@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Page - Toggle Elements</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { visibility: hidden; } /* Hide everything by default */
+        body.gatekeeper-ready { visibility: visible; } /* Class to be added by gatekeeper.js when ready */
+        body { font-family: 'Inter', sans-serif; background-color: #1a1a2e; color: #e0e0e0; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 20px; border-radius: 8px; }
+        .public-content { background-color: rgba(100, 100, 100, 0.1); border: 1px solid rgba(100, 100, 100, 0.3); }
+        .free-content { background-color: rgba(255, 165, 0, 0.1); border: 1px solid rgba(255, 165, 0, 0.3); }
+        .paid-content { background-color: rgba(0, 255, 0, 0.1); border: 1px solid rgba(0, 255, 0, 0.3); }
+        .btn { 
+            background-color: #00aaff; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            padding: 12px 24px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            text-decoration: none; 
+            display: inline-block; 
+            margin: 5px;
+        }
+        .btn:hover { background-color: #0088cc; }
+        .btn-orange { background-color: #ff6b35; }
+        .btn-orange:hover { background-color: #e55a2b; }
+        .btn-green { background-color: #28a745; }
+        .btn-green:hover { background-color: #218838; }
+        .status { 
+            position: fixed; 
+            top: 10px; 
+            right: 10px; 
+            background: rgba(0, 0, 0, 0.8); 
+            color: white; 
+            padding: 10px; 
+            border-radius: 5px; 
+            font-size: 12px;
+        }
+    </style>
+
+    <!-- Konfiguracja Gatekeepera dla toggle mode -->
+    <script>
+        window.gatekeeperConfig = {
+            productSlug: 'awesome-free-product' // Slug produktu
+        };
+    </script>
+
+    <!-- GATEKEEPER SCRIPT -->
+    <script src="../gatekeeper.js"></script>
+
+    <!-- NO-SCRIPT REDIRECT: Matches gatekeeperConfig.productSlug -->
+    <noscript>
+        <meta http-equiv="refresh" content="0;url=/?product=awesome-free-product"/>
+    </noscript>
+</head>
+<body>
+    <div class="status" id="status">Loading...</div>
+    
+    <div class="container">
+        <h1>Test Page - Toggle Elements</h1>
+        <p>Ta strona testuje mechanizm toggle - pokazywanie różnych elementów w zależności od dostępu do produktu.</p>
+        
+        <div class="section public-content">
+            <h2>🌍 Treść publiczna</h2>
+            <p>Ta treść jest zawsze widoczna dla wszystkich, niezależnie od statusu logowania czy dostępu do produktu.</p>
+        </div>
+
+        <!-- Elementy dla osób BEZ dostępu do produktu -->
+        <div class="section free-content" data-free>
+            <h2>🔓 Treść dla osób bez dostępu</h2>
+            <p>Ta sekcja jest widoczna gdy:</p>
+            <ul>
+                <li>Użytkownik nie jest zalogowany</li>
+                <li>Użytkownik jest zalogowany, ale nie ma dostępu do produktu</li>
+            </ul>
+            <p><strong>Zachęta do zakupu:</strong></p>
+            <a href="/?product=awesome-free-product" class="btn btn-orange">Kup teraz za 99 zł</a>
+            <p style="margin-top: 1rem; font-size: 0.9rem;">
+                ✨ Dostęp do ekskluzywnych materiałów<br>
+                📚 Kompletny kurs wideo<br>
+                💬 Wsparcie techniczne<br>
+            </p>
+        </div>
+
+        <!-- Elementy dla osób Z dostępem do produktu -->
+        <div class="section paid-content" data-paid>
+            <h2>🎉 Treść dla właścicieli produktu</h2>
+            <p>Ta sekcja jest widoczna tylko dla użytkowników, którzy mają dostęp do produktu.</p>
+            <p><strong>Gratulacje! Masz już dostęp do produktu.</strong></p>
+            <a href="#" class="btn btn-green">Przejdź do kursu</a>
+            <a href="#" class="btn">Pobierz materiały</a>
+            <p style="margin-top: 1rem; font-size: 0.9rem;">
+                🎯 Twój postęp: 15%<br>
+                📅 Ostatnia aktywność: dzisiaj<br>
+                💎 Status: Aktywny<br>
+            </p>
+        </div>
+
+        <!-- Elementy mieszane -->
+        <div class="section public-content">
+            <h2>🔄 Test mieszanych elementów</h2>
+            
+            <div data-free style="padding: 10px; background: rgba(255, 165, 0, 0.2); margin: 10px 0; border-radius: 4px;">
+                <strong>Dla gości:</strong> Zaloguj się lub kup produkt, aby uzyskać pełny dostęp!
+            </div>
+            
+            <div data-paid style="padding: 10px; background: rgba(0, 255, 0, 0.2); margin: 10px 0; border-radius: 4px;">
+                <strong>Dla właścicieli:</strong> Witaj z powrotem! Kontynuuj naukę tam, gdzie skończyłeś.
+            </div>
+        </div>
+
+        <div class="section public-content">
+            <h2>🛠️ Testing Tools</h2>
+            <p>Use these buttons to test the system:</p>
+            <button class="btn" onclick="checkSession()">Check Session</button>
+            <button class="btn" onclick="logout()">Logout</button>
+            <button class="btn" onclick="refreshPage()">Refresh Page</button>
+        </div>
+    </div>
+
+    <script>
+        // Status monitoring
+        function updateStatus(message) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            console.log('Status:', message);
+        }
+
+        // Testing functions
+        async function checkSession() {
+            if (window.gateflowSupabaseClient) {
+                const { data: { session } } = await window.gateflowSupabaseClient.auth.getSession();
+                if (session) {
+                    updateStatus(`Logged in as: ${session.user.email}`);
+                } else {
+                    updateStatus('Not logged in');
+                }
+            } else {
+                updateStatus('Supabase not initialized');
+            }
+        }
+
+        async function logout() {
+            if (window.gateflowSupabaseClient) {
+                await window.gateflowSupabaseClient.auth.signOut();
+                updateStatus('Logged out');
+                location.reload();
+            }
+        }
+
+        function refreshPage() {
+            location.reload();
+        }
+
+        // Initialize status
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStatus('Page loaded, initializing...');
+            
+            // Check for gatekeeper ready
+            const checkReady = setInterval(() => {
+                if (document.body.classList.contains('gatekeeper-ready')) {
+                    updateStatus('Gatekeeper ready');
+                    clearInterval(checkReady);
+                    checkSession();
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>

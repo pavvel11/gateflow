@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GateFlow - Enterprise Content Protection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .hero {
+            text-align: center;
+            padding: 80px 20px;
+            color: white;
+        }
+        
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero p {
+            font-size: 1.5rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+        
+        .pricing {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin: 60px 0;
+        }
+        
+        .plan {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            color: white;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .plan:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .plan.popular {
+            border: 2px solid #ffd700;
+            transform: scale(1.05);
+        }
+        
+        .plan.popular::before {
+            content: "Most Popular";
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ffd700;
+            color: #000;
+            padding: 5px 20px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .plan h3 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .price {
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 20px 0;
+            color: #ffd700;
+        }
+        
+        .price .period {
+            font-size: 1rem;
+            opacity: 0.7;
+        }
+        
+        .features {
+            list-style: none;
+            margin: 30px 0;
+            text-align: left;
+        }
+        
+        .features li {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .features li::before {
+            content: "✅";
+            margin-right: 10px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            display: inline-block;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn.primary {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #000;
+        }
+        
+        .features-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 60px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin: 60px 0;
+            color: white;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-top: 40px;
+        }
+        
+        .feature {
+            text-align: center;
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .watermark-demo {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 40px 0;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .demo-watermark {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <h1>🔐 GateFlow</h1>
+            <p>Enterprise Content Protection System</p>
+            <p style="font-size: 1.2rem; opacity: 0.8;">Secure your premium content with advanced access control, analytics, and licensing.</p>
+        </div>
+
+        <div class="watermark-demo">
+            <h3 style="color: white; margin-bottom: 15px;">🎯 See GateFlow in Action</h3>
+            <p style="color: rgba(255,255,255,0.8);">This is how your content looks with GateFlow protection. Without a license, users see the watermark below.</p>
+            <div class="demo-watermark">
+                <span style="margin-right: 8px;">🔐</span>
+                Secured by <strong>GateFlow</strong> v8.0
+                <div style="font-size: 10px; opacity: 0.8; margin-top: 2px;">
+                    Get license to remove this notice
+                </div>
+            </div>
+        </div>
+
+        <div class="pricing">
+            <div class="plan">
+                <h3>🆓 Open Source</h3>
+                <div class="price">Free</div>
+                <ul class="features">
+                    <li>Unlimited personal use</li>
+                    <li>All core protection features</li>
+                    <li>Basic analytics</li>
+                    <li>Community support</li>
+                    <li style="opacity: 0.6;">⚠️ Watermark displayed</li>
+                </ul>
+                <a href="#" class="btn">Download Free</a>
+            </div>
+
+            <div class="plan popular">
+                <h3>💼 Professional</h3>
+                <div class="price">$49<span class="period">/domain/year</span></div>
+                <ul class="features">
+                    <li>Remove watermark</li>
+                    <li>Priority email support</li>
+                    <li>Advanced analytics</li>
+                    <li>Custom branding</li>
+                    <li>License for 1 domain</li>
+                </ul>
+                <a href="#purchase" class="btn primary">Get Professional</a>
+            </div>
+
+            <div class="plan">
+                <h3>🏢 Enterprise</h3>
+                <div class="price">$199<span class="period">/domain/year</span></div>
+                <ul class="features">
+                    <li>Everything in Professional</li>
+                    <li>White-label solution</li>
+                    <li>Custom integrations</li>
+                    <li>Dedicated support</li>
+                    <li>SLA guarantee</li>
+                </ul>
+                <a href="#purchase" class="btn">Get Enterprise</a>
+            </div>
+
+            <div class="plan">
+                <h3>🌍 Multi-Domain</h3>
+                <div class="price">$299<span class="period">/year</span></div>
+                <ul class="features">
+                    <li>Use on unlimited domains</li>
+                    <li>All enterprise features</li>
+                    <li>Volume discounts</li>
+                    <li>Global CDN access</li>
+                    <li>Premium support</li>
+                </ul>
+                <a href="#purchase" class="btn">Get Multi-Domain</a>
+            </div>
+        </div>
+
+        <div class="features-section">
+            <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 20px;">Why Choose GateFlow?</h2>
+            <p style="text-align: center; font-size: 1.2rem; opacity: 0.8; margin-bottom: 40px;">
+                The most advanced content protection system available
+            </p>
+            
+            <div class="feature-grid">
+                <div class="feature">
+                    <span class="feature-icon">🔒</span>
+                    <h3>Military-Grade Security</h3>
+                    <p>Content is removed from DOM, not just hidden. Anti-tampering measures protect your assets.</p>
+                </div>
+                
+                <div class="feature">
+                    <span class="feature-icon">⚡</span>
+                    <h3>Lightning Fast</h3>
+                    <p>Batch processing, intelligent caching, and performance optimization for instant loading.</p>
+                </div>
+                
+                <div class="feature">
+                    <span class="feature-icon">📊</span>
+                    <h3>Advanced Analytics</h3>
+                    <p>Comprehensive tracking with custom dimensions, scroll depth, and performance metrics.</p>
+                </div>
+                
+                <div class="feature">
+                    <span class="feature-icon">♿</span>
+                    <h3>Accessibility First</h3>
+                    <p>Full ARIA support, screen readers, keyboard navigation, and motion preferences.</p>
+                </div>
+                
+                <div class="feature">
+                    <span class="feature-icon">🎨</span>
+                    <h3>Beautiful UX</h3>
+                    <p>Theme-aware loading states, smooth animations, and responsive design.</p>
+                </div>
+                
+                <div class="feature">
+                    <span class="feature-icon">🛠️</span>
+                    <h3>Developer Friendly</h3>
+                    <p>Extensive configuration, debug tools, comprehensive documentation.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="purchase" style="background: rgba(255,255,255,0.1); border-radius: 20px; padding: 60px; text-align: center; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); color: white;">
+            <h2 style="font-size: 2.5rem; margin-bottom: 20px;">Ready to Get Started?</h2>
+            <p style="font-size: 1.2rem; margin-bottom: 40px; opacity: 0.8;">
+                Join thousands of developers protecting their content with GateFlow
+            </p>
+            
+            <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+                <a href="mailto:sales@gateflow.pl?subject=GateFlow License Purchase&body=Hello, I would like to purchase a GateFlow license for my domain." class="btn primary" style="font-size: 1.1rem; padding: 18px 35px;">
+                    💼 Purchase License
+                </a>
+                <a href="mailto:support@gateflow.pl" class="btn" style="font-size: 1.1rem; padding: 18px 35px;">
+                    💬 Contact Sales
+                </a>
+            </div>
+            
+            <div style="margin-top: 40px; padding-top: 40px; border-top: 1px solid rgba(255,255,255,0.2);">
+                <h3 style="margin-bottom: 20px;">License Generation Process:</h3>
+                <ol style="text-align: left; max-width: 600px; margin: 0 auto; opacity: 0.9;">
+                    <li style="margin: 10px 0;">Purchase license for your domain</li>
+                    <li style="margin: 10px 0;">Receive license key via email within 24 hours</li>
+                    <li style="margin: 10px 0;">Add license key to your GateFlow configuration</li>
+                    <li style="margin: 10px 0;">Watermark automatically disappears</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2025 GateFlow. All rights reserved.</p>
+        <p style="margin-top: 10px; font-size: 0.9rem;">
+            <a href="mailto:support@gateflow.pl" style="color: rgba(255,255,255,0.8);">Support</a> • 
+            <a href="#" style="color: rgba(255,255,255,0.8);">Documentation</a> • 
+            <a href="#" style="color: rgba(255,255,255,0.8);">GitHub</a>
+        </p>
+    </div>
+
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add hover effects to pricing plans
+        document.querySelectorAll('.plan').forEach(plan => {
+            plan.addEventListener('mouseenter', function() {
+                if (!this.classList.contains('popular')) {
+                    this.style.transform = 'translateY(-10px) scale(1.02)';
+                }
+            });
+            
+            plan.addEventListener('mouseleave', function() {
+                if (!this.classList.contains('popular')) {
+                    this.style.transform = 'translateY(0) scale(1)';
+                } else {
+                    this.style.transform = 'scale(1.05)';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+/* themes/light.css */
+:root {
+    --background-start-color: #f0f2f5;
+    --background-end-color: #d9e2f0;
+    --glass-background-color: rgba(255, 255, 255, 0.6);
+    --border-color: rgba(0, 0, 0, 0.1);
+    --text-primary-color: #1a1a2e;
+    --text-secondary-color: #5a647e;
+    --accent-color: #007bff;
+    --accent-glow-color: rgba(0, 123, 255, 0.4);
+}

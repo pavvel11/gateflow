@@ -1,0 +1,11 @@
+/* themes/dark.css */
+:root {
+    --background-start-color: #1a1a2e;
+    --background-end-color: #16213e;
+    --glass-background-color: rgba(255, 255, 255, 0.05);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --text-primary-color: #e0e0e0;
+    --text-secondary-color: #a0a0b0;
+    --accent-color: #00aaff;
+    --accent-glow-color: rgba(0, 170, 255, 0.5);
+}

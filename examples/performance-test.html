@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gatekeeper Performance Test - Stress Testing & Benchmarks</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .test-section {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .metric {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #60a5fa;
+        }
+        
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .test-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .console-output {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.8rem;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 15px 0;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-loading { background: #fbbf24; }
+        .status-success { background: #10b981; }
+        .status-error { background: #ef4444; }
+    </style>
+</head>
+<body>
+    <noscript>
+        <meta http-equiv="refresh" content="0;url=/?product=performance-test"/>
+    </noscript>
+
+    <div class="container">
+        <h1>🚀 Gatekeeper Performance Test Suite</h1>
+        <p>Comprehensive performance testing and benchmarking for Gatekeeper v8.0</p>
+
+        <div class="test-section">
+            <h2>📊 Performance Metrics</h2>
+            <div class="metrics">
+                <div class="metric">
+                    <div class="metric-value" id="loadTime">-</div>
+                    <div class="metric-label">Load Time (ms)</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="initTime">-</div>
+                    <div class="metric-label">Init Time (ms)</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="batchTime">-</div>
+                    <div class="metric-label">Batch Check (ms)</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="cacheHits">0</div>
+                    <div class="metric-label">Cache Hits</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="totalElements">100</div>
+                    <div class="metric-label">Test Elements</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="memoryUsage">-</div>
+                    <div class="metric-label">Memory (MB)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Stress Tests</h2>
+            <p>These tests simulate various scenarios to measure Gatekeeper performance under load.</p>
+            
+            <button onclick="runBatchTest()">🔄 Batch Access Test (50 elements)</button>
+            <button onclick="runCacheTest()">💾 Cache Performance Test</button>
+            <button onclick="runRetryTest()">🔁 Retry Logic Test</button>
+            <button onclick="runMemoryTest()">🧠 Memory Usage Test</button>
+            <button onclick="clearTests()">🧹 Clear Results</button>
+            
+            <div id="testResults" class="console-output">
+                <div>🟢 Performance test suite ready...</div>
+                <div>📱 User Agent: <span id="userAgent"></span></div>
+                <div>⚡ Performance API: <span id="perfSupport"></span></div>
+                <div>💾 Memory API: <span id="memSupport"></span></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📈 Live Analytics Dashboard</h2>
+            <div id="analyticsData" class="console-output">
+                <div>📊 Waiting for analytics events...</div>
+            </div>
+        </div>
+
+        <!-- Generate 100 test elements for stress testing -->
+        <div class="test-section">
+            <h2>🎯 Test Elements (Hidden from View)</h2>
+            <p>100 elements with various protection levels for comprehensive testing:</p>
+            <div style="display: none;">
+                <!-- Generate elements dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Performance monitoring setup
+        const performanceData = {
+            startTime: performance.now(),
+            loadTime: 0,
+            initTime: 0,
+            batchTime: 0,
+            cacheHits: 0,
+            memoryUsage: 0
+        };
+
+        // Create test elements for stress testing
+        function createTestElements() {
+            const container = document.querySelector('.test-section:last-child div[style="display: none;"]');
+            const products = ['test-product-1', 'test-product-2', 'test-product-3', 'premium-course', 'basic-course'];
+            
+            for (let i = 1; i <= 100; i++) {
+                const element = document.createElement('div');
+                const productSlug = products[i % products.length];
+                
+                if (i % 3 === 0) {
+                    element.setAttribute('data-gatekeeper-product', productSlug);
+                } else if (i % 2 === 0) {
+                    element.setAttribute('data-paid', '');
+                } else {
+                    element.setAttribute('data-free', '');
+                }
+                
+                element.className = 'test-item';
+                element.textContent = `Test Element ${i} (${productSlug})`;
+                container.appendChild(element);
+            }
+            
+            log(`✅ Generated 100 test elements`);
+        }
+
+        // Logging function
+        function log(message) {
+            const output = document.getElementById('testResults');
+            const timestamp = new Date().toLocaleTimeString();
+            output.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        // Analytics interceptor
+        const originalTrackEvent = window.trackEvent;
+        function interceptAnalytics() {
+            // Override console.log for Gatekeeper events
+            const originalLog = console.log;
+            console.log = function(...args) {
+                if (args[0] && args[0].includes('📊 Gatekeeper Analytics:')) {
+                    const analyticsOutput = document.getElementById('analyticsData');
+                    const timestamp = new Date().toLocaleTimeString();
+                    analyticsOutput.innerHTML += `<div>[${timestamp}] ${args.join(' ')}</div>`;
+                    analyticsOutput.scrollTop = analyticsOutput.scrollHeight;
+                    
+                    // Update cache hits counter
+                    if (args[1] === 'gatekeeper_cache_hit') {
+                        performanceData.cacheHits++;
+                        updateMetrics();
+                    }
+                }
+                originalLog.apply(console, args);
+            };
+        }
+
+        // Test functions
+        async function runBatchTest() {
+            log('🔄 Starting batch access test...');
+            const startTime = performance.now();
+            
+            // Trigger a batch check by calling handleProtection
+            if (window.gatekeeperSupabaseClient) {
+                const { data: { session } } = await window.gatekeeperSupabaseClient.auth.getSession();
+                // This will trigger batch checking of all elements
+                window.location.hash = 'batch-test';
+                window.location.hash = '';
+            }
+            
+            const endTime = performance.now();
+            performanceData.batchTime = endTime - startTime;
+            
+            log(`✅ Batch test completed in ${performanceData.batchTime.toFixed(2)}ms`);
+            updateMetrics();
+        }
+
+        async function runCacheTest() {
+            log('💾 Testing cache performance...');
+            const iterations = 10;
+            const startCacheHits = performanceData.cacheHits;
+            
+            for (let i = 0; i < iterations; i++) {
+                // Force multiple access checks to test caching
+                if (window.gatekeeperSupabaseClient) {
+                    const { data: { session } } = await window.gatekeeperSupabaseClient.auth.getSession();
+                    // Simulate multiple rapid checks
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+            }
+            
+            const cacheHitsGained = performanceData.cacheHits - startCacheHits;
+            log(`✅ Cache test completed. Cache hits gained: ${cacheHitsGained}`);
+        }
+
+        async function runRetryTest() {
+            log('🔁 Testing retry logic...');
+            // This would need to simulate network failures
+            // For demo purposes, we'll just log the test
+            log('⚠️ Retry test would simulate network failures in real implementation');
+            log('✅ Retry logic test completed (simulated)');
+        }
+
+        function runMemoryTest() {
+            log('🧠 Testing memory usage...');
+            if (performance.memory) {
+                const memory = performance.memory;
+                performanceData.memoryUsage = (memory.usedJSHeapSize / 1024 / 1024).toFixed(2);
+                log(`📊 Used JS Heap: ${performanceData.memoryUsage} MB`);
+                log(`📊 Total JS Heap: ${(memory.totalJSHeapSize / 1024 / 1024).toFixed(2)} MB`);
+                log(`📊 JS Heap Limit: ${(memory.jsHeapSizeLimit / 1024 / 1024).toFixed(2)} MB`);
+            } else {
+                log('⚠️ Memory API not available in this browser');
+            }
+            updateMetrics();
+        }
+
+        function clearTests() {
+            document.getElementById('testResults').innerHTML = '<div>🧹 Test results cleared</div>';
+            document.getElementById('analyticsData').innerHTML = '<div>📊 Analytics data cleared</div>';
+        }
+
+        function updateMetrics() {
+            document.getElementById('loadTime').textContent = performanceData.loadTime.toFixed(0);
+            document.getElementById('initTime').textContent = performanceData.initTime.toFixed(0);
+            document.getElementById('batchTime').textContent = performanceData.batchTime.toFixed(0);
+            document.getElementById('cacheHits').textContent = performanceData.cacheHits;
+            document.getElementById('memoryUsage').textContent = performanceData.memoryUsage || '-';
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            performanceData.loadTime = performance.now() - performanceData.startTime;
+            
+            // Browser capability detection
+            document.getElementById('userAgent').textContent = navigator.userAgent.split(' ')[0];
+            document.getElementById('perfSupport').textContent = window.performance ? '✅ Supported' : '❌ Not Available';
+            document.getElementById('memSupport').textContent = performance.memory ? '✅ Supported' : '❌ Not Available';
+            
+            createTestElements();
+            interceptAnalytics();
+            
+            log(`✅ Page loaded in ${performanceData.loadTime.toFixed(2)}ms`);
+            updateMetrics();
+        });
+
+        // Gatekeeper configuration
+        window.gatekeeperConfig = {
+            productSlug: 'performance-test',
+            development: true
+        };
+
+        window.gatekeeperAdvancedConfig = {
+            performance: {
+                batchSize: 100, // Test with larger batch
+                queryTimeout: 10000,
+                retryAttempts: 3,
+                enableQueryCache: true,
+                preloadUserAccess: true
+            },
+            ui: {
+                showProgressBar: false // Disable for cleaner testing
+            },
+            analytics: {
+                enableDetailedTracking: true,
+                trackScrollDepth: false,
+                trackTimeOnPage: false,
+                trackDeviceInfo: true
+            },
+            development: {
+                enableDebugMode: true,
+                enablePerformanceMonitoring: true,
+                logLevel: 'debug'
+            }
+        };
+
+        // Monitor when Gatekeeper initializes
+        const originalInitialize = window.initializeGatekeeper;
+        window.initializeGatekeeper = function() {
+            const initStart = performance.now();
+            if (originalInitialize) {
+                originalInitialize();
+            }
+            performanceData.initTime = performance.now() - initStart;
+            log(`⚡ Gatekeeper initialized in ${performanceData.initTime.toFixed(2)}ms`);
+            updateMetrics();
+        };
+    </script>
+
+    <script src="../gatekeeper.js"></script>
+</body>
+</html>

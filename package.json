@@ -1,0 +1,42 @@
+{
+  "name": "gatekeeper-access-control",
+  "version": "1.0.0",
+  "description": "A modern, flexible access control system for product delivery and content protection built on Supabase",
+  "main": "gatekeeper.js",
+  "scripts": {
+    "dev": "python3 -m http.server 8000",
+    "lint": "echo 'No linting configured'",
+    "test": "echo 'No tests configured'"
+  },
+  "keywords": [
+    "access-control",
+    "supabase",
+    "authentication",
+    "product-protection",
+    "content-gating",
+    "javascript",
+    "magic-link"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/gatekeeper-access-control.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/gatekeeper-access-control/issues"
+  },
+  "homepage": "https://github.com/yourusername/gatekeeper-access-control#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "files": [
+    "gatekeeper.js",
+    "dist/",
+    "examples/",
+    "sql/",
+    "README.md"
+  ]
+}

@@ -1,0 +1,46 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables (IMPORTANT: Don't commit real credentials)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Node modules
+node_modules/
+
+# Build outputs
+dist/*.map
+build/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Package manager lockfiles (optional)
+# package-lock.json
+# yarn.lock
+
+# Personal configuration files with real credentials
+# config.personal.js

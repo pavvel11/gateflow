@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gateflow</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link id="theme-stylesheet" rel="stylesheet" href="">
+    <style>
+        /* Base styles that are not theme-dependent */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-start-color);
+            color: var(--text-primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+            transition: background-color 0.5s ease;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at 20% 20%, #3a2d5b 0%, transparent 40%),
+                        radial-gradient(circle at 80% 70%, #0f3460 0%, transparent 40%);
+            animation: aurora 20s infinite linear;
+        }
+
+        @keyframes aurora {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .checkout-container {
+            display: flex;
+            width: 100%;
+            max-width: 960px;
+            background: var(--glass-background-color);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+            border-radius: .25rem;
+        }
+
+        .alert-danger {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .product-section {
+            padding: 48px;
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .product-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .product-icon {
+            font-size: 48px;
+            margin-right: 24px;
+        }
+
+        .product-details h3 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-primary-color);
+        }
+
+        .product-details p {
+            margin: 4px 0 0;
+            color: var(--text-secondary-color);
+            font-size: 16px;
+        }
+
+        .price {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary-color);
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .form-section {
+            padding: 48px;
+            width: 50%;
+        }
+
+        .form-section h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary-color);
+        }
+        
+        .form-section .text-muted {
+            color: var(--text-secondary-color) !important;
+            margin-bottom: 24px !important;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary-color);
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            background-color: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .form-control:focus {
+            background-color: rgba(0, 0, 0, 0.3);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px var(--accent-glow-color);
+            outline: none;
+        }
+        
+        .form-control::placeholder {
+            color: var(--text-secondary-color);
+            opacity: 0.7;
+        }
+
+        .btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 16px;
+            width: 100%;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px var(--accent-glow-color);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 12px;
+            color: var(--text-secondary-color);
+        }
+
+        #payment-form {
+            display: none; /* Hidden by default */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="checkout-container" id="container">
+        <!-- Content will be dynamically loaded here -->
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script>
+        const container = document.getElementById('container');
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const productSlug = urlParams.get('product');
+
+            if (!productSlug) {
+                container.innerHTML = '<div class="alert alert-danger">Product slug not specified in URL.</div>';
+                return;
+            }
+
+            const { data: product, error } = await supabase
+                .from('products')
+                .select('*')
+                .eq('slug', productSlug)
+                .single();
+
+            if (error || !product) {
+                container.innerHTML = `<div class="alert alert-danger">Could not load product: ${productSlug}.</div>`;
+                return;
+            }
+
+            // Load the theme
+            document.getElementById('theme-stylesheet').href = `themes/${product.theme}.css`;
+
+            // Determine locale for currency formatting
+            const userLocale = navigator.language || navigator.languages[0] || 'en-US';
+            const formattedPrice = new Intl.NumberFormat(userLocale, { style: 'currency', currency: 'USD' }).format(product.price);
+
+            // Load the layout template
+            const layoutResponse = await fetch(`layouts/${product.layout_template}.html`);
+            if (!layoutResponse.ok) {
+                container.innerHTML = `<div class="alert alert-danger">Could not load layout template: ${product.layout_template}.html</div>`;
+                return;
+            }
+            const layoutHtml = await layoutResponse.text();
+
+            // Manually replace template variables in the loaded HTML
+            let processedLayoutHtml = layoutHtml
+                .replace(/\${product\.icon}/g, product.icon)
+                .replace(/\${product\.name}/g, product.name)
+                .replace(/\${product\.description}/g, product.description)
+                .replace(/\${product\.priceFormatted}/g, formattedPrice);
+
+            // Populate the container with the loaded layout
+            container.innerHTML = processedLayoutHtml;
+
+            const formContent = document.getElementById('form-content');
+            if (product.price == 0) {
+                // FREE PRODUCT: Show magic link form
+                formContent.innerHTML = `
+                    <h2>Get your free product</h2>
+                    <p class="text-muted">Enter your email below to receive a secure download link.</p>
+                    <form id="magic-link-form">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email address</label>
+                            <input type="email" class="form-control" id="email" placeholder="name@example.com" required>
+                        </div>
+                        <button type="submit" class="btn">Send Magic Link</button>
+                    </form>
+                `;
+                handleMagicLinkForm(productSlug);
+            } else {
+                // PAID PRODUCT: Show payment button
+                formContent.innerHTML = `
+                    <h2>Purchase Access</h2>
+                    <p class="text-muted">Click below to proceed to a secure payment page.</p>
+                    <form id="payment-form">
+                        <button type="submit" class="btn">Proceed to Payment</button>
+                    </form>
+                `;
+                handlePaymentForm(productSlug);
+            }
+        });
+
+        function handleMagicLinkForm(productSlug) {
+            const form = document.getElementById('magic-link-form');
+            const messageArea = document.getElementById('message-area');
+            const submitButton = form.querySelector('button[type="submit"]');
+
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const email = document.getElementById('email').value;
+                
+                submitButton.disabled = true;
+                submitButton.textContent = 'Sending...';
+                messageArea.innerHTML = '<div class="alert alert-info">Sending magic link...</div>';
+
+                try {
+                    const { error } = await supabase.auth.signInWithOtp({
+                        email: email,
+                        options: {
+                            emailRedirectTo: `${window.location.origin}/protected-product.html?product=${productSlug}`
+                        }
+                    });
+
+                    if (error) {
+                        messageArea.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                    } else {
+                        messageArea.innerHTML = '<div class="alert alert-success">Success! Check your email for the magic link.</div>';
+                        form.style.display = 'none';
+                    }
+                } finally {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Send Magic Link';
+                }
+            });
+        }
+
+        function handlePaymentForm(productSlug) {
+            const form = document.getElementById('payment-form');
+            const messageArea = document.getElementById('message-area');
+
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                messageArea.innerHTML = '<div>Redirecting to payment...</div>';
+
+                const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+                    body: { slug: productSlug }
+                });
+
+                if (error) {
+                    messageArea.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                } else if (data.checkout_url) {
+                    window.location.href = data.checkout_url;
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protected Elements Example</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { visibility: hidden; } /* Hide everything by default */
+        body.gatekeeper-ready { visibility: visible; } /* Class to be added by gatekeeper.js when ready */
+        body { font-family: 'Inter', sans-serif; background-color: #1a1a2e; color: #e0e0e0; }
+        .container { text-align: center; padding: 40px; max-width: 800px; margin: 40px auto; }
+        .btn { background-color: #00aaff; color: white; border: none; border-radius: 8px; padding: 14px 28px; font-size: 16px; font-weight: 600; cursor: pointer; text-decoration: none; margin-top: 20px; }
+        .protected-element { border: 2px dashed #00aaff; padding: 20px; margin-top: 20px; border-radius: 8px; }
+        .gatekeeper-form-container { width: 100%; max-width: 450px; padding: 40px; background: rgba(255, 255, 255, 0.05); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); margin: auto; }
+        .gatekeeper-form-container .text-muted { color: #a0a0b0; }
+        .gatekeeper-form-container .form-label { color: #a0a0b0; }
+        .gatekeeper-form-container .form-control { background-color: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); color: #e0e0e0; border-radius: 8px; padding: 12px 16px; font-size: 16px; width: 100%; box-sizing: border-box; }
+        .gatekeeper-form-container .alert { padding: 1rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: .25rem; }
+        .gatekeeper-form-container .alert-danger { color: #721c24; background-color: #f8d7da; border-color: #f5c6cb; }
+        .gatekeeper-form-container .alert-success { color: #155724; background-color: #d4edda; border-color: #c3e6cb; }
+    </style>
+
+    <!-- JEDEN SKRYPT, KTÓRY WSZYSTKO ROBI -->
+    <script src="../gatekeeper.js"></script>
+
+    <!-- NO-SCRIPT REDIRECT: Main product is awesome-free-product -->
+    <noscript>
+        <meta http-equiv="refresh" content="0;url=/?product=awesome-free-product"/>
+    </noscript>
+</head>
+<body>
+    <div class="container">
+        <h1>Mixed Content Page</h1>
+        <p>This part of the page is always visible.</p>
+
+        <div class="protected-element" data-gatekeeper-product="awesome-free-product">
+            <h2>Content for Free Product</h2>
+            <p>You can see this because you have access to the 'awesome-free-product'.</p>
+        </div>
+
+        <div class="protected-element" data-gatekeeper-product="premium-course">
+            <h2>Content for Premium Course</h2>
+            <p>You can see this ONLY if you have access to the 'premium-course'.</p>
+        </div>
+
+        <p>This part is also always visible.</p>
+    </div>
+</body>
+</html>
