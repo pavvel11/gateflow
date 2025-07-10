@@ -7,6 +7,10 @@
 ehthumbs.db
 Thumbs.db
 
+# IDE specific files
+.copilot-codeGeneration-instructions.md
+
+
 # Editor files
 .vscode/
 .idea/
