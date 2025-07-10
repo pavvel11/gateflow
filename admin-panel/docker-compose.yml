@@ -1,0 +1,44 @@
+# GateFlow Admin Panel - Docker Compose
+version: '3.8'
+
+services:
+  admin-panel:
+    build: .
+    container_name: gateflow-admin
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      - ENABLE_MULTITENANT=${ENABLE_MULTITENANT:-false}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Local Supabase stack
+  # supabase-db:
+  #   image: supabase/postgres:15.1.0.147
+  #   container_name: gateflow-db
+  #   environment:
+  #     POSTGRES_HOST: /var/run/postgresql
+  #     PGPORT: 5432
+  #     POSTGRES_PORT: 5432
+  #     PGPASSWORD: your-super-secret-and-long-postgres-password
+  #     POSTGRES_PASSWORD: your-super-secret-and-long-postgres-password
+  #     PGDATABASE: postgres
+  #     POSTGRES_DB: postgres
+  #   volumes:
+  #     - ./supabase/volumes/db/data:/var/lib/postgresql/data:Z
+  #   ports:
+  #     - "5432:5432"
+  #   restart: unless-stopped
+
+networks:
+  default:
+    name: gateflow-network
