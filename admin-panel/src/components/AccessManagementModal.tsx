@@ -13,14 +13,13 @@ interface AccessManagementModalProps {
 interface UserAccess {
   id: string;
   product_id: string;
-  granted_at: string;
-  granted_by: string;
-  products: {
-    id: string;
-    name: string;
-    description: string;
-    is_active: boolean;
-  };
+  product_name: string;
+  product_description: string;
+  product_price: number;
+  product_currency: string;
+  product_is_active: boolean;
+  access_created_at: string;
+  product_slug: string;
 }
 
 const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
@@ -201,15 +200,15 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <div className="font-medium text-gray-900 dark:text-white">
-                            {access.products.name}
+                            {access.product_name}
                           </div>
                           <div className="flex items-center space-x-2">
                             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                              access.products.is_active 
+                              access.product_is_active 
                                 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                                 : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                             }`}>
-                              {access.products.is_active ? 'Active' : 'Inactive'}
+                              {access.product_is_active ? 'Active' : 'Inactive'}
                             </span>
                             <button
                               onClick={() => handleRemoveAccess(access.product_id)}
@@ -225,7 +224,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                           </div>
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                          Granted: {formatDate(access.granted_at)}
+                          Granted: {formatDate(access.access_created_at)}
                         </div>
                       </div>
                     </div>

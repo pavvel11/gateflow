@@ -65,6 +65,18 @@ export interface UserWithAccess extends User {
   product_access: {
     product_slug: string
     product_name: string
+    product_price?: number
+    product_currency?: string
+    product_icon?: string
+    product_is_active?: boolean
     granted_at: string
   }[]
+  
+  // Statistics
+  stats?: {
+    total_products: number
+    total_value: number
+    last_access_granted_at: string | null
+    first_access_granted_at: string | null
+  }
 }

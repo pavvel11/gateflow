@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import { useState } from 'react'
+import Link from 'next/link'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -38,30 +39,36 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
               </div>
               
               <div className="hidden md:ml-10 md:flex md:space-x-8">
-                <a
+                <Link
                   href="/dashboard"
                   className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   Dashboard
-                </a>
-                <a
+                </Link>
+                <Link
                   href="/dashboard/products"
                   className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   Products
-                </a>
-                <a
+                </Link>
+                <Link
                   href="/dashboard/users"
                   className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   Users
-                </a>
-                <a
+                </Link>
+                <Link
                   href="/dashboard/analytics"
                   className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   Analytics
-                </a>
+                </Link>
+                <Link
+                  href="/auth-debug"
+                  className="text-orange-500 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Auth Debug
+                </Link>
               </div>
             </div>
             

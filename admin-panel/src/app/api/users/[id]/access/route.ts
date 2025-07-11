@@ -20,23 +20,22 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user's product access with product details
+    // Get user's product access with product details using the detailed view
     const { data: userAccess, error: accessError } = await supabase
-      .from('user_product_access')
+      .from('user_product_access_detailed')
       .select(`
         id,
         product_id,
-        granted_at,
-        granted_by,
-        products (
-          id,
-          name,
-          description,
-          is_active
-        )
+        product_name,
+        product_description,
+        product_price,
+        product_currency,
+        product_is_active,
+        access_created_at,
+        product_slug
       `)
       .eq('user_id', userId)
-      .order('granted_at', { ascending: false });
+      .order('access_created_at', { ascending: false });
 
     if (accessError) {
       console.error('Error fetching user access:', accessError);
@@ -113,21 +112,9 @@ export async function POST(
       .insert({
         user_id: userId,
         product_id: body.product_id,
-        granted_by: user.id,
-        granted_at: new Date().toISOString()
+        created_at: new Date().toISOString()
       })
-      .select(`
-        id,
-        product_id,
-        granted_at,
-        granted_by,
-        products (
-          id,
-          name,
-          description,
-          is_active
-        )
-      `)
+      .select('id, product_id, created_at')
       .single();
 
     if (accessError) {

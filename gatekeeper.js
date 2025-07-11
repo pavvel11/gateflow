@@ -1,5 +1,6 @@
-// gatekeeper.js (v8 - Enterprise Content Protection System)
+// gatekeeper.js (v9 - Enterprise Content Protection System)
 // GateFlow - Professional Content Access Control
+// Updated 2025-07-11: Complete refactor to use product_id-based access control
 // 
 // 🏢 ENTERPRISE FEATURES:
 // • Domain-based licensing with anti-tampering protection
@@ -21,7 +22,13 @@
 // • Element Protection: Selective content via data-gatekeeper-product  
 // • Toggle Mode: Free/paid content switching via data-free/data-paid
 //
-// 📄 LICENSE: Freemium model - Free with watermark, $49/domain/year for removal
+// � ACCESS CONTROL SYSTEM:
+// • Uses product_id-based access records (not product_slug) for robust access control
+// • Secure server-side RPC functions for checking and granting access
+// • Efficient view-based lookups for batch operations
+// • All database operations properly maintain referential integrity
+//
+// �📄 LICENSE: Freemium model - Free with watermark, $49/domain/year for removal
 // 🌐 Website: https://gateflow.pl | 📧 Support: support@gateflow.pl
 
 // Configuration
@@ -36,7 +43,7 @@ const CACHE_EXPIRY_MS = 300000; // 5 minutes
 const MAX_RETRY_ATTEMPTS = 3;
 
 // GateFlow Licensing System
-const GATEFLOW_VERSION = '1.0.0';
+const GATEFLOW_VERSION = '2.0.0'; // Major version update for product_id-based access control
 const GATEFLOW_LICENSE_CHECK_INTERVAL = 86400000; // 24 hours
 const GATEFLOW_LICENSE_ENDPOINTS = [
     'https://api.gateflow.pl/license/verify',
@@ -684,6 +691,39 @@ function loadSupabaseScript(callback) {
     document.head.appendChild(script);
 }
 
+/**
+ * Validates that all required API functions exist
+ * @param {Object} supabase - The Supabase client
+ * @returns {Promise<boolean>} True if the API is valid
+ */
+async function validateAccessAPI(supabase) {
+    try {
+        // Try to call the check_user_product_access function
+        await supabase.rpc('check_user_product_access', {
+            user_id_param: '00000000-0000-0000-0000-000000000000', // Dummy UUID
+            product_slug_param: 'test'
+        });
+        
+        // Try to call the grant_product_access function
+        await supabase.rpc('grant_product_access', {
+            user_id_param: '00000000-0000-0000-0000-000000000000', // Dummy UUID
+            product_slug_param: 'test'
+        });
+        
+        // Try to query the user_product_access_by_slug view
+        await supabase
+            .from('user_product_access_by_slug')
+            .select('id')
+            .limit(1);
+            
+        console.log("Gatekeeper: All required API functions and views available");
+        return true;
+    } catch (error) {
+        console.error("Gatekeeper: Access API validation failed:", error.message);
+        throw new Error("GateFlow API functions not available. Please ensure database migrations have been applied.");
+    }
+}
+
 function initializeGatekeeper() {
     console.log("🚀 GateFlow v" + GATEFLOW_VERSION + " - Enterprise Content Protection System");
     console.log("📄 License: Free with watermark | Pro: $49/domain/year");
@@ -691,6 +731,16 @@ function initializeGatekeeper() {
     
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     window.gateflowSupabaseClient = supabase;
+    
+    // Validate that all required API functions exist before proceeding
+    validateAccessAPI(supabase).catch(error => {
+        console.error("Gatekeeper: Critical initialization error:", error);
+        document.body.innerHTML = getErrorHTML(
+            "GateFlow initialization failed: Required database functions not found. Please contact your administrator.",
+            "",
+            "dark"
+        );
+    });
 
     const config = window.gatekeeperConfig || {};
     console.log("GateFlow: Config loaded:", Object.keys(config).length, "options");
@@ -722,18 +772,18 @@ function initializeGatekeeper() {
         console.log("Gatekeeper: Checking access for:", userId, productSlug);
         
         try {
-            const { data, error } = await supabase
-                .from('user_product_access')
-                .select('id')
-                .eq('user_id', userId)
-                .eq('product_slug', productSlug)
-                .limit(1);
+            // Use the secure RPC function that checks access by product_id internally
+            const { data: accessResult, error } = await supabase
+                .rpc('check_user_product_access', {
+                    user_id_param: userId,
+                    product_slug_param: productSlug
+                });
                 
             if (error) {
                 console.error("Gatekeeper: Error checking product access:", error);
                 
                 // Retry logic for transient errors
-                if (retryCount < MAX_RETRY_ATTEMPTS && error.code !== '23505') {
+                if (retryCount < MAX_RETRY_ATTEMPTS) {
                     console.log(`Gatekeeper: Retrying access check (${retryCount + 1}/${MAX_RETRY_ATTEMPTS})`);
                     await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
                     return hasAccess(userId, productSlug, retryCount + 1);
@@ -742,7 +792,7 @@ function initializeGatekeeper() {
                 return false;
             }
             
-            const hasAccess = data && data.length > 0;
+            const hasAccess = !!accessResult;
             console.log("Gatekeeper: Access check result:", hasAccess);
             
             // Cache the result
@@ -769,8 +819,9 @@ function initializeGatekeeper() {
         
         console.log("Gatekeeper: Batch checking access for:", userId, productSlugs);
         
+        // Use the view that efficiently joins access records with product data
         const { data, error } = await supabase
-            .from('user_product_access')
+            .from('user_product_access_by_slug')
             .select('product_slug')
             .eq('user_id', userId)
             .in('product_slug', productSlugs);
@@ -785,6 +836,14 @@ function initializeGatekeeper() {
             requested: productSlugs, 
             granted: Array.from(accessSet) 
         });
+        
+        // Cache individual results for future single-product checks
+        productSlugs.forEach(slug => {
+            const hasAccess = accessSet.has(slug);
+            const cacheKey = getCacheKey('access', userId, slug);
+            setCachedData(cacheKey, hasAccess);
+        });
+        
         return accessSet;
     }
 
@@ -797,19 +856,27 @@ function initializeGatekeeper() {
     async function insertAccessRecord(userId, productSlug) {
         console.log("Gatekeeper: Inserting access record for:", userId, productSlug);
         
-        const { error } = await supabase
-            .from('user_product_access')
-            .insert({ user_id: userId, product_slug: productSlug });
+        // Use the RPC function that handles product_id lookup and insertion securely
+        const { data: accessGranted, error } = await supabase
+            .rpc('grant_product_access', {
+                user_id_param: userId,
+                product_slug_param: productSlug
+            });
             
-        if (error && error.code !== DUPLICATE_KEY_ERROR) {
-            console.error("Gatekeeper: Error inserting access record:", error);
+        if (error) {
+            console.error("Gatekeeper: Error granting access:", error);
             return false;
         }
         
-        if (error && error.code === DUPLICATE_KEY_ERROR) {
-            console.log("Gatekeeper: User already has access (duplicate key)");
+        if (!accessGranted) {
+            console.log("Gatekeeper: Failed to grant access, product may not exist");
+            return false;
         } else {
-            console.log("Gatekeeper: Access record inserted successfully");
+            console.log("Gatekeeper: Access granted successfully");
+            
+            // Clear cache for this user/product
+            const cacheKey = getCacheKey('access', userId, productSlug);
+            setCachedData(cacheKey, true); // Update cache with the new access state
         }
         
         return true;
@@ -919,8 +986,9 @@ function initializeGatekeeper() {
         }
         
         try {
+            // Use the view that efficiently joins access records with product data
             const { data, error } = await supabase
-                .from('user_product_access')
+                .from('user_product_access_by_slug')
                 .select('product_slug')
                 .eq('user_id', userId)
                 .in('product_slug', uncachedSlugs);
@@ -934,7 +1002,7 @@ function initializeGatekeeper() {
                 return results;
             }
             
-            const accessibleSlugs = new Set(data.map(row => row.product_slug));
+            const accessibleSlugs = new Set(data?.map(row => row.product_slug) || []);
             
             uncachedSlugs.forEach(slug => {
                 const hasAccess = accessibleSlugs.has(slug);
@@ -1430,9 +1498,9 @@ function initializeGatekeeper() {
             submitButton.disabled = true;
             submitButton.textContent = 'Sending...';
             
-            // Construct redirect URL properly
+            // Construct redirect URL to the product-access handler that will grant access using product_id
             const redirectUrl = productSlug ? 
-                `${window.location.origin}${window.location.pathname}?product=${productSlug}` :
+                `${window.location.origin}/auth/product-access?product=${encodeURIComponent(productSlug)}` :
                 window.location.href;
             
             const { error } = await supabase.auth.signInWithOtp({

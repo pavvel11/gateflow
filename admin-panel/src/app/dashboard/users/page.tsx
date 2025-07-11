@@ -1,7 +1,8 @@
 'use client'
 
 import DashboardLayout from '@/components/DashboardLayout'
-import UsersTable from '@/components/UsersTable'
+import UsersPageContent from '@/components/UsersPageContent'
+import { ToastProvider } from '@/contexts/ToastContext'
 import { withAdminAuth } from '@/components/withAdminAuth'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -18,9 +19,9 @@ function UsersPage() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
-          <UsersTable />
-        </div>
+        <ToastProvider>
+          <UsersPageContent />
+        </ToastProvider>
       </div>
     </DashboardLayout>
   )

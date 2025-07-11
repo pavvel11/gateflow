@@ -1,62 +1,35 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import { UserWithAccess } from '@/types';
-import AccessManagementModal from './AccessManagementModal';
 
 interface UsersTableProps {
-  onUsersChange?: () => void;
+  users: UserWithAccess[];
+  loading: boolean;
+  error: string | null;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  sortBy: string;
+  sortOrder: 'asc' | 'desc';
+  onSort: (column: string) => void;
+  onViewDetails: (user: UserWithAccess) => void;
+  onManageAccess: (user: UserWithAccess) => void;
+  onRefresh: () => void;
 }
 
-const UsersTable: React.FC<UsersTableProps> = ({ onUsersChange }) => {
-  const [users, setUsers] = useState<UserWithAccess[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('created_at');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [selectedUser, setSelectedUser] = useState<UserWithAccess | null>(null);
-  const [showAccessModal, setShowAccessModal] = useState(false);
-
-  const fetchUsers = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const params = new URLSearchParams({
-        search: searchTerm,
-        sortBy,
-        sortOrder
-      });
-      
-      const response = await fetch(`/api/users?${params}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      setUsers(data.users || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred while fetching users');
-    } finally {
-      setLoading(false);
-    }
-  }, [searchTerm, sortBy, sortOrder]);
-
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
-
-  const handleSort = (column: string) => {
-    if (sortBy === column) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(column);
-      setSortOrder('asc');
-    }
-  };
-
+const UsersTable: React.FC<UsersTableProps> = ({
+  users,
+  loading,
+  error,
+  searchTerm,
+  setSearchTerm,
+  sortBy,
+  sortOrder,
+  onSort,
+  onViewDetails,
+  onManageAccess,
+  onRefresh
+}) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -65,11 +38,6 @@ const UsersTable: React.FC<UsersTableProps> = ({ onUsersChange }) => {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
-
-  const handleManageAccess = (user: UserWithAccess) => {
-    setSelectedUser(user);
-    setShowAccessModal(true);
   };
 
   if (loading) {
@@ -104,7 +72,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ onUsersChange }) => {
               </div>
               <div className="mt-4">
                 <button
-                  onClick={fetchUsers}
+                  onClick={onRefresh}
                   className="text-sm font-medium text-red-800 dark:text-red-200 hover:text-red-700 dark:hover:text-red-100"
                 >
                   Try again
@@ -145,7 +113,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ onUsersChange }) => {
               <th
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                onClick={() => handleSort('email')}
+                onClick={() => onSort('email')}
               >
                 <div className="flex items-center space-x-1">
                   <span>Email</span>
@@ -159,7 +127,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ onUsersChange }) => {
               <th
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                onClick={() => handleSort('created_at')}
+                onClick={() => onSort('created_at')}
               >
                 <div className="flex items-center space-x-1">
                   <span>Joined</span>
@@ -175,6 +143,9 @@ const UsersTable: React.FC<UsersTableProps> = ({ onUsersChange }) => {
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Product Access
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Total Value
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Status
@@ -232,6 +203,32 @@ const UsersTable: React.FC<UsersTableProps> = ({ onUsersChange }) => {
                     )}
                   </div>
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {/* Calculate total value of user's products */}
+                  {user.product_access.length > 0 ? (
+                    <div className="text-gray-900 dark:text-white">
+                      {user.product_access.reduce((total, access) => {
+                        // Parse price with fallback to 0
+                        const price = access.product_price || 0;
+                        return total + price;
+                      }, 0) > 0 ? (
+                        // Format as currency if greater than 0
+                        new Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: 'USD',
+                        }).format(user.product_access.reduce((total, access) => {
+                          const price = access.product_price || 0;
+                          return total + price;
+                        }, 0))
+                      ) : (
+                        <span className="text-blue-600 dark:text-blue-400">Free</span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-gray-500 dark:text-gray-400">-</span>
+                  )}
+                </td>
+                
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                     user.email_confirmed_at 
@@ -242,12 +239,28 @@ const UsersTable: React.FC<UsersTableProps> = ({ onUsersChange }) => {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button
-                    onClick={() => handleManageAccess(user)}
-                    className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-3"
-                  >
-                    Manage Access
-                  </button>
+                  <div className="flex justify-end space-x-2">
+                    <button
+                      onClick={() => onViewDetails(user)}
+                      className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
+                      aria-label={`View details for ${user.email}`}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => onManageAccess(user)}
+                      className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                      aria-label={`Manage access for ${user.email}`}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -267,21 +280,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ onUsersChange }) => {
         </div>
       )}
 
-      {/* Access Management Modal */}
-      {selectedUser && (
-        <AccessManagementModal
-          user={selectedUser}
-          isOpen={showAccessModal}
-          onClose={() => {
-            setShowAccessModal(false);
-            setSelectedUser(null);
-          }}
-          onAccessChange={() => {
-            fetchUsers();
-            onUsersChange?.();
-          }}
-        />
-      )}
+      {/* No modals here, they are handled by the parent component */}
     </div>
   );
 };
