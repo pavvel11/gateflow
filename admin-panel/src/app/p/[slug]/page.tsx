@@ -66,14 +66,16 @@ export default async function ProductPage({ params }: PageProps) {
 
     // If not admin, check for specific product access
     if (!isAdmin) {
-      const { data: access } = await supabase
-        .from('user_product_access')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('product_slug', slug)
-        .single();
+      // Using the check_user_product_access RPC function which handles the relation correctly
+      const { data: hasProductAccess } = await supabase
+        .rpc('check_user_product_access', {
+          user_id_param: user.id,
+          product_slug_param: slug
+        });
       
-      hasAccess = !!access;
+      hasAccess = !!hasProductAccess;
+      
+      // hasAccess is already set in the previous statement
     } else {
       // Admins always have access to all products
       hasAccess = true;

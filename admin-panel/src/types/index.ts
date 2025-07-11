@@ -5,6 +5,7 @@ export interface Product {
   description: string
   icon: string
   price: number
+  currency: string
   theme: string
   stripe_price_id: string | null
   layout_template: string
@@ -18,9 +19,15 @@ export interface Product {
 export interface UserProductAccess {
   id: string
   user_id: string
-  product_slug: string
+  product_id: string
   created_at: string
   tenant_id?: string
+  
+  // Include these fields from the view for convenience
+  product_slug?: string
+  product_name?: string
+  product_price?: number
+  product_currency?: string
 }
 
 export interface AdminUser {

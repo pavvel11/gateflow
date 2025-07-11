@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Product } from '@/types';
 import { createClient } from '@/lib/supabase/client';
+import { formatPrice } from '@/lib/constants';
 
 interface ProductViewProps {
   product: Product;
@@ -101,7 +102,8 @@ export default function ProductView({ product }: ProductViewProps) {
           </div>
           
           <div className="text-3xl font-bold text-white mt-5">
-            {product.price === 0 ? 'FREE' : `$${product.price.toFixed(2)}`}
+            {product.price === 0 ? 'FREE' : 
+              `${formatPrice(product.price, product.currency)} ${product.currency}`}
           </div>
         </div>
         

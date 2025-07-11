@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useDebounce } from '@/hooks/useDebounce';
+import React, { useCallback } from 'react';
 
 interface FilterOption {
   label: string;
@@ -42,26 +41,13 @@ const FilterBar: React.FC<FilterBarProps> = ({
   onSortChange,
   onExportClick
 }) => {
-  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
-  const debouncedSearchTerm = useDebounce(localSearchTerm, 300);
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    onSearchChange(e.target.value);
+  }, [onSearchChange]);
 
-  // Update search when debounced value changes
-  useEffect(() => {
-    onSearchChange(debouncedSearchTerm);
-  }, [debouncedSearchTerm, onSearchChange]);
-
-  // Update local state when prop changes
-  useEffect(() => {
-    setLocalSearchTerm(searchTerm);
-  }, [searchTerm]);
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLocalSearchTerm(e.target.value);
-  };
-
-  const handleSortOrderToggle = () => {
+  const handleSortOrderToggle = useCallback(() => {
     onSortChange(sortBy, sortOrder === 'asc' ? 'desc' : 'asc');
-  };
+  }, [onSortChange, sortBy, sortOrder]);
 
   return (
     <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0 md:space-x-2">
@@ -73,7 +59,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
         <input
           type="text"
           placeholder="Search products..."
-          value={localSearchTerm}
+          value={searchTerm}
           onChange={handleSearchChange}
           className="pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
         />

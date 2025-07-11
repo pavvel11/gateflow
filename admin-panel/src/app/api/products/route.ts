@@ -29,6 +29,12 @@ export async function GET(request: NextRequest) {
       query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
     }
 
+    // Apply status filter
+    const status = searchParams.get('status');
+    if (status && status !== 'all') {
+      query = query.eq('is_active', status === 'active');
+    }
+
     // Apply sorting
     query = query.order(sortBy, { ascending: sortOrder === 'asc' });
 
@@ -70,7 +76,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, slug, description, price, is_active, icon, theme, redirect_url } = body;
+    const { name, slug, description, price, currency, is_active, icon, theme, redirect_url } = body;
 
     // Validate required fields
     if (!name || !slug || !description || price === undefined) {
@@ -117,6 +123,7 @@ export async function POST(request: NextRequest) {
         slug: slug.trim(),
         description: description.trim(),
         price: price,
+        currency: currency || 'USD',
         redirect_url: redirect_url || null,
         is_active: is_active !== undefined ? is_active : true,
         icon: icon || 'cube',

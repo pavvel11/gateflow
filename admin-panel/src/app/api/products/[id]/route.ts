@@ -47,7 +47,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const body = await request.json();
-    const { name, slug, description, price, is_active, icon, theme, redirect_url } = body;
+    const { name, slug, description, price, currency, is_active, icon, theme, redirect_url } = body;
 
     // Validate required fields
     if (!name || !slug || !description || price === undefined) {
@@ -95,6 +95,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         slug: slug.trim(),
         description: description.trim(),
         price: price,
+        currency: currency || 'USD',
         redirect_url: redirect_url || null,
         is_active: is_active !== undefined ? is_active : true,
         icon: icon || 'cube',
@@ -132,17 +133,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // First get the product to find its slug
-    const { data: product, error: productError } = await supabase
-      .from('products')
-      .select('slug')
-      .eq('id', id)
-      .single();
-
-    if (productError) {
-      console.error('Error fetching product:', productError);
-      return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 });
-    }
+    // No need to fetch the product, we can delete access entries directly using the product ID
 
     // Check if product has any user access entries
     try {
@@ -150,11 +141,11 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       const { error: deleteAccessError } = await supabase
         .from('user_product_access')
         .delete()
-        .eq('product_slug', product.slug);
+        .eq('product_id', id);
 
       if (deleteAccessError) {
         console.error('Error deleting product access entries:', deleteAccessError);
-        return NextResponse.json({ error: 'Failed to delete product access entries' }, { status: 500 });
+        return NextResponse.json({ error: 'Error deleting product access entries: ' + JSON.stringify(deleteAccessError) }, { status: 500 });
       }
       
       // Now we can safely delete the product

@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Product } from '@/types';
 import IconSelector from './IconSelector';
-import ThemeSelector from './ThemeSelector';
-import { THEME_OPTIONS, getThemeColorClass, getIconPath } from '@/utils/themeUtils';
+import { getIconEmoji } from '@/utils/themeUtils';
+import { CURRENCIES, getCurrencySymbol } from '@/lib/constants';
 
 interface ProductFormModalProps {
   product?: Product | null;
@@ -20,10 +20,10 @@ export interface ProductFormData {
   slug: string;
   description: string;
   price: number;
+  currency: string;
   redirect_url?: string | null;
   is_active: boolean;
   icon: string;
-  theme: string;
 }
 
 const ProductFormModal: React.FC<ProductFormModalProps> = ({
@@ -39,11 +39,14 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
     slug: '',
     description: '',
     price: 0,
+    currency: 'USD',
     redirect_url: '',
     is_active: true,
-    icon: 'cube',
-    theme: 'default'
+    icon: 'cube'
   });
+  
+  // Separate state for the displayed price input value
+  const [priceDisplayValue, setPriceDisplayValue] = useState<string>('');
   
   const [slugModified, setSlugModified] = useState(false);
   const [currentDomain, setCurrentDomain] = useState<string>('');
@@ -51,28 +54,33 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
   useEffect(() => {
     if (product) {
+      // For existing products, we'll use the icon directly
       setFormData({
         name: product.name,
         slug: product.slug,
         description: product.description,
         price: product.price,
+        currency: product.currency || 'USD',
         redirect_url: product.redirect_url || '',
         is_active: product.is_active,
-        icon: product.icon || 'cube',
-        theme: product.theme || 'default'
+        icon: product.icon || getIconEmoji('rocket') // Use emoji directly
       });
+      // Set display value for price - always show the value, even for zero
+      setPriceDisplayValue(product.price.toString().replace('.', ','));
       setSlugModified(true); // Don't auto-generate slug when editing
     } else {
+      // For new products, use the emoji from the start
       setFormData({
         name: '',
         slug: '',
         description: '',
         price: 0,
+        currency: 'USD',
         redirect_url: '',
         is_active: true,
-        icon: 'cube',
-        theme: 'default'
+        icon: getIconEmoji('rocket') // Use emoji directly for new products
       });
+      setPriceDisplayValue('');
       setSlugModified(false);
     }
     
@@ -123,11 +131,6 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         ...prev,
         [name]: generateSlug(value)
       }));
-    } else if (name === 'price') {
-      setFormData(prev => ({
-        ...prev,
-        [name]: parseFloat(value) || 0
-      }));
     } else {
       setFormData(prev => ({
         ...prev,
@@ -152,9 +155,11 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
   };
 
   const handleIconSelect = (icon: string) => {
+    // The IconSelector now directly returns the emoji character
+    // So we can just use it directly
     setFormData(prev => ({
       ...prev,
-      icon
+      icon: icon // The icon is already the emoji character
     }));
   };
 
@@ -166,10 +171,6 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
       aria-labelledby="product-form-title"
       role="dialog"
       aria-modal="true"
-      onClick={(e) => {
-        // Close modal when clicking the backdrop (not the modal content)
-        if (e.target === e.currentTarget) onClose();
-      }}
     >
       <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl p-6 shadow-xl animate-modal-appear">
         <div className="flex items-center justify-between mb-4">
@@ -214,10 +215,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
           }}>
           {/* Product Preview */}
           <div className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-            <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-white ${getThemeColorClass(formData.theme)}`}>
-              <svg className="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={getIconPath(formData.icon)} />
-              </svg>
+            <div className="w-12 h-12 flex items-center justify-center">
+              <span className="text-3xl" aria-label="Product icon">{formData.icon}</span>
             </div>
             <div>
               <h4 className="font-medium text-gray-900 dark:text-white">{formData.name || 'Product Name'}</h4>
@@ -300,38 +299,87 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Price ($)
+                Price
               </label>
-              <input
-                type="number"
-                id="price"
-                name="price"
-                value={formData.price}
-                onChange={handleInputChange}
-                min="0"
-                step="0.01"
-                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="theme" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Theme
-              </label>
-              <ThemeSelector
-                selectedTheme={formData.theme}
-                onSelectTheme={(theme) => {
-                  setFormData(prev => ({
-                    ...prev,
-                    theme
-                  }));
-                }}
-                themes={THEME_OPTIONS}
-              />
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="text-gray-500 dark:text-gray-400 sm:text-sm min-w-[24px]">
+                    {formData.currency === 'PLN' || formData.currency === 'CHF' ? '' : getCurrencySymbol(formData.currency)}
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  id="price"
+                  name="price"
+                  value={priceDisplayValue}
+                  onChange={(e) => {
+                    const inputValue = e.target.value;
+                    
+                    // Allow empty input (convert to '0')
+                    if (inputValue === '') {
+                      setPriceDisplayValue('0');
+                      setFormData(prev => ({
+                        ...prev,
+                        price: 0
+                      }));
+                      return;
+                    }
+                    
+                    // Allow digits, comma, and dot
+                    if (!/^[\d,.]*$/.test(inputValue)) {
+                      return; // Don't update if invalid characters
+                    }
+                    
+                    // Replace comma with dot for processing
+                    const processedValue = inputValue.replace(',', '.');
+                    
+                    // Ensure only one decimal point
+                    const dotCount = (processedValue.match(/\./g) || []).length;
+                    if (dotCount > 1) {
+                      return; // Don't allow multiple decimal points
+                    }
+                    
+                    // Check if it's a valid number format
+                    if (/^\d*\.?\d{0,2}$/.test(processedValue)) {
+                      const numericValue = parseFloat(processedValue);
+                      
+                      // Update both display value and form data
+                      setPriceDisplayValue(inputValue);
+                      setFormData(prev => ({
+                        ...prev,
+                        price: isNaN(numericValue) ? 0 : numericValue
+                      }));
+                    }
+                  }}
+                  placeholder={formData.currency === 'PLN' || formData.currency === 'CHF' ? `0,00 ${getCurrencySymbol(formData.currency)}` : "0,00"}
+                  className={`${(formData.currency === 'PLN' || formData.currency === 'CHF') ? 'pl-3' : 'pl-12'} block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:ring-opacity-50 transition-all duration-150`}
+                  required
+                  aria-describedby="price-currency"
+                />
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                  <select
+                    id="currency"
+                    name="currency"
+                    value={formData.currency}
+                    onChange={handleInputChange}
+                    className="h-full py-0 pl-2 pr-7 border-transparent bg-transparent text-gray-500 dark:text-gray-400 sm:text-sm rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    aria-label="Currency"
+                  >
+                    {CURRENCIES.map(currency => (
+                      <option key={currency.code} value={currency.code}>
+                        {currency.code}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Enter price in {CURRENCIES.find(c => c.code === formData.currency)?.name || formData.currency}.
+              </p>
             </div>
 
             <div>
@@ -379,31 +427,36 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             </label>
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-gray-500"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 ease-in-out transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              {isSubmitting ? (
-                <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  {product ? 'Updating...' : 'Creating...'}
-                </span>
-              ) : (
-                product ? 'Update Product' : 'Create Product'
-              )}
-            </button>
+          <div className="flex justify-between items-center pt-6 border-t border-gray-200 dark:border-gray-700 mt-6">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Use buttons to close this form
+            </p>
+            <div className="flex space-x-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 ease-in-out transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {product ? 'Updating...' : 'Creating...'}
+                  </span>
+                ) : (
+                  product ? 'Update Product' : 'Create Product'
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>

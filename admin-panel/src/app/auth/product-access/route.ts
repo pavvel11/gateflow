@@ -26,9 +26,9 @@ export async function GET(request: Request) {
   try {
     console.log(`[ProductAccess] Processing access for user ${user.id} to product ${productSlug}`);
     
-    // First, check if the user already has access to the product
+    // First, check if the user already has access to the product using the view
     const { data: existingAccess, error: accessError } = await supabase
-      .from('user_product_access')
+      .from('user_product_access_by_slug')
       .select('*')
       .eq('user_id', user.id)
       .eq('product_slug', productSlug)
@@ -66,23 +66,22 @@ export async function GET(request: Request) {
       if (product.price === 0) {
         console.log(`[ProductAccess] Product is free, granting access`);
         
-        // Grant access for free products
+        // Grant access for free products using the secure RPC function
         const { error: insertError } = await supabase
-          .from('user_product_access')
-          .insert({
-            user_id: user.id,
-            product_slug: productSlug
+          .rpc('grant_product_access', {
+            user_id_param: user.id,
+            product_slug_param: productSlug
           });
           
         if (insertError) {
           console.error(`[ProductAccess] Error inserting access record:`, insertError);
           // If we couldn't insert the record but it's because it already exists (duplicate key),
           // we can still proceed to the redirect
-          if (insertError.code !== '23505') { // PostgreSQL duplicate key error
-            // For other errors, redirect to the product page anyway - let the page handle it
-            redirect(`/p/${productSlug}`);
-            return;
-          }
+          // With the RPC function, we don't need to worry about duplicate key errors
+          // as it handles that internally with ON CONFLICT DO NOTHING
+          console.error(`[ProductAccess] Error granting access via RPC:`, insertError);
+          redirect(`/p/${productSlug}`);
+          return;
         } else {
           console.log(`[ProductAccess] Access granted successfully`);
         }
