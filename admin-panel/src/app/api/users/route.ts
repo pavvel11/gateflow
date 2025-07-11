@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') ?? '1', 10);
+    const limit = parseInt(searchParams.get('limit') ?? '10', 10);
+    const searchTerm = searchParams.get('search') || '';
+    const sortBy = searchParams.get('sortBy') || 'user_created_at';
+    const sortOrder = searchParams.get('sortOrder') || 'desc';
+
     const supabase = await createClient();
 
     // Check if user is authenticated
@@ -11,11 +18,20 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get users with their access statistics from the view
-    const { data: userStats, error: statsError } = await supabase
+    // Base query
+    let query = supabase
       .from('user_access_stats')
-      .select('*')
-      .order('user_created_at', { ascending: false });
+      .select('*', { count: 'exact' });
+
+    // Apply search filter
+    if (searchTerm) {
+      query = query.ilike('email', `%${searchTerm}%`);
+    }
+    
+    // Get users with their access statistics from the view
+    const { data: userStats, error: statsError, count } = await query
+      .order(sortBy, { ascending: sortOrder === 'asc' })
+      .range((page - 1) * limit, page * limit - 1);
 
     if (statsError) {
       console.error('Error fetching user stats:', statsError);
@@ -65,7 +81,14 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json({ users });
+    return NextResponse.json({ 
+      users,
+      pagination: {
+        total: count,
+        totalPages: Math.ceil((count || 0) / limit),
+        currentPage: page,
+      }
+    });
   } catch (error) {
     console.error('Error in users API:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

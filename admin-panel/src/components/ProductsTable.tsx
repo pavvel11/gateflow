@@ -19,6 +19,9 @@ interface ProductsTableProps {
   totalItems: number;
   onPageChange: (page: number) => void;
   limit: number;
+  sortBy: string;
+  sortOrder: 'asc' | 'desc';
+  onSort: (column: string) => void;
 }
 
 const ProductsTable: React.FC<ProductsTableProps> = ({
@@ -33,10 +36,30 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
   totalPages,
   totalItems,
   onPageChange,
-  limit
+  limit,
+  sortBy,
+  sortOrder,
+  onSort,
 }) => {
   const startIndex = (currentPage - 1) * limit + 1;
   const endIndex = Math.min(startIndex + products.length - 1, totalItems);
+
+  const SortableHeader = ({ column, title }: { column: string; title: string }) => (
+    <th
+      scope="col"
+      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+      onClick={() => onSort(column)}
+    >
+      <div className="flex items-center">
+        <span>{title}</span>
+        {sortBy === column && (
+          <span className="ml-1">
+            {sortOrder === 'asc' ? '▲' : '▼'}
+          </span>
+        )}
+      </div>
+    </th>
+  );
 
   if (loading) {
     return (
@@ -75,21 +98,11 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Product Name
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Price
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Date Created
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Last Updated
-                  </th>
+                  <SortableHeader column="name" title="Product Name" />
+                  <SortableHeader column="price" title="Price" />
+                  <SortableHeader column="is_active" title="Status" />
+                  <SortableHeader column="created_at" title="Date Created" />
+                  <SortableHeader column="updated_at" title="Last Updated" />
                   <th scope="col" className="relative px-6 py-3">
                     <span className="sr-only">Actions</span>
                   </th>

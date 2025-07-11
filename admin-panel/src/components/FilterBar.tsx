@@ -12,10 +12,10 @@ interface FilterBarProps {
   onSearchChange: (value: string) => void;
   statusFilter: string;
   onStatusFilterChange: (value: string) => void;
-  sortBy: string;
-  sortOrder: 'asc' | 'desc';
-  onSortChange: (field: string, order: 'asc' | 'desc') => void;
-  onExportClick?: () => void;
+  onAddProduct: () => void;
+  onExport: () => void;
+  onRefresh: () => void;
+  addButtonRef: React.RefObject<HTMLButtonElement | null>;
 }
 
 const statusOptions: FilterOption[] = [
@@ -24,30 +24,19 @@ const statusOptions: FilterOption[] = [
   { label: 'Inactive', value: 'inactive' }
 ];
 
-const sortOptions: FilterOption[] = [
-  { label: 'Name', value: 'name' },
-  { label: 'Price', value: 'price' },
-  { label: 'Date Created', value: 'created_at' },
-  { label: 'Status', value: 'is_active' }
-];
-
 const FilterBar: React.FC<FilterBarProps> = ({
   searchTerm,
   onSearchChange,
   statusFilter,
   onStatusFilterChange,
-  sortBy,
-  sortOrder,
-  onSortChange,
-  onExportClick
+  onAddProduct,
+  onExport,
+  onRefresh,
+  addButtonRef,
 }) => {
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     onSearchChange(e.target.value);
   }, [onSearchChange]);
-
-  const handleSortOrderToggle = useCallback(() => {
-    onSortChange(sortBy, sortOrder === 'asc' ? 'desc' : 'asc');
-  }, [onSortChange, sortBy, sortOrder]);
 
   return (
     <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0 md:space-x-2">
@@ -84,65 +73,45 @@ const FilterBar: React.FC<FilterBarProps> = ({
             ))}
           </select>
         </div>
+      </div>
 
-        {/* Sort By */}
-        <div className="inline-flex items-center">
-          <label htmlFor="sort-by" className="mr-2 text-sm text-gray-700 dark:text-gray-300 hidden sm:inline">
-            Sort by:
-          </label>
-          <div className="relative">
-            <div className="flex items-center rounded-lg overflow-hidden shadow-sm bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
-              <select
-                id="sort-by"
-                value={sortBy}
-                onChange={(e) => onSortChange(e.target.value, sortOrder)}
-                className="text-sm bg-transparent border-0 text-gray-900 dark:text-white py-2 pl-3 pr-8 focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
-                style={{
-                  backgroundImage: "none"
-                }}
-              >
-                {sortOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute right-8 flex items-center pr-2 text-gray-500 dark:text-gray-400">
-                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" clipRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-                </svg>
-              </div>
-              <button
-                onClick={handleSortOrderToggle}
-                className="px-2 py-2 h-full bg-transparent text-gray-700 dark:text-gray-300 border-l border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors"
-                aria-label={sortOrder === 'asc' ? 'Sort ascending' : 'Sort descending'}
-              >
-                {sortOrder === 'asc' ? (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                  </svg>
-                ) : (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
+      <div className="flex items-center space-x-3">
+        {/* Refresh Button */}
+        <button
+          onClick={onRefresh}
+          className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 shadow-sm hover:shadow-md"
+          title="Refresh products"
+        >
+          <svg className="-ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+          </svg>
+          <span className="hidden sm:inline">Refresh</span>
+        </button>
 
         {/* Export Button */}
-        {onExportClick && (
-          <button
-            onClick={onExportClick}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-          >
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-            </svg>
-            Export
-          </button>
-        )}
+        <button
+          onClick={onExport}
+          className="inline-flex items-center px-4 py-2 border border-emerald-300 dark:border-emerald-600 rounded-lg text-sm font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 shadow-sm hover:shadow-md"
+          title="Export products to CSV"
+        >
+          <svg className="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span className="hidden sm:inline">Export</span>
+        </button>
+
+        {/* Add Product Button */}
+        <button
+          ref={addButtonRef}
+          onClick={onAddProduct}
+          className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
+          title="Add new product"
+        >
+          <svg className="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+          </svg>
+          <span className="hidden sm:inline">Add Product</span>
+        </button>
       </div>
     </div>
   );

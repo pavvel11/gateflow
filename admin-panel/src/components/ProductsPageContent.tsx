@@ -37,6 +37,15 @@ const ProductsPageContent: React.FC = () => {
   const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('asc');
+    }
+  };
+
   // Debounce search term to avoid excessive API calls
   useEffect(() => {
     const timerId = setTimeout(() => {
@@ -182,8 +191,7 @@ const ProductsPageContent: React.FC = () => {
   };
 
   const handlePreviewProduct = (product: Product) => {
-    const gatekeeperUrl = `${window.location.origin}/p/${product.slug}`;
-    window.open(gatekeeperUrl, '_blank');
+    window.open(`/products/${product.slug}`, '_blank');
   };
 
   const handlePreviewRedirect = (product: Product) => {
@@ -194,11 +202,11 @@ const ProductsPageContent: React.FC = () => {
     }
   };
 
-  const handleDeleteProduct = (product: Product) => {
+  const handleDeleteProductClick = (product: Product) => {
     setProductToDelete(product);
   };
 
-  const handleCreateNewProduct = () => {
+  const handleAddNewProduct = () => {
     setEditingProduct(null);
     setShowProductForm(true);
   };
@@ -213,11 +221,6 @@ const ProductsPageContent: React.FC = () => {
     setCurrentPage(1);
   };
 
-  const handleSortChange = (field: string, order: 'asc' | 'desc') => {
-    setSortBy(field);
-    setSortOrder(order);
-  };
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -228,7 +231,7 @@ const ProductsPageContent: React.FC = () => {
       return;
     }
     setShowExportConfirmation(true);
-  }, [products.length, addToast]);
+  }, [products, addToast]);
   
   const confirmExport = () => {
     const filename = `products_${new Date().toISOString().split('T')[0]}.csv`;
@@ -239,43 +242,22 @@ const ProductsPageContent: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Products
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Manage your products and access control
-          </p>
-        </div>
-        <button
-          ref={addButtonRef}
-          onClick={handleCreateNewProduct}
-          className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          <svg className="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Create Product
-        </button>
-      </div>
-
       <FilterBar
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
         statusFilter={statusFilter}
         onStatusFilterChange={handleStatusFilterChange}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        onSortChange={handleSortChange}
-        onExportClick={handleExportCsv}
+        onAddProduct={handleAddNewProduct}
+        onExport={handleExportCsv}
+        onRefresh={fetchProducts}
+        addButtonRef={addButtonRef}
       />
       <ProductsTable
         products={products}
         loading={loading}
         error={error}
         onEditProduct={handleEditProduct}
-        onDeleteProduct={handleDeleteProduct}
+        onDeleteProduct={handleDeleteProductClick}
         onPreviewProduct={handlePreviewProduct}
         onPreviewRedirect={handlePreviewRedirect}
         currentPage={currentPage}
@@ -283,6 +265,9 @@ const ProductsPageContent: React.FC = () => {
         totalItems={totalItems}
         onPageChange={handlePageChange}
         limit={limit}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSort={handleSort}
       />
 
       {showProductForm && (

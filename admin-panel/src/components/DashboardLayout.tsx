@@ -57,18 +57,6 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
                 >
                   Users
                 </Link>
-                <Link
-                  href="/dashboard/analytics"
-                  className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Analytics
-                </Link>
-                <Link
-                  href="/auth-debug"
-                  className="text-orange-500 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Auth Debug
-                </Link>
               </div>
             </div>
             

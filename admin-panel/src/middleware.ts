@@ -52,6 +52,15 @@ export async function middleware(request: NextRequest) {
   const isAccessDeniedRoute = request.nextUrl.pathname === '/access-denied'
   const isProductPageRoute = request.nextUrl.pathname.startsWith('/p/')
   const isProductRedirectRoute = request.nextUrl.pathname.startsWith('/product/')
+  const isHomeRoute = request.nextUrl.pathname === '/'
+  
+  // Check if this might be a 404 route by looking at common protected paths
+  // If it's not a known protected route pattern, allow it through (let Next.js handle 404)
+  const isKnownProtectedRoute = 
+    request.nextUrl.pathname.startsWith('/dashboard') ||
+    request.nextUrl.pathname.startsWith('/admin') ||
+    request.nextUrl.pathname.startsWith('/settings') ||
+    request.nextUrl.pathname.startsWith('/profile')
   
   // Redirect authenticated users away from login page
   if (session && isLoginRoute) {
@@ -59,12 +68,14 @@ export async function middleware(request: NextRequest) {
   }
   
   // Public routes that don't require authentication
-  const isPublicRoute = isLoginRoute || isAuthRoute || isAccessDeniedRoute || isProductPageRoute || isProductRedirectRoute
+  const isPublicRoute = isLoginRoute || isAuthRoute || isAccessDeniedRoute || isProductPageRoute || isProductRedirectRoute || isHomeRoute
   
-  // Redirect unauthenticated users to login page for protected routes (but not for product pages)
+  // Only redirect to login for known protected routes when user is not authenticated
+  // This allows 404 pages and other unknown routes to be handled by Next.js
   if (
     !session && 
-    !isPublicRoute
+    !isPublicRoute &&
+    isKnownProtectedRoute
   ) {
     return NextResponse.redirect(new URL('/login', origin))
   }
