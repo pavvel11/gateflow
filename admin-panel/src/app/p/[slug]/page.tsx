@@ -2,7 +2,6 @@ import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import ProductView from './components/ProductView';
-import AccessGrantedView from './components/AccessGrantedView';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -12,7 +11,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   
-  // Fetch product data
+  // Fetch product data - for metadata we can check active products only
   const supabase = await createClient();
   const { data: product } = await supabase
     .from('products')
@@ -36,57 +35,62 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params;
   
-  // Fetch product data from Supabase
+  // First, get the current user to check if they have access
   const supabase = await createClient();
-  const { data: product, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('slug', slug)
-    .eq('is_active', true)
-    .single();
-
-  // If product not found or error, return 404
-  if (error || !product) {
-    console.error('Product not found:', error);
-    return notFound();
-  }
-
-  // Get current user (if authenticated)
   const { data: { user } } = await supabase.auth.getUser();
   
-  // Check if user has access to this product
-  let hasAccess = false;
-
+  let product = null;
+  
   if (user) {
-    // Check if user is an admin (admins have access to all products)
-    const { data: isAdminData } = await supabase
-      .rpc('is_admin', { user_id: user.id });
+    // For logged in users: check if they have access to the product
+    // If they do, show the product even if it's inactive
+    const { data: accessData } = await supabase
+      .from('user_product_access')
+      .select('product_id')
+      .eq('user_id', user.id)
+      .single();
     
-    const isAdmin = isAdminData || false;
-
-    // If not admin, check for specific product access
-    if (!isAdmin) {
-      // Using the check_user_product_access RPC function which handles the relation correctly
-      const { data: hasProductAccess } = await supabase
-        .rpc('check_user_product_access', {
-          user_id_param: user.id,
-          product_slug_param: slug
-        });
+    if (accessData) {
+      // User has access to some product, fetch the requested product regardless of active status
+      const { data: productData } = await supabase
+        .from('products')
+        .select('*')
+        .eq('slug', slug)
+        .single();
       
-      hasAccess = !!hasProductAccess;
+      // But only if user actually has access to THIS specific product
+      const { data: specificAccess } = await supabase
+        .from('user_product_access')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('product_id', productData?.id)
+        .single();
       
-      // hasAccess is already set in the previous statement
-    } else {
-      // Admins always have access to all products
-      hasAccess = true;
+      if (specificAccess && productData) {
+        product = productData;
+      }
     }
   }
   
-  // If user has access, show the access granted view
-  if (hasAccess) {
-    return <AccessGrantedView product={product} />;
+  // If no product found yet (user not logged in, or no access, or product doesn't exist)
+  // Try to fetch active product
+  if (!product) {
+    const { data: activeProduct } = await supabase
+      .from('products')
+      .select('*')
+      .eq('slug', slug)
+      .eq('is_active', true)
+      .single();
+    
+    product = activeProduct;
   }
-  
-  // Otherwise, show the standard product view for purchase/signup
+
+  // If still no product found, return 404
+  if (!product) {
+    console.log('Product not found or user has no access');
+    return notFound();
+  }
+
+  // The ProductView component will handle all logic for access checking and rendering
   return <ProductView product={product} />;
 }

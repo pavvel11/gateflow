@@ -47,7 +47,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const body = await request.json();
-    const { name, slug, description, price, currency, is_active, icon, theme, redirect_url } = body;
+    const { name, slug, description, price, currency, is_active, is_featured, icon, theme, redirect_url } = body;
 
     // Validate required fields
     if (!name || !slug || !description || price === undefined) {
@@ -98,6 +98,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         currency: currency || 'USD',
         redirect_url: redirect_url || null,
         is_active: is_active !== undefined ? is_active : true,
+        is_featured: is_featured !== undefined ? is_featured : false,
         icon: icon || 'cube',
         theme: theme || 'blue',
         updated_at: new Date().toISOString()

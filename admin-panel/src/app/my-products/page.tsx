@@ -1,0 +1,324 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+
+interface Product {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  icon: string;
+  price: number;
+  currency: string;
+  is_active: boolean;
+  is_featured: boolean;
+  created_at: string;
+}
+
+interface UserProductAccess {
+  id: string;
+  product: Product;
+  granted_at: string;
+}
+
+interface UserAccessData {
+    id: string;
+    created_at: string;
+    product: Product;
+}
+
+const formatPrice = (price: number | null, currency: string | null = 'USD') => {
+  if (price === null) return 'N/A';
+  const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
+  if (isNaN(numericPrice)) return 'Invalid Price';
+
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency || 'USD',
+  }).format(numericPrice);
+};
+
+export default function MyProductsPage() {
+  const { user, loading: authLoading } = useAuth();
+  const [userProducts, setUserProducts] = useState<UserProductAccess[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const supabase = createClient();
+
+  const fetchProductsData = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Fetch products user has access to
+      const { data: userAccessData, error: userError } = await supabase
+        .from('user_product_access')
+        .select(`
+          id,
+          created_at,
+          product:products!inner (
+            id, name, slug, description, icon, price, currency, is_active, is_featured, created_at
+          )
+        `)
+        .eq('user_id', user.id);
+
+      if (userError) throw userError;
+      
+      const transformedUserProducts: UserProductAccess[] = (userAccessData as unknown as UserAccessData[] || []).map((item) => ({
+        id: item.id,
+        granted_at: item.created_at,
+        product: item.product,
+      })).filter((item): item is UserProductAccess => item.product !== null);
+
+      // Fetch all active products
+      const { data: allProductsData, error: productsError } = await supabase
+        .from('products')
+        .select('*')
+        .eq('is_active', true)
+        .order('is_featured', { ascending: false })
+        .order('price', { ascending: true });
+
+      if (productsError) throw productsError;
+
+      setUserProducts(transformedUserProducts);
+      setAllProducts(allProductsData || []);
+
+    } catch (err) {
+        const error = err as Error;
+        console.error('Error fetching products data:', error);
+        setError(error.message || 'Failed to load products data.');
+    } finally {
+      setLoading(false);
+    }
+  }, [user, supabase]);
+
+  useEffect(() => {
+    if (!authLoading) {
+      fetchProductsData();
+    }
+  }, [authLoading, fetchProductsData]);
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <p className="text-gray-300">Loading your products...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+        <div className="text-center p-4">
+          <div className="text-red-400 text-6xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-bold text-white mb-2">Unable to Load Your Products</h1>
+          <p className="text-gray-300 mb-6">{error}</p>
+          <button 
+            onClick={fetchProductsData} 
+            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+        <div className="text-center p-4">
+          <h2 className="text-2xl font-bold text-white mb-4">Access Required</h2>
+          <p className="text-gray-300 mb-6">Please log in to see your products.</p>
+          <Link
+            href="/login"
+            className="inline-flex items-center px-6 py-3 border border-transparent rounded-lg text-base font-medium text-white bg-purple-600 hover:bg-purple-700"
+          >
+            Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const accessibleProductIds = new Set(userProducts.map(up => up.product.id));
+  const availableProducts = allProducts.filter(p => !accessibleProductIds.has(p.id));
+  const freeProducts = availableProducts.filter(p => p.price === 0);
+  const paidProducts = availableProducts.filter(p => p.price > 0);
+
+  const renderProductCard = (product: Product, accessible: boolean) => (
+    <div
+      key={product.id}
+      className={`group bg-white/5 backdrop-blur-md border rounded-xl p-6 hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:shadow-2xl relative overflow-hidden ${accessible ? 'border-green-500/30' : 'border-white/10'}`}
+    >
+      {/* Badges */}
+      <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
+        {accessible && (
+          <div className="flex items-center px-2 py-1 bg-green-500/20 border border-green-500/30 rounded-full text-xs font-medium text-green-300">
+            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+            Accessible
+          </div>
+        )}
+        {product.is_featured && (
+          <div className="flex items-center px-3 py-1 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-xs font-medium text-yellow-300">
+            <svg className="w-3 h-3 text-yellow-400 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            Featured
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center mb-4">
+        <div className="text-4xl mr-4">{product.icon}</div>
+        <div className="flex-1">
+          <h3 className={`text-xl font-semibold text-white transition-colors ${accessible ? 'group-hover:text-green-300' : 'group-hover:text-purple-300'}`}>
+            {product.name}
+          </h3>
+          <div className="flex items-center mt-1">
+            {product.price > 0 ? (
+               <div className="flex items-center px-2 py-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full">
+                <svg className="w-3 h-3 text-purple-400 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+                <span className="text-xs font-medium text-purple-300">Premium</span>
+              </div>
+            ) : (
+              <span className="inline-flex items-center px-2 py-1 bg-green-500/20 border border-green-500/30 rounded text-xs font-medium text-green-300">
+                FREE
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      <p className="text-gray-300 mb-6 min-h-[3rem] line-clamp-2">
+        {product.description}
+      </p>
+      
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-2xl font-bold text-purple-400">
+          {formatPrice(product.price, product.currency)}
+        </div>
+      </div>
+
+      <Link
+        href={`/p/${product.slug}`}
+        className={`block w-full text-center font-semibold py-3 px-4 rounded-lg transition-all duration-200 hover:shadow-lg ${accessible ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'}`}
+      >
+        {accessible ? 'Launch Product' : 'View Product'}
+      </Link>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white">
+      {/* Navigation */}
+      <nav className="relative z-10 bg-black/20 backdrop-blur-md border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <Link href="/" className="flex items-center">
+                <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <span className="ml-3 text-xl font-bold text-white">GateFlow</span>
+              </Link>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <div className="text-sm text-gray-300 hidden sm:block">
+                {user.email}
+              </div>
+              <button
+                onClick={signOut}
+                className="px-4 py-2 border border-white/20 hover:bg-white/10 text-white rounded-lg transition-colors font-medium"
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Header */}
+      <header className="relative pt-20 pb-16 text-center">
+        <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
+            My Products
+          </span>
+        </h1>
+        <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+          Here are all your accessible products and other available resources.
+        </p>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        {/* My Access Section */}
+        {userProducts.length > 0 && (
+          <section className="mb-16">
+            <h2 className="text-3xl font-bold text-white mb-8">My Accessible Products</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {userProducts.map((userProduct) => renderProductCard(userProduct.product, true))}
+            </div>
+          </section>
+        )}
+
+        {/* Available Products Section */}
+        {(freeProducts.length > 0 || paidProducts.length > 0) && (
+          <section>
+            <h2 className="text-3xl font-bold text-white mb-8">Available Products</h2>
+            
+            {freeProducts.length > 0 && (
+              <div className="mb-12">
+                <h3 className="text-2xl font-semibold text-green-300 mb-6">Free Resources</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {freeProducts.map((product) => renderProductCard(product, false))}
+                </div>
+              </div>
+            )}
+
+            {paidProducts.length > 0 && (
+              <div>
+                <h3 className="text-2xl font-semibold text-purple-300 mb-6">Premium Solutions</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {paidProducts.map((product) => renderProductCard(product, false))}
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Empty State */}
+        {userProducts.length === 0 && availableProducts.length === 0 && (
+          <div className="text-center py-20">
+            <div className="text-6xl mb-8">📦</div>
+            <h3 className="text-3xl font-bold text-white mb-4">No Products Available</h3>
+            <p className="text-xl text-gray-300 max-w-md mx-auto">
+              It looks like there are no products here at the moment. Check back later!
+            </p>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}

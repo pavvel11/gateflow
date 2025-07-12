@@ -62,6 +62,9 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/settings') ||
     request.nextUrl.pathname.startsWith('/profile')
   
+  // Routes that require authentication but not admin privileges
+  const isUserRoute = request.nextUrl.pathname.startsWith('/my-products')
+  
   // Redirect authenticated users away from login page
   if (session && isLoginRoute) {
     return NextResponse.redirect(new URL('/dashboard', origin))
@@ -75,7 +78,7 @@ export async function middleware(request: NextRequest) {
   if (
     !session && 
     !isPublicRoute &&
-    isKnownProtectedRoute
+    (isKnownProtectedRoute || isUserRoute)
   ) {
     return NextResponse.redirect(new URL('/login', origin))
   }

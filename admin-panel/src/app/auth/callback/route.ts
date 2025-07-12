@@ -17,27 +17,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', requestUrl.origin))
   }
   
-  // Check for custom redirect URL (for product access etc.)
-  let redirectPath = '/dashboard';
-  const redirectTo = requestUrl.searchParams.get('redirect_to');
+  // Create server client to exchange the code for a session first
+  // We need a temporary response to collect cookies during auth process
+  const tempResponse = NextResponse.next()
   
-  if (redirectTo) {
-    try {
-      // Ensure the redirectTo is a valid URL path on our site (security)
-      const redirectToUrl = new URL(redirectTo, requestUrl.origin);
-      if (redirectToUrl.origin === requestUrl.origin) {
-        redirectPath = redirectToUrl.pathname + redirectToUrl.search;
-      }
-    } catch {
-      console.error('Invalid redirect URL:', redirectTo);
-    }
-  }
-  
-  // Use the request origin for redirects (works in any environment)
-  const redirectUrl = new URL(redirectPath, requestUrl.origin)
-  const response = NextResponse.redirect(redirectUrl)
-  
-  // Create server client to exchange the code for a session
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -47,8 +30,9 @@ export async function GET(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
+          // Set cookies on the temporary response object
           cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set({
+            tempResponse.cookies.set({
               name,
               value,
               ...options
@@ -59,10 +43,55 @@ export async function GET(request: NextRequest) {
     }
   )
   
-  // Exchange the code for a session
-  // This automatically updates the session cookies
-  await supabase.auth.exchangeCodeForSession(code)
+  // Exchange the code for a session first
+  const { data: { session }, error } = await supabase.auth.exchangeCodeForSession(code)
   
-  // Return the response with the updated cookies and redirect
-  return response
+  if (error || !session) {
+    console.error('Error exchanging code for session:', error)
+    return NextResponse.redirect(new URL('/login', requestUrl.origin))
+  }
+  
+  // Check for custom redirect URL (for product access etc.)
+  let redirectPath = '/dashboard' // default to dashboard
+  const redirectTo = requestUrl.searchParams.get('redirect_to')
+  
+  if (redirectTo) {
+    try {
+      // Ensure the redirectTo is a valid URL path on our site (security)
+      const redirectToUrl = new URL(redirectTo, requestUrl.origin)
+      if (redirectToUrl.origin === requestUrl.origin) {
+        redirectPath = redirectToUrl.pathname + redirectToUrl.search
+      }
+    } catch {
+      console.error('Invalid redirect URL:', redirectTo)
+    }
+  } else {
+    // No custom redirect, check user role to determine default redirect
+    try {
+      const { data: isAdmin } = await supabase.rpc('is_admin')
+      
+      if (isAdmin) {
+        redirectPath = '/dashboard' // Admins go to dashboard
+      } else {
+        redirectPath = '/my-products' // Regular users go to their products
+      }
+    } catch (error) {
+      console.error('Error checking admin status:', error)
+      // If we can't determine admin status, send to user page as safer default
+      redirectPath = '/my-products'
+    }
+  }
+  
+  // Use the request origin for redirects (works in any environment)
+  const redirectUrl = new URL(redirectPath, requestUrl.origin)
+  
+  // Create redirect response and transfer auth cookies
+  const redirectResponse = NextResponse.redirect(redirectUrl)
+  
+  // Transfer cookies from the temp response to the redirect response
+  tempResponse.cookies.getAll().forEach(cookie => {
+    redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+  })
+  
+  return redirectResponse
 }

@@ -120,7 +120,14 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                           </div>
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900 dark:text-white">{product.name}</div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">{product.name}</div>
+                            {product.is_featured && (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                                ⭐ Featured
+                              </span>
+                            )}
+                          </div>
                           <div className="text-sm text-gray-500 dark:text-gray-400">{product.slug}</div>
                         </div>
                       </div>

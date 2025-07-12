@@ -11,6 +11,7 @@ export interface Product {
   layout_template: string
   redirect_url?: string | null
   is_active: boolean
+  is_featured: boolean
   created_at: string
   updated_at: string
   tenant_id?: string
@@ -78,5 +79,64 @@ export interface UserWithAccess extends User {
     total_value: number
     last_access_granted_at: string | null
     first_access_granted_at: string | null
+  }
+}
+
+export interface WebhookConfig {
+  id: string
+  name: string
+  endpoint_url: string
+  is_enabled: boolean
+  is_global: boolean
+  product_id?: string | null
+  secret_key?: string | null
+  headers: Record<string, string>
+  retry_attempts: number
+  timeout_seconds: number
+  tenant_id?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface WebhookLog {
+  id: string
+  webhook_config_id: string
+  user_id?: string | null
+  product_id?: string | null
+  endpoint_url: string
+  request_payload: Record<string, unknown>
+  request_headers: Record<string, string>
+  response_status?: number | null
+  response_body?: string | null
+  response_headers: Record<string, string>
+  attempt_number: number
+  is_successful: boolean
+  error_message?: string | null
+  duration_ms?: number | null
+  tenant_id?: string
+  created_at: string
+}
+
+export interface WebhookPayload {
+  event: 'access_granted'
+  timestamp: string
+  user: {
+    id: string
+    email: string
+    created_at: string
+    email_confirmed_at?: string | null
+    last_sign_in_at?: string | null
+    user_metadata?: Record<string, unknown>
+  }
+  product: {
+    id: string
+    name: string
+    slug: string
+    description: string
+    icon: string
+    price: number
+    currency: string
+    is_featured: boolean
+    created_at: string
   }
 }

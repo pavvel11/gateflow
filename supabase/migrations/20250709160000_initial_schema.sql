@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS products (
   layout_template TEXT DEFAULT 'default' NOT NULL, -- Used by gatekeeper layouts
   stripe_price_id TEXT, -- Stripe integration
   is_active BOOLEAN NOT NULL DEFAULT true, -- Admin panel functionality
+  is_featured BOOLEAN NOT NULL DEFAULT false, -- Featured product checkbox
   tenant_id TEXT, -- Support for multi-tenancy
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
@@ -43,6 +44,47 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   action TEXT NOT NULL,
   user_id UUID NOT NULL,
   details JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+-- Create webhook_configs table for webhook automation
+CREATE TABLE IF NOT EXISTS webhook_configs (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  name TEXT NOT NULL, -- Human readable name for the webhook
+  endpoint_url TEXT NOT NULL, -- URL where webhook will be sent
+  is_enabled BOOLEAN NOT NULL DEFAULT true, -- Enable/disable webhook
+  is_global BOOLEAN NOT NULL DEFAULT false, -- Global webhook (all products) vs product-specific
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE, -- NULL for global webhooks
+  secret_key TEXT, -- Optional secret for webhook validation
+  headers JSONB DEFAULT '{}', -- Additional headers to send
+  retry_attempts INTEGER DEFAULT 3, -- Number of retry attempts
+  timeout_seconds INTEGER DEFAULT 30, -- Request timeout
+  tenant_id TEXT, -- Support for multi-tenancy
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  CONSTRAINT webhook_product_check CHECK (
+    (is_global = true AND product_id IS NULL) OR 
+    (is_global = false AND product_id IS NOT NULL)
+  )
+);
+
+-- Create webhook_logs table for tracking webhook deliveries
+CREATE TABLE IF NOT EXISTS webhook_logs (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  webhook_config_id UUID REFERENCES webhook_configs(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL, -- User who triggered the webhook
+  product_id UUID REFERENCES products(id) ON DELETE SET NULL, -- Product related to the webhook
+  endpoint_url TEXT NOT NULL, -- URL where webhook was sent (snapshot)
+  request_payload JSONB NOT NULL, -- Data sent in the webhook
+  request_headers JSONB DEFAULT '{}', -- Headers sent with the request
+  response_status INTEGER, -- HTTP status code received
+  response_body TEXT, -- Response body (if any)
+  response_headers JSONB DEFAULT '{}', -- Response headers received
+  attempt_number INTEGER DEFAULT 1, -- Which attempt this was (1, 2, 3...)
+  is_successful BOOLEAN DEFAULT false, -- Whether webhook was successful
+  error_message TEXT, -- Error message if failed
+  duration_ms INTEGER, -- How long the request took
+  tenant_id TEXT, -- Support for multi-tenancy
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
@@ -201,9 +243,89 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Create function to trigger webhooks when access is granted
+CREATE OR REPLACE FUNCTION trigger_access_granted_webhooks(
+    user_id_param UUID,
+    product_id_param UUID
+) RETURNS BOOLEAN AS $$
+DECLARE
+    webhook_record RECORD;
+    user_data JSONB;
+    product_data JSONB;
+    webhook_payload JSONB;
+BEGIN
+    -- Get user data
+    SELECT jsonb_build_object(
+        'id', id,
+        'email', email,
+        'created_at', created_at,
+        'email_confirmed_at', email_confirmed_at,
+        'last_sign_in_at', last_sign_in_at,
+        'user_metadata', raw_user_meta_data
+    ) INTO user_data
+    FROM auth.users
+    WHERE id = user_id_param;
+    
+    -- Get product data
+    SELECT jsonb_build_object(
+        'id', id,
+        'name', name,
+        'slug', slug,
+        'description', description,
+        'icon', icon,
+        'price', price,
+        'currency', currency,
+        'is_featured', is_featured,
+        'created_at', created_at
+    ) INTO product_data
+    FROM products
+    WHERE id = product_id_param;
+    
+    -- Create webhook payload
+    webhook_payload := jsonb_build_object(
+        'event', 'access_granted',
+        'timestamp', NOW(),
+        'user', user_data,
+        'product', product_data
+    );
+    
+    -- Find all enabled webhooks (global + product-specific)
+    FOR webhook_record IN
+        SELECT id, endpoint_url, secret_key, headers, retry_attempts, timeout_seconds
+        FROM webhook_configs
+        WHERE is_enabled = true 
+          AND (is_global = true OR product_id = product_id_param)
+    LOOP
+        -- Log the webhook (will be picked up by webhook processor)
+        INSERT INTO webhook_logs (
+            webhook_config_id,
+            user_id,
+            product_id,
+            endpoint_url,
+            request_payload,
+            request_headers,
+            attempt_number,
+            is_successful
+        ) VALUES (
+            webhook_record.id,
+            user_id_param,
+            product_id_param,
+            webhook_record.endpoint_url,
+            webhook_payload,
+            webhook_record.headers,
+            1,
+            false -- Will be updated by webhook processor
+        );
+    END LOOP;
+    
+    RETURN true;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_products_slug ON products(slug);
 CREATE INDEX IF NOT EXISTS idx_products_is_active ON products(is_active);
+CREATE INDEX IF NOT EXISTS idx_products_is_featured ON products(is_featured);
 CREATE INDEX IF NOT EXISTS idx_products_price ON products(price);
 CREATE INDEX IF NOT EXISTS idx_products_created_at ON products(created_at);
 CREATE INDEX IF NOT EXISTS idx_user_product_access_user_id ON user_product_access(user_id);
@@ -214,10 +336,24 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
 CREATE INDEX IF NOT EXISTS idx_products_tenant_id ON products(tenant_id) WHERE tenant_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_user_product_access_tenant_id ON user_product_access(tenant_id) WHERE tenant_id IS NOT NULL;
 
+-- Indexes for webhook tables
+CREATE INDEX IF NOT EXISTS idx_webhook_configs_product_id ON webhook_configs(product_id);
+CREATE INDEX IF NOT EXISTS idx_webhook_configs_is_enabled ON webhook_configs(is_enabled);
+CREATE INDEX IF NOT EXISTS idx_webhook_configs_is_global ON webhook_configs(is_global);
+CREATE INDEX IF NOT EXISTS idx_webhook_configs_tenant_id ON webhook_configs(tenant_id) WHERE tenant_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_webhook_logs_webhook_config_id ON webhook_logs(webhook_config_id);
+CREATE INDEX IF NOT EXISTS idx_webhook_logs_user_id ON webhook_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_webhook_logs_product_id ON webhook_logs(product_id);
+CREATE INDEX IF NOT EXISTS idx_webhook_logs_created_at ON webhook_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_webhook_logs_is_successful ON webhook_logs(is_successful);
+CREATE INDEX IF NOT EXISTS idx_webhook_logs_tenant_id ON webhook_logs(tenant_id) WHERE tenant_id IS NOT NULL;
+
 -- Enable Row Level Security
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_product_access ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE webhook_configs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE webhook_logs ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for products table
 -- Allow public read access for all products (needed by gatekeeper.js)
@@ -271,6 +407,26 @@ CREATE POLICY "Allow authenticated users to insert audit logs" ON audit_logs
   TO authenticated
   WITH CHECK (true);
 
+-- RLS Policies for webhook_configs table
+-- Only authenticated users can manage webhook configs (admin panel)
+CREATE POLICY "Allow authenticated users to manage webhook configs" ON webhook_configs
+  FOR ALL
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
+
+-- RLS Policies for webhook_logs table
+-- Only authenticated users can read webhook logs (admin panel)
+CREATE POLICY "Allow authenticated users to read webhook logs" ON webhook_logs
+  FOR SELECT
+  TO authenticated
+  USING (true);
+
+-- Allow service role to insert webhook logs (used by webhook system)
+CREATE POLICY "Allow service role to insert webhook logs" ON webhook_logs
+  FOR INSERT
+  WITH CHECK (true);
+
 -- Create function to automatically update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -283,6 +439,12 @@ $$ language plpgsql;
 -- Create trigger for products table
 CREATE TRIGGER update_products_updated_at
   BEFORE UPDATE ON products
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- Create trigger for webhook_configs table
+CREATE TRIGGER update_webhook_configs_updated_at
+  BEFORE UPDATE ON webhook_configs
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
