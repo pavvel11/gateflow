@@ -119,7 +119,7 @@ const BaseModal: React.FC<BaseModalProps> = ({
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
@@ -132,6 +132,8 @@ const BaseModal: React.FC<BaseModalProps> = ({
           rounded-2xl shadow-2xl 
           transform transition-all duration-300 ease-out
           animate-[modalIn_0.3s_ease-out]
+          max-h-[90vh] overflow-y-auto
+          my-8
           ${className}
         `}
         onClick={(e) => e.stopPropagation()}

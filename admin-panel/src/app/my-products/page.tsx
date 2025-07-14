@@ -42,7 +42,7 @@ const formatPrice = (price: number | null, currency: string | null = 'USD') => {
 };
 
 export default function MyProductsPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, isAdmin, loading: authLoading, signOut } = useAuth();
   const [userProducts, setUserProducts] = useState<UserProductAccess[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,10 +107,6 @@ export default function MyProductsPage() {
       fetchProductsData();
     }
   }, [authLoading, fetchProductsData]);
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
 
   if (authLoading || loading) {
     return (
@@ -249,6 +245,20 @@ export default function MyProductsPage() {
               <div className="text-sm text-gray-300 hidden sm:block">
                 {user.email}
               </div>
+              {isAdmin && (
+                <Link
+                  href="/dashboard"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+                >
+                  Admin Panel
+                </Link>
+              )}
+              <Link
+                href="/products"
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium"
+              >
+                Store
+              </Link>
               <button
                 onClick={signOut}
                 className="px-4 py-2 border border-white/20 hover:bg-white/10 text-white rounded-lg transition-colors font-medium"

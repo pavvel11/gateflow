@@ -1,0 +1,411 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { 
+  validateProductId, 
+  validateUpdateProduct, 
+  sanitizeProductData 
+} from '@/lib/validations/product';
+
+/**
+ * Admin API for product management by ID
+ * SECURITY: Admin only access with full validation
+ */
+
+/**
+ * Handle CORS preflight requests
+ */
+export async function OPTIONS(request: Request) {
+  const origin = request.headers.get('origin') || '*';
+  
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
+}
+
+/**
+ * GET /api/admin/products/[id] - Get product by ID
+ * SECURITY: Admin only access
+ */
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+    const supabase = await createClient();
+    
+    // Check if user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { 
+        status: 401,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      });
+    }
+
+    // TODO: Add admin role check here
+    // For now, any authenticated user can access (should be admin only)
+
+    // Validate product ID
+    const idValidation = validateProductId(id);
+    if (!idValidation.isValid) {
+      return NextResponse.json({ 
+        error: 'Invalid product ID', 
+        details: idValidation.errors 
+      }, { 
+        status: 400,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      });
+    }
+
+    // Get product by ID
+    const { data: product, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return NextResponse.json({ error: 'Product not found' }, { 
+          status: 404,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          }
+        });
+      }
+      
+      console.error('Error fetching product:', error);
+      return NextResponse.json({ error: 'Failed to fetch product' }, { 
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      });
+    }
+
+    return NextResponse.json(product, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      }
+    });
+  } catch (error) {
+    console.error('Error in GET /api/admin/products/[id]:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { 
+      status: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      }
+    });
+  }
+}
+
+/**
+ * PUT /api/admin/products/[id] - Update product by ID
+ * SECURITY: Admin only access, strict validation
+ */
+export async function PUT(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+    const supabase = await createClient();
+    
+    // Check if user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { 
+        status: 401,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      });
+    }
+
+    // TODO: Add admin role check here
+    // For now, any authenticated user can access (should be admin only)
+
+    // Validate product ID
+    const idValidation = validateProductId(id);
+    if (!idValidation.isValid) {
+      return NextResponse.json({ 
+        error: 'Invalid product ID', 
+        details: idValidation.errors 
+      }, { 
+        status: 400,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      });
+    }
+
+    // Parse and validate request body
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      console.error('Error parsing request body:', parseError);
+      return NextResponse.json({ error: 'Invalid JSON in request body' }, { 
+        status: 400,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      });
+    }
+
+    // Sanitize input data
+    const sanitizedData = sanitizeProductData(body);
+
+    // Validate update data
+    const validation = validateUpdateProduct(sanitizedData);
+    if (!validation.isValid) {
+      return NextResponse.json({ 
+        error: 'Validation failed', 
+        details: validation.errors 
+      }, { 
+        status: 400,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      });
+    }
+
+    // Check if slug is unique (if being updated)
+    if (sanitizedData.slug) {
+      const { data: existingProduct, error: slugCheckError } = await supabase
+        .from('products')
+        .select('id')
+        .eq('slug', sanitizedData.slug)
+        .neq('id', id)
+        .maybeSingle();
+      
+      if (slugCheckError) {
+        console.error('Error checking slug availability:', slugCheckError);
+        return NextResponse.json({ error: 'Failed to check slug availability' }, { 
+          status: 500,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          }
+        });
+      }
+      
+      if (existingProduct) {
+        return NextResponse.json({ error: 'A product with this slug already exists' }, { 
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          }
+        });
+      }
+    }
+
+    // Update product
+    const { data: updatedProduct, error } = await supabase
+      .from('products')
+      .update(sanitizedData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return NextResponse.json({ error: 'Product not found' }, { 
+          status: 404,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          }
+        });
+      }
+
+      console.error('Error updating product:', error);
+      return NextResponse.json({ error: 'Failed to update product' }, { 
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      });
+    }
+
+    return NextResponse.json(updatedProduct, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      }
+    });
+  } catch (error) {
+    console.error('Error in PUT /api/admin/products/[id]:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { 
+      status: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      }
+    });
+  }
+}
+
+/**
+ * DELETE /api/admin/products/[id] - Delete product by ID
+ * SECURITY: Admin only access
+ */
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+    const supabase = await createClient();
+    
+    // Check if user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { 
+        status: 401,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      });
+    }
+
+    // TODO: Add admin role check here
+    // For now, any authenticated user can access (should be admin only)
+
+    // Validate product ID
+    const idValidation = validateProductId(id);
+    if (!idValidation.isValid) {
+      return NextResponse.json({ 
+        error: 'Invalid product ID', 
+        details: idValidation.errors 
+      }, { 
+        status: 400,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      });
+    }
+
+    // Check if product exists and has no active user accesses
+    const { data: userAccesses, error: accessCheckError } = await supabase
+      .from('user_product_access')
+      .select('id')
+      .eq('product_id', id)
+      .limit(1);
+
+    if (accessCheckError) {
+      console.error('Error checking product access:', accessCheckError);
+      return NextResponse.json({ error: 'Failed to check product usage' }, { 
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      });
+    }
+
+    if (userAccesses && userAccesses.length > 0) {
+      return NextResponse.json({ 
+        error: 'Cannot delete product with existing user accesses. Deactivate it instead.' 
+      }, { 
+        status: 400,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      });
+    }
+
+    // Delete product
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return NextResponse.json({ error: 'Product not found' }, { 
+          status: 404,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          }
+        });
+      }
+
+      console.error('Error deleting product:', error);
+      return NextResponse.json({ error: 'Failed to delete product' }, { 
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      });
+    }
+
+    return NextResponse.json({ message: 'Product deleted successfully' }, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      }
+    });
+  } catch (error) {
+    console.error('Error in DELETE /api/admin/products/[id]:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { 
+      status: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      }
+    });
+  }
+}

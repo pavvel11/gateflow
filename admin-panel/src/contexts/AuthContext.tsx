@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkAdminStatus = async (userId: string, retries = 3): Promise<boolean> => {
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        const { data, error } = await supabase.rpc('is_admin', { user_id: userId })
+        const { data, error } = await supabase.rpc('is_admin', { user_id_param: userId })
         
         if (error) {
           console.error(`Error checking admin status (attempt ${attempt}):`, error)

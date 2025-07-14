@@ -20,6 +20,8 @@ interface UserAccess {
   product_currency: string;
   product_is_active: boolean;
   access_created_at: string;
+  access_expires_at?: string | null;
+  access_duration_days?: number | null;
   product_slug: string;
 }
 
@@ -35,6 +37,9 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState('');
+  const [accessDuration, setAccessDuration] = useState<number | ''>('');
+  const [accessExpiration, setAccessExpiration] = useState<string>('');
+  const [accessType, setAccessType] = useState<'permanent' | 'duration' | 'expiration'>('permanent');
   const [error, setError] = useState<string | null>(null);
 
   const fetchUserAccess = useCallback(async () => {
@@ -58,7 +63,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
 
   const fetchAvailableProducts = useCallback(async () => {
     try {
-      const response = await fetch('/api/products');
+      const response = await fetch('/api/admin/products');
       if (!response.ok) {
         throw new Error('Failed to fetch products');
       }
@@ -94,7 +99,10 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          product_id: selectedProductId
+          product_id: selectedProductId,
+          access_type: accessType,
+          access_duration_days: accessType === 'duration' ? accessDuration : null,
+          access_expires_at: accessType === 'expiration' ? accessExpiration : null
         })
       });
 
@@ -107,6 +115,9 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
       await fetchUserAccess();
       setShowAddForm(false);
       setSelectedProductId('');
+      setAccessDuration('');
+      setAccessExpiration('');
+      setAccessType('permanent');
       onAccessChange();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to grant access');
@@ -219,6 +230,16 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                           </div>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
                             Granted: {formatDate(access.access_created_at)}
+                            {access.access_expires_at && (
+                              <span className="block text-orange-600 dark:text-orange-400">
+                                Expires: {formatDate(access.access_expires_at)}
+                              </span>
+                            )}
+                            {access.access_duration_days && (
+                              <span className="block text-blue-600 dark:text-blue-400">
+                                Duration: {access.access_duration_days} days
+                              </span>
+                            )}
                           </p>
                         </div>
                       </div>
@@ -256,14 +277,78 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                         <option key={product.id} value={product.id}>
                           {product.name} {product.price > 0 ? `(${product.currency} ${product.price})` : '(Free)'}
                         </option>
-                      ))}
+                        ))}
                     </select>
                   </div>
+
+                  <div>
+                    <label htmlFor="access-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Access Type
+                    </label>
+                    <div className="flex space-x-2">
+                      <Button
+                        onClick={() => setAccessType('permanent')}
+                        variant={accessType === 'permanent' ? 'primary' : 'secondary'}
+                        className="flex-1"
+                      >
+                        Permanent
+                      </Button>
+                      <Button
+                        onClick={() => setAccessType('duration')}
+                        variant={accessType === 'duration' ? 'primary' : 'secondary'}
+                        className="flex-1"
+                      >
+                        Duration
+                      </Button>
+                      <Button
+                        onClick={() => setAccessType('expiration')}
+                        variant={accessType === 'expiration' ? 'primary' : 'secondary'}
+                        className="flex-1"
+                      >
+                        Expiration
+                      </Button>
+                    </div>
+                  </div>
+
+                  {accessType === 'duration' && (
+                    <div>
+                      <label htmlFor="access-duration" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Duration (in days)
+                      </label>
+                      <input
+                        id="access-duration"
+                        type="number"
+                        value={accessDuration}
+                        onChange={(e) => setAccessDuration(Number(e.target.value))}
+                        className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        placeholder="Enter duration in days"
+                      />
+                    </div>
+                  )}
+
+                  {accessType === 'expiration' && (
+                    <div>
+                      <label htmlFor="access-expiration" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Expiration Date
+                      </label>
+                      <input
+                        id="access-expiration"
+                        type="date"
+                        value={accessExpiration}
+                        onChange={(e) => setAccessExpiration(e.target.value)}
+                        className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      />
+                    </div>
+                  )}
+
                   <div className="flex justify-end space-x-3">
                     <Button
                       onClick={() => {
                         setShowAddForm(false);
                         setSelectedProductId('');
+                        setAccessDuration('');
+                        setAccessExpiration('');
+                        setAccessType('permanent');
                         setError(null);
                       }}
                       variant="secondary"

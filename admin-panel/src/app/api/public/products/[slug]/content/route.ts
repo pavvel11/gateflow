@@ -1,0 +1,101 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ slug: string }> }
+) {
+  try {
+    const { slug } = await context.params;
+    const supabase = await createClient();
+    
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Get product with access check using RLS
+    const { data: productWithAccess, error: productError } = await supabase
+      .from('products')
+      .select(`
+        id,
+        name,
+        slug,
+        description,
+        icon,
+        price,
+        currency,
+        is_active,
+        available_from,
+        available_until,
+        content_config,
+        content_delivery_type,
+        user_access:user_product_access!inner(
+          access_expires_at,
+          access_duration_days,
+          created_at
+        )
+      `)
+      .eq('slug', slug)
+      .eq('user_access.user_id', user.id)
+      .single();
+
+    if (productError) {
+      console.error('Error fetching product:', productError);
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    }
+
+    // Additional security check: verify access hasn't expired
+    const userAccess = productWithAccess.user_access[0];
+    const now = new Date();
+    const expiresAt = userAccess.access_expires_at ? new Date(userAccess.access_expires_at) : null;
+    const isExpired = expiresAt && expiresAt < now;
+
+    if (isExpired) {
+      return NextResponse.json({ error: 'Access expired' }, { status: 403 });
+    }
+
+    // Check temporal availability
+    const availableFrom = productWithAccess.available_from ? new Date(productWithAccess.available_from) : null;
+    const availableUntil = productWithAccess.available_until ? new Date(productWithAccess.available_until) : null;
+    
+    const isTemporallyAvailable = (!availableFrom || availableFrom <= now) && (!availableUntil || availableUntil > now);
+    
+    if (!productWithAccess.is_active || !isTemporallyAvailable) {
+      return NextResponse.json({ error: 'Product not available' }, { status: 403 });
+    }
+
+    // Return secure product data with computed access status
+    return NextResponse.json({
+      product: {
+        id: productWithAccess.id,
+        name: productWithAccess.name,
+        slug: productWithAccess.slug,
+        description: productWithAccess.description,
+        icon: productWithAccess.icon,
+        price: productWithAccess.price,
+        currency: productWithAccess.currency,
+        is_active: productWithAccess.is_active,
+        available_from: productWithAccess.available_from,
+        available_until: productWithAccess.available_until,
+        content_config: productWithAccess.content_config,
+        content_delivery_type: productWithAccess.content_delivery_type
+      },
+      userAccess: {
+        access_expires_at: userAccess.access_expires_at,
+        access_duration_days: userAccess.access_duration_days,
+        access_granted_at: userAccess.created_at,
+        // Backend-computed status
+        is_expired: isExpired,
+        is_expiring_soon: expiresAt ? Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) <= 7 : false,
+        days_until_expiration: expiresAt ? Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching product content:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

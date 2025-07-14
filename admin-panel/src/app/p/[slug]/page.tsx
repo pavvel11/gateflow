@@ -43,7 +43,7 @@ export default async function ProductPage({ params }: PageProps) {
   
   if (user) {
     // For logged in users: check if they have access to the product
-    // If they do, show the product even if it's inactive
+    // If they do, show the product even if it's inactive or expired
     const { data: accessData } = await supabase
       .from('user_product_access')
       .select('product_id')
@@ -73,21 +73,40 @@ export default async function ProductPage({ params }: PageProps) {
   }
   
   // If no product found yet (user not logged in, or no access, or product doesn't exist)
-  // Try to fetch active product
+  // Try to fetch any product (active or inactive) to handle temporal availability
   if (!product) {
-    const { data: activeProduct } = await supabase
+    const { data: anyProduct } = await supabase
       .from('products')
       .select('*')
       .eq('slug', slug)
-      .eq('is_active', true)
       .single();
     
-    product = activeProduct;
+    if (anyProduct) {
+      // Check if product is temporally available
+      const now = new Date();
+      const availableFrom = anyProduct.available_from ? new Date(anyProduct.available_from) : null;
+      const availableUntil = anyProduct.available_until ? new Date(anyProduct.available_until) : null;
+      
+      const isTemporallyAvailable = 
+        (!availableFrom || availableFrom <= now) && 
+        (!availableUntil || availableUntil > now);
+      
+      // Show product if:
+      // 1. It's active AND temporally available, OR
+      // 2. It has temporal settings (to show "coming soon" or "expired" messaging), OR  
+      // 3. It's inactive (to show "no longer available" messaging)
+      if ((anyProduct.is_active && isTemporallyAvailable) || 
+          anyProduct.available_from || 
+          anyProduct.available_until || 
+          !anyProduct.is_active) {
+        product = anyProduct;
+      }
+    }
   }
 
   // If still no product found, return 404
   if (!product) {
-    console.log('Product not found or user has no access');
+    console.log('Product not found');
     return notFound();
   }
 

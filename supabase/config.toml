@@ -74,8 +74,6 @@ site_url = "http://localhost:3000"
 additional_redirect_urls = [
   "http://127.0.0.1:3000", 
   "http://localhost:3000",
-  "https://*-gemini-test.vercel.app",
-  "https://*.vercel.app"
 ]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604800 (1 week).
 jwt_expiry = 3600

@@ -8,18 +8,15 @@ export async function isAdmin(userId?: string): Promise<boolean> {
     let targetUserId = userId;
     if (!targetUserId) {
       const { data: { user } } = await supabase.auth.getUser();
-      console.log('Getting current user for admin check:', user?.email);
-      if (!user) return false;
+      if (!user) {
+        return false; // No authenticated user
+      }
       targetUserId = user.id;
     }
 
-    console.log('Checking admin status for user ID:', targetUserId);
-
     // Check if user is admin using the database function
     const { data, error } = await supabase
-      .rpc('is_admin', { user_id: targetUserId });
-
-    console.log('is_admin RPC result:', { data, error });
+      .rpc('is_admin', { user_id_param: targetUserId });
 
     if (error) {
       console.error('Error checking admin status:', error);

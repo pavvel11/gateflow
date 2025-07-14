@@ -3,6 +3,7 @@
 import React from 'react';
 import { Product } from '@/types';
 import { formatPrice } from '@/lib/constants';
+import { formatUTCForDisplay } from '@/lib/timezone';
 import Pagination from './Pagination';
 import { getIconEmoji } from '@/utils/themeUtils';
 
@@ -14,6 +15,7 @@ interface ProductsTableProps {
   onDeleteProduct: (product: Product) => void;
   onPreviewProduct: (product: Product) => void;
   onPreviewRedirect: (product: Product) => void;
+  onGenerateCode: (product: Product) => void;
   currentPage: number;
   totalPages: number;
   totalItems: number;
@@ -32,6 +34,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
   onDeleteProduct,
   onPreviewProduct,
   onPreviewRedirect,
+  onGenerateCode,
   currentPage,
   totalPages,
   totalItems,
@@ -101,8 +104,10 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                   <SortableHeader column="name" title="Product Name" />
                   <SortableHeader column="price" title="Price" />
                   <SortableHeader column="is_active" title="Status" />
+                  <SortableHeader column="available_from" title="Available From" />
+                  <SortableHeader column="available_until" title="Available Until" />
+                  <SortableHeader column="auto_grant_duration_days" title="Auto Duration" />
                   <SortableHeader column="created_at" title="Date Created" />
-                  <SortableHeader column="updated_at" title="Last Updated" />
                   <th scope="col" className="relative px-6 py-3">
                     <span className="sr-only">Actions</span>
                   </th>
@@ -151,13 +156,47 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {new Date(product.created_at).toLocaleDateString()}
+                      {product.available_from ? formatUTCForDisplay(product.available_from, {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      }) : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {product.updated_at ? new Date(product.updated_at).toLocaleDateString() : '-'}
+                      {product.available_until ? formatUTCForDisplay(product.available_until, {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      }) : '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {product.auto_grant_duration_days ? (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                          {product.auto_grant_duration_days} days
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">Permanent</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {formatUTCForDisplay(product.created_at, {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
+                        <button 
+                          onClick={() => onGenerateCode(product)}
+                          className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
+                          aria-label={`Generate code for ${product.name}`}
+                          title="Generate Protection Code"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                          </svg>
+                        </button>
                         <button 
                           onClick={() => onPreviewProduct(product)}
                           className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 transition-colors"

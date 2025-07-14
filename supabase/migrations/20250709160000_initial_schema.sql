@@ -1,6 +1,6 @@
 -- Create initial database structure for GateFlow Admin Panel
 -- Migration: 20250709160000_initial_schema
--- Updated: Now uses UUID for product IDs and product_id for user_product_access relationships
+-- Updated: Consolidated all admin functionality into single migration
 -- Based on existing gateflow_setup.sql and user_product_access_setup.sql
 
 BEGIN;
@@ -17,12 +17,19 @@ CREATE TABLE IF NOT EXISTS products (
   icon TEXT, -- Used by gatekeeper for UI
   price NUMERIC DEFAULT 0 NOT NULL,
   currency TEXT DEFAULT 'USD' NOT NULL, -- Currency for price (USD, EUR, GBP, etc.)
-  redirect_url TEXT, -- Custom redirect URL after authentication
   theme TEXT DEFAULT 'dark' NOT NULL, -- Used by gatekeeper for theming
   layout_template TEXT DEFAULT 'default' NOT NULL, -- Used by gatekeeper layouts
-  stripe_price_id TEXT, -- Stripe integration
+
   is_active BOOLEAN NOT NULL DEFAULT true, -- Admin panel functionality
   is_featured BOOLEAN NOT NULL DEFAULT false, -- Featured product checkbox
+  -- Temporal availability fields
+  available_from TIMESTAMPTZ, -- Product becomes available from this date/time
+  available_until TIMESTAMPTZ, -- Product is available until this date/time
+  -- Auto-grant access duration for users
+  auto_grant_duration_days INTEGER, -- Default access duration when users gain access automatically
+  -- Content delivery fields (clean implementation)
+  content_delivery_type TEXT DEFAULT 'content' NOT NULL CHECK (content_delivery_type IN ('redirect', 'content')),
+  content_config JSONB DEFAULT '{}' NOT NULL, -- Flexible content configuration
   tenant_id TEXT, -- Support for multi-tenancy
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
@@ -33,59 +40,13 @@ CREATE TABLE IF NOT EXISTS user_product_access (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL, -- Improved data integrity
+  -- Temporal access fields
+  access_granted_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  access_expires_at TIMESTAMPTZ, -- NULL means permanent access
+  access_duration_days INTEGER, -- For tracking access duration in days
   tenant_id TEXT, -- Support for multi-tenancy
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   UNIQUE (user_id, product_id) -- Ensure a user can only have one access entry per product
-);
-
--- Create audit_logs table for tracking admin actions
-CREATE TABLE IF NOT EXISTS audit_logs (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  action TEXT NOT NULL,
-  user_id UUID NOT NULL,
-  details JSONB DEFAULT '{}',
-  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
-);
-
--- Create webhook_configs table for webhook automation
-CREATE TABLE IF NOT EXISTS webhook_configs (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  name TEXT NOT NULL, -- Human readable name for the webhook
-  endpoint_url TEXT NOT NULL, -- URL where webhook will be sent
-  is_enabled BOOLEAN NOT NULL DEFAULT true, -- Enable/disable webhook
-  is_global BOOLEAN NOT NULL DEFAULT false, -- Global webhook (all products) vs product-specific
-  product_id UUID REFERENCES products(id) ON DELETE CASCADE, -- NULL for global webhooks
-  secret_key TEXT, -- Optional secret for webhook validation
-  headers JSONB DEFAULT '{}', -- Additional headers to send
-  retry_attempts INTEGER DEFAULT 3, -- Number of retry attempts
-  timeout_seconds INTEGER DEFAULT 30, -- Request timeout
-  tenant_id TEXT, -- Support for multi-tenancy
-  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-  CONSTRAINT webhook_product_check CHECK (
-    (is_global = true AND product_id IS NULL) OR 
-    (is_global = false AND product_id IS NOT NULL)
-  )
-);
-
--- Create webhook_logs table for tracking webhook deliveries
-CREATE TABLE IF NOT EXISTS webhook_logs (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  webhook_config_id UUID REFERENCES webhook_configs(id) ON DELETE CASCADE NOT NULL,
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL, -- User who triggered the webhook
-  product_id UUID REFERENCES products(id) ON DELETE SET NULL, -- Product related to the webhook
-  endpoint_url TEXT NOT NULL, -- URL where webhook was sent (snapshot)
-  request_payload JSONB NOT NULL, -- Data sent in the webhook
-  request_headers JSONB DEFAULT '{}', -- Headers sent with the request
-  response_status INTEGER, -- HTTP status code received
-  response_body TEXT, -- Response body (if any)
-  response_headers JSONB DEFAULT '{}', -- Response headers received
-  attempt_number INTEGER DEFAULT 1, -- Which attempt this was (1, 2, 3...)
-  is_successful BOOLEAN DEFAULT false, -- Whether webhook was successful
-  error_message TEXT, -- Error message if failed
-  duration_ms INTEGER, -- How long the request took
-  tenant_id TEXT, -- Support for multi-tenancy
-  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
 -- Create view for easy access checking by slug
@@ -136,6 +97,9 @@ SELECT
     p.icon as product_icon,
     p.theme as product_theme,
     p.is_active as product_is_active,
+    upa.access_granted_at,
+    upa.access_expires_at,
+    upa.access_duration_days,
     upa.created_at as access_created_at,
     p.created_at as product_created_at,
     p.updated_at as product_updated_at,
@@ -143,45 +107,119 @@ SELECT
 FROM user_product_access upa
 JOIN products p ON upa.product_id = p.id;
 
--- Create function to check user access by slug
+-- Create secure function to check user access for a single product
+-- Uses auth.uid() to get the current authenticated user (SECURITY FIX)
 CREATE OR REPLACE FUNCTION check_user_product_access(
-    user_id_param UUID,
     product_slug_param TEXT
 ) RETURNS BOOLEAN AS $$
 BEGIN
+    -- Input validation
+    IF product_slug_param IS NULL THEN
+        RETURN FALSE;
+    END IF;
+    
+    -- Get current authenticated user ID
+    IF auth.uid() IS NULL THEN
+        RETURN FALSE;
+    END IF;
+    
     RETURN EXISTS (
         SELECT 1 
         FROM user_product_access upa
         JOIN products p ON upa.product_id = p.id
-        WHERE upa.user_id = user_id_param 
+        WHERE upa.user_id = auth.uid()  -- Use authenticated user ID
           AND p.slug = product_slug_param
           AND p.is_active = true
+          -- Check temporal availability for products
+          AND (p.available_from IS NULL OR p.available_from <= NOW())
+          AND (p.available_until IS NULL OR p.available_until >= NOW())
+          -- Check temporal access for user
+          AND (upa.access_expires_at IS NULL OR upa.access_expires_at >= NOW())
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create function to grant product access by slug
-CREATE OR REPLACE FUNCTION grant_product_access(
-    user_id_param UUID,
-    product_slug_param TEXT
+-- Create secure function to batch check user access for multiple products
+-- Uses auth.uid() to get the current authenticated user (SECURITY FIX)
+CREATE OR REPLACE FUNCTION batch_check_user_product_access(
+    product_slugs_param TEXT[]
+) RETURNS JSONB AS $$
+DECLARE
+    result JSONB := '{}';
+    slug TEXT;
+    has_access BOOLEAN;
+    current_user_id UUID;
+BEGIN
+    -- Input validation
+    IF product_slugs_param IS NULL THEN
+        RETURN result;
+    END IF;
+    
+    -- Get current authenticated user ID
+    current_user_id := auth.uid();
+    IF current_user_id IS NULL THEN
+        RETURN result;
+    END IF;
+    
+    -- Check access for each product slug
+    FOREACH slug IN ARRAY product_slugs_param
+    LOOP
+        SELECT check_user_product_access(slug) INTO has_access;
+        result := result || jsonb_build_object(slug, has_access);
+    END LOOP;
+    
+    RETURN result;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create secure function to grant product access
+-- Uses auth.uid() to get the current authenticated user (SECURITY FIX)
+CREATE OR REPLACE FUNCTION grant_free_product_access(
+    product_slug_param TEXT,
+    access_duration_days_param INTEGER DEFAULT NULL
 ) RETURNS BOOLEAN AS $$
 DECLARE
-    product_id_var UUID;
+    product_record RECORD;
+    current_user_id UUID;
+    access_expires_at TIMESTAMPTZ;
 BEGIN
-    -- Find product ID by slug
-    SELECT id INTO product_id_var 
-    FROM products 
-    WHERE slug = product_slug_param AND is_active = true;
-    
-    -- If product doesn't exist, return false
-    IF product_id_var IS NULL THEN
+    -- Input validation
+    IF product_slug_param IS NULL THEN
         RETURN FALSE;
     END IF;
     
-    -- Insert access record (ignore duplicates)
-    INSERT INTO user_product_access (user_id, product_id)
-    VALUES (user_id_param, product_id_var)
-    ON CONFLICT (user_id, product_id) DO NOTHING;
+    -- Get current authenticated user ID
+    current_user_id := auth.uid();
+    IF current_user_id IS NULL THEN
+        RETURN FALSE;
+    END IF;
+    
+    -- Get product by slug
+    SELECT id, auto_grant_duration_days INTO product_record
+    FROM products 
+    WHERE slug = product_slug_param AND is_active = true AND price = 0; -- Only allow free products
+    
+    IF NOT FOUND THEN
+        RETURN FALSE;
+    END IF;
+    
+    -- Calculate access expiration
+    IF access_duration_days_param IS NOT NULL THEN
+        access_expires_at := NOW() + INTERVAL '1 day' * access_duration_days_param;
+    ELSIF product_record.auto_grant_duration_days IS NOT NULL THEN
+        access_expires_at := NOW() + INTERVAL '1 day' * product_record.auto_grant_duration_days;
+    ELSE
+        access_expires_at := NULL; -- Permanent access
+    END IF;
+    
+    -- Insert or update user access
+    INSERT INTO user_product_access (user_id, product_id, access_expires_at, access_duration_days)
+    VALUES (current_user_id, product_record.id, access_expires_at, COALESCE(access_duration_days_param, product_record.auto_grant_duration_days))
+    ON CONFLICT (user_id, product_id) 
+    DO UPDATE SET 
+        access_expires_at = EXCLUDED.access_expires_at,
+        access_duration_days = EXCLUDED.access_duration_days,
+        access_granted_at = NOW();
     
     RETURN TRUE;
 END;
@@ -243,84 +281,26 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create function to trigger webhooks when access is granted
-CREATE OR REPLACE FUNCTION trigger_access_granted_webhooks(
-    user_id_param UUID,
-    product_id_param UUID
-) RETURNS BOOLEAN AS $$
-DECLARE
-    webhook_record RECORD;
-    user_data JSONB;
-    product_data JSONB;
-    webhook_payload JSONB;
-BEGIN
-    -- Get user data
-    SELECT jsonb_build_object(
-        'id', id,
-        'email', email,
-        'created_at', created_at,
-        'email_confirmed_at', email_confirmed_at,
-        'last_sign_in_at', last_sign_in_at,
-        'user_metadata', raw_user_meta_data
-    ) INTO user_data
-    FROM auth.users
-    WHERE id = user_id_param;
-    
-    -- Get product data
-    SELECT jsonb_build_object(
-        'id', id,
-        'name', name,
-        'slug', slug,
-        'description', description,
-        'icon', icon,
-        'price', price,
-        'currency', currency,
-        'is_featured', is_featured,
-        'created_at', created_at
-    ) INTO product_data
-    FROM products
-    WHERE id = product_id_param;
-    
-    -- Create webhook payload
-    webhook_payload := jsonb_build_object(
-        'event', 'access_granted',
-        'timestamp', NOW(),
-        'user', user_data,
-        'product', product_data
-    );
-    
-    -- Find all enabled webhooks (global + product-specific)
-    FOR webhook_record IN
-        SELECT id, endpoint_url, secret_key, headers, retry_attempts, timeout_seconds
-        FROM webhook_configs
-        WHERE is_enabled = true 
-          AND (is_global = true OR product_id = product_id_param)
-    LOOP
-        -- Log the webhook (will be picked up by webhook processor)
-        INSERT INTO webhook_logs (
-            webhook_config_id,
-            user_id,
-            product_id,
-            endpoint_url,
-            request_payload,
-            request_headers,
-            attempt_number,
-            is_successful
-        ) VALUES (
-            webhook_record.id,
-            user_id_param,
-            product_id_param,
-            webhook_record.endpoint_url,
-            webhook_payload,
-            webhook_record.headers,
-            1,
-            false -- Will be updated by webhook processor
-        );
-    END LOOP;
-    
-    RETURN true;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+-- Create admin_users table to track who is an admin
+CREATE TABLE IF NOT EXISTS admin_users (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+-- Create audit table for security monitoring
+CREATE TABLE IF NOT EXISTS audit_log (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  table_name TEXT NOT NULL,
+  operation TEXT NOT NULL CHECK (operation IN ('INSERT', 'UPDATE', 'DELETE')),
+  old_values JSONB,
+  new_values JSONB,
+  user_id UUID REFERENCES auth.users(id),
+  performed_by UUID REFERENCES auth.users(id),
+  performed_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  ip_address INET,
+  user_agent TEXT
+);
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_products_slug ON products(slug);
@@ -331,29 +311,17 @@ CREATE INDEX IF NOT EXISTS idx_products_created_at ON products(created_at);
 CREATE INDEX IF NOT EXISTS idx_user_product_access_user_id ON user_product_access(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_product_access_product_id ON user_product_access(product_id);
 CREATE INDEX IF NOT EXISTS idx_user_product_access_unique ON user_product_access(user_id, product_id);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_admin_users_user_id ON admin_users(user_id);
+
 CREATE INDEX IF NOT EXISTS idx_products_tenant_id ON products(tenant_id) WHERE tenant_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_user_product_access_tenant_id ON user_product_access(tenant_id) WHERE tenant_id IS NOT NULL;
 
--- Indexes for webhook tables
-CREATE INDEX IF NOT EXISTS idx_webhook_configs_product_id ON webhook_configs(product_id);
-CREATE INDEX IF NOT EXISTS idx_webhook_configs_is_enabled ON webhook_configs(is_enabled);
-CREATE INDEX IF NOT EXISTS idx_webhook_configs_is_global ON webhook_configs(is_global);
-CREATE INDEX IF NOT EXISTS idx_webhook_configs_tenant_id ON webhook_configs(tenant_id) WHERE tenant_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_webhook_logs_webhook_config_id ON webhook_logs(webhook_config_id);
-CREATE INDEX IF NOT EXISTS idx_webhook_logs_user_id ON webhook_logs(user_id);
-CREATE INDEX IF NOT EXISTS idx_webhook_logs_product_id ON webhook_logs(product_id);
-CREATE INDEX IF NOT EXISTS idx_webhook_logs_created_at ON webhook_logs(created_at);
-CREATE INDEX IF NOT EXISTS idx_webhook_logs_is_successful ON webhook_logs(is_successful);
-CREATE INDEX IF NOT EXISTS idx_webhook_logs_tenant_id ON webhook_logs(tenant_id) WHERE tenant_id IS NOT NULL;
+
 
 -- Enable Row Level Security
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_product_access ENABLE ROW LEVEL SECURITY;
-ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE webhook_configs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE webhook_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for products table
 -- Allow public read access for all products (needed by gatekeeper.js)
@@ -361,12 +329,22 @@ CREATE POLICY "Allow public read access for everyone" ON products
   FOR SELECT
   USING (true);
 
--- Allow authenticated users full access to products (admin panel)
-CREATE POLICY "Allow authenticated users to manage products" ON products
+-- Allow admin users to manage products
+CREATE POLICY "Allow admin users to manage products" ON products
   FOR ALL
   TO authenticated
-  USING (true)
-  WITH CHECK (true);
+  USING (
+    EXISTS (
+      SELECT 1 FROM admin_users 
+      WHERE user_id = auth.uid()
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM admin_users 
+      WHERE user_id = auth.uid()
+    )
+  );
 
 -- RLS Policies for user_product_access table
 -- Allow users to read their own access records
@@ -388,44 +366,85 @@ CREATE POLICY "Allow authenticated users to insert access for free products" ON 
   );
 
 -- Allow authenticated users full access to user_product_access (admin panel)
-CREATE POLICY "Allow authenticated users to manage access" ON user_product_access
+CREATE POLICY "Allow admin users to manage access" ON user_product_access
   FOR ALL
   TO authenticated
-  USING (true)
-  WITH CHECK (true);
+  USING (
+    EXISTS (
+      SELECT 1 FROM admin_users 
+      WHERE user_id = auth.uid()
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM admin_users 
+      WHERE user_id = auth.uid()
+    )
+  );
 
--- RLS Policies for audit_logs table
--- Only authenticated users can read audit logs
-CREATE POLICY "Allow authenticated users to read audit logs" ON audit_logs
+-- RLS Policies for admin_users table
+-- Allow users to check only their own admin status
+CREATE POLICY "Allow users to read their own admin status" ON admin_users
   FOR SELECT
   TO authenticated
-  USING (true);
+  USING (auth.uid() = user_id);
 
--- Only authenticated users can insert audit logs
-CREATE POLICY "Allow authenticated users to insert audit logs" ON audit_logs
-  FOR INSERT
-  TO authenticated
-  WITH CHECK (true);
+-- Create function to check if user is admin
+CREATE OR REPLACE FUNCTION is_admin(user_id_param UUID DEFAULT auth.uid())
+RETURNS BOOLEAN AS $$
+BEGIN
+  -- Input validation
+  IF user_id_param IS NULL THEN
+    RETURN FALSE;
+  END IF;
+  
+  -- Additional security: ensure user_id exists in auth.users
+  IF NOT EXISTS (SELECT 1 FROM auth.users WHERE id = user_id_param) THEN
+    RETURN FALSE;
+  END IF;
+  
+  RETURN EXISTS (
+    SELECT 1 FROM admin_users 
+    WHERE admin_users.user_id = user_id_param
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- RLS Policies for webhook_configs table
--- Only authenticated users can manage webhook configs (admin panel)
-CREATE POLICY "Allow authenticated users to manage webhook configs" ON webhook_configs
-  FOR ALL
-  TO authenticated
-  USING (true)
-  WITH CHECK (true);
+-- Create function to make first user admin automatically (with race condition protection)
+CREATE OR REPLACE FUNCTION handle_first_user_admin()
+RETURNS TRIGGER
+SET search_path = ''
+AS $$
+BEGIN
+  -- Use advisory lock to prevent race condition
+  -- Use consistent hash of function name to avoid conflicts
+  PERFORM pg_advisory_lock(hashtext('handle_first_user_admin'));
+  
+  BEGIN
+    -- Check if there are no existing admin users
+    IF NOT EXISTS (SELECT 1 FROM public.admin_users) THEN
+      -- Make this user an admin (bypass RLS with SECURITY DEFINER)
+      INSERT INTO public.admin_users (user_id) VALUES (NEW.id);
+    END IF;
+  EXCEPTION
+    WHEN OTHERS THEN
+      -- Release lock on error
+      PERFORM pg_advisory_unlock(hashtext('handle_first_user_admin'));
+      RAISE;
+  END;
+  
+  -- Release advisory lock
+  PERFORM pg_advisory_unlock(hashtext('handle_first_user_admin'));
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- RLS Policies for webhook_logs table
--- Only authenticated users can read webhook logs (admin panel)
-CREATE POLICY "Allow authenticated users to read webhook logs" ON webhook_logs
-  FOR SELECT
-  TO authenticated
-  USING (true);
-
--- Allow service role to insert webhook logs (used by webhook system)
-CREATE POLICY "Allow service role to insert webhook logs" ON webhook_logs
-  FOR INSERT
-  WITH CHECK (true);
+-- Create trigger to automatically make first user admin
+CREATE TRIGGER first_user_admin_trigger
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION handle_first_user_admin();
 
 -- Create function to automatically update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -436,16 +455,42 @@ BEGIN
 END;
 $$ language plpgsql;
 
+-- Create simple audit function for critical tables
+CREATE OR REPLACE FUNCTION audit_trigger_function()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    INSERT INTO public.audit_log (table_name, operation, old_values, user_id)
+    VALUES (TG_TABLE_NAME, TG_OP, row_to_json(OLD), auth.uid());
+    RETURN OLD;
+  ELSIF TG_OP = 'UPDATE' THEN
+    INSERT INTO public.audit_log (table_name, operation, old_values, new_values, user_id)
+    VALUES (TG_TABLE_NAME, TG_OP, row_to_json(OLD), row_to_json(NEW), auth.uid());
+    RETURN NEW;
+  ELSIF TG_OP = 'INSERT' THEN
+    INSERT INTO public.audit_log (table_name, operation, new_values, user_id)
+    VALUES (TG_TABLE_NAME, TG_OP, row_to_json(NEW), auth.uid());
+    RETURN NEW;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Create trigger for products table
 CREATE TRIGGER update_products_updated_at
   BEFORE UPDATE ON products
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
--- Create trigger for webhook_configs table
-CREATE TRIGGER update_webhook_configs_updated_at
-  BEFORE UPDATE ON webhook_configs
+-- Create audit triggers for critical tables
+CREATE TRIGGER audit_admin_users
+  AFTER INSERT OR UPDATE OR DELETE ON admin_users
   FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
+  EXECUTE FUNCTION audit_trigger_function();
+
+CREATE TRIGGER audit_user_product_access
+  AFTER INSERT OR UPDATE OR DELETE ON user_product_access
+  FOR EACH ROW
+  EXECUTE FUNCTION audit_trigger_function();
 
 COMMIT;

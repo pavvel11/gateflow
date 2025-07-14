@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { 
+  validateUserAction, 
+  sanitizeUserActionData 
+} from '@/lib/validations/access';
 
 export async function GET(request: NextRequest) {
   try {
@@ -105,7 +109,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userId, productId, action } = await request.json();
+    const body = await request.json();
+
+    // Sanitize input data
+    const sanitizedData = sanitizeUserActionData(body);
+
+    // Validate input data
+    const validation = validateUserAction(sanitizedData);
+    if (!validation.isValid) {
+      return NextResponse.json({ 
+        error: 'Validation failed', 
+        details: validation.errors 
+      }, { status: 400 });
+    }
+
+    const { userId, productId, action } = sanitizedData;
 
     if (!userId || !productId || !action) {
       return NextResponse.json(

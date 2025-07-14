@@ -1,16 +1,33 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Product } from '@/types';
-import { createClient } from '@/lib/supabase/client';
 import { formatPrice } from '@/lib/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
-import AccessGrantedView from './AccessGrantedView';
+import SecureAccessGrantedView from './SecureAccessGrantedView';
+import ProductAvailabilityBanner from '@/components/ProductAvailabilityBanner';
 import Confetti from 'react-confetti';
 
 interface ProductViewProps {
   product: Product;
+}
+
+interface AccessResponse {
+  hasAccess: boolean;
+  reason?: 'no_access' | 'expired' | 'inactive' | 'temporal';
+  userAccess?: {
+    access_expires_at?: string | null;
+    access_duration_days?: number | null;
+    access_granted_at: string;
+  };
+  product?: {
+    name: string;
+    slug: string;
+    price: number;
+    available_from?: string;
+    available_until?: string;
+  };
 }
 
 export default function ProductView({ product }: ProductViewProps) {
@@ -23,13 +40,56 @@ export default function ProductView({ product }: ProductViewProps) {
   const [showFullContent, setShowFullContent] = useState(false);
   const [countdown, setCountdown] = useState(3);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [userAccess, setUserAccess] = useState<{
+    access_expires_at?: string | null;
+    access_duration_days?: number | null;
+    access_granted_at: string;
+  } | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info' | null; text: string }>({
     type: null,
     text: '',
   });
-  
-  // Initialize Supabase client
-  const supabase = createClient();
+
+  // Helper function to get return_url from URL parameters
+  const getReturnUrl = useCallback(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('return_url');
+  }, []);
+
+  // Helper function to handle redirect to return_url
+  const handleReturnUrlRedirect = useCallback(() => {
+    const returnUrl = getReturnUrl();
+    if (returnUrl) {
+      try {
+        // Decode the return URL and redirect
+        const decodedUrl = decodeURIComponent(returnUrl);
+        console.log('Redirecting to return_url:', decodedUrl);
+        window.location.href = decodedUrl;
+        return true; // Indicate that redirect is happening
+      } catch (error) {
+        console.error('Error redirecting to return_url:', error);
+      }
+    }
+    return false; // No redirect happened
+  }, [getReturnUrl]);
+
+  // Check temporal availability
+  const checkTemporalAvailability = () => {
+    const now = new Date();
+    const availableFrom = product.available_from ? new Date(product.available_from) : null;
+    const availableUntil = product.available_until ? new Date(product.available_until) : null;
+    
+    const isNotYetAvailable = availableFrom && availableFrom > now;
+    const isExpired = availableUntil && availableUntil < now;
+    
+    return {
+      isTemporallyAvailable: (!availableFrom || availableFrom <= now) && (!availableUntil || availableUntil > now),
+      isNotYetAvailable,
+      isExpired
+    };
+  };
+
+  const temporalStatus = checkTemporalAvailability();
 
   // Set window dimensions for confetti
   useEffect(() => {
@@ -53,20 +113,36 @@ export default function ProductView({ product }: ProductViewProps) {
       }
 
       try {
-        const { data, error } = await supabase
-          .from('user_product_access')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('product_id', product.id)
-          .single();
-
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error checking access:', error);
+        const response = await fetch(`/api/public/products/${product.slug}/access`);
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            // User not authenticated, redirect to login
+            window.location.href = '/login';
+            return;
+          }
+          console.error('Error checking access:', response.statusText);
+          setCheckingAccess(false);
+          return;
         }
 
-        if (data) {
+        const data: AccessResponse = await response.json();
+        
+        if (data.hasAccess) {
           setHasAccess(true);
-          setShowFullContent(true); // User already had access, so show content directly
+          setUserAccess(data.userAccess || null);
+          
+          // Check if we should redirect to return_url for existing access
+          const redirected = handleReturnUrlRedirect();
+          if (!redirected) {
+            // No redirect, show full content directly
+            setShowFullContent(true);
+          }
+        } else {
+          setHasAccess(false);
+          setUserAccess(null);
+          setShowFullContent(false);
+          // Handle different access denial reasons if needed
         }
       } catch (err) {
         console.error('Error in checkUserAccess:', err);
@@ -76,7 +152,7 @@ export default function ProductView({ product }: ProductViewProps) {
     };
 
     checkUserAccess();
-  }, [user, product.id, supabase]);
+  }, [user, product.slug, handleReturnUrlRedirect]);
   
   // Handle magic link form submission for free products
   const handleMagicLinkSubmit = async (e: React.FormEvent) => {
@@ -85,11 +161,24 @@ export default function ProductView({ product }: ProductViewProps) {
     setMessage({ type: 'info', text: 'Sending magic link...' });
     
     try {
+      // Import supabase client for auth operations
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      
+      // Get current return_url from URL parameters
+      const returnUrl = getReturnUrl();
+      
+      // Build redirect URL with return_url preserved
+      let redirectUrl = `/auth/product-access?product=${product.slug}`;
+      if (returnUrl) {
+        redirectUrl += `&return_url=${encodeURIComponent(returnUrl)}`;
+      }
+      
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
           // Set redirect URL with proper encoding of parameters to ensure they're preserved
-          emailRedirectTo: `${window.location.origin}/auth/callback?redirect_to=${encodeURIComponent(`/auth/product-access?product=${product.slug}`)}`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?redirect_to=${encodeURIComponent(redirectUrl)}`,
         },
       });
       
@@ -107,21 +196,35 @@ export default function ProductView({ product }: ProductViewProps) {
   
   // Handle payment form submission for paid products
   const handlePaymentSubmit = async (e: React.FormEvent) => {
+    // mock payment processing
     e.preventDefault();
     setLoading(true);
-    setMessage({ type: 'info', text: 'Redirecting to payment...' });
-    
+    setMessage({ type: 'info', text: 'Processing payment...' });
     try {
-      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-        body: { slug: product.slug },
-      });
+      // Simulate payment processing
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       
-      if (error) {
-        setMessage({ type: 'error', text: `Error: ${error.message}` });
-      } else if (data?.checkout_url) {
-        window.location.href = data.checkout_url;
+      // After successful payment, grant access via API
+      const response = await fetch(`/api/public/products/${product.slug}/grant-access`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setMessage({ type: 'error', text: errorData.error || 'Failed to grant access. Please try again.' });
+        return;
       }
-    } catch {
+
+      const data = await response.json();
+      addToast(data.message || 'Access granted successfully!', 'success');
+      setHasAccess(true);
+      setCountdown(3); // Reset countdown to 3 seconds
+      setShowFullContent(false); // Make sure full content is not shown yet to trigger countdown
+    } catch (err) {
+      console.error('Error in handlePaymentSubmit:', err);
       setMessage({ type: 'error', text: 'An unexpected error occurred.' });
     } finally {
       setLoading(false);
@@ -137,52 +240,51 @@ export default function ProductView({ product }: ProductViewProps) {
         setCountdown(prev => prev - 1);
       }, 1000);
     } else if (hasAccess && countdown === 0 && !showFullContent) {
-      setShowFullContent(true);
+      // Check if we should redirect to return_url
+      const redirected = handleReturnUrlRedirect();
+      if (!redirected) {
+        // No redirect, show full content
+        setShowFullContent(true);
+      }
     }
     
     return () => {
       if (timer) clearTimeout(timer);
     };
-  }, [hasAccess, countdown, showFullContent]);
+  }, [hasAccess, countdown, showFullContent, handleReturnUrlRedirect]);
   
   // Handle free access for logged-in users
   const requestFreeAccess = async () => {
     try {
       setLoading(true);
       
-      // First check if user already has access
-      const { data: existingAccess } = await supabase
-        .from('user_product_access')
-        .select('id')
-        .eq('user_id', user?.id)
-        .eq('product_id', product.id)
-        .single();
+      // Grant access via API
+      const response = await fetch(`/api/public/products/${product.slug}/grant-access`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-      if (existingAccess) {
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 401) {
+          addToast('Please log in to access this product', 'error');
+          return;
+        }
+        addToast(errorData.error || 'Failed to request access. Please try again.', 'error');
+        return;
+      }
+
+      const data = await response.json();
+      
+      if (data.alreadyHadAccess) {
         addToast('You already have access to this product!', 'info');
         setHasAccess(true);
         return;
       }
 
-      const { error } = await supabase
-        .from('user_product_access')
-        .insert([{
-          user_id: user?.id,
-          product_id: product.id,
-        }]);
-
-      if (error) {
-        console.error('Error requesting access:', error);
-        if (error.code === '23505') {
-          addToast('You already have access to this product!', 'info');
-          setHasAccess(true);
-        } else {
-          addToast('Failed to request access. Please try again.', 'error');
-        }
-        return;
-      }
-
-      addToast('Access granted successfully!', 'success');
+      addToast(data.message || 'Access granted successfully!', 'success');
       setHasAccess(true); // Update local state to show countdown
       setCountdown(3); // Reset countdown to 3 seconds
       setShowFullContent(false); // Make sure full content is not shown yet to trigger countdown
@@ -248,51 +350,125 @@ export default function ProductView({ product }: ProductViewProps) {
 
   // View 2: User has access
   if (hasAccess) {
-    // View 2a: Show the full content after countdown or if access was pre-existing
-    if (showFullContent) {
-      return <AccessGrantedView product={product} />;
-    }
+    // Double check if access is still valid before showing content
+    const now = new Date();
+    const expiresAt = userAccess?.access_expires_at ? new Date(userAccess.access_expires_at) : null;
+    const isExpired = expiresAt && expiresAt < now;
     
-    // View 2b: Show the countdown and confetti because access was just granted
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 overflow-hidden relative font-sans">
-        <Confetti
-          width={dimensions.width}
-          height={dimensions.height}
-          recycle={false}
-          numberOfPieces={800}
-          gravity={0.25}
-          initialVelocityX={{ min: -10, max: 10 }}
-          initialVelocityY={{ min: -20, max: 5 }}
-        />
-        <div 
-          className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_20%_20%,#3a2d5b_0%,transparent_40%),radial-gradient(circle_at_80%_70%,#0f3460_0%,transparent_40%)]"
-          style={{ animation: 'aurora 20s infinite linear' }}
-        />
-        <style jsx>{`
-          @keyframes aurora {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-        `}</style>
-        <div className="max-w-4xl mx-auto p-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl z-10 text-center">
-          <div className="text-5xl mb-4">🎉</div>
-          <h2 className="text-3xl font-bold text-white mb-2">Access Granted!</h2>
-          <p className="text-gray-300 mb-6">You now have full access to {product.name}.</p>
-          <div className="text-6xl font-bold text-white tabular-nums">{countdown}</div>
-          <p className="text-gray-400 mt-2">Loading content...</p>
+    if (isExpired) {
+      // Access has expired, reset states and show purchase form
+      setHasAccess(false);
+      setUserAccess(null);
+      setShowFullContent(false);
+      // Fall through to show purchase form
+    } else {
+      // View 2a: Show the full content after countdown or if access was pre-existing
+      if (showFullContent) {
+        return <SecureAccessGrantedView product={product} userAccess={userAccess} />;
+      }
+      
+      // View 2b: Show the countdown and confetti because access was just granted
+      return (
+        <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 overflow-hidden relative font-sans">
+          <Confetti
+            width={dimensions.width}
+            height={dimensions.height}
+            recycle={false}
+            numberOfPieces={800}
+            gravity={0.25}
+            initialVelocityX={{ min: -10, max: 10 }}
+            initialVelocityY={{ min: -20, max: 5 }}
+          />
+          <div 
+            className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_20%_20%,#3a2d5b_0%,transparent_40%),radial-gradient(circle_at_80%_70%,#0f3460_0%,transparent_40%)]"
+            style={{ animation: 'aurora 20s infinite linear' }}
+          />
+          <style jsx>{`
+            @keyframes aurora {
+              0% { background-position: 0% 50%; }
+              50% { background-position: 100% 50%; }
+              100% { background-position: 0% 50%; }
+            }
+          `}</style>
+          <div className="max-w-4xl mx-auto p-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl z-10 text-center">
+            <div className="text-5xl mb-4">🎉</div>
+            <h2 className="text-3xl font-bold text-white mb-2">Access Granted!</h2>
+            <p className="text-gray-300 mb-6">You now have full access to {product.name}.</p>
+            <div className="text-6xl font-bold text-white tabular-nums">{countdown}</div>
+            <p className="text-gray-400 mt-2">Loading content...</p>
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
   }
 
   // View 3: User does not have access yet
   
+  // Handle temporal availability for products that exist but aren't temporally available
+  if (temporalStatus.isNotYetAvailable) {
+    return (
+      <ProductActionLayout>
+        {/* Show availability banner for coming soon products */}
+        <div className="mb-6">
+          <ProductAvailabilityBanner 
+            product={product}
+            isAuthenticated={!!user}
+          />
+        </div>
+        
+        <div className="text-center">
+          <div className="text-4xl mb-4">⏰</div>
+          <h2 className="text-2xl font-semibold text-white mb-2">Coming Soon</h2>
+          <p className="text-gray-400 mb-6">
+            This product is not yet available. Check back later!
+          </p>
+        </div>
+      </ProductActionLayout>
+    );
+  }
+  
+  // Handle expired temporal products
+  if (temporalStatus.isExpired && !hasAccess) {
+    return (
+      <ProductActionLayout>
+        {/* Show availability banner for expired products */}
+        <div className="mb-6">
+          <ProductAvailabilityBanner 
+            product={product}
+            isAuthenticated={!!user}
+          />
+        </div>
+        
+        <div className="text-center">
+          <div className="text-4xl mb-4">⏰</div>
+          <h2 className="text-2xl font-semibold text-white mb-2">Offer Expired</h2>
+          <p className="text-gray-400 mb-6">
+            This product was available for a limited time and is no longer accessible to new customers.
+          </p>
+          <div className="bg-red-800/30 border border-red-500/30 rounded-lg p-4 text-red-200">
+            <p className="text-sm">
+              If you previously had access to this product, please log in to view your content.
+            </p>
+          </div>
+        </div>
+      </ProductActionLayout>
+    );
+  }
+
   // Check if product is inactive - show special message
   if (!product.is_active) {
     return (
       <ProductActionLayout>
+        {/* Show availability banner for inactive products with temporal info */}
+        {(product.available_from || product.available_until) && (
+          <div className="mb-6">
+            <ProductAvailabilityBanner 
+              product={product}
+              isAuthenticated={!!user}
+            />
+          </div>
+        )}
+        
         <div className="text-center">
           <div className="text-4xl mb-4">⚠️</div>
           <h2 className="text-2xl font-semibold text-white mb-2">Product No Longer Available</h2>
@@ -311,6 +487,16 @@ export default function ProductView({ product }: ProductViewProps) {
 
   return (
     <ProductActionLayout>
+      {/* Add availability banner for temporal products */}
+      {(product.available_from || product.available_until) && temporalStatus.isTemporallyAvailable && (
+        <div className="mb-6">
+          <ProductAvailabilityBanner 
+            product={product}
+            isAuthenticated={!!user}
+          />
+        </div>
+      )}
+      
       {product.price === 0 ? (
         // View 3a: Free product flow
         user ? (

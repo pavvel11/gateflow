@@ -9,18 +9,62 @@ export interface Product {
   theme: string
   stripe_price_id: string | null
   layout_template: string
-  redirect_url?: string | null
   is_active: boolean
   is_featured: boolean
+  // Temporal availability fields
+  available_from?: string | null
+  available_until?: string | null
+  // Auto-grant access duration for users
+  auto_grant_duration_days?: number | null
+  // Content delivery fields (clean implementation)
+  content_delivery_type: 'redirect' | 'content'
+  content_config: ProductContentConfig
   created_at: string
   updated_at: string
   tenant_id?: string
+}
+
+export interface ProductContentConfig {
+  // For redirect type
+  redirect_url?: string
+  // For content type
+  content_items?: ContentItem[]
+}
+
+export interface ContentItem {
+  id: string
+  type: 'video_embed' | 'download_link' | 'hosted_video' | 'hosted_file' // Extensible for future
+  title: string
+  description?: string
+  config: ContentItemConfig
+  order: number
+  is_active: boolean
+}
+
+export interface ContentItemConfig {
+  // For video_embed
+  embed_url?: string
+  embed_code?: string
+  // For download_link
+  download_url?: string
+  file_name?: string
+  file_size?: string
+  // For future hosted content
+  hosted_file_id?: string
+  mime_type?: string
+  // Common settings
+  thumbnail_url?: string
+  duration?: string
+  access_level?: 'basic' | 'premium' | 'vip'
 }
 
 export interface UserProductAccess {
   id: string
   user_id: string
   product_id: string
+  access_granted_at: string
+  access_expires_at?: string | null
+  access_duration_days?: number | null
   created_at: string
   tenant_id?: string
   

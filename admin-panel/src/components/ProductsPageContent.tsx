@@ -6,6 +6,7 @@ import FilterBar from './FilterBar';
 import ProductsTable from './ProductsTable';
 import { useToast } from '@/contexts/ToastContext';
 import ProductFormModal, { ProductFormData } from './ProductFormModal';
+import CodeGeneratorModal from './CodeGeneratorModal';
 import { exportProductsToCsv } from '@/utils/csvExport';
 
 const ProductsPageContent: React.FC = () => {
@@ -23,6 +24,8 @@ const ProductsPageContent: React.FC = () => {
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showCodeGenerator, setShowCodeGenerator] = useState(false);
+  const [productForCodeGeneration, setProductForCodeGeneration] = useState<Product | null>(null);
 
   // State for pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -72,7 +75,7 @@ const ProductsPageContent: React.FC = () => {
         status: statusFilter
       });
       
-      const response = await fetch(`/api/products?${params}`);
+      const response = await fetch(`/api/admin/products?${params}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -102,7 +105,7 @@ const ProductsPageContent: React.FC = () => {
   const handleCreateProduct = async (formData: ProductFormData) => {
     setSubmitting(true);
     try {
-      const response = await fetch('/api/products', {
+      const response = await fetch('/api/admin/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -130,7 +133,7 @@ const ProductsPageContent: React.FC = () => {
     if (!editingProduct) return Promise.reject(new Error('No product selected for editing'));
     setSubmitting(true);
     try {
-      const response = await fetch(`/api/products/${editingProduct.id}`, {
+      const response = await fetch(`/api/admin/products/${editingProduct.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -164,7 +167,7 @@ const ProductsPageContent: React.FC = () => {
     if (!productToDelete) return;
     
     try {
-      const response = await fetch(`/api/products/${productToDelete.id}`, {
+      const response = await fetch(`/api/admin/products/${productToDelete.id}`, {
         method: 'DELETE',
       });
 
@@ -195,11 +198,16 @@ const ProductsPageContent: React.FC = () => {
   };
 
   const handlePreviewRedirect = (product: Product) => {
-    if (product.redirect_url) {
-      window.open(product.redirect_url, '_blank');
+    if (product.content_delivery_type === 'redirect' && product.content_config?.redirect_url) {
+      window.open(product.content_config.redirect_url, '_blank');
     } else {
       addToast('This product does not have a redirect URL.', 'warning');
     }
+  };
+
+  const handleGenerateCode = (product: Product) => {
+    setProductForCodeGeneration(product);
+    setShowCodeGenerator(true);
   };
 
   const handleDeleteProductClick = (product: Product) => {
@@ -260,6 +268,7 @@ const ProductsPageContent: React.FC = () => {
         onDeleteProduct={handleDeleteProductClick}
         onPreviewProduct={handlePreviewProduct}
         onPreviewRedirect={handlePreviewRedirect}
+        onGenerateCode={handleGenerateCode}
         currentPage={currentPage}
         totalPages={totalPages}
         totalItems={totalItems}
@@ -332,6 +341,17 @@ const ProductsPageContent: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {showCodeGenerator && productForCodeGeneration && (
+        <CodeGeneratorModal
+          isOpen={showCodeGenerator}
+          onClose={() => {
+            setShowCodeGenerator(false);
+            setProductForCodeGeneration(null);
+          }}
+          product={productForCodeGeneration}
+        />
       )}
     </div>
   );

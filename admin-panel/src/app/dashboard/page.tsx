@@ -2,6 +2,7 @@
 
 import DashboardLayout from '@/components/DashboardLayout'
 import StatsOverview from '@/components/StatsOverview'
+import RecentActivity from '@/components/RecentActivity'
 import { withAdminAuth } from '@/components/withAdminAuth'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -64,23 +65,7 @@ function DashboardPage() {
             </div>
           </div>
           
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Recent Activity
-            </h2>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3 text-sm">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span className="text-gray-600 dark:text-gray-400">System started</span>
-                <span className="text-gray-400 dark:text-gray-500 ml-auto">Just now</span>
-              </div>
-              <div className="flex items-center space-x-3 text-sm">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-gray-600 dark:text-gray-400">Admin panel ready</span>
-                <span className="text-gray-400 dark:text-gray-500 ml-auto">Just now</span>
-              </div>
-            </div>
-          </div>
+          <RecentActivity />
         </div>
       </div>
     </DashboardLayout>

@@ -32,18 +32,12 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  console.log('Middleware check:', { 
-    path: request.nextUrl.pathname,
-    hasUser: !!user,
-    userEmail: user?.email 
-  })
-
   if (
     !user &&
     !request.nextUrl.pathname.startsWith('/login') &&
     !request.nextUrl.pathname.startsWith('/api')
   ) {
-    console.log('Redirecting to login - no user found')
+    // Redirecting to login - no user found
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()
     url.pathname = '/login'

@@ -3,13 +3,44 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 
+/**
+ * Helper function to handle redirect with return_url support
+ */
+function handleRedirect(url: string, returnUrl?: string | null) {
+  if (returnUrl) {
+    try {
+      // Validate return_url for security
+      const returnUrlObj = new URL(returnUrl);
+      
+      // Basic security checks
+      if (returnUrlObj.protocol !== 'https:' && returnUrlObj.protocol !== 'http:') {
+        redirect(url);
+        return;
+      }
+      
+      // Redirect to return_url
+      redirect(returnUrl);
+    } catch (error) {
+      // Only catch actual errors, not NEXT_REDIRECT
+      if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
+        throw error; // Re-throw NEXT_REDIRECT - this is expected behavior
+      }
+      redirect(url);
+    }
+  } else {
+    redirect(url);
+  }
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const productSlug = searchParams.get('product');
+  const returnUrl = searchParams.get('return_url');
 
   // If no product slug is provided, redirect to homepage
   if (!productSlug) {
-    redirect('/');
+    handleRedirect('/');
+    return;
   }
 
   // Initialize Supabase client
@@ -18,9 +49,9 @@ export async function GET(request: Request) {
   // Get authenticated user
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    // If user is not authenticated, redirect to product page
-    // This assumes the product page handles unauthenticated access
-    redirect(`/p/${productSlug}`);
+    // If user is not authenticated, redirect to product page with return_url preserved
+    handleRedirect(`/p/${productSlug}`, returnUrl);
+    return;
   }
 
   try {
@@ -52,14 +83,14 @@ export async function GET(request: Request) {
 
       if (productError) {
         console.error(`[ProductAccess] Error fetching product:`, productError);
-        // If we can't find the product, redirect to home page
-        redirect('/');
+        // If we can't find the product, redirect to home page with return_url
+        handleRedirect('/', returnUrl);
         return;
       }
 
       if (!product) {
         console.log(`[ProductAccess] Product not found or inactive`);
-        redirect('/');
+        handleRedirect('/', returnUrl);
         return;
       }
 
@@ -80,15 +111,15 @@ export async function GET(request: Request) {
           // With the RPC function, we don't need to worry about duplicate key errors
           // as it handles that internally with ON CONFLICT DO NOTHING
           console.error(`[ProductAccess] Error granting access via RPC:`, insertError);
-          redirect(`/p/${productSlug}`);
+          handleRedirect(`/p/${productSlug}`, returnUrl);
           return;
         } else {
           console.log(`[ProductAccess] Access granted successfully`);
         }
       } else {
-        // If product exists but is not free, redirect to payment page
+        // If product exists but is not free, redirect to payment page with return_url
         console.log(`[ProductAccess] Product is not free, redirecting to product page for payment`);
-        redirect(`/p/${productSlug}`);
+        handleRedirect(`/p/${productSlug}`, returnUrl);
         return;
       }
     } else {
@@ -96,36 +127,72 @@ export async function GET(request: Request) {
     }
 
     // At this point, user either already had access or we've granted it (for free products)
-    // Get the product's redirect_url
+    // Get the product's content delivery configuration
     const { data: product, error: redirectError } = await supabase
       .from('products')
-      .select('redirect_url')
+      .select('content_delivery_type, content_config')
       .eq('slug', productSlug)
       .single();
 
     if (redirectError) {
       console.error(`[ProductAccess] Error fetching product for redirect:`, redirectError);
-      // If we can't fetch the redirect info, just go to the product page
-      redirect(`/p/${productSlug}`);
+      // If we can't fetch the redirect info, just go to the product page with return_url
+      handleRedirect(`/p/${productSlug}`, returnUrl);
       return;
     }
 
     // Redirect to the specified URL if available, otherwise to the product page
-    if (product?.redirect_url) {
-      console.log(`[ProductAccess] Redirecting to custom URL:`, product.redirect_url);
-      // Redirect to the custom URL
-      redirect(product.redirect_url);
+    if (product?.content_delivery_type === 'redirect' && product?.content_config?.redirect_url) {
+      console.log(`[ProductAccess] Redirecting to custom URL:`, product.content_config.redirect_url);
+      
+      // Security: Validate redirect URL to prevent open redirect attacks
+      try {
+        const redirectUrl = new URL(product.content_config.redirect_url);
+        
+        // Basic security checks
+        if (redirectUrl.protocol !== 'https:' && redirectUrl.protocol !== 'http:') {
+          console.warn(`[ProductAccess] Invalid protocol in redirect URL: ${redirectUrl.protocol}`);
+          handleRedirect(`/p/${productSlug}`, returnUrl);
+          return;
+        }
+        
+        // Block dangerous URLs (can be expanded)
+        const blockedHosts = ['localhost', '127.0.0.1', '0.0.0.0'];
+        if (blockedHosts.includes(redirectUrl.hostname)) {
+          console.warn(`[ProductAccess] Blocked redirect to localhost/internal IP`);
+          handleRedirect(`/p/${productSlug}`, returnUrl);
+          return;
+        }
+        
+        // Redirect to the validated URL
+        redirect(product.content_config.redirect_url);
+      } catch (error) {
+        console.error(`[ProductAccess] Invalid redirect URL:`, error);
+        handleRedirect(`/p/${productSlug}`, returnUrl);
+        return;
+      }
     } else {
-      console.log(`[ProductAccess] No custom redirect URL, going to product page`);
-      // Redirect to the product page if no redirect_url is specified
-      redirect(`/p/${productSlug}`);
+      console.log(`[ProductAccess] No custom redirect URL, checking for return_url`);
+      
+      // Check if we have a return_url (cross-domain scenario)
+      if (returnUrl) {
+        console.log(`[ProductAccess] Redirecting to return_url:`, returnUrl);
+        handleRedirect(`/p/${productSlug}`, returnUrl);
+      } else {
+        // Standard redirect to product page
+        handleRedirect(`/p/${productSlug}`, returnUrl);
+      }
     }
   } catch (error) {
-    // Handle any unexpected errors
+    // Handle any unexpected errors (but not NEXT_REDIRECT)
+    if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
+      throw error; // Re-throw NEXT_REDIRECT - this is expected behavior
+    }
+    
     console.error('[ProductAccess] Unhandled error:', error);
     
     // Instead of redirecting to access-denied, redirect to the product page
     // This gives a better user experience if something goes wrong
-    redirect(`/p/${productSlug}`);
+    handleRedirect(`/p/${productSlug}`, returnUrl);
   }
 }

@@ -1,0 +1,458 @@
+/**
+ * Product validation utilities with strict security checks
+ * SECURITY: All input data MUST be validated before database operations
+ * No external dependencies - pure TypeScript validation
+ */
+
+// Validation result type
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+}
+
+// Product input types
+export interface CreateProductInput {
+  name: string;
+  slug: string;
+  description: string;
+  price: number;
+  currency?: string;
+  is_active?: boolean;
+  is_featured?: boolean;
+  icon?: string;
+  theme?: string;
+  content_delivery_type?: string;
+  content_config?: {
+    content_items: Array<{
+      id: string;
+      type: string;
+      title: string;
+      content: string;
+      order: number;
+      is_active: boolean;
+    }>;
+  };
+  available_from?: string | null;
+  available_until?: string | null;
+  auto_grant_duration_days?: number | null;
+}
+
+export interface UpdateProductInput {
+  name?: string;
+  slug?: string;
+  description?: string;
+  price?: number;
+  currency?: string;
+  is_active?: boolean;
+  is_featured?: boolean;
+  icon?: string;
+  theme?: string;
+  content_delivery_type?: string;
+  content_config?: {
+    content_items: Array<{
+      id: string;
+      type: string;
+      title: string;
+      content: string;
+      order: number;
+      is_active: boolean;
+    }>;
+  };
+  available_from?: string | null;
+  available_until?: string | null;
+  auto_grant_duration_days?: number | null;
+}
+
+// Validation functions
+function validateSlug(slug: string): ValidationResult {
+  const errors: string[] = [];
+  
+  if (!slug || typeof slug !== 'string') {
+    errors.push('Slug is required');
+  } else {
+    const trimmedSlug = slug.trim();
+    
+    if (trimmedSlug.length === 0) {
+      errors.push('Slug cannot be empty');
+    } else if (trimmedSlug.length > 100) {
+      errors.push('Slug must be less than 100 characters');
+    } else if (!/^[a-z0-9-]+$/.test(trimmedSlug)) {
+      errors.push('Slug can only contain lowercase letters, numbers, and hyphens');
+    } else if (trimmedSlug.startsWith('-') || trimmedSlug.endsWith('-')) {
+      errors.push('Slug cannot start or end with hyphens');
+    } else if (trimmedSlug.includes('--')) {
+      errors.push('Slug cannot contain consecutive hyphens');
+    }
+  }
+  
+  return { isValid: errors.length === 0, errors };
+}
+
+function validateName(name: string): ValidationResult {
+  const errors: string[] = [];
+  
+  if (!name || typeof name !== 'string') {
+    errors.push('Name is required');
+  } else {
+    const trimmedName = name.trim();
+    
+    if (trimmedName.length === 0) {
+      errors.push('Name cannot be empty');
+    } else if (trimmedName.length > 200) {
+      errors.push('Name must be less than 200 characters');
+    }
+  }
+  
+  return { isValid: errors.length === 0, errors };
+}
+
+function validateDescription(description: string): ValidationResult {
+  const errors: string[] = [];
+  
+  if (!description || typeof description !== 'string') {
+    errors.push('Description is required');
+  } else {
+    const trimmedDescription = description.trim();
+    
+    if (trimmedDescription.length === 0) {
+      errors.push('Description cannot be empty');
+    } else if (trimmedDescription.length > 1000) {
+      errors.push('Description must be less than 1000 characters');
+    }
+  }
+  
+  return { isValid: errors.length === 0, errors };
+}
+
+function validatePrice(price: number): ValidationResult {
+  const errors: string[] = [];
+  
+  if (typeof price !== 'number') {
+    errors.push('Price must be a number');
+  } else if (isNaN(price) || !isFinite(price)) {
+    errors.push('Price must be a valid number');
+  } else if (price < 0) {
+    errors.push('Price must be non-negative');
+  } else if (price > 999999.99) {
+    errors.push('Price cannot exceed $999,999.99');
+  }
+  
+  return { isValid: errors.length === 0, errors };
+}
+
+function validateCurrency(currency: string): ValidationResult {
+  const errors: string[] = [];
+  const supportedCurrencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD'];
+  
+  if (!currency || typeof currency !== 'string') {
+    errors.push('Currency is required');
+  } else if (currency.length !== 3) {
+    errors.push('Currency must be exactly 3 characters');
+  } else if (!/^[A-Z]{3}$/.test(currency)) {
+    errors.push('Currency must be uppercase letters only');
+  } else if (!supportedCurrencies.includes(currency)) {
+    errors.push('Unsupported currency');
+  }
+  
+  return { isValid: errors.length === 0, errors };
+}
+
+function validateIcon(icon: string): ValidationResult {
+  const errors: string[] = [];
+  
+  if (!icon || typeof icon !== 'string') {
+    errors.push('Icon is required');
+  } else if (icon.length > 10) {
+    errors.push('Icon must be less than 10 characters');
+  } else if (!/^[\p{Emoji}\p{Symbol}]$/u.test(icon) && !/^[a-zA-Z0-9-_]+$/.test(icon)) {
+    errors.push('Invalid icon format');
+  }
+  
+  return { isValid: errors.length === 0, errors };
+}
+
+function validateTheme(theme: string): ValidationResult {
+  const errors: string[] = [];
+  const validThemes = ['blue', 'green', 'purple', 'red', 'orange', 'teal', 'pink', 'gray'];
+  
+  if (!theme || typeof theme !== 'string') {
+    errors.push('Theme is required');
+  } else if (!validThemes.includes(theme)) {
+    errors.push('Invalid theme color');
+  }
+  
+  return { isValid: errors.length === 0, errors };
+}
+
+function validateContentDeliveryType(type: string): ValidationResult {
+  const errors: string[] = [];
+  const validTypes = ['content', 'redirect', 'download'];
+  
+  if (!type || typeof type !== 'string') {
+    errors.push('Content delivery type is required');
+  } else if (!validTypes.includes(type)) {
+    errors.push('Invalid content delivery type');
+  }
+  
+  return { isValid: errors.length === 0, errors };
+}
+
+function validateDate(date: string | null): ValidationResult {
+  const errors: string[] = [];
+  
+  if (date !== null && date !== undefined && date !== '') {
+    if (typeof date !== 'string') {
+      errors.push('Date must be a string');
+    } else if (isNaN(Date.parse(date))) {
+      errors.push('Invalid date format');
+    } else {
+      const parsedDate = new Date(date);
+      const now = new Date();
+      const maxFutureDate = new Date(now.getFullYear() + 10, now.getMonth(), now.getDate());
+      
+      if (parsedDate < new Date('2020-01-01') || parsedDate > maxFutureDate) {
+        errors.push('Date must be between 2020 and 10 years in the future');
+      }
+    }
+  }
+  
+  return { isValid: errors.length === 0, errors };
+}
+
+function validateDuration(duration: number | null): ValidationResult {
+  const errors: string[] = [];
+  
+  if (duration !== null && duration !== undefined) {
+    if (typeof duration !== 'number') {
+      errors.push('Duration must be a number');
+    } else if (!Number.isInteger(duration)) {
+      errors.push('Duration must be an integer');
+    } else if (duration < 1) {
+      errors.push('Duration must be at least 1 day');
+    } else if (duration > 3650) {
+      errors.push('Duration cannot exceed 10 years');
+    }
+  }
+  
+  return { isValid: errors.length === 0, errors };
+}
+
+function validateUUID(uuid: string): ValidationResult {
+  const errors: string[] = [];
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  
+  if (!uuid || typeof uuid !== 'string') {
+    errors.push('UUID is required');
+  } else if (!uuidRegex.test(uuid)) {
+    errors.push('Invalid UUID format');
+  }
+  
+  return { isValid: errors.length === 0, errors };
+}
+
+// Main validation functions
+export function validateCreateProduct(data: unknown): ValidationResult {
+  const errors: string[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const input = data as any;
+  
+  // Validate required fields
+  const nameResult = validateName(input.name);
+  const slugResult = validateSlug(input.slug);
+  const descriptionResult = validateDescription(input.description);
+  const priceResult = validatePrice(input.price);
+  
+  errors.push(...nameResult.errors, ...slugResult.errors, ...descriptionResult.errors, ...priceResult.errors);
+  
+  // Validate optional fields
+  if (input.currency) {
+    const currencyResult = validateCurrency(input.currency);
+    errors.push(...currencyResult.errors);
+  }
+  
+  if (input.icon) {
+    const iconResult = validateIcon(input.icon);
+    errors.push(...iconResult.errors);
+  }
+  
+  if (input.theme) {
+    const themeResult = validateTheme(input.theme);
+    errors.push(...themeResult.errors);
+  }
+  
+  if (input.content_delivery_type) {
+    const typeResult = validateContentDeliveryType(input.content_delivery_type);
+    errors.push(...typeResult.errors);
+  }
+  
+  if (input.available_from) {
+    const fromResult = validateDate(input.available_from);
+    errors.push(...fromResult.errors);
+  }
+  
+  if (input.available_until) {
+    const untilResult = validateDate(input.available_until);
+    errors.push(...untilResult.errors);
+  }
+  
+  if (input.auto_grant_duration_days !== null && input.auto_grant_duration_days !== undefined) {
+    const durationResult = validateDuration(input.auto_grant_duration_days);
+    errors.push(...durationResult.errors);
+  }
+  
+  // Validate date range
+  if (input.available_from && input.available_until) {
+    const fromDate = new Date(input.available_from);
+    const untilDate = new Date(input.available_until);
+    if (fromDate >= untilDate) {
+      errors.push('Available from date must be before available until date');
+    }
+  }
+  
+  return { isValid: errors.length === 0, errors };
+}
+
+export function validateUpdateProduct(data: unknown): ValidationResult {
+  const errors: string[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const input = data as any;
+  
+  // Validate fields only if provided
+  if (input.name !== undefined) {
+    const nameResult = validateName(input.name);
+    errors.push(...nameResult.errors);
+  }
+  
+  if (input.slug !== undefined) {
+    const slugResult = validateSlug(input.slug);
+    errors.push(...slugResult.errors);
+  }
+  
+  if (input.description !== undefined) {
+    const descriptionResult = validateDescription(input.description);
+    errors.push(...descriptionResult.errors);
+  }
+  
+  if (input.price !== undefined) {
+    const priceResult = validatePrice(input.price);
+    errors.push(...priceResult.errors);
+  }
+  
+  if (input.currency !== undefined) {
+    const currencyResult = validateCurrency(input.currency);
+    errors.push(...currencyResult.errors);
+  }
+  
+  if (input.icon !== undefined) {
+    const iconResult = validateIcon(input.icon);
+    errors.push(...iconResult.errors);
+  }
+  
+  if (input.theme !== undefined) {
+    const themeResult = validateTheme(input.theme);
+    errors.push(...themeResult.errors);
+  }
+  
+  if (input.content_delivery_type !== undefined) {
+    const typeResult = validateContentDeliveryType(input.content_delivery_type);
+    errors.push(...typeResult.errors);
+  }
+  
+  if (input.available_from !== undefined) {
+    const fromResult = validateDate(input.available_from);
+    errors.push(...fromResult.errors);
+  }
+  
+  if (input.available_until !== undefined) {
+    const untilResult = validateDate(input.available_until);
+    errors.push(...untilResult.errors);
+  }
+  
+  if (input.auto_grant_duration_days !== undefined) {
+    const durationResult = validateDuration(input.auto_grant_duration_days);
+    errors.push(...durationResult.errors);
+  }
+  
+  // Validate date range if both are provided
+  if (input.available_from && input.available_until) {
+    const fromDate = new Date(input.available_from);
+    const untilDate = new Date(input.available_until);
+    if (fromDate >= untilDate) {
+      errors.push('Available from date must be before available until date');
+    }
+  }
+  
+  return { isValid: errors.length === 0, errors };
+}
+
+export function validateProductId(id: string): ValidationResult {
+  return validateUUID(id);
+}
+
+// Data sanitization function
+export function sanitizeProductData(data: Record<string, unknown>): Record<string, unknown> {
+  // Create a copy to avoid mutating original data
+  const sanitizedData = { ...data };
+  
+  // Remove dangerous fields that should not be set by user
+  delete sanitizedData.id;
+  delete sanitizedData.created_at;
+  delete sanitizedData.updated_at;
+
+  // Sanitize and trim string fields
+  if (sanitizedData.name && typeof sanitizedData.name === 'string') {
+    sanitizedData.name = sanitizedData.name.trim();
+  }
+  
+  if (sanitizedData.description && typeof sanitizedData.description === 'string') {
+    sanitizedData.description = sanitizedData.description.trim();
+  }
+  
+  if (sanitizedData.slug && typeof sanitizedData.slug === 'string') {
+    sanitizedData.slug = sanitizedData.slug.toLowerCase().trim();
+  }
+  
+  if (sanitizedData.currency && typeof sanitizedData.currency === 'string') {
+    sanitizedData.currency = sanitizedData.currency.toUpperCase().trim();
+  }
+  
+  // Convert empty strings to null for date fields
+  if (sanitizedData.available_from === '') {
+    sanitizedData.available_from = null;
+  }
+  
+  if (sanitizedData.available_until === '') {
+    sanitizedData.available_until = null;
+  }
+  
+  // Set defaults
+  if (sanitizedData.currency === undefined) {
+    sanitizedData.currency = 'USD';
+  }
+  
+  if (sanitizedData.icon === undefined) {
+    sanitizedData.icon = '📦';
+  }
+  
+  if (sanitizedData.theme === undefined) {
+    sanitizedData.theme = 'blue';
+  }
+  
+  if (sanitizedData.content_delivery_type === undefined) {
+    sanitizedData.content_delivery_type = 'content';
+  }
+  
+  if (sanitizedData.content_config === undefined) {
+    sanitizedData.content_config = { content_items: [] };
+  }
+  
+  if (sanitizedData.is_active === undefined) {
+    sanitizedData.is_active = true;
+  }
+  
+  if (sanitizedData.is_featured === undefined) {
+    sanitizedData.is_featured = false;
+  }
+  
+  return sanitizedData;
+}

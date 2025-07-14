@@ -57,13 +57,29 @@ export async function GET(request: NextRequest) {
   
   if (redirectTo) {
     try {
-      // Ensure the redirectTo is a valid URL path on our site (security)
-      const redirectToUrl = new URL(redirectTo, requestUrl.origin)
-      if (redirectToUrl.origin === requestUrl.origin) {
-        redirectPath = redirectToUrl.pathname + redirectToUrl.search
+      // Decode the redirect URL to handle encoded parameters
+      const decodedRedirectTo = decodeURIComponent(redirectTo)
+      
+      console.log('🔍 [AuthCallback] Processing redirect:', {
+        original: redirectTo,
+        decoded: decodedRedirectTo,
+        startsWithSlash: decodedRedirectTo.startsWith('/')
+      })
+      
+      // Check if it's a relative path (starts with /)
+      if (decodedRedirectTo.startsWith('/')) {
+        redirectPath = decodedRedirectTo
+        console.log('🔍 [AuthCallback] Using relative path:', redirectPath)
+      } else {
+        // If it's a full URL, validate it's on our domain
+        const redirectToUrl = new URL(decodedRedirectTo)
+        if (redirectToUrl.origin === requestUrl.origin) {
+          redirectPath = redirectToUrl.pathname + redirectToUrl.search
+          console.log('🔍 [AuthCallback] Using full URL path:', redirectPath)
+        }
       }
-    } catch {
-      console.error('Invalid redirect URL:', redirectTo)
+    } catch (error) {
+      console.error('🔍 [AuthCallback] Invalid redirect URL:', redirectTo, error)
     }
   } else {
     // No custom redirect, check user role to determine default redirect
@@ -84,6 +100,11 @@ export async function GET(request: NextRequest) {
   
   // Use the request origin for redirects (works in any environment)
   const redirectUrl = new URL(redirectPath, requestUrl.origin)
+  
+  console.log('🔍 [AuthCallback] Final redirect:', {
+    redirectPath,
+    redirectUrl: redirectUrl.toString()
+  })
   
   // Create redirect response and transfer auth cookies
   const redirectResponse = NextResponse.redirect(redirectUrl)

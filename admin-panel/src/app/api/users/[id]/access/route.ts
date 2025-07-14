@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-
-interface UserAccessRequest {
-  product_id: string;
-}
+import { 
+  validateGrantAccess, 
+  sanitizeGrantAccessData 
+} from '@/lib/validations/access';
 
 // GET /api/users/[id]/access - Get user's product access
 export async function GET(
@@ -32,6 +32,9 @@ export async function GET(
         product_currency,
         product_is_active,
         access_created_at,
+        access_granted_at,
+        access_expires_at,
+        access_duration_days,
         product_slug
       `)
       .eq('user_id', userId)
@@ -67,10 +70,22 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body: UserAccessRequest = await request.json();
+    const body = await request.json();
+
+    // Sanitize input data
+    const sanitizedData = sanitizeGrantAccessData(body);
+
+    // Validate input data
+    const validation = validateGrantAccess(sanitizedData);
+    if (!validation.isValid) {
+      return NextResponse.json({ 
+        error: 'Validation failed', 
+        details: validation.errors 
+      }, { status: 400 });
+    }
 
     // Validate request body
-    if (!body.product_id) {
+    if (!sanitizedData.product_id) {
       return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
     }
 
@@ -78,7 +93,7 @@ export async function POST(
     const { data: product, error: productError } = await supabase
       .from('products')
       .select('id, name, is_active')
-      .eq('id', body.product_id)
+      .eq('id', sanitizedData.product_id)
       .single();
 
     if (productError || !product) {
@@ -94,7 +109,7 @@ export async function POST(
       .from('user_product_access')
       .select('id')
       .eq('user_id', userId)
-      .eq('product_id', body.product_id)
+      .eq('product_id', sanitizedData.product_id)
       .single();
 
     if (existingError && existingError.code !== 'PGRST116') {
@@ -107,14 +122,33 @@ export async function POST(
     }
 
     // Grant access
+    const accessData: {
+      user_id: string;
+      product_id: string;
+      created_at: string;
+      access_duration_days?: number;
+      access_expires_at?: string;
+    } = {
+      user_id: userId,
+      product_id: sanitizedData.product_id as string,
+      created_at: new Date().toISOString()
+    };
+
+    // Add temporal access fields if provided
+    if (sanitizedData.access_duration_days) {
+      accessData.access_duration_days = sanitizedData.access_duration_days as number;
+      // Calculate expiration date based on duration
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + (sanitizedData.access_duration_days as number));
+      accessData.access_expires_at = expirationDate.toISOString();
+    } else if (sanitizedData.access_expires_at) {
+      accessData.access_expires_at = sanitizedData.access_expires_at as string;
+    }
+
     const { data: newAccess, error: accessError } = await supabase
       .from('user_product_access')
-      .insert({
-        user_id: userId,
-        product_id: body.product_id,
-        created_at: new Date().toISOString()
-      })
-      .select('id, product_id, created_at')
+      .insert(accessData)
+      .select('id, product_id, created_at, access_expires_at, access_duration_days')
       .single();
 
     if (accessError) {

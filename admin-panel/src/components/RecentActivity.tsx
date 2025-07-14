@@ -1,0 +1,222 @@
+'use client'
+
+import { createClient } from '@/lib/supabase/client'
+import { useEffect, useState } from 'react'
+
+interface ActivityItem {
+  id: string
+  type: 'access_granted' | 'product_created' | 'user_registered'
+  message: string
+  timestamp: string
+  user_email?: string
+  product_name?: string
+  icon: 'user' | 'product' | 'access'
+  color: string
+}
+
+export default function RecentActivity() {
+  const [activities, setActivities] = useState<ActivityItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+
+  useEffect(() => {
+    async function fetchRecentActivity() {
+      try {
+        // Get recent access grants with user email
+        const { data: accessGrants } = await supabase
+          .from('user_product_access')
+          .select(`
+            id,
+            created_at,
+            user_id,
+            product_id,
+            products(name)
+          `)
+          .order('created_at', { ascending: false })
+          .limit(10)
+
+        // Get user emails separately (since direct auth.users join might not work)
+        const userIds = [...new Set(accessGrants?.map(grant => grant.user_id) || [])]
+        const { data: users } = await supabase
+          .from('user_access_stats')
+          .select('user_id, email')
+          .in('user_id', userIds)
+
+        // Create user email lookup map
+        const userEmailMap = new Map(users?.map(user => [user.user_id, user.email]) || [])
+
+        // Get recent products
+        const { data: recentProducts } = await supabase
+          .from('products')
+          .select('id, name, created_at')
+          .order('created_at', { ascending: false })
+          .limit(5)
+
+        const activityItems: ActivityItem[] = []
+
+        // Process access grants
+        if (accessGrants) {
+          accessGrants.forEach(grant => {
+            // For one-to-one relation, Supabase returns single object, not array
+            const product = grant.products as unknown as { name: string } | null
+            const productName = product?.name || 'Unknown product'
+            const userEmail = userEmailMap.get(grant.user_id) || grant.user_id
+            
+            activityItems.push({
+              id: `access_${grant.id}`,
+              type: 'access_granted',
+              message: `Access granted to ${productName}`,
+              timestamp: grant.created_at,
+              user_email: userEmail,
+              product_name: productName,
+              icon: 'access',
+              color: 'green'
+            })
+          })
+        }
+
+        // Process new products
+        if (recentProducts) {
+          recentProducts.forEach(product => {
+            activityItems.push({
+              id: `product_${product.id}`,
+              type: 'product_created',
+              message: `New product created: ${product.name}`,
+              timestamp: product.created_at,
+              product_name: product.name,
+              icon: 'product',
+              color: 'blue'
+            })
+          })
+        }
+
+        // Sort by timestamp and take latest 8
+        activityItems.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        setActivities(activityItems.slice(0, 8))
+
+      } catch (error) {
+        console.error('Error fetching recent activity:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchRecentActivity()
+  }, [supabase])
+
+  const formatTimeAgo = (timestamp: string) => {
+    const now = new Date()
+    const past = new Date(timestamp)
+    const diffMs = now.getTime() - past.getTime()
+    const diffMins = Math.floor(diffMs / (1000 * 60))
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+    if (diffMins < 1) return 'Just now'
+    if (diffMins < 60) return `${diffMins}m ago`
+    if (diffHours < 24) return `${diffHours}h ago`
+    if (diffDays < 7) return `${diffDays}d ago`
+    return past.toLocaleDateString()
+  }
+
+  const getIcon = (type: ActivityItem['icon']) => {
+    switch (type) {
+      case 'access':
+        return (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        )
+      case 'product':
+        return (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+        )
+      case 'user':
+        return (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        )
+      default:
+        return null
+    }
+  }
+
+  const getColorClasses = (color: string) => {
+    switch (color) {
+      case 'green':
+        return 'bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400'
+      case 'blue':
+        return 'bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
+      case 'yellow':
+        return 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400'
+      default:
+        return 'bg-gray-100 text-gray-600 dark:bg-gray-900/20 dark:text-gray-400'
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+          Recent Activity
+        </h2>
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex items-center space-x-3 animate-pulse">
+              <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+              <div className="flex-1">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-1"></div>
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+              </div>
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+        Recent Activity
+      </h2>
+      <div className="space-y-3">
+        {activities.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="text-gray-400 dark:text-gray-500 mb-2">
+              <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">No recent activity</p>
+          </div>
+        ) : (
+          activities.map((activity) => (
+            <div key={activity.id} className="flex items-center space-x-3 group hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg p-2 -m-2 transition-colors">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getColorClasses(activity.color)}`}>
+                {getIcon(activity.icon)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                  {activity.message}
+                </p>
+                {activity.user_email && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                    {activity.user_email}
+                  </p>
+                )}
+              </div>
+              <span className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">
+                {formatTimeAgo(activity.timestamp)}
+              </span>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  )
+}

@@ -28,21 +28,37 @@ export default function StatsOverview() {
           .from('products')
           .select('*', { count: 'exact', head: true })
 
-        // Get total users (from auth.users)
-        const { count: usersCount } = await supabase
+        // Get total unique users from user_product_access
+        const { data: accessUsers } = await supabase
           .from('user_product_access')
-          .select('user_id', { count: 'exact', head: true })
+          .select('user_id')
+        
+        const uniqueUsers = new Set(accessUsers?.map(record => record.user_id) || [])
+        const totalUsers = uniqueUsers.size
 
         // Get total access records
         const { count: accessCount } = await supabase
           .from('user_product_access')
           .select('*', { count: 'exact', head: true })
 
+        // Get active users (users who have accessed products recently)
+        // Since we don't have last_login tracking yet, we'll use recent access grants as a proxy
+        const sevenDaysAgo = new Date()
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+        
+        const { data: recentAccessUsers } = await supabase
+          .from('user_product_access')
+          .select('user_id, created_at')
+          .gte('created_at', sevenDaysAgo.toISOString())
+        
+        const activeUniqueUsers = new Set(recentAccessUsers?.map(record => record.user_id) || [])
+        const activeUsers = activeUniqueUsers.size
+
         setStats({
           totalProducts: productsCount || 0,
-          totalUsers: usersCount || 0,
+          totalUsers: totalUsers,
           totalAccess: accessCount || 0,
-          activeUsers: usersCount || 0, // Simplified for now
+          activeUsers: activeUsers,
         })
       } catch (error) {
         console.error('Error fetching stats:', error)
@@ -89,7 +105,7 @@ export default function StatsOverview() {
       bgColor: 'from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20',
     },
     {
-      name: 'Active Users',
+      name: 'Active Users (7d)',
       value: stats.activeUsers,
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -49,13 +49,25 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
                   href="/dashboard/products"
                   className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
-                  Products
+                  Manage Products
                 </Link>
                 <Link
                   href="/dashboard/users"
                   className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   Users
+                </Link>
+                <Link
+                  href="/my-products"
+                  className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  My Products
+                </Link>
+                <Link
+                  href="/products"
+                  className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Store
                 </Link>
               </div>
             </div>

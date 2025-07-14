@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Product } from '@/types';
+import { Product, ContentItem } from '@/types';
+import { ProductContentConfig } from '@/types';
+import DateTimePicker from './ui/DateTimePicker';
 import IconSelector from './IconSelector';
 import { getIconEmoji } from '@/utils/themeUtils';
 import { CURRENCIES, getCurrencySymbol } from '@/lib/constants';
@@ -22,10 +24,20 @@ export interface ProductFormData {
   description: string;
   price: number;
   currency: string;
-  redirect_url?: string | null;
   is_active: boolean;
   is_featured: boolean;
   icon: string;
+  // Temporal availability fields
+  available_from?: string | null;
+  available_until?: string | null;
+  // Auto-grant access duration for users
+  auto_grant_duration_days?: number | null;
+  // Content delivery fields
+  content_delivery_type: 'redirect' | 'content';
+  content_config: {
+    redirect_url?: string;
+    content_items?: ContentItem[]; // We'll manage content items separately
+  };
 }
 
 const ProductFormModal: React.FC<ProductFormModalProps> = ({
@@ -42,10 +54,16 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
     description: '',
     price: 0,
     currency: 'USD',
-    redirect_url: '',
     is_active: true,
     is_featured: false,
-    icon: 'cube'
+    icon: 'cube',
+    available_from: '',
+    available_until: '',
+    auto_grant_duration_days: null,
+    content_delivery_type: 'content',
+    content_config: {
+      content_items: []
+    }
   });
   
   // Separate state for the displayed price input value
@@ -64,10 +82,14 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         description: product.description,
         price: product.price,
         currency: product.currency || 'USD',
-        redirect_url: product.redirect_url || '',
         is_active: product.is_active,
         is_featured: product.is_featured || false,
-        icon: product.icon || getIconEmoji('rocket') // Use emoji directly
+        icon: product.icon || getIconEmoji('rocket'), // Use emoji directly
+        available_from: product.available_from || '',
+        available_until: product.available_until || '',
+        auto_grant_duration_days: product.auto_grant_duration_days || null,
+        content_delivery_type: product.content_delivery_type || 'content',
+        content_config: product.content_config || { content_items: [] }
       });
       // Set display value for price - always show the value, even for zero
       setPriceDisplayValue(product.price.toString().replace('.', ','));
@@ -80,10 +102,14 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         description: '',
         price: 0,
         currency: 'USD',
-        redirect_url: '',
         is_active: true,
         is_featured: false,
-        icon: getIconEmoji('rocket') // Use emoji directly for new products
+        icon: getIconEmoji('rocket'), // Use emoji directly for new products
+        available_from: '',
+        available_until: '',
+        auto_grant_duration_days: null,
+        content_delivery_type: 'content',
+        content_config: { content_items: [] }
       });
       setPriceDisplayValue('');
       setSlugModified(false);
@@ -385,28 +411,236 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             </div>
           </ModalSection>
 
-          {/* Advanced Settings */}
-          <ModalSection title="Advanced Settings">
+          {/* Temporal Availability Settings */}
+          <ModalSection title="Temporal Availability">
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <DateTimePicker
+                  label="Available From"
+                  value={formData.available_from || ''}
+                  onChange={(value) => setFormData(prev => ({ ...prev, available_from: value }))}
+                  placeholder="Select start date and time"
+                  description="Product will be available starting from this date and time"
+                  showTimeSelect={true}
+                />
+
+                <DateTimePicker
+                  label="Available Until"
+                  value={formData.available_until || ''}
+                  onChange={(value) => setFormData(prev => ({ ...prev, available_until: value }))}
+                  placeholder="Select end date and time"
+                  description="Product will be unavailable after this date and time"
+                  showTimeSelect={true}
+                  minDate={formData.available_from ? new Date(formData.available_from) : undefined}
+                />
+              </div>
+              
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">Temporal Availability</h4>
+                    <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                      Leave both fields empty for permanent availability. Set only &ldquo;Available From&rdquo; for products launching in the future. 
+                      Set only &ldquo;Available Until&rdquo; for limited-time offers.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ModalSection>
+
+          {/* Auto-Grant Access Settings */}
+          <ModalSection title="Auto-Grant Access Settings">
             <div className="space-y-4">
               <div>
-                <label htmlFor="redirect_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Redirect URL
+                <label htmlFor="auto-grant-duration" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Default Access Duration (days)
                   <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">(optional)</span>
                 </label>
                 <input
-                  type="url"
-                  id="redirect_url"
-                  name="redirect_url"
-                  placeholder="https://example.com/your-content"
-                  value={formData.redirect_url || ''}
-                  onChange={handleInputChange}
+                  type="number"
+                  id="auto-grant-duration"
+                  name="auto_grant_duration_days"
+                  value={formData.auto_grant_duration_days || ''}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    auto_grant_duration_days: e.target.value ? Number(e.target.value) : null
+                  }))}
+                  min="1"
                   className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  placeholder="e.g., 30 for 30 days"
                 />
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  URL to redirect users after gaining access. Leave empty to show default product page.
+                  When users gain access to this product, their access will automatically expire after this many days. 
+                  Leave empty for permanent access.
                 </p>
               </div>
+              
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-amber-600 dark:text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h4 className="text-sm font-medium text-amber-800 dark:text-amber-200">Auto-Grant Duration</h4>
+                    <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                      This setting applies to automatic access grants (e.g., free products, purchases). 
+                      Manual access grants through the admin panel can override this setting.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ModalSection>
 
+          {/* Content Delivery Settings */}
+          <ModalSection title="Content Delivery">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Content Delivery Type
+                </label>
+                <select
+                  value={formData.content_delivery_type}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    content_delivery_type: e.target.value as 'redirect' | 'content'
+                  }))}
+                  className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="content">Content Items</option>
+                  <option value="redirect">Redirect</option>
+                </select>
+              </div>
+
+              {formData.content_delivery_type === 'redirect' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Redirect URL
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://example.com/your-content"
+                    value={(formData.content_config as { redirect_url?: string })?.redirect_url || ''}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      content_config: { redirect_url: e.target.value }
+                    }))}
+                    className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  />
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    URL to redirect users after gaining access.
+                  </p>
+                </div>
+              )}
+
+              {formData.content_delivery_type === 'content' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Content Items
+                  </label>
+                  <div className="space-y-2">
+                    {(formData.content_config as ProductContentConfig)?.content_items?.map((item, index) => (
+                      <div key={index} className="flex items-center space-x-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <select
+                          value={item.type}
+                          onChange={(e) => {
+                            const newItems = [...((formData.content_config as ProductContentConfig)?.content_items || [])];
+                            newItems[index] = { ...item, type: e.target.value as 'video_embed' | 'download_link' };
+                            setFormData(prev => ({ 
+                              ...prev, 
+                              content_config: { ...prev.content_config, content_items: newItems }
+                            }));
+                          }}
+                          className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-white"
+                        >
+                          <option value="video_embed">Video Embed</option>
+                          <option value="download_link">Download Link</option>
+                        </select>
+                        <input
+                          type="text"
+                          placeholder="Title"
+                          value={item.title}
+                          onChange={(e) => {
+                            const newItems = [...((formData.content_config as ProductContentConfig)?.content_items || [])];
+                            newItems[index] = { ...item, title: e.target.value };
+                            setFormData(prev => ({ 
+                              ...prev, 
+                              content_config: { ...prev.content_config, content_items: newItems }
+                            }));
+                          }}
+                          className="flex-1 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-white"
+                        />
+                        <input
+                          type="text"
+                          placeholder="URL"
+                          value={item.config?.embed_url || item.config?.download_url || ''}
+                          onChange={(e) => {
+                            const newItems = [...((formData.content_config as ProductContentConfig)?.content_items || [])];
+                            const configKey = item.type === 'video_embed' ? 'embed_url' : 'download_url';
+                            newItems[index] = { 
+                              ...item, 
+                              config: { ...item.config, [configKey]: e.target.value } 
+                            };
+                            setFormData(prev => ({ 
+                              ...prev, 
+                              content_config: { ...prev.content_config, content_items: newItems }
+                            }));
+                          }}
+                          className="flex-1 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-white"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newItems = ((formData.content_config as ProductContentConfig)?.content_items || []).filter((_, i) => i !== index);
+                            setFormData(prev => ({ 
+                              ...prev, 
+                              content_config: { ...prev.content_config, content_items: newItems }
+                            }));
+                          }}
+                          className="px-2 py-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const currentItems = ((formData.content_config as ProductContentConfig)?.content_items || []);
+                        const newItems = [...currentItems, {
+                          id: `temp-${Date.now()}`,
+                          type: 'video_embed' as const,
+                          title: '',
+                          config: { embed_url: '' },
+                          order: currentItems.length + 1,
+                          is_active: true
+                        }];
+                        setFormData(prev => ({ 
+                          ...prev, 
+                          content_config: { ...prev.content_config, content_items: newItems }
+                        }));
+                      }}
+                      className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
+                    >
+                      Add Content Item
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </ModalSection>
+
+          {/* Advanced Settings */}
+          <ModalSection title="Advanced Settings">
+            <div className="space-y-4">
               <div className="flex items-center">
                 <input
                   type="checkbox"

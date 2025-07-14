@@ -1,1564 +1,1498 @@
-// gatekeeper.js (v9 - Enterprise Content Protection System)
-// GateFlow - Professional Content Access Control
-// Updated 2025-07-11: Complete refactor to use product_id-based access control
-// 
-// 🏢 ENTERPRISE FEATURES:
-// • Domain-based licensing with anti-tampering protection
-// • Advanced analytics with custom dimensions & device tracking  
-// • Batch operations with intelligent caching (5min TTL)
-// • Multi-theme UI support with accessibility features
-// • Error handling with configurable fallback modes
-// • Performance monitoring with retry logic & timeouts
-//
-// 🔐 SECURITY FEATURES:
-// • Protected elements REMOVED from DOM (not just hidden)
-// • License verification via multiple redundant endpoints
-// • Domain fingerprinting with browser environment detection
-// • Auto-restoring watermark with MutationObserver protection
-// • Obfuscated license keys and domain validation
-//
-// 💡 USAGE MODES:
-// • Page Protection: Entire page access control
-// • Element Protection: Selective content via data-gatekeeper-product  
-// • Toggle Mode: Free/paid content switching via data-free/data-paid
-//
-// � ACCESS CONTROL SYSTEM:
-// • Uses product_id-based access records (not product_slug) for robust access control
-// • Secure server-side RPC functions for checking and granting access
-// • Efficient view-based lookups for batch operations
-// • All database operations properly maintain referential integrity
-//
-// �📄 LICENSE: Freemium model - Free with watermark, $49/domain/year for removal
-// 🌐 Website: https://gateflow.pl | 📧 Support: support@gateflow.pl
+/**
+ * GateFlow - Professional Content Access Control System
+ * Version 1.0.0 - Complete Refactor
+ * 
+ * 🎯 FEATURES:
+ * • Domain-based licensing with watermark system
+ * • Multi-mode content protection (page/element/toggle)
+ * • Supabase integration for user authentication
+ * • Advanced caching and performance optimization
+ * • Comprehensive analytics and event tracking
+ * • Robust error handling and security measures
+ * 
+ * 📋 USAGE:
+ * Served dynamically via /api/gatekeeper endpoint
+ * Configuration automatically injected by GatekeeperGenerator
+ * 
+ * 📄 LICENSE: Freemium - Free with watermark, $49/domain/year for removal
+ * 🌐 Website: https://gateflow.pl | 📧 Support: support@gateflow.pl
+ */
 
-// Configuration
-const SUPABASE_URL = 'https://grinnleqqyygznnbpjzc.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdyaW5ubGVxcXl5Z3pubmJwanpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5MDI4MzksImV4cCI6MjA2NzQ3ODgzOX0.1iHxyjc3KKTz9uNin_wmpM7t0yKRC3DD_9jLl4stNiQ';
+// ============================================================================
+// CORE CONSTANTS & CONFIGURATION
+// ============================================================================
 
-// Constants
-const DUPLICATE_KEY_ERROR = '23505';
-const QUERY_TIMEOUT_MS = 3000;
-const PROCESSING_DELAY_MS = 100;
-const CACHE_EXPIRY_MS = 300000; // 5 minutes
-const MAX_RETRY_ATTEMPTS = 3;
-
-// GateFlow Licensing System
-const GATEFLOW_VERSION = '2.0.0'; // Major version update for product_id-based access control
-const GATEFLOW_LICENSE_CHECK_INTERVAL = 86400000; // 24 hours
-const GATEFLOW_LICENSE_ENDPOINTS = [
-    'https://api.gateflow.pl/license/verify',
-    'https://license.gateflow.pl/v1/check',
-    'https://gateflow-licensing.vercel.app/api/verify'
-];
-
-// Cache for performance optimization
-const gatekeeperCache = new Map();
-const gateflowLicenseCache = new Map();
-
-// User session tracking
-let currentUserId = null;
-let sessionStartTime = null;
-let accessGrantedTime = null;
-let licenseStatus = { valid: false, domain: null, expires: null };
-
-// Analytics & Event Tracking
-const GATEKEEPER_EVENTS = {
-    ACCESS_GRANTED: 'gateflow_access_granted',
-    ACCESS_DENIED: 'gateflow_access_denied',
-    LOGIN_FORM_SHOWN: 'gateflow_login_form_shown',
-    MAGIC_LINK_SENT: 'gateflow_magic_link_sent',
-    FREE_PRODUCT_GRANTED: 'gateflow_free_product_granted',
-    ELEMENT_REMOVED: 'gateflow_element_removed_security',
-    BATCH_CHECK_PERFORMED: 'gateflow_batch_check_performed',
-    ERROR_OCCURRED: 'gateflow_error_occurred',
-    PAGE_LOAD_TIME: 'gateflow_page_load_time',
-    USER_PROGRESS: 'gateflow_user_progress',
-    CACHE_HIT: 'gateflow_cache_hit',
-    PERFORMANCE_METRIC: 'gateflow_performance_metric',
-    LICENSE_CHECK: 'gateflow_license_check',
-    LICENSE_VIOLATION: 'gateflow_license_violation'
+const CONSTANTS = {
+    VERSION: '1.0.0',
+    CACHE_TTL: 300000, // 5 minutes
+    LICENSE_CHECK_INTERVAL: 86400000, // 24 hours
+    QUERY_TIMEOUT: 3000,
+    MAX_RETRIES: 3,
+    PROCESSING_DELAY: 100,
+    
+    // Database errors
+    DUPLICATE_KEY_ERROR: '23505',
+    
+    // License endpoints
+    LICENSE_ENDPOINTS: [
+        'https://api.gateflow.pl/license/verify',
+        'https://license.gateflow.pl/v1/check',
+        'https://gateflow-licensing.vercel.app/api/verify'
+    ],
+    
+    // Event names
+    EVENTS: {
+        ACCESS_GRANTED: 'gateflow_access_granted',
+        ACCESS_DENIED: 'gateflow_access_denied',
+        LOGIN_SHOWN: 'gateflow_login_shown',
+        MAGIC_LINK_SENT: 'gateflow_magic_link_sent',
+        FREE_ACCESS_GRANTED: 'gateflow_free_access_granted',
+        ELEMENT_PROTECTED: 'gateflow_element_protected',
+        ELEMENT_ACCESSED: 'gateflow_element_accessed',
+        BATCH_CHECK: 'gateflow_batch_check',
+        ERROR: 'gateflow_error',
+        PERFORMANCE: 'gateflow_performance',
+        LICENSE_CHECK: 'gateflow_license_check',
+        LICENSE_VIOLATION: 'gateflow_license_violation'
+    },
+    
+    // Fallback modes
+    FALLBACK_MODES: {
+        SHOW_ALL: 'show_all',
+        HIDE_ALL: 'hide_all', 
+        SHOW_FREE: 'show_free'
+    }
 };
 
+// ============================================================================
+// CORE CLASSES
+// ============================================================================
+
 /**
- * GateFlow License System
- * Provides domain-based licensing with anti-tampering measures
+ * Advanced caching system with TTL and performance optimization
  */
-function obfuscateString(str) {
-    return btoa(str).split('').reverse().join('');
-}
-
-function deobfuscateString(str) {
-    return atob(str.split('').reverse().join(''));
-}
-
-function getDomainFingerprint() {
-    const domain = window.location.hostname;
-    const protocol = window.location.protocol;
-    const port = window.location.port;
+class CacheManager {
+    constructor() {
+        this.cache = new Map();
+        this.cleanupInterval = setInterval(() => this.cleanup(), 60000); // Cleanup every minute
+    }
     
-    // Create domain fingerprint
-    const fingerprint = `${protocol}//${domain}${port ? ':' + port : ''}`;
+    generateKey(type, ...args) {
+        return `${type}_${args.join('_')}`;
+    }
     
-    // Add some browser fingerprinting for extra security
-    const userAgent = navigator.userAgent;
-    const language = navigator.language;
-    
-    // Use userAgentData if available (modern browsers), fallback to userAgent parsing
-    let platformInfo = 'unknown';
-    try {
-        if (navigator.userAgentData && navigator.userAgentData.platform) {
-            platformInfo = navigator.userAgentData.platform;
-        } else {
-            // Fallback: extract platform info from userAgent without using deprecated navigator.platform
-            const ua = navigator.userAgent.toLowerCase();
-            if (ua.includes('win')) platformInfo = 'windows';
-            else if (ua.includes('mac')) platformInfo = 'macos';
-            else if (ua.includes('linux')) platformInfo = 'linux';
-            else if (ua.includes('android')) platformInfo = 'android';
-            else if (ua.includes('iphone') || ua.includes('ipad')) platformInfo = 'ios';
-            else platformInfo = 'other';
+    get(key) {
+        const cached = this.cache.get(key);
+        if (!cached) return null;
+        
+        if (Date.now() - cached.timestamp > CONSTANTS.CACHE_TTL) {
+            this.cache.delete(key);
+            return null;
         }
-    } catch (e) {
-        platformInfo = 'unknown';
+        
+        Analytics.track(CONSTANTS.EVENTS.PERFORMANCE, { 
+            action: 'cache_hit', 
+            key: key.split('_')[0] 
+        });
+        return cached.data;
     }
     
-    const combined = `${fingerprint}|${userAgent.slice(0, 50)}|${language}|${platformInfo}`;
-    
-    // Simple hash function
-    let hash = 0;
-    for (let i = 0; i < combined.length; i++) {
-        const char = combined.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32-bit integer
+    set(key, data, ttl = CONSTANTS.CACHE_TTL) {
+        this.cache.set(key, {
+            data,
+            timestamp: Date.now(),
+            ttl
+        });
     }
     
-    return Math.abs(hash).toString(16);
+    delete(key) {
+        this.cache.delete(key);
+    }
+    
+    clear() {
+        this.cache.clear();
+    }
+    
+    cleanup() {
+        const now = Date.now();
+        for (const [key, entry] of this.cache.entries()) {
+            if (now - entry.timestamp > entry.ttl) {
+                this.cache.delete(key);
+            }
+        }
+    }
+    
+    destroy() {
+        clearInterval(this.cleanupInterval);
+        this.clear();
+    }
 }
 
-async function checkGateFlowLicense() {
-    const config = window.gatekeeperConfig || {};
-    const licenseKey = config.gateflowLicense;
-    
-    // If no license key provided, show watermark
-    if (!licenseKey) {
-        licenseStatus.valid = false;
-        licenseStatus.showWatermark = true;
-        return false;
+/**
+ * Comprehensive analytics and event tracking system
+ */
+class Analytics {
+    static track(event, data = {}) {
+        try {
+            const eventData = {
+                ...data,
+                timestamp: new Date().toISOString(),
+                url: window.location.href,
+                userAgent: navigator.userAgent,
+                gateflow_version: CONSTANTS.VERSION,
+                license_status: LicenseManager.getStatus().valid ? 'licensed' : 'unlicensed',
+                viewport: {
+                    width: window.innerWidth,
+                    height: window.innerHeight
+                },
+                user_id: SessionManager.getCurrentUserId(),
+                session_duration: SessionManager.getSessionDuration(),
+                performance: {
+                    memory: performance.memory ? {
+                        used: performance.memory.usedJSHeapSize,
+                        total: performance.memory.totalJSHeapSize
+                    } : null,
+                    timing: performance.timing ? {
+                        load: performance.timing.loadEventEnd - performance.timing.navigationStart
+                    } : null
+                }
+            };
+            
+            // Add device info
+            if (navigator.userAgentData?.platform) {
+                eventData.platform = navigator.userAgentData.platform;
+            }
+            
+            console.log(`📊 GateFlow Analytics: ${event}`, eventData);
+            
+            // Send to analytics providers
+            this.sendToProviders(event, eventData);
+            
+        } catch (error) {
+            console.warn('Analytics tracking failed:', error);
+        }
     }
     
-    // Check cache first
-    const cacheKey = `license_${getDomainFingerprint()}`;
-    const cached = gateflowLicenseCache.get(cacheKey);
-    if (cached && (Date.now() - cached.timestamp) < GATEFLOW_LICENSE_CHECK_INTERVAL) {
-        licenseStatus = cached.data;
-        return cached.data.valid;
+    static sendToProviders(event, data) {
+        // Google Analytics
+        if (window.gtag) {
+            window.gtag('event', event, data);
+        }
+        
+        // Segment
+        if (window.analytics) {
+            window.analytics.track(event, data);
+        }
+        
+        // Facebook Pixel
+        if (window.fbq) {
+            window.fbq('trackCustom', event, data);
+        }
+        
+        // Custom analytics endpoint
+        const config = this.getConfig();
+        if (config.analyticsEndpoint) {
+            fetch(config.analyticsEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ event, data })
+            }).catch(error => console.warn('Custom analytics failed:', error));
+        }
     }
     
-    const domainFingerprint = getDomainFingerprint();
-    const currentDomain = window.location.hostname;
+    static getConfig() {
+        return window.gatekeeperConfig || {};
+    }
+}
+
+/**
+ * Domain fingerprinting and license verification system
+ */
+class LicenseManager {
+    static status = { valid: false, domain: null, expires: null, showWatermark: true };
     
-    try {
-        // Try multiple endpoints for redundancy
-        for (const endpoint of GATEFLOW_LICENSE_ENDPOINTS) {
+    static getDomainFingerprint() {
+        const { hostname, protocol, port } = window.location;
+        const fingerprint = `${protocol}//${hostname}${port ? ':' + port : ''}`;
+        
+        // Enhanced fingerprinting
+        const { userAgent, language } = navigator;
+        const platformInfo = navigator.userAgentData?.platform || this.getPlatformFromUA(userAgent);
+        
+        const combined = `${fingerprint}|${userAgent.slice(0, 50)}|${language}|${platformInfo}`;
+        
+        // Simple but effective hash
+        let hash = 0;
+        for (let i = 0; i < combined.length; i++) {
+            hash = ((hash << 5) - hash) + combined.charCodeAt(i);
+            hash = hash & hash; // Convert to 32-bit integer
+        }
+        
+        return Math.abs(hash).toString(16);
+    }
+    
+    static getPlatformFromUA(ua) {
+        const lower = ua.toLowerCase();
+        if (lower.includes('win')) return 'windows';
+        if (lower.includes('mac')) return 'macos';
+        if (lower.includes('linux')) return 'linux';
+        if (lower.includes('android')) return 'android';
+        if (lower.includes('iphone') || lower.includes('ipad')) return 'ios';
+        return 'unknown';
+    }
+    
+    static obfuscate(str) {
+        return btoa(str).split('').reverse().join('');
+    }
+    
+    static deobfuscate(str) {
+        return atob(str.split('').reverse().join(''));
+    }
+    
+    static async checkLicense() {
+        const config = window.gatekeeperConfig || {};
+        const licenseKey = config.gateflowLicense;
+        
+        if (!licenseKey) {
+            this.status = { valid: false, showWatermark: true };
+            return false;
+        }
+        
+        // Check cache first
+        const cacheKey = cache.generateKey('license', this.getDomainFingerprint());
+        const cached = cache.get(cacheKey);
+        if (cached) {
+            this.status = cached;
+            return cached.valid;
+        }
+        
+        try {
+            const result = await this.verifyWithEndpoints(licenseKey);
+            
+            if (result.valid) {
+                this.status = {
+                    valid: true,
+                    domain: window.location.hostname,
+                    expires: result.expires,
+                    showWatermark: false,
+                    plan: result.plan || 'pro'
+                };
+                
+                cache.set(cacheKey, this.status, CONSTANTS.LICENSE_CHECK_INTERVAL);
+                
+                Analytics.track(CONSTANTS.EVENTS.LICENSE_CHECK, {
+                    status: 'valid',
+                    domain: window.location.hostname,
+                    plan: result.plan
+                });
+                
+                return true;
+            } else {
+                this.status = { valid: false, showWatermark: true, violation: 'invalid_license' };
+                Analytics.track(CONSTANTS.EVENTS.LICENSE_VIOLATION, {
+                    domain: window.location.hostname,
+                    reason: 'invalid_license'
+                });
+                return false;
+            }
+        } catch (error) {
+            console.warn('License check failed:', error);
+            this.status = { valid: false, showWatermark: true, violation: 'check_failed' };
+            return false;
+        }
+    }
+    
+    static async verifyWithEndpoints(licenseKey) {
+        const domain = window.location.hostname;
+        const fingerprint = this.getDomainFingerprint();
+        
+        const payload = {
+            license: this.obfuscate(licenseKey),
+            domain: this.obfuscate(domain),
+            fingerprint,
+            timestamp: Date.now(),
+            version: CONSTANTS.VERSION
+        };
+        
+        for (const endpoint of CONSTANTS.LICENSE_ENDPOINTS) {
             try {
                 const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-GateFlow-Version': GATEFLOW_VERSION
+                        'X-GateFlow-Version': CONSTANTS.VERSION
                     },
-                    body: JSON.stringify({
-                        license: obfuscateString(licenseKey),
-                        domain: obfuscateString(currentDomain),
-                        fingerprint: domainFingerprint,
-                        timestamp: Date.now(),
-                        version: GATEFLOW_VERSION
-                    })
+                    body: JSON.stringify(payload)
                 });
                 
                 if (response.ok) {
-                    const result = await response.json();
-                    
-                    if (result.valid) {
-                        licenseStatus = {
-                            valid: true,
-                            domain: currentDomain,
-                            expires: result.expires,
-                            showWatermark: false,
-                            plan: result.plan || 'pro'
-                        };
-                        
-                        // Cache the result
-                        gateflowLicenseCache.set(cacheKey, {
-                            data: licenseStatus,
-                            timestamp: Date.now()
-                        });
-                        
-                        trackEvent(GATEKEEPER_EVENTS.LICENSE_CHECK, {
-                            status: 'valid',
-                            domain: currentDomain,
-                            plan: result.plan
-                        });
-                        
-                        return true;
-                    }
+                    return await response.json();
                 }
             } catch (error) {
-                console.log('GateFlow: License endpoint unavailable:', error.message);
+                console.warn(`License endpoint ${endpoint} failed:`, error.message);
             }
         }
         
-        // If all endpoints fail or license invalid
-        licenseStatus = {
-            valid: false,
-            domain: currentDomain,
-            showWatermark: true,
-            violation: 'invalid_license'
-        };
-        
-        trackEvent(GATEKEEPER_EVENTS.LICENSE_VIOLATION, {
-            domain: currentDomain,
-            license_key: licenseKey ? 'provided' : 'missing',
-            fingerprint: domainFingerprint
-        });
-        
-        return false;
-        
-    } catch (error) {
-        console.log('GateFlow: License check failed:', error.message);
-        
-        // On error, allow operation but show watermark
-        licenseStatus = {
-            valid: false,
-            domain: currentDomain,
-            showWatermark: true,
-            violation: 'check_failed'
-        };
-        
-        return false;
-    }
-}
-
-function createGateFlowWatermark() {
-    if (licenseStatus.valid) return;
-    
-    const watermark = document.createElement('div');
-    watermark.id = 'gateflow-watermark';
-    watermark.innerHTML = `
-        <div style="
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 25px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-size: 13px;
-            font-weight: 600;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-            z-index: 999999;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            user-select: none;
-        " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="window.open('https://gateflow.pl/pricing', '_blank')">
-            <span style="margin-right: 8px;">🔐</span>
-            Secured by <strong>GateFlow</strong> v${GATEFLOW_VERSION}
-            <div style="font-size: 10px; opacity: 0.8; margin-top: 2px;">
-                Get license to remove this notice
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(watermark);
-    
-    // Add some anti-tampering
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            if (mutation.type === 'childList') {
-                mutation.removedNodes.forEach((node) => {
-                    if (node.id === 'gateflow-watermark') {
-                        // Re-create watermark if removed
-                        setTimeout(createGateFlowWatermark, 1000);
-                    }
-                });
-            }
-        });
-    });
-    
-    observer.observe(document.body, { childList: true, subtree: true });
-    
-    // Periodic check to ensure watermark exists
-    setInterval(() => {
-        if (!document.getElementById('gateflow-watermark') && !licenseStatus.valid) {
-            createGateFlowWatermark();
-        }
-    }, 5000);
-}
-
-/**
- * Advanced cache management
- */
-function getCacheKey(type, ...args) {
-    return `${type}_${args.join('_')}`;
-}
-
-function getCachedData(key) {
-    const cached = gatekeeperCache.get(key);
-    if (!cached) return null;
-    
-    if (Date.now() - cached.timestamp > CACHE_EXPIRY_MS) {
-        gatekeeperCache.delete(key);
-        return null;
+        throw new Error('All license endpoints failed');
     }
     
-    trackEvent(GATEKEEPER_EVENTS.CACHE_HIT, { key });
-    return cached.data;
-}
-
-function setCachedData(key, data) {
-    gatekeeperCache.set(key, {
-        data,
-        timestamp: Date.now()
-    });
-}
-
-/**
- * Performance monitoring
- */
-function measurePerformance(label, fn) {
-    return async (...args) => {
-        const startTime = performance.now();
-        try {
-            const result = await fn(...args);
-            const endTime = performance.now();
-            const duration = endTime - startTime;
-            
-            trackEvent(GATEKEEPER_EVENTS.PERFORMANCE_METRIC, {
-                label,
-                duration,
-                success: true
-            });
-            
-            return result;
-        } catch (error) {
-            const endTime = performance.now();
-            const duration = endTime - startTime;
-            
-            trackEvent(GATEKEEPER_EVENTS.PERFORMANCE_METRIC, {
-                label,
-                duration,
-                success: false,
-                error: error.message
-            });
-            
-            throw error;
-        }
-    };
-}
-
-/**
- * Enhanced analytics tracking with advanced features
- * @param {string} event - Event name
- * @param {Object} data - Event data
- */
-function trackEvent(event, data = {}) {
-    try {
-        const config = window.gatekeeperConfig || {};
-        const advancedConfig = window.gatekeeperAdvancedConfig || {};
-        
-        // Add comprehensive event data
-        const eventData = {
-            ...data,
-            timestamp: new Date().toISOString(),
-            url: window.location.href,
-            userAgent: navigator.userAgent,
-            gateflow_version: GATEFLOW_VERSION,
-            license_status: licenseStatus.valid ? 'licensed' : 'unlicensed',
-            viewport: {
-                width: window.innerWidth,
-                height: window.innerHeight
-            },
-            user_id: currentUserId,
-            session_duration: sessionStartTime ? Date.now() - sessionStartTime : 0,
-            time_to_access: accessGrantedTime ? Date.now() - accessGrantedTime : 0
-        };
-        
-        // Add custom dimensions if configured
-        if (advancedConfig.analytics?.customDimensions) {
-            Object.assign(eventData, advancedConfig.analytics.customDimensions);
-        }
-        
-        // Add device information if enabled
-        if (advancedConfig.analytics?.trackDeviceInfo) {
-            // Use modern userAgentData when available, fallback to parsing userAgent
-            let platformInfo = 'unknown';
-            if (navigator.userAgentData && navigator.userAgentData.platform) {
-                platformInfo = navigator.userAgentData.platform;
-            } else {
-                // Fallback: parse platform from userAgent string
-                const ua = navigator.userAgent.toLowerCase();
-                if (ua.includes('win')) platformInfo = 'Windows';
-                else if (ua.includes('mac')) platformInfo = 'macOS';
-                else if (ua.includes('linux')) platformInfo = 'Linux';
-                else if (ua.includes('android')) platformInfo = 'Android';
-                else if (ua.includes('iphone') || ua.includes('ipad')) platformInfo = 'iOS';
-            }
-            
-            eventData.device_info = {
-                platform: platformInfo,
-                language: navigator.language,
-                cookieEnabled: navigator.cookieEnabled,
-                onLine: navigator.onLine
-            };
-        }
-        
-        console.log(`📊 GateFlow Analytics: ${event}`, eventData);
-        
-        // Send to multiple analytics providers if available
-        if (window.gtag) {
-            window.gtag('event', event, eventData);
-        }
-        
-        if (window.analytics) {
-            window.analytics.track(event, eventData);
-        }
-        
-        if (window.fbq) {
-            window.fbq('trackCustom', event, eventData);
-        }
-        
-        // Custom analytics endpoint if configured
-        if (config.analyticsEndpoint) {
-            fetch(config.analyticsEndpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ event, data: eventData })
-            }).catch(err => console.log('Analytics endpoint failed:', err));
-        }
-        
-    } catch (error) {
-        console.log('Analytics tracking failed:', error);
-    }
-}
-
-// Templates
-
-// Enhanced Templates with Theme Support
-
-const LOADING_THEMES = {
-    default: {
-        background: 'rgba(255,255,255,0.1)',
-        border: '1px solid rgba(255,255,255,0.2)',
-        textColor: '#e0e0e0',
-        accentColor: '#00aaff'
-    },
-    dark: {
-        background: 'rgba(0,0,0,0.8)',
-        border: '1px solid rgba(255,255,255,0.1)',
-        textColor: '#ffffff',
-        accentColor: '#4facfe'
-    },
-    light: {
-        background: 'rgba(255,255,255,0.95)',
-        border: '1px solid rgba(0,0,0,0.1)',
-        textColor: '#333333',
-        accentColor: '#007bff'
-    }
-};
-
-function getLoadingHTML(message = 'Checking access...', theme = 'default') {
-    const t = LOADING_THEMES[theme] || LOADING_THEMES.default;
-    
-    return `
-    <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-        <div style="text-align: center; padding: 40px; background: ${t.background}; border-radius: 16px; border: ${t.border}; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
-            <div style="font-size: 48px; margin-bottom: 24px; animation: pulse 2s ease-in-out infinite;">�</div>
-            <div style="font-size: 20px; color: ${t.textColor}; margin-bottom: 12px; font-weight: 600;">${message}</div>
-            <div style="font-size: 14px; color: ${t.textColor}; opacity: 0.7; margin-bottom: 24px;">Please wait a moment while we verify your access</div>
-            <div style="width: 240px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin: 0 auto; overflow: hidden;">
-                <div style="width: 100%; height: 100%; background: linear-gradient(90deg, ${t.accentColor}, ${t.accentColor}dd); border-radius: 3px; animation: loading-bar 2s ease-in-out infinite;"></div>
-            </div>
-            <div style="margin-top: 20px; font-size: 12px; color: ${t.textColor}; opacity: 0.5;">
-                Powered by GateFlow v${GATEFLOW_VERSION}
-            </div>
-        </div>
-        <style>
-            @keyframes loading-bar {
-                0% { transform: translateX(-100%); }
-                50% { transform: translateX(0%); }
-                100% { transform: translateX(100%); }
-            }
-            @keyframes pulse {
-                0%, 100% { transform: scale(1); }
-                50% { transform: scale(1.1); }
-            }
-            @media (prefers-reduced-motion: reduce) {
-                * { animation: none !important; }
-            }
-        </style>
-    </div>
-    `;
-}
-
-function getErrorHTML(error, productSlug = '', theme = 'default') {
-    const t = LOADING_THEMES[theme] || LOADING_THEMES.default;
-    const config = window.gatekeeperConfig || {};
-    const isDevelopment = config.development || window.location.hostname === 'localhost';
-    
-    const errorMessage = isDevelopment ? error : 'We encountered a temporary issue while checking your access.';
-    
-    return `
-    <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); padding: 20px;">
-        <div style="text-align: center; padding: 40px; background: ${t.background}; border-radius: 20px; border: ${t.border}; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); max-width: 500px; width: 100%;">
-            <div style="font-size: 72px; margin-bottom: 24px; animation: shake 0.5s ease-in-out;">⚠️</div>
-            <div style="font-size: 24px; color: #ff6b6b; margin-bottom: 16px; font-weight: 600;">Oops! Something went wrong</div>
-            <div style="font-size: 16px; color: ${t.textColor}; opacity: 0.8; margin-bottom: 24px; line-height: 1.5;">
-                ${errorMessage}
-            </div>
-            ${isDevelopment ? `
-            <div style="font-size: 12px; color: #666; margin-bottom: 24px; padding: 16px; background: rgba(0,0,0,0.3); border-radius: 8px; font-family: 'Monaco', 'Consolas', monospace; text-align: left; word-break: break-word;">
-                <strong>Debug Info:</strong><br>
-                ${error}
-            </div>
-            ` : ''}
-            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px;">
-                <button onclick="location.reload()" 
-                        style="background: #00aaff; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.2);"
-                        onmouseover="this.style.transform='translateY(-2px)'"
-                        onmouseout="this.style.transform='translateY(0)'">
-                    🔄 Try Again
-                </button>
-                ${productSlug ? `
-                <a href="/?product=${productSlug}" 
-                   style="background: #28a745; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; display: inline-block; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.2);"
-                   onmouseover="this.style.transform='translateY(-2px)'"
-                   onmouseout="this.style.transform='translateY(0)'">
-                    🛒 Product Page
-                </a>
-                ` : ''}
-                <a href="/" 
-                   style="background: #6c757d; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; display: inline-block; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.2);"
-                   onmouseover="this.style.transform='translateY(-2px)'"
-                   onmouseout="this.style.transform='translateY(0)'">
-                    🏠 Home
-                </a>
-            </div>
-            <div style="font-size: 12px; color: ${t.textColor}; opacity: 0.4;">
-                Error occurred at ${new Date().toLocaleString()} • GateFlow v${GATEFLOW_VERSION}
-            </div>
-        </div>
-        <style>
-            @keyframes shake {
-                0%, 100% { transform: translateX(0); }
-                25% { transform: translateX(-5px); }
-                75% { transform: translateX(5px); }
-            }
-        </style>
-    </div>
-    `;
-}
-
-// Error Handling & Fallback Modes
-const FALLBACK_MODE = {
-    SHOW_ALL: 'show_all',      // Development mode - show everything
-    HIDE_ALL: 'hide_all',      // Production safe - hide everything on error
-    SHOW_FREE: 'show_free'     // Show only free content
-};
-
-/**
- * Handles errors gracefully with fallback behavior
- * @param {Error} error - The error that occurred
- * @param {string} context - Context where error occurred
- * @param {string} productSlug - Product slug for recovery options
- * @returns {boolean} Whether to continue execution
- */
-function handleError(error, context, productSlug = '') {
-    const config = window.gatekeeperConfig || {};
-    const fallbackMode = config.fallbackMode || FALLBACK_MODE.HIDE_ALL;
-    const isDevelopment = config.development || window.location.hostname === 'localhost';
-    
-    console.error(`Gatekeeper Error in ${context}:`, error);
-    
-    trackEvent(GATEKEEPER_EVENTS.ERROR_OCCURRED, {
-        error: error.message,
-        context,
-        productSlug,
-        fallbackMode,
-        stack: error.stack
-    });
-    
-    // In development, show detailed error
-    if (isDevelopment) {
-        document.body.innerHTML = ERROR_HTML(error.message, productSlug);
-        return false;
+    static getStatus() {
+        return this.status;
     }
     
-    // In production, handle based on fallback mode
-    switch (fallbackMode) {
-        case FALLBACK_MODE.SHOW_ALL:
-            console.log('Gatekeeper: Fallback mode SHOW_ALL - showing all content');
-            document.body.classList.add('gatekeeper-ready');
-            return true;
-            
-        case FALLBACK_MODE.SHOW_FREE:
-            console.log('Gatekeeper: Fallback mode SHOW_FREE - removing paid content only');
-            document.querySelectorAll('[data-paid], [data-gatekeeper-product]').forEach(el => el.remove());
-            document.body.classList.add('gatekeeper-ready');
-            return true;
-            
-        case FALLBACK_MODE.HIDE_ALL:
-        default:
-            console.log('Gatekeeper: Fallback mode HIDE_ALL - showing error page');
-            document.body.innerHTML = ERROR_HTML('Service temporarily unavailable', productSlug);
-            return false;
-    }
-}
-
-/**
- * Shows loading state while processing
- */
-function showLoadingState() {
-    document.body.innerHTML = LOADING_HTML;
-    trackEvent('gatekeeper_loading_shown', { 
-        timestamp: Date.now() 
-    });
-}
-
-function getLoginFormHTML(productSlug, theme = 'default') {
-    const t = LOADING_THEMES[theme] || LOADING_THEMES.default;
-    
-    return `
-    <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px;">
-        <div class="gatekeeper-form-container" style="width: 100%; max-width: 400px; background: ${t.background}; border-radius: 20px; border: ${t.border}; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); overflow: hidden;">
-            <div style="padding: 40px;">
-                <div id="gatekeeper-message-area" style="margin-bottom: 20px;"></div>
-                
-                <div style="text-align: center; margin-bottom: 32px;">
-                    <div style="font-size: 64px; margin-bottom: 16px;">🔐</div>
-                    <h2 style="color: ${t.textColor}; margin: 0 0 8px 0; font-size: 24px; font-weight: 600;">Access Required</h2>
-                    <p style="color: ${t.textColor}; opacity: 0.7; margin: 0; font-size: 16px;">To view this content, please sign in or get access via the product page.</p>
-                </div>
-                
-                <form id="gatekeeper-magic-link-form" style="margin-bottom: 24px;">
-                    <div style="margin-bottom: 20px;">
-                        <label for="gatekeeper-email" style="display: block; color: ${t.textColor}; font-weight: 500; margin-bottom: 8px; font-size: 14px;">Email address</label>
-                        <input type="email" 
-                               id="gatekeeper-email" 
-                               placeholder="name@example.com" 
-                               required 
-                               style="width: 100%; padding: 12px 16px; border: 2px solid rgba(255,255,255,0.2); border-radius: 8px; background: rgba(255,255,255,0.1); color: ${t.textColor}; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box;"
-                               onfocus="this.style.borderColor='${t.accentColor}'; this.style.background='rgba(255,255,255,0.15)'"
-                               onblur="this.style.borderColor='rgba(255,255,255,0.2)'; this.style.background='rgba(255,255,255,0.1)'">
-                    </div>
-                    <button type="submit" 
-                            style="width: 100%; padding: 14px; background: linear-gradient(135deg, ${t.accentColor}, ${t.accentColor}dd); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.2);"
-                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.3)'"
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.2)'">
-                        ✨ Send Access Link
-                    </button>
-                </form>
-                
-                <div style="text-align: center; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-                    <p style="color: ${t.textColor}; opacity: 0.6; margin: 0 0 16px 0; font-size: 14px;">
-                        Don't have access yet?
-                    </p>
-                    <a href="/?product=${productSlug}" 
-                       style="display: inline-block; padding: 10px 20px; background: rgba(255,255,255,0.1); color: ${t.textColor}; text-decoration: none; border-radius: 6px; font-size: 14px; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.2);"
-                       onmouseover="this.style.background='rgba(255,255,255,0.2)'"
-                       onmouseout="this.style.background='rgba(255,255,255,0.1)'">
-                        🛒 Get Access Now
-                    </a>
-                </div>
-                
-                <div style="margin-top: 24px; text-align: center; font-size: 12px; color: ${t.textColor}; opacity: 0.4;">
-                    Secured by GateFlow v${GATEFLOW_VERSION}
+    static createWatermark() {
+        if (this.status.valid) return;
+        
+        const watermark = document.createElement('div');
+        watermark.id = 'gateflow-watermark';
+        watermark.innerHTML = `
+            <div style="
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 25px;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                font-size: 13px;
+                font-weight: 600;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255,255,255,0.2);
+                z-index: 999999;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                user-select: none;
+            " onmouseover="this.style.transform='scale(1.05)'" 
+               onmouseout="this.style.transform='scale(1)'" 
+               onclick="window.open('https://gateflow.pl/pricing', '_blank')">
+                <span style="margin-right: 8px;">🔐</span>
+                Secured by <strong>GateFlow</strong> v${CONSTANTS.VERSION}
+                <div style="font-size: 10px; opacity: 0.8; margin-top: 2px;">
+                    Get license to remove this notice
                 </div>
             </div>
-        </div>
-    </div>
-    `;
-}
-
-function loadSupabaseScript(callback) {
-    if (window.supabase) return callback();
-    const script = document.createElement('script');
-    script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-    script.onload = callback;
-    script.onerror = () => console.error("Failed to load Supabase JS library.");
-    document.head.appendChild(script);
+        `;
+        
+        document.body.appendChild(watermark);
+        
+        // Anti-tampering protection
+        this.protectWatermark();
+    }
+    
+    static protectWatermark() {
+        const observer = new MutationObserver(() => {
+            if (!document.getElementById('gateflow-watermark') && !this.status.valid) {
+                this.createWatermark();
+            }
+        });
+        
+        observer.observe(document.body, { childList: true, subtree: true });
+        
+        // Periodic check
+        setInterval(() => {
+            if (!document.getElementById('gateflow-watermark') && !this.status.valid) {
+                this.createWatermark();
+            }
+        }, 5000);
+    }
 }
 
 /**
- * Validates that all required API functions exist
- * @param {Object} supabase - The Supabase client
- * @returns {Promise<boolean>} True if the API is valid
+ * User session and authentication management
  */
-async function validateAccessAPI(supabase) {
-    try {
-        // Try to call the check_user_product_access function
-        await supabase.rpc('check_user_product_access', {
-            user_id_param: '00000000-0000-0000-0000-000000000000', // Dummy UUID
-            product_slug_param: 'test'
-        });
-        
-        // Try to call the grant_product_access function
-        await supabase.rpc('grant_product_access', {
-            user_id_param: '00000000-0000-0000-0000-000000000000', // Dummy UUID
-            product_slug_param: 'test'
-        });
-        
-        // Try to query the user_product_access_by_slug view
-        await supabase
-            .from('user_product_access_by_slug')
-            .select('id')
-            .limit(1);
-            
-        console.log("Gatekeeper: All required API functions and views available");
-        return true;
-    } catch (error) {
-        console.error("Gatekeeper: Access API validation failed:", error.message);
-        throw new Error("GateFlow API functions not available. Please ensure database migrations have been applied.");
-    }
-}
-
-function initializeGatekeeper() {
-    console.log("🚀 GateFlow v" + GATEFLOW_VERSION + " - Enterprise Content Protection System");
-    console.log("📄 License: Free with watermark | Pro: $49/domain/year");
-    console.log("🌐 Website: https://gateflow.pl | 📧 Support: support@gateflow.pl");
+class SessionManager {
+    static currentUserId = null;
+    static sessionStartTime = null;
+    static accessGrantedTime = null;
+    static supabaseClient = null;
     
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    window.gateflowSupabaseClient = supabase;
-    
-    // Validate that all required API functions exist before proceeding
-    validateAccessAPI(supabase).catch(error => {
-        console.error("Gatekeeper: Critical initialization error:", error);
-        document.body.innerHTML = getErrorHTML(
-            "GateFlow initialization failed: Required database functions not found. Please contact your administrator.",
-            "",
-            "dark"
-        );
-    });
-
-    const config = window.gatekeeperConfig || {};
-    console.log("GateFlow: Config loaded:", Object.keys(config).length, "options");
-    
-    const bodyElement = document.body;
-    const originalBodyHTML = bodyElement.innerHTML;
-    let isProcessing = false; // Flag to prevent multiple simultaneous processing
-
-    /**
-     * Enhanced access check with caching and retry logic
-     * @param {string} userId - The user ID
-     * @param {string} productSlug - The product slug
-     * @returns {Promise<boolean>} True if user has access
-     */
-    const hasAccess = measurePerformance('hasAccess', async (userId, productSlug, retryCount = 0) => {
-        if (!userId || !productSlug) {
-            console.log("Gatekeeper: Missing userId or productSlug for access check");
-            return false;
-        }
+    static initialize(supabaseClient) {
+        this.supabaseClient = supabaseClient;
+        this.sessionStartTime = Date.now();
         
-        // Check cache first
-        const cacheKey = getCacheKey('access', userId, productSlug);
-        const cachedResult = getCachedData(cacheKey);
-        if (cachedResult !== null) {
-            console.log("Gatekeeper: Cache hit for access check:", cachedResult);
-            return cachedResult;
-        }
+        // Handle session from URL hash (magic link callback)
+        this.handleSessionFromUrl();
         
-        console.log("Gatekeeper: Checking access for:", userId, productSlug);
+        // Check for existing session
+        this.initializeCurrentSession();
         
-        try {
-            // Use the secure RPC function that checks access by product_id internally
-            const { data: accessResult, error } = await supabase
-                .rpc('check_user_product_access', {
-                    user_id_param: userId,
-                    product_slug_param: productSlug
+        // Listen for auth state changes
+        this.supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (session?.user) {
+                this.currentUserId = session.user.id;
+                this.accessGrantedTime = Date.now();
+                
+                Analytics.track(CONSTANTS.EVENTS.ACCESS_GRANTED, {
+                    user_id: this.currentUserId,
+                    event_type: event
                 });
                 
-            if (error) {
-                console.error("Gatekeeper: Error checking product access:", error);
-                
-                // Retry logic for transient errors
-                if (retryCount < MAX_RETRY_ATTEMPTS) {
-                    console.log(`Gatekeeper: Retrying access check (${retryCount + 1}/${MAX_RETRY_ATTEMPTS})`);
-                    await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
-                    return hasAccess(userId, productSlug, retryCount + 1);
+                // Clean up URL after successful login
+                if (event === 'SIGNED_IN' && window.location.hash) {
+                    window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
                 }
-                
-                return false;
-            }
-            
-            const hasAccess = !!accessResult;
-            console.log("Gatekeeper: Access check result:", hasAccess);
-            
-            // Cache the result
-            setCachedData(cacheKey, hasAccess);
-            
-            return hasAccess;
-        } catch (error) {
-            console.error("Gatekeeper: Access check failed:", error);
-            return false;
-        }
-    });
-
-    /**
-     * Checks access to multiple products in a single query (performance optimization)
-     * @param {string} userId - The user ID
-     * @param {string[]} productSlugs - Array of product slugs to check
-     * @returns {Promise<Set<string>>} Set of product slugs user has access to
-     */
-    async function checkBatchAccess(userId, productSlugs) {
-        if (!userId || !productSlugs || productSlugs.length === 0) {
-            console.log("Gatekeeper: Missing userId or productSlugs for batch access check");
-            return new Set();
-        }
-        
-        console.log("Gatekeeper: Batch checking access for:", userId, productSlugs);
-        
-        // Use the view that efficiently joins access records with product data
-        const { data, error } = await supabase
-            .from('user_product_access_by_slug')
-            .select('product_slug')
-            .eq('user_id', userId)
-            .in('product_slug', productSlugs);
-            
-        if (error) {
-            console.error("Gatekeeper: Error in batch access check:", error);
-            return new Set();
-        }
-        
-        const accessSet = new Set(data?.map(row => row.product_slug) || []);
-        console.log("Gatekeeper: Batch access result:", { 
-            requested: productSlugs, 
-            granted: Array.from(accessSet) 
-        });
-        
-        // Cache individual results for future single-product checks
-        productSlugs.forEach(slug => {
-            const hasAccess = accessSet.has(slug);
-            const cacheKey = getCacheKey('access', userId, slug);
-            setCachedData(cacheKey, hasAccess);
-        });
-        
-        return accessSet;
-    }
-
-    /**
-     * Inserts an access record for a user and product
-     * @param {string} userId - The user ID
-     * @param {string} productSlug - The product slug
-     * @returns {Promise<boolean>} True if successful
-     */
-    async function insertAccessRecord(userId, productSlug) {
-        console.log("Gatekeeper: Inserting access record for:", userId, productSlug);
-        
-        // Use the RPC function that handles product_id lookup and insertion securely
-        const { data: accessGranted, error } = await supabase
-            .rpc('grant_product_access', {
-                user_id_param: userId,
-                product_slug_param: productSlug
-            });
-            
-        if (error) {
-            console.error("Gatekeeper: Error granting access:", error);
-            return false;
-        }
-        
-        if (!accessGranted) {
-            console.log("Gatekeeper: Failed to grant access, product may not exist");
-            return false;
-        } else {
-            console.log("Gatekeeper: Access granted successfully");
-            
-            // Clear cache for this user/product
-            const cacheKey = getCacheKey('access', userId, productSlug);
-            setCachedData(cacheKey, true); // Update cache with the new access state
-        }
-        
-        return true;
-    }
-
-    /**
-     * Enhanced product check with caching and retry logic
-     * @param {string} productSlug - The product slug
-     * @returns {Promise<boolean>} True if product is free
-     */
-    const isProductFree = measurePerformance('isProductFree', async (productSlug, retryCount = 0) => {
-        console.log("Gatekeeper: Checking if product is free:", productSlug);
-        
-        // Check cache first
-        const cacheKey = getCacheKey('product_free', productSlug);
-        const cachedResult = getCachedData(cacheKey);
-        if (cachedResult !== null) {
-            console.log("Gatekeeper: Cache hit for product check:", cachedResult);
-            return cachedResult;
-        }
-        
-        try {
-            const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Query timeout')), QUERY_TIMEOUT_MS)
-            );
-            
-            const productQuery = supabase
-                .from('products')
-                .select('price')
-                .eq('slug', productSlug)
-                .single();
-            
-            const result = await Promise.race([productQuery, timeoutPromise]);
-            
-            if (result.error) {
-                console.error("Gatekeeper: Error fetching product:", result.error);
-                
-                // Retry logic for transient errors
-                if (retryCount < MAX_RETRY_ATTEMPTS && !result.error.code) {
-                    console.log(`Gatekeeper: Retrying product check (${retryCount + 1}/${MAX_RETRY_ATTEMPTS})`);
-                    await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
-                    return isProductFree(productSlug, retryCount + 1);
-                }
-                
-                return false;
-            }
-            
-            if (!result.data) {
-                console.log("Gatekeeper: Product not found:", productSlug);
-                setCachedData(cacheKey, false);
-                return false;
-            }
-            
-            const isFree = result.data.price === 0;
-            console.log("Gatekeeper: Product price check result:", { productSlug, price: result.data.price, isFree });
-            
-            // Cache the result
-            setCachedData(cacheKey, isFree);
-            
-            return isFree;
-            
-        } catch (error) {
-            console.error("Gatekeeper: Product query failed:", error.message);
-            
-            // Retry logic for network errors
-            if (retryCount < MAX_RETRY_ATTEMPTS) {
-                console.log(`Gatekeeper: Retrying product check (${retryCount + 1}/${MAX_RETRY_ATTEMPTS})`);
-                await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
-                return isProductFree(productSlug, retryCount + 1);
-            }
-            
-            return false;
-        }
-    });
-
-    /**
-     * Enhanced batch access check for better performance
-     * @param {string} userId - The user ID
-     * @param {Array<string>} productSlugs - Array of product slugs to check
-     * @returns {Promise<Object>} Map of productSlug -> hasAccess
-     */
-    const batchCheckAccess = measurePerformance('batchCheckAccess', async (userId, productSlugs) => {
-        if (!userId || !productSlugs || productSlugs.length === 0) {
-            console.log("Gatekeeper: Missing userId or productSlugs for batch check");
-            return {};
-        }
-        
-        console.log("Gatekeeper: Batch checking access for:", userId, productSlugs);
-        
-        // Check cache for each product first
-        const results = {};
-        const uncachedSlugs = [];
-        
-        for (const slug of productSlugs) {
-            const cacheKey = getCacheKey('access', userId, slug);
-            const cachedResult = getCachedData(cacheKey);
-            if (cachedResult !== null) {
-                results[slug] = cachedResult;
             } else {
-                uncachedSlugs.push(slug);
+                this.currentUserId = null;
+                this.accessGrantedTime = null;
+                
+                Analytics.track(CONSTANTS.EVENTS.ACCESS_DENIED, {
+                    event_type: event
+                });
             }
-        }
-        
-        if (uncachedSlugs.length === 0) {
-            console.log("Gatekeeper: All products found in cache");
-            return results;
-        }
-        
+        });
+    }
+    
+    static async initializeCurrentSession() {
         try {
-            // Use the view that efficiently joins access records with product data
-            const { data, error } = await supabase
-                .from('user_product_access_by_slug')
-                .select('product_slug')
-                .eq('user_id', userId)
-                .in('product_slug', uncachedSlugs);
-                
-            if (error) {
-                console.error("Gatekeeper: Error in batch access check:", error);
-                // Return cached results and false for uncached ones
-                uncachedSlugs.forEach(slug => {
-                    results[slug] = false;
-                });
-                return results;
+            const { data: { session } } = await this.supabaseClient.auth.getSession();
+            if (session?.user) {
+                this.currentUserId = session.user.id;
+                this.accessGrantedTime = Date.now();
+                console.log('✅ Existing session found:', this.currentUserId);
             }
-            
-            const accessibleSlugs = new Set(data?.map(row => row.product_slug) || []);
-            
-            uncachedSlugs.forEach(slug => {
-                const hasAccess = accessibleSlugs.has(slug);
-                results[slug] = hasAccess;
-                
-                // Cache the result
-                const cacheKey = getCacheKey('access', userId, slug);
-                setCachedData(cacheKey, hasAccess);
-            });
-            
-            console.log("Gatekeeper: Batch access check completed:", results);
-            
-            trackEvent(GATEKEEPER_EVENTS.BATCH_CHECK_PERFORMED, {
-                user_id: userId,
-                products_checked: productSlugs.length,
-                cache_hits: productSlugs.length - uncachedSlugs.length,
-                results
-            });
-            
-            return results;
-            
         } catch (error) {
-            console.error("Gatekeeper: Batch access check failed:", error);
-            // Return false for all uncached products
-            uncachedSlugs.forEach(slug => {
-                results[slug] = false;
-            });
-            return results;
+            console.warn('Failed to initialize current session:', error);
         }
-    });
-    async function grantAccessForFreeProduct(userId, productSlug) {
-        if (!userId || !productSlug) {
-            console.log("Gatekeeper: Missing userId or productSlug for grant access");
-            return false;
-        }
-        
-        console.log("Gatekeeper: Attempting to grant access for:", userId, productSlug);
-        
-        // Always verify product is free first by checking database
-        const isFree = await isProductFree(productSlug);
-        if (!isFree) {
-            console.log("Gatekeeper: Product is not free or not found");
-            trackEvent(GATEKEEPER_EVENTS.ACCESS_DENIED, {
-                reason: 'product_not_free',
-                userId,
-                productSlug
-            });
-            return false;
-        }
-        
-        console.log("Gatekeeper: Product confirmed as free, granting access");
-        const result = await insertAccessRecord(userId, productSlug);
-        
-        if (result) {
-            trackEvent(GATEKEEPER_EVENTS.FREE_PRODUCT_GRANTED, {
-                userId,
-                productSlug,
-                method: 'auto_grant'
-            });
-        }
-        
-        return result;
     }
-
-    async function handleElementProtection(userId) {
-        console.log("Gatekeeper: Running in element mode");
-        const elementsToProtect = Array.from(document.querySelectorAll('[data-gatekeeper-product]'));
-        
-        if (elementsToProtect.length === 0) {
-            console.log("Gatekeeper: No elements to protect");
-            return;
-        }
-        
-        // Get unique product slugs for batch check
-        const productSlugs = [...new Set(elementsToProtect.map(el => el.dataset.gatekeeperProduct))];
-        console.log("Gatekeeper: Checking access for products:", productSlugs);
-        
-        // Batch check access for all products
-        const userAccess = await checkBatchAccess(userId, productSlugs);
-        
-        trackEvent(GATEKEEPER_EVENTS.BATCH_CHECK_PERFORMED, {
-            userId,
-            productSlugs,
-            accessGranted: Array.from(userAccess),
-            elementCount: elementsToProtect.length
-        });
-        
-        // Process each element based on batch results
-        let removedCount = 0;
-        let shownCount = 0;
-        
-        elementsToProtect.forEach(element => {
-            const requiredSlug = element.dataset.gatekeeperProduct;
-            const hasAccess = userAccess.has(requiredSlug);
+    
+    static handleSessionFromUrl() {
+        // Check if we have session tokens in URL hash
+        const hash = window.location.hash;
+        if (hash && hash.includes('access_token=')) {
+            console.log('🔗 Processing magic link callback...');
             
-            if (hasAccess) {
-                // User has access - show the element
-                element.style.display = 'block';
-                shownCount++;
-                console.log("Gatekeeper: Element shown:", { requiredSlug, element: element.tagName });
-            } else {
-                // User doesn't have access - REMOVE from DOM for security
-                console.log("Gatekeeper: Protected element removed from DOM (security):", { requiredSlug, element: element.tagName });
-                trackEvent(GATEKEEPER_EVENTS.ELEMENT_REMOVED, {
-                    productSlug: requiredSlug,
-                    elementTag: element.tagName,
-                    elementId: element.id,
-                    elementClass: element.className
+            try {
+                // Clean up the hash (remove any duplicate # characters)
+                const cleanHash = hash.replace(/^#+/, '#');
+                
+                // Parse the hash parameters
+                const params = new URLSearchParams(cleanHash.substring(1));
+                const accessToken = params.get('access_token');
+                const refreshToken = params.get('refresh_token');
+                const tokenType = params.get('token_type');
+                const expiresIn = params.get('expires_in');
+                
+                console.log('🔍 Parsed tokens:', { 
+                    hasAccessToken: !!accessToken, 
+                    hasRefreshToken: !!refreshToken, 
+                    tokenType 
                 });
-                element.remove();
-                removedCount++;
-            }
-        });
-        
-        console.log("Gatekeeper: Element protection completed:", { 
-            total: elementsToProtect.length, 
-            shown: shownCount, 
-            removed: removedCount 
-        });
-    }
-
-    /**
-     * Handles toggle elements based on product access (data-free vs data-paid)
-     * @param {Object} session - Current user session
-     * @param {string} productSlugFromUrl - Product slug from URL parameter
-     */
-    /**
-     * Auto-refresh functionality - refresh access when user returns to tab
-     */
-    function setupAutoRefresh() {
-        const config = window.gatekeeperAdvancedConfig || {};
-        if (!config.features?.enableAutoRefresh) return;
-        
-        let isHidden = false;
-        
-        document.addEventListener('visibilitychange', async () => {
-            if (document.hidden) {
-                isHidden = true;
-            } else if (isHidden) {
-                isHidden = false;
-                console.log("Gatekeeper: Tab became visible, refreshing access");
                 
-                // Clear cache to force fresh check
-                gatekeeperCache.clear();
-                
-                // Get current session and re-run protection
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session) {
-                    await handleProtection(session);
-                }
-            }
-        });
-    }
-
-    /**
-     * Progress tracking for user engagement analytics
-     */
-    function setupProgressTracking() {
-        const config = window.gatekeeperAdvancedConfig || {};
-        if (!config.features?.enableProgressTracking) return;
-        
-        let scrollDepth = 0;
-        let timeOnPage = 0;
-        const startTime = Date.now();
-        
-        // Track scroll depth
-        if (config.analytics?.trackScrollDepth) {
-            window.addEventListener('scroll', () => {
-                const currentScroll = window.pageYOffset;
-                const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-                const depth = Math.round((currentScroll / maxScroll) * 100);
-                
-                if (depth > scrollDepth && depth % 25 === 0) { // Track every 25%
-                    scrollDepth = depth;
-                    trackEvent(GATEKEEPER_EVENTS.USER_PROGRESS, {
-                        type: 'scroll_depth',
-                        value: depth,
-                        timestamp: Date.now() - startTime
+                if (accessToken) {
+                    // Manually set the session using Supabase's setSession
+                    this.supabaseClient.auth.setSession({
+                        access_token: accessToken,
+                        refresh_token: refreshToken || null
+                    }).then(({ data: { session }, error }) => {
+                        if (error) {
+                            console.error('Error setting session from URL:', error);
+                            return;
+                        }
+                        
+                        if (session) {
+                            console.log('✅ Session established from magic link:', session.user.id);
+                            this.currentUserId = session.user.id;
+                            this.accessGrantedTime = Date.now();
+                            
+                            // Clean up URL
+                            window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+                            
+                            // Refresh page to apply new session state
+                            window.location.reload();
+                        }
                     });
                 }
-            });
-        }
-        
-        // Track time on page
-        if (config.analytics?.trackTimeOnPage) {
-            setInterval(() => {
-                timeOnPage += 30; // Track every 30 seconds
-                trackEvent(GATEKEEPER_EVENTS.USER_PROGRESS, {
-                    type: 'time_on_page',
-                    value: timeOnPage,
-                    scroll_depth: scrollDepth
-                });
-            }, 30000);
+            } catch (error) {
+                console.error('Error parsing magic link tokens:', error);
+            }
         }
     }
-
-    /**
-     * Enhanced accessibility features
-     */
-    function enhanceAccessibility() {
-        const config = window.gatekeeperAdvancedConfig || {};
-        if (!config.accessibility?.enableAriaLabels) return;
-        
-        // Add ARIA labels to protected elements
-        document.querySelectorAll('[data-gatekeeper-product]').forEach(element => {
-            if (!element.getAttribute('aria-label')) {
-                element.setAttribute('aria-label', 'Protected content - access required');
-            }
-        });
-        
-        // Add screen reader text for toggle elements
-        if (config.accessibility?.enableScreenReaderText) {
-            document.querySelectorAll('[data-free]').forEach(element => {
-                if (!element.querySelector('.sr-only')) {
-                    const srText = document.createElement('span');
-                    srText.className = 'sr-only';
-                    srText.textContent = 'Content available for free users';
-                    element.prepend(srText);
+    
+    static getCurrentUserId() {
+        return this.currentUserId;
+    }
+    
+    static getSessionDuration() {
+        return this.sessionStartTime ? Date.now() - this.sessionStartTime : 0;
+    }
+    
+    static async getCurrentSession() {
+        try {
+            // Always use cross-domain session check
+            const mainDomain = window.GATEKEEPER_CONFIG?.MAIN_DOMAIN || 'localhost:3000';
+            return await this.getCrossDomainSession(mainDomain);
+        } catch (error) {
+            console.warn('Failed to get current session:', error);
+            return null;
+        }
+    }
+    
+    static async getCrossDomainSession(mainDomain) {
+        try {
+            const protocol = window.location.protocol;
+            const sessionUrl = `${protocol}//${mainDomain}/api/session`;
+            
+            const response = await fetch(sessionUrl, {
+                method: 'GET',
+                credentials: 'include', // Important for cross-domain cookies
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest', // CSRF protection
+                    'X-GateFlow-Origin': window.location.origin, // Origin tracking
+                    'X-GateFlow-Version': CONSTANTS.VERSION // Version tracking
                 }
             });
             
-            document.querySelectorAll('[data-paid]').forEach(element => {
-                if (!element.querySelector('.sr-only')) {
-                    const srText = document.createElement('span');
-                    srText.className = 'sr-only';
-                    srText.textContent = 'Premium content - subscription required';
-                    element.prepend(srText);
-                }
-            });
-        }
-        
-        // Add CSS for screen reader only text
-        if (!document.getElementById('gatekeeper-a11y-styles')) {
-            const style = document.createElement('style');
-            style.id = 'gatekeeper-a11y-styles';
-            style.textContent = `
-                .sr-only {
-                    position: absolute;
-                    width: 1px;
-                    height: 1px;
-                    padding: 0;
-                    margin: -1px;
-                    overflow: hidden;
-                    clip: rect(0, 0, 0, 0);
-                    white-space: nowrap;
-                    border: 0;
-                }
-            `;
-            document.head.appendChild(style);
-        }
-    }
-
-    /**
-     * Handles toggle elements based on product access (data-free vs data-paid)
-     * @param {Object} session - Current user session
-     * @param {string} productSlugFromUrl - Product slug from URL parameter
-     */
-    async function handleToggleElements(session, productSlugFromUrl) {
-        const userId = session?.user?.id;
-        const requiredSlug = config.productSlug || productSlugFromUrl;
-        
-        if (!requiredSlug) {
-            console.log("Gatekeeper: No product slug for toggle elements, skipping");
-            return;
-        }
-
-        console.log("Gatekeeper: Handling toggle elements for product:", requiredSlug);
-        
-        // Check if user has access to the product
-        let hasProductAccess = false;
-        if (session) {
-            // Try to grant access first if user came with URL parameter
-            if (productSlugFromUrl && productSlugFromUrl === requiredSlug) {
-                console.log("Gatekeeper: User came with URL parameter, trying to grant access for toggle elements");
-                const grantResult = await grantAccessForFreeProduct(userId, requiredSlug);
-                if (grantResult) {
-                    hasProductAccess = true;
-                }
+            if (!response.ok) {
+                console.warn('Cross-domain session check failed:', response.status);
+                return null;
             }
             
-            // If still no access, check database
-            if (!hasProductAccess) {
-                hasProductAccess = await hasAccess(userId, requiredSlug);
+            const data = await response.json();
+            return data.session || null;
+        } catch (error) {
+            console.warn('Cross-domain session check error:', error);
+            return null;
+        }
+    }
+}
+
+/**
+ * Unified access control system
+ */
+class AccessControl {
+    static async batchCheckAccess(productSlugs, userId = null) {
+        const results = {};
+        
+        // Check cache first
+        for (const slug of productSlugs) {
+            const cacheKey = cache.generateKey('access', slug, 'current');
+            const cached = cache.get(cacheKey);
+            if (cached !== null) {
+                results[slug] = cached;
             }
         }
         
-        console.log("Gatekeeper: Toggle elements access result:", { requiredSlug, hasProductAccess, isLoggedIn: !!session });
-
-        // Handle data-free elements (show when user doesn't have access)
-        const freeElements = Array.from(document.querySelectorAll('[data-free]'));
-        freeElements.forEach(element => {
-            const shouldShow = !hasProductAccess;
-            element.style.display = shouldShow ? '' : 'none';
-            console.log("Gatekeeper: Free element display:", { element: element.tagName, shouldShow });
-        });
-
-        // Handle data-paid elements (show when user has access, REMOVE when no access for security)
-        const paidElements = Array.from(document.querySelectorAll('[data-paid]'));
-        paidElements.forEach(element => {
-            if (hasProductAccess) {
-                // User has access - show the element
-                element.style.display = '';
-                console.log("Gatekeeper: Paid element shown:", { element: element.tagName, hasAccess: true });
-            } else {
-                // User doesn't have access - REMOVE from DOM for security
-                console.log("Gatekeeper: Paid element removed from DOM (security):", { element: element.tagName, hasAccess: false });
-                element.remove();
-            }
-        });
-    }
-
-    async function checkAndGrantAccess(session, requiredSlug, productSlugFromUrl) {
-        const userId = session?.user?.id;
-        let accessGranted = false;
+        // Get uncached slugs
+        const uncachedSlugs = productSlugs.filter(slug => !(slug in results));
         
-        // If user came with URL parameter matching required slug, try to grant access first
-        if (session && productSlugFromUrl && productSlugFromUrl === requiredSlug) {
-            console.log("Gatekeeper: User came with URL parameter, trying to grant access for free product first");
-            const grantResult = await grantAccessForFreeProduct(userId, requiredSlug);
-            console.log("Gatekeeper: Grant result:", grantResult);
-            if (grantResult) {
-                accessGranted = true;
-                console.log("Gatekeeper: Access granted successfully via URL parameter");
-            }
-        }
-        
-        // If still no access, check database
-        if (!accessGranted) {
-            accessGranted = await hasAccess(userId, requiredSlug);
-            console.log("Gatekeeper: Database access check:", { requiredSlug, accessGranted, userId });
-        }
-        
-        return accessGranted;
-    }
-
-    function showLoadingState(message) {
-        const config = window.gatekeeperAdvancedConfig || {};
-        if (!config.ui?.showProgressBar) return;
-        
-        const theme = config.ui?.theme === 'auto' ? 
-            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') :
-            (config.ui?.theme || 'default');
-            
-        const loadingMessage = message || config.ui?.loadingMessage || 'Checking access...';
-        
-        bodyElement.innerHTML = getLoadingHTML(loadingMessage, theme);
-    }
-
-    function showLoginForm(requiredSlug) {
-        console.log("Gatekeeper: Access denied, showing login form");
-        
-        const config = window.gatekeeperAdvancedConfig || {};
-        const theme = config.ui?.theme === 'auto' ? 
-            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') :
-            (config.ui?.theme || 'default');
-        
-        trackEvent(GATEKEEPER_EVENTS.LOGIN_FORM_SHOWN, {
-            productSlug: requiredSlug,
-            reason: 'access_required',
-            theme
-        });
-        
-        bodyElement.innerHTML = getLoginFormHTML(requiredSlug, theme);
-        attachFormSubmitListener(requiredSlug);
-    }
-
-    function restoreOriginalContent(session) {
-        console.log("Gatekeeper: Restoring original content");
-        bodyElement.innerHTML = originalBodyHTML;
-        // Re-process any protected elements that might be in the original content
-        setTimeout(() => {
-            isProcessing = false;
-            bodyElement.classList.add('gatekeeper-ready');
-            console.log("Gatekeeper: Gatekeeper-ready class added after content restoration");
-            handleProtection(session);
-        }, PROCESSING_DELAY_MS);
-    }
-
-    async function handlePageProtection(session, productSlugFromUrl) {
-        console.log("Gatekeeper: Running in page mode");
-        const requiredSlug = config.productSlug || productSlugFromUrl;
-        console.log("Gatekeeper: Required slug:", requiredSlug, "config:", config.productSlug, "url:", productSlugFromUrl);
-        
-        if (!requiredSlug) {
-            console.error("Gatekeeper: No product slug specified for page protection.");
-            showLoginForm('');
-            return;
-        }
-        
-        const accessGranted = await checkAndGrantAccess(session, requiredSlug, productSlugFromUrl);
-        
-        if (!accessGranted) {
-            showLoginForm(requiredSlug);
-        } else {
-            console.log("Gatekeeper: Access granted, showing content");
-            // Only restore original content if it's not already there
-            if (bodyElement.innerHTML !== originalBodyHTML) {
-                restoreOriginalContent(session);
-                return;
-            } else {
-                console.log("Gatekeeper: Original content already restored");
-            }
-        }
-    }
-
-    async function handleProtection(session) {
-        if (isProcessing) {
-            console.log("Gatekeeper: Already processing, skipping");
-            return;
-        }
-        isProcessing = true;
-        
-        console.log("Gatekeeper: Starting protection check", session?.user?.id);
-        
-        // Show loading state for better UX
-        const config = window.gatekeeperConfig || {};
-        if (config.showLoadingState !== false) {
-            showLoadingState();
-        }
+        if (uncachedSlugs.length === 0) return results;
         
         try {
-            const userId = session?.user?.id;
-            const urlParams = new URLSearchParams(window.location.search);
-            const productSlugFromUrl = urlParams.get('product');
+            // Check if we're on a different domain than the main domain
+            const mainDomain = window.GATEKEEPER_CONFIG?.MAIN_DOMAIN || 'localhost:3000';
+            const currentDomain = window.location.host;
             
-            console.log("Gatekeeper: URL params:", { productSlugFromUrl, userId });
-
-            // Check what type of elements we have on the page
-            const elementsToProtect = Array.from(document.querySelectorAll('[data-gatekeeper-product]'));
-            const toggleElements = Array.from(document.querySelectorAll('[data-free], [data-paid]'));
+            console.log('🔍 Batch checking access for:', uncachedSlugs, { currentDomain, mainDomain });
             
-            console.log("Gatekeeper: Elements found:", { 
-                toProtect: elementsToProtect.length, 
-                toggle: toggleElements.length 
+            // Always use cross-domain API for access checking
+            const batchResults = await this.getCrossDomainBatchAccess(mainDomain, uncachedSlugs);
+            
+            // Cache results
+            for (const slug of uncachedSlugs) {
+                const hasAccess = batchResults[slug] || false;
+                console.log(`🔐 Cross-domain access result for ${slug}:`, hasAccess);
+                results[slug] = hasAccess;
+                cache.set(cache.generateKey('access', slug, 'current'), hasAccess);
+            }
+            
+            Analytics.track(CONSTANTS.EVENTS.BATCH_CHECK, {
+                slugs_count: uncachedSlugs.length
             });
-
-            // Restore original content first if we showed loading
-            if (config.showLoadingState !== false) {
-                bodyElement.innerHTML = originalBodyHTML;
+            
+            return results;
+        } catch (error) {
+            console.error('Batch access check failed:', error);
+            // Return cached results only, mark uncached as no access
+            for (const slug of uncachedSlugs) {
+                console.warn(`Access check failed for ${slug}, defaulting to no access`);
+                results[slug] = false;
+                cache.set(cache.generateKey('access', slug, 'current'), false, 30000); // Short cache for failed requests
             }
-
-            // Handle toggle elements (data-free/data-paid) first
-            if (toggleElements.length > 0) {
-                await handleToggleElements(session, productSlugFromUrl);
+            return results;
+        }
+    }
+    
+    static async getCrossDomainAccess(mainDomain, productSlug) {
+        try {
+            const protocol = window.location.protocol;
+            const accessUrl = `${protocol}//${mainDomain}/api/access`;
+            
+            const response = await fetch(accessUrl, {
+                method: 'POST',
+                credentials: 'include', // Important for cross-domain cookies
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ productSlug })
+            });
+            
+            if (!response.ok) {
+                console.warn('Cross-domain access check failed:', response.status);
+                return false;
             }
+            
+            const data = await response.json();
+            return data.hasAccess || false;
+        } catch (error) {
+            console.warn('Cross-domain access check error:', error);
+            return false;
+        }
+    }
+    
+    static async getCrossDomainBatchAccess(mainDomain, productSlugs) {
+        try {
+            const protocol = window.location.protocol;
+            const accessUrl = `${protocol}//${mainDomain}/api/access`;
+            
+            const response = await fetch(accessUrl, {
+                method: 'POST',
+                credentials: 'include', // Important for cross-domain cookies
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest', // CSRF protection
+                    'X-GateFlow-Origin': window.location.origin, // Origin tracking
+                    'X-GateFlow-Version': CONSTANTS.VERSION // Version tracking
+                },
+                body: JSON.stringify({ productSlugs }) // Send array of slugs
+            });
+            
+            if (!response.ok) {
+                console.warn('Cross-domain batch access check failed:', response.status);
+                return {};
+            }
+            
+            const data = await response.json();
+            return data.accessResults || {};
+        } catch (error) {
+            console.warn('Cross-domain batch access check error:', error);
+            return {};
+        }
+    }
+}
 
-            // Handle protected elements or page protection
-            if (elementsToProtect.length > 0) {
-                await handleElementProtection(userId);
-            } else if (toggleElements.length === 0) {
-                // Only do page protection if there are no toggle elements
-                await handlePageProtection(session, productSlugFromUrl);
+/**
+ * Modern UI template system
+ */
+class UITemplates {
+    static getTheme() {
+        return window.gatekeeperConfig?.theme || 'default';
+    }
+    
+    static getThemeColors(theme = 'default') {
+        const themes = {
+            default: {
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                textColor: '#e0e0e0',
+                accentColor: '#00aaff'
+            },
+            dark: {
+                background: 'rgba(0,0,0,0.8)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                textColor: '#ffffff',
+                accentColor: '#4facfe'
+            },
+            light: {
+                background: 'rgba(255,255,255,0.95)',
+                border: '1px solid rgba(0,0,0,0.1)',
+                textColor: '#333333',
+                accentColor: '#007bff'
+            }
+        };
+        
+        return themes[theme] || themes.default;
+    }
+    
+    static getLoadingTemplate(message = 'Checking access...') {
+        const theme = this.getThemeColors(this.getTheme());
+        
+        return `
+        <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div style="text-align: center; padding: 40px; background: ${theme.background}; border-radius: 16px; border: ${theme.border}; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+                <div style="font-size: 48px; margin-bottom: 24px; animation: pulse 2s ease-in-out infinite;">🔐</div>
+                <div style="font-size: 20px; color: ${theme.textColor}; margin-bottom: 12px; font-weight: 600;">${message}</div>
+                <div style="font-size: 14px; color: ${theme.textColor}; opacity: 0.7; margin-bottom: 24px;">Please wait while we verify your access</div>
+                <div style="width: 240px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin: 0 auto; overflow: hidden;">
+                    <div style="width: 100%; height: 100%; background: linear-gradient(90deg, ${theme.accentColor}, ${theme.accentColor}dd); border-radius: 3px; animation: loading-bar 2s ease-in-out infinite;"></div>
+                </div>
+                <div style="margin-top: 20px; font-size: 12px; color: ${theme.textColor}; opacity: 0.5;">
+                    Powered by GateFlow v${CONSTANTS.VERSION}
+                </div>
+            </div>
+            <style>
+                @keyframes loading-bar {
+                    0% { transform: translateX(-100%); }
+                    50% { transform: translateX(0%); }
+                    100% { transform: translateX(100%); }
+                }
+                @keyframes pulse {
+                    0%, 100% { transform: scale(1); }
+                    50% { transform: scale(1.1); }
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    * { animation: none !important; }
+                }
+            </style>
+        </div>
+        `;
+    }
+    
+    static getErrorTemplate(error, productSlug = '') {
+        const theme = this.getThemeColors(this.getTheme());
+        const config = window.gatekeeperConfig || {};
+        const isDev = config.development || window.location.hostname === 'localhost';
+        
+        return `
+        <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); padding: 20px;">
+            <div style="text-align: center; padding: 40px; background: ${theme.background}; border-radius: 20px; border: ${theme.border}; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); max-width: 500px; width: 100%;">
+                <div style="font-size: 72px; margin-bottom: 24px; animation: shake 0.5s ease-in-out;">⚠️</div>
+                <div style="font-size: 24px; color: #ff6b6b; margin-bottom: 16px; font-weight: 600;">Something went wrong</div>
+                <div style="font-size: 16px; color: ${theme.textColor}; opacity: 0.8; margin-bottom: 24px; line-height: 1.5;">
+                    ${isDev ? error : 'We encountered a temporary issue. Please try again.'}
+                </div>
+                ${isDev ? `
+                <div style="font-size: 12px; color: #666; margin-bottom: 24px; padding: 16px; background: rgba(0,0,0,0.3); border-radius: 8px; font-family: monospace; text-align: left; word-break: break-word;">
+                    <strong>Debug Info:</strong><br>${error}
+                </div>
+                ` : ''}
+                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px;">
+                    <button onclick="location.reload()" style="background: #00aaff; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s ease;">
+                        🔄 Try Again
+                    </button>
+                    ${productSlug ? `
+                    <a href="/?product=${productSlug}" style="background: #28a745; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; display: inline-block; transition: all 0.3s ease;">
+                        🛒 Product Page
+                    </a>
+                    ` : ''}
+                </div>
+                <div style="font-size: 12px; color: ${theme.textColor}; opacity: 0.4;">
+                    Error at ${new Date().toLocaleString()} • GateFlow v${CONSTANTS.VERSION}
+                </div>
+            </div>
+            <style>
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); }
+                    25% { transform: translateX(-5px); }
+                    75% { transform: translateX(5px); }
+                }
+            </style>
+        </div>
+        `;
+    }
+    
+    static getLoginTemplate(productSlug) {
+        const theme = this.getThemeColors(this.getTheme());
+        
+        return `
+        <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px;">
+            <div style="width: 100%; max-width: 400px; background: ${theme.background}; border-radius: 20px; border: ${theme.border}; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); overflow: hidden;">
+                <div style="padding: 40px;">
+                    <div id="gatekeeper-message-area" style="margin-bottom: 20px;"></div>
+                    
+                    <div style="text-align: center; margin-bottom: 32px;">
+                        <div style="font-size: 64px; margin-bottom: 16px;">🔐</div>
+                        <h2 style="color: ${theme.textColor}; margin: 0 0 8px 0; font-size: 24px; font-weight: 600;">Access Required</h2>
+                        <p style="color: ${theme.textColor}; opacity: 0.7; margin: 0; font-size: 16px;">Sign in to access this content</p>
+                    </div>
+                    
+                    <form id="gatekeeper-magic-link-form" style="margin-bottom: 24px;">
+                        <div style="margin-bottom: 20px;">
+                            <label for="gatekeeper-email" style="display: block; color: ${theme.textColor}; font-weight: 500; margin-bottom: 8px; font-size: 14px;">Email address</label>
+                            <input type="email" id="gatekeeper-email" placeholder="name@example.com" required 
+                                   style="width: 100%; padding: 12px 16px; border: 2px solid rgba(255,255,255,0.2); border-radius: 8px; background: rgba(255,255,255,0.1); color: ${theme.textColor}; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box;">
+                        </div>
+                        <button type="submit" style="width: 100%; padding: 14px; background: linear-gradient(135deg, ${theme.accentColor}, ${theme.accentColor}dd); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
+                            ✨ Send Access Link
+                        </button>
+                    </form>
+                    
+                    <div style="text-align: center; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <p style="color: ${theme.textColor}; opacity: 0.6; margin: 0 0 16px 0; font-size: 14px;">
+                            Don't have access yet?
+                        </p>
+                        <a href="/?product=${productSlug}" style="display: inline-block; padding: 10px 20px; background: rgba(255,255,255,0.1); color: ${theme.textColor}; text-decoration: none; border-radius: 6px; font-size: 14px; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.2);">
+                            🛒 Get Access Now
+                        </a>
+                    </div>
+                    
+                    <div style="margin-top: 24px; text-align: center; font-size: 12px; color: ${theme.textColor}; opacity: 0.4;">
+                        Secured by GateFlow v${CONSTANTS.VERSION}
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+    }
+}
+
+/**
+ * Enhanced error handling and fallback system
+ */
+class ErrorHandler {
+    static handleError(error, context, productSlug = '') {
+        const config = window.gatekeeperConfig || {};
+        const fallbackMode = config.fallbackMode || CONSTANTS.FALLBACK_MODES.HIDE_ALL;
+        const isDev = config.development || window.location.hostname === 'localhost';
+        
+        console.error(`GateFlow Error in ${context}:`, error);
+        
+        Analytics.track(CONSTANTS.EVENTS.ERROR, {
+            error: error.message,
+            context,
+            product_slug: productSlug,
+            fallback_mode: fallbackMode,
+            stack: error.stack
+        });
+        
+        if (isDev) {
+            document.body.innerHTML = UITemplates.getErrorTemplate(error.message, productSlug);
+            return false;
+        }
+        
+        switch (fallbackMode) {
+            case CONSTANTS.FALLBACK_MODES.SHOW_ALL:
+                return true;
+            case CONSTANTS.FALLBACK_MODES.SHOW_FREE:
+                this.showFreeContentOnly();
+                return false;
+            case CONSTANTS.FALLBACK_MODES.HIDE_ALL:
+            default:
+                this.hideAllContent();
+                return false;
+        }
+    }
+    
+    static showFreeContentOnly() {
+        // Remove protected elements but keep data-no-access content
+        document.querySelectorAll('[data-gatekeeper-product]').forEach(el => {
+            const noAccessElements = el.querySelectorAll('[data-no-access]');
+            
+            if (noAccessElements.length > 0) {
+                // Keep only the no-access elements
+                el.innerHTML = '';
+                noAccessElements.forEach(noAccessEl => {
+                    noAccessEl.removeAttribute('data-no-access');
+                    el.appendChild(noAccessEl);
+                });
+                el.removeAttribute('data-gatekeeper-product');
             } else {
-                console.log("Gatekeeper: Page has toggle elements, skipping page protection");
+                // No data-no-access elements found - remove the entire element
+                el.remove();
             }
+        });
+    }
+    
+    static hideAllContent() {
+        // Remove all protected content completely
+        document.querySelectorAll('[data-gatekeeper-product]').forEach(el => {
+            el.remove();
+        });
+    }
+}
+
+/**
+ * Performance monitoring with method decoration
+ */
+class PerformanceMonitor {
+    static measure(label, fn) {
+        return async (...args) => {
+            const startTime = performance.now();
+            try {
+                const result = await fn(...args);
+                const duration = performance.now() - startTime;
+                
+                Analytics.track(CONSTANTS.EVENTS.PERFORMANCE, {
+                    label,
+                    duration,
+                    success: true
+                });
+                
+                return result;
+            } catch (error) {
+                const duration = performance.now() - startTime;
+                
+                Analytics.track(CONSTANTS.EVENTS.PERFORMANCE, {
+                    label,
+                    duration,
+                    success: false,
+                    error: error.message
+                });
+                
+                throw error;
+            }
+        };
+    }
+}
+
+// ============================================================================
+// MAIN GATEKEEPER CLASS
+// ============================================================================
+
+/**
+ * Main GateFlow system orchestrator
+ */
+class GateFlow {
+    constructor() {
+        this.initialized = false;
+        this.config = null;
+        this.protectionMode = null;
+    }
+    
+    async initialize() {
+        if (this.initialized) return;
+        
+        try {
+            // Show loading state
+            document.body.innerHTML = UITemplates.getLoadingTemplate('Initializing GateFlow...');
             
-            // ALWAYS add gatekeeper-ready class at the end
-            bodyElement.classList.add('gatekeeper-ready');
-            console.log("Gatekeeper: Protection check completed, gatekeeper-ready class added");
+            // Initialize components
+            await this.initializeComponents();
             
-            trackEvent(GATEKEEPER_EVENTS.ACCESS_GRANTED, {
-                userId,
-                productSlugFromUrl,
-                elementsProtected: elementsToProtect.length,
-                toggleElements: toggleElements.length,
-                mode: elementsToProtect.length > 0 ? 'element' : toggleElements.length > 0 ? 'toggle' : 'page'
+            // Determine protection mode
+            this.protectionMode = this.detectProtectionMode();
+            
+            // Apply protection based on mode
+            await this.applyProtection();
+            
+            this.initialized = true;
+            
+            // Mark as initialized globally
+            window.GATEKEEPER_INITIALIZED = true;
+            
+            Analytics.track(CONSTANTS.EVENTS.PERFORMANCE, {
+                action: 'initialization_complete',
+                mode: this.protectionMode,
+                duration: performance.now()
             });
             
         } catch (error) {
-            console.error("Gatekeeper: Error in handleProtection:", error);
-            
-            // Handle error gracefully
-            const productSlug = new URLSearchParams(window.location.search).get('product') || config.productSlug;
-            const shouldContinue = handleError(error, 'handleProtection', productSlug);
-            
-            if (shouldContinue) {
-                // Even if there's an error, show the page to avoid blank screen
-                bodyElement.classList.add('gatekeeper-ready');
-            }
-        } finally {
-            isProcessing = false;
+            ErrorHandler.handleError(error, 'initialization');
         }
     }
-
-    function attachFormSubmitListener(productSlug) {
-        const magicLinkForm = document.getElementById('gatekeeper-magic-link-form');
-        if (!magicLinkForm) return;
-        magicLinkForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const email = document.getElementById('gatekeeper-email').value;
-            const submitButton = magicLinkForm.querySelector('button[type="submit"]');
-            const messageArea = document.getElementById('gatekeeper-message-area');
-            submitButton.disabled = true;
-            submitButton.textContent = 'Sending...';
-            
-            // Construct redirect URL to the product-access handler that will grant access using product_id
-            const redirectUrl = productSlug ? 
-                `${window.location.origin}/auth/product-access?product=${encodeURIComponent(productSlug)}` :
-                window.location.href;
-            
-            const { error } = await supabase.auth.signInWithOtp({
-                email: email,
-                options: { emailRedirectTo: redirectUrl }
+    
+    async initializeComponents() {
+        // Load configuration
+        this.config = window.gatekeeperConfig || {};
+        
+        // Load Supabase
+        await this.loadSupabase();
+        
+        // Initialize license system
+        await LicenseManager.checkLicense();
+        
+        // Create watermark if needed
+        LicenseManager.createWatermark();
+        
+        // Initialize session management
+        SessionManager.initialize(SessionManager.supabaseClient);
+        
+        console.log('✅ GateFlow components initialized successfully');
+    }
+    
+    async loadSupabase() {
+        if (window.supabase) {
+            this.createSupabaseClient();
+            return;
+        }
+        
+        try {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+                script.onload = () => {
+                    this.createSupabaseClient();
+                    resolve();
+                };
+                script.onerror = () => {
+                    console.warn('Failed to load Supabase, using fallback mode');
+                    // Create mock client for development
+                    SessionManager.supabaseClient = {
+                        auth: {
+                            getSession: () => Promise.resolve({ data: { session: null } }),
+                            onAuthStateChange: () => ({ data: { subscription: null } }),
+                            signInWithOtp: () => Promise.resolve({ error: null })
+                        },
+                        rpc: () => Promise.resolve({ data: false, error: null })
+                    };
+                    resolve();
+                };
+                document.head.appendChild(script);
             });
-            if (error) {
-                messageArea.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
-                trackEvent(GATEKEEPER_EVENTS.ERROR_OCCURRED, {
-                    context: 'magic_link_send',
-                    error: error.message,
-                    email,
-                    productSlug
+        } catch (error) {
+            console.warn('Supabase initialization failed:', error);
+            // Fallback to mock client
+            SessionManager.supabaseClient = {
+                auth: {
+                    getSession: () => Promise.resolve({ data: { session: null } }),
+                    onAuthStateChange: () => ({ data: { subscription: null } }),
+                    signInWithOtp: () => Promise.resolve({ error: null })
+                },
+                rpc: () => Promise.resolve({ data: false, error: null })
+            };
+        }
+    }
+    
+    createSupabaseClient() {
+        // Try to get config from injected GATEKEEPER_CONFIG or fallback to window.gatekeeperConfig
+        const injectedConfig = typeof GATEKEEPER_CONFIG !== 'undefined' ? GATEKEEPER_CONFIG : {};
+        const windowConfig = window.gatekeeperConfig || {};
+        const config = { ...windowConfig, ...injectedConfig };
+        
+        // Check for Supabase configuration in multiple possible locations
+        const supabaseUrl = config.SUPABASE_URL || 
+                           config.supabaseUrl || 
+                           process?.env?.NEXT_PUBLIC_SUPABASE_URL ||
+                           'https://your-project.supabase.co';
+        
+        const supabaseAnonKey = config.SUPABASE_ANON_KEY || 
+                               config.supabaseAnonKey || 
+                               process?.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+                               'your-anon-key';
+        
+        if (!supabaseUrl || !supabaseAnonKey || 
+            supabaseUrl === 'https://your-project.supabase.co' || 
+            supabaseAnonKey === 'your-anon-key') {
+            console.warn('Supabase configuration not properly set. Using fallback mode.');
+            // Create a mock client for development
+            SessionManager.supabaseClient = {
+                auth: {
+                    getSession: () => Promise.resolve({ data: { session: null } }),
+                    onAuthStateChange: () => ({ data: { subscription: null } }),
+                    signInWithOtp: () => Promise.resolve({ error: null })
+                },
+                rpc: () => Promise.resolve({ data: false, error: null })
+            };
+            return;
+        }
+        
+        SessionManager.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+    }
+    
+    detectProtectionMode() {
+        const params = new URLSearchParams(window.location.search);
+        
+        // Check for productSlug parameter in script URL or configuration
+        const currentScript = document.currentScript;
+        let scriptProductSlug = null;
+        
+        // First check GATEKEEPER_CONFIG for productSlug
+        if (window.GATEKEEPER_CONFIG && window.GATEKEEPER_CONFIG.PRODUCT_SLUG) {
+            scriptProductSlug = window.GATEKEEPER_CONFIG.PRODUCT_SLUG;
+        }
+        
+        // Then check script URL parameters
+        if (!scriptProductSlug && currentScript) {
+            try {
+                const scriptUrl = new URL(currentScript.src);
+                scriptProductSlug = scriptUrl.searchParams.get('productSlug');
+            } catch (error) {
+                // If URL parsing fails, continue without script parameter
+                console.warn('Failed to parse script URL for productSlug:', error);
+            }
+        }
+        
+        // Check original content if available, otherwise current DOM
+        const originalContent = document.body.getAttribute('data-original-content');
+        let searchContent = document.body;
+        
+        if (originalContent) {
+            // Create temporary container to search in original content
+            const tempContainer = document.createElement('div');
+            tempContainer.innerHTML = originalContent;
+            searchContent = tempContainer;
+        }
+        
+        const protectedElements = searchContent.querySelectorAll('[data-gatekeeper-product]');
+        
+        console.log('🔍 Detection debug:', {
+            params: Array.from(params.entries()),
+            scriptProductSlug: scriptProductSlug,
+            configProductSlug: window.GATEKEEPER_CONFIG?.PRODUCT_SLUG,
+            protectedElements: protectedElements.length,
+            protectedSlugs: Array.from(protectedElements).map(el => el.getAttribute('data-gatekeeper-product')),
+            usingOriginalContent: !!originalContent
+        });
+        
+        // Always use element protection if protected elements exist
+        if (protectedElements.length > 0) {
+            // Store product slug for page-level redirect check
+            if (scriptProductSlug) {
+                this.fullPageProductSlug = scriptProductSlug;
+            } else if (params.has('product')) {
+                this.fullPageProductSlug = params.get('product');
+            }
+            
+            console.log('🛡️ Detected mode: ELEMENT (protected elements found)');
+            return 'element';
+        }
+        
+        // Only use page protection if no elements but have productSlug
+        if (scriptProductSlug) {
+            this.fullPageProductSlug = scriptProductSlug;
+            console.log('🛡️ Detected mode: PAGE (script parameter, no elements)');
+            return 'page';
+        } else if (params.has('product')) {
+            console.log('🛡️ Detected mode: PAGE (URL parameter, no elements)');
+            return 'page';
+        }
+        
+        console.log('🛡️ Detected mode: NONE (no protection needed)');
+        return 'none';
+    }
+    
+    async applyProtection() {
+        // Check for multiple protection modes
+        const originalContent = document.body.getAttribute('data-original-content');
+        let searchContent = document.body;
+        
+        if (originalContent) {
+            const tempContainer = document.createElement('div');
+            tempContainer.innerHTML = originalContent;
+            searchContent = tempContainer;
+        }
+        
+        const protectedElements = searchContent.querySelectorAll('[data-gatekeeper-product]');
+        
+        console.log('🛡️ Applying protection:', {
+            mode: this.protectionMode,
+            protectedElements: protectedElements.length,
+            fullPageProductSlug: this.fullPageProductSlug
+        });
+        
+        switch (this.protectionMode) {
+            case 'page':
+                await this.protectPage();
+                break;
+            case 'element':
+                // For element mode, first check if we need page-level redirect
+                if (this.fullPageProductSlug) {
+                    const pageAccessGranted = await this.checkPageAccess();
+                    if (!pageAccessGranted) {
+                        // Page access denied - redirect instead of processing elements
+                        return;
+                    }
+                }
+                // Always process elements if we reach here
+                await this.protectElements();
+                break;
+            case 'toggle':
+                // Legacy toggle mode - deprecated
+                console.warn('⚠️ Toggle mode is deprecated. Use data-no-access instead.');
+                break;
+            default:
+                // No protection needed, restore original content
+                this.restoreOriginalContent();
+                break;
+        }
+    }
+    
+    async protectPage() {
+        const params = new URLSearchParams(window.location.search);
+        let productSlug = params.get('product');
+        
+        // Use script parameter if available (higher priority)
+        if (this.fullPageProductSlug) {
+            productSlug = this.fullPageProductSlug;
+        }
+        
+        if (!productSlug) {
+            ErrorHandler.handleError(new Error('No product slug provided'), 'page_protection');
+            return;
+        }
+        
+        console.log('🔐 Full page protection for product:', productSlug);
+        
+        // Check if user has current session
+        const session = await SessionManager.getCurrentSession();
+        
+        if (session?.user) {
+            // Check access using batch method
+            const accessResults = await AccessControl.batchCheckAccess([productSlug], session.user.id);
+            const hasAccess = accessResults[productSlug] || false;
+            
+            if (hasAccess) {
+                this.restoreOriginalContent();
+                // Show page content
+                document.body.style.visibility = 'visible';
+                document.body.classList.add('gatekeeper-ready');
+                
+                Analytics.track(CONSTANTS.EVENTS.ACCESS_GRANTED, {
+                    product_slug: productSlug,
+                    user_id: session.user.id
+                });
+                return;
+            }
+        }
+        
+        // No access - redirect to product page with return URL
+        console.log('🚫 Access denied, redirecting to product page:', `/p/${productSlug}`);
+        
+        Analytics.track(CONSTANTS.EVENTS.ACCESS_DENIED, {
+            product_slug: productSlug,
+            user_id: session?.user?.id || 'anonymous',
+            redirect_to: `/p/${productSlug}`
+        });
+        
+        // Build redirect URL with return_url parameter
+        const returnUrl = encodeURIComponent(window.location.href);
+        const mainDomain = window.GATEKEEPER_CONFIG?.MAIN_DOMAIN || 'localhost:3000';
+        const protocol = window.location.protocol;
+        
+        // Always redirect to main domain for authentication
+        window.location.href = `${protocol}//${mainDomain}/p/${productSlug}?return_url=${returnUrl}`;
+    }
+    
+    async protectElements() {
+        // First restore original content to work with
+        this.restoreOriginalContent();
+        
+        const protectedElements = document.querySelectorAll('[data-gatekeeper-product]');
+        
+        if (protectedElements.length === 0) {
+            return;
+        }
+        
+        // Get unique product slugs
+        const productSlugs = [...new Set(
+            Array.from(protectedElements).map(el => el.dataset.gatekeeperProduct)
+        )];
+        
+        // Get current user
+        const session = await SessionManager.getCurrentSession();
+        const userId = session?.user?.id || null;
+        
+        // Batch check access
+        const accessResults = await AccessControl.batchCheckAccess(productSlugs, userId);
+        
+        // Process each element
+        protectedElements.forEach(element => {
+            const productSlug = element.dataset.gatekeeperProduct;
+            const hasAccess = accessResults[productSlug] || false;
+            
+            console.log(`🔍 Processing element for ${productSlug}:`, { hasAccess, element });
+            
+            if (hasAccess) {
+                // User has access - remove any data-no-access elements inside
+                console.log(`✅ User has access to ${productSlug}, removing no-access elements`);
+                element.querySelectorAll('[data-no-access]').forEach(noAccessEl => {
+                    console.log('🗑️ Removing no-access element:', noAccessEl);
+                    noAccessEl.remove();
+                });
+                
+                // Remove the data-gatekeeper-product attribute but keep the element
+                element.removeAttribute('data-gatekeeper-product');
+                
+                Analytics.track(CONSTANTS.EVENTS.ELEMENT_ACCESSED, {
+                    product_slug: productSlug,
+                    element_tag: element.tagName.toLowerCase()
                 });
             } else {
-                messageArea.innerHTML = '<div class="alert alert-success">Success! Check your email for the access link.</div>';
-                magicLinkForm.style.display = 'none';
-                trackEvent(GATEKEEPER_EVENTS.MAGIC_LINK_SENT, {
-                    email,
-                    productSlug,
-                    redirectUrl
+                // User doesn't have access - keep only data-no-access elements
+                const noAccessElements = element.querySelectorAll('[data-no-access]');
+                const elementContent = element.innerHTML;
+                
+                if (noAccessElements.length > 0) {
+                    // Keep only the no-access elements
+                    element.innerHTML = '';
+                    noAccessElements.forEach(noAccessEl => {
+                        // Remove the data-no-access attribute and add content to main element
+                        noAccessEl.removeAttribute('data-no-access');
+                        element.appendChild(noAccessEl);
+                    });
+                } else {
+                    // No data-no-access elements found - remove the entire element
+                    element.remove();
+                }
+                
+                // Remove the data-gatekeeper-product attribute
+                element.removeAttribute('data-gatekeeper-product');
+                
+                Analytics.track(CONSTANTS.EVENTS.ELEMENT_PROTECTED, {
+                    product_slug: productSlug,
+                    element_tag: element.tagName.toLowerCase()
                 });
             }
-            submitButton.disabled = false;
-            submitButton.textContent = 'Send Access Link';
         });
     }
-
-    // Initialize advanced features
-    setupAutoRefresh();
-    setupProgressTracking();
-    enhanceAccessibility();
-     // Initialize GateFlow licensing system
-    checkGateFlowLicense().then(() => {
-        createGateFlowWatermark();
+    
+    async checkPageAccess() {
+        if (!this.fullPageProductSlug) {
+            return true; // No page-level product specified
+        }
         
-        // Check initial session
-        console.log("GateFlow: Checking initial session");
-        supabase.auth.getSession().then(async ({ data: { session }, error }) => {
-            if (error) {
-                console.error("GateFlow: Error getting session:", error);
+        console.log('🔐 Checking page-level access for product:', this.fullPageProductSlug);
+        
+        // Check if user has current session
+        const session = await SessionManager.getCurrentSession();
+        
+        if (session?.user) {
+            // Check access using batch method
+            const accessResults = await AccessControl.batchCheckAccess([this.fullPageProductSlug], session.user.id);
+            const hasAccess = accessResults[this.fullPageProductSlug] || false;
+            
+            if (hasAccess) {
+                Analytics.track(CONSTANTS.EVENTS.ACCESS_GRANTED, {
+                    product_slug: this.fullPageProductSlug,
+                    user_id: session.user.id,
+                    context: 'page_access_check'
+                });
+                return true; // ✅ User has access to page-level product
             }
-            console.log("GateFlow: Initial session:", session?.user?.id);
-            
-            // No need to grant access here - handleProtection will do it
-            handleProtection(session);
+        }
+        
+        // No access - redirect to product page with return URL
+        console.log('🚫 Page access denied, redirecting to product page:', `/p/${this.fullPageProductSlug}`);
+        
+        Analytics.track(CONSTANTS.EVENTS.ACCESS_DENIED, {
+            product_slug: this.fullPageProductSlug,
+            user_id: session?.user?.id || 'anonymous',
+            redirect_to: `/p/${this.fullPageProductSlug}`,
+            context: 'page_access_check'
         });
+        
+        // Build redirect URL with return_url parameter
+        const returnUrl = encodeURIComponent(window.location.href);
+        const mainDomain = window.GATEKEEPER_CONFIG?.MAIN_DOMAIN || 'localhost:3000';
+        const protocol = window.location.protocol;
+        
+        // Always redirect to main domain for authentication
+        window.location.href = `${protocol}//${mainDomain}/p/${this.fullPageProductSlug}?return_url=${returnUrl}`;
+        
+        return false;
+    }
+    
+    restoreOriginalContent() {
+        // Remove any loading states and show original content
+        const originalContent = document.body.getAttribute('data-original-content');
+        if (originalContent) {
+            document.body.innerHTML = originalContent;
+            document.body.removeAttribute('data-original-content');
+        }
+        
+        // Also remove any loading classes or styles
+        document.body.classList.remove('gateflow-loading');
+        document.body.style.overflow = '';
+        
+        console.log('✅ Original content restored');
+    }
+    
+    // Public API methods
+    static async checkProductAccess(productSlug) {
+        console.log('🔍 Checking product access:', { productSlug });
+        const results = await AccessControl.batchCheckAccess([productSlug]);
+        return results[productSlug] || false;
+    }
+    
+    static getCurrentUser() {
+        return SessionManager.getCurrentUserId();
+    }
+    
+    static trackEvent(eventName, data = {}) {
+        Analytics.track(eventName, data);
+    }
+    
+    // Instance methods for convenience
+    async checkProductAccess(productSlug, userId = null) {
+        const results = await AccessControl.batchCheckAccess([productSlug], userId);
+        return results[productSlug] || false;
+    }
+    
+    getCurrentUser() {
+        return SessionManager.getCurrentUserId();
+    }
+    
+    trackEvent(eventName, data = {}) {
+        Analytics.track(eventName, data);
+    }
+    
+    get supabaseClient() {
+        return SessionManager.supabaseClient;
+    }
+}
 
-        supabase.auth.onAuthStateChange(async (event, session) => {
-            console.log("GateFlow: Auth state changed:", event, session?.user?.id);
-            
-            // No need to grant access here either - handleProtection will do it
-            // Always re-run protection logic on auth state change
-            handleProtection(session);
+// ============================================================================
+// GLOBAL INITIALIZATION
+// ============================================================================
+
+// Global instances
+const cache = new CacheManager();
+const gateflow = new GateFlow();
+
+// Store original content before any modifications
+if (document.body && !document.body.getAttribute('data-original-content')) {
+    document.body.setAttribute('data-original-content', document.body.innerHTML);
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('🚀 GateFlow initializing...');
+        gateflow.initialize().catch(error => {
+            console.error('GateFlow initialization failed:', error);
+            // Fallback to showing original content
+            const originalContent = document.body.getAttribute('data-original-content');
+            if (originalContent) {
+                document.body.innerHTML = originalContent;
+                document.body.removeAttribute('data-original-content');
+            }
         });
+    });
+} else {
+    console.log('🚀 GateFlow initializing...');
+    gateflow.initialize().catch(error => {
+        console.error('GateFlow initialization failed:', error);
+        // Fallback to showing original content
+        const originalContent = document.body.getAttribute('data-original-content');
+        if (originalContent) {
+            document.body.innerHTML = originalContent;
+            document.body.removeAttribute('data-original-content');
+        }
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadSupabaseScript(initializeGatekeeper);
+// Expose public API
+window.GateFlow = GateFlow;
+window.gateflow = gateflow;
+window.cache = cache;
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    cache.destroy();
 });
+
+// Enhanced error handling for uncaught errors
+window.addEventListener('error', (event) => {
+    if (event.error?.stack?.includes('gateflow') || event.error?.stack?.includes('gatekeeper')) {
+        Analytics.track(CONSTANTS.EVENTS.ERROR, {
+            error: event.error.message,
+            context: 'global_error_handler',
+            stack: event.error.stack
+        });
+    }
+});
+
+// Performance monitoring
+window.addEventListener('load', () => {
+    Analytics.track(CONSTANTS.EVENTS.PERFORMANCE, {
+        action: 'page_load_complete',
+        load_time: performance.now(),
+        memory_usage: performance.memory ? performance.memory.usedJSHeapSize : null
+    });
+});
+
+// Export classes to window for debugging and external access
+window.SessionManager = SessionManager;
+window.AccessControl = AccessControl;
+window.CacheManager = CacheManager;
+window.Analytics = Analytics;
+window.ErrorHandler = ErrorHandler;
+window.UITemplates = UITemplates;
+window.GateFlow = GateFlow;
+
+console.log(`🔐 GateFlow v${CONSTANTS.VERSION} initialized successfully`);

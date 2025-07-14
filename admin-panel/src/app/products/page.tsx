@@ -8,7 +8,7 @@ import { formatPrice } from '@/lib/constants';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function ProductsLanding() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -93,12 +93,22 @@ export default function ProductsLanding() {
             
             <div className="flex items-center space-x-4">
               {user ? (
-                <Link
-                  href="/my-products"
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium"
-                >
-                  My Products
-                </Link>
+                <>
+                  <Link
+                    href="/my-products"
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium"
+                  >
+                    My Products
+                  </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/dashboard"
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+                    >
+                      Admin Panel
+                    </Link>
+                  )}
+                </>
               ) : (
                 <Link
                   href="/login"
