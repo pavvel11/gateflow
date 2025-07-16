@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { Product } from '@/types';
 import { formatPrice } from '@/lib/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import SecureAccessGrantedView from './SecureAccessGrantedView';
-import ProductAvailabilityBanner from '@/components/ProductAvailabilityBanner';
+import ProductAvailabilityBanner from './ProductAvailabilityBanner';
 import Confetti from 'react-confetti';
 
 interface ProductViewProps {
@@ -31,6 +32,7 @@ interface AccessResponse {
 }
 
 export default function ProductView({ product }: ProductViewProps) {
+  const t = useTranslations('productView');
   const { user } = useAuth();
   const { addToast } = useToast();
   const [email, setEmail] = useState('');
@@ -158,7 +160,7 @@ export default function ProductView({ product }: ProductViewProps) {
   const handleMagicLinkSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMessage({ type: 'info', text: 'Sending magic link...' });
+    setMessage({ type: 'info', text: t('sendingMagicLink') });
     
     try {
       // Import supabase client for auth operations
@@ -183,12 +185,12 @@ export default function ProductView({ product }: ProductViewProps) {
       });
       
       if (error) {
-        setMessage({ type: 'error', text: `Error: ${error.message}` });
+        setMessage({ type: 'error', text: t('error', { message: error.message }) });
       } else {
-        setMessage({ type: 'success', text: 'Success! Check your email for the magic link.' });
+        setMessage({ type: 'success', text: t('checkEmailForMagicLink') });
       }
     } catch {
-      setMessage({ type: 'error', text: 'An unexpected error occurred.' });
+      setMessage({ type: 'error', text: t('unexpectedError') });
     } finally {
       setLoading(false);
     }
@@ -323,7 +325,7 @@ export default function ProductView({ product }: ProductViewProps) {
             </div>
           </div>
           <div className="text-3xl font-bold text-white mt-5">
-            {product.price === 0 ? 'FREE' : `${formatPrice(product.price, product.currency)} ${product.currency}`}
+            {product.price === 0 ? t('free') : `${formatPrice(product.price, product.currency)} ${product.currency}`}
           </div>
         </div>
         
@@ -339,10 +341,10 @@ export default function ProductView({ product }: ProductViewProps) {
   if (checkingAccess) {
     return (
       <ProductActionLayout>
-        <h2 className="text-2xl font-semibold text-white mb-2">Loading...</h2>
-        <p className="text-gray-400 mb-6">Checking your access to this product...</p>
+        <h2 className="text-2xl font-semibold text-white mb-2">{t('loading')}</h2>
+        <p className="text-gray-400 mb-6">{t('checkingAccess')}</p>
         <div className="w-full bg-gray-600 rounded-lg py-3.5 px-4 text-center text-white animate-pulse">
-          Checking access...
+          {t('checkingAccessButton')}
         </div>
       </ProductActionLayout>
     );
@@ -392,10 +394,10 @@ export default function ProductView({ product }: ProductViewProps) {
           `}</style>
           <div className="max-w-4xl mx-auto p-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl z-10 text-center">
             <div className="text-5xl mb-4">🎉</div>
-            <h2 className="text-3xl font-bold text-white mb-2">Access Granted!</h2>
-            <p className="text-gray-300 mb-6">You now have full access to {product.name}.</p>
+            <h2 className="text-3xl font-bold text-white mb-2">{t('accessGranted')}</h2>
+            <p className="text-gray-300 mb-6">{t('accessGrantedMessage', { productName: product.name })}</p>
             <div className="text-6xl font-bold text-white tabular-nums">{countdown}</div>
-            <p className="text-gray-400 mt-2">Loading content...</p>
+            <p className="text-gray-400 mt-2">{t('loadingContent')}</p>
           </div>
         </div>
       );
@@ -418,9 +420,9 @@ export default function ProductView({ product }: ProductViewProps) {
         
         <div className="text-center">
           <div className="text-4xl mb-4">⏰</div>
-          <h2 className="text-2xl font-semibold text-white mb-2">Coming Soon</h2>
+          <h2 className="text-2xl font-semibold text-white mb-2">{t('comingSoon')}</h2>
           <p className="text-gray-400 mb-6">
-            This product is not yet available. Check back later!
+            {t('comingSoonMessage')}
           </p>
         </div>
       </ProductActionLayout>
@@ -441,13 +443,13 @@ export default function ProductView({ product }: ProductViewProps) {
         
         <div className="text-center">
           <div className="text-4xl mb-4">⏰</div>
-          <h2 className="text-2xl font-semibold text-white mb-2">Offer Expired</h2>
+          <h2 className="text-2xl font-semibold text-white mb-2">{t('offerExpired')}</h2>
           <p className="text-gray-400 mb-6">
-            This product was available for a limited time and is no longer accessible to new customers.
+            {t('offerExpiredMessage')}
           </p>
           <div className="bg-red-800/30 border border-red-500/30 rounded-lg p-4 text-red-200">
             <p className="text-sm">
-              If you previously had access to this product, please log in to view your content.
+              {t('previousAccessNote')}
             </p>
           </div>
         </div>
@@ -471,13 +473,13 @@ export default function ProductView({ product }: ProductViewProps) {
         
         <div className="text-center">
           <div className="text-4xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-semibold text-white mb-2">Product No Longer Available</h2>
+          <h2 className="text-2xl font-semibold text-white mb-2">{t('productNoLongerAvailable')}</h2>
           <p className="text-gray-400 mb-6">
-            This product is no longer available for new customers.
+            {t('productNoLongerAvailableMessage')}
           </p>
           <div className="bg-yellow-800/30 border border-yellow-500/30 rounded-lg p-4 text-yellow-200">
             <p className="text-sm">
-              If you previously had access to this product, please log in to view your content.
+              {t('previousAccessNote')}
             </p>
           </div>
         </div>
@@ -502,31 +504,31 @@ export default function ProductView({ product }: ProductViewProps) {
         user ? (
           // Logged in, but no access
           <>
-            <h2 className="text-2xl font-semibold text-white mb-2">Get your free product</h2>
-            <p className="text-gray-400 mb-6">Click below to get instant access to this free product.</p>
+            <h2 className="text-2xl font-semibold text-white mb-2">{t('getYourFreeProduct')}</h2>
+            <p className="text-gray-400 mb-6">{t('clickForInstantAccess')}</p>
             <button
               onClick={requestFreeAccess}
               className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3.5 px-4 rounded-lg transition transform hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading}
             >
-              {loading ? 'Getting Access...' : 'Get Instant Access'}
+              {loading ? t('gettingAccess') : t('getInstantAccess')}
             </button>
           </>
         ) : (
           // Not logged in
           <>
-            <h2 className="text-2xl font-semibold text-white mb-2">Get your free product</h2>
-            <p className="text-gray-400 mb-6">Enter your email below to receive a secure download link.</p>
+            <h2 className="text-2xl font-semibold text-white mb-2">{t('getYourFreeProduct')}</h2>
+            <p className="text-gray-400 mb-6">{t('enterEmailForDownload')}</p>
             <form onSubmit={handleMagicLinkSubmit}>
               <div className="mb-4">
                 <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-2">
-                  Email address
+                  {t('emailAddressLabel')}
                 </label>
                 <input
                   type="email"
                   id="email"
                   className="w-full bg-black/20 border border-white/10 text-white rounded-lg py-3 px-4 focus:bg-black/30 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 outline-none transition"
-                  placeholder="name@example.com"
+                  placeholder={t('emailPlaceholder')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -537,7 +539,7 @@ export default function ProductView({ product }: ProductViewProps) {
                 className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3.5 px-4 rounded-lg transition transform hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading}
               >
-                {loading ? 'Sending...' : 'Send Magic Link'}
+                {loading ? t('sending') : t('sendMagicLink')}
               </button>
             </form>
           </>
@@ -545,15 +547,15 @@ export default function ProductView({ product }: ProductViewProps) {
       ) : (
         // View 3b: Paid product flow
         <>
-          <h2 className="text-2xl font-semibold text-white mb-2">Purchase Access</h2>
-          <p className="text-gray-400 mb-6">Click below to proceed to a secure payment page.</p>
+          <h2 className="text-2xl font-semibold text-white mb-2">{t('purchaseAccess')}</h2>
+          <p className="text-gray-400 mb-6">{t('clickForPayment')}</p>
           <form onSubmit={handlePaymentSubmit}>
             <button
               type="submit"
               className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3.5 px-4 rounded-lg transition transform hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading}
             >
-              {loading ? 'Processing...' : 'Proceed to Payment'}
+              {loading ? t('processing') : t('proceedToPayment')}
             </button>
           </form>
         </>
@@ -573,7 +575,7 @@ export default function ProductView({ product }: ProductViewProps) {
       )}
       
       <div className="text-center mt-6 text-xs text-gray-500">
-        Secured by GateFlow
+        {t('securedBy')}
       </div>
     </ProductActionLayout>
   );

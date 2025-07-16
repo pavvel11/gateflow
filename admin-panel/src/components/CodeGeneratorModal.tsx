@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import BaseModal from './ui/BaseModal';
 import { Product } from '@/types';
+import { useTranslations } from 'next-intl';
 
 interface CodeGeneratorModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface CodeOptions {
 }
 
 export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGeneratorModalProps) {
+  const t = useTranslations('admin.codeGenerator');
   const [options, setOptions] = useState<CodeOptions>({
     mode: 'page'
   });
@@ -60,24 +62,24 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
   const generatedCode = generateCode();
 
   return (
-    <BaseModal isOpen={isOpen} onClose={onClose} size="lg">
+    <BaseModal isOpen={isOpen} onClose={onClose} size="lg" closeOnBackdropClick={false}>
       <div className="p-6">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-          Generate Protection Code
+          {t('title')}
         </h2>
         
         <div className="space-y-6">
           {/* Product Info */}
           <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Product: {product.name}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Slug: {product.slug}</p>
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{t('product')}: {product.name}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t('slug')}: {product.slug}</p>
           </div>
 
           {/* Options */}
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Protection Mode
+                {t('protectionMode')}
               </label>
               <div className="grid grid-cols-2 gap-4">
                 <button
@@ -88,9 +90,9 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
                       : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
-                  <div className="font-medium">🌐 Protect Entire Page</div>
+                  <div className="font-medium">🌐 {t('pageMode')}</div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Protects the whole page content
+                    {t('pageDescription')}
                   </div>
                 </button>
                 <button
@@ -101,9 +103,9 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
                       : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
-                  <div className="font-medium">🎯 Protect Elements</div>
+                  <div className="font-medium">🎯 {t('elementMode')}</div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Protects specific page elements
+                    {t('elementDescription')}
                   </div>
                 </button>
               </div>
@@ -114,7 +116,7 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Generated Code
+                {t('generatedCode')}
               </label>
               <button
                 onClick={handleCopy}
@@ -124,7 +126,7 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
                     : 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/40'
                 }`}
               >
-                {copiedCode === generatedCode ? '✓ Copied!' : '📋 Copy Code'}
+                {copiedCode === generatedCode ? t('copied') : t('copyCode')}
               </button>
             </div>
             <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg text-sm whitespace-pre-wrap break-all">
@@ -135,21 +137,21 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
           {/* Instructions */}
           <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
             <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">
-              📋 Implementation Instructions
+              📋 {t('instructions')}
             </h4>
             <div className="text-sm text-blue-800 dark:text-blue-400 space-y-1">
               {options.mode === 'page' ? (
                 <>
-                  <p>1. Copy the script tag above</p>
-                  <p>2. Paste it into the &lt;head&gt; section of your protected page</p>
-                  <p>3. The entire page will be protected automatically</p>
+                  <p dangerouslySetInnerHTML={{ __html: t('pageInstructions.step1') }} />
+                  <p dangerouslySetInnerHTML={{ __html: t('pageInstructions.step2') }} />
+                  <p dangerouslySetInnerHTML={{ __html: t('pageInstructions.step3') }} />
                 </>
               ) : (
                 <>
-                  <p>1. Add the script tag to your page &lt;head&gt;</p>
-                  <p>2. Wrap content you want to protect with data-gatekeeper-product=&quot;{product.slug}&quot;</p>
-                  <p>3. Add fallback content with data-no-access for users without access</p>
-                  <p>4. The script will automatically show/hide content based on user access</p>
+                  <p dangerouslySetInnerHTML={{ __html: t('elementInstructions.step1') }} />
+                  <p dangerouslySetInnerHTML={{ __html: t('elementInstructions.step2', { slug: product.slug }) }} />
+                  <p dangerouslySetInnerHTML={{ __html: t('elementInstructions.step3') }} />
+                  <p dangerouslySetInnerHTML={{ __html: t('elementInstructions.step4') }} />
                 </>
               )}
             </div>
@@ -158,37 +160,28 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
           {/* Additional Information */}
           <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg">
             <h4 className="font-semibold text-amber-900 dark:text-amber-300 mb-2">
-              ℹ️ Important Information
+              ℹ️ {t('importantInfo')}
             </h4>
             <div className="text-sm text-amber-800 dark:text-amber-400 space-y-2">
               {options.mode === 'page' ? (
                 <>
                   <p>
-                    <strong>Frontend Protection:</strong> This solution operates entirely on the client-side, 
-                    making it compatible with any website builder like WordPress, Webflow, Squarespace, or static HTML. 
-                    While this approach is less secure than server-side protection, we&apos;ve implemented several 
-                    obfuscation techniques to make circumvention more challenging than typical frontend solutions.
+                    <strong>{t('frontendProtection')}:</strong> {t('frontendProtectionDescription')}
                   </p>
                   <p>
-                    <strong>Use Case:</strong> Perfect for protecting landing pages, course content, or any standalone 
-                    page where you want to control access based on user purchases or subscriptions.
+                    <strong>{t('useCase')}:</strong> {t('pageModeUseCase')}
                   </p>
                 </>
               ) : (
                 <>
                   <p>
-                    <strong>Selective Content Display:</strong> This method allows you to show or hide specific 
-                    sections of a page based on user access. It&apos;s particularly useful for sales pages where 
-                    you want to display different content to paying customers versus prospects.
+                    <strong>{t('selectiveDisplay')}:</strong> {t('selectiveDisplayDescription')}
                   </p>
                   <p>
-                    <strong>Implementation:</strong> Add data-gatekeeper-product=&quot;{product.slug}&quot; to content 
-                    that should be visible to users with access, and data-no-access=&quot;true&quot; to fallback content 
-                    for users without access. The script will automatically manage visibility.
+                    <strong>{t('implementation')}:</strong> {t('implementationDescription', { slug: product.slug })}
                   </p>
                   <p>
-                    <strong>Common Use Case:</strong> Replace &quot;Buy Now&quot; buttons with &quot;Access Product&quot; buttons 
-                    for existing customers, or show premium content sections only to subscribers.
+                    <strong>{t('commonUseCase')}:</strong> {t('elementModeUseCase')}
                   </p>
                 </>
               )}
@@ -201,13 +194,13 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
             onClick={onClose}
             className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
           >
-            Close
+            {t('close')}
           </button>
           <button
             onClick={handleCopy}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
           >
-            Copy Code
+            {t('copyCode')}
           </button>
         </div>
       </div>

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from 'react';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 export default function LandingPage() {
   const [mounted, setMounted] = useState(false);
@@ -43,6 +44,9 @@ export default function LandingPage() {
             </div>
             
             <div className="flex items-center space-x-4">
+              {/* Language Switcher */}
+              <LanguageSwitcher />
+              
               <Link
                 href="/products"
                 className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"

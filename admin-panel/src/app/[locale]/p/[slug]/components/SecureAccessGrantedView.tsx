@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Product } from '@/types';
 import DigitalContentRenderer from '@/components/DigitalContentRenderer';
 
@@ -27,6 +28,7 @@ interface SecureProductData {
 }
 
 export default function AccessGrantedView({ product }: AccessGrantedViewProps) {
+  const t = useTranslations('secureAccess');
   const [secureData, setSecureData] = useState<SecureProductData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -87,7 +89,7 @@ export default function AccessGrantedView({ product }: AccessGrantedViewProps) {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
-        <div className="text-white">Loading secure content...</div>
+        <div className="text-white">{t('loadingSecureContent')}</div>
       </div>
     );
   }
@@ -97,13 +99,13 @@ export default function AccessGrantedView({ product }: AccessGrantedViewProps) {
       <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
         <div className="text-center">
           <div className="text-4xl mb-4">🔒</div>
-          <h2 className="text-xl font-semibold text-white mb-2">Access Error</h2>
+          <h2 className="text-xl font-semibold text-white mb-2">{t('accessError')}</h2>
           <p className="text-gray-400 text-sm mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
             className="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
           >
-            Refresh Page
+            {t('refreshPage')}
           </button>
         </div>
       </div>
@@ -113,7 +115,7 @@ export default function AccessGrantedView({ product }: AccessGrantedViewProps) {
   if (!secureData) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
-        <div className="text-white">No content available</div>
+        <div className="text-white">{t('noContentAvailable')}</div>
       </div>
     );
   }
@@ -142,8 +144,8 @@ export default function AccessGrantedView({ product }: AccessGrantedViewProps) {
         
         <div className="max-w-md mx-auto p-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl z-10 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-white mb-2">Redirecting...</h2>
-          <p className="text-gray-400 text-sm mb-4">You&apos;re being redirected to your content.</p>
+          <h2 className="text-xl font-semibold text-white mb-2">{t('redirecting')}</h2>
+          <p className="text-gray-400 text-sm mb-4">{t('redirectingMessage')}</p>
           {redirectUrl && (
             <a 
               href={redirectUrl}
@@ -152,7 +154,7 @@ export default function AccessGrantedView({ product }: AccessGrantedViewProps) {
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
-              Go to Content
+              {t('goToContent')}
             </a>
           )}
         </div>
@@ -191,7 +193,7 @@ export default function AccessGrantedView({ product }: AccessGrantedViewProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span className="text-green-300 font-medium">
-                {secureUserAccess.is_expired ? 'Access Expired' : 'Access Granted'}
+                {secureUserAccess.is_expired ? t('accessExpired') : t('accessGranted')}
               </span>
               {secureProduct.is_featured && (
                 <svg className="w-4 h-4 text-yellow-400 ml-2" fill="currentColor" viewBox="0 0 20 20">
@@ -226,8 +228,8 @@ export default function AccessGrantedView({ product }: AccessGrantedViewProps) {
                       : 'text-blue-300'
                 }`}>
                   {secureUserAccess.is_expired 
-                    ? `Expired ${formatDate(secureUserAccess.access_expires_at)}`
-                    : `Expires ${formatDate(secureUserAccess.access_expires_at)}`
+                    ? t('expired', { date: formatDate(secureUserAccess.access_expires_at) })
+                    : t('expires', { date: formatDate(secureUserAccess.access_expires_at) })
                   }
                 </span>
               </div>
@@ -240,13 +242,13 @@ export default function AccessGrantedView({ product }: AccessGrantedViewProps) {
               <svg className="w-5 h-5 text-yellow-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833-.23 2.5 1.732 2.5z" />
               </svg>
-              <span className="text-yellow-300 font-medium">Legacy Access</span>
+              <span className="text-yellow-300 font-medium">{t('legacyAccess')}</span>
             </div>
           )}
         </div>
         
         <div className="bg-white/10 border border-white/10 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold text-white mb-4">Product Description</h2>
+          <h2 className="text-xl font-semibold text-white mb-4">{t('productDescription')}</h2>
           <p className="text-gray-300">{secureProduct.description}</p>
         </div>
         
@@ -257,10 +259,10 @@ export default function AccessGrantedView({ product }: AccessGrantedViewProps) {
         />
         
         <div className="text-center mt-8 text-sm text-gray-500">
-          Secured by GateFlow • {new Date().toLocaleDateString()}
+          {t('securedByGateFlow')} • {new Date().toLocaleDateString()}
           {!secureProduct.is_active && (
             <div className="mt-2 text-xs text-yellow-400">
-              This product is no longer available to new customers
+              {t('productNoLongerAvailable')}
             </div>
           )}
         </div>

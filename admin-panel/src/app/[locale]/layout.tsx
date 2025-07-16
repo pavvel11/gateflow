@@ -4,7 +4,6 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { locales } from '@/lib/locales';
 import { notFound } from 'next/navigation';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 type Props = {
   children: React.ReactNode;
@@ -30,11 +29,6 @@ export default async function LocaleLayout({
       <AuthProvider>
         <ToastProvider>
           <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-            {/* Language Switcher */}
-            <div className="fixed top-4 right-4 z-50">
-              <LanguageSwitcher />
-            </div>
-            
             {children}
           </div>
         </ToastProvider>

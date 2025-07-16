@@ -5,20 +5,22 @@ import StatsOverview from '@/components/StatsOverview'
 import RecentActivity from '@/components/RecentActivity'
 import { withAdminAuth } from '@/components/withAdminAuth'
 import { useAuth } from '@/contexts/AuthContext'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 
 function DashboardPage() {
   const { user } = useAuth()
+  const t = useTranslations('admin.dashboard')
 
   return (
     <DashboardLayout user={{ email: user!.email!, id: user!.id }}>
       <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Dashboard
+            {t('title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Welcome to your GateFlow admin panel
+            {t('welcome')}
           </p>
         </div>
         
@@ -27,7 +29,7 @@ function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Quick Actions
+              {t('quickActions')}
             </h2>
             <div className="space-y-3">
               <Link
@@ -41,8 +43,8 @@ function DashboardPage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-900 dark:text-white">Manage Products</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Add, edit, or remove products</p>
+                    <h3 className="font-medium text-gray-900 dark:text-white">{t('createProduct')}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{t('createProductDescription')}</p>
                   </div>
                 </div>
               </Link>
@@ -58,8 +60,8 @@ function DashboardPage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-900 dark:text-white">User Access</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Manage user permissions</p>
+                    <h3 className="font-medium text-gray-900 dark:text-white">{t('manageUsers')}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{t('manageUsersDescription')}</p>
                   </div>
                 </div>
               </Link>

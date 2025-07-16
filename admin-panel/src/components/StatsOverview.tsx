@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 interface Stats {
   totalProducts: number
@@ -11,6 +12,7 @@ interface Stats {
 }
 
 export default function StatsOverview() {
+  const t = useTranslations('admin.dashboard')
   const [stats, setStats] = useState<Stats>({
     totalProducts: 0,
     totalUsers: 0,
@@ -72,7 +74,7 @@ export default function StatsOverview() {
 
   const statItems = [
     {
-      name: 'Total Products',
+      name: t('totalProducts'),
       value: stats.totalProducts,
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,7 +85,7 @@ export default function StatsOverview() {
       bgColor: 'from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20',
     },
     {
-      name: 'Total Users',
+      name: t('totalUsers'),
       value: stats.totalUsers,
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,7 +96,7 @@ export default function StatsOverview() {
       bgColor: 'from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20',
     },
     {
-      name: 'Access Records',
+      name: t('accessRecords'),
       value: stats.totalAccess,
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,7 +107,7 @@ export default function StatsOverview() {
       bgColor: 'from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20',
     },
     {
-      name: 'Active Users (7d)',
+      name: t('activeUsers'),
       value: stats.activeUsers,
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

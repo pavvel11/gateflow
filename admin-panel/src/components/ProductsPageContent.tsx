@@ -8,10 +8,12 @@ import { useToast } from '@/contexts/ToastContext';
 import ProductFormModal, { ProductFormData } from './ProductFormModal';
 import CodeGeneratorModal from './CodeGeneratorModal';
 import { exportProductsToCsv } from '@/utils/csvExport';
+import { useTranslations } from 'next-intl';
 
 const ProductsPageContent: React.FC = () => {
   const { addToast } = useToast();
   const addButtonRef = useRef<HTMLButtonElement>(null);
+  const t = useTranslations('admin.products');
 
   // State for products and loading status
   const [products, setProducts] = useState<Product[]>([]);
@@ -116,13 +118,13 @@ const ProductsPageContent: React.FC = () => {
       }
       setShowProductForm(false);
       await fetchProducts();
-      addToast(`Product "${formData.name}" was successfully created`, 'success');
+      addToast(t('createSuccess', { name: formData.name }), 'success');
       setTimeout(() => {
         addButtonRef.current?.focus();
       }, 0);
     } catch (err) {
       console.error('Error creating product:', err);
-      addToast(err instanceof Error ? err.message : 'Failed to create product', 'error');
+      addToast(err instanceof Error ? err.message : t('createError'), 'error');
       return Promise.reject(err);
     } finally {
       setSubmitting(false);
@@ -145,10 +147,10 @@ const ProductsPageContent: React.FC = () => {
       setShowProductForm(false);
       setEditingProduct(null);
       await fetchProducts();
-      addToast(`Product "${formData.name}" was successfully updated`, 'success');
+      addToast(t('updateSuccess', { name: formData.name }), 'success');
     } catch (err) {
       console.error('Error updating product:', err);
-      addToast(err instanceof Error ? err.message : 'Failed to update product', 'error');
+      addToast(err instanceof Error ? err.message : t('updateError'), 'error');
       return Promise.reject(err);
     } finally {
       setSubmitting(false);
@@ -181,9 +183,9 @@ const ProductsPageContent: React.FC = () => {
       await fetchProducts();
       setProductToDelete(null);
       
-      addToast(`Product "${productName}" was successfully deleted`, 'success');
+      addToast(t('deleteSuccess', { name: productName }), 'success');
     } catch (err) {
-      addToast(err instanceof Error ? err.message : 'Failed to delete product', 'error');
+      addToast(err instanceof Error ? err.message : t('deleteError'), 'error');
     }
   };
 
@@ -201,7 +203,7 @@ const ProductsPageContent: React.FC = () => {
     if (product.content_delivery_type === 'redirect' && product.content_config?.redirect_url) {
       window.open(product.content_config.redirect_url, '_blank');
     } else {
-      addToast('This product does not have a redirect URL.', 'warning');
+      addToast(t('noRedirectUrl'), 'warning');
     }
   };
 
@@ -235,17 +237,17 @@ const ProductsPageContent: React.FC = () => {
 
   const handleExportCsv = useCallback(() => {
     if (products.length === 0) {
-      addToast('No products to export', 'warning');
+      addToast(t('noProductsToExport'), 'warning');
       return;
     }
     setShowExportConfirmation(true);
-  }, [products, addToast]);
+  }, [products, addToast, t]);
   
   const confirmExport = () => {
     const filename = `products_${new Date().toISOString().split('T')[0]}.csv`;
     exportProductsToCsv(products, filename);
     setShowExportConfirmation(false);
-    addToast(`${products.length} products exported successfully`, 'success');
+    addToast(t('exportSuccess', { count: products.length }), 'success');
   };
 
   return (
@@ -295,23 +297,26 @@ const ProductsPageContent: React.FC = () => {
 
       {productToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Confirm Deletion</h3>
+          <div 
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('confirmDelete')}</h3>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {`Are you sure you want to delete the product "${productToDelete.name}"? This action cannot be undone.`}
+              {t('deleteConfirmMessage', { name: productToDelete.name })}
             </p>
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 onClick={() => setProductToDelete(null)}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:bg-gray-600"
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 onClick={confirmDelete}
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
-                Delete
+                {t('delete')}
               </button>
             </div>
           </div>
@@ -320,23 +325,26 @@ const ProductsPageContent: React.FC = () => {
 
       {showExportConfirmation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Confirm Export</h3>
+          <div 
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('confirmExport')}</h3>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Are you sure you want to export the current list of {products.length} products to a CSV file?
+              {t('exportConfirmMessage', { count: products.length })}
             </p>
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 onClick={() => setShowExportConfirmation(false)}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:bg-gray-600"
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 onClick={confirmExport}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                Export
+                {t('export')}
               </button>
             </div>
           </div>

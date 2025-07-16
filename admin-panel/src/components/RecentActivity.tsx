@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 interface ActivityItem {
   id: string
@@ -15,6 +16,7 @@ interface ActivityItem {
 }
 
 export default function RecentActivity() {
+  const t = useTranslations('admin.dashboard');
   const [activities, setActivities] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
@@ -65,7 +67,7 @@ export default function RecentActivity() {
             activityItems.push({
               id: `access_${grant.id}`,
               type: 'access_granted',
-              message: `Access granted to ${productName}`,
+              message: t('recentActivity.accessGranted', { product: productName }),
               timestamp: grant.created_at,
               user_email: userEmail,
               product_name: productName,
@@ -81,7 +83,7 @@ export default function RecentActivity() {
             activityItems.push({
               id: `product_${product.id}`,
               type: 'product_created',
-              message: `New product created: ${product.name}`,
+              message: t('recentActivity.productCreated', { product: product.name }),
               timestamp: product.created_at,
               product_name: product.name,
               icon: 'product',
@@ -102,7 +104,7 @@ export default function RecentActivity() {
     }
 
     fetchRecentActivity()
-  }, [supabase])
+  }, [supabase, t])
 
   const formatTimeAgo = (timestamp: string) => {
     const now = new Date()
@@ -161,7 +163,7 @@ export default function RecentActivity() {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Recent Activity
+          {t('recentActivity.title')}
         </h2>
         <div className="space-y-3">
           {[...Array(5)].map((_, i) => (
@@ -182,7 +184,7 @@ export default function RecentActivity() {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-        Recent Activity
+        {t('recentActivity.title')}
       </h2>
       <div className="space-y-3">
         {activities.length === 0 ? (
@@ -192,7 +194,7 @@ export default function RecentActivity() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">No recent activity</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('recentActivity.noActivity')}</p>
           </div>
         ) : (
           activities.map((activity) => (

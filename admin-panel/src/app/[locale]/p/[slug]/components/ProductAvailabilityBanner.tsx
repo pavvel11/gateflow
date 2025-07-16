@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 
 interface ProductAvailabilityBannerProps {
   product: {
@@ -12,6 +13,7 @@ interface ProductAvailabilityBannerProps {
 }
 
 export default function ProductAvailabilityBanner({ product, isAuthenticated = false }: ProductAvailabilityBannerProps) {
+  const t = useTranslations('availabilityBanner');
   const now = new Date();
   const availableFrom = product.available_from ? new Date(product.available_from) : null;
   const availableUntil = product.available_until ? new Date(product.available_until) : null;
@@ -29,11 +31,16 @@ export default function ProductAvailabilityBanner({ product, isAuthenticated = f
     const minutes = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000));
     
     if (days > 0) {
-      return `${days} day${days !== 1 ? 's' : ''} ${hours} hour${hours !== 1 ? 's' : ''}`;
+      const daysText = days === 1 ? t('days') : t('daysPlural');
+      const hoursText = hours === 1 ? t('hours') : t('hoursPlural');
+      return `${days} ${daysText} ${hours} ${hoursText}`;
     } else if (hours > 0) {
-      return `${hours} hour${hours !== 1 ? 's' : ''} ${minutes} minute${minutes !== 1 ? 's' : ''}`;
+      const hoursText = hours === 1 ? t('hours') : t('hoursPlural');
+      const minutesText = minutes === 1 ? t('minutes') : t('minutesPlural');
+      return `${hours} ${hoursText} ${minutes} ${minutesText}`;
     } else {
-      return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+      const minutesText = minutes === 1 ? t('minutes') : t('minutesPlural');
+      return `${minutes} ${minutesText}`;
     }
   };
   
@@ -58,9 +65,9 @@ export default function ProductAvailabilityBanner({ product, isAuthenticated = f
             </svg>
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-gray-300">Product Unavailable</h3>
+            <h3 className="text-sm font-medium text-gray-300">{t('productUnavailable')}</h3>
             <p className="text-sm text-gray-400 mt-1">
-              This product is currently not available for new customers.
+              {t('productUnavailableMessage')}
             </p>
           </div>
         </div>
@@ -79,12 +86,12 @@ export default function ProductAvailabilityBanner({ product, isAuthenticated = f
             </svg>
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-blue-300">Coming Soon</h3>
+            <h3 className="text-sm font-medium text-blue-300">{t('comingSoon')}</h3>
             <p className="text-sm text-blue-400 mt-1">
-              This product will be available starting {formatDate(availableFrom)}.
+              {t('comingSoonMessage', { date: formatDate(availableFrom) })}
             </p>
             <p className="text-xs text-blue-300 mt-1">
-              ⏰ Available in {formatTimeRemaining(availableFrom)}
+              ⏰ {t('availableIn', { time: formatTimeRemaining(availableFrom) })}
             </p>
           </div>
         </div>
@@ -103,9 +110,12 @@ export default function ProductAvailabilityBanner({ product, isAuthenticated = f
             </svg>
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-red-300">Offer Expired</h3>
+            <h3 className="text-sm font-medium text-red-300">{t('offerExpired')}</h3>
             <p className="text-sm text-red-400 mt-1">
-              This product was available until {formatDate(availableUntil)} and is no longer available for {isAuthenticated ? 'new access' : 'purchase'}.
+              {t('offerExpiredMessage', { 
+                date: formatDate(availableUntil), 
+                type: isAuthenticated ? t('newAccess') : t('purchase') 
+              })}
             </p>
           </div>
         </div>
@@ -129,16 +139,16 @@ export default function ProductAvailabilityBanner({ product, isAuthenticated = f
           </div>
           <div className="ml-3">
             <h3 className={`text-sm font-medium ${isExpiring24h ? 'text-red-300' : 'text-orange-300'}`}>
-              {isExpiring24h ? '⚠️ Last Chance!' : '🔥 Limited Time Offer'}
+              {isExpiring24h ? `⚠️ ${t('lastChance')}` : `🔥 ${t('limitedTimeOffer')}`}
             </h3>
             <p className={`text-sm mt-1 ${isExpiring24h ? 'text-red-400' : 'text-orange-400'}`}>
               {isExpiring24h 
-                ? `Only ${formatTimeRemaining(availableUntil)} left to get access!`
-                : `Available for ${formatTimeRemaining(availableUntil)} more!`
+                ? t('lastChanceMessage', { time: formatTimeRemaining(availableUntil) })
+                : t('limitedTimeMessage', { time: formatTimeRemaining(availableUntil) })
               }
             </p>
             <p className="text-xs text-gray-300 mt-1">
-              Offer ends {formatDate(availableUntil)}
+              {t('offerEnds', { date: formatDate(availableUntil) })}
             </p>
           </div>
         </div>

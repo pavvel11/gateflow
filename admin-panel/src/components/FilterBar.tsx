@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface FilterOption {
   label: string;
@@ -18,12 +19,6 @@ interface FilterBarProps {
   addButtonRef: React.RefObject<HTMLButtonElement | null>;
 }
 
-const statusOptions: FilterOption[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Active', value: 'active' },
-  { label: 'Inactive', value: 'inactive' }
-];
-
 const FilterBar: React.FC<FilterBarProps> = ({
   searchTerm,
   onSearchChange,
@@ -34,6 +29,13 @@ const FilterBar: React.FC<FilterBarProps> = ({
   onRefresh,
   addButtonRef,
 }) => {
+  const t = useTranslations('admin.products');
+  
+  const statusOptions: FilterOption[] = [
+    { label: t('all'), value: 'all' },
+    { label: t('active'), value: 'active' },
+    { label: t('inactive'), value: 'inactive' }
+  ];
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     onSearchChange(e.target.value);
   }, [onSearchChange]);
@@ -47,7 +49,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
         </svg>
         <input
           type="text"
-          placeholder="Search products..."
+          placeholder={t('searchPlaceholder')}
           value={searchTerm}
           onChange={handleSearchChange}
           className="pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
@@ -58,7 +60,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
         {/* Status Filter */}
         <div className="inline-flex items-center">
           <label htmlFor="status-filter" className="mr-2 text-sm text-gray-700 dark:text-gray-300 hidden sm:inline">
-            Status:
+            {t('status')}:
           </label>
           <select
             id="status-filter"
@@ -80,24 +82,24 @@ const FilterBar: React.FC<FilterBarProps> = ({
         <button
           onClick={onRefresh}
           className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 shadow-sm hover:shadow-md"
-          title="Refresh products"
+          title={t('refresh')}
         >
           <svg className="-ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
           </svg>
-          <span className="hidden sm:inline">Refresh</span>
+          <span className="hidden sm:inline">{t('refresh')}</span>
         </button>
 
         {/* Export Button */}
         <button
           onClick={onExport}
           className="inline-flex items-center px-4 py-2 border border-emerald-300 dark:border-emerald-600 rounded-lg text-sm font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 shadow-sm hover:shadow-md"
-          title="Export products to CSV"
+          title={t('export')}
         >
           <svg className="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <span className="hidden sm:inline">Export</span>
+          <span className="hidden sm:inline">{t('export')}</span>
         </button>
 
         {/* Add Product Button */}
@@ -105,12 +107,12 @@ const FilterBar: React.FC<FilterBarProps> = ({
           ref={addButtonRef}
           onClick={onAddProduct}
           className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
-          title="Add new product"
+          title={t('add')}
         >
           <svg className="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
           </svg>
-          <span className="hidden sm:inline">Add Product</span>
+          <span className="hidden sm:inline">{t('add')}</span>
         </button>
       </div>
     </div>

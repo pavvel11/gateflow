@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import LanguageSwitcher from './LanguageSwitcher'
 
@@ -16,6 +17,7 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children, user }: DashboardLayoutProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { signOut } = useAuth()
+  const t = useTranslations('admin.navigation')
 
   const handleSignOut = async () => {
     await signOut()
@@ -44,37 +46,37 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
                   href="/dashboard"
                   className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
-                  Dashboard
+                  {t('dashboard')}
                 </Link>
                 <Link
                   href="/dashboard/products"
                   className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
-                  Manage Products
+                  {t('products')}
                 </Link>
                 <Link
                   href="/dashboard/users"
                   className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
-                  Users
+                  {t('users')}
                 </Link>
                 <Link
                   href="/my-products"
                   className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
-                  My Products
+                  {t('myProducts')}
                 </Link>
                 <Link
                   href="/products"
                   className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
-                  Store
+                  {t('store')}
                 </Link>
               </div>
             </div>
             
             <div className="flex items-center space-x-4">
-              {/* Language switcher */}
+              {/* Language Switcher */}
               <LanguageSwitcher />
               
               {/* User menu */}
@@ -103,7 +105,7 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
                         onClick={handleSignOut}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                       >
-                        Sign out
+                        {t('logout')}
                       </button>
                     </div>
                   </div>

@@ -7,9 +7,11 @@ import UsersTable from './UsersTable';
 import { useToast } from '@/contexts/ToastContext';
 import UserDetailsModal from './UserDetailsModal';
 import AccessManagementModal from './AccessManagementModal';
+import { useTranslations } from 'next-intl';
 
 const UsersPageContent: React.FC = () => {
   const { addToast } = useToast();
+  const t = useTranslations('admin.users');
 
   // State for users and loading status
   const [users, setUsers] = useState<UserWithAccess[]>([]);
@@ -81,11 +83,11 @@ const UsersPageContent: React.FC = () => {
       }
     } catch (err) {
       console.error('Error fetching users:', err);
-      setError('Failed to load users. Please try again later.');
+      setError(t('errorLoadingUsers'));
     } finally {
       setLoading(false);
     }
-  }, [currentPage, limit, debouncedSearchTerm, sortBy, sortOrder]);
+  }, [currentPage, limit, debouncedSearchTerm, sortBy, sortOrder, t]);
 
   // Re-fetch users when dependencies change
   useEffect(() => {
@@ -104,15 +106,15 @@ const UsersPageContent: React.FC = () => {
   };
 
   const handleAccessChange = async () => {
-    addToast('User access updated successfully', 'success');
+    addToast(t('accessUpdated'), 'success');
     await fetchUsers();
   };
 
   return (
     <div className="space-y-6">
        <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Users</h1>
-        <p className="text-gray-600 dark:text-gray-400">Manage user accounts and product access</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('title')}</h1>
+        <p className="text-gray-600 dark:text-gray-400">{t('description')}</p>
       </div>
       <UsersFilterBar
         searchTerm={searchTerm}

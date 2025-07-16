@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { UserWithAccess, Product } from '@/types';
 import { BaseModal, ModalHeader, ModalBody, ModalFooter, ModalSection, Button, Message } from './ui/Modal';
+import { useTranslations } from 'next-intl';
 
 interface AccessManagementModalProps {
   user: UserWithAccess;
@@ -31,6 +32,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
   onClose,
   onAccessChange
 }) => {
+  const t = useTranslations('admin.users.accessModal');
   const [userAccess, setUserAccess] = useState<UserAccess[]>([]);
   const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
@@ -55,11 +57,11 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
       const data = await response.json();
       setUserAccess(data.access || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch user access');
+      setError(err instanceof Error ? err.message : t('errorFetch'));
     } finally {
       setLoading(false);
     }
-  }, [user.id]);
+  }, [user.id, t]);
 
   const fetchAvailableProducts = useCallback(async () => {
     try {
@@ -85,7 +87,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
 
   const handleGrantAccess = async () => {
     if (!selectedProductId) {
-      setError('Please select a product');
+      setError(t('selectProduct'));
       return;
     }
 
@@ -108,7 +110,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to grant access');
+        throw new Error(errorData.error || t('grantAccessError'));
       }
 
       // Refresh user access
@@ -120,7 +122,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
       setAccessType('permanent');
       onAccessChange();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to grant access');
+      setError(err instanceof Error ? err.message : t('grantAccessError'));
     } finally {
       setActionLoading(null);
     }
@@ -137,14 +139,14 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to remove access');
+        throw new Error(errorData.error || t('removeAccessError'));
       }
 
       // Refresh user access
       await fetchUserAccess();
       onAccessChange();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to remove access');
+      setError(err instanceof Error ? err.message : t('removeAccessError'));
     } finally {
       setActionLoading(null);
     }
@@ -170,10 +172,10 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <BaseModal isOpen={isOpen} onClose={onClose} size="lg">
+    <BaseModal isOpen={isOpen} onClose={onClose} size="lg" closeOnBackdropClick={false}>
       <ModalHeader
-        title="Manage User Access"
-        subtitle={`Managing product access for ${user.email}`}
+        title={t('title')}
+        subtitle={t('subtitle', { email: user.email })}
         icon={
           <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -185,7 +187,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
         {error && (
           <Message
             type="error"
-            title="Error"
+            title={t('error')}
             message={error}
             className="mb-4"
           />
@@ -194,11 +196,11 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Loading access information...</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('loadingAccess')}</p>
           </div>
         ) : (
           <div className="space-y-6">
-            <ModalSection title="Current Access">
+            <ModalSection title={t('currentAccess')}>
               {userAccess.length > 0 ? (
                 <div className="space-y-3">
                   {userAccess.map((access) => (
@@ -215,7 +217,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                                   ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                                   : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
                               }`}>
-                                {access.product_is_active ? 'Active' : 'Inactive'}
+                                {access.product_is_active ? t('active') : t('inactive')}
                               </span>
                               <Button
                                 onClick={() => handleRemoveAccess(access.product_id)}
@@ -224,20 +226,20 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                                 variant="danger"
                                 size="sm"
                               >
-                                Remove
+                                {t('remove')}
                               </Button>
                             </div>
                           </div>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Granted: {formatDate(access.access_created_at)}
+                            {t('granted')}: {formatDate(access.access_created_at)}
                             {access.access_expires_at && (
                               <span className="block text-orange-600 dark:text-orange-400">
-                                Expires: {formatDate(access.access_expires_at)}
+                                {t('expires')}: {formatDate(access.access_expires_at)}
                               </span>
                             )}
                             {access.access_duration_days && (
                               <span className="block text-blue-600 dark:text-blue-400">
-                                Duration: {access.access_duration_days} days
+                                {t('duration')}: {access.access_duration_days} {t('days')}
                               </span>
                             )}
                           </p>

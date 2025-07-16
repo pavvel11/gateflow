@@ -8,6 +8,7 @@ import IconSelector from './IconSelector';
 import { getIconEmoji } from '@/utils/themeUtils';
 import { CURRENCIES, getCurrencySymbol } from '@/lib/constants';
 import { BaseModal, ModalHeader, ModalBody, ModalFooter, ModalSection, Button, Message } from './ui/Modal';
+import { useTranslations } from 'next-intl';
 
 interface ProductFormModalProps {
   product?: Product | null;
@@ -48,6 +49,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
   isSubmitting,
   error
 }) => {
+  const t = useTranslations('admin.products.form');
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     slug: '',
@@ -197,16 +199,16 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <BaseModal isOpen={isOpen} onClose={onClose} size="xl">
+    <BaseModal isOpen={isOpen} onClose={onClose} size="xl" closeOnBackdropClick={false}>
       <ModalHeader
-        title={product ? 'Edit Product' : 'Create New Product'}
-        subtitle={product ? `Editing ${product.name}` : 'Add a new product to your catalog'}
+        title={product ? t('editProduct') : t('createNewProduct')}
+        subtitle={product ? t('editing', { name: product.name }) : t('addToYourCatalog')}
         icon={
           <span className="text-2xl">{formData.icon}</span>
         }
         badge={formData.is_active ? 
-          { text: 'Active', variant: 'success' } : 
-          { text: 'Inactive', variant: 'neutral' }
+          { text: t('active'), variant: 'success' } : 
+          { text: t('inactive'), variant: 'neutral' }
         }
       />
 
@@ -214,7 +216,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         {error && (
           <Message
             type="error"
-            title="Error"
+            title={t('error')}
             message={error}
             className="mb-6"
           />
@@ -240,11 +242,11 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                       ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                       : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
                   }`}>
-                    {formData.price === 0 ? 'Free' : `${getCurrencySymbol(formData.currency)}${formData.price}`}
+                    {formData.price === 0 ? t('free') : `${getCurrencySymbol(formData.currency)}${formData.price}`}
                   </span>
                   {formData.is_featured && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
-                      ⭐ Featured
+                      ⭐ {t('featured')}
                     </span>
                   )}
                   {formData.slug && (
@@ -258,7 +260,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
-                      Preview
+                      {t('preview')}
                     </a>
                   )}
                 </div>
@@ -267,11 +269,11 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
           </ModalSection>
 
           {/* Basic Information */}
-          <ModalSection title="Basic Information">
+          <ModalSection title={t('basicInformation')}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Product Name
+                  {t('productName')}
                 </label>
                 <input
                   type="text"
@@ -281,15 +283,15 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   onChange={handleInputChange}
                   ref={nameInputRef}
                   className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  placeholder="Enter product name"
+                  placeholder={t('enterProductName')}
                   required
                 />
               </div>
 
               <div>
                 <label htmlFor="slug" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  URL Slug
-                  <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">(auto-generated)</span>
+                  {t('urlSlug')}
+                  <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">({t('autoGenerated')})</span>
                 </label>
                 <div className="relative">
                   <input
@@ -336,7 +338,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Price
+                  {t('price')}
                 </label>
                 <div className="relative rounded-lg shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -395,13 +397,13 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   </div>
                 </div>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  Set to 0 for free products. Use comma or dot for decimal separator.
+                  {t('setToZeroForFree')}
                 </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Product Icon
+                  {t('productIcon')}
                 </label>
                 <IconSelector 
                   selectedIcon={formData.icon} 
@@ -412,24 +414,24 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
           </ModalSection>
 
           {/* Temporal Availability Settings */}
-          <ModalSection title="Temporal Availability">
+          <ModalSection title={t('temporalAvailability')}>
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <DateTimePicker
-                  label="Available From"
+                  label={t('availableFrom')}
                   value={formData.available_from || ''}
                   onChange={(value) => setFormData(prev => ({ ...prev, available_from: value }))}
-                  placeholder="Select start date and time"
-                  description="Product will be available starting from this date and time"
+                  placeholder={t('selectStartDate')}
+                  description={t('productAvailableFrom')}
                   showTimeSelect={true}
                 />
 
                 <DateTimePicker
-                  label="Available Until"
+                  label={t('availableUntil')}
                   value={formData.available_until || ''}
                   onChange={(value) => setFormData(prev => ({ ...prev, available_until: value }))}
-                  placeholder="Select end date and time"
-                  description="Product will be unavailable after this date and time"
+                  placeholder={t('selectEndDate')}
+                  description={t('productUnavailableAfter')}
                   showTimeSelect={true}
                   minDate={formData.available_from ? new Date(formData.available_from) : undefined}
                 />
@@ -443,10 +445,9 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">Temporal Availability</h4>
+                    <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">{t('temporalAvailabilityTitle')}</h4>
                     <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                      Leave both fields empty for permanent availability. Set only &ldquo;Available From&rdquo; for products launching in the future. 
-                      Set only &ldquo;Available Until&rdquo; for limited-time offers.
+                      {t('temporalAvailabilityDescription')}
                     </p>
                   </div>
                 </div>
@@ -455,12 +456,12 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
           </ModalSection>
 
           {/* Auto-Grant Access Settings */}
-          <ModalSection title="Auto-Grant Access Settings">
+          <ModalSection title={t('autoGrantAccessSettings')}>
             <div className="space-y-4">
               <div>
                 <label htmlFor="auto-grant-duration" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Default Access Duration (days)
-                  <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">(optional)</span>
+                  {t('defaultAccessDuration')}
+                  <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">({t('optional')})</span>
                 </label>
                 <input
                   type="number"
@@ -473,11 +474,10 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   }))}
                   min="1"
                   className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  placeholder="e.g., 30 for 30 days"
+                  placeholder={t('durationPlaceholder')}
                 />
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  When users gain access to this product, their access will automatically expire after this many days. 
-                  Leave empty for permanent access.
+                  {t('accessExpireAfter')}
                 </p>
               </div>
               
@@ -489,10 +489,9 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <h4 className="text-sm font-medium text-amber-800 dark:text-amber-200">Auto-Grant Duration</h4>
+                    <h4 className="text-sm font-medium text-amber-800 dark:text-amber-200">{t('autoGrantDurationTitle')}</h4>
                     <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                      This setting applies to automatic access grants (e.g., free products, purchases). 
-                      Manual access grants through the admin panel can override this setting.
+                      {t('autoGrantDurationDescription')}
                     </p>
                   </div>
                 </div>
@@ -501,11 +500,11 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
           </ModalSection>
 
           {/* Content Delivery Settings */}
-          <ModalSection title="Content Delivery">
+          <ModalSection title={t('contentDelivery')}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Content Delivery Type
+                  {t('contentDeliveryType')}
                 </label>
                 <select
                   value={formData.content_delivery_type}
@@ -515,19 +514,19 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   }))}
                   className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 >
-                  <option value="content">Content Items</option>
-                  <option value="redirect">Redirect</option>
+                  <option value="content">{t('contentItems')}</option>
+                  <option value="redirect">{t('redirect')}</option>
                 </select>
               </div>
 
               {formData.content_delivery_type === 'redirect' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Redirect URL
+                    {t('redirectUrl')}
                   </label>
                   <input
                     type="url"
-                    placeholder="https://example.com/your-content"
+                    placeholder={t('redirectPlaceholder')}
                     value={(formData.content_config as { redirect_url?: string })?.redirect_url || ''}
                     onChange={(e) => setFormData(prev => ({ 
                       ...prev, 
@@ -536,7 +535,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   />
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    URL to redirect users after gaining access.
+                    {t('redirectDescription')}
                   </p>
                 </div>
               )}
@@ -544,7 +543,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
               {formData.content_delivery_type === 'content' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Content Items
+                    {t('contentItems')}
                   </label>
                   <div className="space-y-2">
                     {(formData.content_config as ProductContentConfig)?.content_items?.map((item, index) => (
@@ -561,12 +560,12 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                           }}
                           className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-white"
                         >
-                          <option value="video_embed">Video Embed</option>
-                          <option value="download_link">Download Link</option>
+                          <option value="video_embed">{t('videoEmbed')}</option>
+                          <option value="download_link">{t('downloadLink')}</option>
                         </select>
                         <input
                           type="text"
-                          placeholder="Title"
+                          placeholder={t('title')}
                           value={item.title}
                           onChange={(e) => {
                             const newItems = [...((formData.content_config as ProductContentConfig)?.content_items || [])];
@@ -580,7 +579,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                         />
                         <input
                           type="text"
-                          placeholder="URL"
+                          placeholder={t('url')}
                           value={item.config?.embed_url || item.config?.download_url || ''}
                           onChange={(e) => {
                             const newItems = [...((formData.content_config as ProductContentConfig)?.content_items || [])];
@@ -607,7 +606,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                           }}
                           className="px-2 py-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                         >
-                          Remove
+                          {t('remove')}
                         </button>
                       </div>
                     ))}
@@ -630,7 +629,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                       }}
                       className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
                     >
-                      Add Content Item
+                      {t('addContentItem')}
                     </button>
                   </div>
                 </div>
@@ -639,7 +638,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
           </ModalSection>
 
           {/* Advanced Settings */}
-          <ModalSection title="Advanced Settings">
+          <ModalSection title={t('advancedSettings')}>
             <div className="space-y-4">
               <div className="flex items-center">
                 <input
@@ -651,7 +650,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <label htmlFor="is_active" className="ml-3 block text-sm font-medium text-gray-900 dark:text-gray-100">
-                  Product is active and visible to users
+                  {t('productActive')}
                 </label>
               </div>
 
@@ -665,7 +664,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <label htmlFor="is_featured" className="ml-3 block text-sm font-medium text-gray-900 dark:text-gray-100">
-                  Featured product (highlighted in listings)
+                  {t('featuredProduct')}
                 </label>
               </div>
             </div>
@@ -675,7 +674,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
       <ModalFooter>
         <Button onClick={onClose} variant="secondary">
-          Cancel
+          {t('cancel')}
         </Button>
         <Button
           type="submit"
@@ -684,7 +683,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
           loading={isSubmitting}
           variant="primary"
         >
-          {product ? 'Update Product' : 'Create Product'}
+          {product ? t('updateProduct') : t('createProduct')}
         </Button>
       </ModalFooter>
     </BaseModal>
