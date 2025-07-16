@@ -1,12 +1,15 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
+import createMiddleware from 'next-intl/middleware'
+import { locales, defaultLocale } from './lib/locales'
 
-/**
- * Middleware for handling authentication and redirects
- * - Protects routes that require authentication
- * - Redirects authenticated users away from login page
- * - Uses dynamic URL based on request for compatibility with any environment
- */
+// Create next-intl middleware
+const intlMiddleware = createMiddleware({
+  locales,
+  defaultLocale,
+  localePrefix: 'as-needed'
+})
+
 export async function middleware(request: NextRequest) {
   // Skip middleware for API routes and static files
   if (
@@ -16,10 +19,20 @@ export async function middleware(request: NextRequest) {
   ) {
     return NextResponse.next()
   }
+
+  // Apply internationalization middleware first
+  const intlResponse = intlMiddleware(request)
   
-  // Get base URL from current request (works in any environment)
-  const origin = request.nextUrl.origin
-  const response = NextResponse.next()
+  // If intl middleware redirects, return that response
+  if (intlResponse.status === 302 || intlResponse.status === 301) {
+    return intlResponse
+  }
+
+  // Create response based on intl middleware
+  const response = new NextResponse(intlResponse.body, {
+    status: intlResponse.status,
+    headers: intlResponse.headers
+  })
   
   // Create Supabase client for authentication
   const supabase = createServerClient(
@@ -42,47 +55,47 @@ export async function middleware(request: NextRequest) {
       }
     }
   )
-  
+
   // Get current session
   const { data: { session } } = await supabase.auth.getSession()
+
+  const pathname = request.nextUrl.pathname
   
-  // Identify route types
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/auth')
-  const isLoginRoute = request.nextUrl.pathname === '/login'
-  const isAccessDeniedRoute = request.nextUrl.pathname === '/access-denied'
-  const isProductPageRoute = request.nextUrl.pathname.startsWith('/p/')
-  const isProductRedirectRoute = request.nextUrl.pathname.startsWith('/product/')
-  const isHomeRoute = request.nextUrl.pathname === '/'
+  // Extract locale from pathname
+  const localeMatch = pathname.match(/^\/([a-z]{2})(?:\/|$)/)
+  const locale = localeMatch ? localeMatch[1] : ''
   
-  // Check if this might be a 404 route by looking at common protected paths
-  // If it's not a known protected route pattern, allow it through (let Next.js handle 404)
-  const isKnownProtectedRoute = 
-    request.nextUrl.pathname.startsWith('/dashboard') ||
-    request.nextUrl.pathname.startsWith('/admin') ||
-    request.nextUrl.pathname.startsWith('/settings') ||
-    request.nextUrl.pathname.startsWith('/profile')
-  
-  // Routes that require authentication but not admin privileges
-  const isUserRoute = request.nextUrl.pathname.startsWith('/my-products')
-  
-  // Redirect authenticated users away from login page
+  // Remove locale from pathname to get actual path
+  const actualPath = locale && locales.includes(locale as typeof locales[number]) 
+    ? pathname.replace(`/${locale}`, '') || '/'
+    : pathname
+
+  // Handle root path
+  if (actualPath === '/') {
+    const targetPath = session ? '/dashboard' : '/login'
+    const redirectPath = locale ? `/${locale}${targetPath}` : targetPath
+    return NextResponse.redirect(new URL(redirectPath, request.url))
+  }
+
+  // Protected routes
+  const isProtectedRoute = 
+    actualPath.startsWith('/dashboard') ||
+    actualPath.startsWith('/my-products') ||
+    actualPath.startsWith('/admin')
+
+  const isLoginRoute = actualPath === '/login'
+
+  // Auth logic
   if (session && isLoginRoute) {
-    return NextResponse.redirect(new URL('/dashboard', origin))
+    const redirectPath = locale ? `/${locale}/dashboard` : '/dashboard'
+    return NextResponse.redirect(new URL(redirectPath, request.url))
   }
-  
-  // Public routes that don't require authentication
-  const isPublicRoute = isLoginRoute || isAuthRoute || isAccessDeniedRoute || isProductPageRoute || isProductRedirectRoute || isHomeRoute
-  
-  // Only redirect to login for known protected routes when user is not authenticated
-  // This allows 404 pages and other unknown routes to be handled by Next.js
-  if (
-    !session && 
-    !isPublicRoute &&
-    (isKnownProtectedRoute || isUserRoute)
-  ) {
-    return NextResponse.redirect(new URL('/login', origin))
+
+  if (!session && isProtectedRoute) {
+    const redirectPath = locale ? `/${locale}/login` : '/login'
+    return NextResponse.redirect(new URL(redirectPath, request.url))
   }
-  
+
   return response
 }
 

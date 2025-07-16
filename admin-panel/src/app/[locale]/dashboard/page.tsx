@@ -5,6 +5,7 @@ import StatsOverview from '@/components/StatsOverview'
 import RecentActivity from '@/components/RecentActivity'
 import { withAdminAuth } from '@/components/withAdminAuth'
 import { useAuth } from '@/contexts/AuthContext'
+import Link from 'next/link'
 
 function DashboardPage() {
   const { user } = useAuth()
@@ -29,7 +30,7 @@ function DashboardPage() {
               Quick Actions
             </h2>
             <div className="space-y-3">
-              <a
+              <Link
                 href="/dashboard/products"
                 className="block p-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/30 dark:hover:to-indigo-900/30 transition-all"
               >
@@ -44,9 +45,9 @@ function DashboardPage() {
                     <p className="text-sm text-gray-500 dark:text-gray-400">Add, edit, or remove products</p>
                   </div>
                 </div>
-              </a>
+              </Link>
               
-              <a
+              <Link
                 href="/dashboard/users"
                 className="block p-4 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/30 dark:hover:to-emerald-900/30 transition-all"
               >
@@ -61,7 +62,7 @@ function DashboardPage() {
                     <p className="text-sm text-gray-500 dark:text-gray-400">Manage user permissions</p>
                   </div>
                 </div>
-              </a>
+              </Link>
             </div>
           </div>
           

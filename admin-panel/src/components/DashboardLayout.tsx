@@ -3,6 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useState } from 'react'
 import Link from 'next/link'
+import LanguageSwitcher from './LanguageSwitcher'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -73,6 +74,9 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
             </div>
             
             <div className="flex items-center space-x-4">
+              {/* Language switcher */}
+              <LanguageSwitcher />
+              
               {/* User menu */}
               <div className="relative">
                 <button
