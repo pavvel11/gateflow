@@ -6,6 +6,7 @@ import { Product } from '@/types';
 import { formatPrice } from '@/lib/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
+import PaymentButton from '@/components/payment/PaymentButton';
 import SecureAccessGrantedView from './SecureAccessGrantedView';
 import ProductAvailabilityBanner from './ProductAvailabilityBanner';
 import Confetti from 'react-confetti';
@@ -191,43 +192,6 @@ export default function ProductView({ product }: ProductViewProps) {
       }
     } catch {
       setMessage({ type: 'error', text: t('unexpectedError') });
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Handle payment form submission for paid products
-  const handlePaymentSubmit = async (e: React.FormEvent) => {
-    // mock payment processing
-    e.preventDefault();
-    setLoading(true);
-    setMessage({ type: 'info', text: 'Processing payment...' });
-    try {
-      // Simulate payment processing
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      
-      // After successful payment, grant access via API
-      const response = await fetch(`/api/public/products/${product.slug}/grant-access`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        setMessage({ type: 'error', text: errorData.error || 'Failed to grant access. Please try again.' });
-        return;
-      }
-
-      const data = await response.json();
-      addToast(data.message || 'Access granted successfully!', 'success');
-      setHasAccess(true);
-      setCountdown(3); // Reset countdown to 3 seconds
-      setShowFullContent(false); // Make sure full content is not shown yet to trigger countdown
-    } catch (err) {
-      console.error('Error in handlePaymentSubmit:', err);
-      setMessage({ type: 'error', text: 'An unexpected error occurred.' });
     } finally {
       setLoading(false);
     }
@@ -549,15 +513,14 @@ export default function ProductView({ product }: ProductViewProps) {
         <>
           <h2 className="text-2xl font-semibold text-white mb-2">{t('purchaseAccess')}</h2>
           <p className="text-gray-400 mb-6">{t('clickForPayment')}</p>
-          <form onSubmit={handlePaymentSubmit}>
-            <button
-              type="submit"
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3.5 px-4 rounded-lg transition transform hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={loading}
-            >
-              {loading ? t('processing') : t('proceedToPayment')}
-            </button>
-          </form>
+          <PaymentButton
+            product={product}
+            successUrl={`${window.location.origin}/p/${product.slug}?payment=success`}
+            cancelUrl={`${window.location.origin}/p/${product.slug}?payment=cancelled`}
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3.5 px-4 rounded-lg transition transform hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {t('proceedToPayment')} - {formatPrice(product.price, product.currency)}
+          </PaymentButton>
         </>
       )}
       

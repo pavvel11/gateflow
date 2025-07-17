@@ -184,3 +184,75 @@ export interface WebhookPayload {
     created_at: string
   }
 }
+
+// Payment-related types for admin panel
+export interface PaymentTransaction {
+  id: string;
+  user_id: string;
+  product_id: string;
+  amount: number;
+  currency: string;
+  status: 'completed' | 'failed' | 'pending' | 'refunded';
+  payment_method: string;
+  stripe_payment_intent_id: string;
+  refund_id?: string;
+  refund_amount?: number;
+  refund_reason?: string;
+  refunded_at?: string;
+  created_at: string;
+  updated_at: string;
+  user?: {
+    email: string;
+    full_name?: string;
+  };
+  product?: {
+    name: string;
+    type: string;
+  };
+}
+
+export interface PaymentSession {
+  id: string;
+  user_id: string;
+  product_id: string;
+  stripe_session_id: string;
+  status: 'pending' | 'completed' | 'expired' | 'canceled';
+  amount: number;
+  currency: string;
+  expires_at: string;
+  created_at: string;
+  updated_at: string;
+  user?: {
+    email: string;
+    full_name?: string;
+  };
+  product?: {
+    name: string;
+    type: string;
+  };
+}
+
+export interface PaymentStats {
+  totalRevenue: number;
+  totalTransactions: number;
+  totalRefunded: number;
+  totalPending: number;
+  averageOrderValue: number;
+  revenueChange: number;
+  transactionsChange: number;
+  recentActivity: {
+    completedToday: number;
+    failedToday: number;
+    refundedToday: number;
+  };
+}
+
+export interface AdminAction {
+  id: string;
+  admin_id: string;
+  action: string;
+  target_type: string;
+  target_id: string;
+  details?: Record<string, unknown>;
+  created_at: string;
+}

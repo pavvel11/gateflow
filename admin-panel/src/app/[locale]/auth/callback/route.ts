@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
+import { claimGuestPurchases } from '@/lib/actions/auth'
 
 /**
  * Auth callback handler for Supabase magic links
@@ -49,6 +50,19 @@ export async function GET(request: NextRequest) {
   if (error || !session) {
     console.error('Error exchanging code for session:', error)
     return NextResponse.redirect(new URL('/login', requestUrl.origin))
+  }
+
+  // Claim any guest purchases for this user's email
+  if (session?.user?.email && session?.user?.id) {
+    try {
+      const result = await claimGuestPurchases(session.user.email, session.user.id)
+      if (result.success && result.claimedCount > 0) {
+        console.log(`🎉 [AuthCallback] Claimed ${result.claimedCount} guest purchases for user ${session.user.email}`)
+      }
+    } catch (error) {
+      console.error('Error claiming guest purchases:', error)
+      // Don't block the login process if claiming fails
+    }
   }
   
   // Check for custom redirect URL (for product access etc.)

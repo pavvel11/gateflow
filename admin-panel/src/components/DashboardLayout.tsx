@@ -61,6 +61,12 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
                   {t('users')}
                 </Link>
                 <Link
+                  href="/dashboard/payments"
+                  className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  {t('payments')}
+                </Link>
+                <Link
                   href="/my-products"
                   className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >

@@ -104,6 +104,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (!isMountedRef.current) return
           
           setIsAdmin(adminStatus)
+          
+          // Claim any guest purchases for this user
+          try {
+            const response = await fetch('/api/claim-guest-purchases', {
+              method: 'POST',
+              credentials: 'include',
+            })
+            
+            if (response.ok) {
+              const data = await response.json()
+              if (data.claimedCount > 0) {
+                console.log(`🎉 Claimed ${data.claimedCount} guest purchases for user`)
+              }
+            }
+          } catch (error) {
+            console.error('Error claiming guest purchases:', error)
+            // Don't block the authentication process if claiming fails
+          }
         } else {
           setIsAdmin(false)
         }
