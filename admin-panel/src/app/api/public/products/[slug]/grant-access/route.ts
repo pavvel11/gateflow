@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { checkRateLimit } from '@/lib/rate-limiting';
 
 export async function POST(
   request: NextRequest,
@@ -14,6 +15,16 @@ export async function POST(
     
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Rate limiting
+    const rateLimitOk = await checkRateLimit('grant_access', 5, 60, user.id);
+    
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
     }
 
     // Get product

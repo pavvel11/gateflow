@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Product } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
-import FreeProductView from './FreeProductView';
-import PaidProductViewProfessional from './PaidProductViewProfessional';
 import ProductAccessView from './ProductAccessView';
 
 interface ProductViewProps {
@@ -25,27 +24,39 @@ interface AccessResponse {
 export default function ProductView({ product }: ProductViewProps) {
   const t = useTranslations('productView');
   const { user } = useAuth();
+  const router = useRouter();
   
   const [accessData, setAccessData] = useState<AccessResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const hasCheckedAccess = useRef(false);
 
-  // Check user access only once on mount
+  // Check user access when user changes
   useEffect(() => {
     const checkUserAccess = async () => {
-      if (hasCheckedAccess.current) return;
-      hasCheckedAccess.current = true;
+      console.log('ProductViewNew: Starting access check', { 
+        user: user?.id, 
+        email: user?.email, 
+        slug: product.slug,
+        hasCheckedAccess: hasCheckedAccess.current
+      });
       
       if (!user) {
+        console.log('ProductViewNew: No user, setting hasAccess: false');
+        setAccessData({ hasAccess: false });
         setLoading(false);
         return;
       }
+
+      // Reset loading when user becomes available
+      setLoading(true);
+      hasCheckedAccess.current = false;
 
       try {
         const response = await fetch(`/api/public/products/${product.slug}/access`);
         
         if (!response.ok) {
           if (response.status === 401) {
+            console.log('ProductViewNew: 401 response, redirecting to login');
             window.location.href = '/login';
             return;
           }
@@ -55,7 +66,15 @@ export default function ProductView({ product }: ProductViewProps) {
         }
 
         const data: AccessResponse = await response.json();
+        console.log('ProductViewNew: Access check result:', data);
         setAccessData(data);
+        
+        // If user doesn't have access, redirect to checkout
+        if (!data.hasAccess) {
+          console.log('ProductViewNew: User has no access, redirecting to checkout');
+          router.push(`/checkout/${product.slug}`);
+          return;
+        }
       } catch (err) {
         console.error('Error in checkUserAccess:', err);
       } finally {
@@ -64,8 +83,7 @@ export default function ProductView({ product }: ProductViewProps) {
     };
 
     checkUserAccess();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Remove dependencies to prevent re-runs
+  }, [user, product.slug, router]); // Add router to dependencies
 
   // Check temporal availability
   const checkTemporalAvailability = () => {
@@ -99,6 +117,7 @@ export default function ProductView({ product }: ProductViewProps) {
 
   // Check if user has access
   if (accessData?.hasAccess) {
+    console.log('User has access, showing ProductAccessView');
     return <ProductAccessView product={product} userAccess={accessData.userAccess} />;
   }
 
@@ -142,10 +161,5 @@ export default function ProductView({ product }: ProductViewProps) {
     );
   }
 
-  // Route to appropriate view based on product type
-  if (product.price === 0) {
-    return <FreeProductView product={product} />;
-  } else {
-    return <PaidProductViewProfessional product={product} key={`paid-${product.id}`} />;
-  }
+  return null;
 }

@@ -179,8 +179,8 @@ export class CheckoutService {
         ],
         mode: CHECKOUT_CONFIG.SESSION.PAYMENT_MODE,
         return_url: options.returnUrl,
-        // Set redirect_on_completion to 'if_required' to allow onComplete handler
-        redirect_on_completion: 'if_required',
+        // Set redirect_on_completion to 'always' for proper server-side verification
+        redirect_on_completion: 'always',
         metadata: {
           product_id: options.product.id,
           product_slug: options.product.slug,

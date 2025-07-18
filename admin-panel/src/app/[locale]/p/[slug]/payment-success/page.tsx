@@ -1,76 +1,152 @@
-'use client';
+import { createClient } from '@/lib/supabase/server';
+import { getStripeServer } from '@/lib/stripe/server';
+import { redirect } from 'next/navigation';
+import PaymentSuccessView from './components/PaymentSuccessView';
 
-import { useEffect, useState, use } from 'react';
-import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
-import Confetti from 'react-confetti';
+interface PageProps {
+  params: Promise<{ locale: string; slug: string }>;
+  searchParams: Promise<{ session_id?: string }>;
+}
 
-export default function PaymentSuccessPage({ params }: { params: Promise<{ locale: string, slug: string }> }) {
-  const resolvedParams = use(params);
-  const router = useRouter();
-  const t = useTranslations('productView');
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const [countdown, setCountdown] = useState(3);
+export default async function PaymentSuccessPage({ params, searchParams }: PageProps) {
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
   
-  // Set window dimensions for confetti
-  useEffect(() => {
-    const { innerWidth, innerHeight } = window;
-    setDimensions({ width: innerWidth, height: innerHeight });
+  const { session_id } = resolvedSearchParams;
+  
+  // If no session_id, redirect to product page
+  if (!session_id) {
+    redirect(`/p/${resolvedParams.slug}`);
+  }
 
-    const handleResize = () => {
-      setDimensions({ width: window.innerWidth, height: window.innerHeight });
-    };
+  const supabase = await createClient();
+  
+  // Get authenticated user
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  
+  if (authError || !user) {
+    redirect('/login');
+  }
 
-    window.addEventListener('resize', handleResize, { passive: true });
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // Get product details
+  const { data: product, error: productError } = await supabase
+    .from('products')
+    .select('id, name, slug, description, icon')
+    .eq('slug', resolvedParams.slug)
+    .single();
 
-  // Countdown and redirect
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (countdown > 1) {
-        setCountdown(countdown - 1);
-      } else {
-        // Redirect back to product page
-        router.push(`/p/${resolvedParams.slug}`);
+  if (productError || !product) {
+    redirect('/');
+  }
+
+  // Verify payment with Stripe
+  const stripe = getStripeServer();
+  let paymentVerified = false;
+  let accessGranted = false;
+  let errorMessage = '';
+
+  try {
+    // Retrieve session from Stripe
+    const session = await stripe.checkout.sessions.retrieve(session_id, {
+      expand: ['line_items', 'payment_intent']
+    });
+
+    if (!session) {
+      redirect(`/p/${resolvedParams.slug}`);
+    }
+
+    // Check if session belongs to current user or has correct product
+    const sessionUserId = session.metadata?.user_id;
+    const sessionProductId = session.metadata?.product_id;
+    
+    if (sessionUserId && sessionUserId !== user.id) {
+      redirect(`/p/${resolvedParams.slug}`);
+    }
+
+    if (sessionProductId !== product.id) {
+      redirect(`/p/${resolvedParams.slug}`);
+    }
+
+    // Check session status
+    if (session.status === 'open') {
+      redirect(`/checkout/${resolvedParams.slug}`);
+    }
+
+    if (session.status === 'complete' && session.payment_status === 'paid') {
+      paymentVerified = true;
+
+      // Check if access already exists
+      const { data: existingAccess } = await supabase
+        .from('user_product_access')
+        .select('access_expires_at')
+        .eq('user_id', user.id)
+        .eq('product_id', product.id)
+        .single();
+
+      if (existingAccess) {
+        const expiresAt = existingAccess.access_expires_at 
+          ? new Date(existingAccess.access_expires_at) 
+          : null;
+        const isExpired = expiresAt && expiresAt < new Date();
+        
+        if (!isExpired) {
+          accessGranted = true;
+        }
       }
-    }, 1000);
 
-    return () => clearTimeout(timer);
-  }, [countdown, router, resolvedParams.slug]);
+      // Grant access if not already granted
+      if (!accessGranted) {
+        // Get product auto_grant_duration_days
+        const { data: productWithDuration } = await supabase
+          .from('products')
+          .select('auto_grant_duration_days')
+          .eq('id', product.id)
+          .single();
+
+        // Calculate access expiry
+        let accessExpiresAt: string | null = null;
+        if (productWithDuration?.auto_grant_duration_days) {
+          const expiryDate = new Date();
+          expiryDate.setDate(expiryDate.getDate() + productWithDuration.auto_grant_duration_days);
+          accessExpiresAt = expiryDate.toISOString();
+        }
+
+        // Grant access
+        const { error: accessError } = await supabase
+          .from('user_product_access')
+          .upsert({
+            user_id: user.id,
+            product_id: product.id,
+            access_granted_at: new Date().toISOString(),
+            access_expires_at: accessExpiresAt,
+            access_duration_days: productWithDuration?.auto_grant_duration_days,
+          }, {
+            onConflict: 'user_id,product_id'
+          });
+
+        if (accessError) {
+          console.error('Error granting access:', accessError);
+          errorMessage = 'Payment successful but failed to grant access. Please contact support.';
+        } else {
+          accessGranted = true;
+        }
+      }
+    } else {
+      errorMessage = 'Payment was not successful. Please try again.';
+    }
+
+  } catch (error) {
+    console.error('Payment verification error:', error);
+    errorMessage = 'Unable to verify payment. Please contact support.';
+  }
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 overflow-hidden relative font-sans">
-      <Confetti
-        width={dimensions.width}
-        height={dimensions.height}
-        recycle={false}
-        numberOfPieces={800}
-        gravity={0.25}
-        initialVelocityX={{ min: -10, max: 10 }}
-        initialVelocityY={{ min: -20, max: 5 }}
-      />
-      
-      <div 
-        className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_20%_20%,#3a2d5b_0%,transparent_40%),radial-gradient(circle_at_80%_70%,#0f3460_0%,transparent_40%)]"
-        style={{ animation: 'aurora 20s infinite linear' }}
-      />
-      
-      <style jsx>{`
-        @keyframes aurora {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-      `}</style>
-      
-      <div className="max-w-4xl mx-auto p-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl z-10 text-center">
-        <div className="text-5xl mb-4">🎉</div>
-        <h2 className="text-3xl font-bold text-white mb-2">{t('paymentSuccessful')}</h2>
-        <p className="text-gray-300 mb-6">{t('paymentSuccessMessage')}</p>
-        <div className="text-6xl font-bold text-white tabular-nums">{countdown}</div>
-        <p className="text-gray-400 mt-2">{t('loadingContent')}</p>
-      </div>
-    </div>
+    <PaymentSuccessView
+      product={product}
+      paymentVerified={paymentVerified}
+      accessGranted={accessGranted}
+      errorMessage={errorMessage}
+      sessionId={session_id}
+    />
   );
 }
