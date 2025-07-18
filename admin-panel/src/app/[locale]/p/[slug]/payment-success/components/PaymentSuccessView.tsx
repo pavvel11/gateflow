@@ -16,7 +16,7 @@ interface PaymentSuccessViewProps {
   paymentVerified: boolean;
   accessGranted: boolean;
   errorMessage: string;
-  sessionId: string;
+  sessionId?: string; // Make optional for free products
 }
 
 export default function PaymentSuccessView({
@@ -29,7 +29,7 @@ export default function PaymentSuccessView({
   const router = useRouter();
   const t = useTranslations('productView');
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const [countdown, setCountdown] = useState(5);
+  const [countdown, setCountdown] = useState(3);
   
   // Set window dimensions for confetti
   useEffect(() => {
@@ -83,7 +83,7 @@ export default function PaymentSuccessView({
             </button>
           </div>
           <div className="mt-6 text-sm text-gray-400">
-            <p>Session ID: {sessionId}</p>
+            {sessionId && <p>Session ID: {sessionId}</p>}
           </div>
         </div>
       </div>

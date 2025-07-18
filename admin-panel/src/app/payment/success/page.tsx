@@ -35,12 +35,6 @@ async function PaymentSuccessContent({ searchParams }: PaymentSuccessPageProps) 
         <p className="text-gray-400 mb-6">
           Your payment has been processed successfully. You now have access to your purchased product.
         </p>
-        <button
-          onClick={() => window.location.href = '/'}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-        >
-          Continue
-        </button>
       </div>
     </div>
   );

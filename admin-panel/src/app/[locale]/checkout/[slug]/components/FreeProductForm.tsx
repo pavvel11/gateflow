@@ -44,7 +44,7 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
         const data = await response.json();
         addToast(data.message || 'Access granted successfully!', 'success');
         
-        // Redirect to success page
+        // Redirect to success page (no session_id needed for free products)
         router.push(`/p/${product.slug}/payment-success`);
       } catch (err) {
         console.error('Error in handleFreeAccess:', err);
