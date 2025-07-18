@@ -18,7 +18,7 @@ export const getStripeServer = (): Stripe => {
     }
     
     stripe = new Stripe(secretKey, {
-      apiVersion: '2025-06-30.basil', // Latest API version
+      // Use default API version for this Stripe SDK
       typescript: true,
     });
   }

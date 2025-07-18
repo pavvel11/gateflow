@@ -92,6 +92,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const currentUser = session?.user ?? null
         
+        console.log('AuthContext: Setting user:', {
+          hasSession: !!session,
+          userId: currentUser?.id,
+          userEmail: currentUser?.email,
+          userEmailVerified: currentUser?.email_confirmed_at,
+          userMetadata: currentUser?.user_metadata,
+          userAppMetadata: currentUser?.app_metadata
+        });
+        
         // Set user immediately for responsive UI
         setUser(currentUser)
         setError(null)

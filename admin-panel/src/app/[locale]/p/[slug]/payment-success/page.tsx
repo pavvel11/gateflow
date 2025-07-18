@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Confetti from 'react-confetti';
 
-export default function PaymentSuccessPage() {
+export default function PaymentSuccessPage({ params }: { params: Promise<{ locale: string, slug: string }> }) {
+  const resolvedParams = use(params);
   const router = useRouter();
   const t = useTranslations('productView');
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -20,7 +21,7 @@ export default function PaymentSuccessPage() {
       setDimensions({ width: window.innerWidth, height: window.innerHeight });
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize, { passive: true });
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
@@ -31,13 +32,12 @@ export default function PaymentSuccessPage() {
         setCountdown(countdown - 1);
       } else {
         // Redirect back to product page
-        const productSlug = window.location.pathname.split('/')[2]; // Extract slug from /p/[slug]/payment-success
-        router.push(`/p/${productSlug}`);
+        router.push(`/p/${resolvedParams.slug}`);
       }
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [countdown, router]);
+  }, [countdown, router, resolvedParams.slug]);
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 overflow-hidden relative font-sans">
@@ -67,7 +67,7 @@ export default function PaymentSuccessPage() {
       <div className="max-w-4xl mx-auto p-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl z-10 text-center">
         <div className="text-5xl mb-4">🎉</div>
         <h2 className="text-3xl font-bold text-white mb-2">{t('paymentSuccessful')}</h2>
-        <p className="text-gray-300 mb-6">{t('accessGrantedMessage')}</p>
+        <p className="text-gray-300 mb-6">{t('paymentSuccessMessage')}</p>
         <div className="text-6xl font-bold text-white tabular-nums">{countdown}</div>
         <p className="text-gray-400 mt-2">{t('loadingContent')}</p>
       </div>

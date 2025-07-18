@@ -103,7 +103,7 @@ export default function ProductView({ product }: ProductViewProps) {
       setDimensions({ width: window.innerWidth, height: window.innerHeight });
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize, { passive: true });
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 

@@ -488,7 +488,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION claim_guest_purchases_verified(
   user_email TEXT,
   user_id_param UUID,
-  verification_token TEXT DEFAULT NULL
+  verification_token_param TEXT DEFAULT NULL
 ) RETURNS INTEGER AS $$
 DECLARE
   claimed_count INTEGER := 0;
@@ -501,19 +501,19 @@ BEGIN
     LEFT JOIN guest_purchase_verifications gpv ON gp.id = gpv.guest_purchase_id
     WHERE gp.customer_email = user_email
       AND gp.claimed_by_user_id IS NULL
-      AND (gpv.email_verified = TRUE OR verification_token IS NOT NULL)
+      AND (gpv.email_verified = TRUE OR verification_token_param IS NOT NULL)
   LOOP
     -- If verification token provided, verify it
-    IF verification_token IS NOT NULL THEN
+    IF verification_token_param IS NOT NULL THEN
       UPDATE guest_purchase_verifications 
       SET email_verified = TRUE, verified_at = NOW()
       WHERE guest_purchase_id = guest_purchase_record.id 
-        AND verification_token = verification_token
+        AND guest_purchase_verifications.verification_token = verification_token_param
         AND verification_expires_at > NOW();
     END IF;
 
     -- Only proceed if email is verified
-    IF guest_purchase_record.email_verified OR verification_token IS NOT NULL THEN
+    IF guest_purchase_record.email_verified OR verification_token_param IS NOT NULL THEN
       -- Update guest purchase
       UPDATE guest_purchases 
       SET claimed_by_user_id = user_id_param, claimed_at = NOW()

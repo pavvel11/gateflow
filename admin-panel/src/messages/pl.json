@@ -189,6 +189,8 @@
     "accessGranted": "Dostęp przyznany!",
     "accessGrantedMessage": "Masz już pełny dostęp do {productName}.",
     "loadingContent": "Ładowanie treści...",
+    "paymentSuccessful": "Płatność zakończona sukcesem!",
+    "paymentSuccessMessage": "Twoja płatność została pomyślnie przetworzona! Masz teraz pełny dostęp do swojego produktu.",
     "free": "DARMOWE",
     "sendingMagicLink": "Wysyłanie magicznego linku...",
     "checkEmailForMagicLink": "Sukces! Sprawdź swój email w poszukiwaniu magicznego linku.",

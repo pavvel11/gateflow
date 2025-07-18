@@ -1,0 +1,38 @@
+'use client';
+
+import { EmbeddedCheckout, EmbeddedCheckoutProvider } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+import { fetchClientSecret } from '@/lib/actions/checkout';
+import { useAuth } from '@/contexts/AuthContext';
+import { Product } from '@/types';
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+
+interface EmbeddedCheckoutComponentProps {
+  product: Product;
+  email?: string;
+}
+
+export default function EmbeddedCheckoutComponent({ product, email }: EmbeddedCheckoutComponentProps) {
+  const { user } = useAuth();
+  
+  // Create fetchClientSecret function that Stripe will call
+  const fetchClientSecretForProduct = async () => {
+    return fetchClientSecret({
+      productId: product.id,
+      email: email || user?.email,
+    });
+  };
+
+  return (
+    <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 border border-white/20">
+      <h2 className="text-xl font-semibold text-white mb-4">Complete Your Purchase</h2>
+      <EmbeddedCheckoutProvider
+        stripe={stripePromise}
+        options={{ fetchClientSecret: fetchClientSecretForProduct }}
+      >
+        <EmbeddedCheckout />
+      </EmbeddedCheckoutProvider>
+    </div>
+  );
+}

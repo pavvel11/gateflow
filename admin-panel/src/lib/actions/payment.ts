@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getStripeServer } from '@/lib/stripe/server';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limiting';
 import type { 
   CreateCheckoutSessionRequest, 
   CreateCheckoutSessionResponse,
@@ -26,16 +27,19 @@ export async function createCheckoutSession(
   // Get authenticated user (optional - guests can also make purchases)
   const { data: { user } } = await supabase.auth.getUser();
   
-  // Rate limiting check using user ID or IP-based identifier
-  const identifier = user?.id || 'anonymous';
-  const { data: rateLimitOk, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
-    identifier_param: identifier,
-    action_type_param: 'checkout_creation',
-    max_requests: 5,
-    window_minutes: 15,
-  });
+  // Rate limiting check with proper IP-based limiting for anonymous users
+  const rateLimitConfig = user 
+    ? RATE_LIMITS.CHECKOUT_CREATION 
+    : RATE_LIMITS.CHECKOUT_CREATION_ANONYMOUS;
   
-  if (rateLimitError || !rateLimitOk) {
+  const isAllowed = await checkRateLimit(
+    rateLimitConfig.actionType,
+    rateLimitConfig.maxRequests,
+    rateLimitConfig.windowMinutes,
+    user?.id
+  );
+  
+  if (!isAllowed) {
     throw new Error('Too many checkout attempts. Please try again later.');
   }
   

@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Product } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import FreeProductView from './FreeProductView';
-import PaidProductView from './PaidProductView';
+import PaidProductViewProfessional from './PaidProductViewProfessional';
 import ProductAccessView from './ProductAccessView';
 
 interface ProductViewProps {
@@ -146,6 +146,6 @@ export default function ProductView({ product }: ProductViewProps) {
   if (product.price === 0) {
     return <FreeProductView product={product} />;
   } else {
-    return <PaidProductView product={product} key={`paid-${product.id}`} />;
+    return <PaidProductViewProfessional product={product} key={`paid-${product.id}`} />;
   }
 }

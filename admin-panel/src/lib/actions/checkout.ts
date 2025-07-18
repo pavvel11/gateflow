@@ -1,13 +1,35 @@
-'use server'
+'use server';
 
+import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { getStripeServer } from '@/lib/stripe/server';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limiting';
 
-export async function fetchClientSecret(productId: string): Promise<string> {
+interface CreateEmbeddedCheckoutOptions {
+  productId: string;
+  email?: string;
+}
+
+export async function fetchClientSecret(options: CreateEmbeddedCheckoutOptions): Promise<string> {
+  const origin = (await headers()).get('origin');
+  const supabase = await createClient();
+  
   try {
-    const supabase = await createClient();
-    
+    const { productId, email } = options;
+
+    // Input validation
+    if (!productId) {
+      throw new Error('Product ID is required');
+    }
+
+    // Email validation if provided
+    if (email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        throw new Error('Invalid email format');
+      }
+    }
+
     // Get authenticated user (optional)
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -55,7 +77,7 @@ export async function fetchClientSecret(productId: string): Promise<string> {
       throw new Error('Product not available for purchase');
     }
 
-    // Check if user already has access (prevent duplicate purchases) - only for logged in users
+    // Check if user already has access (prevent duplicate purchases)
     if (user) {
       const { data: existingAccess } = await supabase
         .from('user_product_access')
@@ -79,7 +101,7 @@ export async function fetchClientSecret(productId: string): Promise<string> {
     // Create embedded checkout session
     const session = await stripe.checkout.sessions.create({
       ui_mode: 'embedded',
-      customer_email: user?.email || undefined, // Optional - Stripe will collect if not provided
+      customer_email: email || user?.email || undefined,
       line_items: [
         {
           price_data: {
@@ -88,18 +110,21 @@ export async function fetchClientSecret(productId: string): Promise<string> {
               name: product.name,
               description: product.description || undefined,
             },
-            unit_amount: Math.round(product.price * 100), // Convert to cents
+            unit_amount: Math.round(product.price * 100),
           },
           quantity: 1,
         },
       ],
       mode: 'payment',
-      return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/p/${product.slug}/payment-success`,
+      return_url: `${origin}/p/${product.slug}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
       metadata: {
-        product_id: product.id.toString(),
+        product_id: product.id,
+        product_slug: product.slug,
         user_id: user?.id || '',
-        user_email: user?.email || '',
       },
+      expires_at: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours
+      automatic_tax: { enabled: false },
+      billing_address_collection: 'auto',
     });
 
     if (!session.client_secret) {
@@ -107,8 +132,9 @@ export async function fetchClientSecret(productId: string): Promise<string> {
     }
 
     return session.client_secret;
+    
   } catch (error) {
-    console.error('Error in fetchClientSecret:', error);
-    throw error;
+    console.error('Embedded checkout error:', error);
+    throw error instanceof Error ? error : new Error('Failed to create checkout session');
   }
 }

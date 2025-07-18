@@ -194,6 +194,8 @@
     "accessGranted": "Access Granted!",
     "accessGrantedMessage": "You now have full access to {productName}.",
     "loadingContent": "Loading content...",
+    "paymentSuccessful": "Payment Successful!",
+    "paymentSuccessMessage": "Your payment has been processed successfully! You now have full access to your product.",
     "free": "FREE",
     "sendingMagicLink": "Sending magic link...",
     "checkEmailForMagicLink": "Success! Check your email for the magic link.",

@@ -39,7 +39,7 @@ export default function ProductAccessView({ product, userAccess }: ProductAccess
         setDimensions({ width: window.innerWidth, height: window.innerHeight });
       };
 
-      window.addEventListener('resize', handleResize);
+      window.addEventListener('resize', handleResize, { passive: true });
       return () => window.removeEventListener('resize', handleResize);
     }
   }, []);
