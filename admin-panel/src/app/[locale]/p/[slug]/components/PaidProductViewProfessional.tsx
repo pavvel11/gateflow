@@ -41,11 +41,6 @@ export default function PaidProductViewProfessional({ product }: PaidProductView
 
   // Memoize checkout request to prevent unnecessary re-renders
   const checkoutRequest = useMemo(() => {
-    console.log('Frontend: Creating checkout request with user:', { 
-      userId: user?.id, 
-      email: user?.email,
-      isLoggedIn: !!user 
-    });
     return {
       productId: product.id,
       email: user?.email,
@@ -57,7 +52,6 @@ export default function PaidProductViewProfessional({ product }: PaidProductView
 
     try {
       initializingRef.current = true;
-      console.log('Frontend: Starting checkout initialization...', checkoutRequest);
       
       setState(CheckoutState.LOADING);
       setError(null);
@@ -71,27 +65,16 @@ export default function PaidProductViewProfessional({ product }: PaidProductView
 
       if (!mountedRef.current) return;
 
-      console.log('Frontend: Received response', { 
-        ok: response.ok, 
-        status: response.status, 
-        statusText: response.statusText 
-      });
-
       const data = await response.json();
-      console.log('Frontend: Response data', data);
 
       if (!response.ok) {
-        console.error('Frontend: Request failed', data);
         throw new Error(data.error || 'Failed to create checkout session');
       }
 
-      console.log('Frontend: Setting client secret and updating state');
       setClientSecret(data.clientSecret);
       setState(CheckoutState.READY);
       
     } catch (err) {
-      console.error('Frontend: Error in initializeCheckout', err);
-      
       if (!mountedRef.current) return;
       
       const errorMessage = err instanceof Error ? err.message : 'Failed to initialize payment';
@@ -131,7 +114,7 @@ export default function PaidProductViewProfessional({ product }: PaidProductView
   }, []);
 
   const handlePaymentSuccess = useCallback(() => {
-    router.push(`/p/${product.slug}/payment-success`);
+    router.push(`/p/${product.slug}/payment-status`);
   }, [router, product.slug]);
 
   const renderProductInfo = () => (

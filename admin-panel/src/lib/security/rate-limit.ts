@@ -35,8 +35,6 @@ export async function checkRateLimit(
     });
 
     if (error) {
-      console.error('Rate limit check error:', error);
-      // Fail open - allow request if rate limiting fails
       return {
         allowed: true,
         remaining: options.maxRequests,
@@ -53,9 +51,7 @@ export async function checkRateLimit(
       remaining,
       resetTime,
     };
-  } catch (error) {
-    console.error('Rate limit error:', error);
-    // Fail open
+  } catch {
     return {
       allowed: true,
       remaining: options.maxRequests,

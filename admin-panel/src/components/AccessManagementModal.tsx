@@ -72,8 +72,8 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
       
       const data = await response.json();
       setAvailableProducts(data.products || []);
-    } catch (err) {
-      console.error('Error fetching products:', err);
+    } catch {
+      // Silent error handling
     }
   }, []);
 

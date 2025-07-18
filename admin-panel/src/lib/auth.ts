@@ -17,15 +17,12 @@ export async function isAdmin(userId?: string): Promise<boolean> {
     // Check if user is admin using the database function
     const { data, error } = await supabase
       .rpc('is_admin', { user_id_param: targetUserId });
-
     if (error) {
-      console.error('Error checking admin status:', error);
       return false;
     }
 
     return data || false;
-  } catch (error) {
-    console.error('Error in isAdmin:', error);
+  } catch {
     return false;
   }
 }

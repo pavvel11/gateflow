@@ -36,27 +36,22 @@ const writeToLogFile = (entry: string) => {
 
 export const logger = {
   info: (message: string, data?: LogData) => {
-    console.log(`ℹ️ ${message}`, data || '');
     writeToLogFile(formatLogEntry('INFO', message, data));
   },
   
   error: (message: string, data?: LogData) => {
-    console.error(`❌ ${message}`, data || '');
     writeToLogFile(formatLogEntry('ERROR', message, data));
   },
   
   warn: (message: string, data?: LogData) => {
-    console.warn(`⚠️ ${message}`, data || '');
     writeToLogFile(formatLogEntry('WARN', message, data));
   },
   
   debug: (message: string, data?: LogData) => {
-    console.log(`🔍 ${message}`, data || '');
     writeToLogFile(formatLogEntry('DEBUG', message, data));
   },
   
   security: (message: string, data?: LogData) => {
-    console.log(`🔐 ${message}`, data || '');
     writeToLogFile(formatLogEntry('SECURITY', message, data));
   }
 };

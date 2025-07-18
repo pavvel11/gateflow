@@ -51,7 +51,6 @@ export default function EmbeddedPaymentForm({
       const { client_secret } = await response.json();
       setClientSecret(client_secret);
     } catch (error) {
-      console.error('Error fetching client secret:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to initialize payment';
       setError(errorMessage);
       onError?.(errorMessage);

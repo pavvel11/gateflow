@@ -9,32 +9,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreateChe
     const supabase = await createClient();
     const requestData: CreateCheckoutRequest = await request.json();
     
-    console.log('Backend: Received checkout request:', {
-      productId: requestData.productId,
-      email: requestData.email,
-      hasEmail: !!requestData.email
-    });
-    
     // Get authenticated user (optional for guest checkout)
     const { data: { user } } = await supabase.auth.getUser();
-    
-    console.log('Backend: Authenticated user:', {
-      userId: user?.id,
-      userEmail: user?.email,
-      isLoggedIn: !!user
-    });
     
     // Get origin for return URL
     const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL;
     
     // Use user's email from session if not provided in request
     const finalEmail = requestData.email || user?.email;
-    
-    console.log('Backend: Final email for checkout:', {
-      requestEmail: requestData.email,
-      sessionEmail: user?.email,
-      finalEmail: finalEmail
-    });
     
     // Create modified request with final email
     const finalRequestData = {
@@ -48,7 +30,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreateChe
     
     // Get product for return URL
     const product = await checkoutService.getProduct(finalRequestData.productId);
-    const returnUrl = `${origin}/p/${product.slug}/payment-success?session_id={CHECKOUT_SESSION_ID}`;
+    
+    // Use the same return URL for both logged-in and guest users
+    // The payment-status page will handle both scenarios intelligently
+    const returnUrl = `${origin}/p/${product.slug}/payment-status?session_id={CHECKOUT_SESSION_ID}`;
     
     const result = await checkoutService.createCheckoutSession(
       finalRequestData,

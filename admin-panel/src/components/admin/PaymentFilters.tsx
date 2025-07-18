@@ -67,8 +67,7 @@ export default function PaymentFilters({
       } else {
         addToast(t('exportError'), 'error');
       }
-    } catch (error) {
-      console.error('Export error:', error);
+    } catch {
       addToast(t('exportError'), 'error');
     }
   };

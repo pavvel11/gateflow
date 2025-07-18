@@ -96,8 +96,8 @@ export default function RecentActivity() {
         activityItems.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
         setActivities(activityItems.slice(0, 8))
 
-      } catch (error) {
-        console.error('Error fetching recent activity:', error)
+      } catch {
+        // Silent error handling
       } finally {
         setLoading(false)
       }

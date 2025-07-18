@@ -75,7 +75,7 @@ export default function PaidProductView({ product }: PaidProductViewProps) {
 
   const handlePaymentSuccess = () => {
     // Redirect to success page
-    router.push(`/p/${product.slug}/payment-success`);
+    router.push(`/p/${product.slug}/payment-status`);
   };
 
   if (loading) {

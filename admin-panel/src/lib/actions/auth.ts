@@ -10,34 +10,33 @@ import { revalidatePath } from 'next/cache';
  * Claim guest purchases when user signs up or signs in (SECURE VERSION)
  * Should be called after successful authentication
  */
-export async function claimGuestPurchases(userEmail: string, userId: string, verificationToken?: string) {
+export async function claimGuestPurchases(userEmail: string, userId: string) {
   const supabase = await createClient();
   
   try {
-    // Call the enhanced database function with email verification
-    const { data, error } = await supabase.rpc('claim_guest_purchases_verified', {
-      user_email: userEmail,
-      user_id_param: userId,
-      verification_token_param: verificationToken || null,
+    // Call the database function to claim guest purchases
+    const { data, error } = await supabase.rpc('claim_guest_purchases_for_user', {
+      p_user_id: userId,
     });
     
     if (error) {
-      console.error('Failed to claim guest purchases:', error);
       return { success: false, claimedCount: 0 };
     }
     
+    // Parse the result (function returns json object)
+    const result = data as { success: boolean; claimed_count: number; message?: string };
+    
     // Revalidate relevant pages if purchases were claimed
-    if (data > 0) {
+    if (result.success && result.claimed_count > 0) {
       revalidatePath('/dashboard/products');
       revalidatePath('/my-products');
     }
     
     return { 
-      success: true, 
-      claimedCount: data || 0 
+      success: result.success, 
+      claimedCount: result.claimed_count || 0 
     };
-  } catch (error) {
-    console.error('Error claiming guest purchases:', error);
+  } catch {
     return { success: false, claimedCount: 0 };
   }
 }
@@ -56,13 +55,11 @@ export async function checkGuestPurchases(userEmail: string) {
       .is('claimed_by_user_id', null);
     
     if (error) {
-      console.error('Failed to check guest purchases:', error);
       return [];
     }
     
     return data || [];
-  } catch (error) {
-    console.error('Error checking guest purchases:', error);
+  } catch {
     return [];
   }
 }

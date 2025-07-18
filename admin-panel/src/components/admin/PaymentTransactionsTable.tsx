@@ -45,8 +45,7 @@ export default function PaymentTransactionsTable({
       } else {
         addToast(result.message, 'error');
       }
-    } catch (error) {
-      console.error('Refund error:', error);
+    } catch {
       addToast(tRefund('error'), 'error');
     } finally {
       setRefundingId(null);

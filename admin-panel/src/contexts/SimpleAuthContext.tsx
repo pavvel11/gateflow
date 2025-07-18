@@ -39,8 +39,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
             .single()
           
           setIsAdmin(!!adminData)
-        } catch (error) {
-          console.log('Admin check error:', error)
+        } catch {
           setIsAdmin(false)
         }
       }
@@ -63,8 +62,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
               .single()
             
             setIsAdmin(!!adminData)
-          } catch (error) {
-            console.log('Admin check error:', error)
+          } catch {
             setIsAdmin(false)
           }
         } else {

@@ -63,8 +63,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
 
       const data = await response.json();
       setUserProfile(data);
-    } catch (err) {
-      console.error('Error fetching user profile:', err);
+    } catch {
       setError(t('modal.loadError'));
     } finally {
       setLoading(false);

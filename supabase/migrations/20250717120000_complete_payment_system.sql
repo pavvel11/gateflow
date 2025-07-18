@@ -32,24 +32,6 @@ CREATE TABLE IF NOT EXISTS admin_actions (
 -- PAYMENT TRACKING TABLES
 -- =============================================================================
 
--- Create payment_sessions table for tracking checkout sessions
-CREATE TABLE IF NOT EXISTS payment_sessions (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  session_id TEXT UNIQUE NOT NULL, -- Stripe checkout session ID
-  provider_type TEXT NOT NULL DEFAULT 'stripe', -- Future: support other providers
-  product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE, -- Nullable for guest checkouts
-  customer_email TEXT NOT NULL,
-  amount NUMERIC NOT NULL,
-  currency TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'failed', 'cancelled')),
-  metadata JSONB DEFAULT '{}' NOT NULL,
-  expires_at TIMESTAMPTZ NOT NULL,
-  completed_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
-);
-
 -- Create webhook_events table for idempotency and audit trail
 CREATE TABLE IF NOT EXISTS webhook_events (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
@@ -64,15 +46,15 @@ CREATE TABLE IF NOT EXISTS webhook_events (
 -- Create payment_transactions table for completed payments
 CREATE TABLE IF NOT EXISTS payment_transactions (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  session_id TEXT REFERENCES payment_sessions(session_id) ON DELETE CASCADE NOT NULL,
+  session_id TEXT NOT NULL,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE, -- Nullable for guest purchases
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
   customer_email TEXT NOT NULL, -- Always store email for guest purchases
-  amount NUMERIC NOT NULL,
+  amount NUMERIC NOT NULL, -- Amount in cents (e.g., 1000 = $10.00)
   currency TEXT NOT NULL,
   stripe_payment_intent_id TEXT, -- Stripe PaymentIntent ID
   status TEXT NOT NULL DEFAULT 'completed' CHECK (status IN ('completed', 'refunded', 'disputed')),
-  refunded_amount NUMERIC DEFAULT 0,
+  refunded_amount NUMERIC DEFAULT 0, -- Refunded amount in cents
   refunded_at TIMESTAMPTZ,
   refunded_by UUID REFERENCES auth.users(id), -- Admin who processed refund
   refund_reason TEXT,
@@ -90,24 +72,13 @@ CREATE TABLE IF NOT EXISTS guest_purchases (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   customer_email TEXT NOT NULL,
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
-  transaction_amount NUMERIC NOT NULL,
+  transaction_amount NUMERIC NOT NULL, -- Amount in cents (e.g., 1000 = $10.00)
   session_id TEXT NOT NULL, -- Reference to Stripe session
   claimed_by_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL, -- When user creates account and claims
   access_expires_at TIMESTAMPTZ, -- Copy from product settings
   claimed_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-  UNIQUE (customer_email, product_id) -- One purchase per email per product
-);
-
--- Add email verification token system for guest purchases (SECURITY)
-CREATE TABLE IF NOT EXISTS guest_purchase_verifications (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  guest_purchase_id UUID REFERENCES guest_purchases(id) ON DELETE CASCADE NOT NULL,
-  verification_token TEXT UNIQUE NOT NULL,
-  email_verified BOOLEAN DEFAULT FALSE NOT NULL,
-  verification_expires_at TIMESTAMPTZ NOT NULL,
-  verified_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+  UNIQUE (session_id) -- One purchase per session (session_id is unique per transaction)
 );
 
 -- =============================================================================
@@ -143,14 +114,14 @@ END $$;
 -- =============================================================================
 
 -- Payment system indexes
-CREATE INDEX IF NOT EXISTS idx_payment_sessions_session_id ON payment_sessions(session_id);
-CREATE INDEX IF NOT EXISTS idx_payment_sessions_user_id ON payment_sessions(user_id);
-CREATE INDEX IF NOT EXISTS idx_payment_sessions_product_id ON payment_sessions(product_id);
-CREATE INDEX IF NOT EXISTS idx_payment_sessions_status ON payment_sessions(status);
 CREATE INDEX IF NOT EXISTS idx_webhook_events_event_id ON webhook_events(event_id);
 CREATE INDEX IF NOT EXISTS idx_payment_transactions_user_id ON payment_transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_payment_transactions_product_id ON payment_transactions(product_id);
 CREATE INDEX IF NOT EXISTS idx_payment_transactions_customer_email ON payment_transactions(customer_email);
+CREATE INDEX IF NOT EXISTS idx_payment_transactions_session_id ON payment_transactions(session_id);
+
+-- Add unique constraint on session_id to prevent duplicate transactions
+ALTER TABLE payment_transactions ADD CONSTRAINT unique_session_id UNIQUE (session_id);
 
 -- Admin system indexes
 CREATE INDEX IF NOT EXISTS idx_admin_actions_admin_id ON admin_actions(admin_id);
@@ -163,8 +134,6 @@ CREATE INDEX IF NOT EXISTS idx_guest_purchases_product_id ON guest_purchases(pro
 CREATE INDEX IF NOT EXISTS idx_guest_purchases_claimed_by_user_id ON guest_purchases(claimed_by_user_id);
 
 -- Security indexes
-CREATE INDEX IF NOT EXISTS idx_guest_purchase_verifications_token ON guest_purchase_verifications(verification_token);
-CREATE INDEX IF NOT EXISTS idx_guest_purchase_verifications_expires ON guest_purchase_verifications(verification_expires_at);
 CREATE INDEX IF NOT EXISTS idx_rate_limits_identifier_action ON rate_limits(identifier, action_type);
 CREATE INDEX IF NOT EXISTS idx_rate_limits_window_start ON rate_limits(window_start);
 
@@ -175,11 +144,9 @@ CREATE INDEX IF NOT EXISTS idx_rate_limits_window_start ON rate_limits(window_st
 -- Enable RLS on all tables
 ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admin_actions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE payment_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payment_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE webhook_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guest_purchases ENABLE ROW LEVEL SECURITY;
-ALTER TABLE guest_purchase_verifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rate_limits ENABLE ROW LEVEL SECURITY;
 
 -- =============================================================================
@@ -214,13 +181,6 @@ CREATE POLICY "Admins can insert admin actions" ON admin_actions
 CREATE POLICY "Service role full access admin actions" ON admin_actions
     FOR ALL USING (auth.role() = 'service_role');
 
--- Payment sessions policies
-CREATE POLICY "Users can view own payment sessions" ON payment_sessions
-    FOR SELECT USING (user_id = auth.uid());
-
-CREATE POLICY "Service role full access payment sessions" ON payment_sessions
-    FOR ALL USING (auth.role() = 'service_role');
-
 -- Payment transactions policies
 CREATE POLICY "Users can view own payment transactions" ON payment_transactions
     FOR SELECT USING (user_id = auth.uid());
@@ -248,24 +208,6 @@ CREATE POLICY "Users can view own claimed guest purchases" ON guest_purchases
 CREATE POLICY "Service role full access guest purchases" ON guest_purchases
     FOR ALL USING (auth.role() = 'service_role');
 
--- Guest purchase verifications policies (SECURITY)
-CREATE POLICY "Users can read their own verification tokens" ON guest_purchase_verifications
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM guest_purchases 
-      WHERE guest_purchases.id = guest_purchase_verifications.guest_purchase_id 
-      AND guest_purchases.customer_email = auth.jwt() ->> 'email'
-    )
-  );
-
-CREATE POLICY "Admins can read all verification tokens" ON guest_purchase_verifications
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM admin_users 
-      WHERE admin_users.user_id = auth.uid()
-    )
-  );
-
 -- Rate limiting policies (SECURITY)
 CREATE POLICY "Users can read their own rate limits" ON rate_limits
   FOR SELECT USING (
@@ -288,155 +230,30 @@ CREATE OR REPLACE FUNCTION is_admin(user_id_param UUID DEFAULT NULL)
 RETURNS BOOLEAN AS $$
 DECLARE
     target_user_id UUID;
+    current_user_id UUID;
 BEGIN
+    -- Get current authenticated user
+    current_user_id := auth.uid();
+    
     -- Use provided user_id or current authenticated user
-    target_user_id := COALESCE(user_id_param, auth.uid());
+    target_user_id := COALESCE(user_id_param, current_user_id);
+    
+    -- Security: Only allow users to check their own admin status
+    -- If user_id_param is provided and different from current user, return FALSE
+    IF user_id_param IS NOT NULL AND user_id_param != current_user_id THEN
+        RETURN FALSE;
+    END IF;
+    
+    -- Input validation
+    IF target_user_id IS NULL THEN
+        RETURN FALSE;
+    END IF;
     
     -- Check if user exists in admin_users table
     RETURN EXISTS (
         SELECT 1 FROM admin_users 
         WHERE user_id = target_user_id
     );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Complete payment transaction function
-CREATE OR REPLACE FUNCTION complete_payment_transaction(
-    session_id_param TEXT,
-    customer_email_param TEXT
-) RETURNS BOOLEAN AS $$
-DECLARE
-    payment_session RECORD;
-    product_record RECORD;
-    user_record RECORD;
-    final_user_id UUID;
-    access_expires_at TIMESTAMPTZ;
-BEGIN
-    -- Get payment session with validation
-    SELECT * INTO payment_session
-    FROM payment_sessions
-    WHERE session_id = session_id_param
-      AND status = 'pending'
-      AND expires_at > NOW();
-    
-    IF NOT FOUND THEN
-        RAISE EXCEPTION 'Invalid or expired payment session';
-    END IF;
-    
-    -- Get product details
-    SELECT * INTO product_record
-    FROM products
-    WHERE id = payment_session.product_id
-      AND is_active = true;
-    
-    IF NOT FOUND THEN
-        RAISE EXCEPTION 'Product not found or inactive';
-    END IF;
-    
-    -- Determine the user ID - use existing user_id from session or find by email
-    IF payment_session.user_id IS NOT NULL THEN
-        final_user_id := payment_session.user_id;
-    ELSE
-        -- Try to find existing user by email
-        SELECT * INTO user_record
-        FROM auth.users
-        WHERE email = customer_email_param;
-        
-        IF FOUND THEN
-            final_user_id := user_record.id;
-        ELSE
-            -- For guest checkout, we'll store the transaction without user_id
-            final_user_id := NULL;
-        END IF;
-    END IF;
-    
-    -- Calculate access expiration
-    IF product_record.auto_grant_duration_days IS NOT NULL THEN
-        access_expires_at := NOW() + (product_record.auto_grant_duration_days || ' days')::INTERVAL;
-    ELSE
-        access_expires_at := NULL; -- Permanent access
-    END IF;
-    
-    -- Update payment session status
-    UPDATE payment_sessions
-    SET status = 'completed',
-        user_id = final_user_id,
-        completed_at = NOW(),
-        updated_at = NOW()
-    WHERE session_id = session_id_param;
-    
-    -- Create payment transaction record
-    INSERT INTO payment_transactions (
-        session_id,
-        user_id,
-        product_id,
-        customer_email,
-        amount,
-        currency,
-        metadata
-    ) VALUES (
-        session_id_param,
-        final_user_id,
-        payment_session.product_id,
-        customer_email_param,
-        payment_session.amount,
-        payment_session.currency,
-        payment_session.metadata
-    );
-    
-    -- If user exists, grant direct access
-    IF final_user_id IS NOT NULL THEN
-        -- Grant product access
-        INSERT INTO user_product_access (
-            user_id,
-            product_id,
-            granted_at,
-            access_expires_at
-        ) VALUES (
-            final_user_id,
-            payment_session.product_id,
-            NOW(),
-            access_expires_at
-        )
-        ON CONFLICT (user_id, product_id)
-        DO UPDATE SET
-            granted_at = NOW(),
-            access_expires_at = CASE 
-                WHEN EXCLUDED.access_expires_at IS NULL THEN NULL
-                WHEN user_product_access.access_expires_at IS NULL THEN EXCLUDED.access_expires_at
-                ELSE GREATEST(user_product_access.access_expires_at, EXCLUDED.access_expires_at)
-            END;
-    ELSE
-        -- Store as guest purchase for later claiming
-        INSERT INTO guest_purchases (
-            customer_email,
-            product_id,
-            transaction_amount,
-            session_id,
-            access_expires_at
-        ) VALUES (
-            customer_email_param,
-            payment_session.product_id,
-            payment_session.amount,
-            session_id_param,
-            access_expires_at
-        )
-        ON CONFLICT (customer_email, product_id)
-        DO UPDATE SET
-            transaction_amount = EXCLUDED.transaction_amount,
-            session_id = EXCLUDED.session_id,
-            access_expires_at = CASE 
-                WHEN EXCLUDED.access_expires_at IS NULL THEN NULL
-                WHEN guest_purchases.access_expires_at IS NULL THEN EXCLUDED.access_expires_at
-                ELSE GREATEST(guest_purchases.access_expires_at, EXCLUDED.access_expires_at)
-            END;
-    END IF;
-    
-    RETURN TRUE;
-    
-EXCEPTION
-    WHEN OTHERS THEN
-        RAISE EXCEPTION 'Transaction failed: %', SQLERRM;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -484,99 +301,55 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Enhanced claim function with email verification requirement (SECURITY)
-CREATE OR REPLACE FUNCTION claim_guest_purchases_verified(
-  user_email TEXT,
-  user_id_param UUID,
-  verification_token_param TEXT DEFAULT NULL
-) RETURNS INTEGER AS $$
+-- Function to claim guest purchases when user logs in
+CREATE OR REPLACE FUNCTION claim_guest_purchases_for_user(
+  p_user_id UUID
+) RETURNS json AS $$
 DECLARE
+  user_email_var TEXT;
   claimed_count INTEGER := 0;
   guest_purchase_record RECORD;
+  product_slug_var TEXT;
 BEGIN
-  -- Enhanced security: only claim verified guest purchases
+  -- Get user's email
+  SELECT email INTO user_email_var 
+  FROM auth.users 
+  WHERE id = p_user_id;
+  
+  IF user_email_var IS NULL THEN
+    RETURN json_build_object(
+      'success', false,
+      'error', 'User not found'
+    );
+  END IF;
+  
+  -- Find and claim all unclaimed guest purchases for this email
   FOR guest_purchase_record IN
-    SELECT gp.*, gpv.email_verified
-    FROM guest_purchases gp
-    LEFT JOIN guest_purchase_verifications gpv ON gp.id = gpv.guest_purchase_id
-    WHERE gp.customer_email = user_email
-      AND gp.claimed_by_user_id IS NULL
-      AND (gpv.email_verified = TRUE OR verification_token_param IS NOT NULL)
+    SELECT *
+    FROM guest_purchases
+    WHERE customer_email = user_email_var
+      AND claimed_by_user_id IS NULL
   LOOP
-    -- If verification token provided, verify it
-    IF verification_token_param IS NOT NULL THEN
-      UPDATE guest_purchase_verifications 
-      SET email_verified = TRUE, verified_at = NOW()
-      WHERE guest_purchase_id = guest_purchase_record.id 
-        AND guest_purchase_verifications.verification_token = verification_token_param
-        AND verification_expires_at > NOW();
-    END IF;
-
-    -- Only proceed if email is verified
-    IF guest_purchase_record.email_verified OR verification_token_param IS NOT NULL THEN
-      -- Update guest purchase
-      UPDATE guest_purchases 
-      SET claimed_by_user_id = user_id_param, claimed_at = NOW()
-      WHERE id = guest_purchase_record.id;
-
-      -- Grant product access
-      INSERT INTO user_product_access (user_id, product_id, granted_at)
-      VALUES (user_id_param, guest_purchase_record.product_id, NOW())
-      ON CONFLICT (user_id, product_id) DO NOTHING;
-
-      claimed_count := claimed_count + 1;
-    END IF;
+    -- Update guest purchase to mark as claimed
+    UPDATE guest_purchases
+    SET claimed_by_user_id = p_user_id,
+        claimed_at = NOW()
+    WHERE id = guest_purchase_record.id;
+    
+    -- Get product slug for grant_product_access function
+    SELECT slug INTO product_slug_var FROM products WHERE id = guest_purchase_record.product_id;
+    
+    -- Grant access to the product
+    PERFORM grant_product_access(p_user_id, product_slug_var, NULL);
+    
+    claimed_count := claimed_count + 1;
   END LOOP;
-
-  RETURN claimed_count;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Enhanced guest purchase creation with verification (SECURITY)
-CREATE OR REPLACE FUNCTION create_guest_purchase_with_verification(
-  product_id_param UUID,
-  customer_email_param TEXT,
-  transaction_amount_param NUMERIC,
-  session_id_param TEXT
-) RETURNS TABLE (
-  guest_purchase_id UUID,
-  verification_token TEXT
-) AS $$
-DECLARE
-  new_guest_purchase_id UUID;
-  new_verification_token TEXT;
-BEGIN
-  -- Generate verification token
-  new_verification_token := encode(gen_random_bytes(32), 'base64');
   
-  -- Create guest purchase
-  INSERT INTO guest_purchases (
-    product_id, 
-    customer_email, 
-    transaction_amount, 
-    session_id
-  )
-  VALUES (
-    product_id_param, 
-    customer_email_param, 
-    transaction_amount_param, 
-    session_id_param
-  )
-  RETURNING id INTO new_guest_purchase_id;
-  
-  -- Create verification record
-  INSERT INTO guest_purchase_verifications (
-    guest_purchase_id,
-    verification_token,
-    verification_expires_at
-  )
-  VALUES (
-    new_guest_purchase_id,
-    new_verification_token,
-    NOW() + INTERVAL '7 days'
+  RETURN json_build_object(
+    'success', true,
+    'claimed_count', claimed_count,
+    'message', 'Claimed ' || claimed_count || ' guest purchases'
   );
-  
-  RETURN QUERY SELECT new_guest_purchase_id, new_verification_token;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -599,11 +372,11 @@ BEGIN
         pt.id,
         p.name,
         p.slug,
-        pt.amount,
+        pt.amount / 100.0, -- Convert cents to dollars for display
         pt.currency,
         pt.created_at,
         pt.status,
-        pt.refunded_amount
+        pt.refunded_amount / 100.0 -- Convert cents to dollars for display
     FROM payment_transactions pt
     JOIN products p ON pt.product_id = p.id
     WHERE pt.user_id = user_id_param
@@ -633,3 +406,49 @@ CREATE TRIGGER trigger_update_refunded_at
     EXECUTE FUNCTION update_refunded_at();
 
 COMMIT;
+
+
+-- Create a service role function for granting product access
+-- This function can only be called by Service Role for guest purchases
+CREATE OR REPLACE FUNCTION grant_product_access_service_role(
+    user_id_param UUID,
+    product_id_param UUID,
+    access_duration_days_param INTEGER DEFAULT NULL
+) RETURNS BOOLEAN AS $$
+DECLARE
+    product_auto_duration INTEGER;
+    expires_at TIMESTAMPTZ;
+    final_duration INTEGER;
+BEGIN
+    -- Get product auto-grant duration
+    SELECT auto_grant_duration_days INTO product_auto_duration
+    FROM products
+    WHERE id = product_id_param AND is_active = true;
+
+    -- If product doesn't exist, return false
+    IF product_auto_duration IS NULL THEN
+        RETURN FALSE;
+    END IF;
+
+    -- Determine final duration: explicit param > product auto-grant > null (permanent)
+    final_duration := COALESCE(access_duration_days_param, product_auto_duration);
+
+    -- Calculate expiration date if duration is provided
+    IF final_duration IS NOT NULL THEN
+        expires_at := NOW() + (final_duration || ' days')::INTERVAL;
+    END IF;
+
+    -- Insert access record (update if exists)
+    INSERT INTO user_product_access (user_id, product_id, access_duration_days, access_expires_at)
+    VALUES (user_id_param, product_id_param, final_duration, expires_at)
+    ON CONFLICT (user_id, product_id) DO UPDATE SET
+        access_granted_at = NOW(),
+        access_duration_days = EXCLUDED.access_duration_days,
+        access_expires_at = EXCLUDED.access_expires_at;
+
+    RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Grant execute permissions to the service role
+GRANT EXECUTE ON FUNCTION grant_product_access_service_role TO service_role;

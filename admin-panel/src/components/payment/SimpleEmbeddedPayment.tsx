@@ -29,7 +29,6 @@ export default function SimpleEmbeddedPayment({
   // Cleanup on unmount
   useEffect(() => {
     if (isEmbeddedCheckoutActive) {
-      console.warn('Another Embedded Checkout is already active');
       return;
     }
     

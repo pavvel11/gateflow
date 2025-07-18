@@ -36,8 +36,7 @@ export class JSProcessor {
       }
 
       return processedCode;
-    } catch (error) {
-      console.error('Error processing JavaScript:', error);
+    } catch {
       // Return original code if processing fails
       return code;
     }

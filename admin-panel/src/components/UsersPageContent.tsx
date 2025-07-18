@@ -81,8 +81,7 @@ const UsersPageContent: React.FC = () => {
         setTotalPages(data.pagination.totalPages);
         setTotalItems(data.pagination.total);
       }
-    } catch (err) {
-      console.error('Error fetching users:', err);
+    } catch {
       setError(t('errorLoadingUsers'));
     } finally {
       setLoading(false);

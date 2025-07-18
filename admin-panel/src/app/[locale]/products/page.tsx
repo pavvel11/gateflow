@@ -28,14 +28,12 @@ export default function ProductsLanding() {
           .order('price', { ascending: true });
 
         if (error) {
-          console.error('Error fetching products:', error);
           setError(t('loadError'));
           return;
         }
 
         setProducts(data || []);
-      } catch (err) {
-        console.error('Error in fetchProducts:', err);
+      } catch {
         setError(t('unexpectedError'));
       } finally {
         setLoading(false);

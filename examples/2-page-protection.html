@@ -223,7 +223,6 @@ class AdvancedPattern {
         try {
             await this.loadResources();
             this.bindEvents();
-            console.log('✅ Advanced pattern initialized');
         } catch (error) {
             this.handleError(error);
         }
@@ -239,7 +238,6 @@ class AdvancedPattern {
     bindEvents() {
         // Event binding logic
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('🚀 Ready!');
         });
     }
     

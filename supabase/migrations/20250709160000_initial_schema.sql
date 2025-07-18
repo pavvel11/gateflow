@@ -389,27 +389,6 @@ CREATE POLICY "Allow users to read their own admin status" ON admin_users
   TO authenticated
   USING (auth.uid() = user_id);
 
--- Create function to check if user is admin
-CREATE OR REPLACE FUNCTION is_admin(user_id_param UUID DEFAULT auth.uid())
-RETURNS BOOLEAN AS $$
-BEGIN
-  -- Input validation
-  IF user_id_param IS NULL THEN
-    RETURN FALSE;
-  END IF;
-  
-  -- Additional security: ensure user_id exists in auth.users
-  IF NOT EXISTS (SELECT 1 FROM auth.users WHERE id = user_id_param) THEN
-    RETURN FALSE;
-  END IF;
-  
-  RETURN EXISTS (
-    SELECT 1 FROM admin_users 
-    WHERE admin_users.user_id = user_id_param
-  );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
 -- Create function to make first user admin automatically (with race condition protection)
 CREATE OR REPLACE FUNCTION handle_first_user_admin()
 RETURNS TRIGGER
@@ -507,7 +486,21 @@ DECLARE
     product_auto_duration INTEGER;
     expires_at TIMESTAMPTZ;
     final_duration INTEGER;
+    current_user_id UUID;
 BEGIN
+    -- SECURITY: Get current authenticated user
+    current_user_id := auth.uid();
+    
+    -- SECURITY: Only allow granting access to the authenticated user
+    IF current_user_id IS NULL THEN
+        RAISE EXCEPTION 'Authentication required';
+    END IF;
+    
+    -- SECURITY: Can only grant access to yourself
+    IF current_user_id != user_id_param THEN
+        RAISE EXCEPTION 'Cannot grant access to other users';
+    END IF;
+
     -- Find product ID by slug and get auto-grant duration
     SELECT id, auto_grant_duration_days INTO product_id_var, product_auto_duration
     FROM products
@@ -528,7 +521,62 @@ BEGIN
 
     -- Insert access record (update if exists)
     INSERT INTO user_product_access (user_id, product_id, access_duration_days, access_expires_at)
-    VALUES (user_id_param, product_id_var, final_duration, expires_at)
+    VALUES (current_user_id, product_id_var, final_duration, expires_at)
+    ON CONFLICT (user_id, product_id) DO UPDATE SET
+        access_granted_at = NOW(),
+        access_duration_days = EXCLUDED.access_duration_days,
+        access_expires_at = EXCLUDED.access_expires_at;
+
+    RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Overloaded version that accepts product_id directly
+CREATE OR REPLACE FUNCTION grant_product_access(
+    user_id_param UUID,
+    product_id_param UUID,
+    access_duration_days_param INTEGER DEFAULT NULL
+) RETURNS BOOLEAN AS $$
+DECLARE
+    product_auto_duration INTEGER;
+    expires_at TIMESTAMPTZ;
+    final_duration INTEGER;
+    current_user_id UUID;
+BEGIN
+    -- SECURITY: Get current authenticated user
+    current_user_id := auth.uid();
+    
+    -- SECURITY: Only allow granting access to the authenticated user
+    IF current_user_id IS NULL THEN
+        RAISE EXCEPTION 'Authentication required';
+    END IF;
+    
+    -- SECURITY: Can only grant access to yourself
+    IF current_user_id != user_id_param THEN
+        RAISE EXCEPTION 'Cannot grant access to other users';
+    END IF;
+
+    -- Get product auto-grant duration
+    SELECT auto_grant_duration_days INTO product_auto_duration
+    FROM products
+    WHERE id = product_id_param AND is_active = true;
+
+    -- If product doesn't exist, return false
+    IF product_auto_duration IS NULL THEN
+        RETURN FALSE;
+    END IF;
+
+    -- Determine final duration: explicit param > product auto-grant > null (permanent)
+    final_duration := COALESCE(access_duration_days_param, product_auto_duration);
+
+    -- Calculate expiration date if duration is provided
+    IF final_duration IS NOT NULL THEN
+        expires_at := NOW() + (final_duration || ' days')::INTERVAL;
+    END IF;
+
+    -- Insert access record (update if exists)
+    INSERT INTO user_product_access (user_id, product_id, access_duration_days, access_expires_at)
+    VALUES (current_user_id, product_id_param, final_duration, expires_at)
     ON CONFLICT (user_id, product_id) DO UPDATE SET
         access_granted_at = NOW(),
         access_duration_days = EXCLUDED.access_duration_days,

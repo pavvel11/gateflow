@@ -163,13 +163,11 @@ class Analytics {
                 eventData.platform = navigator.userAgentData.platform;
             }
             
-            console.log(`📊 GateFlow Analytics: ${event}`, eventData);
-            
             // Send to analytics providers
             this.sendToProviders(event, eventData);
             
         } catch (error) {
-            console.warn('Analytics tracking failed:', error);
+            // Silent error handling
         }
     }
     
@@ -192,11 +190,15 @@ class Analytics {
         // Custom analytics endpoint
         const config = this.getConfig();
         if (config.analyticsEndpoint) {
-            fetch(config.analyticsEndpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ event, data })
-            }).catch(error => console.warn('Custom analytics failed:', error));
+            try {
+                fetch(config.analyticsEndpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ event, data })
+                });
+            } catch (e) {
+                // Silent error handling
+            }
         }
     }
     
@@ -296,7 +298,6 @@ class LicenseManager {
                 return false;
             }
         } catch (error) {
-            console.warn('License check failed:', error);
             this.status = { valid: false, showWatermark: true, violation: 'check_failed' };
             return false;
         }
@@ -329,7 +330,7 @@ class LicenseManager {
                     return await response.json();
                 }
             } catch (error) {
-                console.warn(`License endpoint ${endpoint} failed:`, error.message);
+                // Silent error handling
             }
         }
         
@@ -450,10 +451,9 @@ class SessionManager {
             if (session?.user) {
                 this.currentUserId = session.user.id;
                 this.accessGrantedTime = Date.now();
-                console.log('✅ Existing session found:', this.currentUserId);
             }
         } catch (error) {
-            console.warn('Failed to initialize current session:', error);
+            // Silent error handling
         }
     }
     
@@ -461,8 +461,6 @@ class SessionManager {
         // Check if we have session tokens in URL hash
         const hash = window.location.hash;
         if (hash && hash.includes('access_token=')) {
-            console.log('🔗 Processing magic link callback...');
-            
             try {
                 // Clean up the hash (remove any duplicate # characters)
                 const cleanHash = hash.replace(/^#+/, '#');
@@ -474,12 +472,7 @@ class SessionManager {
                 const tokenType = params.get('token_type');
                 const expiresIn = params.get('expires_in');
                 
-                console.log('🔍 Parsed tokens:', { 
-                    hasAccessToken: !!accessToken, 
-                    hasRefreshToken: !!refreshToken, 
-                    tokenType 
-                });
-                
+
                 if (accessToken) {
                     // Manually set the session using Supabase's setSession
                     this.supabaseClient.auth.setSession({
@@ -487,12 +480,10 @@ class SessionManager {
                         refresh_token: refreshToken || null
                     }).then(({ data: { session }, error }) => {
                         if (error) {
-                            console.error('Error setting session from URL:', error);
                             return;
                         }
                         
                         if (session) {
-                            console.log('✅ Session established from magic link:', session.user.id);
                             this.currentUserId = session.user.id;
                             this.accessGrantedTime = Date.now();
                             
@@ -505,7 +496,7 @@ class SessionManager {
                     });
                 }
             } catch (error) {
-                console.error('Error parsing magic link tokens:', error);
+                // Silent error handling
             }
         }
     }
@@ -524,7 +515,6 @@ class SessionManager {
             const mainDomain = window.GATEKEEPER_CONFIG?.MAIN_DOMAIN || 'localhost:3000';
             return await this.getCrossDomainSession(mainDomain);
         } catch (error) {
-            console.warn('Failed to get current session:', error);
             return null;
         }
     }
@@ -547,14 +537,12 @@ class SessionManager {
             });
             
             if (!response.ok) {
-                console.warn('Cross-domain session check failed:', response.status);
                 return null;
             }
             
             const data = await response.json();
             return data.session || null;
         } catch (error) {
-            console.warn('Cross-domain session check error:', error);
             return null;
         }
     }
@@ -586,15 +574,12 @@ class AccessControl {
             const mainDomain = window.GATEKEEPER_CONFIG?.MAIN_DOMAIN || 'localhost:3000';
             const currentDomain = window.location.host;
             
-            console.log('🔍 Batch checking access for:', uncachedSlugs, { currentDomain, mainDomain });
-            
             // Always use cross-domain API for access checking
             const batchResults = await this.getCrossDomainBatchAccess(mainDomain, uncachedSlugs);
             
             // Cache results
             for (const slug of uncachedSlugs) {
                 const hasAccess = batchResults[slug] || false;
-                console.log(`🔐 Cross-domain access result for ${slug}:`, hasAccess);
                 results[slug] = hasAccess;
                 cache.set(cache.generateKey('access', slug, 'current'), hasAccess);
             }
@@ -605,10 +590,8 @@ class AccessControl {
             
             return results;
         } catch (error) {
-            console.error('Batch access check failed:', error);
             // Return cached results only, mark uncached as no access
             for (const slug of uncachedSlugs) {
-                console.warn(`Access check failed for ${slug}, defaulting to no access`);
                 results[slug] = false;
                 cache.set(cache.generateKey('access', slug, 'current'), false, 30000); // Short cache for failed requests
             }
@@ -632,14 +615,12 @@ class AccessControl {
             });
             
             if (!response.ok) {
-                console.warn('Cross-domain access check failed:', response.status);
                 return false;
             }
             
             const data = await response.json();
             return data.hasAccess || false;
         } catch (error) {
-            console.warn('Cross-domain access check error:', error);
             return false;
         }
     }
@@ -663,14 +644,12 @@ class AccessControl {
             });
             
             if (!response.ok) {
-                console.warn('Cross-domain batch access check failed:', response.status);
                 return {};
             }
             
             const data = await response.json();
             return data.accessResults || {};
         } catch (error) {
-            console.warn('Cross-domain batch access check error:', error);
             return {};
         }
     }
@@ -840,8 +819,6 @@ class ErrorHandler {
         const fallbackMode = config.fallbackMode || CONSTANTS.FALLBACK_MODES.HIDE_ALL;
         const isDev = config.development || window.location.hostname === 'localhost';
         
-        console.error(`GateFlow Error in ${context}:`, error);
-        
         Analytics.track(CONSTANTS.EVENTS.ERROR, {
             error: error.message,
             context,
@@ -992,7 +969,6 @@ class GateFlow {
         // Initialize session management
         SessionManager.initialize(SessionManager.supabaseClient);
         
-        console.log('✅ GateFlow components initialized successfully');
     }
     
     async loadSupabase() {
@@ -1010,7 +986,6 @@ class GateFlow {
                     resolve();
                 };
                 script.onerror = () => {
-                    console.warn('Failed to load Supabase, using fallback mode');
                     // Create mock client for development
                     SessionManager.supabaseClient = {
                         auth: {
@@ -1025,7 +1000,6 @@ class GateFlow {
                 document.head.appendChild(script);
             });
         } catch (error) {
-            console.warn('Supabase initialization failed:', error);
             // Fallback to mock client
             SessionManager.supabaseClient = {
                 auth: {
@@ -1058,7 +1032,6 @@ class GateFlow {
         if (!supabaseUrl || !supabaseAnonKey || 
             supabaseUrl === 'https://your-project.supabase.co' || 
             supabaseAnonKey === 'your-anon-key') {
-            console.warn('Supabase configuration not properly set. Using fallback mode.');
             // Create a mock client for development
             SessionManager.supabaseClient = {
                 auth: {
@@ -1093,7 +1066,6 @@ class GateFlow {
                 scriptProductSlug = scriptUrl.searchParams.get('productSlug');
             } catch (error) {
                 // If URL parsing fails, continue without script parameter
-                console.warn('Failed to parse script URL for productSlug:', error);
             }
         }
         
@@ -1110,15 +1082,6 @@ class GateFlow {
         
         const protectedElements = searchContent.querySelectorAll('[data-gatekeeper-product]');
         
-        console.log('🔍 Detection debug:', {
-            params: Array.from(params.entries()),
-            scriptProductSlug: scriptProductSlug,
-            configProductSlug: window.GATEKEEPER_CONFIG?.PRODUCT_SLUG,
-            protectedElements: protectedElements.length,
-            protectedSlugs: Array.from(protectedElements).map(el => el.getAttribute('data-gatekeeper-product')),
-            usingOriginalContent: !!originalContent
-        });
-        
         // Always use element protection if protected elements exist
         if (protectedElements.length > 0) {
             // Store product slug for page-level redirect check
@@ -1128,21 +1091,17 @@ class GateFlow {
                 this.fullPageProductSlug = params.get('product');
             }
             
-            console.log('🛡️ Detected mode: ELEMENT (protected elements found)');
             return 'element';
         }
         
         // Only use page protection if no elements but have productSlug
         if (scriptProductSlug) {
             this.fullPageProductSlug = scriptProductSlug;
-            console.log('🛡️ Detected mode: PAGE (script parameter, no elements)');
             return 'page';
         } else if (params.has('product')) {
-            console.log('🛡️ Detected mode: PAGE (URL parameter, no elements)');
             return 'page';
         }
         
-        console.log('🛡️ Detected mode: NONE (no protection needed)');
         return 'none';
     }
     
@@ -1159,12 +1118,6 @@ class GateFlow {
         
         const protectedElements = searchContent.querySelectorAll('[data-gatekeeper-product]');
         
-        console.log('🛡️ Applying protection:', {
-            mode: this.protectionMode,
-            protectedElements: protectedElements.length,
-            fullPageProductSlug: this.fullPageProductSlug
-        });
-        
         switch (this.protectionMode) {
             case 'page':
                 await this.protectPage();
@@ -1180,10 +1133,6 @@ class GateFlow {
                 }
                 // Always process elements if we reach here
                 await this.protectElements();
-                break;
-            case 'toggle':
-                // Legacy toggle mode - deprecated
-                console.warn('⚠️ Toggle mode is deprecated. Use data-no-access instead.');
                 break;
             default:
                 // No protection needed, restore original content
@@ -1206,8 +1155,6 @@ class GateFlow {
             return;
         }
         
-        console.log('🔐 Full page protection for product:', productSlug);
-        
         // Check if user has current session
         const session = await SessionManager.getCurrentSession();
         
@@ -1229,9 +1176,6 @@ class GateFlow {
                 return;
             }
         }
-        
-        // No access - redirect to product page with return URL
-        console.log('🚫 Access denied, redirecting to product page:', `/p/${productSlug}`);
         
         Analytics.track(CONSTANTS.EVENTS.ACCESS_DENIED, {
             product_slug: productSlug,
@@ -1275,13 +1219,9 @@ class GateFlow {
             const productSlug = element.dataset.gatekeeperProduct;
             const hasAccess = accessResults[productSlug] || false;
             
-            console.log(`🔍 Processing element for ${productSlug}:`, { hasAccess, element });
-            
             if (hasAccess) {
                 // User has access - remove any data-no-access elements inside
-                console.log(`✅ User has access to ${productSlug}, removing no-access elements`);
                 element.querySelectorAll('[data-no-access]').forEach(noAccessEl => {
-                    console.log('🗑️ Removing no-access element:', noAccessEl);
                     noAccessEl.remove();
                 });
                 
@@ -1326,8 +1266,6 @@ class GateFlow {
             return true; // No page-level product specified
         }
         
-        console.log('🔐 Checking page-level access for product:', this.fullPageProductSlug);
-        
         // Check if user has current session
         const session = await SessionManager.getCurrentSession();
         
@@ -1345,9 +1283,6 @@ class GateFlow {
                 return true; // ✅ User has access to page-level product
             }
         }
-        
-        // No access - redirect to product page with return URL
-        console.log('🚫 Page access denied, redirecting to product page:', `/p/${this.fullPageProductSlug}`);
         
         Analytics.track(CONSTANTS.EVENTS.ACCESS_DENIED, {
             product_slug: this.fullPageProductSlug,
@@ -1379,12 +1314,10 @@ class GateFlow {
         document.body.classList.remove('gateflow-loading');
         document.body.style.overflow = '';
         
-        console.log('✅ Original content restored');
     }
     
     // Public API methods
     static async checkProductAccess(productSlug) {
-        console.log('🔍 Checking product access:', { productSlug });
         const results = await AccessControl.batchCheckAccess([productSlug]);
         return results[productSlug] || false;
     }
@@ -1432,9 +1365,7 @@ if (document.body && !document.body.getAttribute('data-original-content')) {
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        console.log('🚀 GateFlow initializing...');
         gateflow.initialize().catch(error => {
-            console.error('GateFlow initialization failed:', error);
             // Fallback to showing original content
             const originalContent = document.body.getAttribute('data-original-content');
             if (originalContent) {
@@ -1444,9 +1375,7 @@ if (document.readyState === 'loading') {
         });
     });
 } else {
-    console.log('🚀 GateFlow initializing...');
     gateflow.initialize().catch(error => {
-        console.error('GateFlow initialization failed:', error);
         // Fallback to showing original content
         const originalContent = document.body.getAttribute('data-original-content');
         if (originalContent) {
@@ -1495,4 +1424,3 @@ window.ErrorHandler = ErrorHandler;
 window.UITemplates = UITemplates;
 window.GateFlow = GateFlow;
 
-console.log(`🔐 GateFlow v${CONSTANTS.VERSION} initialized successfully`);

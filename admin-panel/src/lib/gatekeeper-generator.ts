@@ -114,13 +114,6 @@ ${this.generateInitialization()}`;
       FEATURES: config.features || {}
     };
 
-    // Debug logging
-    console.log('🔍 GatekeeperGenerator config debug:', {
-      originalProductSlug: config.productSlug,
-      safeProductSlug: safeConfig.PRODUCT_SLUG,
-      willBeSetTo: safeConfig.PRODUCT_SLUG ? `'${safeConfig.PRODUCT_SLUG}'` : 'null'
-    });
-
     return `// === DYNAMIC CONFIGURATION ===
 // Generated: ${new Date().toISOString()}
 // Environment: ${config.environment}
@@ -200,20 +193,15 @@ const GATEKEEPER_CONFIG = Object.freeze({
 // Core GateKeeper functionality will be loaded here
 // This is a fallback when gatekeeper-core.js is not found
 
-console.warn('Using fallback GateKeeper core - please ensure gatekeeper-core.js exists');
-
 // Clean implementation for development
 window.gatekeeper = {
   config: GATEKEEPER_CONFIG,
   
   init: function() {
     console.log('GateKeeper initialized in fallback mode');
-    console.log('Config:', GATEKEEPER_CONFIG);
   },
   
   checkAccess: function(productSlug) {
-    console.log('Checking access for:', productSlug);
-    console.log('Using URL:', GATEKEEPER_CONFIG.SUPABASE_URL);
     return Promise.resolve(false);
   },
   
@@ -234,8 +222,6 @@ window.gatekeeper = {
 // Make config available globally for testing and debugging
 if (typeof GATEKEEPER_CONFIG !== 'undefined') {
   window.GATEKEEPER_CONFIG = GATEKEEPER_CONFIG;
-  console.log('🔐 GateKeeper v' + GATEKEEPER_CONFIG.GATEFLOW_VERSION + ' loaded');
-  
   // Only show full config in development
   if (GATEKEEPER_CONFIG.ENVIRONMENT === 'development') {
     console.log('📊 Config:', GATEKEEPER_CONFIG);

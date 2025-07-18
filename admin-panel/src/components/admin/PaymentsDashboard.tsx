@@ -59,8 +59,7 @@ export default function PaymentsDashboard() {
         const statsData = await statsRes.json();
         setStats(statsData);
       }
-    } catch (error) {
-      console.error('Error fetching payment data:', error);
+    } catch {
       addToast('Failed to load payment data', 'error');
     } finally {
       setLoading(false);

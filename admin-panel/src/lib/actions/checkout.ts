@@ -116,7 +116,7 @@ export async function fetchClientSecret(options: CreateEmbeddedCheckoutOptions):
         },
       ],
       mode: 'payment',
-      return_url: `${origin}/p/${product.slug}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      return_url: `${origin}/p/${product.slug}/payment-status?session_id={CHECKOUT_SESSION_ID}`,
       metadata: {
         product_id: product.id,
         product_slug: product.slug,
@@ -133,8 +133,18 @@ export async function fetchClientSecret(options: CreateEmbeddedCheckoutOptions):
 
     return session.client_secret;
     
-  } catch (error) {
-    console.error('Embedded checkout error:', error);
+  } catch {
     throw error instanceof Error ? error : new Error('Failed to create checkout session');
   }
+}
+
+export async function signOutAndRedirectToCheckout() {
+  const supabase = await createClient();
+  
+  // Sign out the user
+  await supabase.auth.signOut();
+  
+  // Note: We can't redirect from server action, so we'll return success
+  // and let the client handle the redirect
+  return { success: true };
 }

@@ -45,9 +45,8 @@ export default function FreeProductView({ product }: FreeProductViewProps) {
         addToast(data.message || 'Access granted successfully!', 'success');
         
         // Redirect to success page
-        router.push(`/p/${product.slug}/payment-success`);
-      } catch (err) {
-        console.error('Error in handleFreeAccess:', err);
+        router.push(`/p/${product.slug}/payment-status`);
+      } catch {
         addToast('An unexpected error occurred', 'error');
       } finally {
         setLoading(false);

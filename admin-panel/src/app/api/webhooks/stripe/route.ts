@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (existingEvent) {
-      console.log('Event already processed:', event.id);
       return NextResponse.json({ received: true, duplicate: true });
     }
 
@@ -76,7 +75,7 @@ export async function POST(request: NextRequest) {
         break;
       
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        break; // Ignore other event types
     }
 
     return NextResponse.json({ received: true });
@@ -114,8 +113,6 @@ async function handleCheckoutSessionCompleted(
       console.error('Failed to complete payment transaction:', error);
       return;
     }
-
-    console.log('Payment processed successfully for email:', customerEmail);
   } catch (error) {
     console.error('Error handling checkout session completion:', error);
   }
@@ -135,8 +132,6 @@ async function handlePaymentIntentSucceeded(
         updated_at: new Date().toISOString(),
       })
       .eq('session_id', paymentIntent.metadata?.checkout_session_id);
-
-    console.log('PaymentIntent succeeded:', paymentIntent.id);
   } catch (error) {
     console.error('Error handling payment intent success:', error);
   }
@@ -156,8 +151,6 @@ async function handlePaymentIntentFailed(
         updated_at: new Date().toISOString(),
       })
       .eq('session_id', paymentIntent.metadata?.checkout_session_id);
-
-    console.log('PaymentIntent failed:', paymentIntent.id);
   } catch (error) {
     console.error('Error handling payment intent failure:', error);
   }
@@ -190,8 +183,6 @@ async function handleChargeDispute(
           updated_at: new Date().toISOString(),
         })
         .eq('id', transaction.id);
-
-      console.log('Charge disputed:', dispute.id);
     }
   } catch (error) {
     console.error('Error handling charge dispute:', error);

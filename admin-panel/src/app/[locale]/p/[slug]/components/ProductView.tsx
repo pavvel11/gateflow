@@ -1,5 +1,7 @@
 'use client';
 
+// ! TODO check if this is needed
+ 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Product } from '@/types';
@@ -66,11 +68,10 @@ export default function ProductView({ product }: ProductViewProps) {
       try {
         // Decode the return URL and redirect
         const decodedUrl = decodeURIComponent(returnUrl);
-        console.log('Redirecting to return_url:', decodedUrl);
         window.location.href = decodedUrl;
         return true; // Indicate that redirect is happening
-      } catch (error) {
-        console.error('Error redirecting to return_url:', error);
+      } catch {
+        // Silent error handling for return URL redirect
       }
     }
     return false; // No redirect happened
@@ -124,7 +125,6 @@ export default function ProductView({ product }: ProductViewProps) {
             window.location.href = '/login';
             return;
           }
-          console.error('Error checking access:', response.statusText);
           setCheckingAccess(false);
           return;
         }
@@ -147,8 +147,8 @@ export default function ProductView({ product }: ProductViewProps) {
           setShowFullContent(false);
           // Handle different access denial reasons if needed
         }
-      } catch (err) {
-        console.error('Error in checkUserAccess:', err);
+      } catch {
+        // Silent error handling
       } finally {
         setCheckingAccess(false);
       }
@@ -254,8 +254,7 @@ export default function ProductView({ product }: ProductViewProps) {
       setHasAccess(true); // Update local state to show countdown
       setCountdown(3); // Reset countdown to 3 seconds
       setShowFullContent(false); // Make sure full content is not shown yet to trigger countdown
-    } catch (err) {
-      console.error('Error in requestFreeAccess:', err);
+    } catch {
       addToast('An unexpected error occurred', 'error');
     } finally {
       setLoading(false);

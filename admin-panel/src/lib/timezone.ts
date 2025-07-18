@@ -22,8 +22,7 @@ export function convertLocalToUTC(localDatetimeString: string): string {
     
     // Return as UTC ISO string
     return localDate.toISOString();
-  } catch (error) {
-    console.error('Error converting local time to UTC:', error);
+  } catch {
     return '';
   }
 }
@@ -52,8 +51,7 @@ export function convertUTCToLocal(utcIsoString: string): string {
     
     // Return in datetime-local format
     return localDate.toISOString().slice(0, 16);
-  } catch (error) {
-    console.error('Error converting UTC to local time:', error);
+  } catch {
     return '';
   }
 }
@@ -87,8 +85,7 @@ export function formatUTCForDisplay(
     
     // Format in user's local timezone
     return utcDate.toLocaleString(undefined, options);
-  } catch (error) {
-    console.error('Error formatting UTC time for display:', error);
+  } catch {
     return '';
   }
 }
@@ -100,8 +97,7 @@ export function formatUTCForDisplay(
 export function getUserTimezone(): string {
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
-  } catch (error) {
-    console.error('Error getting user timezone:', error);
+  } catch {
     return 'UTC';
   }
 }
@@ -119,8 +115,7 @@ export function isDateInFuture(utcIsoString: string): boolean {
     const now = new Date();
     
     return utcDate > now;
-  } catch (error) {
-    console.error('Error checking if date is in future:', error);
+  } catch {
     return false;
   }
 }
@@ -155,8 +150,7 @@ export function isCurrentlyAvailable(
     }
     
     return true;
-  } catch (error) {
-    console.error('Error checking availability:', error);
+  } catch {
     return false;
   }
 }

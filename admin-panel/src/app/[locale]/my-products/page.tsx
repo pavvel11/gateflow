@@ -98,7 +98,6 @@ export default function MyProductsPage() {
 
     } catch (err) {
         const error = err as Error;
-        console.error('Error fetching products data:', error);
         setError(error.message || 'Failed to load products data.');
     } finally {
       setLoading(false);

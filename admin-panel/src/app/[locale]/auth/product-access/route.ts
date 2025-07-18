@@ -55,8 +55,6 @@ export async function GET(request: Request) {
   }
 
   try {
-    console.log(`[ProductAccess] Processing access for user ${user.id} to product ${productSlug}`);
-    
     // First, check if the user already has access to the product
     const { data: existingAccess, error: accessError } = await supabase
       .from('user_product_access')
@@ -72,8 +70,6 @@ export async function GET(request: Request) {
 
     // If the user doesn't have access, check if product is free and grant access if so
     if (!existingAccess) {
-      console.log(`[ProductAccess] No existing access found, checking if product is free`);
-      
       const { data: product, error: productError } = await supabase
         .from('products')
         .select('*')
@@ -89,14 +85,11 @@ export async function GET(request: Request) {
       }
 
       if (!product) {
-        console.log(`[ProductAccess] Product not found or inactive`);
         handleRedirect('/', returnUrl);
         return;
       }
 
       if (product.price === 0) {
-        console.log(`[ProductAccess] Product is free, granting access using grant_free_product_access function`);
-        
         // Use the secure grant_free_product_access function that only works for free products
         const { data: accessResult, error: grantError } = await supabase
           .rpc('grant_free_product_access', {
@@ -109,9 +102,8 @@ export async function GET(request: Request) {
           handleRedirect(`/p/${productSlug}`, returnUrl);
           return;
         } else if (accessResult) {
-          console.log(`[ProductAccess] Access granted successfully via grant_free_product_access`);
           // For free products, redirect to payment success page to show confetti
-          handleRedirect(`/p/${productSlug}/payment-success`, returnUrl);
+          handleRedirect(`/p/${productSlug}/payment-status`, returnUrl);
           return;
         } else {
           console.error(`[ProductAccess] grant_free_product_access returned false - product might not exist or not be free`);
@@ -120,14 +112,10 @@ export async function GET(request: Request) {
         }
       } else {
         // If product exists but is not free, redirect to payment page with return_url
-        console.log(`[ProductAccess] Product is not free, redirecting to product page for payment`);
         handleRedirect(`/p/${productSlug}`, returnUrl);
         return;
       }
-    } else {
-      console.log(`[ProductAccess] User already has access to this product`);
     }
-
     // At this point, user either already had access or we've granted it (for free products)
     // Get the product's content delivery configuration
     const { data: product, error: redirectError } = await supabase
@@ -145,8 +133,6 @@ export async function GET(request: Request) {
 
     // Redirect to the specified URL if available, otherwise to the product page
     if (product?.content_delivery_type === 'redirect' && product?.content_config?.redirect_url) {
-      console.log(`[ProductAccess] Redirecting to custom URL:`, product.content_config.redirect_url);
-      
       // Security: Validate redirect URL to prevent open redirect attacks
       try {
         const redirectUrl = new URL(product.content_config.redirect_url);
@@ -174,11 +160,8 @@ export async function GET(request: Request) {
         return;
       }
     } else {
-      console.log(`[ProductAccess] No custom redirect URL, checking for return_url`);
-      
       // Check if we have a return_url (cross-domain scenario)
       if (returnUrl) {
-        console.log(`[ProductAccess] Redirecting to return_url:`, returnUrl);
         handleRedirect(`/p/${productSlug}`, returnUrl);
       } else {
         // Standard redirect to product page
@@ -190,9 +173,6 @@ export async function GET(request: Request) {
     if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
       throw error; // Re-throw NEXT_REDIRECT - this is expected behavior
     }
-    
-    console.error('[ProductAccess] Unhandled error:', error);
-    
     // Instead of redirecting to access-denied, redirect to the product page
     // This gives a better user experience if something goes wrong
     handleRedirect(`/p/${productSlug}`, returnUrl);

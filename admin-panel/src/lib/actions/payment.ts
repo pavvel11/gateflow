@@ -144,7 +144,7 @@ export async function createCheckoutSession(
   }
   
   // Store payment session in database for tracking
-  const { error: sessionError } = await supabase
+  await supabase
     .from('payment_sessions')
     .insert({
       session_id: session.id,
@@ -162,11 +162,6 @@ export async function createCheckoutSession(
       },
       expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     });
-  
-  if (sessionError) {
-    console.error('Error saving payment session:', sessionError);
-    // Don't fail the request - session is created in Stripe
-  }
   
   return {
     sessionId: session.id,
@@ -272,7 +267,6 @@ export async function processRefund(data: RefundRequest): Promise<RefundResponse
     };
     
   } catch (error) {
-    console.error('Refund processing error:', error);
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Failed to process refund',

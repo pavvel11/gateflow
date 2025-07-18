@@ -9,4 +9,4 @@ const SUPABASE_ANON_KEY = 'your-anon-key-here'; // Replace with your Supabase an
 // We must refer to window.supabase to avoid a ReferenceError.
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-console.log('Supabase client initialized with example config. Please update with your real credentials.');
+// Note: This is an example configuration. Update with your real credentials before use.

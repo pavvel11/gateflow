@@ -54,8 +54,8 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
       await navigator.clipboard.writeText(code);
       setCopiedCode(code);
       setTimeout(() => setCopiedCode(null), 2000);
-    } catch (err) {
-      console.error('Failed to copy code:', err);
+    } catch {
+      // Silent error handling
     }
   };
 

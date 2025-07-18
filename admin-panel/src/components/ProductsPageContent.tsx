@@ -90,8 +90,7 @@ const ProductsPageContent: React.FC = () => {
         setTotalPages(data.pagination.totalPages);
         setTotalItems(data.pagination.total);
       }
-    } catch (err) {
-      console.error('Error fetching products:', err);
+    } catch {
       setError('Failed to load products. Please try again later.');
     } finally {
       setLoading(false);
@@ -123,7 +122,6 @@ const ProductsPageContent: React.FC = () => {
         addButtonRef.current?.focus();
       }, 0);
     } catch (err) {
-      console.error('Error creating product:', err);
       addToast(err instanceof Error ? err.message : t('createError'), 'error');
       return Promise.reject(err);
     } finally {
@@ -149,7 +147,6 @@ const ProductsPageContent: React.FC = () => {
       await fetchProducts();
       addToast(t('updateSuccess', { name: formData.name }), 'success');
     } catch (err) {
-      console.error('Error updating product:', err);
       addToast(err instanceof Error ? err.message : t('updateError'), 'error');
       return Promise.reject(err);
     } finally {

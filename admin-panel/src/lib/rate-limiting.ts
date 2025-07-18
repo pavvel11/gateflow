@@ -48,14 +48,12 @@ export async function checkRateLimit(
     });
     
     if (error) {
-      console.error('Rate limit check error:', error);
       // In case of error, allow the action (fail open)
       return true;
     }
     
     return !!rateLimitOk;
-  } catch (error) {
-    console.error('Rate limit check failed:', error);
+  } catch {
     // In case of error, allow the action (fail open)
     return true;
   }

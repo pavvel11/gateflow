@@ -53,8 +53,7 @@ export default function AccessGrantedView({ product }: AccessGrantedViewProps) {
 
         const data = await response.json();
         setSecureData(data);
-      } catch (err) {
-        console.error('Error fetching secure data:', err);
+      } catch {
         setError('Failed to load content');
       } finally {
         setLoading(false);

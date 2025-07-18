@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Confetti from 'react-confetti';
 
-interface PaymentSuccessViewProps {
+interface PaymentStatusViewProps {
   product: {
     id: string;
     name: string;
@@ -19,13 +19,13 @@ interface PaymentSuccessViewProps {
   sessionId?: string; // Make optional for free products
 }
 
-export default function PaymentSuccessView({
+export default function PaymentStatusView({
   product,
   paymentVerified,
   accessGranted,
   errorMessage,
   sessionId,
-}: PaymentSuccessViewProps) {
+}: PaymentStatusViewProps) {
   const router = useRouter();
   const t = useTranslations('productView');
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -65,25 +65,35 @@ export default function PaymentSuccessView({
     return (
       <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
         <div className="max-w-4xl mx-auto p-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl text-center">
-          <div className="text-5xl mb-4">⚠️</div>
-          <h2 className="text-3xl font-bold text-white mb-2">Payment Issue</h2>
-          <p className="text-red-300 mb-6">{errorMessage}</p>
-          <div className="flex gap-4 justify-center">
-            <button
-              onClick={() => router.push(`/p/${product.slug}`)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-            >
-              Go to Product
-            </button>
-            <button
-              onClick={() => router.push('/contact')}
-              className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-            >
-              Contact Support
-            </button>
+          <div className="text-5xl mb-4">
+            {paymentVerified ? '⚠️' : '❌'}
           </div>
-          <div className="mt-6 text-sm text-gray-400">
-            {sessionId && <p>Session ID: {sessionId}</p>}
+          <h2 className="text-3xl font-bold text-white mb-2">
+            {paymentVerified ? 'Action Required' : 'Payment Issue'}
+          </h2>
+          <p className="text-gray-300 mb-6">{errorMessage}</p>
+          
+          {/* Show login options if it's a guest purchase */}
+          {paymentVerified && errorMessage.includes('log in') && (
+            <div className="space-y-4">
+              <button
+                onClick={() => router.push('/login')}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors"
+              >
+                Go to Login
+              </button>
+              <p className="text-gray-400 text-sm">
+                Don&apos;t have an account? <span className="text-blue-400 cursor-pointer hover:underline" onClick={() => router.push('/signup')}>Sign up here</span>
+              </p>
+            </div>
+          )}
+          
+          <div className="mt-8 flex items-center justify-center gap-4">
+            <div className="text-3xl">{product.icon}</div>
+            <div>
+              <h3 className="text-xl font-semibold text-white">{product.name}</h3>
+              <p className="text-gray-300">{product.description}</p>
+            </div>
           </div>
         </div>
       </div>

@@ -61,14 +61,6 @@ export async function GET(request: Request) {
     const mainDomain = process.env.NEXT_PUBLIC_MAIN_DOMAIN || 
                       (process.env.NODE_ENV === 'development' ? 'localhost:3000' : request.headers.get('host') || 'localhost:3000');
 
-    // Debug logging
-    console.log('🔍 Gatekeeper route debug:', {
-      productSlug,
-      mainDomain,
-      nodeEnv: process.env.NODE_ENV,
-      searchParams: Object.fromEntries(url.searchParams.entries())
-    });
-
     // Generate the gatekeeper script using the new generator
     const config = {
       supabaseUrl,

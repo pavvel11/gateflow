@@ -62,8 +62,8 @@ export default function StatsOverview() {
           totalAccess: accessCount || 0,
           activeUsers: activeUsers,
         })
-      } catch (error) {
-        console.error('Error fetching stats:', error)
+      } catch {
+        // Silent error handling
       } finally {
         setLoading(false)
       }

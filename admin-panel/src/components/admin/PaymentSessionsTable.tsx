@@ -38,8 +38,7 @@ export default function PaymentSessionsTable({
         const errorData = await response.json();
         addToast(errorData.error || tCancel('error'), 'error');
       }
-    } catch (error) {
-      console.error('Cancel session error:', error);
+    } catch {
       addToast(tCancel('error'), 'error');
     } finally {
       setCancelingId(null);

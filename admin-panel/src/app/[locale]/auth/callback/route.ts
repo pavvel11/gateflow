@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 import { claimGuestPurchases } from '@/lib/actions/auth'
+import type { Session, AuthError } from '@supabase/supabase-js'
 
 /**
  * Auth callback handler for Supabase magic links
@@ -13,7 +14,8 @@ export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
   
-  // If no code is provided, redirect to login
+
+  // Check if we have code parameter
   if (!code) {
     return NextResponse.redirect(new URL('/login', requestUrl.origin))
   }
@@ -44,25 +46,37 @@ export async function GET(request: NextRequest) {
     }
   )
   
-  // Exchange the code for a session first
-  const { data: { session }, error } = await supabase.auth.exchangeCodeForSession(code)
+  // Exchange the code for a session - different methods for different auth types
+  let session: Session | null = null;
+  let error: AuthError | null = null;
+  
+  if (code) {
+    // For magic links, the code parameter is actually the token_hash
+    // Try verifyOtp first (for magic links)
+    const otpResponse = await supabase.auth.verifyOtp({
+      token_hash: code,
+      type: 'magiclink'
+    });
+    
+    if (otpResponse.data.session) {
+      session = otpResponse.data.session;
+      error = otpResponse.error;
+    } else {
+      // If OTP verification fails, try OAuth code exchange
+      const oauthResponse = await supabase.auth.exchangeCodeForSession(code);
+      session = oauthResponse.data.session;
+      error = oauthResponse.error;
+    }
+  }
+  
   
   if (error || !session) {
-    console.error('Error exchanging code for session:', error)
     return NextResponse.redirect(new URL('/login', requestUrl.origin))
   }
 
   // Claim any guest purchases for this user's email
   if (session?.user?.email && session?.user?.id) {
-    try {
-      const result = await claimGuestPurchases(session.user.email, session.user.id)
-      if (result.success && result.claimedCount > 0) {
-        console.log(`🎉 [AuthCallback] Claimed ${result.claimedCount} guest purchases for user ${session.user.email}`)
-      }
-    } catch (error) {
-      console.error('Error claiming guest purchases:', error)
-      // Don't block the login process if claiming fails
-    }
+      await claimGuestPurchases(session.user.email, session.user.id)
   }
   
   // Check for custom redirect URL (for product access etc.)
@@ -74,26 +88,18 @@ export async function GET(request: NextRequest) {
       // Decode the redirect URL to handle encoded parameters
       const decodedRedirectTo = decodeURIComponent(redirectTo)
       
-      console.log('🔍 [AuthCallback] Processing redirect:', {
-        original: redirectTo,
-        decoded: decodedRedirectTo,
-        startsWithSlash: decodedRedirectTo.startsWith('/')
-      })
-      
       // Check if it's a relative path (starts with /)
       if (decodedRedirectTo.startsWith('/')) {
         redirectPath = decodedRedirectTo
-        console.log('🔍 [AuthCallback] Using relative path:', redirectPath)
       } else {
         // If it's a full URL, validate it's on our domain
         const redirectToUrl = new URL(decodedRedirectTo)
         if (redirectToUrl.origin === requestUrl.origin) {
           redirectPath = redirectToUrl.pathname + redirectToUrl.search
-          console.log('🔍 [AuthCallback] Using full URL path:', redirectPath)
         }
       }
-    } catch (error) {
-      console.error('🔍 [AuthCallback] Invalid redirect URL:', redirectTo, error)
+    } catch {
+      // Silent error handling - if decoding fails, fallback to default
     }
   } else {
     // No custom redirect, check user role to determine default redirect
@@ -105,8 +111,7 @@ export async function GET(request: NextRequest) {
       } else {
         redirectPath = '/my-products' // Regular users go to their products
       }
-    } catch (error) {
-      console.error('Error checking admin status:', error)
+    } catch {
       // If we can't determine admin status, send to user page as safer default
       redirectPath = '/my-products'
     }
@@ -114,11 +119,6 @@ export async function GET(request: NextRequest) {
   
   // Use the request origin for redirects (works in any environment)
   const redirectUrl = new URL(redirectPath, requestUrl.origin)
-  
-  console.log('🔍 [AuthCallback] Final redirect:', {
-    redirectPath,
-    redirectUrl: redirectUrl.toString()
-  })
   
   // Create redirect response and transfer auth cookies
   const redirectResponse = NextResponse.redirect(redirectUrl)

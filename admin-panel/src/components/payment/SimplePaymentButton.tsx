@@ -42,7 +42,6 @@ export default function SimplePaymentButton({
       window.location.href = data.url;
       
     } catch (err) {
-      console.error('Payment error:', err);
       setError(err instanceof Error ? err.message : 'Payment failed');
     } finally {
       setIsLoading(false);

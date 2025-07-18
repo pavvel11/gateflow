@@ -50,8 +50,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data, error } = await supabase.rpc('is_admin', { user_id_param: userId })
         
         if (error) {
-          console.error(`Error checking admin status (attempt ${attempt}):`, error)
-          
           if (attempt === retries) {
             return false // Default to non-admin after final attempt
           }
@@ -62,13 +60,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         
         return Boolean(data)
-      } catch (err) {
-        console.error(`Error in checkAdminStatus (attempt ${attempt}):`, err)
-        
+      } catch {
         if (attempt === retries) {
           return false // Default to non-admin after final attempt
         }
-        
         await new Promise(resolve => setTimeout(resolve, attempt * 1000))
       }
     }
@@ -92,15 +87,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const currentUser = session?.user ?? null
         
-        console.log('AuthContext: Setting user:', {
-          hasSession: !!session,
-          userId: currentUser?.id,
-          userEmail: currentUser?.email,
-          userEmailVerified: currentUser?.email_confirmed_at,
-          userMetadata: currentUser?.user_metadata,
-          userAppMetadata: currentUser?.app_metadata
-        });
-        
         // Set user immediately for responsive UI
         setUser(currentUser)
         setError(null)
@@ -114,29 +100,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           setIsAdmin(adminStatus)
           
+          //! TODO: Change to hande in supabase trigger function
           // Claim any guest purchases for this user
           try {
             const response = await fetch('/api/claim-guest-purchases', {
               method: 'POST',
               credentials: 'include',
             })
-            
+
             if (response.ok) {
-              const data = await response.json()
-              if (data.claimedCount > 0) {
-                console.log(`🎉 Claimed ${data.claimedCount} guest purchases for user`)
-              }
+              await response.json()
             }
-          } catch (error) {
-            console.error('Error claiming guest purchases:', error)
+          } catch {
             // Don't block the authentication process if claiming fails
           }
         } else {
           setIsAdmin(false)
         }
-      } catch (err) {
-        console.error('Error in auth state change:', err)
-        
+      } catch {
         if (isMountedRef.current) {
           setError('Authentication error occurred')
         }
@@ -168,7 +149,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!isMountedRef.current) return
 
       if (error) {
-        console.error('Error fetching session:', error.message)
         setError(error.message)
         setLoading(false)
         return
@@ -176,9 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Use immediate processing for initial session
       await handleAuthStateChange(session, true)
-    } catch (err) {
-      console.error('Error in session initialization:', err)
-      
+    } catch {
       if (isMountedRef.current) {
         setError('Failed to initialize authentication')
         setLoading(false)
@@ -194,10 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true)
       
       const { error } = await supabase.auth.signOut()
-      
       if (error) {
-        console.error('Error signing out:', error)
-        
         if (isMountedRef.current) {
           setError('Failed to sign out')
         }
@@ -205,9 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Navigate to login after sign out
       router.replace('/login')
-    } catch (err) {
-      console.error('Error in signOut:', err)
-      
+    } catch {
       if (isMountedRef.current) {
         setError('Failed to sign out')
       }

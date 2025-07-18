@@ -23,7 +23,7 @@ interface AccessResponse {
 
 export default function ProductView({ product }: ProductViewProps) {
   const t = useTranslations('productView');
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   
   const [accessData, setAccessData] = useState<AccessResponse | null>(null);
@@ -33,17 +33,13 @@ export default function ProductView({ product }: ProductViewProps) {
   // Check user access when user changes
   useEffect(() => {
     const checkUserAccess = async () => {
-      console.log('ProductViewNew: Starting access check', { 
-        user: user?.id, 
-        email: user?.email, 
-        slug: product.slug,
-        hasCheckedAccess: hasCheckedAccess.current
-      });
+      // Don't do anything while auth is still loading
+      if (authLoading) {
+        return;
+      }
       
       if (!user) {
-        console.log('ProductViewNew: No user, setting hasAccess: false');
-        setAccessData({ hasAccess: false });
-        setLoading(false);
+        router.push(`/checkout/${product.slug}`);
         return;
       }
 
@@ -56,34 +52,30 @@ export default function ProductView({ product }: ProductViewProps) {
         
         if (!response.ok) {
           if (response.status === 401) {
-            console.log('ProductViewNew: 401 response, redirecting to login');
             window.location.href = '/login';
             return;
           }
-          console.error('Error checking access:', response.statusText);
           setLoading(false);
           return;
         }
 
         const data: AccessResponse = await response.json();
-        console.log('ProductViewNew: Access check result:', data);
         setAccessData(data);
         
         // If user doesn't have access, redirect to checkout
         if (!data.hasAccess) {
-          console.log('ProductViewNew: User has no access, redirecting to checkout');
           router.push(`/checkout/${product.slug}`);
           return;
         }
-      } catch (err) {
-        console.error('Error in checkUserAccess:', err);
+      } catch {
+        // Handle any errors silently
       } finally {
         setLoading(false);
       }
     };
 
     checkUserAccess();
-  }, [user, product.slug, router]); // Add router to dependencies
+  }, [user, product.slug, router, authLoading]); // Add authLoading to dependencies
 
   // Check temporal availability
   const checkTemporalAvailability = () => {
@@ -101,8 +93,8 @@ export default function ProductView({ product }: ProductViewProps) {
     };
   };
 
-  // Loading state
-  if (loading) {
+  // Loading state - show loading while auth is loading OR while we're checking access
+  if (authLoading || loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
         <div className="max-w-4xl mx-auto p-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl">
@@ -117,7 +109,6 @@ export default function ProductView({ product }: ProductViewProps) {
 
   // Check if user has access
   if (accessData?.hasAccess) {
-    console.log('User has access, showing ProductAccessView');
     return <ProductAccessView product={product} userAccess={accessData.userAccess} />;
   }
 

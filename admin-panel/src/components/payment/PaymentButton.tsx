@@ -70,7 +70,6 @@ export default function PaymentButton({
         throw new Error('Failed to create checkout session');
       }
     } catch (error) {
-      console.error('Payment initiation error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to start payment process';
       addToast(errorMessage, 'error');
       setIsLoading(false);

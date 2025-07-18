@@ -152,15 +152,6 @@ export class CheckoutService {
    */
   async createStripeSession(options: CheckoutSessionOptions): Promise<{ clientSecret: string; sessionId: string }> {
     try {
-      console.log('Creating Stripe session with options:', {
-        ui_mode: CHECKOUT_CONFIG.SESSION.UI_MODE,
-        customer_email: options.email,
-        product_name: options.product.name,
-        product_price: options.product.price,
-        currency: options.product.currency,
-        return_url: options.returnUrl
-      });
-
       // Prepare session configuration
       const sessionConfig: Record<string, unknown> = {
         ui_mode: CHECKOUT_CONFIG.SESSION.UI_MODE,
@@ -194,20 +185,11 @@ export class CheckoutService {
       // Only add customer_email if it's a valid email
       if (options.email && options.email.trim() !== '') {
         sessionConfig.customer_email = options.email;
-        console.log('Adding customer_email to session:', options.email);
-      } else {
-        console.log('No customer_email provided, user will need to enter email manually');
       }
 
       const session = await this.stripe.checkout.sessions.create(sessionConfig);
 
-      console.log('Stripe session created successfully:', {
-        sessionId: session.id,
-        hasClientSecret: !!session.client_secret
-      });
-
       if (!session.client_secret) {
-        console.error('Stripe session created but no client_secret returned');
         throw new CheckoutError(
           CheckoutErrorType.STRIPE_ERROR,
           CHECKOUT_ERRORS.STRIPE_SESSION_FAILED,
@@ -215,31 +197,34 @@ export class CheckoutService {
         );
       }
 
+      // Save session to payment_sessions table for webhook processing
+      try {
+        await this.supabase
+          .from('payment_sessions')
+          .insert({
+            session_id: session.id,
+            user_id: options.userId || null,
+            product_id: options.product.id,
+            amount: options.product.price,
+            currency: options.product.currency,
+            status: 'pending',
+            expires_at: new Date(Date.now() + (CHECKOUT_CONFIG.SESSION.EXPIRES_HOURS * 60 * 60 * 1000)).toISOString(),
+            metadata: {
+              product_slug: options.product.slug,
+              customer_email: options.email
+            }
+          });
+      } catch {
+        // Don't throw error here - session is still valid even if we can't save to DB
+      }
+
       return {
         clientSecret: session.client_secret,
         sessionId: session.id,
       };
     } catch (error) {
-      console.error('Stripe session creation failed:', error);
-      
       if (error instanceof CheckoutError) {
         throw error;
-      }
-      
-      // Log detailed Stripe error
-      if (error && typeof error === 'object' && 'type' in error) {
-        const stripeError = error as {
-          type?: string;
-          code?: string;
-          message?: string;
-          param?: string;
-        };
-        console.error('Stripe API error details:', {
-          type: stripeError.type,
-          code: stripeError.code,
-          message: stripeError.message,
-          param: stripeError.param
-        });
       }
       
       throw new CheckoutError(

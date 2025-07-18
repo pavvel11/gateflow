@@ -167,17 +167,6 @@ export class ConfigGenerator {
  *   options: { emailRedirectTo: 'https://yoursite.com/callback' }
  * });
  * 
- * // Real-time subscriptions:
- * const channel = supabase.channel('table-changes')
- *   .on('postgres_changes', { event: '*', schema: 'public', table: 'your_table' }, (payload) => {
- *     console.log('Change received!', payload);
- *   })
- *   .subscribe();
- * 
- * // File uploads:
- * const { data, error } = await supabase.storage
- *   .from('bucket')
- *   .upload('path/to/file.jpg', file);
  */`
     };
   }

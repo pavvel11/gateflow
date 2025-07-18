@@ -217,15 +217,6 @@ export async function POST(request: Request) {
         )
       }
       
-      // Debug logging
-      console.log('🔍 Cross-domain access check:', {
-        productSlug: slugsToCheck[0],
-        hasAccess: !!hasAccess,
-        userEmail: session.user.email,
-        userId: session.user.id,
-        origin: origin
-      });
-      
       return NextResponse.json(
         { hasAccess: !!hasAccess, userId: session.user.id },
         {

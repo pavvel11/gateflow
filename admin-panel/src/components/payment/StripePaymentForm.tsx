@@ -52,7 +52,6 @@ function CheckoutForm({ product, onSuccess, onError }: CheckoutFormProps) {
 
       if (error) {
         // Payment failed
-        console.error('Payment failed:', error);
         const errorMessage = error.message || 'Payment failed. Please try again.';
         addToast(errorMessage, 'error');
         onError?.(errorMessage);
@@ -64,8 +63,7 @@ function CheckoutForm({ product, onSuccess, onError }: CheckoutFormProps) {
         // Redirect to product page with success parameter
         router.push(`/p/${product.slug}?payment=success`);
       }
-    } catch (err) {
-      console.error('Payment error:', err);
+    } catch {
       const errorMessage = 'An unexpected error occurred. Please try again.';
       addToast(errorMessage, 'error');
       onError?.(errorMessage);

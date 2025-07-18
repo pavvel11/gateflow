@@ -62,11 +62,10 @@ export default function ProductAccessView({ product, userAccess }: ProductAccess
           const decodedUrl = decodeURIComponent(returnUrl);
           window.location.href = decodedUrl;
           return;
-        } catch (error) {
-          console.error('Error redirecting to return_url:', error);
+        } catch {
+          // Fallback to showing content if URL decoding fails
         }
       }
-      
       // No return URL, stop confetti and show content
       setShowConfetti(false);
     }

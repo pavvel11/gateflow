@@ -45,9 +45,8 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
         addToast(data.message || 'Access granted successfully!', 'success');
         
         // Redirect to success page (no session_id needed for free products)
-        router.push(`/p/${product.slug}/payment-success`);
-      } catch (err) {
-        console.error('Error in handleFreeAccess:', err);
+        router.push(`/p/${product.slug}/payment-status`);
+      } catch {
         addToast('An unexpected error occurred', 'error');
       } finally {
         setLoading(false);
@@ -89,7 +88,6 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
       });
 
       if (error) {
-        console.error('Magic link error:', error);
         setMessage({ type: 'error', text: error.message });
         return;
       }
@@ -99,8 +97,7 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
         text: t('magicLinkSent') 
       });
       
-    } catch (err) {
-      console.error('Error in handleMagicLinkSubmit:', err);
+    } catch {
       setMessage({ type: 'error', text: 'An unexpected error occurred' });
     } finally {
       setLoading(false);
