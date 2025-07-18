@@ -78,7 +78,7 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
       const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();
       
-      const redirectUrl = `${window.location.origin}/auth/product-access?product=${product.slug}`;
+      const redirectUrl = `${window.location.origin}/auth/callback?redirect_to=${encodeURIComponent(`/auth/product-access?product=${product.slug}`)}`;
       
       const { error } = await supabase.auth.signInWithOtp({
         email,
@@ -126,7 +126,7 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
     <div className="w-1/2 pl-8">
       <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 border border-white/20">
         <h2 className="text-xl font-semibold text-white mb-4">
-          {user ? t('claimFreeProduct') : t('getInstantAccess')}
+          {user ? t('getYourFreeProduct') : t('getInstantAccess')}
         </h2>
         
         {message.type && (
@@ -168,7 +168,7 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
               {t('processing')}
             </div>
           ) : (
-            user ? t('claimNow') : t('sendMagicLink')
+            user ? t('getFreeAccess') : t('sendMagicLink')
           )}
         </button>
 

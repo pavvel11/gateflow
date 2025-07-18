@@ -494,3 +494,46 @@ CREATE TRIGGER audit_user_product_access
   EXECUTE FUNCTION audit_trigger_function();
 
 COMMIT;
+
+
+-- Create function to grant product access by slug
+CREATE OR REPLACE FUNCTION grant_product_access(
+    user_id_param UUID,
+    product_slug_param TEXT,
+    access_duration_days_param INTEGER DEFAULT NULL
+) RETURNS BOOLEAN AS $$
+DECLARE
+    product_id_var UUID;
+    product_auto_duration INTEGER;
+    expires_at TIMESTAMPTZ;
+    final_duration INTEGER;
+BEGIN
+    -- Find product ID by slug and get auto-grant duration
+    SELECT id, auto_grant_duration_days INTO product_id_var, product_auto_duration
+    FROM products
+    WHERE slug = product_slug_param AND is_active = true;
+
+    -- If product doesn't exist, return false
+    IF product_id_var IS NULL THEN
+        RETURN FALSE;
+    END IF;
+
+    -- Determine final duration: explicit param > product auto-grant > null (permanent)
+    final_duration := COALESCE(access_duration_days_param, product_auto_duration);
+
+    -- Calculate expiration date if duration is provided
+    IF final_duration IS NOT NULL THEN
+        expires_at := NOW() + (final_duration || ' days')::INTERVAL;
+    END IF;
+
+    -- Insert access record (update if exists)
+    INSERT INTO user_product_access (user_id, product_id, access_duration_days, access_expires_at)
+    VALUES (user_id_param, product_id_var, final_duration, expires_at)
+    ON CONFLICT (user_id, product_id) DO UPDATE SET
+        access_granted_at = NOW(),
+        access_duration_days = EXCLUDED.access_duration_days,
+        access_expires_at = EXCLUDED.access_expires_at;
+
+    RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

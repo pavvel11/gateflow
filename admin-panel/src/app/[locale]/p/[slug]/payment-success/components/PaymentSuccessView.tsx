@@ -119,8 +119,15 @@ export default function PaymentSuccessView({
         
         <div className="max-w-4xl mx-auto p-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl z-10 text-center">
           <div className="text-5xl mb-4">🎉</div>
-          <h2 className="text-3xl font-bold text-white mb-2">{t('paymentSuccessful')}</h2>
-          <p className="text-gray-300 mb-6">{t('paymentSuccessMessage')}</p>
+          <h2 className="text-3xl font-bold text-white mb-2">
+            {sessionId ? t('paymentSuccessful') : t('accessGranted')}
+          </h2>
+          <p className="text-gray-300 mb-6">
+            {sessionId 
+              ? t('paymentSuccessMessage', { productName: product.name }) 
+              : t('accessGrantedMessage', { productName: product.name })
+            }
+          </p>
           <div className="text-6xl font-bold text-white tabular-nums">{countdown}</div>
           <p className="text-gray-400 mt-2">{t('loadingContent')}</p>
           

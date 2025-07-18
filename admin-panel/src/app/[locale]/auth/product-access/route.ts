@@ -57,12 +57,12 @@ export async function GET(request: Request) {
   try {
     console.log(`[ProductAccess] Processing access for user ${user.id} to product ${productSlug}`);
     
-    // First, check if the user already has access to the product using the view
+    // First, check if the user already has access to the product
     const { data: existingAccess, error: accessError } = await supabase
-      .from('user_product_access_by_slug')
-      .select('*')
+      .from('user_product_access')
+      .select('*, products!inner(slug)')
       .eq('user_id', user.id)
-      .eq('product_slug', productSlug)
+      .eq('products.slug', productSlug)
       .single();
 
     if (accessError && accessError.code !== 'PGRST116') { // PGRST116 is "not found" error
@@ -95,26 +95,28 @@ export async function GET(request: Request) {
       }
 
       if (product.price === 0) {
-        console.log(`[ProductAccess] Product is free, granting access`);
+        console.log(`[ProductAccess] Product is free, granting access using grant_free_product_access function`);
         
-        // Grant access for free products using the secure RPC function
-        const { error: insertError } = await supabase
-          .rpc('grant_product_access', {
-            user_id_param: user.id,
-            product_slug_param: productSlug
+        // Use the secure grant_free_product_access function that only works for free products
+        const { data: accessResult, error: grantError } = await supabase
+          .rpc('grant_free_product_access', {
+            product_slug_param: productSlug,
+            access_duration_days_param: null // Will use product's auto_grant_duration_days
           });
           
-        if (insertError) {
-          console.error(`[ProductAccess] Error inserting access record:`, insertError);
-          // If we couldn't insert the record but it's because it already exists (duplicate key),
-          // we can still proceed to the redirect
-          // With the RPC function, we don't need to worry about duplicate key errors
-          // as it handles that internally with ON CONFLICT DO NOTHING
-          console.error(`[ProductAccess] Error granting access via RPC:`, insertError);
+        if (grantError) {
+          console.error(`[ProductAccess] Error granting access:`, grantError);
           handleRedirect(`/p/${productSlug}`, returnUrl);
           return;
+        } else if (accessResult) {
+          console.log(`[ProductAccess] Access granted successfully via grant_free_product_access`);
+          // For free products, redirect to payment success page to show confetti
+          handleRedirect(`/p/${productSlug}/payment-success`, returnUrl);
+          return;
         } else {
-          console.log(`[ProductAccess] Access granted successfully`);
+          console.error(`[ProductAccess] grant_free_product_access returned false - product might not exist or not be free`);
+          handleRedirect(`/p/${productSlug}`, returnUrl);
+          return;
         }
       } else {
         // If product exists but is not free, redirect to payment page with return_url
