@@ -178,9 +178,6 @@ export class CheckoutService {
         sessionConfig.customer_email = options.email;
       }
 
-      // Log session configuration for debugging
-      console.log('Creating Stripe session with config:', JSON.stringify(sessionConfig, null, 2));
-
       const session = await this.stripe.checkout.sessions.create(sessionConfig);
 
       if (!session.client_secret) {

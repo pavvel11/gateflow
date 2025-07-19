@@ -46,9 +46,7 @@ function loadStripeEnvConfig(): Record<string, string> {
     try {
       const content = readFileSync(stripeFilePath, 'utf-8');
       fileConfig = parseStripeFile(content);
-      console.log('✅ Loaded .stripe configuration file');
-    } catch (error) {
-      console.warn('⚠️ Failed to load .stripe file:', error);
+    } catch {
     }
   }
   

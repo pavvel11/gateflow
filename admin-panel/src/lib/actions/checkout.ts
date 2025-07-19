@@ -85,11 +85,6 @@ export async function fetchClientSecret(options: CreateEmbeddedCheckoutOptions):
       billing_address_collection: 'auto' as const,
     };
 
-    // Log session configuration for debugging
-    console.log('Creating embedded checkout session with config:', JSON.stringify(sessionConfig, null, 2));
-    console.log('Product currency:', product.currency);
-    console.log('Payment methods from config:', STRIPE_CONFIG.payment_method_types);
-    
     // Create embedded checkout session
     const session = await stripe.checkout.sessions.create(sessionConfig);
 
