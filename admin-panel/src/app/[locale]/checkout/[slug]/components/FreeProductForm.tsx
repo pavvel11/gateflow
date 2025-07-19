@@ -94,7 +94,7 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
 
       setMessage({ 
         type: 'success', 
-        text: t('magicLinkSent') 
+        text: t('checkEmailForMagicLink') 
       });
       
     } catch {

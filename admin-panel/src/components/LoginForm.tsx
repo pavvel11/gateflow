@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 
 /**
  * Login form component that handles magic link authentication
@@ -13,6 +14,7 @@ export default function LoginForm() {
   const [sentEmail, setSentEmail] = useState(false)
   const [siteUrl, setSiteUrl] = useState('')
   const supabase = createClient()
+  const t = useTranslations()
 
   // Get current site URL for redirects (works in any environment)
   useEffect(() => {
@@ -40,10 +42,10 @@ export default function LoginForm() {
         setSentEmail(false)
       } else {
         setSentEmail(true)
-        setMessage('Magic link sent! Check your email inbox.')
+        setMessage(t('productView.checkEmailForMagicLink'))
       }
     } catch {
-      setMessage('An error occurred. Please try again.')
+      setMessage(t('common.error'))
       setSentEmail(false)
     } finally {
       setIsLoading(false)
@@ -55,7 +57,7 @@ export default function LoginForm() {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-200 mb-2">
-          Email address
+          {t('auth.email')}
         </label>
         <input
           id="email"
@@ -79,10 +81,10 @@ export default function LoginForm() {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            Sending magic link...
+            {t('productView.sendingMagicLink')}
           </div>
         ) : (
-          'Send Magic Link'
+          t('auth.sendMagicLink')
         )}
       </button>
 
@@ -106,8 +108,8 @@ export default function LoginForm() {
         {message}
       </div>
       <div className="text-gray-300 text-sm">
-        <p>Please check your email at <span className="font-medium">{email}</span> for the magic link.</p>
-        <p className="mt-2">Click the link to sign in automatically.</p>
+        <p>{t('productView.checkEmailAtForMagicLink', { email })}</p>
+        <p className="mt-2">{t('auth.clickLinkToSignIn')}</p>
       </div>
     </div>
   )

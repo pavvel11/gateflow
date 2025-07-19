@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { Product } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import ProductAccessView from './ProductAccessView';
+import FloatingToolbar from '@/components/FloatingToolbar';
 
 interface ProductViewProps {
   product: Product;
@@ -97,6 +98,9 @@ export default function ProductView({ product }: ProductViewProps) {
   if (authLoading || loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
+        {/* Unified Floating Toolbar */}
+        <FloatingToolbar position="top-right" />
+        
         <div className="max-w-4xl mx-auto p-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl">
           <div className="text-center">
             <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -109,13 +113,23 @@ export default function ProductView({ product }: ProductViewProps) {
 
   // Check if user has access
   if (accessData?.hasAccess) {
-    return <ProductAccessView product={product} userAccess={accessData.userAccess} />;
+    return (
+      <div>
+        {/* Unified Floating Toolbar */}
+        <FloatingToolbar position="top-right" />
+        
+        <ProductAccessView product={product} userAccess={accessData.userAccess} />
+      </div>
+    );
   }
 
   // Check if product is inactive
   if (!product.is_active) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
+        {/* Unified Floating Toolbar */}
+        <FloatingToolbar position="top-right" />
+        
         <div className="max-w-4xl mx-auto p-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl text-center">
           <div className="text-4xl mb-4">⚠️</div>
           <h2 className="text-2xl font-semibold text-white mb-2">{t('productNoLongerAvailable')}</h2>
@@ -134,6 +148,9 @@ export default function ProductView({ product }: ProductViewProps) {
   if (!temporal.isTemporallyAvailable) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
+        {/* Unified Floating Toolbar */}
+        <FloatingToolbar position="top-right" />
+        
         <div className="max-w-4xl mx-auto p-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl text-center">
           <div className="text-4xl mb-4">⏰</div>
           <h2 className="text-2xl font-semibold text-white mb-2">
@@ -152,5 +169,12 @@ export default function ProductView({ product }: ProductViewProps) {
     );
   }
 
-  return null;
+  return (
+    <div>
+      {/* Unified Floating Toolbar */}
+      <FloatingToolbar position="top-right" />
+      
+      {null}
+    </div>
+  );
 }

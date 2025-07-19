@@ -3,11 +3,14 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import LoginForm from '@/components/LoginForm'
+import FloatingLanguageSwitcher from '@/components/FloatingLanguageSwitcher'
 
 export default function LoginPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const t = useTranslations()
 
   useEffect(() => {
     if (!loading && user) {
@@ -24,7 +27,7 @@ export default function LoginPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
           </div>
-          <p className="text-white text-lg">Loading...</p>
+          <p className="text-white text-lg">{t('common.loading')}</p>
         </div>
       </div>
     )
@@ -36,6 +39,9 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+      {/* Floating Language Switcher */}
+      <FloatingLanguageSwitcher position="top-right" variant="discrete" />
+      
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
       
       <div className="relative z-10 w-full max-w-md">
@@ -46,7 +52,7 @@ export default function LoginPage() {
             </svg>
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">GateFlow Admin</h1>
-          <p className="text-gray-300">Sign in to manage your content protection</p>
+          <p className="text-gray-300">{t('auth.pleaseSignIn')}</p>
         </div>
         
         <LoginForm />

@@ -42,12 +42,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
   /**
-   * Fetches admin status with retry mechanism and exponential backoff
+   * Fetches admin status using cached function for better performance
    */
   const checkAdminStatus = async (userId: string, retries = 3): Promise<boolean> => {
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        const { data, error } = await supabase.rpc('is_admin', { user_id_param: userId })
+        // Use cached version for better performance when called repeatedly
+        const { data, error } = await supabase.rpc('is_admin_cached')
         
         if (error) {
           if (attempt === retries) {
@@ -165,7 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   /**
-   * Signs out the current user with proper error handling
+   * Signs out the current user with proper cache cleanup
    */
   const signOut = async () => {
     try {
@@ -177,6 +178,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setError('Failed to sign out')
         }
       }
+      
+      // Clear local state
+      setUser(null)
+      setIsAdmin(false)
       
       // Navigate to login after sign out
       router.replace('/login')

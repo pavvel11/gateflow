@@ -37,13 +37,16 @@
   "auth": {
     "login": "Zaloguj się",
     "logout": "Wyloguj się",
-    "email": "Email",
+    "email": "Adres email",
     "password": "Hasło",
     "signIn": "Zaloguj się",
     "signUp": "Zarejestruj się",
     "forgotPassword": "Zapomniałeś hasła?",
     "welcomeBack": "Witaj ponownie",
-    "pleaseSignIn": "Zaloguj się do swojego konta"
+    "pleaseSignIn": "Zaloguj się, aby zarządzać ochroną treści",
+    "sendMagicLink": "Wyślij magiczny link",
+    "checkEmailAt": "Sprawdź swój email na {email} w poszukiwaniu magicznego linku.",
+    "clickLinkToSignIn": "Kliknij link, aby zalogować się automatycznie."
   },
   "products": {
     "title": "Produkty",
@@ -144,6 +147,7 @@
       "gateflow": "GateFlow",
       "myProducts": "Moje produkty",
       "adminPanel": "Panel administratora",
+      "login": "Zaloguj się",
       "getStarted": "Rozpocznij"
     },
     "hero": {
@@ -228,6 +232,8 @@
     "sending": "Wysyłanie...",
     "sendMagicLink": "Wyślij magiczny link",
     "magicLinkExplanation": "Wyślemy Ci bezpieczny link logowania, aby uzyskać dostęp do produktu.",
+    "checkEmailAtForMagicLink": "Sprawdź swój email na {email} w poszukiwaniu magicznego linku.",
+    "clickLinkToAccess": "Kliknij link, aby automatycznie uzyskać dostęp do produktu.",
     "clickForPayment": "Kliknij poniżej, aby przejść do bezpiecznej strony płatności.",
     "processing": "Przetwarzanie...",
     "proceedToPayment": "Przejdź do płatności",

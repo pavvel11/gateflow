@@ -1,0 +1,26 @@
+{
+    "product": {
+        "getAccess": "Get Access",
+        "freeProduct": "Get your free product",
+        "purchaseAccess": "Purchase Access", 
+        "proceedToPayment": "Proceed to Payment",
+        "sendMagicLink": "Send Magic Link",
+        "sending": "Sending...",
+        "checkEmail": "Success! Check your email for the magic link.",
+        "redirectingToPayment": "Redirecting to payment...",
+        "emailPlaceholder": "name@example.com",
+        "emailLabel": "Email address",
+        "enterEmailBelow": "Enter your email below to receive a secure download link.",
+        "clickBelowToProceed": "Click below to proceed to a secure payment page."
+    },
+    "errors": {
+        "productSlugNotSpecified": "Product slug not specified in URL.",
+        "couldNotLoadProduct": "Could not load product",
+        "couldNotLoadLayout": "Could not load layout template",
+        "sendingMagicLink": "Sending magic link...",
+        "error": "Error"
+    },
+    "notifications": {
+        "languageChanged": "Language changed to"
+    }
+}

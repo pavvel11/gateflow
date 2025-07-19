@@ -1,0 +1,26 @@
+{
+    "product": {
+        "getAccess": "Uzyskaj Dostęp",
+        "freeProduct": "Odbierz darmowy produkt",
+        "purchaseAccess": "Zakup Dostęp",
+        "proceedToPayment": "Przejdź do Płatności",
+        "sendMagicLink": "Wyślij Magic Link",
+        "sending": "Wysyłanie...",
+        "checkEmail": "Sukces! Sprawdź swoją skrzynkę email, aby otrzymać magic link.",
+        "redirectingToPayment": "Przekierowanie do płatności...",
+        "emailPlaceholder": "nazwa@przykład.com",
+        "emailLabel": "Adres email",
+        "enterEmailBelow": "Wpisz swój email poniżej, aby otrzymać bezpieczny link do pobrania.",
+        "clickBelowToProceed": "Kliknij poniżej, aby przejść do bezpiecznej strony płatności."
+    },
+    "errors": {
+        "productSlugNotSpecified": "Slug produktu nie został określony w URL.",
+        "couldNotLoadProduct": "Nie można załadować produktu",
+        "couldNotLoadLayout": "Nie można załadować szablonu układu",
+        "sendingMagicLink": "Wysyłanie magic link...",
+        "error": "Błąd"
+    },
+    "notifications": {
+        "languageChanged": "Język zmieniony na"
+    }
+}

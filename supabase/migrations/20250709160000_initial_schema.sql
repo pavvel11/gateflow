@@ -389,6 +389,83 @@ CREATE POLICY "Allow users to read their own admin status" ON admin_users
   TO authenticated
   USING (auth.uid() = user_id);
 
+
+-- Check if user is admin (optimized)
+CREATE OR REPLACE FUNCTION is_admin(user_id_param UUID DEFAULT NULL)
+RETURNS BOOLEAN AS $$
+DECLARE
+    current_user_id UUID;
+    target_user_id UUID;
+BEGIN
+    -- Get current authenticated user (cache result)
+    current_user_id := auth.uid();
+    
+    -- Early return if no authenticated user
+    IF current_user_id IS NULL THEN
+        RETURN FALSE;
+    END IF;
+    
+    -- Use provided user_id or current authenticated user
+    target_user_id := COALESCE(user_id_param, current_user_id);
+    
+    -- Security: Only allow users to check their own admin status
+    -- Early return if trying to check another user's status
+    IF user_id_param IS NOT NULL AND user_id_param != current_user_id THEN
+        RETURN FALSE;
+    END IF;
+    
+    -- Direct EXISTS check with index usage
+    RETURN EXISTS (
+        SELECT 1 FROM admin_users 
+        WHERE user_id = target_user_id
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public;
+
+-- Create cached version for better performance when called repeatedly
+CREATE OR REPLACE FUNCTION is_admin_cached()
+RETURNS BOOLEAN AS $$
+BEGIN
+    -- Use connection-level cache for admin status
+    -- This avoids repeated DB lookups in the same connection
+    RETURN COALESCE(
+        current_setting('app.user_is_admin', true)::boolean,
+        (
+            SELECT CASE 
+                WHEN EXISTS(SELECT 1 FROM admin_users WHERE user_id = auth.uid())
+                THEN true 
+                ELSE false 
+            END
+        )
+    );
+EXCEPTION 
+    WHEN OTHERS THEN
+        -- Set cache and return result
+        PERFORM set_config('app.user_is_admin', 
+            CASE 
+                WHEN EXISTS(SELECT 1 FROM admin_users WHERE user_id = auth.uid())
+                THEN 'true' 
+                ELSE 'false' 
+            END, 
+            true
+        );
+        RETURN current_setting('app.user_is_admin')::boolean;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public;
+
+-- Create function to clear admin cache (useful for logout)
+CREATE OR REPLACE FUNCTION clear_admin_cache()
+RETURNS VOID AS $$
+BEGIN
+    -- Clear the connection-level cache
+    PERFORM set_config('app.user_is_admin', NULL, true);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public;
+
+
 -- Create function to make first user admin automatically (with race condition protection)
 CREATE OR REPLACE FUNCTION handle_first_user_admin()
 RETURNS TRIGGER
