@@ -5,6 +5,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { fetchClientSecret } from '@/lib/actions/checkout';
 import { useAuth } from '@/contexts/AuthContext';
 import { Product } from '@/types';
+import { embeddedCheckoutOptions } from '@/lib/stripe/config';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -29,7 +30,7 @@ export default function EmbeddedCheckoutComponent({ product, email }: EmbeddedCh
       <h2 className="text-xl font-semibold text-white mb-4">Complete Your Purchase</h2>
       <EmbeddedCheckoutProvider
         stripe={stripePromise}
-        options={{ fetchClientSecret: fetchClientSecretForProduct }}
+        options={embeddedCheckoutOptions(fetchClientSecretForProduct)}
       >
         <EmbeddedCheckout />
       </EmbeddedCheckoutProvider>

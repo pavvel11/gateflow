@@ -7,6 +7,7 @@ import {
 } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import type { Product } from '@/types';
+import { embeddedCheckoutOptions } from '@/lib/stripe/config';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -98,13 +99,10 @@ export default function SimpleEmbeddedPayment({
       
       <EmbeddedCheckoutProvider
         stripe={stripePromise}
-        options={{ 
-          fetchClientSecret,
-          onComplete: () => {
-            isEmbeddedCheckoutActive = false;
-            onSuccess?.();
-          }
-        }}
+        options={embeddedCheckoutOptions(fetchClientSecret, () => {
+          isEmbeddedCheckoutActive = false;
+          onSuccess?.();
+        })}
         key={`checkout-${product.id}`}
       >
         <EmbeddedCheckout />

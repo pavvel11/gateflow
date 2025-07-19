@@ -7,6 +7,7 @@ import {
 import { loadStripe } from '@stripe/stripe-js';
 import { useState, useEffect, useCallback } from 'react';
 import type { Product } from '@/types';
+import { embeddedCheckoutOptionsWithSecret } from '@/lib/stripe/config';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -119,12 +120,7 @@ export default function EmbeddedPaymentForm({
         
         <EmbeddedCheckoutProvider
           stripe={stripePromise}
-          options={{ 
-            clientSecret,
-            onComplete: () => {
-              onSuccess?.();
-            }
-          }}
+          options={embeddedCheckoutOptionsWithSecret(clientSecret, () => onSuccess?.())}
         >
           <EmbeddedCheckout />
         </EmbeddedCheckoutProvider>

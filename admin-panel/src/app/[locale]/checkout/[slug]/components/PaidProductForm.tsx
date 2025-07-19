@@ -8,6 +8,7 @@ import { formatPrice } from '@/lib/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { signOutAndRedirectToCheckout } from '@/lib/actions/checkout';
 import { useRouter } from 'next/navigation';
+import { embeddedCheckoutOptions } from '@/lib/stripe/config';
 
 // Create Stripe promise outside component to avoid recreation
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
@@ -177,7 +178,7 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
         {!error && !hasAccess && (
           <EmbeddedCheckoutProvider
             stripe={stripePromise}
-            options={{ fetchClientSecret }}
+            options={embeddedCheckoutOptions(fetchClientSecret)}
           >
             <EmbeddedCheckout />
           </EmbeddedCheckoutProvider>

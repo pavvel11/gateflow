@@ -1,13 +1,16 @@
 import { createClient } from '@/lib/supabase/server';
 import { getStripeServer } from '@/lib/stripe/server';
+import { ProductValidationService, type ValidatedProduct } from '@/lib/services/product-validation';
 import { 
   CheckoutError, 
   CheckoutErrorType, 
-  ProductForCheckout, 
   CheckoutSessionOptions,
   CreateCheckoutRequest 
 } from '@/types/checkout';
-import { CHECKOUT_CONFIG, CHECKOUT_ERRORS, HTTP_STATUS } from '@/lib/constants/checkout';
+import { STRIPE_CONFIG, CHECKOUT_ERRORS, HTTP_STATUS } from '@/lib/stripe/config';
+
+// Remove the local ProductForCheckout interface since we now use ValidatedProduct
+type ProductForCheckout = ValidatedProduct;
 
 /**
  * Professional checkout service with proper error handling and validation
@@ -15,6 +18,7 @@ import { CHECKOUT_CONFIG, CHECKOUT_ERRORS, HTTP_STATUS } from '@/lib/constants/c
 export class CheckoutService {
   private supabase!: Awaited<ReturnType<typeof createClient>>;
   private stripe: ReturnType<typeof getStripeServer>;
+  private validationService!: ProductValidationService;
 
   constructor() {
     this.stripe = getStripeServer();
@@ -25,6 +29,7 @@ export class CheckoutService {
    */
   async initialize(): Promise<void> {
     this.supabase = await createClient();
+    this.validationService = new ProductValidationService(this.supabase);
   }
 
   /**
@@ -39,7 +44,7 @@ export class CheckoutService {
       );
     }
 
-    if (request.email && !CHECKOUT_CONFIG.VALIDATION.EMAIL_REGEX.test(request.email)) {
+    if (request.email && !ProductValidationService.validateEmail(request.email)) {
       throw new CheckoutError(
         CheckoutErrorType.VALIDATION_ERROR,
         CHECKOUT_ERRORS.INVALID_EMAIL,
@@ -54,9 +59,9 @@ export class CheckoutService {
   async checkRateLimit(identifier: string): Promise<void> {
     const { data: rateLimitOk, error } = await this.supabase.rpc('check_rate_limit', {
       identifier_param: identifier,
-      action_type_param: CHECKOUT_CONFIG.RATE_LIMIT.ACTION_TYPE,
-      max_requests: CHECKOUT_CONFIG.RATE_LIMIT.MAX_REQUESTS,
-      window_minutes: CHECKOUT_CONFIG.RATE_LIMIT.WINDOW_MINUTES,
+      action_type_param: STRIPE_CONFIG.rate_limit.action_type,
+      max_requests: STRIPE_CONFIG.rate_limit.max_requests,
+      window_minutes: STRIPE_CONFIG.rate_limit.window_minutes,
     });
 
     if (error || !rateLimitOk) {
@@ -69,81 +74,65 @@ export class CheckoutService {
   }
 
   /**
-   * Get and validate product for checkout
+   * Get and validate product for checkout (now uses ProductValidationService)
    */
   async getProduct(productId: string): Promise<ProductForCheckout> {
-    const { data: product, error } = await this.supabase
-      .from('products')
-      .select('id, slug, name, description, price, currency, is_active, available_from, available_until')
-      .eq('id', productId)
-      .eq('is_active', true)
-      .single();
-
-    if (error || !product) {
-      throw new CheckoutError(
-        CheckoutErrorType.PRODUCT_NOT_FOUND,
-        CHECKOUT_ERRORS.PRODUCT_NOT_FOUND,
-        HTTP_STATUS.NOT_FOUND
-      );
-    }
-
-    // Validate product price
-    if (product.price < CHECKOUT_CONFIG.VALIDATION.MIN_PRICE) {
-      throw new CheckoutError(
-        CheckoutErrorType.VALIDATION_ERROR,
-        CHECKOUT_ERRORS.INVALID_PRICE,
-        HTTP_STATUS.BAD_REQUEST
-      );
-    }
-
-    return product;
-  }
-
-  /**
-   * Validate temporal availability of product
-   */
-  validateTemporalAvailability(product: ProductForCheckout): void {
-    const now = new Date();
-    const availableFrom = product.available_from ? new Date(product.available_from) : null;
-    const availableUntil = product.available_until ? new Date(product.available_until) : null;
-    
-    const isTemporallyAvailable = 
-      (!availableFrom || availableFrom <= now) && 
-      (!availableUntil || availableUntil > now);
-    
-    if (!isTemporallyAvailable) {
-      throw new CheckoutError(
-        CheckoutErrorType.PRODUCT_UNAVAILABLE,
-        CHECKOUT_ERRORS.PRODUCT_UNAVAILABLE,
-        HTTP_STATUS.BAD_REQUEST
-      );
-    }
-  }
-
-  /**
-   * Check if user already has access to prevent duplicate purchases
-   */
-  async checkExistingAccess(userId: string, productId: string): Promise<void> {
-    const { data: existingAccess } = await this.supabase
-      .from('user_product_access')
-      .select('access_expires_at')
-      .eq('user_id', userId)
-      .eq('product_id', productId)
-      .single();
-
-    if (existingAccess) {
-      const expiresAt = existingAccess.access_expires_at 
-        ? new Date(existingAccess.access_expires_at) 
-        : null;
-      const isExpired = expiresAt && expiresAt < new Date();
+    try {
+      return await this.validationService.validateProduct(productId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Product validation failed';
       
-      if (!isExpired) {
+      if (message.includes('not found') || message.includes('inactive')) {
         throw new CheckoutError(
-          CheckoutErrorType.DUPLICATE_ACCESS,
-          CHECKOUT_ERRORS.DUPLICATE_ACCESS,
+          CheckoutErrorType.PRODUCT_NOT_FOUND,
+          CHECKOUT_ERRORS.PRODUCT_NOT_FOUND,
+          HTTP_STATUS.NOT_FOUND
+        );
+      }
+      
+      if (message.includes('price')) {
+        throw new CheckoutError(
+          CheckoutErrorType.VALIDATION_ERROR,
+          CHECKOUT_ERRORS.INVALID_PRICE,
           HTTP_STATUS.BAD_REQUEST
         );
       }
+      
+      throw new CheckoutError(
+        CheckoutErrorType.VALIDATION_ERROR,
+        message,
+        HTTP_STATUS.BAD_REQUEST
+      );
+    }
+  }
+
+  /**
+   * Validate temporal availability of product (now uses ProductValidationService)
+   */
+  validateTemporalAvailability(product: ProductForCheckout): void {
+    try {
+      ProductValidationService.validateTemporalAvailability(product);
+    } catch (error) {
+      throw new CheckoutError(
+        CheckoutErrorType.PRODUCT_UNAVAILABLE,
+        error instanceof Error ? error.message : 'Product not available for purchase',
+        HTTP_STATUS.BAD_REQUEST
+      );
+    }
+  }
+
+    /**
+   * Check if user already has access to prevent duplicate purchases (now uses ProductValidationService)
+   */
+  async checkExistingAccess(userId: string, productId: string): Promise<void> {
+    const userAccess = await this.validationService.checkUserAccess(userId, productId);
+    
+    if (userAccess.hasAccess) {
+      throw new CheckoutError(
+        CheckoutErrorType.DUPLICATE_ACCESS,
+        CHECKOUT_ERRORS.DUPLICATE_ACCESS,
+        HTTP_STATUS.BAD_REQUEST
+      );
     }
   }
 
@@ -154,7 +143,8 @@ export class CheckoutService {
     try {
       // Prepare session configuration
       const sessionConfig: Record<string, unknown> = {
-        ui_mode: CHECKOUT_CONFIG.SESSION.UI_MODE,
+        ui_mode: STRIPE_CONFIG.session.ui_mode,
+        payment_method_types: [...STRIPE_CONFIG.payment_method_types],
         line_items: [
           {
             price_data: {
@@ -168,7 +158,7 @@ export class CheckoutService {
             quantity: 1,
           },
         ],
-        mode: CHECKOUT_CONFIG.SESSION.PAYMENT_MODE,
+        mode: STRIPE_CONFIG.session.payment_mode,
         return_url: options.returnUrl,
         // Set redirect_on_completion to 'always' for proper server-side verification
         redirect_on_completion: 'always',
@@ -177,8 +167,9 @@ export class CheckoutService {
           product_slug: options.product.slug,
           user_id: options.userId || '',
         },
-        expires_at: Math.floor(Date.now() / 1000) + (CHECKOUT_CONFIG.SESSION.EXPIRES_HOURS * 60 * 60),
-        automatic_tax: { enabled: false },
+        expires_at: Math.floor(Date.now() / 1000) + (STRIPE_CONFIG.session.expires_hours * 60 * 60),
+        automatic_tax: STRIPE_CONFIG.session.automatic_tax,
+        tax_id_collection: STRIPE_CONFIG.session.tax_id_collection,
         billing_address_collection: 'auto',
       };
 
@@ -186,6 +177,9 @@ export class CheckoutService {
       if (options.email && options.email.trim() !== '') {
         sessionConfig.customer_email = options.email;
       }
+
+      // Log session configuration for debugging
+      console.log('Creating Stripe session with config:', JSON.stringify(sessionConfig, null, 2));
 
       const session = await this.stripe.checkout.sessions.create(sessionConfig);
 
@@ -208,7 +202,7 @@ export class CheckoutService {
             amount: options.product.price,
             currency: options.product.currency,
             status: 'pending',
-            expires_at: new Date(Date.now() + (CHECKOUT_CONFIG.SESSION.EXPIRES_HOURS * 60 * 60 * 1000)).toISOString(),
+            expires_at: new Date(Date.now() + (STRIPE_CONFIG.session.expires_hours * 60 * 60 * 1000)).toISOString(),
             metadata: {
               product_slug: options.product.slug,
               customer_email: options.email
@@ -227,9 +221,12 @@ export class CheckoutService {
         throw error;
       }
       
+      // Log the actual Stripe error for debugging
+      console.error('Stripe session creation error:', error);
+      
       throw new CheckoutError(
         CheckoutErrorType.STRIPE_ERROR,
-        CHECKOUT_ERRORS.STRIPE_SESSION_FAILED,
+        `Failed to create checkout session: ${error instanceof Error ? error.message : 'Unknown error'}`,
         HTTP_STATUS.INTERNAL_SERVER_ERROR
       );
     }

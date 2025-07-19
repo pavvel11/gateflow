@@ -1,0 +1,42 @@
+# Stripe Configuration File
+# Copy this file to .stripe and customize for your environment
+# This file is loaded during build time and runtime
+
+# UI Theme Configuration
+STRIPE_THEME=night
+STRIPE_LABELS=floating
+
+# Payment Methods (comma-separated, ordered by preference)
+STRIPE_PAYMENT_METHODS=blik,p24,card
+
+# BLIK Configuration
+STRIPE_BLIK_SETUP_FUTURE_USAGE=off_session
+
+# Session Configuration  
+STRIPE_SESSION_UI_MODE=embedded
+STRIPE_SESSION_PAYMENT_MODE=payment
+STRIPE_SESSION_EXPIRES_HOURS=24
+STRIPE_SESSION_BILLING_ADDRESS_COLLECTION=auto
+STRIPE_SESSION_AUTOMATIC_TAX_ENABLED=true
+STRIPE_SESSION_TAX_ID_COLLECTION_ENABLED=true
+
+# Rate Limiting
+STRIPE_RATE_LIMIT_MAX_REQUESTS=10
+STRIPE_RATE_LIMIT_WINDOW_MINUTES=1
+STRIPE_RATE_LIMIT_ACTION_TYPE=checkout_creation
+
+# Validation
+STRIPE_VALIDATION_MIN_PRICE=0.01
+
+# Layout Options
+STRIPE_LAYOUTS_DEFAULT=tabs
+
+# Error Messages (customize for your language/brand)
+STRIPE_ERROR_PRODUCT_ID_REQUIRED=Product ID is required
+STRIPE_ERROR_INVALID_EMAIL=Invalid email format
+STRIPE_ERROR_PRODUCT_NOT_FOUND=Product not found or inactive
+STRIPE_ERROR_PRODUCT_UNAVAILABLE=Product not available for purchase
+STRIPE_ERROR_DUPLICATE_ACCESS=You already have access to this product
+STRIPE_ERROR_RATE_LIMIT_EXCEEDED=Too many checkout attempts. Please try again later.
+STRIPE_ERROR_STRIPE_SESSION_FAILED=Failed to create checkout session
+STRIPE_ERROR_INVALID_PRICE=Invalid product price

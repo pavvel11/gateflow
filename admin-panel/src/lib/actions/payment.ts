@@ -8,6 +8,8 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getStripeServer } from '@/lib/stripe/server';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limiting';
+import { ProductValidationService } from '@/lib/services/product-validation';
+import { STRIPE_CONFIG } from '@/lib/stripe/config';
 import type { 
   CreateCheckoutSessionRequest, 
   CreateCheckoutSessionResponse,
@@ -54,65 +56,20 @@ export async function createCheckoutSession(
   }
   
   // Validate email format for guests
-  if (!user && data.email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(data.email)) {
-      throw new Error('Please enter a valid email address');
-    }
+  if (!user && data.email && !ProductValidationService.validateEmail(data.email)) {
+    throw new Error('Please enter a valid email address');
   }
   
-  // Get product details with security validation
-  const { data: product, error: productError } = await supabase
-    .from('products')
-    .select('id, slug, name, description, price, currency, is_active, available_from, available_until')
-    .eq('id', data.productId)
-    .eq('is_active', true)
-    .single();
-  
-  if (productError || !product) {
-    throw new Error('Product not found or inactive');
-  }
-  
-  // Validate product price (must be > 0 for paid products)
-  if (product.price <= 0) {
-    throw new Error('Invalid product price');
-  }
-  
-  // Check temporal availability
-  const now = new Date();
-  const availableFrom = product.available_from ? new Date(product.available_from) : null;
-  const availableUntil = product.available_until ? new Date(product.available_until) : null;
-  
-  const isTemporallyAvailable = (!availableFrom || availableFrom <= now) && (!availableUntil || availableUntil > now);
-  
-  if (!isTemporallyAvailable) {
-    throw new Error('Product not available for purchase');
-  }
-  
-  // Check if user already has access (prevent duplicate purchases) - only for logged in users
-  if (user) {
-    const { data: existingAccess } = await supabase
-      .from('user_product_access')
-      .select('access_expires_at')
-      .eq('user_id', user.id)
-      .eq('product_id', product.id)
-      .single();
-    
-    if (existingAccess) {
-      const expiresAt = existingAccess.access_expires_at ? new Date(existingAccess.access_expires_at) : null;
-      const isExpired = expiresAt && expiresAt < now;
-      
-      if (!isExpired) {
-        throw new Error('You already have access to this product');
-      }
-    }
-  }
+  // Validate product and check user access
+  const validationService = new ProductValidationService(supabase);
+  const { product } = await validationService.validateForCheckout(data.productId, user);
   
   const stripe = getStripeServer();
   
   // Create secure Stripe checkout session
   const session = await stripe.checkout.sessions.create({
     customer_email: data.email || user?.email,
+    payment_method_types: [...STRIPE_CONFIG.payment_method_types],
     mode: 'payment',
     line_items: [
       {

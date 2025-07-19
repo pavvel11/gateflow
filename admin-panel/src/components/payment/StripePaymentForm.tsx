@@ -1,6 +1,3 @@
-// components/payment/StripePaymentForm.tsx
-// Secure Stripe payment form using React Stripe.js Elements
-
 'use client';
 
 import { useState } from 'react';
@@ -8,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { getStripe } from '@/lib/stripe/client';
 import { useToast } from '@/contexts/ToastContext';
+import { elementsOptions } from '@/lib/stripe/config';
 import type { Product } from '@/types';
 
 interface StripePaymentFormProps {
@@ -132,21 +130,7 @@ export default function StripePaymentForm({
 }: StripePaymentFormProps) {
   const stripePromise = getStripe();
 
-  const options = {
-    clientSecret,
-    appearance: {
-      theme: 'stripe' as const,
-      variables: {
-        colorPrimary: '#3b82f6',
-        colorBackground: '#ffffff',
-        colorText: '#374151',
-        colorDanger: '#ef4444',
-        fontFamily: 'Inter, system-ui, sans-serif',
-        spacingUnit: '4px',
-        borderRadius: '8px',
-      },
-    },
-  };
+  const options = elementsOptions(clientSecret);
 
   return (
     <div className="max-w-md mx-auto">

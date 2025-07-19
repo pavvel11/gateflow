@@ -7,6 +7,7 @@ import { Product } from '@/types';
 import { formatPrice } from '@/lib/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import { embeddedCheckoutOptionsWithSecret } from '@/lib/stripe/config';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -181,10 +182,7 @@ export default function PaidProductView({ product }: PaidProductViewProps) {
           <div className="w-1/2 pl-8">
             <EmbeddedCheckoutProvider
               stripe={stripePromise}
-              options={{
-                clientSecret,
-                onComplete: handlePaymentSuccess,
-              }}
+              options={embeddedCheckoutOptionsWithSecret(clientSecret, handlePaymentSuccess)}
             >
               <EmbeddedCheckout />
             </EmbeddedCheckoutProvider>

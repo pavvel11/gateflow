@@ -13,6 +13,18 @@ services:
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
       - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
       - ENABLE_MULTITENANT=${ENABLE_MULTITENANT:-false}
+      
+      # Stripe Configuration Override (optional)
+      # These override .stripe file settings
+      - STRIPE_THEME=${STRIPE_THEME:-night}
+      - STRIPE_LABELS=${STRIPE_LABELS:-floating}
+      - STRIPE_PAYMENT_METHODS=${STRIPE_PAYMENT_METHODS:-blik,p24,card}
+      - STRIPE_SESSION_AUTOMATIC_TAX_ENABLED=${STRIPE_SESSION_AUTOMATIC_TAX_ENABLED:-true}
+      - STRIPE_SESSION_TAX_ID_COLLECTION_ENABLED=${STRIPE_SESSION_TAX_ID_COLLECTION_ENABLED:-true}
+      
+      # Stripe Error Messages (optional localization)
+      - STRIPE_ERROR_PRODUCT_NOT_FOUND=${STRIPE_ERROR_PRODUCT_NOT_FOUND:-Product not found or inactive}
+      - STRIPE_ERROR_RATE_LIMIT_EXCEEDED=${STRIPE_ERROR_RATE_LIMIT_EXCEEDED:-Too many checkout attempts. Please try again later.}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]

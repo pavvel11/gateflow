@@ -1,7 +1,87 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from 'next-intl/plugin';
+import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
+
+/**
+ * Parse .stripe file content
+ */
+function parseStripeFile(content: string): Record<string, string> {
+  const config: Record<string, string> = {};
+  const lines = content.split('\n');
+  
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    
+    const equalIndex = trimmed.indexOf('=');
+    if (equalIndex === -1) continue;
+    
+    const key = trimmed.slice(0, equalIndex).trim();
+    let value = trimmed.slice(equalIndex + 1).trim();
+    
+    // Remove quotes
+    if ((value.startsWith('"') && value.endsWith('"')) || 
+        (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    
+    config[key] = value;
+  }
+  
+  return config;
+}
+
+/**
+ * Load Stripe configuration at build time
+ */
+function loadStripeEnvConfig(): Record<string, string> {
+  let fileConfig: Record<string, string> = {};
+  
+  // Load .stripe file if exists
+  const stripeFilePath = join(process.cwd(), '.stripe');
+  if (existsSync(stripeFilePath)) {
+    try {
+      const content = readFileSync(stripeFilePath, 'utf-8');
+      fileConfig = parseStripeFile(content);
+      console.log('✅ Loaded .stripe configuration file');
+    } catch (error) {
+      console.warn('⚠️ Failed to load .stripe file:', error);
+    }
+  }
+  
+  // Helper function with env override
+  const getConfig = (envKey: string, fileKey: string, defaultValue: string) => {
+    return process.env[envKey] || fileConfig[fileKey] || defaultValue;
+  };
+  
+  return {
+    NEXT_PUBLIC_STRIPE_THEME: getConfig('STRIPE_THEME', 'STRIPE_THEME', 'night'),
+    NEXT_PUBLIC_STRIPE_LABELS: getConfig('STRIPE_LABELS', 'STRIPE_LABELS', 'floating'),
+    NEXT_PUBLIC_STRIPE_PAYMENT_METHODS: getConfig('STRIPE_PAYMENT_METHODS', 'STRIPE_PAYMENT_METHODS', 'blik,p24,card'),
+    NEXT_PUBLIC_STRIPE_BLIK_SETUP_FUTURE_USAGE: getConfig('STRIPE_BLIK_SETUP_FUTURE_USAGE', 'STRIPE_BLIK_SETUP_FUTURE_USAGE', 'off_session'),
+    NEXT_PUBLIC_STRIPE_SESSION_UI_MODE: getConfig('STRIPE_SESSION_UI_MODE', 'STRIPE_SESSION_UI_MODE', 'embedded'),
+    NEXT_PUBLIC_STRIPE_SESSION_PAYMENT_MODE: getConfig('STRIPE_SESSION_PAYMENT_MODE', 'STRIPE_SESSION_PAYMENT_MODE', 'payment'),
+    NEXT_PUBLIC_STRIPE_SESSION_EXPIRES_HOURS: getConfig('STRIPE_SESSION_EXPIRES_HOURS', 'STRIPE_SESSION_EXPIRES_HOURS', '24'),
+    NEXT_PUBLIC_STRIPE_SESSION_BILLING_ADDRESS_COLLECTION: getConfig('STRIPE_SESSION_BILLING_ADDRESS_COLLECTION', 'STRIPE_SESSION_BILLING_ADDRESS_COLLECTION', 'auto'),
+    NEXT_PUBLIC_STRIPE_SESSION_AUTOMATIC_TAX_ENABLED: getConfig('STRIPE_SESSION_AUTOMATIC_TAX_ENABLED', 'STRIPE_SESSION_AUTOMATIC_TAX_ENABLED', 'true'),
+    NEXT_PUBLIC_STRIPE_SESSION_TAX_ID_COLLECTION_ENABLED: getConfig('STRIPE_SESSION_TAX_ID_COLLECTION_ENABLED', 'STRIPE_SESSION_TAX_ID_COLLECTION_ENABLED', 'true'),
+    NEXT_PUBLIC_STRIPE_RATE_LIMIT_MAX_REQUESTS: getConfig('STRIPE_RATE_LIMIT_MAX_REQUESTS', 'STRIPE_RATE_LIMIT_MAX_REQUESTS', '10'),
+    NEXT_PUBLIC_STRIPE_RATE_LIMIT_WINDOW_MINUTES: getConfig('STRIPE_RATE_LIMIT_WINDOW_MINUTES', 'STRIPE_RATE_LIMIT_WINDOW_MINUTES', '1'),
+    NEXT_PUBLIC_STRIPE_RATE_LIMIT_ACTION_TYPE: getConfig('STRIPE_RATE_LIMIT_ACTION_TYPE', 'STRIPE_RATE_LIMIT_ACTION_TYPE', 'checkout_creation'),
+    NEXT_PUBLIC_STRIPE_VALIDATION_MIN_PRICE: getConfig('STRIPE_VALIDATION_MIN_PRICE', 'STRIPE_VALIDATION_MIN_PRICE', '0.01'),
+    NEXT_PUBLIC_STRIPE_ERROR_PRODUCT_ID_REQUIRED: getConfig('STRIPE_ERROR_PRODUCT_ID_REQUIRED', 'STRIPE_ERROR_PRODUCT_ID_REQUIRED', 'Product ID is required'),
+    NEXT_PUBLIC_STRIPE_ERROR_INVALID_EMAIL: getConfig('STRIPE_ERROR_INVALID_EMAIL', 'STRIPE_ERROR_INVALID_EMAIL', 'Invalid email format'),
+    NEXT_PUBLIC_STRIPE_ERROR_PRODUCT_NOT_FOUND: getConfig('STRIPE_ERROR_PRODUCT_NOT_FOUND', 'STRIPE_ERROR_PRODUCT_NOT_FOUND', 'Product not found or inactive'),
+    NEXT_PUBLIC_STRIPE_ERROR_PRODUCT_UNAVAILABLE: getConfig('STRIPE_ERROR_PRODUCT_UNAVAILABLE', 'STRIPE_ERROR_PRODUCT_UNAVAILABLE', 'Product not available for purchase'),
+    NEXT_PUBLIC_STRIPE_ERROR_DUPLICATE_ACCESS: getConfig('STRIPE_ERROR_DUPLICATE_ACCESS', 'STRIPE_ERROR_DUPLICATE_ACCESS', 'You already have access to this product'),
+    NEXT_PUBLIC_STRIPE_ERROR_RATE_LIMIT_EXCEEDED: getConfig('STRIPE_ERROR_RATE_LIMIT_EXCEEDED', 'STRIPE_ERROR_RATE_LIMIT_EXCEEDED', 'Too many checkout attempts. Please try again later.'),
+    NEXT_PUBLIC_STRIPE_ERROR_STRIPE_SESSION_FAILED: getConfig('STRIPE_ERROR_STRIPE_SESSION_FAILED', 'STRIPE_ERROR_STRIPE_SESSION_FAILED', 'Failed to create checkout session'),
+    NEXT_PUBLIC_STRIPE_ERROR_INVALID_PRICE: getConfig('STRIPE_ERROR_INVALID_PRICE', 'STRIPE_ERROR_INVALID_PRICE', 'Invalid product price'),
+  };
+}
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -12,6 +92,7 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '2mb',
     },
   },
+  env: loadStripeEnvConfig(), // Inject Stripe config as environment variables
 };
 
 export default withNextIntl(nextConfig);

@@ -8,6 +8,7 @@ import { formatPrice } from '@/lib/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { CheckoutErrorType } from '@/types/checkout';
+import { embeddedCheckoutOptionsWithSecret } from '@/lib/stripe/config';
 
 // Create Stripe promise outside component to avoid recreation
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
@@ -164,10 +165,7 @@ export default function PaidProductViewProfessional({ product }: PaidProductView
           <EmbeddedCheckoutProvider
             key={`${clientSecret}-${checkoutKey}`} // Unique key for each checkout instance
             stripe={stripePromise}
-            options={{
-              clientSecret,
-              onComplete: handlePaymentSuccess,
-            }}
+            options={embeddedCheckoutOptionsWithSecret(clientSecret, handlePaymentSuccess)}
           >
             <EmbeddedCheckout />
           </EmbeddedCheckoutProvider>
