@@ -251,7 +251,16 @@
       "continueToPayment": "Continue to Payment",
       "cancel": "Cancel"
     },
-    "securedBy": "Secured by GateFlow"
+    "securedBy": "Secured by GateFlow",
+    "accessGrantedOn": "Access granted on:",
+    "expires": "Expires:",
+    "contentReady": "Your Content is Ready!",
+    "contentDescription": "This is where your product content would be displayed. You now have full access to:",
+    "allPremiumFeatures": "All premium features",
+    "exclusiveContent": "Exclusive content",
+    "prioritySupport": "Priority support",
+    "welcomeUser": "Welcome {userEmail}! Enjoy your purchase.",
+    "welcomeGuest": "Welcome Guest! Enjoy your purchase."
   },
   "secureAccess": {
     "loadingSecureContent": "Loading secure content...",
@@ -707,5 +716,30 @@
     "premiumSolutions": "Premium Solutions",
     "noProductsAvailable": "No Products Available",
     "noProductsMessage": "It looks like there are no products here at the moment. Check back later!"
+  },
+  "paymentStatus": {
+    "paymentSuccessful": "Payment Successful!",
+    "accessGranted": "Access Granted",
+    "paymentFailed": "Payment Failed",
+    "paymentExpired": "Payment Expired",
+    "paymentCompleteAccountRequired": "Payment Complete - Account Required",
+    "processingPayment": "Processing Payment",
+    "paymentProcessedSuccessfully": "Your payment has been processed successfully!",
+    "accessGrantedToProduct": "You now have access to {productName}",
+    "redirectingToProduct": "Redirecting to product...",
+    "pleaseWaitVerifying": "Please wait while we verify your payment with Stripe...",
+    "toAccessYourProduct": "To access your product:",
+    "step1CheckEmail": "1. Check your email inbox {email} and spam folder",
+    "step2ClickMagicLink": "2. Click the magic link in the email to log in",
+    "step3AutoRedirect": "3. You'll be automatically redirected to your product",
+    "didNotReceiveEmail": "Didn't receive the email? Check your spam folder or contact support.",
+    "logInToAccess": "Log In to Access",
+    "createAccount": "Create Account",
+    "purchaseSavedLinked": "Your purchase is saved and will be linked to your account",
+    "tryAgain": "Try Again",
+    "havingTrouble": "Having trouble?",
+    "contactSupport": "Contact support",
+    "startNewPayment": "Start New Payment",
+    "paymentSessionsExpire": "Payment sessions expire after 24 hours for security"
   }
 }

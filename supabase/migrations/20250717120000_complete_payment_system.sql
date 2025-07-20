@@ -276,7 +276,6 @@ DECLARE
   user_email_var TEXT;
   claimed_count INTEGER := 0;
   guest_purchase_record RECORD;
-  product_slug_var TEXT;
 BEGIN
   -- Get user's email
   SELECT email INTO user_email_var 
@@ -293,21 +292,18 @@ BEGIN
   -- Find and claim all unclaimed guest purchases for this email
   FOR guest_purchase_record IN
     SELECT *
-    FROM guest_purchases
+    FROM public.guest_purchases
     WHERE customer_email = user_email_var
       AND claimed_by_user_id IS NULL
   LOOP
     -- Update guest purchase to mark as claimed
-    UPDATE guest_purchases
+    UPDATE public.guest_purchases
     SET claimed_by_user_id = p_user_id,
         claimed_at = NOW()
     WHERE id = guest_purchase_record.id;
     
-    -- Get product slug for grant_product_access function
-    SELECT slug INTO product_slug_var FROM products WHERE id = guest_purchase_record.product_id;
-    
-    -- Grant access to the product
-    PERFORM grant_product_access(p_user_id, product_slug_var, NULL);
+    -- Grant access to the product using service role function
+    PERFORM public.grant_product_access_service_role(p_user_id, guest_purchase_record.product_id);
     
     claimed_count := claimed_count + 1;
   END LOOP;
@@ -318,7 +314,11 @@ BEGIN
     'message', 'Claimed ' || claimed_count || ' guest purchases'
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = 'public, auth';
+
+-- Note: User registration trigger is handled in the initial schema migration
+-- to avoid conflicts with the first_user_admin_trigger
 
 -- Get user's payment history
 CREATE OR REPLACE FUNCTION get_user_payment_history(
@@ -375,47 +375,3 @@ CREATE TRIGGER trigger_update_refunded_at
 COMMIT;
 
 
--- Create a service role function for granting product access
--- This function can only be called by Service Role for guest purchases
-CREATE OR REPLACE FUNCTION grant_product_access_service_role(
-    user_id_param UUID,
-    product_id_param UUID,
-    access_duration_days_param INTEGER DEFAULT NULL
-) RETURNS BOOLEAN AS $$
-DECLARE
-    product_auto_duration INTEGER;
-    expires_at TIMESTAMPTZ;
-    final_duration INTEGER;
-BEGIN
-    -- Get product auto-grant duration
-    SELECT auto_grant_duration_days INTO product_auto_duration
-    FROM products
-    WHERE id = product_id_param AND is_active = true;
-
-    -- If product doesn't exist, return false
-    IF product_auto_duration IS NULL THEN
-        RETURN FALSE;
-    END IF;
-
-    -- Determine final duration: explicit param > product auto-grant > null (permanent)
-    final_duration := COALESCE(access_duration_days_param, product_auto_duration);
-
-    -- Calculate expiration date if duration is provided
-    IF final_duration IS NOT NULL THEN
-        expires_at := NOW() + (final_duration || ' days')::INTERVAL;
-    END IF;
-
-    -- Insert access record (update if exists)
-    INSERT INTO user_product_access (user_id, product_id, access_duration_days, access_expires_at)
-    VALUES (user_id_param, product_id_param, final_duration, expires_at)
-    ON CONFLICT (user_id, product_id) DO UPDATE SET
-        access_granted_at = NOW(),
-        access_duration_days = EXCLUDED.access_duration_days,
-        access_expires_at = EXCLUDED.access_expires_at;
-
-    RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Grant execute permissions to the service role
-GRANT EXECUTE ON FUNCTION grant_product_access_service_role TO service_role;

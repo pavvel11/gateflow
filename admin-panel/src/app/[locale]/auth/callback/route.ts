@@ -1,6 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
-import { claimGuestPurchases } from '@/lib/actions/auth'
 import type { Session, AuthError } from '@supabase/supabase-js'
 
 /**
@@ -74,10 +73,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', requestUrl.origin))
   }
 
-  // Claim any guest purchases for this user's email
-  if (session?.user?.email && session?.user?.id) {
-      await claimGuestPurchases(session.user.email, session.user.id)
-  }
+  // Note: Guest purchases are now automatically claimed by database trigger
+  // when user registers/signs in for the first time
   
   // Check for custom redirect URL (for product access etc.)
   let redirectPath = '/dashboard' // default to dashboard

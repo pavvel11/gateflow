@@ -466,41 +466,135 @@ $$ LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public;
 
 
--- Create function to make first user admin automatically (with race condition protection)
-CREATE OR REPLACE FUNCTION handle_first_user_admin()
+-- Create function to handle all new user registration logic
+CREATE OR REPLACE FUNCTION handle_new_user_registration()
 RETURNS TRIGGER
-SET search_path = ''
+SET search_path = 'public, auth'
 AS $$
+DECLARE
+  claim_result JSON;
+  admin_count INTEGER;
 BEGIN
   -- Use advisory lock to prevent race condition
   -- Use consistent hash of function name to avoid conflicts
-  PERFORM pg_advisory_lock(hashtext('handle_first_user_admin'));
+  PERFORM pg_advisory_lock(hashtext('handle_new_user_registration'));
   
   BEGIN
-    -- Check if there are no existing admin users
-    IF NOT EXISTS (SELECT 1 FROM public.admin_users) THEN
+    -- 1. First User Admin: Check if there are no existing admin users and make first user admin
+    SELECT COUNT(*) INTO admin_count FROM public.admin_users;
+    
+    IF admin_count = 0 THEN
       -- Make this user an admin (bypass RLS with SECURITY DEFINER)
       INSERT INTO public.admin_users (user_id) VALUES (NEW.id);
+    ELSE
     END IF;
+    
+    -- 2. Guest Purchase Claims: Claim guest purchases for this user (if function exists)
+    -- This will be available after the payment system migration
+    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'claim_guest_purchases_for_user') THEN
+      SELECT public.claim_guest_purchases_for_user(NEW.id) INTO claim_result;
+      
+      -- Log the guest purchase claim result
+      IF claim_result->>'success' = 'true' AND (claim_result->>'claimed_count')::INTEGER > 0 THEN
+        INSERT INTO public.audit_log (
+          table_name, 
+          operation, 
+          new_values, 
+          user_id,
+          performed_at
+        ) VALUES (
+          'guest_purchases',
+          'UPDATE',
+          jsonb_build_object(
+            'user_id', NEW.id,
+            'email', NEW.email, 
+            'claimed_count', claim_result->>'claimed_count',
+            'message', claim_result->>'message'
+          ),
+          NEW.id,
+          NOW()
+        );
+      END IF;
+    END IF;
+    
+    -- 3. Audit Logging: Log registration event for security monitoring
+    INSERT INTO public.audit_log (
+      table_name, 
+      operation, 
+      new_values, 
+      user_id,
+      performed_at
+    ) VALUES (
+      'auth.users',
+      'INSERT',
+      jsonb_build_object('email', NEW.email, 'id', NEW.id),
+      NEW.id,
+      NOW()
+    );
+
   EXCEPTION
     WHEN OTHERS THEN
       -- Release lock on error
-      PERFORM pg_advisory_unlock(hashtext('handle_first_user_admin'));
+      PERFORM pg_advisory_unlock(hashtext('handle_new_user_registration'));
       RAISE;
   END;
   
   -- Release advisory lock
-  PERFORM pg_advisory_unlock(hashtext('handle_first_user_admin'));
+  PERFORM pg_advisory_unlock(hashtext('handle_new_user_registration'));
   
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create trigger to automatically make first user admin
-CREATE TRIGGER first_user_admin_trigger
+-- Create service role version of grant_product_access function
+-- This version is used by triggers and service role operations
+CREATE OR REPLACE FUNCTION grant_product_access_service_role(
+    user_id_param UUID,
+    product_id_param UUID
+) RETURNS BOOLEAN AS $$
+DECLARE
+    product_auto_duration INTEGER;
+    expires_at TIMESTAMPTZ := NULL;
+    final_duration INTEGER := NULL;
+BEGIN
+    -- Get product auto-grant duration
+    SELECT auto_grant_duration_days INTO product_auto_duration
+    FROM public.products
+    WHERE id = product_id_param AND is_active = true;
+
+    -- If product doesn't exist, return false
+    IF NOT FOUND THEN
+        RETURN FALSE;
+    END IF;
+
+    -- Set final duration
+    final_duration := product_auto_duration;
+
+    -- Calculate expiration date if duration is provided
+    IF final_duration IS NOT NULL THEN
+        expires_at := NOW() + (final_duration || ' days')::INTERVAL;
+    END IF;
+
+    -- Insert access record (update if exists)
+    INSERT INTO public.user_product_access (user_id, product_id, access_duration_days, access_expires_at)
+    VALUES (user_id_param, product_id_param, final_duration, expires_at)
+    ON CONFLICT (user_id, product_id) DO UPDATE SET
+        access_granted_at = NOW(),
+        access_duration_days = EXCLUDED.access_duration_days,
+        access_expires_at = EXCLUDED.access_expires_at;
+
+    RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Grant execute permissions to the service role
+GRANT EXECUTE ON FUNCTION grant_product_access_service_role TO service_role;
+
+-- Create trigger for comprehensive user registration handling
+CREATE TRIGGER user_registration_trigger
   AFTER INSERT ON auth.users
   FOR EACH ROW
-  EXECUTE FUNCTION handle_first_user_admin();
+  EXECUTE FUNCTION handle_new_user_registration();
 
 -- Create function to automatically update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()

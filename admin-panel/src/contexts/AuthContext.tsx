@@ -100,21 +100,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (!isMountedRef.current) return
           
           setIsAdmin(adminStatus)
-          
-          //! TODO: Change to hande in supabase trigger function
-          // Claim any guest purchases for this user
-          try {
-            const response = await fetch('/api/claim-guest-purchases', {
-              method: 'POST',
-              credentials: 'include',
-            })
-
-            if (response.ok) {
-              await response.json()
-            }
-          } catch {
-            // Don't block the authentication process if claiming fails
-          }
         } else {
           setIsAdmin(false)
         }

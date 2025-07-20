@@ -246,7 +246,16 @@
       "continueToPayment": "Kontynuuj do płatności",
       "cancel": "Anuluj"
     },
-    "securedBy": "Zabezpieczone przez GateFlow"
+    "securedBy": "Zabezpieczone przez GateFlow",
+    "accessGrantedOn": "Dostęp przyznany:",
+    "expires": "Wygasa:",
+    "contentReady": "Twoja zawartość jest gotowa!",
+    "contentDescription": "Tutaj będzie wyświetlana zawartość twojego produktu. Masz teraz pełny dostęp do:",
+    "allPremiumFeatures": "Wszystkich funkcji premium",
+    "exclusiveContent": "Ekskluzywnej zawartości",
+    "prioritySupport": "Priorytetowego wsparcia",
+    "welcomeUser": "Witaj {userEmail}! Ciesz się zakupem.",
+    "welcomeGuest": "Witaj Gościu! Ciesz się zakupem."
   },
   "secureAccess": {
     "loadingSecureContent": "Ładowanie bezpiecznej zawartości...",
@@ -702,5 +711,30 @@
     "premiumSolutions": "Rozwiązania premium",
     "noProductsAvailable": "Brak dostępnych produktów",
     "noProductsMessage": "Wygląda na to, że w tej chwili nie ma tutaj żadnych produktów. Sprawdź później!"
+  },
+  "paymentStatus": {
+    "paymentSuccessful": "Płatność zakończona sukcesem!",
+    "accessGranted": "Dostęp przyznany",
+    "paymentFailed": "Płatność nieudana",
+    "paymentExpired": "Płatność wygasła",
+    "paymentCompleteAccountRequired": "Płatność zakończona - wymagane konto",
+    "processingPayment": "Przetwarzanie płatności",
+    "paymentProcessedSuccessfully": "Twoja płatność została przetworzona pomyślnie!",
+    "accessGrantedToProduct": "Masz teraz dostęp do {productName}",
+    "redirectingToProduct": "Przekierowywanie do produktu...",
+    "pleaseWaitVerifying": "Proszę czekać, weryfikujemy twoją płatność z Stripe...",
+    "toAccessYourProduct": "Aby uzyskać dostęp do produktu:",
+    "step1CheckEmail": "1. Sprawdź swoją skrzynkę e-mail {email} i folder spam",
+    "step2ClickMagicLink": "2. Kliknij magiczny link w e-mailu, aby się zalogować",
+    "step3AutoRedirect": "3. Zostaniesz automatycznie przekierowany do produktu",
+    "didNotReceiveEmail": "Nie otrzymałeś e-maila? Sprawdź folder spam lub skontaktuj się z pomocą techniczną.",
+    "logInToAccess": "Zaloguj się, aby uzyskać dostęp",
+    "createAccount": "Utwórz konto",
+    "purchaseSavedLinked": "Twój zakup jest zapisany i zostanie połączony z twoim kontem",
+    "tryAgain": "Spróbuj ponownie",
+    "havingTrouble": "Masz problemy?",
+    "contactSupport": "Skontaktuj się z pomocą techniczną",
+    "startNewPayment": "Rozpocznij nową płatność",
+    "paymentSessionsExpire": "Sesje płatności wygasają po 24 godzinach ze względów bezpieczeństwa"
   }
 }

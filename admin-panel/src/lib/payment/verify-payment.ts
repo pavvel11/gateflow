@@ -261,6 +261,7 @@ export async function verifyPaymentSession(
             });
 
             if (error) {
+              console.error('Failed to grant access to existing user:', error);
               return {
                 ...baseResponse,
                 access_granted: false,
@@ -268,6 +269,7 @@ export async function verifyPaymentSession(
               };
             }
 
+            console.log('Granting access to existing user scenario - sending magic link');
             return {
               ...baseResponse,
               access_granted: true,
@@ -311,6 +313,7 @@ export async function verifyPaymentSession(
             };
           }
 
+          console.log('Guest purchase scenario - sending magic link');
           return {
             ...baseResponse,
             access_granted: false,

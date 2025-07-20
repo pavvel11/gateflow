@@ -46,6 +46,7 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
     if (isStripePayment) {
       // Handle paid product with Stripe session using direct function call
       const result = await verifyPaymentSession(session_id, user);
+      console.log('Payment verification result:', result);
 
       if (result.status === 'expired') {
         paymentStatus = 'expired';

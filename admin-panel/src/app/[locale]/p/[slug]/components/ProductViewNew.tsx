@@ -118,7 +118,7 @@ export default function ProductView({ product }: ProductViewProps) {
         {/* Unified Floating Toolbar */}
         <FloatingToolbar position="top-right" />
         
-        <ProductAccessView product={product} userAccess={accessData.userAccess} />
+        <ProductAccessView product={product} />
       </div>
     );
   }
