@@ -32,17 +32,6 @@ CREATE TABLE IF NOT EXISTS admin_actions (
 -- PAYMENT TRACKING TABLES
 -- =============================================================================
 
--- Create webhook_events table for idempotency and audit trail
-CREATE TABLE IF NOT EXISTS webhook_events (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  event_id TEXT UNIQUE NOT NULL, -- Stripe event ID
-  provider_type TEXT NOT NULL DEFAULT 'stripe',
-  event_type TEXT NOT NULL,
-  event_data JSONB NOT NULL,
-  processed_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
-);
-
 -- Create payment_transactions table for completed payments
 CREATE TABLE IF NOT EXISTS payment_transactions (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
@@ -75,7 +64,6 @@ CREATE TABLE IF NOT EXISTS guest_purchases (
   transaction_amount NUMERIC NOT NULL, -- Amount in cents (e.g., 1000 = $10.00)
   session_id TEXT NOT NULL, -- Reference to Stripe session
   claimed_by_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL, -- When user creates account and claims
-  access_expires_at TIMESTAMPTZ, -- Copy from product settings
   claimed_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   UNIQUE (session_id) -- One purchase per session (session_id is unique per transaction)
@@ -97,24 +85,10 @@ CREATE TABLE IF NOT EXISTS rate_limits (
 );
 
 -- =============================================================================
--- PRODUCT ENHANCEMENTS
--- =============================================================================
-
--- Add stripe_price_id to products table if not exists
-DO $$ 
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                   WHERE table_name = 'products' AND column_name = 'stripe_price_id') THEN
-        ALTER TABLE products ADD COLUMN stripe_price_id TEXT;
-    END IF;
-END $$;
-
--- =============================================================================
 -- INDEXES FOR PERFORMANCE
 -- =============================================================================
 
 -- Payment system indexes
-CREATE INDEX IF NOT EXISTS idx_webhook_events_event_id ON webhook_events(event_id);
 CREATE INDEX IF NOT EXISTS idx_payment_transactions_user_id ON payment_transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_payment_transactions_product_id ON payment_transactions(product_id);
 CREATE INDEX IF NOT EXISTS idx_payment_transactions_customer_email ON payment_transactions(customer_email);
@@ -132,6 +106,7 @@ CREATE INDEX IF NOT EXISTS idx_admin_actions_target ON admin_actions(target_type
 CREATE INDEX IF NOT EXISTS idx_guest_purchases_customer_email ON guest_purchases(customer_email);
 CREATE INDEX IF NOT EXISTS idx_guest_purchases_product_id ON guest_purchases(product_id);
 CREATE INDEX IF NOT EXISTS idx_guest_purchases_claimed_by_user_id ON guest_purchases(claimed_by_user_id);
+CREATE INDEX IF NOT EXISTS idx_guest_purchases_session_id ON guest_purchases(session_id);
 
 -- Security indexes
 CREATE INDEX IF NOT EXISTS idx_rate_limits_identifier_action ON rate_limits(identifier, action_type);
@@ -145,7 +120,6 @@ CREATE INDEX IF NOT EXISTS idx_rate_limits_window_start ON rate_limits(window_st
 ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admin_actions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payment_transactions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE webhook_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guest_purchases ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rate_limits ENABLE ROW LEVEL SECURITY;
 
@@ -196,10 +170,6 @@ CREATE POLICY "Admins can update payment transactions for refunds" ON payment_tr
             WHERE admin_users.user_id = auth.uid()
         )
     );
-
--- Webhook events policies
-CREATE POLICY "Service role full access webhook events" ON webhook_events
-    FOR ALL USING (auth.role() = 'service_role');
 
 -- Guest purchases policies
 CREATE POLICY "Users can view own claimed guest purchases" ON guest_purchases
@@ -267,6 +237,257 @@ BEGIN
   RETURN TRUE;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
+-- Create service role version of grant_product_access function
+-- This version is used by triggers and service role operations
+-- Enhanced logic: extends existing access or removes limits based on product configuration
+-- Optimized: Single query with UPSERT and conditional logic
+CREATE OR REPLACE FUNCTION grant_product_access_service_role(
+    user_id_param UUID,
+    product_id_param UUID
+) RETURNS BOOLEAN AS $$
+DECLARE
+    product_auto_duration INTEGER;
+    existing_expires_at TIMESTAMPTZ;
+    access_record_exists BOOLEAN := FALSE;
+    new_expires_at TIMESTAMPTZ := NULL;
+    final_duration INTEGER := NULL;
+BEGIN
+    -- Single query to get product info and existing access in one go
+    SELECT 
+        p.auto_grant_duration_days,
+        upa.access_expires_at,
+        (upa.user_id IS NOT NULL) -- Check if access record exists
+    INTO 
+        product_auto_duration,
+        existing_expires_at,
+        access_record_exists
+    FROM public.products p
+    LEFT JOIN public.user_product_access upa ON (
+        upa.user_id = user_id_param AND 
+        upa.product_id = product_id_param
+    )
+    WHERE p.id = product_id_param AND p.is_active = true;
+
+    -- If product doesn't exist, return false
+    IF NOT FOUND THEN
+        RETURN FALSE;
+    END IF;
+
+    -- Calculate new expiration based on optimized business logic
+    IF access_record_exists THEN
+        -- User has access record
+        IF existing_expires_at IS NULL THEN
+            -- User has PERMANENT access - NEVER downgrade
+            new_expires_at := NULL;
+            final_duration := NULL;
+        ELSIF existing_expires_at > NOW() THEN
+            -- User has active LIMITED access
+            IF product_auto_duration IS NOT NULL THEN
+                -- Extend existing access
+                new_expires_at := existing_expires_at + (product_auto_duration || ' days')::INTERVAL;
+                final_duration := product_auto_duration;
+            ELSE
+                -- Upgrade to permanent
+                new_expires_at := NULL;
+                final_duration := NULL;
+            END IF;
+        ELSE
+            -- User's access expired - standard logic
+            IF product_auto_duration IS NOT NULL THEN
+                new_expires_at := NOW() + (product_auto_duration || ' days')::INTERVAL;
+                final_duration := product_auto_duration;
+            ELSE
+                new_expires_at := NULL;
+                final_duration := NULL;
+            END IF;
+        END IF;
+    ELSE
+        -- No access record - create new with standard logic
+        IF product_auto_duration IS NOT NULL THEN
+            new_expires_at := NOW() + (product_auto_duration || ' days')::INTERVAL;
+            final_duration := product_auto_duration;
+        ELSE
+            new_expires_at := NULL;
+            final_duration := NULL;
+        END IF;
+    END IF;
+
+    -- Single UPSERT operation with conditional update logic
+    INSERT INTO public.user_product_access (
+        user_id, 
+        product_id, 
+        access_duration_days, 
+        access_expires_at,
+        access_granted_at
+    )
+    VALUES (
+        user_id_param, 
+        product_id_param, 
+        final_duration, 
+        new_expires_at,
+        NOW()
+    )
+    ON CONFLICT (user_id, product_id) DO UPDATE SET
+        access_granted_at = NOW(),
+        access_duration_days = EXCLUDED.access_duration_days,
+        access_expires_at = CASE
+            -- Never downgrade from permanent to limited
+            WHEN user_product_access.access_expires_at IS NULL THEN NULL
+            -- Otherwise use calculated value
+            ELSE EXCLUDED.access_expires_at
+        END;
+
+    RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Grant execute permissions to the service role
+GRANT EXECUTE ON FUNCTION grant_product_access_service_role TO service_role;
+
+-- Create optimized payment processing function
+-- Reuses existing grant_product_access_service_role for consistency
+CREATE OR REPLACE FUNCTION process_stripe_payment_completion(
+    session_id_param TEXT,
+    product_id_param UUID,
+    customer_email_param TEXT,
+    amount_total NUMERIC,
+    currency_param TEXT,
+    stripe_payment_intent_id TEXT DEFAULT NULL,
+    user_id_param UUID DEFAULT NULL
+) RETURNS JSONB AS $$
+DECLARE
+    current_user_id UUID;
+    product_record RECORD;
+    existing_user_id UUID;
+    access_expires_at TIMESTAMPTZ := NULL;
+    scenario TEXT;
+    result JSONB;
+    grant_success BOOLEAN;
+BEGIN
+    -- Use passed user_id parameter instead of auth.uid() for service role compatibility
+    current_user_id := user_id_param;
+
+    -- Validate required parameters
+    IF session_id_param IS NULL OR product_id_param IS NULL OR customer_email_param IS NULL THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Missing required parameters');
+    END IF;
+
+    -- Single query to get product details and check if transaction exists
+    SELECT 
+        p.id, p.name, p.slug, p.auto_grant_duration_days, p.price, p.currency as product_currency,
+        EXISTS(SELECT 1 FROM public.payment_transactions pt WHERE pt.session_id = session_id_param) as transaction_exists
+    INTO product_record
+    FROM public.products p
+    WHERE p.id = product_id_param AND p.is_active = true;
+
+    -- Check if product exists
+    IF product_record.id IS NULL THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Product not found or inactive');
+    END IF;
+
+    -- Calculate access expiry once (for response)
+    IF product_record.auto_grant_duration_days IS NOT NULL THEN
+        access_expires_at := NOW() + (product_record.auto_grant_duration_days || ' days')::INTERVAL;
+    END IF;
+
+    -- Insert payment transaction if it doesn't exist (idempotent)
+    IF NOT product_record.transaction_exists THEN
+        INSERT INTO public.payment_transactions (
+            session_id, user_id, product_id, customer_email, amount, currency, 
+            stripe_payment_intent_id, status, metadata
+        ) VALUES (
+            session_id_param, current_user_id, product_id_param, customer_email_param, amount_total, currency_param,
+            stripe_payment_intent_id, 'completed',
+            jsonb_build_object(
+                'stripe_session_id', session_id_param,
+                'product_slug', product_record.slug,
+                'amount_display', (amount_total / 100.0)::text || ' ' || upper(currency_param)
+            )
+        );
+    END IF;
+
+    -- SCENARIO 1: User is logged in
+    IF current_user_id IS NOT NULL THEN
+        scenario := 'logged_in_user';
+        
+        -- Use existing service role function to grant access
+        SELECT grant_product_access_service_role(current_user_id, product_id_param) INTO grant_success;
+        
+        IF NOT grant_success THEN
+            RETURN jsonb_build_object('success', false, 'error', 'Failed to grant access to logged-in user');
+        END IF;
+
+        RETURN jsonb_build_object(
+            'success', true,
+            'access_granted', true,
+            'already_had_access', false, -- Service role function handles this internally
+            'scenario', scenario,
+            'access_expires_at', access_expires_at,
+            'requires_login', false,
+            'send_magic_link', false,
+            'customer_email', customer_email_param
+        );
+    END IF;
+
+    -- SCENARIO 2 & 3: No current user - single query to check if email exists
+    SELECT id INTO existing_user_id FROM auth.users WHERE email = customer_email_param;
+
+    IF existing_user_id IS NOT NULL THEN
+        -- SCENARIO 2: Email exists - grant access to that user using service role function
+        scenario := 'existing_user_email';
+        
+        SELECT grant_product_access_service_role(existing_user_id, product_id_param) INTO grant_success;
+        
+        IF NOT grant_success THEN
+            RETURN jsonb_build_object('success', false, 'error', 'Failed to grant access to existing user');
+        END IF;
+
+        result := jsonb_build_object(
+            'success', true,
+            'access_granted', true,
+            'already_had_access', false,
+            'scenario', scenario,
+            'access_expires_at', access_expires_at,
+            'requires_login', true,
+            'send_magic_link', true,
+            'customer_email', customer_email_param
+        );
+    ELSE
+        -- SCENARIO 3: Email not in database - save as guest purchase
+        scenario := 'guest_purchase';
+        
+        INSERT INTO public.guest_purchases (customer_email, product_id, session_id, transaction_amount)
+        VALUES (customer_email_param, product_id_param, session_id_param, amount_total)
+        ON CONFLICT (session_id) DO NOTHING;
+
+        result := jsonb_build_object(
+            'success', true,
+            'access_granted', false,
+            'already_had_access', false,
+            'scenario', scenario,
+            'access_expires_at', access_expires_at,
+            'requires_login', true,
+            'send_magic_link', true,
+            'is_guest_purchase', true,
+            'customer_email', customer_email_param
+        );
+    END IF;
+
+    RETURN result;
+
+EXCEPTION
+    WHEN OTHERS THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', 'Database error during payment processing: ' || SQLERRM
+        );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Grant execute permissions to the service role
+GRANT EXECUTE ON FUNCTION process_stripe_payment_completion TO service_role;
 
 -- Function to claim guest purchases when user logs in
 CREATE OR REPLACE FUNCTION claim_guest_purchases_for_user(

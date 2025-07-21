@@ -19,6 +19,7 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
   
   // Get authenticated user (optional for guest purchases)
   const { data: { user } } = await supabase.auth.getUser();
+  console.log('Payment status page - user:', user ? { id: user.id, email: user.email } : null);
   
   // For free products, user must be logged in
   if (!isStripePayment && !user) {
@@ -46,7 +47,14 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
     if (isStripePayment) {
       // Handle paid product with Stripe session using direct function call
       const result = await verifyPaymentSession(session_id, user);
-      console.log('Payment verification result:', result);
+      console.log('Payment verification result:', {
+        scenario: result.scenario,
+        access_granted: result.access_granted,
+        send_magic_link: result.send_magic_link,
+        requires_login: result.requires_login,
+        is_guest_purchase: result.is_guest_purchase,
+        user_id: user?.id || 'null'
+      });
 
       if (result.status === 'expired') {
         paymentStatus = 'expired';

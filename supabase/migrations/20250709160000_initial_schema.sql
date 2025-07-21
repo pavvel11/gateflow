@@ -49,22 +49,6 @@ CREATE TABLE IF NOT EXISTS user_product_access (
   UNIQUE (user_id, product_id) -- Ensure a user can only have one access entry per product
 );
 
--- Create view for easy access checking by slug
-CREATE OR REPLACE VIEW user_product_access_by_slug AS
-SELECT 
-    upa.id,
-    upa.user_id,
-    upa.product_id,
-    p.slug as product_slug,
-    p.name as product_name,
-    p.price as product_price,
-    p.currency as product_currency,
-    upa.created_at,
-    upa.tenant_id
-FROM user_product_access upa
-JOIN products p ON upa.product_id = p.id
-WHERE p.is_active = true;
-
 -- Create a view for user access statistics
 CREATE OR REPLACE VIEW user_access_stats AS
 SELECT 
@@ -316,6 +300,9 @@ CREATE INDEX IF NOT EXISTS idx_admin_users_user_id ON admin_users(user_id);
 CREATE INDEX IF NOT EXISTS idx_products_tenant_id ON products(tenant_id) WHERE tenant_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_user_product_access_tenant_id ON user_product_access(tenant_id) WHERE tenant_id IS NOT NULL;
 
+-- Optimization indexes for user access
+CREATE INDEX IF NOT EXISTS idx_user_product_access_expires_at ON user_product_access(access_expires_at) WHERE access_expires_at IS NOT NULL;
+
 
 
 -- Enable Row Level Security
@@ -546,50 +533,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create service role version of grant_product_access function
--- This version is used by triggers and service role operations
-CREATE OR REPLACE FUNCTION grant_product_access_service_role(
-    user_id_param UUID,
-    product_id_param UUID
-) RETURNS BOOLEAN AS $$
-DECLARE
-    product_auto_duration INTEGER;
-    expires_at TIMESTAMPTZ := NULL;
-    final_duration INTEGER := NULL;
-BEGIN
-    -- Get product auto-grant duration
-    SELECT auto_grant_duration_days INTO product_auto_duration
-    FROM public.products
-    WHERE id = product_id_param AND is_active = true;
-
-    -- If product doesn't exist, return false
-    IF NOT FOUND THEN
-        RETURN FALSE;
-    END IF;
-
-    -- Set final duration
-    final_duration := product_auto_duration;
-
-    -- Calculate expiration date if duration is provided
-    IF final_duration IS NOT NULL THEN
-        expires_at := NOW() + (final_duration || ' days')::INTERVAL;
-    END IF;
-
-    -- Insert access record (update if exists)
-    INSERT INTO public.user_product_access (user_id, product_id, access_duration_days, access_expires_at)
-    VALUES (user_id_param, product_id_param, final_duration, expires_at)
-    ON CONFLICT (user_id, product_id) DO UPDATE SET
-        access_granted_at = NOW(),
-        access_duration_days = EXCLUDED.access_duration_days,
-        access_expires_at = EXCLUDED.access_expires_at;
-
-    RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Grant execute permissions to the service role
-GRANT EXECUTE ON FUNCTION grant_product_access_service_role TO service_role;
-
 -- Create trigger for comprehensive user registration handling
 CREATE TRIGGER user_registration_trigger
   AFTER INSERT ON auth.users
@@ -645,114 +588,3 @@ CREATE TRIGGER audit_user_product_access
 
 COMMIT;
 
-
--- Create function to grant product access by slug
-CREATE OR REPLACE FUNCTION grant_product_access(
-    user_id_param UUID,
-    product_slug_param TEXT,
-    access_duration_days_param INTEGER DEFAULT NULL
-) RETURNS BOOLEAN AS $$
-DECLARE
-    product_id_var UUID;
-    product_auto_duration INTEGER;
-    expires_at TIMESTAMPTZ;
-    final_duration INTEGER;
-    current_user_id UUID;
-BEGIN
-    -- SECURITY: Get current authenticated user
-    current_user_id := auth.uid();
-    
-    -- SECURITY: Only allow granting access to the authenticated user
-    IF current_user_id IS NULL THEN
-        RAISE EXCEPTION 'Authentication required';
-    END IF;
-    
-    -- SECURITY: Can only grant access to yourself
-    IF current_user_id != user_id_param THEN
-        RAISE EXCEPTION 'Cannot grant access to other users';
-    END IF;
-
-    -- Find product ID by slug and get auto-grant duration
-    SELECT id, auto_grant_duration_days INTO product_id_var, product_auto_duration
-    FROM products
-    WHERE slug = product_slug_param AND is_active = true;
-
-    -- If product doesn't exist, return false
-    IF product_id_var IS NULL THEN
-        RETURN FALSE;
-    END IF;
-
-    -- Determine final duration: explicit param > product auto-grant > null (permanent)
-    final_duration := COALESCE(access_duration_days_param, product_auto_duration);
-
-    -- Calculate expiration date if duration is provided
-    IF final_duration IS NOT NULL THEN
-        expires_at := NOW() + (final_duration || ' days')::INTERVAL;
-    END IF;
-
-    -- Insert access record (update if exists)
-    INSERT INTO user_product_access (user_id, product_id, access_duration_days, access_expires_at)
-    VALUES (current_user_id, product_id_var, final_duration, expires_at)
-    ON CONFLICT (user_id, product_id) DO UPDATE SET
-        access_granted_at = NOW(),
-        access_duration_days = EXCLUDED.access_duration_days,
-        access_expires_at = EXCLUDED.access_expires_at;
-
-    RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Overloaded version that accepts product_id directly
-CREATE OR REPLACE FUNCTION grant_product_access(
-    user_id_param UUID,
-    product_id_param UUID,
-    access_duration_days_param INTEGER DEFAULT NULL
-) RETURNS BOOLEAN AS $$
-DECLARE
-    product_auto_duration INTEGER;
-    expires_at TIMESTAMPTZ;
-    final_duration INTEGER;
-    current_user_id UUID;
-BEGIN
-    -- SECURITY: Get current authenticated user
-    current_user_id := auth.uid();
-    
-    -- SECURITY: Only allow granting access to the authenticated user
-    IF current_user_id IS NULL THEN
-        RAISE EXCEPTION 'Authentication required';
-    END IF;
-    
-    -- SECURITY: Can only grant access to yourself
-    IF current_user_id != user_id_param THEN
-        RAISE EXCEPTION 'Cannot grant access to other users';
-    END IF;
-
-    -- Get product auto-grant duration
-    SELECT auto_grant_duration_days INTO product_auto_duration
-    FROM products
-    WHERE id = product_id_param AND is_active = true;
-
-    -- If product doesn't exist, return false
-    IF product_auto_duration IS NULL THEN
-        RETURN FALSE;
-    END IF;
-
-    -- Determine final duration: explicit param > product auto-grant > null (permanent)
-    final_duration := COALESCE(access_duration_days_param, product_auto_duration);
-
-    -- Calculate expiration date if duration is provided
-    IF final_duration IS NOT NULL THEN
-        expires_at := NOW() + (final_duration || ' days')::INTERVAL;
-    END IF;
-
-    -- Insert access record (update if exists)
-    INSERT INTO user_product_access (user_id, product_id, access_duration_days, access_expires_at)
-    VALUES (current_user_id, product_id_param, final_duration, expires_at)
-    ON CONFLICT (user_id, product_id) DO UPDATE SET
-        access_granted_at = NOW(),
-        access_duration_days = EXCLUDED.access_duration_days,
-        access_expires_at = EXCLUDED.access_expires_at;
-
-    RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;

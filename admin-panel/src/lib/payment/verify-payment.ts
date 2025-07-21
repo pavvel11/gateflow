@@ -6,7 +6,6 @@
  * Only use in Server Components and API Routes.
  */
 
-import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getStripeServer } from '@/lib/stripe/server';
 import type { User } from '@supabase/supabase-js';
@@ -60,7 +59,6 @@ export async function verifyPaymentSession(
     };
   }
 
-  const supabase = await createClient();
   const stripe = getStripeServer();
   
   // Create Service Role client for secure operations
@@ -113,218 +111,62 @@ export async function verifyPaymentSession(
       expires_at: session.expires_at,
     };
 
-    // If payment is complete, save transaction and handle access
+    // If payment is complete, delegate to database function
     if (session.status === 'complete' && session.payment_status === 'paid') {
       const productId = session.metadata?.product_id;
-      const productSlug = session.metadata?.product_slug;
+      const customerEmail = session.customer_details?.email || session.customer_email;
       
-      if (productId && productSlug) {
+      if (productId && customerEmail) {
         try {
-          // Get product details
-          const { data: product, error: productError } = await supabase
-            .from('products')
-            .select('id, name, slug, auto_grant_duration_days, price, currency')
-            .eq('id', productId)
-            .single();
+          // Extract payment intent ID
+          const stripePaymentIntentId = typeof session.payment_intent === 'object' 
+            ? session.payment_intent?.id 
+            : session.payment_intent;
 
-          if (productError || !product) {
-            return {
-              ...baseResponse,
-              access_granted: false,
-              error: 'Product not found'
-            };
-          }
-
-          // STEP 1: Save payment transaction for audit trail (SECURE - uses Service Role)
-          const transactionAmount = session.amount_total || 0;
-          const customerEmail = session.customer_details?.email || session.customer_email;
-          
-          if (!customerEmail) {
-            return {
-              ...baseResponse,
-              access_granted: false,
-              error: 'No customer email found in session'
-            };
-          }
-
-          // Save transaction (works for both logged-in and guest users)
-          try {
-            const { data: existingTransaction } = await serviceClient
-              .from('payment_transactions')
-              .select('id')
-              .eq('session_id', session.id)
-              .single();
-
-            if (!existingTransaction) {
-              await serviceClient
-                .from('payment_transactions')
-                .insert({
-                  session_id: session.id,
-                  user_id: user?.id || null, // Can be null for guest purchases
-                  product_id: product.id,
-                  customer_email: customerEmail,
-                  amount: transactionAmount,
-                  currency: product.currency,
-                  stripe_payment_intent_id: typeof session.payment_intent === 'object' ? session.payment_intent?.id : session.payment_intent,
-                  status: 'completed',
-                  metadata: {
-                    stripe_session_id: session.id,
-                    product_slug: productSlug,
-                    session_metadata: session.metadata,
-                    amount_display: `${(transactionAmount / 100).toFixed(2)} ${(product.currency || 'usd').toUpperCase()}`
-                  }
-                });
-
-            }
-          } catch {
-            // Don't fail the entire process if transaction saving fails
-          }
-
-          // STEP 2: Handle access granting based on user status
-          
-          // SCENARIO 1: User is logged in
-          if (user) {
-            // Check if access already exists
-            const { data: existingAccess } = await supabase
-              .from('user_product_access')
-              .select('access_expires_at')
-              .eq('user_id', user.id)
-              .eq('product_id', productId)
-              .single();
-
-            if (existingAccess) {
-              const expiresAt = existingAccess.access_expires_at 
-                ? new Date(existingAccess.access_expires_at) 
-                : null;
-              const isExpired = expiresAt && expiresAt < new Date();
-              
-              if (!isExpired) {
-                return {
-                  ...baseResponse,
-                  access_granted: true,
-                  already_had_access: true,
-                  scenario: 'logged_in_user'
-                };
-              }
-            }
-
-            // Calculate access expiry
-            let accessExpiresAt: string | null = null;
-            if (product.auto_grant_duration_days) {
-              const expiryDate = new Date();
-              expiryDate.setDate(expiryDate.getDate() + product.auto_grant_duration_days);
-              accessExpiresAt = expiryDate.toISOString();
-            }
-
-            // Grant access to logged-in user
-            const { error: accessError } = await supabase
-              .from('user_product_access')
-              .upsert({
-                user_id: user.id,
-                product_id: productId,
-                access_granted_at: new Date().toISOString(),
-                access_expires_at: accessExpiresAt,
-                access_duration_days: product.auto_grant_duration_days,
-              }, {
-                onConflict: 'user_id,product_id'
-              });
-
-            if (accessError) {
-              return {
-                ...baseResponse,
-                access_granted: false,
-                error: 'Failed to grant access'
-              };
-            }
-
-            return {
-              ...baseResponse,
-              access_granted: true,
-              already_had_access: false,
-              access_expires_at: accessExpiresAt,
-              scenario: 'logged_in_user'
-            };
-          }
-
-          // SCENARIO 2 & 3: No current user - check if email exists in user database
-          const { data: existingUser, error: userError } = await serviceClient
-            .from('auth.users')
-            .select('id, email')
-            .eq('email', customerEmail)
-            .single();
-
-          if (!userError && existingUser) {
-            // SCENARIO 2: Email exists in database - grant access to that user
-            const { error } = await serviceClient.rpc('grant_product_access_service_role', {
-              user_id_param: existingUser.id,
-              product_id_param: product.id
+          // Delegate to database function with corrected parameter names
+          const { data: paymentResult, error: paymentError } = await serviceClient
+            .rpc('process_stripe_payment_completion', {
+              session_id_param: session.id,
+              product_id_param: productId,
+              customer_email_param: customerEmail,
+              amount_total: session.amount_total || 0,
+              currency_param: session.currency || 'usd',
+              stripe_payment_intent_id: stripePaymentIntentId || null,
+              user_id_param: user?.id || null
             });
 
-            if (error) {
-              console.error('Failed to grant access to existing user:', error);
-              return {
-                ...baseResponse,
-                access_granted: false,
-                error: 'Failed to grant access to existing user'
-              };
-            }
-
-            console.log('Granting access to existing user scenario - sending magic link');
-            return {
-              ...baseResponse,
-              access_granted: true,
-              requires_login: true,
-              customer_email: customerEmail,
-              scenario: 'existing_user_email',
-              send_magic_link: true
-            };
-          }
-
-          // SCENARIO 3: Email not in database - save as guest purchase
-          const { error: guestError } = await serviceClient
-            .from('guest_purchases')
-            .insert({
-              customer_email: customerEmail,
-              product_id: product.id,
-              session_id: session.id,
-              transaction_amount: transactionAmount,
-              claimed_by_user_id: null,
-              access_expires_at: null
-            });
-
-          if (guestError) {
-            // Check if it's a duplicate session_id error (already processed)
-            if (guestError.code === '23505') {
-              return {
-                ...baseResponse,
-                access_granted: false,
-                is_guest_purchase: true,
-                requires_login: true,
-                customer_email: customerEmail,
-                scenario: 'guest_purchase_duplicate',
-                send_magic_link: true
-              };
-            }
-            
+          if (paymentError) {
+            console.error('Database payment processing error:', paymentError);
             return {
               ...baseResponse,
               access_granted: false,
-              error: 'Failed to save guest purchase'
+              error: 'Failed to process payment'
             };
           }
 
-          console.log('Guest purchase scenario - sending magic link');
+          if (!paymentResult?.success) {
+            return {
+              ...baseResponse,
+              access_granted: false,
+              error: paymentResult?.error || 'Payment processing failed'
+            };
+          }
+
+          // Convert database response to our interface
           return {
             ...baseResponse,
-            access_granted: false,
-            is_guest_purchase: true,
-            requires_login: true,
-            customer_email: customerEmail,
-            scenario: 'guest_purchase',
-            send_magic_link: true
+            access_granted: paymentResult.access_granted || false,
+            already_had_access: paymentResult.already_had_access || false,
+            requires_login: paymentResult.requires_login || false,
+            is_guest_purchase: paymentResult.is_guest_purchase || false,
+            scenario: paymentResult.scenario,
+            access_expires_at: paymentResult.access_expires_at,
+            send_magic_link: paymentResult.send_magic_link || false,
+            customer_email: paymentResult.customer_email
           };
 
-        } catch {
+        } catch (error) {
+          console.error('Payment processing error:', error);
           return {
             ...baseResponse,
             access_granted: false,
@@ -332,6 +174,13 @@ export async function verifyPaymentSession(
           };
         }
       }
+
+      // Missing required data
+      return {
+        ...baseResponse,
+        access_granted: false,
+        error: !productId ? 'Product ID missing from session metadata' : 'Customer email missing from session'
+      };
     }
 
     return baseResponse;
@@ -350,6 +199,7 @@ export async function verifyPaymentSession(
       }
     }
 
+    console.error('Payment verification error:', error);
     return {
       session_id: sessionId,
       status: 'error',

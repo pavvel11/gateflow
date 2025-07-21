@@ -7,7 +7,6 @@ export interface Product {
   price: number
   currency: string
   theme: string
-  stripe_price_id: string | null
   layout_template: string
   is_active: boolean
   is_featured: boolean
