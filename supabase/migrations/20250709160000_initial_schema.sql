@@ -649,81 +649,118 @@ ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rate_limits ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for products table
--- Allow public read access for active products only (needed by gatekeeper.js)
-CREATE POLICY "Allow public read access for active products" ON products
+CREATE POLICY "SELECT policy for products" ON products
   FOR SELECT
-  USING (is_active = true AND (available_from IS NULL OR available_from <= NOW()) AND (available_until IS NULL OR available_until >= NOW()));
+  USING (
+    -- Admin users see everything
+    EXISTS (
+      SELECT 1 FROM admin_users 
+      WHERE user_id = (SELECT auth.uid())
+    ) OR
+    -- Public users see only active products
+    (is_active = true AND (available_from IS NULL OR available_from <= NOW()) AND (available_until IS NULL OR available_until >= NOW()))
+  );
 
--- Allow authenticated users to read all products (for admin purposes)
-CREATE POLICY "Allow authenticated users to read all products" ON products
-  FOR SELECT
+-- Polityki dla adminów - osobno dla każdej akcji
+CREATE POLICY "Allow admin users to insert products" ON products
+  FOR INSERT
   TO authenticated
-  USING (true);
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM admin_users 
+      WHERE user_id = (SELECT auth.uid())
+    )
+  );
 
--- Allow admin users to manage products
-CREATE POLICY "Allow admin users to manage products" ON products
-  FOR ALL
+CREATE POLICY "Allow admin users to update products" ON products
+  FOR UPDATE
   TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM admin_users 
-      WHERE user_id = (select auth.uid())
+      WHERE user_id = (SELECT auth.uid())
     )
   )
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM admin_users 
-      WHERE user_id = (select auth.uid())
+      WHERE user_id = (SELECT auth.uid())
     )
   );
+
+CREATE POLICY "Allow admin users to delete products" ON products
+  FOR DELETE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM admin_users 
+      WHERE user_id = (SELECT auth.uid())
+    )
+  );
+
+
 
 -- RLS Policies for user_product_access table
 -- Allow users to read their own access records
 CREATE POLICY "Allow users to read their own product access" ON user_product_access
   FOR SELECT
-  USING ((select auth.uid()) = user_id);
+  USING (
+    (SELECT auth.uid()) = user_id OR
+    EXISTS (
+      SELECT 1 FROM admin_users 
+      WHERE user_id = (SELECT auth.uid())
+    )
+  );
 
--- Allow service role to insert access records (used by Edge Functions and admin panel)
+-- Allow service role to insert access records
 CREATE POLICY "Allow service role to insert product access" ON user_product_access
   FOR INSERT
   TO service_role
   WITH CHECK (true);
 
--- Allow authenticated admin users to insert access records (admin panel)
-CREATE POLICY "Allow admin users to insert product access" ON user_product_access
+-- Combined INSERT policy for authenticated users
+CREATE POLICY "Combined INSERT policy for user_product_access" ON user_product_access
   FOR INSERT
   TO authenticated
   WITH CHECK (
+    -- Admin users can insert anything
     EXISTS (
       SELECT 1 FROM admin_users 
-      WHERE user_id = (select auth.uid())
-    )
+      WHERE user_id = (SELECT auth.uid())
+    ) OR
+    -- Regular users can insert access for FREE products for themselves
+    ((SELECT auth.uid()) = user_id AND
+     EXISTS (SELECT 1 FROM products WHERE id = product_id AND price = 0))
   );
 
--- Allow authenticated users to insert access for FREE products (gatekeeper auto-grant)
-CREATE POLICY "Allow authenticated users to insert access for free products" ON user_product_access
-  FOR INSERT
-  WITH CHECK (
-    (select auth.uid()) = user_id AND
-    EXISTS (SELECT 1 FROM products WHERE id = product_id AND price = 0)
-  );
-
--- Allow authenticated users full access to user_product_access (admin panel)
-CREATE POLICY "Allow admin users to manage access" ON user_product_access
-  FOR ALL
+-- Admin UPDATE policy
+CREATE POLICY "Allow admin users to update access" ON user_product_access
+  FOR UPDATE
   TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM admin_users 
-      WHERE user_id = (select auth.uid())
+      WHERE user_id = (SELECT auth.uid())
     )
   )
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM admin_users 
-      WHERE user_id = (select auth.uid())
+      WHERE user_id = (SELECT auth.uid())
     )
   );
+
+-- Admin DELETE policy
+CREATE POLICY "Allow admin users to delete access" ON user_product_access
+  FOR DELETE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM admin_users 
+      WHERE user_id = (SELECT auth.uid())
+    )
+  );
+
 
 -- RLS Policies for admin_users table
 -- Allow users to check only their own admin status
@@ -749,17 +786,35 @@ CREATE POLICY "Allow system to insert audit logs" ON audit_log
   FOR INSERT
   WITH CHECK (true);
 
--- RLS Policies for rate_limits table
--- Allow users to read their own rate limits (for debugging)
-CREATE POLICY "Allow users to read their own rate limits" ON rate_limits
-  FOR SELECT
-  TO authenticated
-  USING ((select auth.uid()) = user_id);
+-- Combined SELECT policy for rate limits
+CREATE POLICY "Combined SELECT policy for rate limits" ON rate_limits
+    FOR SELECT 
+    USING (
+        -- Admins can view all rate limits
+        EXISTS (
+            SELECT 1 FROM admin_users 
+            WHERE admin_users.user_id = (SELECT auth.uid())
+        ) OR
+        -- Users can read their own rate limits
+        (SELECT auth.uid()) = user_id
+    );
 
--- Allow system to manage rate limits
-CREATE POLICY "Allow system to manage rate limits" ON rate_limits
-  FOR ALL
-  WITH CHECK (true);
+-- System policies for modifications
+CREATE POLICY "Allow system to insert rate limits" ON rate_limits
+    FOR INSERT 
+    TO service_role
+    WITH CHECK (true);
+
+CREATE POLICY "Allow system to update rate limits" ON rate_limits
+    FOR UPDATE 
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
+
+CREATE POLICY "Allow system to delete rate limits" ON rate_limits
+    FOR DELETE 
+    TO service_role
+    USING (true);
 
 
 -- Check if user is admin (optimized)

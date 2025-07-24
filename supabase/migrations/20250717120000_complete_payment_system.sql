@@ -249,40 +249,57 @@ CREATE POLICY "Admins can insert admin actions" ON admin_actions
         (select (select auth.role())) = 'service_role'
     );
 
--- Payment transactions policies
-CREATE POLICY "Users can view own payment transactions" ON payment_transactions
-    FOR SELECT USING (
-        user_id = (select auth.uid()) OR  -- Users can see their own transactions
-        EXISTS (SELECT 1 FROM admin_users WHERE user_id = (select auth.uid()))  -- Admins can see all transactions
+-- Combined SELECT policy for payment transactions
+CREATE POLICY "Combined SELECT policy for payment transactions" ON payment_transactions
+    FOR SELECT 
+    USING (
+        user_id = (SELECT auth.uid()) OR  -- Users can see their own transactions
+        EXISTS (SELECT 1 FROM admin_users WHERE user_id = (SELECT auth.uid())) OR  -- Admins can see all transactions
+        (SELECT auth.role()) = 'service_role'  -- Service role can see all
     );
 
 CREATE POLICY "Service role limited access payment transactions" ON payment_transactions
-    FOR INSERT WITH CHECK ((select auth.role()) = 'service_role');
-
-CREATE POLICY "Service role can select payment transactions" ON payment_transactions
-    FOR SELECT USING ((select auth.role()) = 'service_role');
+    FOR INSERT 
+    TO service_role
+    WITH CHECK (true);
 
 -- Admins can update payment transactions for refunds (SECURITY)
 CREATE POLICY "Admins can update payment transactions for refunds" ON payment_transactions
-    FOR UPDATE USING (
+    FOR UPDATE 
+    TO authenticated
+    USING (
         EXISTS (
             SELECT 1 FROM admin_users 
-            WHERE admin_users.user_id = (select auth.uid())
+            WHERE admin_users.user_id = (SELECT auth.uid())
         )
     );
 
--- Guest purchases policies
-CREATE POLICY "Users can view own claimed guest purchases" ON guest_purchases
-    FOR SELECT USING (claimed_by_user_id = (select auth.uid()));
 
-CREATE POLICY "Service role limited access guest purchases" ON guest_purchases
-    FOR INSERT WITH CHECK ((select auth.role()) = 'service_role');
+-- Combined SELECT policy for all roles
+CREATE POLICY "Combined SELECT policy for guest purchases" ON guest_purchases
+    FOR SELECT 
+    USING (
+        claimed_by_user_id = (SELECT auth.uid()) OR 
+        (SELECT auth.role()) = 'service_role'
+    );
 
-CREATE POLICY "Service role can select guest purchases" ON guest_purchases
-    FOR SELECT USING ((select auth.role()) = 'service_role');
+-- Service role policies for modifications only
+CREATE POLICY "Service role can insert guest purchases" ON guest_purchases
+    FOR INSERT 
+    TO service_role
+    WITH CHECK (true);
 
 CREATE POLICY "Service role can update guest purchases" ON guest_purchases
-    FOR UPDATE USING ((select auth.role()) = 'service_role');
+    FOR UPDATE 
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
+
+CREATE POLICY "Service role can delete guest purchases" ON guest_purchases
+    FOR DELETE 
+    TO service_role
+    USING (true);
+
 
 -- Note: rate_limits RLS policies are already defined in the initial schema migration
 
@@ -1887,7 +1904,8 @@ SET statement_timeout = '30s';
 -- =============================================================================
 
 -- View for monitoring rate limit usage (admin only)
-CREATE VIEW rate_limit_summary AS
+CREATE VIEW rate_limit_summary
+WITH (security_invoker=on) AS
 SELECT 
     function_name,
     COUNT(DISTINCT user_id) as unique_users,
@@ -1900,20 +1918,9 @@ WHERE window_start > NOW() - INTERVAL '1 hour'
 GROUP BY function_name
 ORDER BY total_calls DESC;
 
--- Enable RLS on the view
-ALTER VIEW rate_limit_summary SET (security_invoker = on);
-
--- Create policy for admin-only access to rate limit monitoring
-CREATE POLICY "Only admins can view rate limit summary" ON rate_limits
-    FOR SELECT USING (
-        EXISTS (
-            SELECT 1 FROM admin_users 
-            WHERE admin_users.user_id = (select auth.uid())
-        )
-    );
-
 -- View for payment system health monitoring (admin only)
-CREATE VIEW payment_system_health AS
+CREATE VIEW payment_system_health
+WITH (security_invoker=on) AS
 SELECT 
     'payment_transactions' as table_name,
     COUNT(*) as total_records,
@@ -1947,8 +1954,6 @@ SELECT
     NOW() as snapshot_time
 FROM admin_actions;
 
--- Enable RLS on the payment health view
-ALTER VIEW payment_system_health SET (security_invoker = on);
 
 COMMIT;
 
