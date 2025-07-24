@@ -88,8 +88,11 @@ export async function verifyPaymentSession(
       };
     }
 
-    // Check if session belongs to current user (only if user is logged in)
-    if (user && session.metadata?.user_id && session.metadata.user_id !== user.id) {
+    // Check if session belongs to current user (only if user is logged in and session has valid user_id)
+    if (user && session.metadata?.user_id && 
+        session.metadata.user_id !== '' && 
+        session.metadata.user_id !== 'null' && 
+        session.metadata.user_id !== user.id) {
       return {
         session_id: session.id,
         status: session.status || 'unknown',
@@ -118,12 +121,23 @@ export async function verifyPaymentSession(
       
       if (productId && customerEmail) {
         try {
+          // Validate email for disposable domains
+          const { ProductValidationService } = await import('@/lib/services/product-validation');
+          const isValidEmail = await ProductValidationService.validateEmail(customerEmail);
+          if (!isValidEmail) {
+            return {
+              ...baseResponse,
+              access_granted: false,
+              error: 'Invalid email address detected. Temporary email addresses are not allowed for purchases. Please contact support for assistance.',
+              scenario: 'email_validation_failed_server_side'
+            };
+          }
+          
           // Extract payment intent ID
           const stripePaymentIntentId = typeof session.payment_intent === 'object' 
             ? session.payment_intent?.id 
             : session.payment_intent;
 
-          // Delegate to database function with corrected parameter names
           const { data: paymentResult, error: paymentError } = await serviceClient
             .rpc('process_stripe_payment_completion', {
               session_id_param: session.id,

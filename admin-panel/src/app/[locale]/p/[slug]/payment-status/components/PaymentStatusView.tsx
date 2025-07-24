@@ -111,6 +111,13 @@ export default function PaymentStatusView({
           color: 'text-red-400',
           bgColor: 'from-red-900/20 to-red-800/20'
         };
+      case 'email_validation_failed':
+        return {
+          emoji: '📧',
+          title: 'Email Issue',
+          color: 'text-red-400',
+          bgColor: 'from-red-900/20 to-red-800/20'
+        };
       case 'expired':
         return {
           emoji: '⏰',
@@ -146,6 +153,44 @@ export default function PaymentStatusView({
   const statusInfo = getStatusInfo();
 
   // Handle different payment statuses
+  if (paymentStatus === 'email_validation_failed') {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
+        <div className={`max-w-4xl mx-auto p-8 bg-gradient-to-br ${statusInfo.bgColor} backdrop-blur-md border border-white/10 rounded-xl shadow-2xl text-center`}>
+          <div className="text-5xl mb-4">{statusInfo.emoji}</div>
+          <h2 className={`text-3xl font-bold ${statusInfo.color} mb-2`}>
+            {statusInfo.title}
+          </h2>
+          <p className="text-gray-300 mb-6">{errorMessage}</p>
+          
+          <div className="mb-6 p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
+            <h3 className="text-lg font-semibold text-red-300 mb-2">⚠️ Disposable Email Detected</h3>
+          </div>
+          
+          <div className="space-y-4">
+            <button
+              onClick={() => router.push(`/p/${product.slug}`)}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors"
+            >
+              Try Again with Valid Email
+            </button>
+            <p className="text-gray-400 text-sm">
+              Having trouble? <span className="text-blue-400 cursor-pointer hover:underline">Contact Support</span>
+            </p>
+          </div>
+          
+          <div className="mt-8 flex items-center justify-center gap-4">
+            <div className="text-3xl">{product.icon}</div>
+            <div>
+              <h3 className="text-xl font-semibold text-white">{product.name}</h3>
+              <p className="text-gray-300">{product.description}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (paymentStatus === 'failed') {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">

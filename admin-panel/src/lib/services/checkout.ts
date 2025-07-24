@@ -44,24 +44,30 @@ export class CheckoutService {
       );
     }
 
-    if (request.email && !ProductValidationService.validateEmail(request.email)) {
-      throw new CheckoutError(
-        CheckoutErrorType.VALIDATION_ERROR,
-        CHECKOUT_ERRORS.INVALID_EMAIL,
-        HTTP_STATUS.BAD_REQUEST
-      );
+    // Enhanced email validation with disposable domain checking
+    if (request.email) {
+      console.log(`🔍 Validating email: ${request.email}`);
+      const isValidEmail = await ProductValidationService.validateEmail(request.email);
+      console.log(`✅ Email validation result for ${request.email}: ${isValidEmail}`);
+      if (!isValidEmail) {
+        console.log(`❌ Blocking disposable email: ${request.email}`);
+        throw new CheckoutError(
+          CheckoutErrorType.VALIDATION_ERROR,
+          'Invalid or disposable email address not allowed',
+          HTTP_STATUS.BAD_REQUEST
+        );
+      }
     }
   }
 
   /**
    * Check rate limiting for checkout creation
    */
-  async checkRateLimit(identifier: string): Promise<void> {
+  async checkRateLimit(): Promise<void> {
     const { data: rateLimitOk, error } = await this.supabase.rpc('check_rate_limit', {
-      identifier_param: identifier,
-      action_type_param: STRIPE_CONFIG.rate_limit.action_type,
-      max_requests: STRIPE_CONFIG.rate_limit.max_requests,
-      window_minutes: STRIPE_CONFIG.rate_limit.window_minutes,
+      function_name_param: STRIPE_CONFIG.rate_limit.action_type,
+      max_calls: STRIPE_CONFIG.rate_limit.max_requests,
+      time_window_seconds: STRIPE_CONFIG.rate_limit.window_minutes * 60,
     });
 
     if (error || !rateLimitOk) {
@@ -165,7 +171,7 @@ export class CheckoutService {
         metadata: {
           product_id: options.product.id,
           product_slug: options.product.slug,
-          user_id: options.userId || '',
+          user_id: options.userId || null,
         },
         expires_at: Math.floor(Date.now() / 1000) + (STRIPE_CONFIG.session.expires_hours * 60 * 60),
         automatic_tax: STRIPE_CONFIG.session.automatic_tax,
@@ -187,28 +193,6 @@ export class CheckoutService {
           HTTP_STATUS.INTERNAL_SERVER_ERROR
         );
       }
-
-      // Save session to payment_sessions table for webhook processing
-      try {
-        await this.supabase
-          .from('payment_sessions')
-          .insert({
-            session_id: session.id,
-            user_id: options.userId || null,
-            product_id: options.product.id,
-            amount: options.product.price,
-            currency: options.product.currency,
-            status: 'pending',
-            expires_at: new Date(Date.now() + (STRIPE_CONFIG.session.expires_hours * 60 * 60 * 1000)).toISOString(),
-            metadata: {
-              product_slug: options.product.slug,
-              customer_email: options.email
-            }
-          });
-      } catch {
-        // Don't throw error here - session is still valid even if we can't save to DB
-      }
-
       return {
         clientSecret: session.client_secret,
         sessionId: session.id,
@@ -244,8 +228,7 @@ export class CheckoutService {
     await this.validateRequest(request);
     
     // Rate limiting check
-    const identifier = userId || 'anonymous';
-    await this.checkRateLimit(identifier);
+    await this.checkRateLimit();
     
     // Get and validate product
     const product = await this.getProduct(request.productId);

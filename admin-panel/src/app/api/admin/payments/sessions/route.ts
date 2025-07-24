@@ -33,9 +33,9 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    // Build query
+    // Build query - use payment_transactions instead of payment_sessions
     let query = supabase
-      .from('payment_sessions')
+      .from('payment_transactions')
       .select(`
         *,
         products!inner(name, slug)
@@ -56,14 +56,14 @@ export async function GET(request: NextRequest) {
       query = query.gte('created_at', startDate.toISOString());
     }
 
-    const { data: sessions, error } = await query;
+    const { data: transactions, error } = await query;
 
     if (error) {
-      console.error('Error fetching sessions:', error);
-      return NextResponse.json({ error: 'Failed to fetch sessions' }, { status: 500 });
+      console.error('Error fetching transactions:', error);
+      return NextResponse.json({ error: 'Failed to fetch transactions' }, { status: 500 });
     }
 
-    return NextResponse.json(sessions || []);
+    return NextResponse.json(transactions || []);
   } catch (error) {
     console.error('API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

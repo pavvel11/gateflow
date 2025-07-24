@@ -1,8 +1,8 @@
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import LoginForm from '@/components/LoginForm'
 import FloatingLanguageSwitcher from '@/components/FloatingLanguageSwitcher'
@@ -10,13 +10,22 @@ import FloatingLanguageSwitcher from '@/components/FloatingLanguageSwitcher'
 export default function LoginPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const t = useTranslations()
+  const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
     if (!loading && user) {
       router.push('/dashboard')
     }
   }, [user, loading, router])
+
+  useEffect(() => {
+    const error = searchParams.get('error')
+    if (error === 'disposable_email') {
+      setErrorMessage('Registration blocked: Disposable email addresses are not allowed. Please use a permanent email address.')
+    }
+  }, [searchParams])
 
   if (loading) {
     return (
@@ -53,6 +62,12 @@ export default function LoginPage() {
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">GateFlow Admin</h1>
           <p className="text-gray-300">{t('auth.pleaseSignIn')}</p>
+          
+          {errorMessage && (
+            <div className="mt-4 p-4 rounded-xl text-sm bg-red-500/10 text-red-400 border border-red-500/20">
+              {errorMessage}
+            </div>
+          )}
         </div>
         
         <LoginForm />

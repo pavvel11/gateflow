@@ -9,6 +9,7 @@ import { createCheckoutSession } from '@/lib/actions/payment';
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Product } from '@/types';
+import { ProductValidationService } from '@/lib/services/product-validation';
 
 interface PaymentButtonProps {
   product: Product;
@@ -32,9 +33,12 @@ export default function PaymentButton({
   const { user } = useAuth();
   const t = useTranslations('productView.guestCheckout');
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  const validateEmail = async (email: string) => {
+    try {
+      return await ProductValidationService.validateEmail(email);
+    } catch {
+      return false;
+    }
   };
 
   const handlePayment = async () => {
@@ -46,9 +50,12 @@ export default function PaymentButton({
       return;
     }
 
-    if (!user && email && !validateEmail(email)) {
-      setEmailError(t('emailInvalid'));
-      return;
+    if (!user && email) {
+      const isValid = await validateEmail(email);
+      if (!isValid) {
+        setEmailError('Invalid or disposable email address not allowed');
+        return;
+      }
     }
 
     setEmailError('');

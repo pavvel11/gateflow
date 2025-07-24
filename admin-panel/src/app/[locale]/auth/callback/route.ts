@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 import type { Session, AuthError } from '@supabase/supabase-js'
+import { DisposableEmailService } from '@/lib/services/disposable-email'
 
 /**
  * Auth callback handler for Supabase magic links
@@ -71,6 +72,26 @@ export async function GET(request: NextRequest) {
   
   if (error || !session) {
     return NextResponse.redirect(new URL('/login', requestUrl.origin))
+  }
+
+  // Validate email for disposable domains (security check)
+  const userEmail = session.user?.email;
+  if (userEmail) {
+    try {
+      const emailValidation = await DisposableEmailService.validateEmail(userEmail);
+      if (!emailValidation.isValid) {
+        // Sign out the user immediately
+        await supabase.auth.signOut();
+        
+        // Redirect to login with error
+        const loginUrl = new URL('/login', requestUrl.origin);
+        loginUrl.searchParams.set('error', 'disposable_email');
+        return NextResponse.redirect(loginUrl);
+      }
+    } catch (error) {
+      console.error('Email validation error in auth callback:', error);
+      // Don't block auth on validation service errors, just log
+    }
   }
 
   // Note: Guest purchases are now automatically claimed by database trigger

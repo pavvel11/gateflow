@@ -73,7 +73,7 @@ site_url = "http://localhost:3000"
 # For production, add your domain here (e.g. https://example.com)
 additional_redirect_urls = [
   "http://127.0.0.1:3000", 
-  "http://localhost:3000",
+  "http://localhost:3000"
 ]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604800 (1 week).
 jwt_expiry = 3600

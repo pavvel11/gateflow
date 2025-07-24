@@ -52,6 +52,7 @@ BEGIN
     RETURN TRUE;
 END;
 $$ LANGUAGE plpgsql IMMUTABLE SECURITY DEFINER
+SET search_path = ''
 SET statement_timeout = '5s'; -- Increased for production traffic
 
 -- Grant execute permissions
@@ -83,7 +84,7 @@ GRANT EXECUTE ON FUNCTION validate_email_format TO service_role, authenticated;
 -- Create admin_actions table for audit logging (SECURITY)
 CREATE TABLE IF NOT EXISTS admin_actions (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  admin_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  admin_id UUID REFERENCES auth.users(id) ON DELETE CASCADE, -- Nullable for system/guest operations
   action VARCHAR(100) NOT NULL CHECK (length(action) BETWEEN 1 AND 100),
   target_type VARCHAR(50) NOT NULL CHECK (length(target_type) BETWEEN 1 AND 50),
   target_id VARCHAR(255) NOT NULL CHECK (length(target_id) BETWEEN 1 AND 255),
@@ -195,19 +196,11 @@ CREATE INDEX IF NOT EXISTS idx_admin_actions_admin_id ON admin_actions(admin_id)
 CREATE INDEX IF NOT EXISTS idx_admin_actions_created_at ON admin_actions USING BRIN (created_at);
 CREATE INDEX IF NOT EXISTS idx_admin_actions_target ON admin_actions(target_type, target_id);
 
--- BRIN index for efficient cleanup operations (minimal storage overhead)
-CREATE INDEX IF NOT EXISTS idx_admin_actions_cleanup 
-ON admin_actions USING BRIN (created_at);
-
 -- Guest checkout indexes
 CREATE INDEX IF NOT EXISTS idx_guest_purchases_customer_email ON guest_purchases(customer_email);
 CREATE INDEX IF NOT EXISTS idx_guest_purchases_product_id ON guest_purchases(product_id);
 CREATE INDEX IF NOT EXISTS idx_guest_purchases_claimed_by_user_id ON guest_purchases(claimed_by_user_id) WHERE claimed_by_user_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_guest_purchases_session_id ON guest_purchases(session_id);
-
--- BRIN indexes for efficient cleanup and archival operations
-CREATE INDEX IF NOT EXISTS idx_payment_transactions_cleanup 
-ON payment_transactions USING BRIN (created_at);
 
 CREATE INDEX IF NOT EXISTS idx_guest_purchases_cleanup 
 ON guest_purchases USING BRIN (created_at);
@@ -240,56 +233,56 @@ CREATE POLICY "Admins can view admin actions" ON admin_actions
     FOR SELECT USING (
         EXISTS (
             SELECT 1 FROM admin_users 
-            WHERE admin_users.user_id = auth.uid()
+            WHERE admin_users.user_id = (select auth.uid())
         )
     );
 
 CREATE POLICY "Admins can insert admin actions" ON admin_actions
     FOR INSERT WITH CHECK (
-        admin_id = auth.uid() AND
+        -- Allow logged-in admins to insert with their own admin_id
+        (admin_id = (select auth.uid()) AND
         EXISTS (
             SELECT 1 FROM admin_users 
-            WHERE admin_users.user_id = auth.uid()
-        )
+            WHERE admin_users.user_id = (select auth.uid())
+        )) OR
+        -- Allow service_role (database functions) to insert with any admin_id (including NULL)
+        (select (select auth.role())) = 'service_role'
     );
-
-CREATE POLICY "Service role limited access admin actions" ON admin_actions
-    FOR INSERT WITH CHECK (auth.role() = 'service_role');
 
 -- Payment transactions policies
 CREATE POLICY "Users can view own payment transactions" ON payment_transactions
     FOR SELECT USING (
-        user_id = auth.uid() OR  -- Users can see their own transactions
-        EXISTS (SELECT 1 FROM admin_users WHERE user_id = auth.uid())  -- Admins can see all transactions
+        user_id = (select auth.uid()) OR  -- Users can see their own transactions
+        EXISTS (SELECT 1 FROM admin_users WHERE user_id = (select auth.uid()))  -- Admins can see all transactions
     );
 
 CREATE POLICY "Service role limited access payment transactions" ON payment_transactions
-    FOR INSERT WITH CHECK (auth.role() = 'service_role');
+    FOR INSERT WITH CHECK ((select auth.role()) = 'service_role');
 
 CREATE POLICY "Service role can select payment transactions" ON payment_transactions
-    FOR SELECT USING (auth.role() = 'service_role');
+    FOR SELECT USING ((select auth.role()) = 'service_role');
 
 -- Admins can update payment transactions for refunds (SECURITY)
 CREATE POLICY "Admins can update payment transactions for refunds" ON payment_transactions
     FOR UPDATE USING (
         EXISTS (
             SELECT 1 FROM admin_users 
-            WHERE admin_users.user_id = auth.uid()
+            WHERE admin_users.user_id = (select auth.uid())
         )
     );
 
 -- Guest purchases policies
 CREATE POLICY "Users can view own claimed guest purchases" ON guest_purchases
-    FOR SELECT USING (claimed_by_user_id = auth.uid());
+    FOR SELECT USING (claimed_by_user_id = (select auth.uid()));
 
 CREATE POLICY "Service role limited access guest purchases" ON guest_purchases
-    FOR INSERT WITH CHECK (auth.role() = 'service_role');
+    FOR INSERT WITH CHECK ((select auth.role()) = 'service_role');
 
 CREATE POLICY "Service role can select guest purchases" ON guest_purchases
-    FOR SELECT USING (auth.role() = 'service_role');
+    FOR SELECT USING ((select auth.role()) = 'service_role');
 
 CREATE POLICY "Service role can update guest purchases" ON guest_purchases
-    FOR UPDATE USING (auth.role() = 'service_role');
+    FOR UPDATE USING ((select auth.role()) = 'service_role');
 
 -- Note: rate_limits RLS policies are already defined in the initial schema migration
 
@@ -561,6 +554,7 @@ EXCEPTION
         );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
 SET statement_timeout = '10s';
 
 -- Grant execute permissions to the service role
@@ -631,7 +625,7 @@ BEGIN
     -- Authorization check: Verify caller has permission to process payments for the specified user (SECURITY)
     IF user_id_param IS NOT NULL THEN
         -- If user_id is specified, verify authorization
-        IF auth.role() = 'service_role' THEN
+        IF (select auth.role()) = 'service_role' THEN
             -- Service role can process payments for any user (trusted backend)
             current_user_id := user_id_param;
         ELSIF auth.uid() = user_id_param THEN
@@ -653,7 +647,7 @@ BEGIN
         EXISTS(
             SELECT 1 FROM public.payment_transactions pt 
             WHERE pt.session_id = session_id_param 
-               OR (stripe_payment_intent_id IS NOT NULL AND pt.stripe_payment_intent_id = stripe_payment_intent_id)
+               OR (process_stripe_payment_completion.stripe_payment_intent_id IS NOT NULL AND pt.stripe_payment_intent_id = process_stripe_payment_completion.stripe_payment_intent_id)
         ) as transaction_exists
     INTO product_record
     FROM public.products p
@@ -677,7 +671,7 @@ BEGIN
             stripe_payment_intent_id, status, metadata
         ) VALUES (
             session_id_param, current_user_id, product_id_param, customer_email_param, amount_total, currency_param,
-            stripe_payment_intent_id, 'completed',
+            process_stripe_payment_completion.stripe_payment_intent_id, 'completed',
             jsonb_build_object(
                 'stripe_session_id', session_id_param,
                 'product_slug', product_record.slug,
@@ -958,6 +952,7 @@ EXCEPTION
         );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
 SET statement_timeout = '15s'; -- Increased for production webhook traffic and complex transactions
 
 -- Grant execute permissions to the service role
@@ -1117,7 +1112,7 @@ BEGIN
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public, auth
+SET search_path = ''
 SET statement_timeout = '5s';
 
 -- Note: User registration trigger is handled in the initial schema migration
@@ -1172,6 +1167,7 @@ BEGIN
     LIMIT 100; -- Prevent excessive data retrieval
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
 SET statement_timeout = '5s';
 
 -- =============================================================================
@@ -1189,7 +1185,8 @@ BEGIN
     END IF;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql
+SET search_path = '';
 
 -- Create trigger for refunded_at automation
 CREATE TRIGGER trigger_update_refunded_at
@@ -1248,7 +1245,7 @@ BEGIN
     -- Insert admin action with proper user identification
     INSERT INTO admin_actions (admin_id, action, target_type, target_id, details)
     VALUES (
-        COALESCE(auth.uid(), '00000000-0000-0000-0000-000000000000'::UUID),
+        auth.uid(), -- NULL for system operations when no user is logged in
         action_name,
         target_type,
         target_id,
@@ -1256,6 +1253,7 @@ BEGIN
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
 SET statement_timeout = '2s';
 
 -- Grant execute permissions to the service role and authenticated users
@@ -1368,7 +1366,8 @@ BEGIN
     
     RETURN COALESCE(NEW, OLD);
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql
+SET search_path = '';
 
 -- Add audit triggers for critical tables
 CREATE TRIGGER audit_payment_transactions
@@ -1410,7 +1409,7 @@ CREATE OR REPLACE FUNCTION send_monitoring_email(
 ) RETURNS VOID AS $$
 BEGIN
     -- Security check: Only allow service_role and authenticated users
-    IF auth.role() NOT IN ('service_role', 'authenticated') THEN
+    IF (select auth.role()) NOT IN ('service_role', 'authenticated') THEN
         RAISE EXCEPTION 'Unauthorized';
     END IF;
     
@@ -1436,6 +1435,7 @@ EXCEPTION
         NULL;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
 SET statement_timeout = '1s';
 
 -- Unified monitoring function - handles both immediate CRITICAL alerts and batch WARNING alerts
@@ -1543,6 +1543,7 @@ EXCEPTION
         NULL;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
 SET statement_timeout = '2s';
 
 -- Simple trigger - one function handles all monitoring logic
@@ -1578,7 +1579,8 @@ BEGIN
     
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql
+SET search_path = '';
 
 -- Add monitoring trigger only to admin_actions
 -- 
@@ -1648,7 +1650,7 @@ BEGIN
         -- Admins can validate any transaction
         EXISTS (SELECT 1 FROM admin_users WHERE user_id = current_user_id) OR
         -- Service role can validate any transaction
-        auth.role() = 'service_role'
+        (select auth.role()) = 'service_role'
       );
     
     IF NOT FOUND THEN
@@ -1676,6 +1678,7 @@ BEGIN
     RETURN TRUE;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
 SET statement_timeout = '2s';
 
 -- Function to get payment statistics (admin only)
@@ -1754,6 +1757,7 @@ BEGIN
     RETURN stats;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
 SET statement_timeout = '10s';
 
 -- Function to cleanup old admin actions for maintenance (admin only)
@@ -1793,6 +1797,7 @@ BEGIN
     RETURN deleted_count;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
 SET statement_timeout = '30s';
 
 -- Function to cleanup old rate limits for maintenance (admin only)
@@ -1832,6 +1837,7 @@ BEGIN
     RETURN deleted_count;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
 SET statement_timeout = '60s';
 
 -- Function to cleanup old guest purchases (claimed ones older than retention period)
@@ -1873,6 +1879,7 @@ BEGIN
     RETURN deleted_count;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
 SET statement_timeout = '30s';
 
 -- =============================================================================
@@ -1901,7 +1908,7 @@ CREATE POLICY "Only admins can view rate limit summary" ON rate_limits
     FOR SELECT USING (
         EXISTS (
             SELECT 1 FROM admin_users 
-            WHERE admin_users.user_id = auth.uid()
+            WHERE admin_users.user_id = (select auth.uid())
         )
     );
 

@@ -20,7 +20,6 @@ export interface CreateProductInput {
   is_active?: boolean;
   is_featured?: boolean;
   icon?: string;
-  theme?: string;
   content_delivery_type?: string;
   content_config?: {
     content_items: Array<{
@@ -46,7 +45,6 @@ export interface UpdateProductInput {
   is_active?: boolean;
   is_featured?: boolean;
   icon?: string;
-  theme?: string;
   content_delivery_type?: string;
   content_config?: {
     content_items: Array<{
@@ -171,19 +169,6 @@ function validateIcon(icon: string): ValidationResult {
   return { isValid: errors.length === 0, errors };
 }
 
-function validateTheme(theme: string): ValidationResult {
-  const errors: string[] = [];
-  const validThemes = ['blue', 'green', 'purple', 'red', 'orange', 'teal', 'pink', 'gray'];
-  
-  if (!theme || typeof theme !== 'string') {
-    errors.push('Theme is required');
-  } else if (!validThemes.includes(theme)) {
-    errors.push('Invalid theme color');
-  }
-  
-  return { isValid: errors.length === 0, errors };
-}
-
 function validateContentDeliveryType(type: string): ValidationResult {
   const errors: string[] = [];
   const validTypes = ['content', 'redirect', 'download'];
@@ -275,11 +260,6 @@ export function validateCreateProduct(data: unknown): ValidationResult {
     errors.push(...iconResult.errors);
   }
   
-  if (input.theme) {
-    const themeResult = validateTheme(input.theme);
-    errors.push(...themeResult.errors);
-  }
-  
   if (input.content_delivery_type) {
     const typeResult = validateContentDeliveryType(input.content_delivery_type);
     errors.push(...typeResult.errors);
@@ -346,11 +326,6 @@ export function validateUpdateProduct(data: unknown): ValidationResult {
   if (input.icon !== undefined) {
     const iconResult = validateIcon(input.icon);
     errors.push(...iconResult.errors);
-  }
-  
-  if (input.theme !== undefined) {
-    const themeResult = validateTheme(input.theme);
-    errors.push(...themeResult.errors);
   }
   
   if (input.content_delivery_type !== undefined) {
@@ -432,10 +407,6 @@ export function sanitizeProductData(data: Record<string, unknown>): Record<strin
   
   if (sanitizedData.icon === undefined) {
     sanitizedData.icon = '📦';
-  }
-  
-  if (sanitizedData.theme === undefined) {
-    sanitizedData.theme = 'blue';
   }
   
   if (sanitizedData.content_delivery_type === undefined) {

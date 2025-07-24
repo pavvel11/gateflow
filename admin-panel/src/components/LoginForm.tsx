@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/client'
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
+import { validateEmailAction } from '@/lib/actions/validate-email'
 
 /**
  * Login form component that handles magic link authentication
@@ -27,6 +28,23 @@ export default function LoginForm() {
     setMessage('')
 
     try {
+      // Validate email against disposable email list
+      const emailValidation = await validateEmailAction(email);
+      
+      if (emailValidation.isDisposable) {
+        setMessage('Disposable email addresses are not allowed. Please use a permanent email address.');
+        setSentEmail(false)
+        setIsLoading(false)
+        return;
+      }
+
+      if (!emailValidation.isValid && emailValidation.error) {
+        setMessage('Email validation failed. Please try again.');
+        setSentEmail(false)
+        setIsLoading(false)
+        return;
+      }
+
       // Dynamic redirect URL for Supabase auth
       const redirectUrl = `${siteUrl}/auth/callback`
       

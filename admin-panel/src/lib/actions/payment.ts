@@ -55,9 +55,12 @@ export async function createCheckoutSession(
     throw new Error('Email is required for guest purchases');
   }
   
-  // Validate email format for guests
-  if (!user && data.email && !ProductValidationService.validateEmail(data.email)) {
-    throw new Error('Please enter a valid email address');
+  // Validate email for guests - enhanced with disposable domain checking
+  if (!user && data.email) {
+    const emailValidation = await ProductValidationService.validateEmail(data.email);
+    if (!emailValidation) {
+      throw new Error('Invalid or disposable email address not allowed');
+    }
   }
   
   // Validate product and check user access
@@ -99,26 +102,6 @@ export async function createCheckoutSession(
   if (!session.id || !session.url) {
     throw new Error('Failed to create checkout session');
   }
-  
-  // Store payment session in database for tracking
-  await supabase
-    .from('payment_sessions')
-    .insert({
-      session_id: session.id,
-      provider_type: 'stripe',
-      product_id: product.id,
-      user_id: user?.id || null, // Nullable for guest purchases
-      customer_email: data.email || user?.email || '',
-      amount: product.price,
-      currency: product.currency,
-      status: 'pending',
-      metadata: {
-        success_url: data.successUrl,
-        cancel_url: data.cancelUrl,
-        product_slug: product.slug,
-      },
-      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    });
   
   return {
     sessionId: session.id,
@@ -235,29 +218,9 @@ export async function processRefund(data: RefundRequest): Promise<RefundResponse
  * Check payment status and redirect if needed
  * Works for both authenticated and guest users
  */
-export async function checkPaymentStatus(sessionId: string) {
-  const supabase = await createClient();
-  
-  // Get session details
-  const { data: session, error } = await supabase
-    .from('payment_sessions')
-    .select('*, products(slug)')
-    .eq('session_id', sessionId)
-    .single();
-  
-  if (error || !session) {
-    redirect('/payment/error?reason=session_not_found');
-  }
-  
-  if (session.status === 'completed') {
-    // Redirect to product page with success message
-    redirect(`/p/${session.products?.slug}?payment=success`);
-  } else if (session.status === 'failed') {
-    redirect('/payment/error?reason=payment_failed');
-  } else if (session.status === 'cancelled') {
-    redirect(`/p/${session.products?.slug}?payment=cancelled`);
-  }
-  
-  // If still pending, show loading state or redirect to pending page
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function checkPaymentStatus(_sessionId: string) {
+  // Note: This function is not used in embedded checkout flow
+  // Payment status is verified directly via Stripe API in payment-status page
   redirect('/payment/pending');
 }

@@ -65,7 +65,8 @@ CREATE TABLE IF NOT EXISTS user_product_access (
 );
 
 -- Create a view for user access statistics
-CREATE OR REPLACE VIEW user_access_stats AS
+CREATE OR REPLACE VIEW user_access_stats
+WITH (security_invoker=on) AS
 SELECT 
     u.id as user_id,
     u.email,
@@ -83,7 +84,8 @@ LEFT JOIN products p ON upa.product_id = p.id
 GROUP BY u.id, u.email, u.created_at, u.email_confirmed_at, u.last_sign_in_at, u.raw_user_meta_data;
 
 -- Create a more detailed user product access view for admin panels
-CREATE OR REPLACE VIEW user_product_access_detailed AS
+CREATE OR REPLACE VIEW user_product_access_detailed
+WITH (security_invoker=on) AS
 SELECT 
     upa.id,
     upa.user_id,
@@ -344,6 +346,7 @@ BEGIN
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
 SET statement_timeout = '2s';
 
 COMMENT ON FUNCTION check_user_product_access IS 'Check if authenticated user has access to a specific product by slug. Includes rate limiting and input sanitization.';
@@ -423,6 +426,7 @@ BEGIN
     RETURN result;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
 SET statement_timeout = '2s'; -- Reduced timeout to prevent DoS
 
 COMMENT ON FUNCTION batch_check_user_product_access IS 'Batch check user access for multiple products. Limited to 20 products per call with rate limiting.';
@@ -491,6 +495,7 @@ BEGIN
     RETURN TRUE;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
 SET statement_timeout = '2s';
 
 COMMENT ON FUNCTION grant_free_product_access IS 'Grant access to free products for authenticated users. Includes input validation and sanitization.';
@@ -574,6 +579,7 @@ BEGIN
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
 SET statement_timeout = '5s';
 
 COMMENT ON FUNCTION get_user_profile IS 'Get complete user profile with access statistics. Users can only view their own profile, admins can view any profile.';
@@ -630,13 +636,9 @@ CREATE INDEX IF NOT EXISTS idx_user_product_access_expires_at ON user_product_ac
 -- Rate limiting indexes
 CREATE INDEX IF NOT EXISTS idx_rate_limits_user_function ON rate_limits(user_id, function_name);
 CREATE INDEX IF NOT EXISTS idx_rate_limits_window_start ON rate_limits(window_start);
--- Index for pg_cron cleanup job (removed WHERE clause with NOW() - not allowed in index predicates)
-CREATE INDEX IF NOT EXISTS idx_rate_limits_cleanup ON rate_limits(window_start DESC);
 
 -- Audit log indexes
 CREATE INDEX IF NOT EXISTS idx_audit_log_performed_at ON audit_log(performed_at DESC);
--- Index for audit log cleanup (removed WHERE clause with NOW() - not allowed in index predicates)
-CREATE INDEX IF NOT EXISTS idx_audit_log_cleanup ON audit_log(performed_at DESC);
 
 
 -- Enable Row Level Security
@@ -665,13 +667,13 @@ CREATE POLICY "Allow admin users to manage products" ON products
   USING (
     EXISTS (
       SELECT 1 FROM admin_users 
-      WHERE user_id = auth.uid()
+      WHERE user_id = (select auth.uid())
     )
   )
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM admin_users 
-      WHERE user_id = auth.uid()
+      WHERE user_id = (select auth.uid())
     )
   );
 
@@ -679,7 +681,7 @@ CREATE POLICY "Allow admin users to manage products" ON products
 -- Allow users to read their own access records
 CREATE POLICY "Allow users to read their own product access" ON user_product_access
   FOR SELECT
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 -- Allow service role to insert access records (used by Edge Functions and admin panel)
 CREATE POLICY "Allow service role to insert product access" ON user_product_access
@@ -694,7 +696,7 @@ CREATE POLICY "Allow admin users to insert product access" ON user_product_acces
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM admin_users 
-      WHERE user_id = auth.uid()
+      WHERE user_id = (select auth.uid())
     )
   );
 
@@ -702,7 +704,7 @@ CREATE POLICY "Allow admin users to insert product access" ON user_product_acces
 CREATE POLICY "Allow authenticated users to insert access for free products" ON user_product_access
   FOR INSERT
   WITH CHECK (
-    auth.uid() = user_id AND
+    (select auth.uid()) = user_id AND
     EXISTS (SELECT 1 FROM products WHERE id = product_id AND price = 0)
   );
 
@@ -713,13 +715,13 @@ CREATE POLICY "Allow admin users to manage access" ON user_product_access
   USING (
     EXISTS (
       SELECT 1 FROM admin_users 
-      WHERE user_id = auth.uid()
+      WHERE user_id = (select auth.uid())
     )
   )
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM admin_users 
-      WHERE user_id = auth.uid()
+      WHERE user_id = (select auth.uid())
     )
   );
 
@@ -728,7 +730,7 @@ CREATE POLICY "Allow admin users to manage access" ON user_product_access
 CREATE POLICY "Allow users to read their own admin status" ON admin_users
   FOR SELECT
   TO authenticated
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 -- RLS Policies for audit_log table
 -- Only allow admin users to read audit logs
@@ -738,7 +740,7 @@ CREATE POLICY "Allow admin users to read audit logs" ON audit_log
   USING (
     EXISTS (
       SELECT 1 FROM admin_users 
-      WHERE user_id = auth.uid()
+      WHERE user_id = (select auth.uid())
     )
   );
 
@@ -752,7 +754,7 @@ CREATE POLICY "Allow system to insert audit logs" ON audit_log
 CREATE POLICY "Allow users to read their own rate limits" ON rate_limits
   FOR SELECT
   TO authenticated
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 -- Allow system to manage rate limits
 CREATE POLICY "Allow system to manage rate limits" ON rate_limits
@@ -921,7 +923,8 @@ BEGIN
   
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = '';
 
 -- Create trigger for comprehensive user registration handling
 CREATE TRIGGER user_registration_trigger
@@ -936,7 +939,8 @@ BEGIN
   NEW.updated_at = timezone('utc'::text, now());
   RETURN NEW;
 END;
-$$ language plpgsql;
+$$ language plpgsql
+SET search_path = '';
 
 -- Create simple audit function for critical tables
 CREATE OR REPLACE FUNCTION audit_trigger_function()
@@ -957,7 +961,8 @@ BEGIN
   END IF;
   RETURN NULL;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = '';
 
 -- Secure function to log audit entries with proper validation
 CREATE OR REPLACE FUNCTION log_audit_entry(
@@ -1004,6 +1009,7 @@ BEGIN
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
 SET statement_timeout = '2s';
 
 -- Grant execute permissions to the service role and authenticated users

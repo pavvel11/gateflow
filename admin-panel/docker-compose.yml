@@ -1,55 +1,27 @@
 # GateFlow Admin Panel - Docker Compose
-version: '3.8'
 
 services:
   admin-panel:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+        NEXT_TELEMETRY_DISABLED: ${NEXT_TELEMETRY_DISABLED}
     container_name: gateflow-admin
+    env_file:
+      - .env
     ports:
       - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
-      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
-      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
-      - ENABLE_MULTITENANT=${ENABLE_MULTITENANT:-false}
-      
-      # Stripe Configuration Override (optional)
-      # These override .stripe file settings
-      - STRIPE_THEME=${STRIPE_THEME:-night}
-      - STRIPE_LABELS=${STRIPE_LABELS:-floating}
-      - STRIPE_PAYMENT_METHODS=${STRIPE_PAYMENT_METHODS:-blik,p24,card}
-      - STRIPE_SESSION_AUTOMATIC_TAX_ENABLED=${STRIPE_SESSION_AUTOMATIC_TAX_ENABLED:-true}
-      - STRIPE_SESSION_TAX_ID_COLLECTION_ENABLED=${STRIPE_SESSION_TAX_ID_COLLECTION_ENABLED:-true}
-      
-      # Stripe Error Messages (optional localization)
-      - STRIPE_ERROR_PRODUCT_NOT_FOUND=${STRIPE_ERROR_PRODUCT_NOT_FOUND:-Product not found or inactive}
-      - STRIPE_ERROR_RATE_LIMIT_EXCEEDED=${STRIPE_ERROR_RATE_LIMIT_EXCEEDED:-Too many checkout attempts. Please try again later.}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-
-  # Optional: Local Supabase stack
-  # supabase-db:
-  #   image: supabase/postgres:15.1.0.147
-  #   container_name: gateflow-db
-  #   environment:
-  #     POSTGRES_HOST: /var/run/postgresql
-  #     PGPORT: 5432
-  #     POSTGRES_PORT: 5432
-  #     PGPASSWORD: your-super-secret-and-long-postgres-password
-  #     POSTGRES_PASSWORD: your-super-secret-and-long-postgres-password
-  #     PGDATABASE: postgres
-  #     POSTGRES_DB: postgres
-  #   volumes:
-  #     - ./supabase/volumes/db/data:/var/lib/postgresql/data:Z
-  #   ports:
-  #     - "5432:5432"
-  #   restart: unless-stopped
 
 networks:
   default:

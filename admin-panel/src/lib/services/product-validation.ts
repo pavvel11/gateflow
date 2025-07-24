@@ -5,6 +5,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import type { User } from '@supabase/supabase-js';
+import { DisposableEmailService } from './disposable-email';
 
 export interface ValidatedProduct {
   id: string;
@@ -134,9 +135,18 @@ export class ProductValidationService {
   }
 
   /**
-   * Validate email format
+   * Validate email format and check for disposable domains
    */
-  static validateEmail(email: string): boolean {
+  static async validateEmail(email: string, allowDisposable: boolean = false): Promise<boolean> {
+    // Use our enhanced disposable email service
+    const validation = await DisposableEmailService.validateEmail(email, allowDisposable);
+    return validation.isValid;
+  }
+
+  /**
+   * Validate email format only (basic regex check)
+   */
+  static validateEmailFormat(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   }

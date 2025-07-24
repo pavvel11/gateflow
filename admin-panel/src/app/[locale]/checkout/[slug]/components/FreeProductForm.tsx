@@ -6,6 +6,7 @@ import { Product } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useRouter } from 'next/navigation';
+import { validateEmailAction } from '@/lib/actions/validate-email';
 
 interface FreeProductFormProps {
   product: Product;
@@ -63,9 +64,14 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
       return;
     }
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    // Enhanced email validation with disposable domain checking
+    try {
+      const emailValidation = await validateEmailAction(email);
+      if (!emailValidation.isValid) {
+        setMessage({ type: 'error', text: emailValidation.error || 'Invalid or disposable email address not allowed' });
+        return;
+      }
+    } catch {
       setMessage({ type: 'error', text: 'Please enter a valid email address' });
       return;
     }

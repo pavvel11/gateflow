@@ -17,8 +17,7 @@ export function exportProductsToCsv(products: Product[], filename = 'products.cs
     'Status',
     'Created',
     'Updated',
-    'Icon',
-    'Theme'
+    'Icon'
   ];
 
   // Convert the products to CSV rows
@@ -31,8 +30,7 @@ export function exportProductsToCsv(products: Product[], filename = 'products.cs
     product.is_active ? 'Active' : 'Inactive',
     new Date(product.created_at).toISOString().split('T')[0], // Format date as YYYY-MM-DD
     product.updated_at ? new Date(product.updated_at).toISOString().split('T')[0] : '',
-    product.icon || '',
-    product.theme || ''
+    product.icon || ''
   ]);
 
   // Join the headers and rows to create the CSV content

@@ -69,6 +69,10 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
             paymentStatus = 'magic_link_sent';
             customerEmail = result.customer_email || '';
           }
+        } else if (result.scenario === 'email_validation_failed_server_side') {
+          // Email validation failed without refund
+          paymentStatus = 'email_validation_failed';
+          errorMessage = result.error || 'Invalid email address detected.';
         } else if (result.is_guest_purchase && result.send_magic_link) {
           // Guest purchase saved - let frontend handle magic link
           paymentStatus = 'magic_link_sent';

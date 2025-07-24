@@ -45,11 +45,8 @@ export async function GET() {
 
     const totalRevenue = revenueData?.reduce((sum, transaction) => sum + transaction.amount, 0) || 0;
 
-    // Get pending sessions count
-    const { count: pendingSessions } = await supabase
-      .from('payment_sessions')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'pending');
+    // Get pending sessions count - not applicable in embedded checkout
+    const pendingSessions = 0; // Embedded checkout doesn't use payment_sessions
 
     // Get refunded amount
     const { data: refundData } = await supabase

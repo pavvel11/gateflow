@@ -6,7 +6,6 @@ export interface Product {
   icon: string
   price: number
   currency: string
-  theme: string
   layout_template: string
   is_active: boolean
   is_featured: boolean

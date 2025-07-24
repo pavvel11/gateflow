@@ -24,9 +24,12 @@ export async function fetchClientSecret(options: CreateEmbeddedCheckoutOptions):
       throw new Error('Product ID is required');
     }
 
-    // Email validation if provided
-    if (email && !ProductValidationService.validateEmail(email)) {
-      throw new Error('Invalid email format');
+    // Email validation if provided - enhanced with disposable domain checking
+    if (email) {
+      const emailValidation = await ProductValidationService.validateEmail(email);
+      if (!emailValidation) {
+        throw new Error('Invalid or disposable email address not allowed');
+      }
     }
 
     // Get authenticated user (optional)
