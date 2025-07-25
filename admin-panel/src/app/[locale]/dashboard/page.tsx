@@ -66,7 +66,7 @@ function DashboardPage() {
                 </div>
               </Link>
               
-              <Link
+              {/* <Link
                 href="/dashboard/payments"
                 className="block p-4 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30 transition-all"
               >
@@ -81,7 +81,7 @@ function DashboardPage() {
                     <p className="text-sm text-gray-500 dark:text-gray-400">{t('managePaymentsDescription')}</p>
                   </div>
                 </div>
-              </Link>
+              </Link> */}
             </div>
           </div>
           

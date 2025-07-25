@@ -7,15 +7,14 @@ import { Product } from '@/types';
 import { createClient } from '@/lib/supabase/client';
 import { formatPrice } from '@/lib/constants';
 import { useAuth } from '@/contexts/AuthContext';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
+import DashboardLayout from '@/components/DashboardLayout';
 
 export default function ProductsLanding() {
   const t = useTranslations('storefront');
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -49,151 +48,51 @@ export default function ProductsLanding() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500 mx-auto mb-4"></div>
-          <p className="text-gray-300">{t('loading')}</p>
+      <DashboardLayout user={user ? {
+        email: user.email || '',
+        id: user.id || ''
+      } : null}>
+        <div className="bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500 mx-auto mb-4"></div>
+            <p className="text-gray-300">{t('loading')}</p>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-400 text-6xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-white mb-2">{t('unableToLoad')}</h1>
-          <p className="text-gray-300 mb-6">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
-          >
-            {t('tryAgain')}
-          </button>
+      <DashboardLayout user={user ? {
+        email: user.email || '',
+        id: user.id || ''
+      } : null}>
+        <div className="bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <div className="text-red-400 text-6xl mb-4">⚠️</div>
+            <h1 className="text-2xl font-bold text-white mb-2">{t('unableToLoad')}</h1>
+            <p className="text-gray-300 mb-6">{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+            >
+              {t('tryAgain')}
+            </button>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
-      {/* Navigation */}
-      <nav className="relative z-10 bg-black/20 backdrop-blur-md border-b border-white/10 sticky top-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center group">
-                <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center group-hover:shadow-lg group-hover:scale-105 transition-all">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                </div>
-                <span className="ml-3 text-xl font-bold text-white group-hover:text-purple-200 transition-colors">
-                  {t('navigation.gateflow')}
-                </span>
-              </Link>
-            </div>
-            
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-3">
-              {/* Language Switcher */}
-              <LanguageSwitcher />
-              
-              {user ? (
-                <>
-                  <Link
-                    href="/my-products"
-                    className="px-4 py-2 bg-purple-600/80 hover:bg-purple-600 backdrop-blur-sm text-white rounded-lg transition-all font-medium hover:scale-105 hover:shadow-lg"
-                  >
-                    {t('navigation.myProducts')}
-                  </Link>
-                  {isAdmin && (
-                    <Link
-                      href="/dashboard"
-                      className="px-4 py-2 bg-blue-600/80 hover:bg-blue-600 backdrop-blur-sm text-white rounded-lg transition-all font-medium hover:scale-105 hover:shadow-lg"
-                    >
-                      {t('navigation.adminPanel')}
-                    </Link>
-                  )}
-                </>
-              ) : (
-                <Link
-                  href="/login"
-                  className="px-4 py-2 bg-purple-600/80 hover:bg-purple-600 backdrop-blur-sm text-white rounded-lg transition-all font-medium hover:scale-105 hover:shadow-lg"
-                >
-                  {t('navigation.login')}
-                </Link>
-              )}
-            </div>
-
-            {/* Mobile Navigation */}
-            <div className="md:hidden flex items-center space-x-2">
-              {/* Language Switcher */}
-              <LanguageSwitcher />
-              
-              {/* Mobile Menu Button */}
-              <button 
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
-                aria-label="Toggle mobile menu"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-black/30 backdrop-blur-md border-t border-white/10">
-            <div className="px-4 py-4 space-y-3">
-              {user ? (
-                <>
-                  <Link
-                    href="/my-products"
-                    className="block px-4 py-2 text-center bg-purple-600/80 hover:bg-purple-600 text-white rounded-lg transition-all font-medium"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {t('navigation.myProducts')}
-                  </Link>
-                  {isAdmin && (
-                    <Link
-                      href="/dashboard"
-                      className="block px-4 py-2 text-center bg-blue-600/80 hover:bg-blue-600 text-white rounded-lg transition-all font-medium"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {t('navigation.adminPanel')}
-                    </Link>
-                  )}
-                </>
-              ) : (
-                <Link
-                  href="/login"
-                  className="block px-4 py-2 text-center bg-purple-600/80 hover:bg-purple-600 text-white rounded-lg transition-all font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {t('navigation.login')}
-                </Link>
-              )}
-            </div>
-          </div>
-        )}
-      </nav>
-      
-      {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/20 md:hidden"
-          onClick={() => setMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* Hero Section */}
-      <section className="relative pt-20 pb-16 overflow-hidden">
+    <DashboardLayout user={user ? {
+      email: user.email || '',
+      id: user.id || ''
+    } : null}>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 -mx-4 -my-6 px-4 py-6">
+        {/* Hero Section */}
+        <section className="relative pt-20 pb-16 overflow-hidden">
         {/* Background aurora effect */}
         <div 
           className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_20%_20%,#3a2d5b_0%,transparent_40%),radial-gradient(circle_at_80%_70%,#0f3460_0%,transparent_40%)]"
@@ -454,5 +353,6 @@ export default function ProductsLanding() {
         </div>
       </footer>
     </div>
+    </DashboardLayout>
   );
 }

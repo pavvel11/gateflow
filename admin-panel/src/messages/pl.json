@@ -32,7 +32,9 @@
     "settings": "Ustawienia",
     "logout": "Wyloguj",
     "login": "Zaloguj",
-    "profile": "Profil"
+    "profile": "Profil",
+    "myProducts": "Moje Produkty",
+    "store": "Sklep"
   },
   "auth": {
     "login": "Zaloguj się",

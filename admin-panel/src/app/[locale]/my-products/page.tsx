@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslations } from 'next-intl';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
+import DashboardLayout from '@/components/DashboardLayout';
 
 interface Product {
   id: string;
@@ -44,7 +44,7 @@ const formatPrice = (price: number | null, currency: string | null = 'USD') => {
 };
 
 export default function MyProductsPage() {
-  const { user, isAdmin, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const t = useTranslations('myProducts');
   const [userProducts, setUserProducts] = useState<UserProductAccess[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -112,47 +112,59 @@ export default function MyProductsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500 mx-auto mb-4"></div>
-          <p className="text-gray-300">{t('loadingProducts')}</p>
+      <DashboardLayout user={user ? {
+        email: user.email || '',
+        id: user.id || ''
+      } : null}>
+        <div className="bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500 mx-auto mb-4"></div>
+            <p className="text-gray-300">{t('loadingProducts')}</p>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-        <div className="text-center p-4">
-          <div className="text-red-400 text-6xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-white mb-2">{t('errorTitle')}</h1>
-          <p className="text-gray-300 mb-6">{error}</p>
-          <button 
-            onClick={fetchProductsData} 
-            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
-          >
-            {t('tryAgain')}
-          </button>
+      <DashboardLayout user={user ? {
+        email: user.email || '',
+        id: user.id || ''
+      } : null}>
+        <div className="bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center min-h-96">
+          <div className="text-center p-4">
+            <div className="text-red-400 text-6xl mb-4">⚠️</div>
+            <h1 className="text-2xl font-bold text-white mb-2">{t('errorTitle')}</h1>
+            <p className="text-gray-300 mb-6">{error}</p>
+            <button 
+              onClick={fetchProductsData} 
+              className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+            >
+              {t('tryAgain')}
+            </button>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
   
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-        <div className="text-center p-4">
-          <h2 className="text-2xl font-bold text-white mb-4">{t('accessRequired')}</h2>
-          <p className="text-gray-300 mb-6">{t('pleaseLoginToSeeProducts')}</p>
-          <Link
-            href="/login"
-            className="inline-flex items-center px-6 py-3 border border-transparent rounded-lg text-base font-medium text-white bg-purple-600 hover:bg-purple-700"
-          >
-            {t('login')}
-          </Link>
+      <DashboardLayout user={null}>
+        <div className="bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center min-h-96">
+          <div className="text-center p-4">
+            <h2 className="text-2xl font-bold text-white mb-4">{t('accessRequired')}</h2>
+            <p className="text-gray-300 mb-6">{t('pleaseLoginToSeeProducts')}</p>
+            <Link
+              href="/login"
+              className="inline-flex items-center px-6 py-3 border border-transparent rounded-lg text-base font-medium text-white bg-purple-600 hover:bg-purple-700"
+            >
+              {t('login')}
+            </Link>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
@@ -227,65 +239,22 @@ export default function MyProductsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white">
-      {/* Navigation */}
-      <nav className="relative z-10 bg-black/20 backdrop-blur-md border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center">
-                <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                </div>
-                <span className="ml-3 text-xl font-bold text-white">GateFlow</span>
-              </Link>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              {/* Language Switcher */}
-              <LanguageSwitcher />
-              
-              <div className="text-sm text-gray-300 hidden sm:block">
-                {user.email}
-              </div>
-              {isAdmin && (
-                <Link
-                  href="/dashboard"
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
-                >
-                  {t('adminPanel')}
-                </Link>
-              )}
-              <Link
-                href="/products"
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium"
-              >
-                {t('store')}
-              </Link>
-              <button
-                onClick={signOut}
-                className="px-4 py-2 border border-white/20 hover:bg-white/10 text-white rounded-lg transition-colors font-medium"
-              >
-                {t('signOut')}
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Header */}
-      <header className="relative pt-20 pb-16 text-center">
-        <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
-            {t('title')}
-          </span>
-        </h1>
-        <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-          {t('subtitle')}
-        </p>
-      </header>
+    <DashboardLayout user={user ? {
+      email: user.email || '',
+      id: user.id || ''
+    } : null}>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white -mx-4 -my-6 px-4 py-6">
+        {/* Header */}
+        <header className="relative pt-20 pb-16 text-center">
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
+              {t('title')}
+            </span>
+          </h1>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            {t('subtitle')}
+          </p>
+        </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         {/* My Access Section */}
@@ -335,5 +304,6 @@ export default function MyProductsPage() {
         )}
       </main>
     </div>
+    </DashboardLayout>
   );
 }

@@ -1,249 +1,533 @@
-# GateFlow v8.0 - Enterprise Content Protection System
+# 🚀 GateFlow - Professional Content Access Control System
 
-A modern, enterprise-grade access control system for product delivery and content protection built on Supabase with advanced performance, analytics, and accessibility features.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen)](https://nodejs.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?logo=supabase&logoColor=white)](https://supabase.com/)
+[![Next.js](https://img.shields.io/badge/Next.js-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-## 🔐 GateFlow Licensing
+> **Transform your content into a revenue-generating machine with enterprise-grade access control.**
 
-GateFlow offers flexible licensing options for different use cases:
+GateFlow is a comprehensive content access control and monetization platform that combines powerful authentication, flexible payment processing, and intuitive content protection. Whether you're selling digital products, courses, or premium content, GateFlow provides everything you need to secure and monetize your offerings.
 
-- **🆓 Open Source**: Free for personal/educational use (watermark displayed)
-- **💼 Professional**: $49/domain/year (remove watermark, priority support)
-- **🏢 Enterprise**: $199/domain/year (white-label, custom integrations)
-- **🌍 Multi-Domain**: $299/year (unlimited domains)
+## ✨ Key Features
 
-[**Purchase License**](https://gateflow.pl/pricing) | [**Documentation**](https://docs.gateflow.pl)
+### 🔐 **Advanced Access Control**
 
-## 🚀 Features
+- **Multi-mode Protection**: Page-level, element-level, and toggle-based content gating
+- **Role-based Permissions**: Granular control over user access levels
+- **Time-based Access**: Set expiration dates and temporary access grants
+- **Domain-based Licensing**: Secure deployment with watermark system
 
-### Core Protection
+### 💳 **Integrated Payment System**
 
-- **Page Protection** - Protect entire pages based on product access
-- **Element Protection** - Show/hide specific elements based on access
-- **Toggle Elements** - Dynamic content switching for users with/without access
-- **Magic Link Authentication** - Seamless email-based login
-- **Free Product Support** - Automatic access grants for free products
-- **Database-Driven** - All decisions based on Supabase database
+- **Stripe Integration**: Complete payment processing with webhooks
+- **Guest Checkout**: Allow purchases without account creation
+- **Multiple Currencies**: Support for 30+ international currencies
+- **Refund Management**: Built-in refund tracking and administration
+- **Lead Generation**: Offer free products in exchange for email registration to build newsletter base
 
-### 🔒 Security Features
+### 🎨 **Rich User Experience**
 
-- **DOM Removal**: Protected content is completely removed from DOM (not just hidden)
-- **No Hidden Content**: Protected content never reaches client-side when user shouldn't see it
-- **🚫 Anti-Bypass Protection** - Noscript redirects prevent JavaScript-disabled bypass attempts
-- **Database Verification**: All access checks validated against Supabase database
-- **Session-Based**: User authentication managed securely through Supabase Auth
+- **Magic Link Authentication**: Passwordless login via email
+- **Responsive Design**: Beautiful UI that works on all devices
+- **Theme System**: Light/dark mode with customizable styling
+- **Internationalization**: Multi-language support (English, Polish)
 
-### ⚡ Performance Optimization
+### 📊 **Powerful Administration**
 
-- **Batch Access Checks** - Multiple products checked in single query for optimal speed
-- **Intelligent Caching** - 5-minute TTL cache with automatic invalidation
-- **Retry Logic** - Automatic retry for transient failures with exponential backoff
-- **Performance Monitoring** - Built-in metrics and timing for optimization
-- **Preload User Access** - Optional preloading of user permissions
-- **Query Timeout Protection** - Prevents hanging queries
+- **Real-time Dashboard**: Monitor sales, users, and analytics
+- **Product Management**: Create and manage digital products
+- **User Administration**: Comprehensive user and access management
+- **Analytics & Reporting**: Detailed insights into your business
 
-### 📊 Advanced Analytics
+### 🛡️ **Enterprise Security**
 
-- **Comprehensive Event Tracking** - All user interactions and system events
-- **Scroll Depth Tracking** - Monitor user engagement with content
-- **Time on Page Metrics** - Track user session duration and engagement
-- **Device Information** - Browser, platform, and capability detection
-- **Custom Dimensions** - Extensible analytics with custom properties
-- **Multi-Provider Support** - Google Analytics, Segment, Facebook Pixel, custom endpoints
-- **Performance Metrics** - Load times, cache hits, error rates
+- **Row Level Security**: Database-level access control with Supabase RLS
+- **Rate Limiting**: Advanced protection against abuse
+- **Audit Logging**: Complete tracking of administrative actions
+- **SQL Injection Protection**: Parameterized queries and input validation
 
-### 🛡️ Error Handling & Resilience
+## 🏗️ Architecture
 
-- **Graceful Fallbacks** - Configurable behavior when services are unavailable
-- **Smart Error Recovery** - Development vs production error handling
-- **User-Friendly Error Pages** - Beautiful error pages with recovery options
-- **Fallback Modes**: `show_all`, `hide_all`, `show_free`
+```mermaid
+graph TB
+    A[Frontend - Next.js Admin Panel] --> B[Supabase Auth]
+    A --> C[Supabase Database]
+    A --> D[Stripe Payments]
+    E[GateFlow.js SDK] --> B
+    E --> C
+    F[Protected Content] --> E
+    G[Guest Users] --> E
+    H[Registered Users] --> E
+    
+    subgraph "Database Layer"
+        C --> I[Products]
+        C --> J[User Access]
+        C --> K[Payment Transactions]
+        C --> L[Admin Audit Log]
+    end
+    
+    subgraph "Security Layer"
+        M[Rate Limiting]
+        N[RLS Policies]
+        O[Input Validation]
+        P[Audit Logging]
+    end
 
-### 🎨 Enhanced User Experience
+## 🚀 Quick Start
 
-- **Beautiful Loading States** - Theme-aware loading animations
-- **Theme Support** - Light, dark, and auto themes based on user preference
-- **Auto-Refresh** - Refresh access when user returns to tab
-- **Progress Tracking** - Monitor user progress through content
-- **Smooth Animations** - Respectful of user motion preferences
-- **Progressive Enhancement** - Works without JavaScript with fallbacks
+### Prerequisites
 
-### ♿ Accessibility First
+- Node.js 14+ and npm/yarn
+- Supabase account
+- Stripe account (for payments)
 
-- **ARIA Labels & Roles** - Full screen reader compatibility
-- **Keyboard Navigation** - Complete keyboard accessibility
-- **Screen Reader Text** - Hidden descriptive text for assistive technology
-- **High Contrast Support** - Respects user contrast preferences
-- **Reduced Motion** - Honors prefers-reduced-motion settings
-- **Focus Management** - Proper focus handling for dynamic content
+### 1. Clone & Install
 
-## 📁 Project Structure
+```bash
+git clone https://github.com/yourusername/gateflow-access-control.git
+cd gateflow-access-control
 
-```
-├── gatekeeper.js           # Main gatekeeper script (refactored, clean code)
-├── config.js              # Supabase configuration for index.html
-├── index.html             # Main index/checkout page
-├── examples/              # Example implementations
-│   ├── protected-product.html  # Page protection example
-│   ├── test-mixed.html        # Element protection example
-│   ├── test-toggle.html       # Toggle elements demo
-│   ├── landing-page.html      # Dynamic landing page example
-│   └── elements-example.html  # Basic elements example
-├── sql/                   # Database setup scripts
-│   ├── gateflow_setup.sql     # Products table setup
-│   └── user_product_access_setup.sql # User access table setup
-├── debug/                 # Development and debugging tools
-│   ├── database-debug.html    # Database state debugging
-│   ├── debug-protected.html   # Protection debugging
-│   └── quick-setup.html       # Quick setup verification
-├── layouts/               # Layout templates
-│   └── default.html
-├── themes/                # CSS themes
-├── supabase/              # Supabase functions
-└── README.md              # This file
+# Install main dependencies
+npm install
+
+# Install admin panel dependencies
+cd admin-panel
+npm install
+cd ..
 ```
 
-## 🛠️ Setup
+### 2. Database Setup
 
-### 1. Database Setup
+```bash
+# Initialize Supabase project
+npx supabase init
 
-Run the SQL scripts in your Supabase dashboard:
+# Start local development
+npx supabase start
 
-- `sql/gateflow_setup.sql` - Creates products table
-- `sql/user_product_access_setup.sql` - Creates user access table
+# Run migrations
+npx supabase db reset
+```
 
-### 2. Configuration
+### 3. Environment Configuration
 
-Update the Supabase credentials in `gatekeeper.js` and `config.js`:
+Create `.env.local` in the admin panel directory:
+
+```env
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Stripe Configuration
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Application URLs
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
+
+### 4. Launch the Application
+
+```bash
+# Start the admin panel
+cd admin-panel
+npm run dev
+
+# In another terminal, serve examples
+cd ..
+npm run dev
+```
+
+Visit:
+
+- **Admin Panel**: <http://localhost:3000>
+- **Examples**: <http://localhost:8000>
+
+## 📖 Usage Examples
+
+### Basic Content Protection
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Protected Content</title>
+</head>
+<body>
+    <!-- Free content visible to everyone -->
+    <div class="free-content">
+        <h1>Welcome to Our Platform</h1>
+        <p>This content is free for everyone...</p>
+    </div>
+
+    <!-- Protected content requires purchase -->
+    <div class="gateflow-protect" data-product-slug="premium-course">
+        <h2>Premium Course Content</h2>
+        <p>This exclusive content is only available to paying customers...</p>
+    </div>
+
+    <!-- Free content that requires email registration (lead magnet) -->
+    <div class="gateflow-protect" data-product-slug="free-ebook" data-price="0">
+        <h2>Free Marketing Guide</h2>
+        <p>Get our comprehensive marketing guide by providing your email address...</p>
+    </div>
+
+    <!-- Initialize GateFlow -->
+    <script src="/api/gatekeeper?domain=yourdomain.com"></script>
+</body>
+</html>
+```
+
+### Element-Level Protection
+
+```html
+<!-- Protect specific elements -->
+<div class="gateflow-element" 
+     data-product-slug="advanced-tutorials"
+     data-fallback="Please purchase our Advanced Tutorials to access this content.">
+    <video src="premium-tutorial.mp4" controls></video>
+</div>
+
+<!-- Toggle-based protection -->
+<button class="gateflow-toggle" 
+        data-product-slug="pro-features"
+        data-show-text="Hide Advanced Settings"
+        data-hide-text="Unlock Advanced Settings">
+    Toggle Pro Features
+</button>
+```
+
+### JavaScript API Integration
 
 ```javascript
-const SUPABASE_URL = 'your-project-url';
-const SUPABASE_ANON_KEY = 'your-anon-key';
+// Check user access programmatically
+GateFlow.checkAccess('premium-course').then(hasAccess => {
+    if (hasAccess) {
+        // Load premium content
+        loadPremiumFeatures();
+    } else {
+        // Show purchase options
+        GateFlow.showPurchaseModal('premium-course');
+    }
+});
+
+// Handle free products for lead generation
+GateFlow.checkAccess('free-ebook').then(hasAccess => {
+    if (!hasAccess) {
+        // Show email registration form for free product
+        GateFlow.showPurchaseModal('free-ebook');
+    }
+});
+
+// Listen to access events
+GateFlow.on('access_granted', (event) => {
+    console.log('User gained access to:', event.productSlug);
+    if (event.price === 0) {
+        // Handle free product access - new lead captured!
+        trackNewLead(event.customerEmail);
+    }
+    refreshContent();
+});
+
+// Track custom events
+GateFlow.track('video_completed', { 
+    product: 'advanced-course',
+    duration: 1200 
+});
 ```
 
-### 3. Implementation
+## 🎨 Customization
 
-Add to your HTML pages:
+### Theme Configuration
 
-```html
-<script>
-    window.gatekeeperConfig = {
-        productSlug: 'your-product-slug'
-    };
-</script>
-<script src="gatekeeper.js"></script>
-```
-
-## 🎯 Usage Examples
-
-### Page Protection
-Protects entire page - shows login form if no access:
-```html
-<script>
-    window.gatekeeperConfig = {
-        productSlug: 'premium-course'
-    };
-</script>
-```
-
-### Element Protection
-
-**🔒 Security**: Protected elements are completely removed from DOM when user lacks access (not just hidden).
-
-```html
-<div data-gatekeeper-product="premium-course">
-    Premium content here
-</div>
-```
-
-### Toggle Elements
-
-Different content for users with/without access:
-
-**🔒 Security**: `data-paid` elements are removed from DOM when user lacks access.
-
-```html
-<!-- For users without access -->
-<div data-free>
-    <h2>Buy now for $99</h2>
-    <button>Purchase</button>
-</div>
-
-<!-- For users with access -->
-<div data-paid>
-    <h2>Welcome back!</h2>
-    <button>Continue Learning</button>
-</div>
-```
-
-## 🔧 API Reference
-
-### Configuration
 ```javascript
-window.gatekeeperConfig = {
-    productSlug: 'product-slug',         // Required: Product to protect
-    gateflowLicense: 'GFLOW-XXXX-XXXX',  // Optional: License key (removes watermark)
-    showLoadingState: true,              // Optional: Show loading animation (default: true)
-    fallbackMode: 'hide_all',            // Optional: 'show_all', 'hide_all', 'show_free' (default: 'hide_all')
-    development: false,                  // Optional: Show detailed errors (default: false)
-    analyticsEndpoint: 'https://your-analytics.com/events'  // Optional: Custom analytics endpoint
+// config.js
+window.GATEFLOW_CONFIG = {
+    theme: {
+        primaryColor: '#667eea',
+        backgroundColor: '#ffffff',
+        borderRadius: '12px',
+        fontFamily: 'Inter, sans-serif'
+    },
+    ui: {
+        showWatermark: false, // Requires license
+        modalAnimation: 'slideUp',
+        loadingSpinner: 'dots'
+    }
 };
 ```
 
-### Analytics & Tracking
-
-Gatekeeper automatically tracks key events for optimization:
+### Advanced Configuration
 
 ```javascript
-// Events tracked:
-// - gatekeeper_access_granted
-// - gatekeeper_access_denied  
-// - gatekeeper_login_form_shown
-// - gatekeeper_magic_link_sent
-// - gatekeeper_free_product_granted
-// - gatekeeper_element_removed_security
-// - gatekeeper_batch_check_performed
-// - gatekeeper_error_occurred
-
-// Works with: Google Analytics, Segment, Facebook Pixel
-// Automatically detects: window.gtag, window.analytics, window.fbq
+window.GATEFLOW_CONFIG = {
+    supabase: {
+        url: 'your-supabase-url',
+        anonKey: 'your-anon-key'
+    },
+    features: {
+        enableAnalytics: true,
+        enableCaching: true,
+        debugMode: false
+    },
+    protection: {
+        fallbackMode: 'show_free', // 'hide_all', 'show_all', 'show_free'
+        gracefulDegradation: true
+    }
+};
 ```
 
-### Fallback Modes
+## 🛠️ Development
 
-Configure behavior when errors occur:
+### Project Structure
 
-- **`hide_all`** (default): Show error page, safest for production
-- **`show_free`**: Remove only paid content, show free content
-- **`show_all`**: Show everything, good for development
+gateflow-access-control/
+├── 📁 admin-panel/          # Next.js admin dashboard
+│   ├── src/
+│   │   ├── app/             # App router pages
+│   │   ├── components/      # React components
+│   │   ├── lib/             # Utility functions
+│   │   └── types/           # TypeScript definitions
+│   └── package.json
+├── 📁 examples/             # Demo implementations
+│   ├── 1-free-content.html
+│   ├── 2-page-protection.html
+│   ├── 3-element-protection.html
+│   └── ...
+├── 📁 supabase/             # Database schema & migrations
+│   ├── migrations/
+│   └── config.toml
+├── 📁 themes/               # CSS theme files
+├── gatekeeper.js            # Core JavaScript SDK
+├── config.example.js        # Configuration template
+└── package.json
 
-### Data Attributes
-- `data-gatekeeper-product="slug"` - Protect element based on product access
-- `data-free` - Show when user doesn't have access
-- `data-paid` - Show when user has access
+### Available Scripts
 
-### URL Parameters
-- `?product=slug` - Automatic access grant for free products
+```bash
+# Development
+npm run dev              # Start demo server
+cd admin-panel && npm run dev  # Start admin panel
 
-### Noscript Fallback
-For pages with JavaScript disabled, add a fallback redirect:
-```html
-<noscript>
-    <meta http-equiv="refresh" content="0;url=/?product=your-main-product-slug"/>
-</noscript>
+# Production
+npm run build            # Build for production
+npm start               # Start production server
+
+# Database
+npx supabase db reset    # Reset database
+npx supabase db push     # Push schema changes
+npx supabase gen types typescript --local > types/database.ts
+
+# Quality
+npm run lint            # Run linting
+npm test               # Run tests
 ```
-**Important**: Match the product slug to your page's main protected content.
+
+### Database Schema
+
+The system uses a comprehensive PostgreSQL schema with:
+
+- **Products**: Manage digital products and pricing
+- **User Access**: Track user permissions and expiration
+- **Payment Transactions**: Complete payment history with Stripe integration
+- **Guest Purchases**: Handle purchases before account creation
+- **Admin Actions**: Audit log for administrative activities
+- **Rate Limiting**: Prevent abuse and ensure fair usage
+
+Key tables include advanced features like:
+
+- Row Level Security (RLS) policies
+- Optimistic locking for concurrent access
+- Comprehensive input validation
+- Audit logging for all administrative actions
+
+## 🔧 API Reference
+
+### Core Methods
+
+#### `GateFlow.checkAccess(productSlug)`
+
+Check if the current user has access to a product.
+
+```javascript
+const hasAccess = await GateFlow.checkAccess('premium-course');
+```
+
+#### `GateFlow.showPurchaseModal(productSlug)`
+
+Display the purchase modal for a specific product.
+
+```javascript
+GateFlow.showPurchaseModal('advanced-features');
+```
+
+#### `GateFlow.track(eventName, data)`
+
+Track custom analytics events.
+
+```javascript
+GateFlow.track('feature_used', { feature: 'export', format: 'pdf' });
+```
+
+### Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `theme.primaryColor` | string | `#667eea` | Primary brand color |
+| `theme.backgroundColor` | string | `#ffffff` | Modal background color |
+| `ui.showWatermark` | boolean | `true` | Show/hide GateFlow watermark |
+| `features.enableAnalytics` | boolean | `true` | Enable event tracking |
+| `protection.fallbackMode` | string | `show_free` | Behavior when access check fails |
+
+## 📊 Analytics & Monitoring
+
+GateFlow provides comprehensive analytics out of the box:
+
+### Built-in Events
+
+- **Access Events**: `access_granted`, `access_denied`
+- **Purchase Events**: `purchase_completed`, `purchase_failed`
+- **User Events**: `login_shown`, `magic_link_sent`
+- **Performance Events**: `cache_hit`, `api_response_time`
+- **Lead Generation Events**: `lead_captured`, `free_product_accessed`
+
+### Custom Event Tracking
+
+```javascript
+// Track user interactions
+GateFlow.track('video_started', { 
+    productSlug: 'course-basics',
+    videoId: 'intro-001',
+    timestamp: Date.now()
+});
+
+// Track business metrics
+GateFlow.track('conversion_funnel', {
+    step: 'pricing_page_viewed',
+    source: 'organic',
+    plan: 'premium'
+});
+
+// Track lead generation success
+GateFlow.track('lead_captured', {
+    productSlug: 'free-ebook',
+    source: 'blog_post',
+    leadMagnet: 'marketing_guide'
+});
+```
+
+## 🌍 Internationalization
+
+GateFlow supports multiple languages with easy configuration:
+
+```javascript
+window.GATEFLOW_CONFIG = {
+    locale: 'pl', // 'en', 'pl'
+    messages: {
+        'access_denied': 'Dostęp zabroniony',
+        'purchase_required': 'Wymagany zakup',
+        // ... custom translations
+    }
+};
+```
+
+Supported languages:
+
+- 🇺🇸 English (default)
+- 🇵🇱 Polish
+- 🔄 More languages coming soon
 
 ## 🚀 Deployment
 
-1. Upload files to your web server
-2. Configure Supabase credentials
-3. Set up database tables
-4. Test with your products
+### Production Checklist
 
-## 📝 License
+- [ ] Configure production Supabase project
+- [ ] Set up Stripe webhook endpoints
+- [ ] Update environment variables
+- [ ] Configure custom domain
+- [ ] Enable SSL/TLS certificates
+- [ ] Set up monitoring and logging
+- [ ] Test payment flows end-to-end
 
-MIT License - feel free to use in your projects!
+### Deployment Options
+
+#### Vercel (Recommended)
+
+```bash
+npx vercel --prod
+```
+
+#### Traditional Hosting
+
+```bash
+npm run build
+npm start
+```
+
+#### Docker
+
+```bash
+docker build -t gateflow .
+docker run -p 3000:3000 gateflow
+```
 
 ## 🤝 Contributing
 
-Feel free to submit issues and enhancement requests!
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Setup
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes and test thoroughly
+4. Commit with conventional commits: `git commit -m "feat: add amazing feature"`
+5. Push to your branch: `git push origin feature/amazing-feature`
+6. Submit a pull request
+
+### Code Style
+
+- Use TypeScript for type safety
+- Follow ESLint configuration
+- Write comprehensive tests
+- Document public APIs
+- Use conventional commit messages
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+### Commercial Licensing
+
+GateFlow operates under a freemium model:
+
+- **Free**: Full functionality with GateFlow watermark
+- **Pro ($49/domain/year)**: Remove watermark, priority support
+- **Enterprise**: Custom licensing for large deployments
+
+## 🆘 Support
+
+- 📧 **Email**: <support@gateflow.pl>
+- 🌐 **Website**: <https://gateflow.pl>
+- 📚 **Documentation**: <https://docs.gateflow.pl>
+- 💬 **Discord**: <https://discord.gg/gateflow>
+- 🐛 **Issues**: [GitHub Issues](https://github.com/yourusername/gateflow-access-control/issues)
+
+## 🙏 Acknowledgments
+
+- [Supabase](https://supabase.com/) for the incredible backend-as-a-service platform
+- [Stripe](https://stripe.com/) for robust payment processing
+- [Next.js](https://nextjs.org/) for the powerful React framework
+- [Tailwind CSS](https://tailwindcss.com/) for beautiful, responsive styling
+
+---
+
+---
+
+**[🌟 Star this repo](https://github.com/yourusername/gateflow-access-control) | [🚀 Try the demo](https://demo.gateflow.pl) | [📖 Read the docs](https://docs.gateflow.pl)**
+
+Made with ❤️ by the GateFlow team

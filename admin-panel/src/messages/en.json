@@ -49,7 +49,9 @@
     "settings": "Settings",
     "logout": "Logout",
     "login": "Login",
-    "profile": "Profile"
+    "profile": "Profile",
+    "myProducts": "My Products",
+    "store": "Store"
   },
   "auth": {
     "login": "Login",
