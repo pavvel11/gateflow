@@ -65,8 +65,7 @@ CREATE TABLE IF NOT EXISTS user_product_access (
 );
 
 -- Create a view for user access statistics
-CREATE OR REPLACE VIEW user_access_stats
-WITH (security_invoker=on) AS
+CREATE OR REPLACE VIEW user_access_stats AS
 SELECT 
     u.id as user_id,
     u.email,
@@ -79,13 +78,12 @@ SELECT
     MAX(upa.created_at) as last_access_granted_at,
     MIN(upa.created_at) as first_access_granted_at
 FROM auth.users u
-LEFT JOIN user_product_access upa ON u.id = upa.user_id
-LEFT JOIN products p ON upa.product_id = p.id
+LEFT JOIN public.user_product_access upa ON u.id = upa.user_id
+LEFT JOIN public.products p ON upa.product_id = p.id
 GROUP BY u.id, u.email, u.created_at, u.email_confirmed_at, u.last_sign_in_at, u.raw_user_meta_data;
 
 -- Create a more detailed user product access view for admin panels
-CREATE OR REPLACE VIEW user_product_access_detailed
-WITH (security_invoker=on) AS
+CREATE OR REPLACE VIEW user_product_access_detailed AS
 SELECT 
     upa.id,
     upa.user_id,
@@ -104,8 +102,8 @@ SELECT
     p.created_at as product_created_at,
     p.updated_at as product_updated_at,
     upa.tenant_id
-FROM user_product_access upa
-JOIN products p ON upa.product_id = p.id;
+FROM public.user_product_access upa
+JOIN public.products p ON upa.product_id = p.id;
 
 -- Create rate limiting function to prevent abuse
 -- CRITICAL SECURITY: Multi-layer protection against spoofing and bypass attempts
@@ -175,7 +173,7 @@ BEGIN
         backup_rate_limit_key := 'global_anon_' || function_name_param;
         
         -- Check global anonymous rate limit (stricter limits)
-        INSERT INTO rate_limits (user_id, function_name, window_start, call_count)
+        INSERT INTO public.rate_limits (user_id, function_name, window_start, call_count)
         VALUES (
             (md5(backup_rate_limit_key)::uuid), -- Deterministic UUID from backup key
             'global_' || function_name_param, 
@@ -193,7 +191,7 @@ BEGIN
     END IF;
     
     -- Try to increment existing record or insert new one
-    INSERT INTO rate_limits (user_id, function_name, window_start, call_count)
+    INSERT INTO public.rate_limits (user_id, function_name, window_start, call_count)
     VALUES (current_user_id, function_name_param, window_start_param, 1)
     ON CONFLICT (user_id, function_name, window_start)
     DO UPDATE SET 
@@ -205,7 +203,7 @@ BEGIN
     RETURN current_count <= max_calls;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 SET statement_timeout = '2s';
 
 COMMENT ON FUNCTION check_rate_limit IS 'SECURE rate limiting function with anti-spoofing protection. CRITICAL: Never trust client headers like x-forwarded-for as they can be easily spoofed by attackers to bypass rate limits. Uses only server-side reliable sources.';
@@ -217,7 +215,7 @@ DECLARE
     deleted_count INTEGER;
 BEGIN
     -- Delete rate limit records older than 24 hours
-    DELETE FROM rate_limits 
+    DELETE FROM public.rate_limits
     WHERE window_start < NOW() - INTERVAL '24 hours';
     
     GET DIAGNOSTICS deleted_count = ROW_COUNT;
@@ -225,7 +223,7 @@ BEGIN
     RETURN deleted_count;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public;
+SET search_path = '';
 
 COMMENT ON FUNCTION cleanup_rate_limits IS 'Cleanup old rate limit records. Should be called periodically (e.g., daily cron job).';
 
@@ -241,7 +239,7 @@ BEGIN
     END IF;
     
     -- Delete audit log records older than retention period
-    DELETE FROM audit_log 
+    DELETE FROM public.audit_log
     WHERE performed_at < NOW() - INTERVAL '1 day' * retention_days;
     
     GET DIAGNOSTICS deleted_count = ROW_COUNT;
@@ -249,7 +247,7 @@ BEGIN
     RETURN deleted_count;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public;
+SET search_path = '';
 
 COMMENT ON FUNCTION cleanup_audit_logs IS 'Cleanup old audit log records based on retention policy. Default is 90 days.';
 
@@ -275,7 +273,7 @@ BEGIN
     ORDER BY cron.jobname;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public;
+SET search_path = '';
 
 COMMENT ON FUNCTION get_cleanup_job_status IS 'Get status of cleanup cron jobs for monitoring purposes';
 
@@ -333,8 +331,8 @@ BEGIN
     
     RETURN EXISTS (
         SELECT 1 
-        FROM user_product_access upa
-        JOIN products p ON upa.product_id = p.id
+        FROM public.user_product_access upa
+        JOIN public.products p ON upa.product_id = p.id
         WHERE upa.user_id = auth.uid()  -- Use authenticated user ID
           AND p.slug = clean_slug       -- Use sanitized slug
           AND p.is_active = true
@@ -407,8 +405,8 @@ BEGIN
         -- Use parameterized query to prevent SQL injection
         SELECT EXISTS (
             SELECT 1 
-            FROM user_product_access upa
-            JOIN products p ON upa.product_id = p.id
+            FROM public.user_product_access upa
+            JOIN public.products p ON upa.product_id = p.id
             WHERE upa.user_id = current_user_id
               AND p.slug = clean_slug
               AND p.is_active = true
@@ -467,7 +465,7 @@ BEGIN
     
     -- Get product by slug (use sanitized slug)
     SELECT id, auto_grant_duration_days INTO product_record
-    FROM products 
+    FROM public.products 
     WHERE slug = clean_slug AND is_active = true AND price = 0; -- Only allow free products
     
     IF NOT FOUND THEN
@@ -484,7 +482,7 @@ BEGIN
     END IF;
     
     -- Insert or update user access
-    INSERT INTO user_product_access (user_id, product_id, access_expires_at, access_duration_days)
+    INSERT INTO public.user_product_access (user_id, product_id, access_expires_at, access_duration_days)
     VALUES (current_user_id, product_record.id, access_expires_at, COALESCE(access_duration_days_param, product_record.auto_grant_duration_days))
     ON CONFLICT (user_id, product_id) 
     DO UPDATE SET 
@@ -522,7 +520,7 @@ BEGIN
     
     -- Security check: only allow users to view their own profile or admins to view any profile
     IF user_id_param != current_user_id THEN
-        IF NOT EXISTS (SELECT 1 FROM admin_users WHERE user_id = current_user_id) THEN
+        IF NOT EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = current_user_id) THEN
             RAISE EXCEPTION 'Unauthorized: Can only view your own profile';
         END IF;
     END IF;
@@ -551,7 +549,7 @@ BEGIN
         'last_access_granted_at', last_access_granted_at,
         'first_access_granted_at', first_access_granted_at
     ) INTO user_stats
-    FROM user_access_stats
+    FROM public.user_access_stats
     WHERE user_id = user_id_param;
     
     -- Get user access details
@@ -568,7 +566,7 @@ BEGIN
             'granted_at', access_created_at
         )
     ) INTO user_access
-    FROM user_product_access_detailed
+    FROM public.user_product_access_detailed
     WHERE user_id = user_id_param;
     
     -- Return the combined user profile
@@ -654,11 +652,11 @@ CREATE POLICY "SELECT policy for products" ON products
   USING (
     -- Admin users see everything
     EXISTS (
-      SELECT 1 FROM admin_users 
+      SELECT 1 FROM public.admin_users 
       WHERE user_id = (SELECT auth.uid())
     ) OR
-    -- Public users see only active products
-    (is_active = true AND (available_from IS NULL OR available_from <= NOW()) AND (available_until IS NULL OR available_until >= NOW()))
+    -- Public users see only active products (temporal availability handled in application logic)
+    is_active = true
   );
 
 -- Polityki dla adminów - osobno dla każdej akcji
@@ -667,7 +665,7 @@ CREATE POLICY "Allow admin users to insert products" ON products
   TO authenticated
   WITH CHECK (
     EXISTS (
-      SELECT 1 FROM admin_users 
+      SELECT 1 FROM public.admin_users 
       WHERE user_id = (SELECT auth.uid())
     )
   );
@@ -677,13 +675,13 @@ CREATE POLICY "Allow admin users to update products" ON products
   TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM admin_users 
+      SELECT 1 FROM public.admin_users 
       WHERE user_id = (SELECT auth.uid())
     )
   )
   WITH CHECK (
     EXISTS (
-      SELECT 1 FROM admin_users 
+      SELECT 1 FROM public.admin_users 
       WHERE user_id = (SELECT auth.uid())
     )
   );
@@ -693,7 +691,7 @@ CREATE POLICY "Allow admin users to delete products" ON products
   TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM admin_users 
+      SELECT 1 FROM public.admin_users 
       WHERE user_id = (SELECT auth.uid())
     )
   );
@@ -707,7 +705,7 @@ CREATE POLICY "Allow users to read their own product access" ON user_product_acc
   USING (
     (SELECT auth.uid()) = user_id OR
     EXISTS (
-      SELECT 1 FROM admin_users 
+      SELECT 1 FROM public.admin_users 
       WHERE user_id = (SELECT auth.uid())
     )
   );
@@ -725,12 +723,12 @@ CREATE POLICY "Combined INSERT policy for user_product_access" ON user_product_a
   WITH CHECK (
     -- Admin users can insert anything
     EXISTS (
-      SELECT 1 FROM admin_users 
+      SELECT 1 FROM public.admin_users 
       WHERE user_id = (SELECT auth.uid())
     ) OR
     -- Regular users can insert access for FREE products for themselves
     ((SELECT auth.uid()) = user_id AND
-     EXISTS (SELECT 1 FROM products WHERE id = product_id AND price = 0))
+     EXISTS (SELECT 1 FROM public.products WHERE id = product_id AND price = 0))
   );
 
 -- Admin UPDATE policy
@@ -739,13 +737,13 @@ CREATE POLICY "Allow admin users to update access" ON user_product_access
   TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM admin_users 
+      SELECT 1 FROM public.admin_users 
       WHERE user_id = (SELECT auth.uid())
     )
   )
   WITH CHECK (
     EXISTS (
-      SELECT 1 FROM admin_users 
+      SELECT 1 FROM public.admin_users 
       WHERE user_id = (SELECT auth.uid())
     )
   );
@@ -756,7 +754,7 @@ CREATE POLICY "Allow admin users to delete access" ON user_product_access
   TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM admin_users 
+      SELECT 1 FROM public.admin_users 
       WHERE user_id = (SELECT auth.uid())
     )
   );
@@ -776,7 +774,7 @@ CREATE POLICY "Allow admin users to read audit logs" ON audit_log
   TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM admin_users 
+      SELECT 1 FROM public.admin_users 
       WHERE user_id = (select auth.uid())
     )
   );
@@ -792,7 +790,7 @@ CREATE POLICY "Combined SELECT policy for rate limits" ON rate_limits
     USING (
         -- Admins can view all rate limits
         EXISTS (
-            SELECT 1 FROM admin_users 
+            SELECT 1 FROM public.admin_users 
             WHERE admin_users.user_id = (SELECT auth.uid())
         ) OR
         -- Users can read their own rate limits
@@ -825,7 +823,7 @@ DECLARE
     target_user_id UUID;
 BEGIN
     -- Get current authenticated user (cache result)
-    current_user_id := auth.uid();
+    current_user_id := (SELECT auth.uid());
     
     -- Early return if no authenticated user
     IF current_user_id IS NULL THEN
@@ -843,12 +841,12 @@ BEGIN
     
     -- Direct EXISTS check with index usage
     RETURN EXISTS (
-        SELECT 1 FROM admin_users 
+        SELECT 1 FROM public.admin_users 
         WHERE user_id = target_user_id
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public;
+SET search_path = '';
 
 -- Create cached version for better performance when called repeatedly
 CREATE OR REPLACE FUNCTION is_admin_cached()
@@ -859,7 +857,7 @@ DECLARE
     cache_key TEXT;
 BEGIN
     -- Get current authenticated user
-    current_user_id := auth.uid();
+    current_user_id := (SELECT auth.uid());
     IF current_user_id IS NULL THEN
         RETURN FALSE;
     END IF;
@@ -881,7 +879,7 @@ BEGIN
     
     -- Check admin status from database
     SELECT EXISTS(
-        SELECT 1 FROM admin_users 
+        SELECT 1 FROM public.admin_users 
         WHERE user_id = current_user_id
     ) INTO user_is_admin;
     
@@ -891,7 +889,7 @@ BEGIN
     RETURN user_is_admin;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public;
+SET search_path = '';
 
 -- Create function to clear admin cache (useful for logout)
 CREATE OR REPLACE FUNCTION clear_admin_cache()
@@ -901,7 +899,7 @@ DECLARE
     cache_key TEXT;
 BEGIN
     -- Get current authenticated user
-    current_user_id := auth.uid();
+    current_user_id := (SELECT auth.uid());
     IF current_user_id IS NOT NULL THEN
         -- Clear the session-specific cache
         cache_key := 'app.user_is_admin_' || replace(current_user_id::TEXT, '-', '_');
@@ -909,7 +907,7 @@ BEGIN
     END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public;
+SET search_path = '';
 
 -- Create function to handle all new user registration logic
 CREATE OR REPLACE FUNCTION handle_new_user_registration()
@@ -942,7 +940,7 @@ BEGIN
       
       -- Log the guest purchase claim result
       IF claim_result->>'success' = 'true' AND (claim_result->>'claimed_count')::INTEGER > 0 THEN
-        PERFORM log_audit_entry(
+        PERFORM public.log_audit_entry(
           'guest_purchases',
           'UPDATE',
           NULL,
@@ -958,7 +956,7 @@ BEGIN
     END IF;
     
     -- 3. Audit Logging: Log registration event for security monitoring
-    PERFORM log_audit_entry(
+    PERFORM public.log_audit_entry(
       'auth.users',
       'INSERT',
       NULL,

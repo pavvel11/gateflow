@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS payment_transactions (
   ),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE, -- Nullable for guest purchases
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
-  customer_email TEXT NOT NULL CHECK (validate_email_format(customer_email)),
+  customer_email TEXT NOT NULL CHECK (public.validate_email_format(customer_email)),
   amount NUMERIC NOT NULL CHECK (amount > 0 AND amount <= 99999999), -- Amount in cents, max $999,999.99
   currency TEXT NOT NULL CHECK (
     length(currency) = 3 AND 
@@ -144,7 +144,7 @@ CREATE TABLE IF NOT EXISTS payment_transactions (
 -- Create guest_purchases table to track purchases by email before account creation
 CREATE TABLE IF NOT EXISTS guest_purchases (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  customer_email TEXT NOT NULL CHECK (validate_email_format(customer_email)),
+  customer_email TEXT NOT NULL CHECK (public.validate_email_format(customer_email)),
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
   transaction_amount NUMERIC NOT NULL CHECK (transaction_amount > 0 AND transaction_amount <= 99999999), -- Amount in cents, max $999,999.99
   session_id TEXT NOT NULL CHECK (
@@ -232,7 +232,7 @@ ALTER TABLE guest_purchases ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Admins can view admin actions" ON admin_actions
     FOR SELECT USING (
         EXISTS (
-            SELECT 1 FROM admin_users 
+            SELECT 1 FROM public.admin_users 
             WHERE admin_users.user_id = (select auth.uid())
         )
     );
@@ -242,7 +242,7 @@ CREATE POLICY "Admins can insert admin actions" ON admin_actions
         -- Allow logged-in admins to insert with their own admin_id
         (admin_id = (select auth.uid()) AND
         EXISTS (
-            SELECT 1 FROM admin_users 
+            SELECT 1 FROM public.admin_users 
             WHERE admin_users.user_id = (select auth.uid())
         )) OR
         -- Allow service_role (database functions) to insert with any admin_id (including NULL)
@@ -254,7 +254,7 @@ CREATE POLICY "Combined SELECT policy for payment transactions" ON payment_trans
     FOR SELECT 
     USING (
         user_id = (SELECT auth.uid()) OR  -- Users can see their own transactions
-        EXISTS (SELECT 1 FROM admin_users WHERE user_id = (SELECT auth.uid())) OR  -- Admins can see all transactions
+        EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = (SELECT auth.uid())) OR  -- Admins can see all transactions
         (SELECT auth.role()) = 'service_role'  -- Service role can see all
     );
 
@@ -269,7 +269,7 @@ CREATE POLICY "Admins can update payment transactions for refunds" ON payment_tr
     TO authenticated
     USING (
         EXISTS (
-            SELECT 1 FROM admin_users 
+            SELECT 1 FROM public.admin_users 
             WHERE admin_users.user_id = (SELECT auth.uid())
         )
     );
@@ -326,7 +326,7 @@ BEGIN
         ON user_product_access(user_id, product_id, version);
         
         -- Update existing records to have version = 1
-        UPDATE user_product_access SET version = 1 WHERE version IS NULL;
+        UPDATE public.user_product_access SET version = 1 WHERE version IS NULL;
     END IF;
 END $$;
 
@@ -504,7 +504,7 @@ BEGIN
     
     -- All retries exhausted - CRITICAL: Log this business failure
     BEGIN
-        PERFORM log_admin_action(
+        PERFORM public.log_admin_action(
             'critical_optimistic_lock_exhausted',
             'user_product_access',
             user_id_param::TEXT || '_' || product_id_param::TEXT,
@@ -540,7 +540,7 @@ EXCEPTION
     WHEN OTHERS THEN
         -- Log the error for debugging
         BEGIN
-            PERFORM log_admin_action(
+            PERFORM public.log_admin_action(
                 'grant_access_error',
                 'user_product_access',
                 user_id_param::TEXT || '_' || product_id_param::TEXT,
@@ -594,8 +594,34 @@ DECLARE
     scenario TEXT;
     result JSONB;
 BEGIN
+    -- TEMPORARY DEBUG: Log function entry with all parameters
+    BEGIN
+        PERFORM public.log_admin_action(
+            'payment_processing_debug_start',
+            'payment_transactions',
+            session_id_param,
+            jsonb_build_object(
+                'severity', 'DEBUG',
+                'session_id', session_id_param,
+                'product_id', product_id_param,
+                'customer_email', customer_email_param,
+                'amount', amount_total,
+                'currency', currency_param,
+                'stripe_payment_intent_id', stripe_payment_intent_id,
+                'user_id_param', user_id_param,
+                'function_name', 'process_stripe_payment_completion',
+                'timestamp', extract(epoch from NOW()),
+                'context', 'debug_function_entry'
+            )
+        );
+    EXCEPTION
+        WHEN OTHERS THEN
+            -- If logging fails, continue anyway
+            NULL;
+    END;
+
     -- Rate limiting: 100 calls per hour for payment processing (increased for checkout)
-    IF NOT check_rate_limit('process_stripe_payment_completion', 100, 3600) THEN
+    IF NOT public.check_rate_limit('process_stripe_payment_completion', 100, 3600) THEN
         RETURN jsonb_build_object('success', false, 'error', 'Rate limit exceeded. Please wait before processing another payment.');
     END IF;
 
@@ -614,7 +640,7 @@ BEGIN
     END IF;
     
     -- Enhanced email validation using dedicated function
-    IF NOT validate_email_format(customer_email_param) THEN
+    IF NOT public.validate_email_format(customer_email_param) THEN
         RETURN jsonb_build_object('success', false, 'error', 'Valid email address is required');
     END IF;
     
@@ -672,32 +698,102 @@ BEGIN
 
     -- Check if product exists
     IF product_record.id IS NULL THEN
+        -- TEMPORARY DEBUG: Log product not found
+        BEGIN
+            PERFORM public.log_admin_action(
+                'payment_processing_debug_product_not_found',
+                'products',
+                product_id_param::TEXT,
+                jsonb_build_object(
+                    'severity', 'DEBUG',
+                    'product_id', product_id_param,
+                    'session_id', session_id_param,
+                    'context', 'debug_product_lookup_failed'
+                )
+            );
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+        
         RETURN jsonb_build_object('success', false, 'error', 'Product not found or inactive');
     END IF;
+
+    -- TEMPORARY DEBUG: Log product found and transaction status
+    BEGIN
+        PERFORM public.log_admin_action(
+            'payment_processing_debug_product_found',
+            'products',
+            product_record.id::TEXT,
+            jsonb_build_object(
+                'severity', 'DEBUG',
+                'product_id', product_record.id,
+                'product_name', product_record.name,
+                'transaction_exists', product_record.transaction_exists,
+                'session_id', session_id_param,
+                'context', 'debug_product_lookup_success'
+            )
+        );
+    EXCEPTION
+        WHEN OTHERS THEN NULL;
+    END;
 
     -- Calculate access expiry once (for response)
     IF product_record.auto_grant_duration_days IS NOT NULL THEN
         access_expires_at := NOW() + (product_record.auto_grant_duration_days || ' days')::INTERVAL;
     END IF;
 
-    -- Insert payment transaction with proper idempotency handling
-    -- Uses multiple conflict resolution strategies for maximum reliability
-    IF NOT product_record.transaction_exists THEN
-        INSERT INTO public.payment_transactions (
-            session_id, user_id, product_id, customer_email, amount, currency, 
-            stripe_payment_intent_id, status, metadata
-        ) VALUES (
-            session_id_param, current_user_id, product_id_param, customer_email_param, amount_total, currency_param,
-            process_stripe_payment_completion.stripe_payment_intent_id, 'completed',
-            jsonb_build_object(
-                'stripe_session_id', session_id_param,
-                'product_slug', product_record.slug,
-                'amount_display', (amount_total / 100.0)::text || ' ' || upper(currency_param),
-                'idempotency_check', 'webhook_processed',
-                'processed_at', NOW()
-            )
-        ) ON CONFLICT (session_id) DO NOTHING;
+    -- EARLY RETURN: Check for idempotency first (much cleaner than nested IF/ELSE)
+    IF product_record.transaction_exists THEN
+        -- Transaction already exists - return idempotent success
+        scenario := 'idempotent_transaction';
+        
+        -- TEMPORARY DEBUG: Log idempotent processing
+        BEGIN
+            PERFORM public.log_admin_action(
+                'payment_processing_debug_idempotent',
+                'payment_transactions',
+                session_id_param,
+                jsonb_build_object(
+                    'severity', 'DEBUG',
+                    'session_id', session_id_param,
+                    'product_id', product_id_param,
+                    'customer_email', customer_email_param,
+                    'scenario', scenario,
+                    'context', 'debug_idempotent_webhook_detected'
+                )
+            );
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+        
+        RETURN jsonb_build_object(
+            'success', true,
+            'access_granted', true,
+            'already_had_access', true, -- This is true because we found an existing transaction
+            'scenario', scenario,
+            'access_expires_at', access_expires_at,
+            'requires_login', false,
+            'send_magic_link', false,
+            'customer_email', customer_email_param,
+            'grant_details', 'Payment already processed successfully'
+        );
     END IF;
+
+    -- NEW TRANSACTION: Process payment and grant access
+    INSERT INTO public.payment_transactions (
+        session_id, user_id, product_id, customer_email, amount, currency, 
+        stripe_payment_intent_id, status, metadata
+    ) VALUES (
+        session_id_param, current_user_id, product_id_param, customer_email_param, amount_total, currency_param,
+        process_stripe_payment_completion.stripe_payment_intent_id, 'completed',
+        jsonb_build_object(
+            'stripe_session_id', session_id_param,
+            'product_slug', product_record.slug,
+            'amount_display', (amount_total / 100.0)::text || ' ' || upper(currency_param),
+            'idempotency_check', 'webhook_processed',
+            'processed_at', NOW()
+        )
+    ) ON CONFLICT (session_id) DO NOTHING;
 
     -- SCENARIO 1: User is logged in
     IF current_user_id IS NOT NULL THEN
@@ -705,13 +801,12 @@ BEGIN
         
         -- Use optimistic locking function with enhanced error handling
         BEGIN
-            SELECT grant_product_access_service_role(current_user_id, product_id_param) INTO result;
-            
+            SELECT public.grant_product_access_service_role(current_user_id, product_id_param) INTO result;
             IF (result->>'success')::boolean = false THEN
                 -- Handle specific optimistic locking failures
                 IF (result->>'retry_exceeded')::boolean = true THEN
                     -- High concurrency - this is actually quite rare and indicates very high traffic
-                    PERFORM log_admin_action(
+                    PERFORM public.log_admin_action(
                         'high_concurrency_detected',
                         'user_product_access',
                         current_user_id::TEXT || '_' || product_id_param::TEXT,
@@ -749,7 +844,7 @@ BEGIN
         EXCEPTION 
             WHEN OTHERS THEN
                 -- Critical error: payment processed but access grant failed
-                PERFORM log_admin_action(
+                PERFORM public.log_admin_action(
                     'critical_access_grant_failure',
                     'user_product_access',
                     current_user_id::TEXT || '_' || product_id_param::TEXT,
@@ -799,12 +894,12 @@ BEGIN
         scenario := 'existing_user_email';
         
         BEGIN
-            SELECT grant_product_access_service_role(existing_user_id, product_id_param) INTO result;
-            
+            SELECT public.grant_product_access_service_role(existing_user_id, product_id_param) INTO result;
+
             IF (result->>'success')::boolean = false THEN
                 -- Handle specific optimistic locking failures
                 IF (result->>'retry_exceeded')::boolean = true THEN
-                    PERFORM log_admin_action(
+                    PERFORM public.log_admin_action(
                         'high_concurrency_detected',
                         'user_product_access',
                         existing_user_id::TEXT || '_' || product_id_param::TEXT,
@@ -841,7 +936,7 @@ BEGIN
         EXCEPTION 
             WHEN OTHERS THEN
                 -- Critical error: payment processed but access grant failed
-                PERFORM log_admin_action(
+                PERFORM public.log_admin_action(
                     'critical_access_grant_failure',
                     'user_product_access',
                     existing_user_id::TEXT || '_' || product_id_param::TEXT,
@@ -933,7 +1028,7 @@ EXCEPTION
     WHEN OTHERS THEN
         -- Log security-relevant errors without exposing internal details
         BEGIN
-            PERFORM log_admin_action(
+            PERFORM public.log_admin_action(
                 'payment_processing_error',
                 'payment_transactions',
                 session_id_param,
@@ -956,9 +1051,23 @@ EXCEPTION
                 NULL;
         END;
         
+        -- TEMPORARY DEBUG: Return detailed error information for troubleshooting
         RETURN jsonb_build_object(
             'success', false,
-            'error', 'Payment processing failed. Please try again or contact support.',
+            'error', 'Payment processing failed: ' || COALESCE(SQLERRM, 'Unknown database error'),
+            'error_code', SQLSTATE,
+            'error_details', jsonb_build_object(
+                'sqlstate', SQLSTATE,
+                'error_message', SQLERRM,
+                'session_id', session_id_param,
+                'product_id', product_id_param,
+                'user_id', current_user_id,
+                'customer_email', customer_email_param,
+                'amount', amount_total,
+                'currency', currency_param,
+                'function', 'process_stripe_payment_completion',
+                'timestamp', NOW()
+            ),
             'error_reference', extract(epoch from NOW())::bigint,
             'retry_safe', CASE 
                 WHEN SQLSTATE LIKE '08%' THEN true  -- Connection errors
@@ -986,7 +1095,7 @@ DECLARE
   guest_purchase_record RECORD;
 BEGIN
   -- Rate limiting: 10 calls per hour for claiming purchases (SECURITY)
-  IF NOT check_rate_limit('claim_guest_purchases_for_user', 10, 3600) THEN
+  IF NOT public.check_rate_limit('claim_guest_purchases_for_user', 10, 3600) THEN
     RETURN json_build_object(
       'success', false,
       'error', 'Rate limit exceeded. Please wait before trying again.'
@@ -1014,7 +1123,7 @@ BEGIN
   END IF;
   
   -- Enhanced email format validation using dedicated function
-  IF NOT validate_email_format(user_email_var) THEN
+  IF NOT public.validate_email_format(user_email_var) THEN
     RETURN json_build_object(
       'success', false,
       'error', 'Invalid email format'
@@ -1047,7 +1156,7 @@ BEGIN
           -- Handle optimistic locking failures
           IF (grant_result->>'retry_exceeded')::boolean = true THEN
             -- High concurrency - log and continue
-            PERFORM log_admin_action(
+            PERFORM public.log_admin_action(
               'guest_claim_concurrency_failure',
               'guest_purchases',
               guest_purchase_record.id::TEXT,
@@ -1065,7 +1174,7 @@ BEGIN
             );
           ELSE
             -- Other error
-            PERFORM log_admin_action(
+            PERFORM public.log_admin_action(
               'guest_claim_grant_failure',
               'guest_purchases',
               guest_purchase_record.id::TEXT,
@@ -1093,7 +1202,7 @@ BEGIN
     EXCEPTION 
       WHEN OTHERS THEN
         -- Critical error: guest purchase marked as claimed but access not granted
-        PERFORM log_admin_action(
+        PERFORM public.log_admin_action(
           'critical_guest_claim_failure',
           'guest_purchases',
           guest_purchase_record.id::TEXT,
@@ -1151,7 +1260,7 @@ CREATE OR REPLACE FUNCTION get_user_payment_history(
 ) AS $$
 BEGIN
     -- Rate limiting: 30 calls per hour for payment history (SECURITY)
-    IF NOT check_rate_limit('get_user_payment_history', 30, 3600) THEN
+    IF NOT public.check_rate_limit('get_user_payment_history', 30, 3600) THEN
         RAISE EXCEPTION 'Rate limit exceeded. Please wait before requesting payment history again.';
     END IF;
 
@@ -1162,7 +1271,7 @@ BEGIN
 
     -- Security check: users can only view their own payment history (unless admin)
     IF user_id_param != auth.uid() THEN
-        IF NOT EXISTS (SELECT 1 FROM admin_users WHERE user_id = auth.uid()) THEN
+        IF NOT EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()) THEN
             RAISE EXCEPTION 'Unauthorized: Can only view your own payment history';
         END IF;
     END IF;
@@ -1177,8 +1286,8 @@ BEGIN
         pt.created_at,
         pt.status,
         pt.refunded_amount / 100.0 -- Convert cents to dollars for display
-    FROM payment_transactions pt
-    JOIN products p ON pt.product_id = p.id
+    FROM public.payment_transactions pt
+    JOIN public.products p ON pt.product_id = p.id
     WHERE pt.user_id = user_id_param
     ORDER BY pt.created_at DESC
     LIMIT 100; -- Prevent excessive data retrieval
@@ -1221,14 +1330,14 @@ CREATE OR REPLACE FUNCTION log_admin_action(
 BEGIN
     -- SECURITY: Rate limiting to prevent log spam attacks by authenticated users
     -- Admins get higher limits since they need to perform legitimate admin actions
-    IF EXISTS (SELECT 1 FROM admin_users WHERE user_id = auth.uid()) THEN
+    IF EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()) THEN
         -- Admin users: 200 log entries per hour (higher limit for legitimate admin work)
-        IF NOT check_rate_limit('log_admin_action_admin', 200, 3600) THEN
+        IF NOT public.check_rate_limit('log_admin_action_admin', 200, 3600) THEN
             RAISE EXCEPTION 'Rate limit exceeded: Too many admin actions logged. Please wait before performing more actions.';
         END IF;
     ELSE
         -- Non-admin authenticated users: 20 log entries per hour (much stricter)
-        IF NOT check_rate_limit('log_admin_action_user', 20, 3600) THEN
+        IF NOT public.check_rate_limit('log_admin_action_user', 20, 3600) THEN
             RAISE EXCEPTION 'Rate limit exceeded: Too many log entries. Please wait before performing more actions.';
         END IF;
     END IF;
@@ -1247,7 +1356,7 @@ BEGIN
     END IF;
     
     -- Validate JSONB is not too large (prevent DoS) - reduced limit for non-admins
-    IF EXISTS (SELECT 1 FROM admin_users WHERE user_id = auth.uid()) THEN
+    IF EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()) THEN
         -- Admins can log larger details (64KB) for legitimate debugging
         IF pg_column_size(action_details) > 65536 THEN -- 64KB limit
             RAISE EXCEPTION 'Action details too large (max 64KB for admins)';
@@ -1260,7 +1369,7 @@ BEGIN
     END IF;
     
     -- Insert admin action with proper user identification
-    INSERT INTO admin_actions (admin_id, action, target_type, target_id, details)
+    INSERT INTO public.admin_actions (admin_id, action, target_type, target_id, details)
     VALUES (
         auth.uid(), -- NULL for system operations when no user is logged in
         action_name,
@@ -1284,7 +1393,7 @@ DECLARE
     action_details JSONB;
 BEGIN
     -- Only log if the user is an admin
-    IF EXISTS (SELECT 1 FROM admin_users WHERE user_id = auth.uid()) THEN
+    IF EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()) THEN
         -- Determine specific action name based on operation and changes
         IF TG_OP = 'UPDATE' AND TG_TABLE_NAME = 'payment_transactions' THEN
             IF OLD.status != NEW.status AND NEW.status = 'refunded' THEN
@@ -1373,7 +1482,7 @@ BEGIN
         END IF;
         
         -- Use the main log_admin_action function
-        PERFORM log_admin_action(
+        PERFORM public.log_admin_action(
             action_name,
             TG_TABLE_NAME::TEXT,
             COALESCE(NEW.id::TEXT, OLD.id::TEXT),
@@ -1486,7 +1595,7 @@ BEGIN
     IF new_action_details IS NOT NULL AND (new_action_details->>'severity') = 'CRITICAL' THEN
         -- Send immediate email for every critical event
         BEGIN
-            PERFORM send_monitoring_email(
+            PERFORM public.send_monitoring_email(
                 'critical_event_immediate',
                 jsonb_build_object(
                     'severity', 'CRITICAL',
@@ -1509,14 +1618,14 @@ BEGIN
     IF new_action_details IS NULL OR (new_action_details->>'severity') = 'WARNING' THEN
         -- Count warnings in last 5 minutes (for batch alerts)
         SELECT COUNT(*) INTO warning_count
-        FROM admin_actions
+        FROM public.admin_actions
         WHERE (details->>'severity') = 'WARNING'
           AND (details->>'context') LIKE '%payment%'
           AND created_at > NOW() - INTERVAL '5 minutes';
         
         -- Check when we last sent payment alert email
         SELECT MAX(created_at) INTO last_email_sent
-        FROM admin_actions
+        FROM public.admin_actions
         WHERE action = 'monitoring_email_sent'
           AND (details->>'alert_type') = 'payment_issues';
         
@@ -1525,7 +1634,7 @@ BEGIN
            (last_email_sent IS NULL OR last_email_sent < NOW() - INTERVAL '15 minutes') THEN
             
             -- Send email about payment issues
-            PERFORM send_monitoring_email(
+            PERFORM public.send_monitoring_email(
                 'payment_issues',
                 jsonb_build_object(
                     'warning_count', warning_count,
@@ -1538,7 +1647,7 @@ BEGIN
             );
             
             -- Log that we sent email (just once)
-            PERFORM log_admin_action(
+            PERFORM public.log_admin_action(
                 'monitoring_email_sent',
                 'admin_actions',
                 'email_notification', 
@@ -1587,7 +1696,7 @@ BEGIN
         
         -- Pass the event details to the monitoring function
         BEGIN
-            PERFORM logs_monitoring_check(NEW.details);
+            PERFORM public.logs_monitoring_check(NEW.details);
         EXCEPTION 
             WHEN OTHERS THEN
                 NULL; -- Never break the main operation
@@ -1659,13 +1768,13 @@ BEGIN
     
     -- Get transaction with access control
     SELECT * INTO transaction_record
-    FROM payment_transactions
+    FROM public.payment_transactions
     WHERE id = transaction_id
       AND (
         -- User can validate their own transactions
         user_id = current_user_id OR
         -- Admins can validate any transaction
-        EXISTS (SELECT 1 FROM admin_users WHERE user_id = current_user_id) OR
+        EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = current_user_id) OR
         -- Service role can validate any transaction
         (select auth.role()) = 'service_role'
       );
@@ -1707,7 +1816,7 @@ DECLARE
     stats JSONB;
 BEGIN
     -- Security check: only admins can access payment statistics
-    IF NOT EXISTS (SELECT 1 FROM admin_users WHERE user_id = auth.uid()) THEN
+    IF NOT EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()) THEN
         RAISE EXCEPTION 'Unauthorized: Admin privileges required';
     END IF;
     
@@ -1754,21 +1863,21 @@ BEGIN
         'guest_purchase_summary', jsonb_build_object(
             'total_guest_purchases', (
                 SELECT COUNT(*) 
-                FROM guest_purchases 
+                FROM public.guest_purchases 
                 WHERE created_at BETWEEN start_date AND end_date
             ),
             'claimed_percentage', CASE 
-                WHEN (SELECT COUNT(*) FROM guest_purchases WHERE created_at BETWEEN start_date AND end_date) = 0 
+                WHEN (SELECT COUNT(*) FROM public.guest_purchases WHERE created_at BETWEEN start_date AND end_date) = 0 
                 THEN 0
                 ELSE ROUND(
-                    (SELECT COUNT(*) FROM guest_purchases WHERE claimed_at BETWEEN start_date AND end_date)::numeric * 100.0 /
-                    (SELECT COUNT(*) FROM guest_purchases WHERE created_at BETWEEN start_date AND end_date), 1
+                    (SELECT COUNT(*) FROM public.guest_purchases WHERE claimed_at BETWEEN start_date AND end_date)::numeric * 100.0 /
+                    (SELECT COUNT(*) FROM public.guest_purchases WHERE created_at BETWEEN start_date AND end_date), 1
                 )
             END
         ),
         'generated_at', NOW()
     ) INTO stats
-    FROM payment_transactions
+    FROM public.payment_transactions
     WHERE created_at BETWEEN start_date AND end_date;
     
     RETURN stats;
@@ -1785,7 +1894,7 @@ DECLARE
     deleted_count INTEGER;
 BEGIN
     -- Security check: only admins can cleanup audit logs
-    IF NOT EXISTS (SELECT 1 FROM admin_users WHERE user_id = auth.uid()) THEN
+    IF NOT EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()) THEN
         RAISE EXCEPTION 'Unauthorized: Admin privileges required';
     END IF;
     
@@ -1795,7 +1904,7 @@ BEGIN
     END IF;
     
     -- Delete old admin actions
-    DELETE FROM admin_actions 
+    DELETE FROM public.admin_actions 
     WHERE created_at < NOW() - (retention_days || ' days')::INTERVAL;
     
     GET DIAGNOSTICS deleted_count = ROW_COUNT;
@@ -1825,7 +1934,7 @@ DECLARE
     deleted_count INTEGER;
 BEGIN
     -- Security check: only admins can cleanup rate limits
-    IF NOT EXISTS (SELECT 1 FROM admin_users WHERE user_id = auth.uid()) THEN
+    IF NOT EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()) THEN
         RAISE EXCEPTION 'Unauthorized: Admin privileges required';
     END IF;
     
@@ -1835,7 +1944,7 @@ BEGIN
     END IF;
     
     -- Delete old rate limit records (leverages BRIN index for efficiency)
-    DELETE FROM rate_limits 
+    DELETE FROM public.rate_limits 
     WHERE window_start < NOW() - (retention_hours || ' hours')::INTERVAL;
     
     GET DIAGNOSTICS deleted_count = ROW_COUNT;
@@ -1865,7 +1974,7 @@ DECLARE
     deleted_count INTEGER;
 BEGIN
     -- Security check: only admins can cleanup guest purchases
-    IF NOT EXISTS (SELECT 1 FROM admin_users WHERE user_id = auth.uid()) THEN
+    IF NOT EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()) THEN
         RAISE EXCEPTION 'Unauthorized: Admin privileges required';
     END IF;
     
@@ -1876,7 +1985,7 @@ BEGIN
     
     -- Delete old claimed guest purchases (leverages BRIN index for efficiency)
     -- Only delete claimed purchases to preserve unclaimed ones
-    DELETE FROM guest_purchases 
+    DELETE FROM public.guest_purchases 
     WHERE claimed_at IS NOT NULL 
       AND claimed_at < NOW() - (retention_days || ' days')::INTERVAL;
     
@@ -1913,7 +2022,7 @@ SELECT
     MAX(window_start) as last_activity,
     AVG(call_count) as avg_calls_per_user,
     MAX(call_count) as max_calls_per_user
-FROM rate_limits
+FROM public.rate_limits
 WHERE window_start > NOW() - INTERVAL '1 hour'
 GROUP BY function_name
 ORDER BY total_calls DESC;
@@ -1930,7 +2039,7 @@ SELECT
     COUNT(*) FILTER (WHERE status = 'disputed') as disputed_transactions,
     ROUND(AVG(amount) / 100.0, 2) as avg_transaction_amount,
     NOW() as snapshot_time
-FROM payment_transactions
+FROM public.payment_transactions
 UNION ALL
 SELECT 
     'guest_purchases' as table_name,
@@ -1941,7 +2050,7 @@ SELECT
     0 as disputed_transactions, -- Not applicable
     ROUND(AVG(transaction_amount) / 100.0, 2) as avg_transaction_amount,
     NOW() as snapshot_time
-FROM guest_purchases
+FROM public.guest_purchases
 UNION ALL
 SELECT 
     'admin_actions' as table_name,
@@ -1952,7 +2061,7 @@ SELECT
     0 as disputed_transactions, -- Not applicable
     0 as avg_transaction_amount, -- Not applicable
     NOW() as snapshot_time
-FROM admin_actions;
+FROM public.admin_actions;
 
 
 COMMIT;

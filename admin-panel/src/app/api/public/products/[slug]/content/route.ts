@@ -57,13 +57,11 @@ export async function GET(
       return NextResponse.json({ error: 'Access expired' }, { status: 403 });
     }
 
-    // Check temporal availability
-    const availableFrom = productWithAccess.available_from ? new Date(productWithAccess.available_from) : null;
-    const availableUntil = productWithAccess.available_until ? new Date(productWithAccess.available_until) : null;
-    
-    const isTemporallyAvailable = (!availableFrom || availableFrom <= now) && (!availableUntil || availableUntil > now);
-    
-    if (!productWithAccess.is_active || !isTemporallyAvailable) {
+    // For products marked as inactive, deny access completely
+    // Note: We don't check temporal availability here because users who already 
+    // have access should be able to access content even if the product is no longer 
+    // available for new purchases
+    if (!productWithAccess.is_active) {
       return NextResponse.json({ error: 'Product not available' }, { status: 403 });
     }
 

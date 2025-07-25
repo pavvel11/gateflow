@@ -27,17 +27,11 @@ export async function GET(
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    // Check temporal availability
-    const now = new Date();
-    const availableFrom = product.available_from ? new Date(product.available_from) : null;
-    const availableUntil = product.available_until ? new Date(product.available_until) : null;
-    
-    const isTemporallyAvailable = (!availableFrom || availableFrom <= now) && (!availableUntil || availableUntil > now);
-    
-    if (!product.is_active || !isTemporallyAvailable) {
+    // For products marked as inactive, deny access completely
+    if (!product.is_active) {
       return NextResponse.json({ 
         hasAccess: false, 
-        reason: !product.is_active ? 'inactive' : 'temporal',
+        reason: 'inactive',
         product: {
           name: product.name,
           slug: product.slug,
@@ -61,20 +55,30 @@ export async function GET(
       return NextResponse.json({ error: 'Access check failed' }, { status: 500 });
     }
 
-    // No access record found
+    // No access record found - check temporal availability for new purchases
     if (!userAccess) {
+      // Check temporal availability only for new purchases
+      const now = new Date();
+      const availableFrom = product.available_from ? new Date(product.available_from) : null;
+      const availableUntil = product.available_until ? new Date(product.available_until) : null;
+      
+      const isTemporallyAvailable = (!availableFrom || availableFrom <= now) && (!availableUntil || availableUntil > now);
+      
       return NextResponse.json({ 
         hasAccess: false, 
-        reason: 'no_access',
+        reason: isTemporallyAvailable ? 'no_access' : 'temporal',
         product: {
           name: product.name,
           slug: product.slug,
-          price: product.price
+          price: product.price,
+          available_from: product.available_from,
+          available_until: product.available_until
         }
       });
     }
 
     // Check if access has expired
+    const now = new Date();
     const expiresAt = userAccess.access_expires_at ? new Date(userAccess.access_expires_at) : null;
     const isExpired = expiresAt && expiresAt < now;
 
