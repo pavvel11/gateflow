@@ -70,13 +70,9 @@ export async function middleware(request: NextRequest) {
     ? pathname.replace(`/${locale}`, '') || '/'
     : pathname
 
-  // Handle root path
-  if (actualPath === '/') {
-    const targetPath = session ? '/dashboard' : '/login'
-    const redirectPath = locale ? `/${locale}${targetPath}` : targetPath
-    return NextResponse.redirect(new URL(redirectPath, request.url))
-  }
-
+  // Don't redirect root path - allow landing page to be shown
+  // Landing page will handle navigation based on auth state
+  
   // Protected routes
   const isProtectedRoute = 
     actualPath.startsWith('/dashboard') ||

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
-import ProductView from './components/ProductViewNew';
+import ProductView from './components/ProductView';
 
 interface PageProps {
   params: Promise<{ slug: string }>;

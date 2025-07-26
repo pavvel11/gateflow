@@ -44,9 +44,6 @@ export default function LandingPage() {
             </div>
             
             <div className="flex items-center space-x-4">
-              {/* Language Switcher */}
-              <LanguageSwitcher />
-              
               <Link
                 href="/products"
                 className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
@@ -59,12 +56,6 @@ export default function LandingPage() {
                     <>
                       <Link
                         href="/dashboard"
-                        className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                      >
-                        Dashboard
-                      </Link>
-                      <Link
-                        href="/dashboard"
                         className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-sm hover:shadow-md"
                       >
                         Admin Panel
@@ -74,15 +65,9 @@ export default function LandingPage() {
                     <>
                       <Link
                         href="/my-products"
-                        className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                      >
-                        My Products
-                      </Link>
-                      <Link
-                        href="/my-products"
                         className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-sm hover:shadow-md"
                       >
-                        Access Products
+                        My Products
                       </Link>
                     </>
                   )}
@@ -91,18 +76,13 @@ export default function LandingPage() {
                 <>
                   <Link
                     href="/login"
-                    className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-sm hover:shadow-md"
                   >
                     Login
                   </Link>
-                  <Link
-                    href="/login"
-                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-sm hover:shadow-md"
-                  >
-                    Get Started
-                  </Link>
                 </>
               )}
+              <LanguageSwitcher />
             </div>
           </div>
         </div>

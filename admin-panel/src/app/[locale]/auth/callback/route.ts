@@ -14,10 +14,32 @@ export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
   
+  // Get the correct origin for redirects - prioritize env var, then headers, then request URL
+  const getOrigin = () => {
+    // First try environment variable
+    if (process.env.NEXT_PUBLIC_SITE_URL) {
+      return process.env.NEXT_PUBLIC_SITE_URL
+    }
+    
+    // Then try headers (for production environments)
+    const host = request.headers.get('host')
+    const protocol = request.headers.get('x-forwarded-proto') || 
+                    request.headers.get('x-forwarded-protocol') ||
+                    (requestUrl.protocol === 'https:' ? 'https' : 'http')
+    
+    if (host) {
+      return `${protocol}://${host}`
+    }
+    
+    // Fallback to request URL origin
+    return requestUrl.origin
+  }
+  
+  const origin = getOrigin()
 
   // Check if we have code parameter
   if (!code) {
-    return NextResponse.redirect(new URL('/login', requestUrl.origin))
+    return NextResponse.redirect(new URL('/login', origin))
   }
   
   // Create server client to exchange the code for a session first
@@ -71,7 +93,7 @@ export async function GET(request: NextRequest) {
   
   
   if (error || !session) {
-    return NextResponse.redirect(new URL('/login', requestUrl.origin))
+    return NextResponse.redirect(new URL('/login', origin))
   }
 
   // Validate email for disposable domains (security check)
@@ -84,7 +106,7 @@ export async function GET(request: NextRequest) {
         await supabase.auth.signOut();
         
         // Redirect to login with error
-        const loginUrl = new URL('/login', requestUrl.origin);
+        const loginUrl = new URL('/login', origin);
         loginUrl.searchParams.set('error', 'disposable_email');
         return NextResponse.redirect(loginUrl);
       }
@@ -112,7 +134,7 @@ export async function GET(request: NextRequest) {
       } else {
         // If it's a full URL, validate it's on our domain
         const redirectToUrl = new URL(decodedRedirectTo)
-        if (redirectToUrl.origin === requestUrl.origin) {
+        if (redirectToUrl.origin === origin) {
           redirectPath = redirectToUrl.pathname + redirectToUrl.search
         }
       }
@@ -135,8 +157,8 @@ export async function GET(request: NextRequest) {
     }
   }
   
-  // Use the request origin for redirects (works in any environment)
-  const redirectUrl = new URL(redirectPath, requestUrl.origin)
+  // Use the correct origin for redirects
+  const redirectUrl = new URL(redirectPath, origin)
   
   // Create redirect response and transfer auth cookies
   const redirectResponse = NextResponse.redirect(redirectUrl)

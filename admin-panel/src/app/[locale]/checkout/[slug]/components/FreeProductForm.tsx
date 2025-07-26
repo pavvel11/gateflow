@@ -7,6 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useRouter } from 'next/navigation';
 import { validateEmailAction } from '@/lib/actions/validate-email';
+import TurnstileWidget from '@/components/TurnstileWidget';
+import TermsCheckbox from '@/components/TermsCheckbox';
 
 interface FreeProductFormProps {
   product: Product;
@@ -20,6 +22,8 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
   
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info' | null; text: string }>({
     type: null,
     text: '',
@@ -61,6 +65,19 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
   const handleMagicLinkSubmit = async () => {
     if (!email) {
       setMessage({ type: 'error', text: 'Please enter your email address' });
+      return;
+    }
+
+    // Check if terms are accepted for non-logged in users
+    if (!termsAccepted) {
+      setMessage({ type: 'error', text: 'Please accept the Terms of Service and Privacy Policy to continue.' });
+      return;
+    }
+
+    // Check if Turnstile token is present for non-logged in users (only in production)
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    if (!isDevelopment && !turnstileToken) {
+      setMessage({ type: 'error', text: 'Please complete the security verification.' });
       return;
     }
 
@@ -160,9 +177,36 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
           </div>
         )}
 
+        {!user && (
+          <>
+            {/* Terms and Conditions Checkbox */}
+            <TermsCheckbox
+              checked={termsAccepted}
+              onChange={setTermsAccepted}
+              termsUrl="/terms"
+              privacyUrl="/privacy"
+            />
+
+            {/* Cloudflare Turnstile - only in production */}
+            {process.env.NODE_ENV === 'production' && (
+              <TurnstileWidget
+                onVerify={setTurnstileToken}
+                onError={() => setTurnstileToken(null)}
+                theme="dark"
+              />
+            )}
+            
+            {process.env.NODE_ENV === 'development' && (
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-sm text-blue-300 mb-4">
+                ℹ️ Turnstile verification is disabled in development mode
+              </div>
+            )}
+          </>
+        )}
+
         <button
           onClick={handleFreeAccess}
-          disabled={loading || (!user && !email)}
+          disabled={loading || (!user && (!email || !termsAccepted || (process.env.NODE_ENV === 'production' && !turnstileToken)))}
           className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
         >
           {loading ? (

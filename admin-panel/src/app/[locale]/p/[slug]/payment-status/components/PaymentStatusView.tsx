@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useTranslations } from 'next-intl';
 import Confetti from 'react-confetti';
+import TurnstileWidget from '@/components/TurnstileWidget';
+import TermsCheckbox from '@/components/TermsCheckbox';
 
 interface PaymentStatusViewProps {
   product: {
@@ -33,12 +35,17 @@ export default function PaymentStatusView({
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [countdown, setCountdown] = useState(3);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const supabase = createClient();
   const t = useTranslations('paymentStatus');
   
   // Send magic link automatically for magic_link_sent status
   useEffect(() => {
-    if (paymentStatus === 'magic_link_sent' && customerEmail && sessionId && !magicLinkSent) {
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const turnstileRequired = isDevelopment ? true : turnstileToken; // Skip turnstile check in dev
+    
+    if (paymentStatus === 'magic_link_sent' && customerEmail && sessionId && !magicLinkSent && termsAccepted && turnstileRequired) {
       const sendMagicLink = async () => {
         try {
           const redirectUrl = `${window.location.origin}/auth/callback?redirect_to=${encodeURIComponent(`/p/${product.slug}/payment-status?session_id=${sessionId}`)}`;
@@ -63,7 +70,7 @@ export default function PaymentStatusView({
       
       sendMagicLink();
     }
-  }, [paymentStatus, customerEmail, sessionId, magicLinkSent, supabase.auth, product.slug]);
+  }, [paymentStatus, customerEmail, sessionId, magicLinkSent, termsAccepted, turnstileToken, supabase.auth, product.slug]);
   
   // Set window dimensions for confetti
   useEffect(() => {
@@ -293,6 +300,37 @@ export default function PaymentStatusView({
           <p className="text-gray-300 mb-6">{t('paymentProcessedSuccessfully')}</p>
           
           <div className="space-y-4">
+            {!magicLinkSent && (!termsAccepted || (process.env.NODE_ENV === 'production' && !turnstileToken)) && (
+              <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4 mb-6">
+                <h3 className="text-lg font-semibold text-yellow-300 mb-4">Before we send your access link:</h3>
+                
+                {/* Terms and Conditions Checkbox */}
+                <div className="mb-4">
+                  <TermsCheckbox
+                    checked={termsAccepted}
+                    onChange={setTermsAccepted}
+                    termsUrl="/terms"
+                    privacyUrl="/privacy"
+                  />
+                </div>
+
+                {/* Cloudflare Turnstile - only in production */}
+                {process.env.NODE_ENV === 'production' && (
+                  <TurnstileWidget
+                    onVerify={setTurnstileToken}
+                    onError={() => setTurnstileToken(null)}
+                    theme="dark"
+                  />
+                )}
+                
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3 text-sm text-blue-300">
+                    ℹ️ Turnstile verification is disabled in development mode
+                  </div>
+                )}
+              </div>
+            )}
+            
             <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-blue-300 mb-2">{t('toAccessYourProduct')}</h3>
               <div className="text-sm text-gray-300 space-y-2">
