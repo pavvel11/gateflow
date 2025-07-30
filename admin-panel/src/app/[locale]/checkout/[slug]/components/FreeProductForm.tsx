@@ -23,7 +23,7 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info' | null; text: string }>({
     type: null,
     text: '',
@@ -70,14 +70,13 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
 
     // Check if terms are accepted for non-logged in users
     if (!termsAccepted) {
-      setMessage({ type: 'error', text: 'Please accept the Terms of Service and Privacy Policy to continue.' });
+      setMessage({ type: 'error', text: t('compliance.pleaseAcceptTerms') });
       return;
     }
 
-    // Check if Turnstile token is present for non-logged in users (only in production)
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    if (!isDevelopment && !turnstileToken) {
-      setMessage({ type: 'error', text: 'Please complete the security verification.' });
+    // Check if Turnstile token is present for non-logged in users
+    if (!captchaToken) {
+      setMessage({ type: 'error', text: t('compliance.securityVerificationRequired') });
       return;
     }
 
@@ -107,6 +106,7 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
         options: {
           shouldCreateUser: true,
           emailRedirectTo: redirectUrl,
+          captchaToken: captchaToken || undefined,
         },
       });
 
@@ -187,18 +187,15 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
               privacyUrl="/privacy"
             />
 
-            {/* Cloudflare Turnstile - only in production */}
-            {process.env.NODE_ENV === 'production' && (
-              <TurnstileWidget
-                onVerify={setTurnstileToken}
-                onError={() => setTurnstileToken(null)}
-                theme="dark"
-              />
-            )}
+            {/* Cloudflare Turnstile - always visible now, with different behavior for dev/prod */}
+            <TurnstileWidget
+              onVerify={setCaptchaToken}
+              onError={() => setCaptchaToken(null)}
+            />
             
             {process.env.NODE_ENV === 'development' && (
-              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-sm text-blue-300 mb-4">
-                ℹ️ Turnstile verification is disabled in development mode
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-sm text-blue-300">
+                💡 Set NEXT_PUBLIC_TURNSTILE_TEST_MODE in .env to test different scenarios
               </div>
             )}
           </>
@@ -206,7 +203,10 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
 
         <button
           onClick={handleFreeAccess}
-          disabled={loading || (!user && (!email || !termsAccepted || (process.env.NODE_ENV === 'production' && !turnstileToken)))}
+          disabled={
+            loading || 
+            (!user && (!email || !termsAccepted || (process.env.NODE_ENV === 'production' && !captchaToken)))
+          }
           className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
         >
           {loading ? (

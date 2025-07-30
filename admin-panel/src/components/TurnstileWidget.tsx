@@ -1,132 +1,152 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
+import { useTranslations } from 'next-intl'
+import { Turnstile, TurnstileInstance } from '@marsidev/react-turnstile'
+
+// Cloudflare dummy sitekeys for testing
+const DUMMY_SITEKEYS = {
+  ALWAYS_PASSES_VISIBLE: '1x00000000000000000000AA',
+  ALWAYS_BLOCKS_VISIBLE: '2x00000000000000000000AB', 
+  ALWAYS_PASSES_INVISIBLE: '1x00000000000000000000BB',
+  ALWAYS_BLOCKS_INVISIBLE: '2x00000000000000000000BB',
+  INTERACTIVE_CHALLENGE: '3x00000000000000000000FF'
+} as const
 
 interface TurnstileWidgetProps {
   onVerify: (token: string) => void
   onError?: () => void
+  onTimeout?: () => void
+  onBeforeInteractive?: () => void
   siteKey?: string
   theme?: 'light' | 'dark' | 'auto'
   size?: 'normal' | 'compact'
-}
-
-interface TurnstileOptions {
-  sitekey: string
-  theme?: 'light' | 'dark' | 'auto'
-  size?: 'normal' | 'compact'
-  callback?: (token: string) => void
-  'error-callback'?: () => void
-  'expired-callback'?: () => void
-}
-
-declare global {
-  interface Window {
-    turnstile: {
-      render: (container: string | HTMLElement, options: TurnstileOptions) => string
-      reset: (widgetId: string) => void
-      remove: (widgetId: string) => void
-      getResponse: (widgetId: string) => string
-    }
-  }
+  /** For development testing: choose dummy sitekey behavior */
+  testMode?: keyof typeof DUMMY_SITEKEYS
 }
 
 export default function TurnstileWidget({
   onVerify,
   onError,
-  siteKey = process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY,
+  onTimeout,
+  onBeforeInteractive,
+  siteKey,
   theme = 'dark',
-  size = 'normal'
+  size = 'normal',
+  testMode
 }: TurnstileWidgetProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const widgetIdRef = useRef<string | null>(null)
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [error, setError] = useState<string>('')
+  const turnstileRef = useRef<TurnstileInstance>(null)
+  const t = useTranslations('security')
+
+  // Determine which sitekey to use
+  const getSiteKey = () => {
+    const isDevelopment = process.env.NODE_ENV === 'development'
+    
+    if (isDevelopment) {
+      // Get testMode from env variable or prop, with fallback
+      const envTestMode = process.env.NEXT_PUBLIC_TURNSTILE_TEST_MODE as keyof typeof DUMMY_SITEKEYS
+      const effectiveTestMode = envTestMode || testMode || 'ALWAYS_PASSES_VISIBLE'
+      
+      // Validate the test mode
+      if (effectiveTestMode in DUMMY_SITEKEYS) {
+        return DUMMY_SITEKEYS[effectiveTestMode]
+      } else {
+        console.warn(`Invalid TURNSTILE_TEST_MODE: ${effectiveTestMode}. Using ALWAYS_PASSES_VISIBLE.`)
+        return DUMMY_SITEKEYS.ALWAYS_PASSES_VISIBLE
+      }
+    } else {
+      // Use provided sitekey or fallback to env variable for production
+      return siteKey || process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY
+    }
+  }
+
+  const effectiveSiteKey = getSiteKey()
+  
+  // Get effective test mode for development info
+  const isDevelopment = process.env.NODE_ENV === 'development'
+  const envTestMode = process.env.NEXT_PUBLIC_TURNSTILE_TEST_MODE as keyof typeof DUMMY_SITEKEYS
+  const effectiveTestMode = isDevelopment ? (envTestMode || testMode || 'ALWAYS_PASSES_VISIBLE') : null
 
   useEffect(() => {
-    // Skip if no site key
-    if (!siteKey) {
-      setError('Turnstile site key not configured')
-      return
-    }
-
-    // Load Turnstile script if not already loaded
-    if (!window.turnstile && !document.querySelector('script[src*="challenges.cloudflare.com"]')) {
-      const script = document.createElement('script')
-      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js'
-      script.async = true
-      script.defer = true
-      script.onload = () => setIsLoaded(true)
-      script.onerror = () => {
-        setError('Failed to load Turnstile')
-        onError?.()
-      }
-      document.head.appendChild(script)
-    } else if (window.turnstile) {
-      setIsLoaded(true)
-    }
-  }, [siteKey, onError])
-
-  useEffect(() => {
-    if (isLoaded && window.turnstile && containerRef.current && siteKey) {
-      try {
-        // Remove existing widget if any
-        if (widgetIdRef.current) {
-          window.turnstile.remove(widgetIdRef.current)
-        }
-
-        // Render new widget
-        widgetIdRef.current = window.turnstile.render(containerRef.current, {
-          sitekey: siteKey,
-          theme,
-          size,
-          callback: (token: string) => {
-            onVerify(token)
-          },
-          'error-callback': () => {
-            setError('Turnstile verification failed')
-            onError?.()
-          },
-          'expired-callback': () => {
-            setError('Turnstile token expired')
-            onError?.()
-          }
-        })
-      } catch {
-        setError('Failed to render Turnstile widget')
-        onError?.()
-      }
-    }
-
+    // Reset widget when component unmounts
+    const currentRef = turnstileRef.current
     return () => {
-      if (widgetIdRef.current && window.turnstile) {
+      if (currentRef) {
         try {
-          window.turnstile.remove(widgetIdRef.current)
+          currentRef.reset()
         } catch {
-          // Ignore cleanup errors
+          // Ignore reset errors during cleanup
         }
       }
     }
-  }, [isLoaded, siteKey, theme, size, onVerify, onError])
+  }, [])
 
-  if (!siteKey) {
+  if (!effectiveSiteKey) {
     return (
-      <div className="p-3 text-sm text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-        ⚠️ Turnstile not configured (development mode)
+      <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-sm text-yellow-300">
+        ⚠️ {t('turnstileNotConfigured')}
       </div>
     )
   }
 
-  if (error) {
-    return (
-      <div className="p-3 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg">
-        {error}
-      </div>
-    )
+  // Show development info when using dummy keys
+  const dummyValues = Object.values(DUMMY_SITEKEYS) as string[]
+  const isUsingDummyKey = isDevelopment && dummyValues.includes(effectiveSiteKey)
+
+  const handleSuccess = (token: string) => {
+    onVerify(token)
+  }
+
+  const handleError = () => {
+    onError?.()
+  }
+
+  const handleExpire = () => {
+    onError?.()
+  }
+
+  const handleTimeout = () => {
+    onTimeout?.()
+  }
+
+  const handleBeforeInteractive = () => {
+    onBeforeInteractive?.()
   }
 
   return (
-    <div className="flex justify-center">
-      <div ref={containerRef} />
+    <div className="mb-4">
+      {/* Development info banner */}
+      {isUsingDummyKey && (
+        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-sm text-blue-300 mb-3">
+          🧪 <strong>Development Mode:</strong> Using dummy Turnstile key ({effectiveTestMode})
+          <br />
+          <span className="text-xs opacity-75">
+            {envTestMode ? 
+              `Set via NEXT_PUBLIC_TURNSTILE_TEST_MODE=${envTestMode}` : 
+              `Using default/prop value. Set NEXT_PUBLIC_TURNSTILE_TEST_MODE to override.`
+            }
+          </span>
+          <br />
+          <span className="text-xs opacity-75">
+            This will generate XXXX.DUMMY.TOKEN.XXXX for testing
+          </span>
+        </div>
+      )}
+      
+      <Turnstile
+        ref={turnstileRef}
+        siteKey={effectiveSiteKey}
+        options={{
+          theme,
+          size,
+          retry: 'auto'
+        }}
+        onSuccess={handleSuccess}
+        onError={handleError}
+        onExpire={handleExpire}
+        onTimeout={handleTimeout}
+        onBeforeInteractive={handleBeforeInteractive}
+      />
     </div>
   )
 }

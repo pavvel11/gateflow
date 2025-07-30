@@ -63,6 +63,8 @@
     "forgotPassword": "Forgot Password?",
     "welcomeBack": "Welcome Back",
     "pleaseSignIn": "Sign in to manage your content protection",
+    "paymentCompletedLoginRequired": "Your payment was successful! Please log in to access your purchased content.",
+    "paymentCompletedLoginTitle": "Login Required to Access Your Purchase",
     "sendMagicLink": "Send Magic Link",
     "checkEmailAt": "Please check your email at {email} for the magic link.",
     "clickLinkToSignIn": "Click the link to sign in automatically."
@@ -742,6 +744,34 @@
     "havingTrouble": "Having trouble?",
     "contactSupport": "Contact support",
     "startNewPayment": "Start New Payment",
-    "paymentSessionsExpire": "Payment sessions expire after 24 hours for security"
+    "paymentSessionsExpire": "Payment sessions expire after 24 hours for security",
+    "sendingMagicLink": "Sending magic link...",
+    "magicLinkSent": "Magic Link Sent!",
+    "checkEmailForLoginLink": "Check your email ({email}) for the login link."
+  },
+  "compliance": {
+    "termsRequired": "Terms of Service Required",
+    "mustAcceptTerms": "You must accept our Terms of Service and Privacy Policy to continue",
+    "beforeSendingLink": "Before we send your access link",
+    "pleaseAcceptTerms": "Please accept the Terms of Service and Privacy Policy to continue.",
+    "acceptTermsAndPrivacy": "I agree to the {termsLink} and {privacyLink}",
+    "iAgreeWith": "I agree to the",
+    "and": "and",
+    "termsOfService": "Terms of Service",
+    "privacyPolicy": "Privacy Policy",
+    "securityVerificationRequired": "Please complete the security verification."
+  },
+  "security": {
+    "turnstileNotConfigured": "⚠️ Turnstile not configured (development mode)",
+    "turnstileDisabledInDev": "ℹ️ Turnstile verification is disabled in development mode",
+    "securityVerificationFailed": "Security verification failed. Please try again.",
+    "pleaseCompleteVerification": "Please complete the security verification.",
+    "verificationExpired": "Security verification expired. Please try again.",
+    "captchaVerificationFailed": "Security verification (captcha) failed.",
+    "captchaTimeout": "Security verification timed out.",
+    "refreshAndTryLogin": "Please refresh the page and",
+    "refreshPageOrLogin": "The verification timed out. Please go to login page to try again.",
+    "tryLoggingInAgain": "Go to login page",
+    "captchaErrorLoginPrompt": "Please"
   }
 }

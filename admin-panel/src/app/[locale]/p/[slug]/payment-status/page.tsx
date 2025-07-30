@@ -42,6 +42,7 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
   let errorMessage = '';
   let paymentStatus = 'processing'; // processing, completed, failed, expired, guest_purchase, magic_link_sent
   let customerEmail = '';
+  let userExistsInDatabase = false; // Track if user exists in database
 
   try {
     if (isStripePayment) {
@@ -55,6 +56,9 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
         is_guest_purchase: result.is_guest_purchase,
         user_id: user?.id || 'null'
       });
+
+      // Check if user exists in database based on scenario
+      userExistsInDatabase = result.scenario === 'existing_user_email';
 
       if (result.status === 'expired') {
         paymentStatus = 'expired';
@@ -139,6 +143,15 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
     errorMessage = 'An error occurred while verifying payment status';
   }
 
+  // Check if terms are already handled:
+  // 1. Stripe collects terms of service, OR
+  // 2. User is authenticated (already accepted during registration), OR
+  // 3. User exists in database (email registered, even if not logged in)
+  const stripeCollectsTerms = process.env.STRIPE_COLLECT_TERMS_OF_SERVICE === 'true';
+  const userIsAuthenticated = !!user;
+  
+  const termsAlreadyHandled = stripeCollectsTerms || userIsAuthenticated || userExistsInDatabase;
+
   return (
     <PaymentStatusView
       product={product}
@@ -147,6 +160,7 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
       errorMessage={errorMessage}
       customerEmail={customerEmail}
       sessionId={session_id}
+      termsAlreadyHandled={termsAlreadyHandled}
     />
   );
 }

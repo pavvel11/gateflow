@@ -17,7 +17,7 @@ export default function LoginForm() {
   const [sentEmail, setSentEmail] = useState(false)
   const [siteUrl, setSiteUrl] = useState('')
   const [termsAccepted, setTermsAccepted] = useState(false)
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const supabase = createClient()
   const t = useTranslations()
 
@@ -34,15 +34,15 @@ export default function LoginForm() {
     try {
       // Check if terms are accepted
       if (!termsAccepted) {
-        setMessage('Please accept the Terms of Service and Privacy Policy to continue.')
+        setMessage(t('compliance.pleaseAcceptTerms'))
         setIsLoading(false)
         return
       }
 
-      // Check if Turnstile token is present (only in production)
-      const isDevelopment = process.env.NODE_ENV === 'development'
-      if (!isDevelopment && !turnstileToken) {
-        setMessage('Please complete the security verification.')
+      // Check if Turnstile token is present
+      // In development, dummy token will be present, in production real verification is required
+      if (!captchaToken) {
+        setMessage(t('compliance.securityVerificationRequired'))
         setIsLoading(false)
         return
       }
@@ -71,6 +71,7 @@ export default function LoginForm() {
         email,
         options: {
           emailRedirectTo: redirectUrl,
+          captchaToken: captchaToken || undefined,
         },
       })
 
@@ -111,22 +112,20 @@ export default function LoginForm() {
       <TermsCheckbox
         checked={termsAccepted}
         onChange={setTermsAccepted}
-        termsUrl="/terms"
-        privacyUrl="/privacy"
       />
 
-      {/* Cloudflare Turnstile - only in production */}
-      {process.env.NODE_ENV === 'production' && (
-        <TurnstileWidget
-          onVerify={setTurnstileToken}
-          onError={() => setTurnstileToken(null)}
-          theme="dark"
-        />
-      )}
+      {/* Cloudflare Turnstile - always visible now, with different behavior for dev/prod */}
+      <TurnstileWidget
+        onVerify={setCaptchaToken}
+        onError={() => setCaptchaToken(null)}
+      />
       
       {process.env.NODE_ENV === 'development' && (
         <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-sm text-blue-300">
-          ℹ️ Turnstile verification is disabled in development mode
+          💡 <strong>Development Tips:</strong>
+          <br />• Set NEXT_PUBLIC_TURNSTILE_TEST_MODE in .env to change test behavior
+          <br />• Available modes: ALWAYS_PASSES_VISIBLE, ALWAYS_BLOCKS_VISIBLE, etc.
+          <br />• In production, real verification will be enforced
         </div>
       )}
 
@@ -247,7 +246,7 @@ export default function LoginForm() {
               setMessage('')
               setEmail('')
               setTermsAccepted(false)
-              setTurnstileToken(null)
+              setCaptchaToken(null)
             }}
             className="w-full py-2 px-4 bg-white/5 text-gray-300 font-medium rounded-xl border border-white/20 hover:bg-white/10 transition-all duration-200"
           >

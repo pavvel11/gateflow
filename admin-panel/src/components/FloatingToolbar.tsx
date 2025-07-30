@@ -23,7 +23,7 @@ export default function FloatingToolbar({
   const router = useRouter()
   const pathname = usePathname()
   const { user, signOut } = useAuth()
-  const t = useTranslations('auth')
+  const t = useTranslations('navigation')
   
   const [isLanguageOpen, setIsLanguageOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
@@ -143,6 +143,15 @@ export default function FloatingToolbar({
                       <div className="px-4 py-2 text-sm text-white/80 border-b border-white/20">
                         {user.email}
                       </div>
+                      <button
+                        onClick={() => {
+                          setIsUserMenuOpen(false)
+                          router.push('/my-products')
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-white/80 hover:bg-white/15 hover:text-white transition-colors"
+                      >
+                        {t('myProducts')}
+                      </button>
                       <button
                         onClick={async () => {
                           setIsUserMenuOpen(false)

@@ -13,6 +13,7 @@ export default function LoginPage() {
   const searchParams = useSearchParams()
   const t = useTranslations()
   const [errorMessage, setErrorMessage] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
     if (!loading && user) {
@@ -22,10 +23,14 @@ export default function LoginPage() {
 
   useEffect(() => {
     const error = searchParams.get('error')
+    const message = searchParams.get('message')
+    
     if (error === 'disposable_email') {
       setErrorMessage('Registration blocked: Disposable email addresses are not allowed. Please use a permanent email address.')
+    } else if (message === 'payment_completed_login_required') {
+      setSuccessMessage(t('auth.paymentCompletedLoginRequired'))
     }
-  }, [searchParams])
+  }, [searchParams, t])
 
   if (loading) {
     return (
@@ -48,6 +53,34 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes fadeInShake {
+          0% { 
+            opacity: 0; 
+            transform: translateY(-10px) scale(0.95); 
+          }
+          60% { 
+            opacity: 1; 
+            transform: translateY(0) scale(1.02); 
+          }
+          80% { 
+            transform: translateY(-2px) scale(1.01); 
+          }
+          90% { 
+            transform: translateY(1px) scale(1); 
+          }
+          100% { 
+            opacity: 1; 
+            transform: translateY(0) scale(1); 
+          }
+        }
+        
+        .animate-fade-in-shake {
+          animation: fadeInShake 0.8s ease-out forwards;
+        }
+      `}</style>
+      
       {/* Floating Language Switcher */}
       <FloatingLanguageSwitcher position="top-right" variant="discrete" />
       
@@ -63,9 +96,30 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold text-white mb-2">GateFlow Admin</h1>
           <p className="text-gray-300">{t('auth.pleaseSignIn')}</p>
           
+          {/* Success message for payment completed */}
+          {successMessage && (
+            <div className="mt-4 p-4 rounded-xl text-sm bg-green-500/10 text-green-400 border border-green-500/20 animate-fade-in-shake">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <div className="font-medium text-green-300">{t('auth.paymentCompletedLoginTitle')}</div>
+                  <div className="mt-1">{successMessage}</div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Error message */}
           {errorMessage && (
-            <div className="mt-4 p-4 rounded-xl text-sm bg-red-500/10 text-red-400 border border-red-500/20">
-              {errorMessage}
+            <div className="mt-4 p-4 rounded-xl text-sm bg-red-500/10 text-red-400 border border-red-500/20 animate-fade-in-shake">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <div>{errorMessage}</div>
+              </div>
             </div>
           )}
         </div>

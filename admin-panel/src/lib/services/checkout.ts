@@ -184,6 +184,14 @@ export class CheckoutService {
         sessionConfig.customer_email = options.email;
       }
 
+      // Add terms of service collection if enabled
+      const collectTermsOfService = process.env.STRIPE_COLLECT_TERMS_OF_SERVICE === 'true' || process.env.STRIPE_COLLECT_TERMS_OF_SERVICE === '1';
+      if (collectTermsOfService) {
+        sessionConfig.consent_collection = {
+          terms_of_service: 'required',
+        };
+      }
+
       const session = await this.stripe.checkout.sessions.create(sessionConfig);
 
       if (!session.client_secret) {

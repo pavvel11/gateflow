@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { useTranslations } from 'next-intl';
 import Confetti from 'react-confetti';
@@ -21,6 +22,7 @@ interface PaymentStatusViewProps {
   paymentStatus: string; // 'processing', 'completed', 'failed', 'expired', 'guest_purchase', 'magic_link_sent'
   customerEmail?: string; // Needed for magic link display
   sessionId?: string; // Make optional for free products
+  termsAlreadyHandled: boolean; // Whether terms are already handled (Stripe collected OR user authenticated)
 }
 
 export default function PaymentStatusView({
@@ -30,22 +32,46 @@ export default function PaymentStatusView({
   paymentStatus,
   customerEmail,
   sessionId,
+  termsAlreadyHandled,
 }: PaymentStatusViewProps) {
   const router = useRouter();
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [countdown, setCountdown] = useState(3);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [sendingMagicLink, setSendingMagicLink] = useState(false);
+  const [showSpinnerForMinTime, setShowSpinnerForMinTime] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaError, setCaptchaError] = useState<string | null>(null);
+  const [captchaTimeout, setCaptchaTimeout] = useState(false);
+  const [showInteractiveWarning, setShowInteractiveWarning] = useState(false);
+  const [isUserAuthenticated, setIsUserAuthenticated] = useState<boolean | null>(null);
   const supabase = createClient();
   const t = useTranslations('paymentStatus');
+  const tCompliance = useTranslations('compliance');
+  const tSecurity = useTranslations('security');
   
+  // Calculate if we should show spinner immediately - more aggressive approach
+  const termsOk = termsAlreadyHandled || termsAccepted;
+  const baseCondition = paymentStatus === 'magic_link_sent' && 
+                       customerEmail && 
+                       sessionId && 
+                       !magicLinkSent && 
+                       termsOk;
+  const shouldShowSpinner = baseCondition || showSpinnerForMinTime; // Show spinner for minimum time
+  
+ 
   // Send magic link automatically for magic_link_sent status
   useEffect(() => {
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    const turnstileRequired = isDevelopment ? true : turnstileToken; // Skip turnstile check in dev
+    // Terms validation: either already handled (Stripe) OR manually accepted
+    const termsOk = termsAlreadyHandled || termsAccepted;
+    // Turnstile validation: always required (dev uses dummy, prod uses real)
+    const turnstileOk = captchaToken;
     
-    if (paymentStatus === 'magic_link_sent' && customerEmail && sessionId && !magicLinkSent && termsAccepted && turnstileRequired) {
+    // Set sending state as soon as conditions are met
+    if (paymentStatus === 'magic_link_sent' && customerEmail && sessionId && !magicLinkSent && termsOk && turnstileOk && !sendingMagicLink) {
+      setSendingMagicLink(true);
+      
       const sendMagicLink = async () => {
         try {
           const redirectUrl = `${window.location.origin}/auth/callback?redirect_to=${encodeURIComponent(`/p/${product.slug}/payment-status?session_id=${sessionId}`)}`;
@@ -54,23 +80,72 @@ export default function PaymentStatusView({
             email: customerEmail,
             options: {
               emailRedirectTo: redirectUrl,
-              shouldCreateUser: true
+              shouldCreateUser: true,
+              captchaToken: captchaToken || undefined,
             }
           });
           
           if (!error) {
             setMagicLinkSent(true);
+            // Also hide spinner when magic link is sent (but minimum time timer might still be running)
+            setTimeout(() => setShowSpinnerForMinTime(false), 100);
           } else {
             console.error('Error sending magic link:', error);
           }
         } catch (err) {
           console.error('Exception sending magic link:', err);
+        } finally {
+          setSendingMagicLink(false);
         }
       };
       
       sendMagicLink();
     }
-  }, [paymentStatus, customerEmail, sessionId, magicLinkSent, termsAccepted, turnstileToken, supabase.auth, product.slug]);
+  }, [paymentStatus, customerEmail, sessionId, magicLinkSent, sendingMagicLink, termsAccepted, captchaToken, supabase.auth, product.slug, termsAlreadyHandled]);
+  
+  // Show spinner for minimum time when conditions are met
+  useEffect(() => {
+    const termsOk = termsAlreadyHandled || termsAccepted;
+    const shouldTriggerSpinner = paymentStatus === 'magic_link_sent' && 
+                                customerEmail && 
+                                sessionId && 
+                                termsOk;
+    
+    // Only trigger spinner if not already showing and magicLink not sent yet
+    if (shouldTriggerSpinner && !showSpinnerForMinTime && !magicLinkSent) {
+      setShowSpinnerForMinTime(true);
+
+      // Keep spinner visible for at least .1 seconds, even if magicLinkSent becomes true
+      const timer = setTimeout(() => {
+        setShowSpinnerForMinTime(false);
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [paymentStatus, customerEmail, sessionId, magicLinkSent, showSpinnerForMinTime, termsAlreadyHandled, termsAccepted]);
+  
+  // Check authentication status and redirect if completed payment but user not authenticated
+  useEffect(() => {
+    if (paymentStatus === 'completed' && accessGranted) {
+      const checkAuthAndRedirect = async () => {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) {
+            // User not authenticated - redirect to login with message
+            router.push('/login?message=payment_completed_login_required');
+          } else {
+            setIsUserAuthenticated(true);
+          }
+        } catch (error) {
+          console.error('Error checking auth status:', error);
+          // On error, assume not authenticated and redirect
+          router.push('/login?message=payment_completed_login_required');
+        }
+      };
+      
+      checkAuthAndRedirect();
+    }
+  }, [paymentStatus, accessGranted, supabase.auth, router]);
   
   // Set window dimensions for confetti
   useEffect(() => {
@@ -87,7 +162,7 @@ export default function PaymentStatusView({
 
   // Countdown and redirect for success
   useEffect(() => {
-    if (paymentStatus === 'completed' && accessGranted) {
+    if (paymentStatus === 'completed' && accessGranted && isUserAuthenticated) {
       const timer = setTimeout(() => {
         if (countdown > 1) {
           setCountdown(countdown - 1);
@@ -99,7 +174,7 @@ export default function PaymentStatusView({
 
       return () => clearTimeout(timer);
     }
-  }, [countdown, router, product.slug, paymentStatus, accessGranted]);
+  }, [countdown, router, product.slug, paymentStatus, accessGranted, isUserAuthenticated]);
 
   // Get status display info
   const getStatusInfo = () => {
@@ -290,6 +365,55 @@ export default function PaymentStatusView({
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
           }
+          
+          @keyframes fadeInPulse {
+            0% { 
+              opacity: 0; 
+              transform: scale(0.95); 
+              box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+            }
+            50% { 
+              transform: scale(1.02); 
+              box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+            }
+            100% { 
+              opacity: 1; 
+              transform: scale(1); 
+              box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+            }
+          }
+          
+          @keyframes slideInLeft {
+            0% { 
+              opacity: 0; 
+              transform: translateX(-20px); 
+            }
+            100% { 
+              opacity: 1; 
+              transform: translateX(0); 
+            }
+          }
+          
+          .animate-fadeInPulse {
+            animation: fadeInPulse 1.5s ease-out forwards;
+          }
+          
+          .animate-slideInLeft {
+            animation: slideInLeft 0.6s ease-out forwards;
+            opacity: 0;
+          }
+          
+          .delay-100 {
+            animation-delay: 0.1s;
+          }
+          
+          .delay-200 {
+            animation-delay: 0.2s;
+          }
+          
+          .delay-300 {
+            animation-delay: 0.3s;
+          }
         `}</style>
         
         <div className={`max-w-4xl mx-auto p-8 bg-gradient-to-br ${statusInfo.bgColor} backdrop-blur-md border border-white/10 rounded-xl shadow-2xl z-10 text-center`}>
@@ -300,43 +424,172 @@ export default function PaymentStatusView({
           <p className="text-gray-300 mb-6">{t('paymentProcessedSuccessfully')}</p>
           
           <div className="space-y-4">
-            {!magicLinkSent && (!termsAccepted || (process.env.NODE_ENV === 'production' && !turnstileToken)) && (
-              <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4 mb-6">
-                <h3 className="text-lg font-semibold text-yellow-300 mb-4">Before we send your access link:</h3>
-                
-                {/* Terms and Conditions Checkbox */}
-                <div className="mb-4">
-                  <TermsCheckbox
-                    checked={termsAccepted}
-                    onChange={setTermsAccepted}
-                    termsUrl="/terms"
-                    privacyUrl="/privacy"
-                  />
-                </div>
+            {(() => {
+              // Show validation block only if we need user action
+              const needsCustomTerms = !termsAlreadyHandled && !termsAccepted;
+              const needsTurnstile = !captchaToken;
+              
+              // Show block if:
+              // 1. Terms needed (always show) OR
+              // 2. Interactive captcha warning is shown (only when onBeforeInteractive triggers)
+              const showValidationBlock = !magicLinkSent && (
+                needsCustomTerms || 
+                showInteractiveWarning
+              );
+              
+              if (showValidationBlock) {
+                return (
+                  <div className="bg-amber-500/10 border-2 border-amber-500/30 rounded-xl p-6 mb-6">
+                    <h3 className="text-xl font-bold text-amber-200 mb-4">
+                      ⚠️ {tCompliance('beforeSendingLink')}:
+                    </h3>
+                    
+                    {/* Terms and Conditions Checkbox - only if terms not already handled */}
+                    {needsCustomTerms && (
+                      <div className="mb-4">
+                        <TermsCheckbox
+                          checked={termsAccepted}
+                          onChange={setTermsAccepted}
+                          termsUrl="/terms"
+                          privacyUrl="/privacy"
+                          variant="prominent"
+                        />
+                      </div>
+                    )}
 
-                {/* Cloudflare Turnstile - only in production */}
-                {process.env.NODE_ENV === 'production' && (
-                  <TurnstileWidget
-                    onVerify={setTurnstileToken}
-                    onError={() => setTurnstileToken(null)}
-                    theme="dark"
-                  />
-                )}
-                
-                {process.env.NODE_ENV === 'development' && (
-                  <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3 text-sm text-blue-300">
-                    ℹ️ Turnstile verification is disabled in development mode
+                    {/* Cloudflare Turnstile - show in yellow block when interactive */}
+                    {showInteractiveWarning && (
+                      <>
+                        <TurnstileWidget
+                          onVerify={(token) => {
+                            setCaptchaToken(token);
+                            setCaptchaError(null); // Clear any previous errors
+                            setShowInteractiveWarning(false); // Hide warning after successful verification
+                          }}
+                          onError={() => {
+                            setCaptchaToken(null);
+                            setCaptchaError(tSecurity('captchaVerificationFailed'));
+                          }}
+                          onTimeout={() => {
+                            setCaptchaTimeout(true);
+                            setCaptchaError(tSecurity('captchaTimeout'));
+                          }}
+                          onBeforeInteractive={() => {
+                            setShowInteractiveWarning(true);
+                          }}
+                        />
+                        
+                        {process.env.NODE_ENV === 'development' && (
+                          <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3 text-sm text-blue-300 mt-3">
+                            💡 Set NEXT_PUBLIC_TURNSTILE_TEST_MODE in .env to test different scenarios
+                          </div>
+                        )}
+                      </>
+                    )}
+                    
+                    {/* Show sending spinner when magic link is being sent within validation block */}
+                    {shouldShowSpinner && !magicLinkSent && (
+                      <div className="mt-4 bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 flex items-center justify-center">
+                        <div className="flex items-center space-x-3">
+                          <div className="animate-spin h-5 w-5 border-2 border-blue-400 border-t-transparent rounded-full"></div>
+                          <span className="text-blue-300 font-medium">{t('sendingMagicLink')}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
+                );
+              }
+              
+              // Always render invisible Turnstile when token is needed (outside yellow block)
+              if (needsTurnstile && !showInteractiveWarning) {
+                return (
+                  <div className="hidden">
+                    <TurnstileWidget
+                      onVerify={(token) => {
+                        setCaptchaToken(token);
+                        setCaptchaError(null);
+                      }}
+                      onError={() => {
+                        setCaptchaToken(null);
+                        setCaptchaError(tSecurity('captchaVerificationFailed'));
+                      }}
+                      onTimeout={() => {
+                        setCaptchaTimeout(true);
+                        setCaptchaError(tSecurity('captchaTimeout'));
+                      }}
+                      onBeforeInteractive={() => {
+                        setShowInteractiveWarning(true);
+                      }}
+                    />
+                  </div>
+                );
+              }
+              
+              // Show success message if magic link was sent successfully
+              if (magicLinkSent) {
+                return (
+                  <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4 mb-6">
+                    <h3 className="text-lg font-semibold text-green-300 mb-2">
+                      ✅ {t('magicLinkSent')}
+                    </h3>
+                    <p className="text-green-200 text-sm">
+                      {t('checkEmailForLoginLink', { email: customerEmail || '' })}
+                    </p>
+                  </div>
+                );
+              }
+              
+              return null;
+            })()}
+            
+            {/* Show spinner when conditions are met but validation block is not shown */}
+            {(() => {
+              const needsCustomTerms = !termsAlreadyHandled && !termsAccepted;
+              const showValidationBlock = !magicLinkSent && (needsCustomTerms || showInteractiveWarning);
+              const showSpinnerOutside = shouldShowSpinner && !magicLinkSent && !showValidationBlock;
+              
+              return showSpinnerOutside;
+            })() && (
+              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 flex items-center justify-center mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="animate-spin h-5 w-5 border-2 border-blue-400 border-t-transparent rounded-full"></div>
+                  <span className="text-blue-300 font-medium">{t('sendingMagicLink')}</span>
+                </div>
+              </div>
+            )}
+            
+            {/* Show captcha errors always (even for invisible captcha) */}
+            {captchaError && (
+              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3 text-sm text-red-300 mb-4">
+                ❌ {captchaError}
+                {captchaTimeout ? (
+                  <>
+                    {' '}{tSecurity('refreshPageOrLogin')}{' '}
+                    <Link href="/login" className="text-blue-400 hover:text-blue-300 underline">
+                      {tSecurity('tryLoggingInAgain')}
+                    </Link>
+                    .
+                  </>
+                ) : (
+                  <>
+                    {' '}{tSecurity('captchaErrorLoginPrompt')}{' '}
+                    <Link href="/login" className="text-blue-400 hover:text-blue-300 underline">
+                      {tSecurity('tryLoggingInAgain')}
+                    </Link>
+                    .
+                  </>
                 )}
               </div>
             )}
             
-            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-blue-300 mb-2">{t('toAccessYourProduct')}</h3>
+            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 animate-fadeInPulse">
+              <h3 className="text-lg font-semibold text-blue-300 mb-2 animate-pulse">
+                🎯 {t('toAccessYourProduct')}
+              </h3>
               <div className="text-sm text-gray-300 space-y-2">
-                <p>{t('step1CheckEmail', { email: customerEmail ? `(${customerEmail})` : '' })}</p>
-                <p>{t('step2ClickMagicLink')}</p>
-                <p>{t('step3AutoRedirect')}</p>
+                <p className="animate-slideInLeft delay-100">{t('step1CheckEmail', { email: customerEmail ? `(${customerEmail})` : '' })}</p>
+                <p className="animate-slideInLeft delay-200">{t('step2ClickMagicLink')}</p>
+                <p className="animate-slideInLeft delay-300">{t('step3AutoRedirect')}</p>
               </div>
             </div>
             
@@ -397,8 +650,8 @@ export default function PaymentStatusView({
     );
   }
 
-  // Success state with access granted
-  if (paymentStatus === 'completed' && accessGranted) {
+  // Success state with access granted - only show if user is authenticated
+  if (paymentStatus === 'completed' && accessGranted && isUserAuthenticated) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 overflow-hidden relative font-sans">
         <Confetti

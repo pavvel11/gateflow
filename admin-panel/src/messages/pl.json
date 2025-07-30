@@ -46,6 +46,8 @@
     "forgotPassword": "Zapomniałeś hasła?",
     "welcomeBack": "Witaj ponownie",
     "pleaseSignIn": "Zaloguj się, aby zarządzać ochroną treści",
+    "paymentCompletedLoginRequired": "Twoja płatność została zakończona sukcesem! Zaloguj się aby uzyskać dostęp do zakupionej treści.",
+    "paymentCompletedLoginTitle": "Wymagane logowanie aby uzyskać dostęp do zakupu",
     "sendMagicLink": "Wyślij magiczny link",
     "checkEmailAt": "Sprawdź swój email na {email} w poszukiwaniu magicznego linku.",
     "clickLinkToSignIn": "Kliknij link, aby zalogować się automatycznie."
@@ -737,6 +739,34 @@
     "havingTrouble": "Masz problemy?",
     "contactSupport": "Skontaktuj się z pomocą techniczną",
     "startNewPayment": "Rozpocznij nową płatność",
-    "paymentSessionsExpire": "Sesje płatności wygasają po 24 godzinach ze względów bezpieczeństwa"
+    "paymentSessionsExpire": "Sesje płatności wygasają po 24 godzinach ze względów bezpieczeństwa",
+    "sendingMagicLink": "Wysyłanie magicznego linku...",
+    "magicLinkSent": "Magiczny link wysłany!",
+    "checkEmailForLoginLink": "Sprawdź swoją skrzynkę e-mail ({email}) w poszukiwaniu linku logowania."
+  },
+  "compliance": {
+    "termsRequired": "Wymagana akceptacja regulaminu",
+    "mustAcceptTerms": "Musisz zaakceptować nasz Regulamin i Politykę Prywatności, aby kontynuować",
+    "beforeSendingLink": "Zanim wyślemy Ci link dostępu",
+    "pleaseAcceptTerms": "Prosimy o zaakceptowanie Regulaminu i Polityki Prywatności, aby kontynuować.",
+    "acceptTermsAndPrivacy": "Zgadzam się z {termsLink} i {privacyLink}",
+    "iAgreeWith": "Zgadzam się z",
+    "and": "i",
+    "termsOfService": "Regulaminem",
+    "privacyPolicy": "Polityką Prywatności",
+    "securityVerificationRequired": "Prosimy o ukończenie weryfikacji bezpieczeństwa."
+  },
+  "security": {
+    "turnstileNotConfigured": "⚠️ Turnstile nie jest skonfigurowany (tryb deweloperski)",
+    "turnstileDisabledInDev": "ℹ️ Weryfikacja Turnstile jest wyłączona w trybie deweloperskim",
+    "securityVerificationFailed": "Weryfikacja bezpieczeństwa nie powiodła się. Spróbuj ponownie.",
+    "pleaseCompleteVerification": "Prosimy o ukończenie weryfikacji bezpieczeństwa.",
+    "verificationExpired": "Weryfikacja bezpieczeństwa wygasła. Spróbuj ponownie.",
+    "captchaVerificationFailed": "Weryfikacja bezpieczeństwa (captcha) nie powiodła się.",
+    "captchaTimeout": "Weryfikacja bezpieczeństwa przekroczyła limit czasu.",
+    "refreshAndTryLogin": "Proszę odświeżyć stronę i",
+    "refreshPageOrLogin": "Weryfikacja przekroczyła limit czasu. Proszę przejść do strony logowania, aby spróbować ponownie.",
+    "tryLoggingInAgain": "Przejdź do strony logowania",
+    "captchaErrorLoginPrompt": "Proszę"
   }
 }
