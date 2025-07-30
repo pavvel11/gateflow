@@ -119,15 +119,6 @@ export default function LoginForm() {
         onVerify={setCaptchaToken}
         onError={() => setCaptchaToken(null)}
       />
-      
-      {process.env.NODE_ENV === 'development' && (
-        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-sm text-blue-300">
-          💡 <strong>Development Tips:</strong>
-          <br />• Set NEXT_PUBLIC_TURNSTILE_TEST_MODE in .env to change test behavior
-          <br />• Available modes: ALWAYS_PASSES_VISIBLE, ALWAYS_BLOCKS_VISIBLE, etc.
-          <br />• In production, real verification will be enforced
-        </div>
-      )}
 
       <button
         type="submit"

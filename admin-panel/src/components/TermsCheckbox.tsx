@@ -84,26 +84,53 @@ export default function TermsCheckbox({
     );
   }
 
-  // Default variant: minimalist
+  // Default variant: custom styled checkbox for elegant design
   return (
     <div className={className}>
-      <label htmlFor="terms-checkbox" className="flex items-center space-x-2 cursor-pointer">
-        <input
-          id="terms-checkbox"
-          type="checkbox"
-          checked={checked}
-          onChange={(e) => onChange(e.target.checked)}
-          required={required}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          className={`w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 transition-all ${isFocused ? 'ring-2 ring-blue-500' : ''}`}
-          aria-describedby="terms-checkbox-description"
-        />
-        <span className="text-sm text-gray-200" id="terms-checkbox-description">
+      <label htmlFor="terms-checkbox" className="flex items-center cursor-pointer group">
+        {/* Custom Checkbox */}
+        <div className="relative flex-shrink-0 mr-1">
+          <input
+            id="terms-checkbox"
+            type="checkbox"
+            checked={checked}
+            onChange={(e) => onChange(e.target.checked)}
+            required={required}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            className="sr-only"
+            aria-describedby="terms-checkbox-description"
+          />
+          <div 
+            className={`w-5 h-5 border-2 rounded transition-all duration-200 flex items-center justify-center ${
+              checked 
+                ? 'bg-amber-400 border-amber-400 shadow-lg shadow-amber-400/25' 
+                : 'bg-transparent border-amber-400/60 hover:border-amber-400/80 group-hover:bg-amber-400/5 group-hover:border-amber-400'
+            } ${
+              isFocused ? 'ring-2 ring-amber-400/50 ring-offset-2 ring-offset-amber-900/20' : ''
+            }`}
+          >
+            {checked && (
+              <svg 
+                className="w-3 h-3 text-amber-900 font-bold" 
+                fill="currentColor" 
+                viewBox="0 0 20 20"
+              >
+                <path 
+                  fillRule="evenodd" 
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                  clipRule="evenodd" 
+                />
+              </svg>
+            )}
+          </div>
+        </div>
+
+        <span className="text-amber-100 text-sm leading-relaxed flex-1 group-hover:text-amber-50 transition-colors" id="terms-checkbox-description">
           {t('iAgreeWith')}{' '}
           <Link
             href={termsUrl}
-            className="underline hover:text-blue-300"
+            className="text-amber-200 hover:text-amber-100 underline font-medium transition-colors"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -112,13 +139,13 @@ export default function TermsCheckbox({
           {' '}{t('and')}{' '}
           <Link
             href={privacyUrl}
-            className="underline hover:text-blue-300"
+            className="text-amber-200 hover:text-amber-100 underline font-medium transition-colors"
             target="_blank"
             rel="noopener noreferrer"
           >
             {t('privacyPolicy')}
           </Link>
-          {required && <span className="text-blue-300 ml-1">*</span>}
+          {required && <span className="text-amber-300 ml-1">*</span>}
         </span>
       </label>
     </div>

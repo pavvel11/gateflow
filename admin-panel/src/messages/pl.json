@@ -757,6 +757,8 @@
     "securityVerificationRequired": "Prosimy o ukończenie weryfikacji bezpieczeństwa."
   },
   "security": {
+    "requiredSteps": "Wymagane kroki bezpieczeństwa",
+    "captchaRequired": "Wymagana weryfikacja bezpieczeństwa",
     "turnstileNotConfigured": "⚠️ Turnstile nie jest skonfigurowany (tryb deweloperski)",
     "turnstileDisabledInDev": "ℹ️ Weryfikacja Turnstile jest wyłączona w trybie deweloperskim",
     "securityVerificationFailed": "Weryfikacja bezpieczeństwa nie powiodła się. Spróbuj ponownie.",
@@ -764,6 +766,7 @@
     "verificationExpired": "Weryfikacja bezpieczeństwa wygasła. Spróbuj ponownie.",
     "captchaVerificationFailed": "Weryfikacja bezpieczeństwa (captcha) nie powiodła się.",
     "captchaTimeout": "Weryfikacja bezpieczeństwa przekroczyła limit czasu.",
+    "captchaInteractiveWarning": "Proszę zweryfikować zabezpieczenie captcha.",
     "refreshAndTryLogin": "Proszę odświeżyć stronę i",
     "refreshPageOrLogin": "Weryfikacja przekroczyła limit czasu. Proszę przejść do strony logowania, aby spróbować ponownie.",
     "tryLoggingInAgain": "Przejdź do strony logowania",

@@ -115,38 +115,29 @@ export default function TurnstileWidget({
 
   return (
     <div className="mb-4">
-      {/* Development info banner */}
+      <div className="flex justify-center">
+        <Turnstile
+          ref={turnstileRef}
+          siteKey={effectiveSiteKey}
+          options={{
+            theme,
+            size,
+            retry: 'auto'
+          }}
+          onSuccess={handleSuccess}
+          onError={handleError}
+          onExpire={handleExpire}
+          onTimeout={handleTimeout}
+          onBeforeInteractive={handleBeforeInteractive}
+        />
+      </div>
+      
+      {/* Minimal development info - only show test mode as tiny text */}
       {isUsingDummyKey && (
-        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-sm text-blue-300 mb-3">
-          🧪 <strong>Development Mode:</strong> Using dummy Turnstile key ({effectiveTestMode})
-          <br />
-          <span className="text-xs opacity-75">
-            {envTestMode ? 
-              `Set via NEXT_PUBLIC_TURNSTILE_TEST_MODE=${envTestMode}` : 
-              `Using default/prop value. Set NEXT_PUBLIC_TURNSTILE_TEST_MODE to override.`
-            }
-          </span>
-          <br />
-          <span className="text-xs opacity-75">
-            This will generate XXXX.DUMMY.TOKEN.XXXX for testing
-          </span>
+        <div className="text-xs text-gray-500 mt-1 opacity-50 text-center">
+          🧪 {effectiveTestMode}
         </div>
       )}
-      
-      <Turnstile
-        ref={turnstileRef}
-        siteKey={effectiveSiteKey}
-        options={{
-          theme,
-          size,
-          retry: 'auto'
-        }}
-        onSuccess={handleSuccess}
-        onError={handleError}
-        onExpire={handleExpire}
-        onTimeout={handleTimeout}
-        onBeforeInteractive={handleBeforeInteractive}
-      />
     </div>
   )
 }

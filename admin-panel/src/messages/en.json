@@ -762,6 +762,8 @@
     "securityVerificationRequired": "Please complete the security verification."
   },
   "security": {
+    "requiredSteps": "Required Security Steps",
+    "captchaRequired": "Security verification required",
     "turnstileNotConfigured": "⚠️ Turnstile not configured (development mode)",
     "turnstileDisabledInDev": "ℹ️ Turnstile verification is disabled in development mode",
     "securityVerificationFailed": "Security verification failed. Please try again.",
@@ -769,6 +771,7 @@
     "verificationExpired": "Security verification expired. Please try again.",
     "captchaVerificationFailed": "Security verification (captcha) failed.",
     "captchaTimeout": "Security verification timed out.",
+    "captchaInteractiveWarning": "Please interact with the captcha verification.",
     "refreshAndTryLogin": "Please refresh the page and",
     "refreshPageOrLogin": "The verification timed out. Please go to login page to try again.",
     "tryLoggingInAgain": "Go to login page",

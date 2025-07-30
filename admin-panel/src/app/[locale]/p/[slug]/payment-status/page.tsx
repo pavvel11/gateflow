@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import PaymentStatusView from './components/PaymentStatusView';
 import { verifyPaymentSession } from '@/lib/payment/verify-payment';
+import { PaymentStatus } from './types';
 
 interface PageProps {
   params: Promise<{ locale: string; slug: string }>;
@@ -40,7 +41,7 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
   // Verify payment with Stripe and determine status
   let accessGranted = false;
   let errorMessage = '';
-  let paymentStatus = 'processing'; // processing, completed, failed, expired, guest_purchase, magic_link_sent
+  let paymentStatus: PaymentStatus = 'processing'; // processing, completed, failed, expired, guest_purchase, magic_link_sent
   let customerEmail = '';
   let userExistsInDatabase = false; // Track if user exists in database
 
