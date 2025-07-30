@@ -140,7 +140,6 @@ function validatePrice(price: number): ValidationResult {
 
 function validateCurrency(currency: string): ValidationResult {
   const errors: string[] = [];
-  const supportedCurrencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD'];
   
   if (!currency || typeof currency !== 'string') {
     errors.push('Currency is required');
@@ -148,9 +147,8 @@ function validateCurrency(currency: string): ValidationResult {
     errors.push('Currency must be exactly 3 characters');
   } else if (!/^[A-Z]{3}$/.test(currency)) {
     errors.push('Currency must be uppercase letters only');
-  } else if (!supportedCurrencies.includes(currency)) {
-    errors.push('Unsupported currency');
   }
+  // Removed hardcoded currency list - let database be the source of truth
   
   return { isValid: errors.length === 0, errors };
 }
