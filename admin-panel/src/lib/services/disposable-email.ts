@@ -9,113 +9,22 @@
  */
 
 import { getDisposableEmailConfig } from './disposable-email-config';
-import { promises as fs } from 'fs';
-import path from 'path';
 
 export class DisposableEmailService {
   private static domains: Set<string> | null = null;
   private static lastFetch: number = 0;
   private static config = getDisposableEmailConfig();
   private static readonly RAW_URL = 'https://raw.githubusercontent.com/unkn0w/disposable-email-domain-list/main/domains.json';
-  private static readonly CACHE_FILE = path.join(process.cwd(), '.cache', 'disposable-domains.json');
-  private static readonly CACHE_META_FILE = path.join(process.cwd(), '.cache', 'disposable-domains-meta.json');
-
-  /**
-   * Ensure cache directory exists
-   */
-  private static async ensureCacheDir(): Promise<void> {
-    const cacheDir = path.dirname(this.CACHE_FILE);
-    try {
-      await fs.mkdir(cacheDir, { recursive: true });
-    } catch (error) {
-      console.error('Failed to create cache directory:', error);
-    }
-  }
-
-  /**
-   * Load domains from local cache
-   */
-  private static async loadFromCache(): Promise<boolean> {
-    try {
-      const [domainsContent, metaContent] = await Promise.all([
-        fs.readFile(this.CACHE_FILE, 'utf8'),
-        fs.readFile(this.CACHE_META_FILE, 'utf8')
-      ]);
-
-      const domains = JSON.parse(domainsContent);
-      const meta = JSON.parse(metaContent);
-
-      // Check if cache is still valid (1 week = 604800000 ms)
-      const now = Date.now();
-      if (now - meta.timestamp < 604800000) {
-        this.domains = new Set(domains);
-        this.lastFetch = meta.timestamp;
-        return true;
-      }
-      return false;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Load domains from expired cache as fallback
-   */
-  private static async loadExpiredCacheAsFallback(): Promise<boolean> {
-    try {
-      const [domainsContent, metaContent] = await Promise.all([
-        fs.readFile(this.CACHE_FILE, 'utf8'),
-        fs.readFile(this.CACHE_META_FILE, 'utf8')
-      ]);
-
-      const domains = JSON.parse(domainsContent);
-      const meta = JSON.parse(metaContent);
-      this.domains = new Set(domains);
-      this.lastFetch = meta.timestamp;
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Save domains to local cache
-   */
-  private static async saveToCache(domains: Set<string>): Promise<void> {
-    try {
-      await this.ensureCacheDir();
-      
-      const domainsArray = Array.from(domains);
-      const meta = { 
-        timestamp: Date.now(), 
-        count: domains.size,
-        source: 'github',
-        version: '1.0'
-      };
-
-      await Promise.all([
-        fs.writeFile(this.CACHE_FILE, JSON.stringify(domainsArray), 'utf8'),
-        fs.writeFile(this.CACHE_META_FILE, JSON.stringify(meta, null, 2), 'utf8')
-      ]);
-
-    } catch (error) {
-      console.error('Failed to save domains to cache:', error);
-    }
-  }
 
   /**
    * Initialize the service with disposable domain list
    */
   private static async initialize(): Promise<void> {
     const now = Date.now();
+    const config = getDisposableEmailConfig();
     
-    // Skip if memory cache is still fresh (1 week = 604800000 ms)
-    if (this.domains && (now - this.lastFetch) < 604800000) {
-      return;
-    }
-
-    // Try to load from filesystem cache first
-    if (await this.loadFromCache()) {
+    // Skip if memory cache is still fresh (configurable TTL)
+    if (this.domains && (now - this.lastFetch) < config.cacheDuration) {
       return;
     }
 
@@ -130,18 +39,10 @@ export class DisposableEmailService {
       // Direct JSON response from raw URL
       const domains = await response.json();
       this.domains = new Set(domains);
-      
       this.lastFetch = now;
-      // Save to cache for next time
-      await this.saveToCache(this.domains);
       
     } catch (error) {
       console.error('❌ Failed to load disposable email domains:', error);
-      
-      // Try to use expired cache as fallback before using hardcoded list
-      if (await this.loadExpiredCacheAsFallback()) {
-        return;
-      }
       
       // Use a basic fallback list of common disposable domains if everything fails
       if (!this.domains) {
@@ -281,46 +182,6 @@ export class DisposableEmailService {
     this.domains = null;
     this.lastFetch = 0;
     await this.initialize();
-  }
-
-  /**
-   * Clear filesystem cache files
-   */
-  static async clearFileCache(): Promise<void> {
-    try {
-      await Promise.all([
-        fs.unlink(this.CACHE_FILE).catch(() => {}),
-        fs.unlink(this.CACHE_META_FILE).catch(() => {})
-      ]);
-    } catch (error) {
-      console.error('Failed to clear filesystem cache:', error);
-    }
-  }
-
-  /**
-   * Get cache info for debugging
-   */
-  static async getCacheInfo(): Promise<{
-    exists: boolean;
-    age?: number;
-    count?: number;
-    isValid?: boolean;
-  }> {
-    try {
-      const metaContent = await fs.readFile(this.CACHE_META_FILE, 'utf8');
-      const meta = JSON.parse(metaContent);
-      const age = Date.now() - meta.timestamp;
-      const isValid = age < 604800000; // 1 week
-      
-      return {
-        exists: true,
-        age: Math.round(age / 86400000), // days
-        count: meta.count,
-        isValid
-      };
-    } catch {
-      return { exists: false };
-    }
   }
 
   /**
