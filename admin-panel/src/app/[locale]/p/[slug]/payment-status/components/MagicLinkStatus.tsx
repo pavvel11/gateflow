@@ -3,7 +3,6 @@ import Link from 'next/link';
 import TurnstileWidget from '@/components/TurnstileWidget';
 import TermsCheckbox from '@/components/TermsCheckbox';
 import { Product } from '../types';
-import { shouldShowVisibleCaptcha } from '../utils/turnstileUtils';
 
 interface MagicLinkStatusProps {
   product: Product;
@@ -48,15 +47,15 @@ export default function MagicLinkStatus({
 
   const needsCustomTerms = !termsAlreadyHandled && !termsAccepted;
   const needsTurnstile = !captchaToken;
-  const shouldShowCaptchaVisible = shouldShowVisibleCaptcha();
   
   // Show validation block if:
   // 1. We need user action (terms or captcha)
   // 2. There's no captcha error
   // 3. Magic link hasn't been sent yet
+  // 4. Captcha became interactive (showInteractiveWarning is set by onBeforeInteractive)
   const showValidationBlock = !magicLinkSent && !captchaError && (
     needsCustomTerms || 
-    (needsTurnstile && shouldShowCaptchaVisible) || 
+    (needsTurnstile && showInteractiveWarning) || 
     showInteractiveWarning
   );
   
@@ -91,8 +90,8 @@ export default function MagicLinkStatus({
               </div>
             )}
 
-            {/* Cloudflare Turnstile - show in yellow block when visible captcha is needed */}
-            {needsTurnstile && shouldShowCaptchaVisible && (
+            {/* Cloudflare Turnstile - show in yellow block when captcha became interactive */}
+            {needsTurnstile && showInteractiveWarning && (
               <TurnstileWidget
                 onVerify={(token) => {
                   onCaptchaSuccess(token);
@@ -111,7 +110,7 @@ export default function MagicLinkStatus({
             )}
             
           </div>
-        ) : needsTurnstile && !shouldShowCaptchaVisible ? (
+        ) : needsTurnstile && !showInteractiveWarning ? (
           // Always render invisible Turnstile when token is needed (outside yellow block)
           <div className="hidden">
             <TurnstileWidget
