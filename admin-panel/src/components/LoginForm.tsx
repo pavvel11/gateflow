@@ -18,7 +18,6 @@ export default function LoginForm() {
   const [siteUrl, setSiteUrl] = useState('')
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
-  const supabase = createClient()
   const t = useTranslations()
 
   // Get current site URL for redirects (works in any environment)
@@ -67,6 +66,7 @@ export default function LoginForm() {
       // Dynamic redirect URL for Supabase auth
       const redirectUrl = `${siteUrl}/auth/callback`
       
+      const supabase = await createClient()
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {

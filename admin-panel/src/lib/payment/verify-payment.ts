@@ -50,7 +50,7 @@ export async function verifyPaymentSession(
   }
 
   // Check environment variables
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return {
       session_id: sessionId,
       status: 'error',
@@ -63,7 +63,7 @@ export async function verifyPaymentSession(
   
   // Create Service Role client for secure operations
   const serviceClient = createServiceClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     {
       auth: {

@@ -17,8 +17,8 @@ export async function GET(request: NextRequest) {
   // Get the correct origin for redirects - prioritize env var, then headers, then request URL
   const getOrigin = () => {
     // First try environment variable
-    if (process.env.NEXT_PUBLIC_SITE_URL) {
-      return process.env.NEXT_PUBLIC_SITE_URL
+    if (process.env.SITE_URL) {
+      return process.env.SITE_URL
     }
     
     // Then try headers (for production environments)
@@ -47,8 +47,8 @@ export async function GET(request: NextRequest) {
   const tempResponse = NextResponse.next()
   
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {

@@ -24,6 +24,7 @@ import type { Appearance, StripeElementsOptions } from '@stripe/stripe-js';
 
 /**
  * Helper functions to get configuration from environment variables
+ * These use runtime environment variables instead of NEXT_PUBLIC_*
  */
 const getEnv = (key: string, fallback: string): string => {
   return process.env[key] || fallback;
@@ -43,65 +44,65 @@ const toFloat = (value: string): number => {
   return isNaN(num) ? 0.01 : num;
 };
 
-// Core Stripe configuration (loaded from environment variables set by next.config.ts)
+// Core Stripe configuration (loaded from server-side environment variables)
 export const STRIPE_CONFIG = {
   // UI Theme
-  theme: getEnv('NEXT_PUBLIC_STRIPE_THEME', 'night') as 'stripe' | 'night' | 'flat',
-  labels: getEnv('NEXT_PUBLIC_STRIPE_LABELS', 'floating') as 'above' | 'floating',
+  theme: getEnv('STRIPE_THEME', 'night') as 'stripe' | 'night' | 'flat',
+  labels: getEnv('STRIPE_LABELS', 'floating') as 'above' | 'floating',
   
   // Payment methods (ordered by preference)  
-  payment_method_types: getEnv('NEXT_PUBLIC_STRIPE_PAYMENT_METHODS', 'blik,p24,card').split(',').map(s => s.trim()) as ('blik' | 'p24' | 'card' | 'link' | 'klarna')[],
+  payment_method_types: getEnv('STRIPE_PAYMENT_METHODS', 'blik,p24,card').split(',').map(s => s.trim()) as ('blik' | 'p24' | 'card' | 'link' | 'klarna')[],
   
   // Payment method options
   payment_method_options: {
     blik: {
-      setup_future_usage: getEnv('NEXT_PUBLIC_STRIPE_BLIK_SETUP_FUTURE_USAGE', 'off_session') as 'off_session' | 'on_session',
+      setup_future_usage: getEnv('STRIPE_BLIK_SETUP_FUTURE_USAGE', 'off_session') as 'off_session' | 'on_session',
     },
   },
   
   // Session settings
   session: {
-    ui_mode: getEnv('NEXT_PUBLIC_STRIPE_SESSION_UI_MODE', 'embedded') as 'embedded' | 'hosted',
-    payment_mode: getEnv('NEXT_PUBLIC_STRIPE_SESSION_PAYMENT_MODE', 'payment') as 'payment' | 'setup' | 'subscription',
-    expires_hours: toNumber(getEnv('NEXT_PUBLIC_STRIPE_SESSION_EXPIRES_HOURS', '24')),
-    billing_address_collection: getEnv('NEXT_PUBLIC_STRIPE_SESSION_BILLING_ADDRESS_COLLECTION', 'auto') as 'auto' | 'required',
+    ui_mode: getEnv('STRIPE_SESSION_UI_MODE', 'embedded') as 'embedded' | 'hosted',
+    payment_mode: getEnv('STRIPE_SESSION_PAYMENT_MODE', 'payment') as 'payment' | 'setup' | 'subscription',
+    expires_hours: toNumber(getEnv('STRIPE_SESSION_EXPIRES_HOURS', '24')),
+    billing_address_collection: getEnv('STRIPE_SESSION_BILLING_ADDRESS_COLLECTION', 'auto') as 'auto' | 'required',
     automatic_tax: { 
-      enabled: toBool(getEnv('NEXT_PUBLIC_STRIPE_SESSION_AUTOMATIC_TAX_ENABLED', 'true'))
+      enabled: toBool(getEnv('STRIPE_SESSION_AUTOMATIC_TAX_ENABLED', 'true'))
     },
     tax_id_collection: { 
-      enabled: toBool(getEnv('NEXT_PUBLIC_STRIPE_SESSION_TAX_ID_COLLECTION_ENABLED', 'true'))
+      enabled: toBool(getEnv('STRIPE_SESSION_TAX_ID_COLLECTION_ENABLED', 'true'))
     },
   },
   
   // Rate limiting
   rate_limit: {
-    max_requests: toNumber(getEnv('NEXT_PUBLIC_STRIPE_RATE_LIMIT_MAX_REQUESTS', '10')),
-    window_minutes: toNumber(getEnv('NEXT_PUBLIC_STRIPE_RATE_LIMIT_WINDOW_MINUTES', '1')),
-    action_type: getEnv('NEXT_PUBLIC_STRIPE_RATE_LIMIT_ACTION_TYPE', 'checkout_creation'),
+    max_requests: toNumber(getEnv('STRIPE_RATE_LIMIT_MAX_REQUESTS', '10')),
+    window_minutes: toNumber(getEnv('STRIPE_RATE_LIMIT_WINDOW_MINUTES', '1')),
+    action_type: getEnv('STRIPE_RATE_LIMIT_ACTION_TYPE', 'checkout_creation'),
   },
   
   // Validation
   validation: {
     email_regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-    min_price: toFloat(getEnv('NEXT_PUBLIC_STRIPE_VALIDATION_MIN_PRICE', '0.01'))
+    min_price: toFloat(getEnv('STRIPE_VALIDATION_MIN_PRICE', '0.01'))
   },
   
   // Layout options
   layouts: {
-    default: getEnv('NEXT_PUBLIC_STRIPE_LAYOUTS_DEFAULT', 'tabs') as 'tabs' | 'accordion' | 'auto',
+    default: getEnv('STRIPE_LAYOUTS_DEFAULT', 'tabs') as 'tabs' | 'accordion' | 'auto',
   }
 } as const;
 
 // Error messages (loaded from environment variables)
 export const CHECKOUT_ERRORS = {
-  PRODUCT_ID_REQUIRED: getEnv('NEXT_PUBLIC_STRIPE_ERROR_PRODUCT_ID_REQUIRED', 'Product ID is required'),
-  INVALID_EMAIL: getEnv('NEXT_PUBLIC_STRIPE_ERROR_INVALID_EMAIL', 'Invalid email format'),
-  PRODUCT_NOT_FOUND: getEnv('NEXT_PUBLIC_STRIPE_ERROR_PRODUCT_NOT_FOUND', 'Product not found or inactive'),
-  PRODUCT_UNAVAILABLE: getEnv('NEXT_PUBLIC_STRIPE_ERROR_PRODUCT_UNAVAILABLE', 'Product not available for purchase'),
-  DUPLICATE_ACCESS: getEnv('NEXT_PUBLIC_STRIPE_ERROR_DUPLICATE_ACCESS', 'You already have access to this product'),
-  RATE_LIMIT_EXCEEDED: getEnv('NEXT_PUBLIC_STRIPE_ERROR_RATE_LIMIT_EXCEEDED', 'Too many checkout attempts. Please try again later.'),
-  STRIPE_SESSION_FAILED: getEnv('NEXT_PUBLIC_STRIPE_ERROR_STRIPE_SESSION_FAILED', 'Failed to create checkout session'),
-  INVALID_PRICE: getEnv('NEXT_PUBLIC_STRIPE_ERROR_INVALID_PRICE', 'Invalid product price')
+  PRODUCT_ID_REQUIRED: getEnv('STRIPE_ERROR_PRODUCT_ID_REQUIRED', 'Product ID is required'),
+  INVALID_EMAIL: getEnv('STRIPE_ERROR_INVALID_EMAIL', 'Invalid email format'),
+  PRODUCT_NOT_FOUND: getEnv('STRIPE_ERROR_PRODUCT_NOT_FOUND', 'Product not found or inactive'),
+  PRODUCT_UNAVAILABLE: getEnv('STRIPE_ERROR_PRODUCT_UNAVAILABLE', 'Product not available for purchase'),
+  DUPLICATE_ACCESS: getEnv('STRIPE_ERROR_DUPLICATE_ACCESS', 'You already have access to this product'),
+  RATE_LIMIT_EXCEEDED: getEnv('STRIPE_ERROR_RATE_LIMIT_EXCEEDED', 'Too many checkout attempts. Please try again later.'),
+  STRIPE_SESSION_FAILED: getEnv('STRIPE_ERROR_STRIPE_SESSION_FAILED', 'Failed to create checkout session'),
+  INVALID_PRICE: getEnv('STRIPE_ERROR_INVALID_PRICE', 'Invalid product price')
 } as const;
 
 // HTTP status codes

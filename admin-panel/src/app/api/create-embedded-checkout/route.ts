@@ -13,7 +13,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreateChe
     const { data: { user } } = await supabase.auth.getUser();
     
     // Get origin for return URL
-    const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL;
+    const origin = request.headers.get('origin') || process.env.SITE_URL;
     
     // Use user's email from session if not provided in request
     const finalEmail = requestData.email || user?.email;

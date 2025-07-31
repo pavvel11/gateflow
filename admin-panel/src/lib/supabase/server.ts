@@ -4,12 +4,13 @@ import { cookies } from 'next/headers'
 export async function createClient() {
   const cookieStore = await cookies()
 
-  // Use different URLs for client vs server
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!
+  // Use server-side environment variables
+  const supabaseUrl = process.env.SUPABASE_URL!
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!
   
   return createServerClient(
     supabaseUrl,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {

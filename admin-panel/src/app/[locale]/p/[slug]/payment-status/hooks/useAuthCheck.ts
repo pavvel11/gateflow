@@ -12,7 +12,6 @@ export function useAuthCheck({ paymentStatus, accessGranted }: UseAuthCheckParam
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
 
   useEffect(() => {
     if (paymentStatus === 'completed' && accessGranted) {
@@ -20,6 +19,7 @@ export function useAuthCheck({ paymentStatus, accessGranted }: UseAuthCheckParam
       
       const checkAuthAndRedirect = async () => {
         try {
+          const supabase = await createClient();
           const { data: { user } } = await supabase.auth.getUser();
           if (!user) {
             // User not authenticated - redirect to login with message
@@ -38,7 +38,7 @@ export function useAuthCheck({ paymentStatus, accessGranted }: UseAuthCheckParam
       
       checkAuthAndRedirect();
     }
-  }, [paymentStatus, accessGranted, supabase.auth, router]);
+  }, [paymentStatus, accessGranted, router]);
 
   return {
     isAuthenticated,

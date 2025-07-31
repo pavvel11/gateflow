@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { Turnstile, TurnstileInstance } from '@marsidev/react-turnstile'
+import { useConfig } from '@/components/providers/config-provider'
 
 // Cloudflare dummy sitekeys for testing
 const DUMMY_SITEKEYS = {
@@ -32,11 +33,11 @@ export default function TurnstileWidget({
   onBeforeInteractive,
   siteKey,
   theme = 'dark',
-  size = 'normal',
-  testMode
+  size = 'normal'
 }: TurnstileWidgetProps) {
   const turnstileRef = useRef<TurnstileInstance>(null)
   const t = useTranslations('security')
+  const config = useConfig()
 
   // Determine which sitekey to use
   const getSiteKey = () => {
@@ -45,7 +46,7 @@ export default function TurnstileWidget({
     if (isDevelopment) {
       // Get testMode from env variable or prop, with fallback
       const envTestMode = process.env.NEXT_PUBLIC_TURNSTILE_TEST_MODE as keyof typeof DUMMY_SITEKEYS
-      const effectiveTestMode = envTestMode || testMode || 'ALWAYS_PASSES_VISIBLE'
+      const effectiveTestMode = envTestMode || 'ALWAYS_PASSES_VISIBLE'
       
       // Validate the test mode
       if (effectiveTestMode in DUMMY_SITEKEYS) {
@@ -55,8 +56,8 @@ export default function TurnstileWidget({
         return DUMMY_SITEKEYS.ALWAYS_PASSES_VISIBLE
       }
     } else {
-      // Use provided sitekey or fallback to env variable for production
-      return siteKey || process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY
+      // Use provided sitekey or fallback to runtime config
+      return siteKey || config.cloudflareSiteKey
     }
   }
 
@@ -64,8 +65,7 @@ export default function TurnstileWidget({
   
   // Get effective test mode for development info
   const isDevelopment = process.env.NODE_ENV === 'development'
-  const envTestMode = process.env.NEXT_PUBLIC_TURNSTILE_TEST_MODE as keyof typeof DUMMY_SITEKEYS
-  const effectiveTestMode = isDevelopment ? (envTestMode || testMode || 'ALWAYS_PASSES_VISIBLE') : null
+  const effectiveTestMode = isDevelopment ? 'ALWAYS_PASSES_VISIBLE' : null
 
   useEffect(() => {
     // Reset widget when component unmounts

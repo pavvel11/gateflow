@@ -19,11 +19,11 @@ export default function RecentActivity() {
   const t = useTranslations('admin.dashboard');
   const [activities, setActivities] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
     async function fetchRecentActivity() {
       try {
+        const supabase = await createClient()
         // Get recent access grants with user email
         const { data: accessGrants } = await supabase
           .from('user_product_access')
@@ -104,7 +104,7 @@ export default function RecentActivity() {
     }
 
     fetchRecentActivity()
-  }, [supabase, t])
+  }, [t])
 
   const formatTimeAgo = (timestamp: string) => {
     const now = new Date()

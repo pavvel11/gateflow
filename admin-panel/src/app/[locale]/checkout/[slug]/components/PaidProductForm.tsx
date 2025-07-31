@@ -9,9 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { signOutAndRedirectToCheckout } from '@/lib/actions/checkout';
 import { useRouter } from 'next/navigation';
 import { embeddedCheckoutOptions } from '@/lib/stripe/config';
-
-// Create Stripe promise outside component to avoid recreation
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+import { useConfig } from '@/components/providers/config-provider';
 
 interface PaidProductFormProps {
   product: Product;
@@ -20,6 +18,8 @@ interface PaidProductFormProps {
 export default function PaidProductForm({ product }: PaidProductFormProps) {
   const { user } = useAuth();
   const router = useRouter();
+  const config = useConfig();
+  const stripePromise = loadStripe(config.stripePublishableKey);
   const [error, setError] = useState<string | null>(null);
   const [hasAccess, setHasAccess] = useState(false);
   const [countdown, setCountdown] = useState(5);

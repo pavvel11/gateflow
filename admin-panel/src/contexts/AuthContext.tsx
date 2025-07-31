@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { User, Session } from '@supabase/supabase-js'
+import { User, Session, AuthChangeEvent } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import { AuthContextType } from '@/types/auth'
 
@@ -37,8 +37,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Performance and memory management refs
   const isMountedRef = useRef(true)
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
-  
-  const supabase = createClient()
   const router = useRouter()
 
   /**
@@ -48,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
         // Use cached version for better performance when called repeatedly
+        const supabase = await createClient()
         const { data, error } = await supabase.rpc('is_admin_cached')
         
         if (error) {
@@ -122,14 +121,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Debounce for subsequent changes to prevent rapid updates
       debounceTimerRef.current = setTimeout(processAuthChange, 100)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [supabase])
+  }, [])
 
   /**
    * Initializes auth state by getting the current session
    */
   const initializeAuth = async () => {
     try {
+      const supabase = await createClient()
       const { data: { session }, error } = await supabase.auth.getSession()
       
       if (!isMountedRef.current) return
@@ -157,6 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true)
       
+      const supabase = await createClient()
       const { error } = await supabase.auth.signOut()
       if (error) {
         if (isMountedRef.current) {
@@ -185,18 +185,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true
     isMountedRef.current = true
+    let subscription: { unsubscribe: () => void } | null = null
 
-    initializeAuth()
+    const setupAuth = async () => {
+      try {
+        await initializeAuth()
 
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return
-      
-      // Don't set loading for subsequent auth changes to prevent UI flicker
-      if (event !== 'INITIAL_SESSION') {
-        await handleAuthStateChange(session, false)
+        // Listen for auth state changes
+        const supabase = await createClient()
+        const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
+          if (!mounted) return
+          
+          // Don't set loading for subsequent auth changes to prevent UI flicker
+          if (event !== 'INITIAL_SESSION') {
+            await handleAuthStateChange(session, false)
+          }
+        })
+        
+        subscription = authSubscription
+      } catch (error) {
+        console.error('Failed to setup auth:', error)
       }
-    })
+    }
+
+    setupAuth()
 
     return () => {
       // Comprehensive cleanup
@@ -207,7 +219,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearTimeout(debounceTimerRef.current)
       }
       
-      subscription.unsubscribe()
+      if (subscription) {
+        subscription.unsubscribe()
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleAuthStateChange]) // initializeAuth is defined inline and supabase.auth is stable

@@ -20,11 +20,11 @@ export default function StatsOverview() {
     activeUsers: 0
   })
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
     async function fetchStats() {
       try {
+        const supabase = await createClient()
         // Get total products
         const { count: productsCount } = await supabase
           .from('products')
@@ -70,7 +70,7 @@ export default function StatsOverview() {
     }
 
     fetchStats()
-  }, [supabase])
+  }, [])
 
   const statItems = [
     {

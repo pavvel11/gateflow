@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { validateEmailAction } from '@/lib/actions/validate-email';
 import TurnstileWidget from '@/components/TurnstileWidget';
 import TermsCheckbox from '@/components/TermsCheckbox';
+import { createClient } from '@/lib/supabase/client';
 
 interface FreeProductFormProps {
   product: Product;
@@ -96,8 +97,7 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
     setMessage({ type: 'info', text: t('sendingMagicLink') });
     
     try {
-      const { createClient } = await import('@/lib/supabase/client');
-      const supabase = createClient();
+      const supabase = await createClient();
       
       const redirectUrl = `${window.location.origin}/auth/callback?redirect_to=${encodeURIComponent(`/auth/product-access?product=${product.slug}`)}`;
       
@@ -192,12 +192,6 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
               onVerify={setCaptchaToken}
               onError={() => setCaptchaToken(null)}
             />
-            
-            {process.env.NODE_ENV === 'development' && (
-              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-sm text-blue-300">
-                💡 Set NEXT_PUBLIC_TURNSTILE_TEST_MODE in .env to test different scenarios
-              </div>
-            )}
           </>
         )}
 

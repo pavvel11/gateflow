@@ -6,8 +6,7 @@ import { fetchClientSecret } from '@/lib/actions/checkout';
 import { useAuth } from '@/contexts/AuthContext';
 import { Product } from '@/types';
 import { embeddedCheckoutOptions } from '@/lib/stripe/config';
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+import { useConfig } from '@/components/providers/config-provider';
 
 interface EmbeddedCheckoutComponentProps {
   product: Product;
@@ -16,6 +15,9 @@ interface EmbeddedCheckoutComponentProps {
 
 export default function EmbeddedCheckoutComponent({ product, email }: EmbeddedCheckoutComponentProps) {
   const { user } = useAuth();
+  const config = useConfig();
+  
+  const stripePromise = loadStripe(config.stripePublishableKey);
   
   // Create fetchClientSecret function that Stripe will call
   const fetchClientSecretForProduct = async () => {

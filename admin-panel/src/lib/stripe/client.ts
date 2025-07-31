@@ -1,25 +1,10 @@
 // lib/stripe/client.ts
-// Secure Stripe client configuration for React components
-
-import { loadStripe, Stripe } from '@stripe/stripe-js';
-
-// Cache the Stripe promise to avoid creating multiple instances
-let stripePromise: Promise<Stripe | null>;
+// DEPRECATED: Use useStripe() hook from client-hook.ts instead
 
 /**
- * Get Stripe instance with publishable key from environment
- * This is safe to use on the client side as it only contains the publishable key
+ * DEPRECATED: Use useStripe() hook from client-hook.ts instead
+ * This function is deprecated and should not be used in new code
  */
-export const getStripe = (): Promise<Stripe | null> => {
-  if (!stripePromise) {
-    const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-    
-    if (!publishableKey) {
-      throw new Error('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not set');
-    }
-    
-    stripePromise = loadStripe(publishableKey);
-  }
-  
-  return stripePromise;
+export const getStripe = () => {
+  throw new Error('getStripe() is deprecated. Use useStripe() hook from @/lib/stripe/client-hook instead.');
 };

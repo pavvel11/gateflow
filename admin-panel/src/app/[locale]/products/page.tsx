@@ -19,7 +19,7 @@ export default function ProductsLanding() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const supabase = createClient();
+        const supabase = await createClient();
         const { data, error } = await supabase
           .from('products')
           .select('*')

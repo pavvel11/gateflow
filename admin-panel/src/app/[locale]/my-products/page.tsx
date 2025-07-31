@@ -50,8 +50,6 @@ export default function MyProductsPage() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  const supabase = createClient();
 
   const fetchProductsData = useCallback(async () => {
     if (!user) {
@@ -62,6 +60,8 @@ export default function MyProductsPage() {
     try {
       setLoading(true);
       setError(null);
+
+      const supabase = await createClient();
 
       // Fetch products user has access to
       const { data: userAccessData, error: userError } = await supabase
@@ -102,7 +102,7 @@ export default function MyProductsPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, supabase]);
+  }, [user]);
 
   useEffect(() => {
     if (!authLoading) {

@@ -25,8 +25,8 @@ export async function OPTIONS(request: Request) {
 export async function GET(request: Request) {
   try {
     // Extract configuration from environment variables
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const supabaseUrl = process.env.SUPABASE_URL
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
     
     // Get the origin from the request headers or default to '*'
     const origin = request.headers.get('origin') || '*';
@@ -58,7 +58,7 @@ export async function GET(request: Request) {
     const productSlug = url.searchParams.get('productSlug');
     
     // Get main domain from environment or default to current host
-    const mainDomain = process.env.NEXT_PUBLIC_MAIN_DOMAIN || 
+    const mainDomain = process.env.MAIN_DOMAIN || 
                       (process.env.NODE_ENV === 'development' ? 'localhost:3000' : request.headers.get('host') || 'localhost:3000');
 
     // Generate the gatekeeper script using the new generator
@@ -66,7 +66,7 @@ export async function GET(request: Request) {
       supabaseUrl,
       supabaseAnonKey,
       environment: process.env.NODE_ENV as 'development' | 'production' | 'test',
-      version: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
+      version: process.env.APP_VERSION || '1.0.0',
       mainDomain,
       productSlug: productSlug || undefined,
       // Optional: Add any additional configuration

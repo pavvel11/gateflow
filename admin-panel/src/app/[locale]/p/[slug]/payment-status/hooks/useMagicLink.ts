@@ -27,8 +27,7 @@ export function useMagicLink({
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [sendingMagicLink, setSendingMagicLink] = useState(false);
   const [showSpinnerForMinTime, setShowSpinnerForMinTime] = useState(false);
-  const supabase = createClient();
-
+  
   const sendMagicLinkInternal = useCallback(async () => {
     if (!customerEmail || !sessionId) return;
     
@@ -36,7 +35,7 @@ export function useMagicLink({
     
     try {
       const redirectUrl = `${window.location.origin}/auth/callback?redirect_to=${encodeURIComponent(`/p/${product.slug}/payment-status?session_id=${sessionId}`)}`;
-      
+      const supabase = await createClient();
       const { error } = await supabase.auth.signInWithOtp({
         email: customerEmail,
         options: {
@@ -57,7 +56,7 @@ export function useMagicLink({
     } finally {
       setSendingMagicLink(false);
     }
-  }, [customerEmail, sessionId, product.slug, supabase.auth, captchaToken]);
+  }, [customerEmail, sessionId, product.slug, captchaToken]);
 
   // Auto-send magic link when conditions are met
   useEffect(() => {

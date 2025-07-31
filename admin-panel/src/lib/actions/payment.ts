@@ -87,8 +87,8 @@ export async function createCheckoutSession(
         quantity: 1,
       },
     ],
-    success_url: data.successUrl || `${process.env.NEXT_PUBLIC_SITE_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: data.cancelUrl || `${process.env.NEXT_PUBLIC_SITE_URL}/p/${product.slug}?payment=cancelled`,
+    success_url: data.successUrl || `${process.env.SITE_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: data.cancelUrl || `${process.env.SITE_URL}/p/${product.slug}?payment=cancelled`,
     metadata: {
       product_id: product.id,
       product_slug: product.slug,
