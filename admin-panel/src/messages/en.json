@@ -231,6 +231,8 @@
     "previousAccessNote": "If you previously had access to this product, please log in to view your content.",
     "productNoLongerAvailable": "Product No Longer Available",
     "productNoLongerAvailableMessage": "This product is no longer available for new customers.",
+    "productInactiveTitle": "Product Inactive",
+    "productInactiveMessage": "This product has been disabled and is no longer available.",
     "getYourFreeProduct": "Get your free product",
     "clickForInstantAccess": "Click below to get instant access to this free product.",
     "gettingAccess": "Getting Access...",
@@ -264,7 +266,16 @@
     "exclusiveContent": "Exclusive content",
     "prioritySupport": "Priority support",
     "welcomeUser": "Welcome {userEmail}! Enjoy your purchase.",
-    "welcomeGuest": "Welcome Guest! Enjoy your purchase."
+    "welcomeGuest": "Welcome Guest! Enjoy your purchase.",
+    "accessExpired": "Access Expired",
+    "accessExpiredMessage": "Your access to this content has expired. You can purchase it again to regain access.",
+    "canPurchaseAgain": "Good news! This product is still available for purchase.",
+    "purchaseAgain": "Purchase Again",
+    "magicLinkError": "Magic Link Error",
+    "emailInvalidError": "Invalid email address. Please check your email and try logging in directly.",
+    "captchaFailedError": "Captcha verification failed. Please try logging in directly.",
+    "rateLimitError": "Too many requests. Please wait a moment and try logging in directly.",
+    "goToLoginPage": "Go to Login Page"
   },
   "secureAccess": {
     "loadingSecureContent": "Loading secure content...",
@@ -276,6 +287,9 @@
     "goToContent": "Go to Content",
     "accessGranted": "Access Granted",
     "accessExpired": "Access Expired",
+    "accessExpiredMessage": "Your access to this content has expired. You can purchase it again to regain access.",
+    "canPurchaseAgain": "Good news! This product is still available for purchase.",
+    "purchaseAgain": "Purchase Again",
     "expires": "Expires {date}",
     "expired": "Expired {date}",
     "legacyAccess": "Legacy Access",
@@ -747,7 +761,14 @@
     "paymentSessionsExpire": "Payment sessions expire after 24 hours for security",
     "sendingMagicLink": "Sending magic link...",
     "magicLinkSent": "Magic Link Sent!",
-    "checkEmailForLoginLink": "Check your email ({email}) for the login link."
+    "checkEmailForLoginLink": "Check your email ({email}) for the login link.",
+    "emailInvalidError": "Invalid email address. Please check your email and try logging in directly.",
+    "captchaFailedError": "Security verification failed. The captcha has been refreshed - please try again.",
+    "rateLimitError": "Too many requests. Please wait a moment and try logging in directly.",
+    "goToLoginPage": "Go to Login Page",
+    "genericError": "Failed to send magic link: {message}",
+    "unexpectedError": "An unexpected error occurred. Please try again.",
+    "captchaRefreshed": "Security verification refreshed. Please complete the verification again."
   },
   "compliance": {
     "termsRequired": "Terms of Service Required",

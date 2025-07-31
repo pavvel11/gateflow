@@ -19,11 +19,14 @@ interface TurnstileWidgetProps {
   onError?: () => void
   onTimeout?: () => void
   onBeforeInteractive?: () => void
+  onReset?: () => void
   siteKey?: string
   theme?: 'light' | 'dark' | 'auto'
   size?: 'normal' | 'compact'
   /** For development testing: choose dummy sitekey behavior */
   testMode?: keyof typeof DUMMY_SITEKEYS
+  /** External reset trigger */
+  resetTrigger?: number
 }
 
 export default function TurnstileWidget({
@@ -31,9 +34,11 @@ export default function TurnstileWidget({
   onError,
   onTimeout,
   onBeforeInteractive,
+  onReset,
   siteKey,
   theme = 'dark',
-  size = 'normal'
+  size = 'normal',
+  resetTrigger = 0
 }: TurnstileWidgetProps) {
   const turnstileRef = useRef<TurnstileInstance>(null)
   const t = useTranslations('security')
@@ -80,6 +85,21 @@ export default function TurnstileWidget({
       }
     }
   }, [])
+
+  // Handle external reset trigger
+  useEffect(() => {
+    if (resetTrigger > 0) {
+      const currentRef = turnstileRef.current
+      if (currentRef) {
+        try {
+          currentRef.reset()
+          onReset?.()
+        } catch (error) {
+          console.warn('Failed to reset Turnstile widget:', error)
+        }
+      }
+    }
+  }, [resetTrigger, onReset])
 
   if (!effectiveSiteKey) {
     return (

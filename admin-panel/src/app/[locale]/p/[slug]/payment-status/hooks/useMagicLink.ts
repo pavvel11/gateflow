@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import { MagicLinkState, PaymentStatus, Product } from '../types';
 import { SPINNER_MIN_TIME } from '../utils/helpers';
@@ -23,20 +24,27 @@ export function useMagicLink({
   termsAccepted,
   captchaToken,
   showInteractiveWarning,
-}: UseMagicLinkParams): MagicLinkState & { sendMagicLink: () => Promise<void> } {
+}: UseMagicLinkParams): MagicLinkState & { sendMagicLink: () => Promise<void>; error: string | null } {
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [sendingMagicLink, setSendingMagicLink] = useState(false);
   const [showSpinnerForMinTime, setShowSpinnerForMinTime] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  const t = useTranslations('paymentStatus');
   
   const sendMagicLinkInternal = useCallback(async () => {
     if (!customerEmail || !sessionId) return;
     
+    // Don't send if we already have an error
+    if (error) return;
+    
     setSendingMagicLink(true);
+    setError(null); // Clear previous errors
     
     try {
       const redirectUrl = `${window.location.origin}/auth/callback?redirect_to=${encodeURIComponent(`/p/${product.slug}/payment-status?session_id=${sessionId}`)}`;
       const supabase = await createClient();
-      const { error } = await supabase.auth.signInWithOtp({
+      const { error: authError } = await supabase.auth.signInWithOtp({
         email: customerEmail,
         options: {
           emailRedirectTo: redirectUrl,
@@ -45,18 +53,29 @@ export function useMagicLink({
         }
       });
       
-      if (!error) {
+      if (!authError) {
         setMagicLinkSent(true);
         setTimeout(() => setShowSpinnerForMinTime(false), 100);
       } else {
-        console.error('Error sending magic link:', error);
+        console.error('Error sending magic link:', authError);
+        // Set user-friendly error message based on error code
+        if (authError.message.includes('email_address_invalid')) {
+          setError(t('emailInvalidError'));
+        } else if (authError.message.includes('captcha_failed')) {
+          setError(t('captchaFailedError'));
+        } else if (authError.message.includes('over_request_rate_limit')) {
+          setError(t('rateLimitError'));
+        } else {
+          setError(t('genericError', { message: authError.message }));
+        }
       }
     } catch (err) {
       console.error('Exception sending magic link:', err);
+      setError(t('unexpectedError'));
     } finally {
       setSendingMagicLink(false);
     }
-  }, [customerEmail, sessionId, product.slug, captchaToken]);
+  }, [customerEmail, sessionId, product.slug, captchaToken, error, t]);
 
   // Auto-send magic link when conditions are met
   useEffect(() => {
@@ -69,10 +88,11 @@ export function useMagicLink({
         !magicLinkSent && 
         termsOk && 
         turnstileOk && 
-        !sendingMagicLink) {
+        !sendingMagicLink &&
+        !error) { // Don't auto-send if there's an error
       sendMagicLinkInternal();
     }
-  }, [paymentStatus, customerEmail, sessionId, magicLinkSent, sendingMagicLink, termsAccepted, captchaToken, termsAlreadyHandled, sendMagicLinkInternal]);
+  }, [paymentStatus, customerEmail, sessionId, magicLinkSent, sendingMagicLink, termsAccepted, captchaToken, termsAlreadyHandled, sendMagicLinkInternal, error]);
 
   // Show spinner for minimum time - different logic for invisible vs interactive
   useEffect(() => {
@@ -102,5 +122,6 @@ export function useMagicLink({
     sending: sendingMagicLink,
     showSpinnerForMinTime,
     sendMagicLink: sendMagicLinkInternal,
+    error,
   };
 }

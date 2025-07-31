@@ -226,6 +226,8 @@
     "previousAccessNote": "Jeśli wcześniej miałeś dostęp do tego produktu, zaloguj się, aby wyświetlić treść.",
     "productNoLongerAvailable": "Produkt już niedostępny",
     "productNoLongerAvailableMessage": "Ten produkt nie jest już dostępny dla nowych klientów.",
+    "productInactiveTitle": "Produkt nieaktywny",
+    "productInactiveMessage": "Ten produkt został wyłączony i nie jest już dostępny.",
     "getYourFreeProduct": "Pobierz swój darmowy produkt",
     "clickForInstantAccess": "Kliknij poniżej, aby uzyskać natychmiastowy dostęp do tego darmowego produktu.",
     "gettingAccess": "Uzyskiwanie dostępu...",
@@ -259,7 +261,16 @@
     "exclusiveContent": "Ekskluzywnej zawartości",
     "prioritySupport": "Priorytetowego wsparcia",
     "welcomeUser": "Witaj {userEmail}! Ciesz się zakupem.",
-    "welcomeGuest": "Witaj Gościu! Ciesz się zakupem."
+    "welcomeGuest": "Witaj Gościu! Ciesz się zakupem.",
+    "accessExpired": "Dostęp wygasł",
+    "accessExpiredMessage": "Twój dostęp do tej zawartości wygasł. Możesz ją zakupić ponownie, aby odzyskać dostęp.",
+    "canPurchaseAgain": "Dobra wiadomość! Ten produkt jest nadal dostępny do zakupu.",
+    "purchaseAgain": "Kup ponownie",
+    "magicLinkError": "Błąd magicznego linku",
+    "emailInvalidError": "Nieprawidłowy adres email. Sprawdź swój email i spróbuj zalogować się bezpośrednio.",
+    "captchaFailedError": "Weryfikacja captcha nie powiodła się. Spróbuj zalogować się bezpośrednio.",
+    "rateLimitError": "Zbyt wiele żądań. Poczekaj chwilę i spróbuj zalogować się bezpośrednio.",
+    "goToLoginPage": "Przejdź do strony logowania"
   },
   "secureAccess": {
     "loadingSecureContent": "Ładowanie bezpiecznej zawartości...",
@@ -271,6 +282,9 @@
     "goToContent": "Przejdź do zawartości",
     "accessGranted": "Dostęp przyznany",
     "accessExpired": "Dostęp wygasł",
+    "accessExpiredMessage": "Twój dostęp do tej zawartości wygasł. Możesz ją zakupić ponownie, aby odzyskać dostęp.",
+    "canPurchaseAgain": "Dobra wiadomość! Ten produkt jest nadal dostępny do zakupu.",
+    "purchaseAgain": "Kup ponownie",
     "expires": "Wygasa {date}",
     "expired": "Wygasł {date}",
     "legacyAccess": "Starszy dostęp",
@@ -742,7 +756,14 @@
     "paymentSessionsExpire": "Sesje płatności wygasają po 24 godzinach ze względów bezpieczeństwa",
     "sendingMagicLink": "Wysyłanie magicznego linku...",
     "magicLinkSent": "Magiczny link wysłany!",
-    "checkEmailForLoginLink": "Sprawdź swoją skrzynkę e-mail ({email}) w poszukiwaniu linku logowania."
+    "checkEmailForLoginLink": "Sprawdź swoją skrzynkę e-mail ({email}) w poszukiwaniu linku logowania.",
+    "emailInvalidError": "Nieprawidłowy adres e-mail. Sprawdź poprawność i spróbuj ponownie.",
+    "captchaFailedError": "Weryfikacja captcha nie powiodła się. Captcha została odświeżona - spróbuj ponownie.",
+    "rateLimitError": "Zbyt wiele prób. Poczekaj chwilę przed ponowną próbą.",
+    "goToLoginPage": "Przejdź do strony logowania",
+    "genericError": "Nie udało się wysłać magicznego linku: {message}",
+    "unexpectedError": "Wystąpił nieoczekiwany błąd. Spróbuj ponownie.",
+    "captchaRefreshed": "Weryfikacja bezpieczeństwa została odświeżona. Uzupełnij weryfikację ponownie."
   },
   "compliance": {
     "termsRequired": "Wymagana akceptacja regulaminu",

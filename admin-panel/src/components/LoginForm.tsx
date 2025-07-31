@@ -18,6 +18,7 @@ export default function LoginForm() {
   const [siteUrl, setSiteUrl] = useState('')
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [captchaResetTrigger, setCaptchaResetTrigger] = useState(0)
   const t = useTranslations()
 
   // Get current site URL for redirects (works in any environment)
@@ -76,7 +77,15 @@ export default function LoginForm() {
       })
 
       if (error) {
-        setMessage(error.message)
+        // Check if it's a captcha-related error and auto-reset
+        if (error.message.includes('captcha') || 
+            error.message.includes('timeout-or-duplicate') ||
+            error.message.includes('request disallowed')) {
+          setMessage(t('paymentStatus.captchaFailedError'))
+          resetCaptcha()
+        } else {
+          setMessage(error.message)
+        }
         setSentEmail(false)
       } else {
         setSentEmail(true)
@@ -88,6 +97,20 @@ export default function LoginForm() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Function to reset captcha
+  const resetCaptcha = () => {
+    setCaptchaToken(null)
+    setCaptchaResetTrigger(prev => prev + 1)
+  }
+
+  // Handle captcha reset completion
+  const handleCaptchaReset = () => {
+    // Show brief confirmation that captcha was refreshed
+    setTimeout(() => {
+      setMessage(t('paymentStatus.captchaRefreshed'))
+    }, 100)
   }
 
   // Form display before email is sent
@@ -118,6 +141,8 @@ export default function LoginForm() {
       <TurnstileWidget
         onVerify={setCaptchaToken}
         onError={() => setCaptchaToken(null)}
+        onReset={handleCaptchaReset}
+        resetTrigger={captchaResetTrigger}
       />
 
       <button

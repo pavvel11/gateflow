@@ -14,6 +14,7 @@ interface MagicLinkStatusProps {
   captchaError: string | null;
   captchaTimeout: boolean;
   showInteractiveWarning: boolean;
+  magicLinkError: string | null;
   onTermsAccept: () => void;
   onCaptchaSuccess: (token: string) => void;
   onCaptchaError: (error: string | null) => void;
@@ -32,6 +33,7 @@ export default function MagicLinkStatus({
   captchaError,
   captchaTimeout,
   showInteractiveWarning,
+  magicLinkError,
   onTermsAccept,
   onCaptchaSuccess,
   onCaptchaError,
@@ -50,10 +52,10 @@ export default function MagicLinkStatus({
   
   // Show validation block if:
   // 1. We need user action (terms or captcha)
-  // 2. There's no captcha error
+  // 2. There's no captcha error AND no magic link error
   // 3. Magic link hasn't been sent yet
   // 4. Captcha became interactive (showInteractiveWarning is set by onBeforeInteractive)
-  const showValidationBlock = !magicLinkSent && !captchaError && (
+  const showValidationBlock = !magicLinkSent && !captchaError && !magicLinkError && (
     needsCustomTerms || 
     (needsTurnstile && showInteractiveWarning) || 
     showInteractiveWarning
@@ -64,7 +66,8 @@ export default function MagicLinkStatus({
                            termsOk && 
                            !magicLinkSent && 
                            !showValidationBlock &&
-                           !captchaError; // Hide spinner when captcha fails
+                           !captchaError &&
+                           !magicLinkError; // Hide spinner when magic link fails
 
   return (
     <>
@@ -170,7 +173,23 @@ export default function MagicLinkStatus({
             )}
           </div>
         )}
-        {!captchaError && (
+        
+        {/* Show magic link errors */}
+        {magicLinkError && (
+          <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3 text-sm text-red-300 mb-4">
+            ❌ {magicLinkError}
+            <div className="mt-3">
+              <Link 
+                href="/login?message=payment_completed_login_required" 
+                className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
+              >
+                {t('goToLoginPage')}
+              </Link>
+            </div>
+          </div>
+        )}
+        
+        {!captchaError && !magicLinkError && (
         <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 animate-fadeInPulse">
           <h3 className="text-lg font-semibold text-blue-300 mb-2 animate-pulse">
             🎯 {t('toAccessYourProduct')}

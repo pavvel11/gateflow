@@ -10,7 +10,7 @@ services:
         NEXT_TELEMETRY_DISABLED: ${NEXT_TELEMETRY_DISABLED:-1}  # Default to 1 if not set
     environment:
       - PORT=${PORT:-3000}  # Default to 3000 if not set
-    container_name: gateflow-admin
+    container_name: gateflow-admin-${APP_ENV:-development}
     env_file:
       - .env
     ports:
