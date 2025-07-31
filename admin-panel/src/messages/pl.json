@@ -22,7 +22,8 @@
     "inactive": "Nieaktywny",
     "created": "Utworzono",
     "updated": "Zaktualizowano",
-    "language": "Język"
+    "language": "Język",
+    "retry": "Spróbuj ponownie"
   },
   "navigation": {
     "dashboard": "Pulpit",
@@ -50,7 +51,9 @@
     "paymentCompletedLoginTitle": "Wymagane logowanie aby uzyskać dostęp do zakupu",
     "sendMagicLink": "Wyślij magiczny link",
     "checkEmailAt": "Sprawdź swój email na {email} w poszukiwaniu magicznego linku.",
-    "clickLinkToSignIn": "Kliknij link, aby zalogować się automatycznie."
+    "clickLinkToSignIn": "Kliknij link, aby zalogować się automatycznie.",
+    "openEmailProvider": "Otwórz {provider}",
+    "backToLogin": "Powrót do logowania"
   },
   "products": {
     "title": "Produkty",
@@ -763,7 +766,8 @@
     "goToLoginPage": "Przejdź do strony logowania",
     "genericError": "Nie udało się wysłać magicznego linku: {message}",
     "unexpectedError": "Wystąpił nieoczekiwany błąd. Spróbuj ponownie.",
-    "captchaRefreshed": "Weryfikacja bezpieczeństwa została odświeżona. Uzupełnij weryfikację ponownie."
+    "captchaRefreshed": "✅ Weryfikacja została odświeżona. Możesz teraz spróbować ponownie.",
+    "captchaResetTryAgain": "Captcha została zresetowana. Uzupełnij weryfikację i spróbuj ponownie."
   },
   "compliance": {
     "termsRequired": "Wymagana akceptacja regulaminu",
@@ -787,10 +791,16 @@
     "verificationExpired": "Weryfikacja bezpieczeństwa wygasła. Spróbuj ponownie.",
     "captchaVerificationFailed": "Weryfikacja bezpieczeństwa (captcha) nie powiodła się.",
     "captchaTimeout": "Weryfikacja bezpieczeństwa przekroczyła limit czasu.",
+    "verifying": "Weryfikacja...",
     "captchaInteractiveWarning": "Proszę zweryfikować zabezpieczenie captcha.",
     "refreshAndTryLogin": "Proszę odświeżyć stronę i",
     "refreshPageOrLogin": "Weryfikacja przekroczyła limit czasu. Proszę przejść do strony logowania, aby spróbować ponownie.",
     "tryLoggingInAgain": "Przejdź do strony logowania",
     "captchaErrorLoginPrompt": "Proszę"
+  },
+  "config": {
+    "loadingConfiguration": "Ładowanie konfiguracji...",
+    "configurationError": "Błąd konfiguracji",
+    "errorLoadingConfiguration": "Nie można załadować konfiguracji aplikacji. Sprawdź połączenie i spróbuj ponownie."
   }
 }

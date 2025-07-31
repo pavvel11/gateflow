@@ -161,11 +161,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<EmailVali
       }
     };
 
-    // Log the validation for monitoring (in development)
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`📧 Email validation: ${email} -> valid: ${result.isValid}, disposable: ${result.isDisposable}`);
-    }
-
     return NextResponse.json(response);
 
   } catch (error) {

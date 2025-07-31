@@ -22,7 +22,8 @@
     "inactive": "Inactive",
     "created": "Created",
     "updated": "Updated",
-    "language": "Language"
+    "language": "Language",
+    "retry": "Retry"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -67,7 +68,9 @@
     "paymentCompletedLoginTitle": "Login Required to Access Your Purchase",
     "sendMagicLink": "Send Magic Link",
     "checkEmailAt": "Please check your email at {email} for the magic link.",
-    "clickLinkToSignIn": "Click the link to sign in automatically."
+    "clickLinkToSignIn": "Click the link to sign in automatically.",
+    "openEmailProvider": "Open {provider}",
+    "backToLogin": "Back to Login"
   },
   "products": {
     "title": "Products",
@@ -768,7 +771,8 @@
     "goToLoginPage": "Go to Login Page",
     "genericError": "Failed to send magic link: {message}",
     "unexpectedError": "An unexpected error occurred. Please try again.",
-    "captchaRefreshed": "Security verification refreshed. Please complete the verification again."
+    "captchaRefreshed": "✅ Verification refreshed. You can now try again.",
+    "captchaResetTryAgain": "Captcha has been reset. Complete the verification and try again."
   },
   "compliance": {
     "termsRequired": "Terms of Service Required",
@@ -792,10 +796,16 @@
     "verificationExpired": "Security verification expired. Please try again.",
     "captchaVerificationFailed": "Security verification (captcha) failed.",
     "captchaTimeout": "Security verification timed out.",
+    "verifying": "Verifying...",
     "captchaInteractiveWarning": "Please interact with the captcha verification.",
     "refreshAndTryLogin": "Please refresh the page and",
     "refreshPageOrLogin": "The verification timed out. Please go to login page to try again.",
     "tryLoggingInAgain": "Go to login page",
     "captchaErrorLoginPrompt": "Please"
+  },
+  "config": {
+    "loadingConfiguration": "Loading configuration...",
+    "configurationError": "Configuration Error",
+    "errorLoadingConfiguration": "Unable to load application configuration. Please check your connection and try again."
   }
 }

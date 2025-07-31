@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Product } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,6 +17,8 @@ interface FreeProductFormProps {
 
 export default function FreeProductForm({ product }: FreeProductFormProps) {
   const t = useTranslations('productView');
+  const tSecurity = useTranslations('security');
+  const tCompliance = useTranslations('compliance');
   const { user } = useAuth();
   const { addToast } = useToast();
   const router = useRouter();
@@ -25,10 +27,22 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
   const [loading, setLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaResetTrigger, setCaptchaResetTrigger] = useState(0);
+  const [captchaLoading, setCaptchaLoading] = useState(false); // Will be set to true only when needed
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info' | null; text: string }>({
     type: null,
     text: '',
   });
+
+  // Reset captcha function - simple and reliable
+  const resetCaptcha = useCallback(() => {
+    setCaptchaToken(null); // Clear current token
+    setCaptchaLoading(true); // Start loading immediately on reset (for invisible captcha)
+    setCaptchaResetTrigger(prev => {
+      const newValue = prev + 1;
+      return newValue;
+    });
+  }, []);
 
   const handleFreeAccess = async () => {
     if (user) {
@@ -66,19 +80,21 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
   const handleMagicLinkSubmit = async () => {
     if (!email) {
       setMessage({ type: 'error', text: 'Please enter your email address' });
+      resetCaptcha(); // Reset after validation error
       return;
     }
 
     // Check if terms are accepted for non-logged in users
     if (!termsAccepted) {
-      setMessage({ type: 'error', text: t('compliance.pleaseAcceptTerms') });
+      setMessage({ type: 'error', text: tCompliance('pleaseAcceptTerms') });
+      resetCaptcha(); // Reset after validation error
       return;
     }
 
     // Check if Turnstile token is present for non-logged in users
     if (!captchaToken) {
-      setMessage({ type: 'error', text: t('compliance.securityVerificationRequired') });
-      return;
+      setMessage({ type: 'error', text: tCompliance('securityVerificationRequired') });
+      return; // Don't reset captcha if it's missing
     }
 
     // Enhanced email validation with disposable domain checking
@@ -86,10 +102,12 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
       const emailValidation = await validateEmailAction(email);
       if (!emailValidation.isValid) {
         setMessage({ type: 'error', text: emailValidation.error || 'Invalid or disposable email address not allowed' });
+        resetCaptcha(); // Reset after validation error
         return;
       }
     } catch {
       setMessage({ type: 'error', text: 'Please enter a valid email address' });
+      resetCaptcha(); // Reset after validation error
       return;
     }
 
@@ -112,6 +130,9 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
 
       if (error) {
         setMessage({ type: 'error', text: error.message });
+        
+        // Reset captcha after ANY error (it was consumed in the failed request)
+        resetCaptcha();
         return;
       }
 
@@ -159,65 +180,83 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
           </div>
         )}
 
-        {!user && (
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-              {t('emailAddress')}
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 border border-white/20 rounded-lg bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder={t('enterEmailAddress')}
-              required
-              disabled={loading}
-            />
-          </div>
-        )}
-
-        {!user && (
-          <>
-            {/* Terms and Conditions Checkbox */}
-            <TermsCheckbox
-              checked={termsAccepted}
-              onChange={setTermsAccepted}
-              termsUrl="/terms"
-              privacyUrl="/privacy"
-            />
-
-            {/* Cloudflare Turnstile - always visible now, with different behavior for dev/prod */}
-            <TurnstileWidget
-              onVerify={setCaptchaToken}
-              onError={() => setCaptchaToken(null)}
-            />
-          </>
-        )}
-
-        <button
-          onClick={handleFreeAccess}
-          disabled={
-            loading || 
-            (!user && (!email || !termsAccepted || (process.env.NODE_ENV === 'production' && !captchaToken)))
-          }
-          className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-        >
-          {loading ? (
-            <div className="flex items-center justify-center">
-              <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-              {t('processing')}
+        <form onSubmit={(e) => { e.preventDefault(); handleFreeAccess(); }} className="space-y-4">
+          {!user && (
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                {t('emailAddress')}
+              </label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full p-3 border border-white/20 rounded-lg bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder={t('enterEmailAddress')}
+                required
+                disabled={loading}
+              />
             </div>
-          ) : (
-            user ? t('getFreeAccess') : t('sendMagicLink')
           )}
-        </button>
 
-        {!user && (
-          <p className="text-xs text-gray-400 mt-3 text-center">
-            {t('magicLinkExplanation')}
-          </p>
-        )}
+          {!user && (
+            <>
+              {/* Terms and Conditions Checkbox */}
+              <TermsCheckbox
+                checked={termsAccepted}
+                onChange={setTermsAccepted}
+                termsUrl="/terms"
+                privacyUrl="/privacy"
+              />
+            </>
+          )}
+
+          <button
+            type="submit"
+            disabled={
+              loading || 
+              captchaLoading || // Disable when captcha is loading
+              (!user && (!email || !termsAccepted || (process.env.NODE_ENV === 'production' && !captchaToken)))
+            }
+            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+          >
+            {loading || captchaLoading ? (
+              <div className="flex items-center justify-center">
+                <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                {captchaLoading ? tSecurity('verifying') : t('processing')}
+              </div>
+            ) : (
+              user ? t('getFreeAccess') : t('sendMagicLink')
+            )}
+          </button>
+
+          {!user && (
+            <>
+              {/* Cloudflare Turnstile - positioned after button, compact layout */}
+              <div className="mt-3">
+                <TurnstileWidget
+                  onVerify={(token) => {
+                    setCaptchaToken(token);
+                    setCaptchaLoading(false); // ✅ FINAL: Captcha completed successfully
+                  }}
+                  onError={() => {
+                    setCaptchaToken(null);
+                    setCaptchaLoading(false); // ✅ FINAL: Reset loading on error
+                  }}
+                  onTimeout={() => {
+                    setCaptchaLoading(false); // ✅ FINAL: Stop loading on timeout
+                  }}
+                  resetTrigger={captchaResetTrigger}
+                  compact={true}
+                />
+              </div>
+              
+              <p className="text-xs text-gray-400 mt-2 text-center">
+                {t('magicLinkExplanation')}
+              </p>
+            </>
+          )}
+        </form>
       </div>
     </div>
   );

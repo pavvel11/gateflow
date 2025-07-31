@@ -19,6 +19,7 @@ export default function LoginForm() {
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const [captchaResetTrigger, setCaptchaResetTrigger] = useState(0)
+  const [captchaLoading, setCaptchaLoading] = useState(false) // Will be set to true only when needed
   const t = useTranslations()
 
   // Get current site URL for redirects (works in any environment)
@@ -54,6 +55,9 @@ export default function LoginForm() {
         setMessage('Disposable email addresses are not allowed. Please use a permanent email address.');
         setSentEmail(false)
         setIsLoading(false)
+        
+        // Reset captcha after failed validation (token was consumed)
+        resetCaptcha()
         return;
       }
 
@@ -61,6 +65,9 @@ export default function LoginForm() {
         setMessage('Email validation failed. Please try again.');
         setSentEmail(false)
         setIsLoading(false)
+        
+        // Reset captcha after failed validation (token was consumed)
+        resetCaptcha()
         return;
       }
 
@@ -77,16 +84,11 @@ export default function LoginForm() {
       })
 
       if (error) {
-        // Check if it's a captcha-related error and auto-reset
-        if (error.message.includes('captcha') || 
-            error.message.includes('timeout-or-duplicate') ||
-            error.message.includes('request disallowed')) {
-          setMessage(t('paymentStatus.captchaFailedError'))
-          resetCaptcha()
-        } else {
-          setMessage(error.message)
-        }
+        setMessage(error.message)
         setSentEmail(false)
+        
+        // Reset captcha after ANY error (it was consumed in the failed request)
+        resetCaptcha()
       } else {
         setSentEmail(true)
         setMessage(t('productView.checkEmailForMagicLink'))
@@ -99,18 +101,11 @@ export default function LoginForm() {
     }
   }
 
-  // Function to reset captcha
+  // Function to reset captcha - simple and reliable
   const resetCaptcha = () => {
     setCaptchaToken(null)
+    setCaptchaLoading(true) // Start loading immediately on reset (for invisible captcha)
     setCaptchaResetTrigger(prev => prev + 1)
-  }
-
-  // Handle captcha reset completion
-  const handleCaptchaReset = () => {
-    // Show brief confirmation that captcha was refreshed
-    setTimeout(() => {
-      setMessage(t('paymentStatus.captchaRefreshed'))
-    }, 100)
   }
 
   // Form display before email is sent
@@ -137,31 +132,39 @@ export default function LoginForm() {
         onChange={setTermsAccepted}
       />
 
-      {/* Cloudflare Turnstile - always visible now, with different behavior for dev/prod */}
-      <TurnstileWidget
-        onVerify={setCaptchaToken}
-        onError={() => setCaptchaToken(null)}
-        onReset={handleCaptchaReset}
-        resetTrigger={captchaResetTrigger}
-      />
-
       <button
         type="submit"
-        disabled={isLoading}
+        disabled={isLoading || captchaLoading}
         className="w-full py-3 px-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-xl shadow-lg hover:from-purple-600 hover:to-pink-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isLoading ? (
+        {isLoading || captchaLoading ? (
           <div className="flex items-center justify-center">
             <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            {t('productView.sendingMagicLink')}
+            {captchaLoading ? t('security.verifying') : t('productView.sendingMagicLink')}
           </div>
         ) : (
           t('auth.sendMagicLink')
         )}
       </button>
+
+      {/* Cloudflare Turnstile - positioned after button */}
+      <TurnstileWidget
+        onVerify={(token) => {
+          setCaptchaToken(token);
+          setCaptchaLoading(false); // ✅ FINAL: Captcha completed successfully
+        }}
+        onError={() => {
+          setCaptchaToken(null);
+          setCaptchaLoading(false); // ✅ FINAL: Reset loading on error
+        }}
+        onTimeout={() => {
+          setCaptchaLoading(false); // ✅ FINAL: Stop loading on timeout
+        }}
+        resetTrigger={captchaResetTrigger}
+      />
 
       {message && !sentEmail && (
         <div className="p-4 rounded-xl text-sm bg-red-500/10 text-red-400 border border-red-500/20">
@@ -174,7 +177,7 @@ export default function LoginForm() {
   // Success message after email is sent
   const renderSuccessMessage = () => {
     // Function to get email provider info
-    const getEmailProviderInfo = (email: string) => {
+    const getEmailProviderInfo = (email: string): { name: string; domains: string[]; url: string; color: string } | null => {
       const domain = email.split('@')[1]?.toLowerCase()
       
       const providers = [
@@ -216,13 +219,8 @@ export default function LoginForm() {
         }
       }
       
-      // Generic webmail fallback
-      return {
-        name: 'Webmail',
-        domains: [domain],
-        url: `https://${domain}`,
-        color: 'from-green-500 to-green-600'
-      }
+      // No fallback - return null for unsupported domains
+      return null
     }
 
     const emailProvider = getEmailProviderInfo(email)
@@ -246,15 +244,17 @@ export default function LoginForm() {
 
         {/* Email Provider Buttons */}
         <div className="space-y-3">
-          <button
-            onClick={() => window.open(emailProvider.url, '_blank')}
-            className={`w-full py-3 px-4 bg-gradient-to-r ${emailProvider.color} text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2`}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-            <span>Otwórz {emailProvider.name}</span>
-          </button>
+          {emailProvider && (
+            <button
+              onClick={() => window.open(emailProvider.url, '_blank')}
+              className={`w-full py-3 px-4 bg-gradient-to-r ${emailProvider.color} text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <span>{t('auth.openEmailProvider', { provider: emailProvider.name })}</span>
+            </button>
+          )}
           
           <button
             onClick={() => {
@@ -266,7 +266,7 @@ export default function LoginForm() {
             }}
             className="w-full py-2 px-4 bg-white/5 text-gray-300 font-medium rounded-xl border border-white/20 hover:bg-white/10 transition-all duration-200"
           >
-            Powrót do logowania
+            {t('auth.backToLogin')}
           </button>
         </div>
       </div>

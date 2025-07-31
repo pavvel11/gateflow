@@ -19,14 +19,17 @@ interface TurnstileWidgetProps {
   onError?: () => void
   onTimeout?: () => void
   onBeforeInteractive?: () => void
+  onAfterInteractive?: () => void
   onReset?: () => void
   siteKey?: string
   theme?: 'light' | 'dark' | 'auto'
-  size?: 'normal' | 'compact'
+  size?: 'normal' | 'compact' | 'invisible'
   /** For development testing: choose dummy sitekey behavior */
   testMode?: keyof typeof DUMMY_SITEKEYS
   /** External reset trigger */
   resetTrigger?: number
+  /** Compact layout with smaller margins */
+  compact?: boolean
 }
 
 export default function TurnstileWidget({
@@ -34,11 +37,13 @@ export default function TurnstileWidget({
   onError,
   onTimeout,
   onBeforeInteractive,
+  onAfterInteractive,
   onReset,
   siteKey,
   theme = 'dark',
   size = 'normal',
-  resetTrigger = 0
+  resetTrigger = 0,
+  compact = false
 }: TurnstileWidgetProps) {
   const turnstileRef = useRef<TurnstileInstance>(null)
   const t = useTranslations('security')
@@ -67,10 +72,6 @@ export default function TurnstileWidget({
   }
 
   const effectiveSiteKey = getSiteKey()
-  
-  // Get effective test mode for development info
-  const isDevelopment = process.env.NODE_ENV === 'development'
-  const effectiveTestMode = isDevelopment ? 'ALWAYS_PASSES_VISIBLE' : null
 
   useEffect(() => {
     // Reset widget when component unmounts
@@ -95,7 +96,7 @@ export default function TurnstileWidget({
           currentRef.reset()
           onReset?.()
         } catch (error) {
-          console.warn('Failed to reset Turnstile widget:', error)
+          console.warn('TurnstileWidget: Failed to reset widget:', error)
         }
       }
     }
@@ -111,7 +112,7 @@ export default function TurnstileWidget({
 
   // Show development info when using dummy keys
   const dummyValues = Object.values(DUMMY_SITEKEYS) as string[]
-  const isUsingDummyKey = isDevelopment && dummyValues.includes(effectiveSiteKey)
+  const isUsingDummyKey = process.env.NODE_ENV === 'development' && dummyValues.includes(effectiveSiteKey)
 
   const handleSuccess = (token: string) => {
     onVerify(token)
@@ -133,8 +134,12 @@ export default function TurnstileWidget({
     onBeforeInteractive?.()
   }
 
+  const handleAfterInteractive = () => {
+    onAfterInteractive?.()
+  }
+
   return (
-    <div className="mb-4">
+    <div className={compact ? 'mb-2' : 'mb-4'}>
       <div className="flex justify-center">
         <Turnstile
           ref={turnstileRef}
@@ -149,13 +154,14 @@ export default function TurnstileWidget({
           onExpire={handleExpire}
           onTimeout={handleTimeout}
           onBeforeInteractive={handleBeforeInteractive}
+          onAfterInteractive={handleAfterInteractive}
         />
       </div>
       
-      {/* Minimal development info - only show test mode as tiny text */}
+      {/* Minimal development info */}
       {isUsingDummyKey && (
         <div className="text-xs text-gray-500 mt-1 opacity-50 text-center">
-          🧪 {effectiveTestMode}
+          🧪 Test Mode
         </div>
       )}
     </div>
