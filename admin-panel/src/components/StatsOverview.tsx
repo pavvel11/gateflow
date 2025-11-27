@@ -35,7 +35,7 @@ export default function StatsOverview() {
           .from('user_product_access')
           .select('user_id')
         
-        const uniqueUsers = new Set(accessUsers?.map(record => record.user_id) || [])
+        const uniqueUsers = new Set((accessUsers || []).map((record: { user_id: string }) => record.user_id))
         const totalUsers = uniqueUsers.size
 
         // Get total access records
@@ -53,7 +53,7 @@ export default function StatsOverview() {
           .select('user_id, created_at')
           .gte('created_at', sevenDaysAgo.toISOString())
         
-        const activeUniqueUsers = new Set(recentAccessUsers?.map(record => record.user_id) || [])
+        const activeUniqueUsers = new Set((recentAccessUsers || []).map((record: { user_id: string }) => record.user_id))
         const activeUsers = activeUniqueUsers.size
 
         setStats({

@@ -349,6 +349,7 @@ When documenting changes or adding information:
 5. **Audit Logging**: Admin actions should be logged to `audit_log` table
 6. **TypeScript Strict**: All TypeScript must pass strict mode checks
 7. **Error Handling**: Never expose sensitive information in error messages
+8. **No Workarounds**: NEVER implement quick fixes or workarounds just to make something work. Always find and fix the root cause. Follow best practices and maintain code quality. Update dependencies when needed instead of patching around issues.
 
 ### When Adding Features
 

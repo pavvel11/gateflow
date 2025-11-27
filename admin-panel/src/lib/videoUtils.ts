@@ -242,7 +242,7 @@ export function parseVideoUrl(url: string): ParsedVideoUrl {
       };
     }
 
-  } catch (error) {
+  } catch {
     // Invalid URL
   }
 

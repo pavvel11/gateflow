@@ -15,6 +15,20 @@ interface ActivityItem {
   color: string
 }
 
+interface AccessGrant {
+  id: string
+  created_at: string
+  user_id: string
+  product_id: string
+  products: { name: string } | null
+}
+
+interface Product {
+  id: string
+  name: string
+  created_at: string
+}
+
 export default function RecentActivity() {
   const t = useTranslations('admin.dashboard');
   const [activities, setActivities] = useState<ActivityItem[]>([])
@@ -38,14 +52,14 @@ export default function RecentActivity() {
           .limit(10)
 
         // Get user emails separately (since direct auth.users join might not work)
-        const userIds = [...new Set(accessGrants?.map(grant => grant.user_id) || [])]
+        const userIds = [...new Set((accessGrants || []).map((grant) => (grant as { user_id: string }).user_id))]
         const { data: users } = await supabase
           .from('user_access_stats')
           .select('user_id, email')
           .in('user_id', userIds)
 
         // Create user email lookup map
-        const userEmailMap = new Map(users?.map(user => [user.user_id, user.email]) || [])
+        const userEmailMap = new Map((users || []).map(user => [(user as { user_id: string; email: string }).user_id, (user as { user_id: string; email: string }).email]))
 
         // Get recent products
         const { data: recentProducts } = await supabase
@@ -58,7 +72,7 @@ export default function RecentActivity() {
 
         // Process access grants
         if (accessGrants) {
-          accessGrants.forEach(grant => {
+          (accessGrants as AccessGrant[]).forEach((grant) => {
             // For one-to-one relation, Supabase returns single object, not array
             const product = grant.products as unknown as { name: string } | null
             const productName = product?.name || 'Unknown product'
@@ -79,7 +93,7 @@ export default function RecentActivity() {
 
         // Process new products
         if (recentProducts) {
-          recentProducts.forEach(product => {
+          (recentProducts as Product[]).forEach((product) => {
             activityItems.push({
               id: `product_${product.id}`,
               type: 'product_created',

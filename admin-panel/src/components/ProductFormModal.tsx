@@ -636,7 +636,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                       <div className="ml-3">
                         <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">Supported Video Platforms</h4>
                         <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                          Paste any URL format - we'll convert it to the proper embed URL automatically!
+                          Paste any URL format - we&apos;ll convert it to the proper embed URL automatically!
                         </p>
                         <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
                           📺 YouTube • 🎬 Vimeo • 🐰 Bunny.net • 🎥 Loom • 📹 Wistia • 🎞️ DailyMotion • 🎮 Twitch
@@ -696,9 +696,9 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                               }));
                             }}
                             onBlur={(e) => {
-                              // Validate URL on blur
+                              // Validate URL on blur (only for video_embed and download_link)
                               const url = e.target.value;
-                              if (url) {
+                              if (url && (item.type === 'video_embed' || item.type === 'download_link')) {
                                 const validation = validateContentItemUrl(url, item.type);
                                 setUrlValidation(prev => ({
                                   ...prev,

@@ -33,16 +33,15 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
-    "@types/javascript-obfuscator": "^0.0.5",
+    "@tailwindcss/postcss": "^4.1.17",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.5",
     "javascript-obfuscator": "^4.1.1",
-    "tailwindcss": "^4",
-    "terser": "^5.43.1",
+    "tailwindcss": "^4.1.17",
+    "terser": "^5.44.1",
     "typescript": "^5"
   }
 }
