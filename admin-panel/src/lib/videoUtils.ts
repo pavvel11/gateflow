@@ -282,10 +282,79 @@ export function isTrustedVideoPlatform(url: string): boolean {
 }
 
 /**
+ * Video embed options
+ */
+export interface VideoEmbedOptions {
+  autoplay?: boolean;
+  loop?: boolean;
+  muted?: boolean;
+  preload?: boolean;
+  controls?: boolean;
+}
+
+/**
+ * Add query parameters to embed URL based on platform and options
+ */
+export function addEmbedOptions(embedUrl: string, options: VideoEmbedOptions = {}): string {
+  if (!embedUrl) return embedUrl;
+
+  try {
+    const url = new URL(embedUrl);
+    const hostname = url.hostname.toLowerCase();
+
+    // Bunny.net parameters
+    if (hostname === 'iframe.mediadelivery.net') {
+      if (options.autoplay) url.searchParams.set('autoplay', 'true');
+      if (options.loop) url.searchParams.set('loop', 'true');
+      if (options.muted) url.searchParams.set('muted', 'true');
+      if (options.preload) url.searchParams.set('preload', 'true');
+      // Bunny always has responsive, but we can set it explicitly
+      url.searchParams.set('responsive', 'true');
+    }
+
+    // YouTube parameters
+    else if (hostname.includes('youtube.com')) {
+      if (options.autoplay) url.searchParams.set('autoplay', '1');
+      if (options.loop) url.searchParams.set('loop', '1');
+      if (options.muted) url.searchParams.set('mute', '1');
+      if (options.controls === false) url.searchParams.set('controls', '0');
+    }
+
+    // Vimeo parameters
+    else if (hostname.includes('vimeo.com')) {
+      if (options.autoplay) url.searchParams.set('autoplay', '1');
+      if (options.loop) url.searchParams.set('loop', '1');
+      if (options.muted) url.searchParams.set('muted', '1');
+      if (options.controls === false) url.searchParams.set('controls', '0');
+    }
+
+    // Wistia parameters
+    else if (hostname.includes('wistia.')) {
+      if (options.autoplay) url.searchParams.set('autoPlay', 'true');
+      if (options.muted) url.searchParams.set('muted', 'true');
+      if (options.controls === false) url.searchParams.set('controlsVisibleOnLoad', 'false');
+    }
+
+    // DailyMotion parameters
+    else if (hostname.includes('dailymotion.com')) {
+      if (options.autoplay) url.searchParams.set('autoplay', '1');
+      if (options.muted) url.searchParams.set('mute', '1');
+      if (options.controls === false) url.searchParams.set('controls', 'false');
+    }
+
+    return url.toString();
+  } catch {
+    return embedUrl;
+  }
+}
+
+/**
  * Get embed URL from any video URL
  * Returns null if URL is invalid or not from a trusted platform
  */
-export function getEmbedUrl(url: string): string | null {
+export function getEmbedUrl(url: string, options?: VideoEmbedOptions): string | null {
   const parsed = parseVideoUrl(url);
-  return parsed.isValid ? parsed.embedUrl : null;
+  if (!parsed.isValid || !parsed.embedUrl) return null;
+
+  return options ? addEmbedOptions(parsed.embedUrl, options) : parsed.embedUrl;
 }

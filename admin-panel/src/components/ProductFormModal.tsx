@@ -566,9 +566,10 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {(formData.content_config as ProductContentConfig)?.content_items?.map((item, index) => (
-                      <div key={index} className="flex items-center space-x-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <div key={index} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center space-x-2 mb-2">
                         <select
                           value={item.type}
                           onChange={(e) => {
@@ -620,8 +621,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                           type="button"
                           onClick={() => {
                             const newItems = ((formData.content_config as ProductContentConfig)?.content_items || []).filter((_, i) => i !== index);
-                            setFormData(prev => ({ 
-                              ...prev, 
+                            setFormData(prev => ({
+                              ...prev,
                               content_config: { ...prev.content_config, content_items: newItems }
                             }));
                           }}
@@ -629,6 +630,118 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                         >
                           {t('remove')}
                         </button>
+                        </div>
+
+                        {/* Video Embed Options */}
+                        {item.type === 'video_embed' && (
+                          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                            <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Video Options</div>
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                              <label className="flex items-center space-x-1 text-xs cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={item.config?.autoplay || false}
+                                  onChange={(e) => {
+                                    const newItems = [...((formData.content_config as ProductContentConfig)?.content_items || [])];
+                                    newItems[index] = {
+                                      ...item,
+                                      config: { ...item.config, autoplay: e.target.checked }
+                                    };
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      content_config: { ...prev.content_config, content_items: newItems }
+                                    }));
+                                  }}
+                                  className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                />
+                                <span className="text-gray-700 dark:text-gray-300">Autoplay</span>
+                              </label>
+
+                              <label className="flex items-center space-x-1 text-xs cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={item.config?.loop || false}
+                                  onChange={(e) => {
+                                    const newItems = [...((formData.content_config as ProductContentConfig)?.content_items || [])];
+                                    newItems[index] = {
+                                      ...item,
+                                      config: { ...item.config, loop: e.target.checked }
+                                    };
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      content_config: { ...prev.content_config, content_items: newItems }
+                                    }));
+                                  }}
+                                  className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                />
+                                <span className="text-gray-700 dark:text-gray-300">Loop</span>
+                              </label>
+
+                              <label className="flex items-center space-x-1 text-xs cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={item.config?.muted || false}
+                                  onChange={(e) => {
+                                    const newItems = [...((formData.content_config as ProductContentConfig)?.content_items || [])];
+                                    newItems[index] = {
+                                      ...item,
+                                      config: { ...item.config, muted: e.target.checked }
+                                    };
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      content_config: { ...prev.content_config, content_items: newItems }
+                                    }));
+                                  }}
+                                  className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                />
+                                <span className="text-gray-700 dark:text-gray-300">Muted</span>
+                              </label>
+
+                              <label className="flex items-center space-x-1 text-xs cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={item.config?.preload || false}
+                                  onChange={(e) => {
+                                    const newItems = [...((formData.content_config as ProductContentConfig)?.content_items || [])];
+                                    newItems[index] = {
+                                      ...item,
+                                      config: { ...item.config, preload: e.target.checked }
+                                    };
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      content_config: { ...prev.content_config, content_items: newItems }
+                                    }));
+                                  }}
+                                  className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                />
+                                <span className="text-gray-700 dark:text-gray-300">Preload</span>
+                              </label>
+
+                              <label className="flex items-center space-x-1 text-xs cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={item.config?.controls !== false}
+                                  onChange={(e) => {
+                                    const newItems = [...((formData.content_config as ProductContentConfig)?.content_items || [])];
+                                    newItems[index] = {
+                                      ...item,
+                                      config: { ...item.config, controls: e.target.checked }
+                                    };
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      content_config: { ...prev.content_config, content_items: newItems }
+                                    }));
+                                  }}
+                                  className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                />
+                                <span className="text-gray-700 dark:text-gray-300">Controls</span>
+                              </label>
+                            </div>
+                            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                              💡 Options support varies by platform (YouTube, Vimeo, Bunny.net, etc.)
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                     <button

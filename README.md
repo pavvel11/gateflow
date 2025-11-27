@@ -184,6 +184,15 @@ open templates/index.html
 
 Access examples at `http://localhost:8000` during development.
 
+### Video Embed Support
+
+Automatically converts and embeds videos from:
+- 📺 YouTube (all URL formats)
+- 🐰 Bunny.net (secure CDN with DRM)
+- 🎬 Vimeo, 🎥 Loom, 📹 Wistia, 🎞️ DailyMotion, 🎮 Twitch
+
+Just paste any video URL - GateFlow converts it to the proper embed format automatically!
+
 ## 📖 Usage Examples
 
 ### Basic Content Protection

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ContentItem } from '@/types';
-import { parseVideoUrl, isTrustedVideoPlatform } from '@/lib/videoUtils';
+import { parseVideoUrl, isTrustedVideoPlatform, addEmbedOptions } from '@/lib/videoUtils';
 
 interface DigitalContentRendererProps {
   contentItems: ContentItem[];
@@ -82,11 +82,20 @@ export default function DigitalContentRenderer({ contentItems, productName }: Di
                     </div>
                   );
 
+                  // Apply embed options (autoplay, loop, muted, etc.)
+                  const embedUrlWithOptions = addEmbedOptions(parsed.embedUrl, {
+                    autoplay: item.config.autoplay,
+                    loop: item.config.loop,
+                    muted: item.config.muted,
+                    preload: item.config.preload,
+                    controls: item.config.controls
+                  });
+
                   return (
                     <div className="relative">
                       {platformBadge}
                       <iframe
-                        src={parsed.embedUrl}
+                        src={embedUrlWithOptions}
                         className="w-full h-full"
                         frameBorder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
