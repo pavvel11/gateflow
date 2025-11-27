@@ -148,6 +148,42 @@ Visit:
 - **Admin Panel**: <http://localhost:3000>
 - **Examples**: <http://localhost:8000>
 
+## 🎨 Ready-to-Use Templates
+
+GateFlow includes **10+ professional landing page templates** ready to customize and deploy:
+
+- **📚 Course Templates**: Modern designs for online courses and educational content
+- **💼 B2B Templates**: Professional layouts for business products and SaaS
+- **🎁 Lead Magnet Templates**: Beautiful pages for free e-books and resources
+- **💎 Premium Templates**: Elegant dark themes for high-ticket items
+- **🎯 Developer Templates**: Tech-focused designs for developer tools
+
+### Quick Start with Templates
+
+```bash
+# Browse templates
+open templates/index.html
+
+# Pick a template (e.g., modern-light-course.html)
+# Customize following the comments: <!-- EDIT: -->
+# Deploy to your domain
+```
+
+📖 **Full Guide**: See `templates/README.md` for detailed customization instructions.
+
+### Live Examples
+
+6 numbered examples demonstrate all GateFlow features:
+
+1. **Free Content** - Basic setup
+2. **Page Protection** - Full page access control
+3. **Element Protection** - Granular content control
+4. **Premium Styling** - Advanced UI customization
+5. **Advanced Features** - JavaScript API usage
+6. **Mixed Protection** - Multiple products on one page
+
+Access examples at `http://localhost:8000` during development.
+
 ## 📖 Usage Examples
 
 ### Basic Content Protection
@@ -294,18 +330,31 @@ gateflow-access-control/
 │   │   ├── lib/             # Utility functions
 │   │   └── types/           # TypeScript definitions
 │   └── package.json
-├── 📁 examples/             # Demo implementations
-│   ├── 1-free-content.html
-│   ├── 2-page-protection.html
-│   ├── 3-element-protection.html
-│   └── ...
+├── 📁 templates/            # 🎨 Ready-to-use landing page templates
+│   ├── README.md            # Full customization guide
+│   ├── modern-light-course.html
+│   ├── dark-premium-vip.html
+│   └── ... (10+ professional templates)
+├── 📁 examples/             # 📚 Live demos of GateFlow features
+│   ├── 1-free-content.html      # Basic setup example
+│   ├── 2-page-protection.html   # Full page protection
+│   ├── 3-element-protection.html # Granular control
+│   └── ... (6 numbered examples)
+├── 📁 themes/               # 🎨 CSS theme files (dark.css, light.css)
+├── 📁 layouts/              # 📐 HTML layout templates (default.html)
 ├── 📁 supabase/             # Database schema & migrations
 │   ├── migrations/
 │   └── config.toml
-├── 📁 themes/               # CSS theme files
-├── gatekeeper.js            # Core JavaScript SDK
+├── gatekeeper.js            # Core JavaScript SDK (1400+ lines)
+├── index.html               # Main landing page
 ├── config.example.js        # Configuration template
 └── package.json
+
+**Note**: `templates/`, `examples/`, `themes/`, and `layouts/` are **optional** static resources:
+- ✅ Use them as starting points for your own pages
+- ✅ Customize freely to match your brand
+- ✅ Deploy them or ignore them completely - they're not required for GateFlow to work
+- ✅ Serve them via your own web server (nginx, Netlify, Vercel, etc.)
 
 ### Available Scripts
 
@@ -444,37 +493,169 @@ Supported languages:
 
 ## 🚀 Deployment
 
+GateFlow offers **two deployment options** to suit different needs and budgets.
+
+### 🌥️ Deployment Options
+
+#### Option 1: Simple Production (Recommended) ⭐
+
+**Files**: `admin-panel/docker-compose.yml`, `DEPLOYMENT-SIMPLE.md`
+
+**To jest zalecana opcja dla 95% użytkowników!** Prosty, sprawdzony, tani.
+
+**Best for:**
+- ✅ Startupy i małe biznesy
+- ✅ Masz już działający test setup
+- ✅ Używasz reverse proxy (Nginx PM, Caddy, Traefik)
+- ✅ Chcesz najprostszego rozwiązania
+- ✅ Development → Production w 15 minut
+
+**Advantages:**
+- 🎯 **Najprostszy**: Tylko 1 kontener (Admin Panel)
+- ✅ **Sprawdzony**: Używasz tego co już testujesz
+- 💰 **Najtańszy**: ~$5-10/miesiąc (2GB RAM)
+- ⚡ **Szybki Deploy**: 15 minut setup
+- 🔄 **Łatwa Aktualizacja**: git pull + rebuild
+- ☁️ **Supabase Cloud**: Automatyczne backupy i scaling
+
+**Requirements:**
+- VPS: 1 vCPU, 2GB RAM, 10GB disk
+- Reverse proxy dla SSL (już masz!)
+- Supabase Cloud account (free tier)
+
+**Quick Start:**
+```bash
+cd /opt/gateflow/admin-panel
+cp .env.example .env
+nano .env  # Wypełnij produkcyjne wartości (Supabase Cloud URLs)
+docker compose up -d
+```
+
+📖 **Full Guide**: See `DEPLOYMENT-SIMPLE.md` for complete instructions.
+
+---
+
+#### Option 2: Full Stack Self-Hosted
+
+**Files**: `docker-compose.fullstack.yml`, `.env.fullstack.example`, `DEPLOYMENT.md`
+
+Runs **everything locally** including PostgreSQL, Supabase services, and your application.
+
+**Best for:**
+- 🏢 Enterprise deployments requiring data sovereignty
+- 🔒 Compliance requirements (HIPAA, GDPR data residency)
+- 💪 High-traffic applications (>10k users)
+- 🎛️ Teams needing complete infrastructure control
+- 🌐 Private networks / air-gapped environments
+
+**Advantages:**
+- 🔐 **Full Control**: Complete ownership of all data and services
+- 🚀 **No Limits**: No Supabase tier restrictions
+- 🏠 **Data Sovereignty**: Keep all data in your infrastructure
+- ⚙️ **Custom Configuration**: Full control over all services
+- 📍 **Location Control**: Deploy anywhere (on-premise, specific region)
+
+**Requirements:**
+- VPS: 2+ vCPU, 4-8GB RAM, 20GB+ disk
+- More technical knowledge for maintenance
+
+**Quick Start:**
+```bash
+# Z root projektu
+cp .env.fullstack.example .env.fullstack
+nano .env.fullstack  # Skonfiguruj wszystkie usługi
+
+# Deploy (11 kontenerów)
+docker compose -f docker-compose.fullstack.yml --env-file .env.fullstack up -d
+```
+
+📖 **Full Guide**: See `DEPLOYMENT.md` for complete instructions.
+
+---
+
+### 📊 Comparison Matrix
+
+| Feature | Simple Production | Full Stack |
+|---------|-------------------|------------|
+| **Setup Complexity** | ⭐ Easiest | ⭐⭐⭐⭐ Advanced |
+| **Docker Containers** | 1 | 11 |
+| **Monthly Cost** | ~$5-10 | ~$10-50 |
+| **RAM Required** | 2GB | 4-8GB |
+| **Maintenance** | Very Low | Medium-High |
+| **Backups** | Automatic (Supabase) | Manual |
+| **Scaling** | Automatic (Supabase) | Manual |
+| **Data Control** | Supabase Cloud | Full Control |
+| **Setup Time** | ~15 min | ~2 hours |
+| **Nginx Needed** | ❌ (use your reverse proxy) | ✅ (optional) |
+| **Best for** | 95% use cases | Enterprise/Compliance |
+
+### 🎯 Which One Should You Choose?
+
+**Choose Simple Production if:** (Recommended for most!)
+- ✅ Startupy, małe/średnie biznesy
+- ✅ Już testujesz `admin-panel/docker-compose.yml`
+- ✅ Masz swój reverse proxy (NPM, Caddy, Traefik)
+- ✅ Chcesz najprostszego i najtańszego rozwiązania
+- ✅ Supabase Cloud wystarczy (free tier do 500MB)
+- ✅ Start → Produkcja w 15 minut
+
+**Choose Full Stack Self-Hosted if:**
+- 🏢 Enterprise requirements
+- 📋 Compliance needs (GDPR data residency, HIPAA)
+- 🔒 Air-gapped environment / private network
+- 💪 High traffic (>10k active users)
+- 🎛️ Need complete infrastructure control
+- 💾 Need >500MB database on free tier
+
+**Pro Tip:**
+1. **Start with Simple** - działa dla 95% projektów!
+2. **Migrate to Full Stack** only when:
+   - Compliance wymaga (dane muszą być w EU/własnej infra)
+   - Traffic przekracza możliwości Supabase Cloud
+   - Potrzebujesz custom Supabase config
+3. **Migration is easy** - both use the same database schema!
+
+---
+
 ### Production Checklist
 
-- [ ] Configure production Supabase project
-- [ ] Set up Stripe webhook endpoints
-- [ ] Update environment variables
-- [ ] Configure custom domain
-- [ ] Enable SSL/TLS certificates
-- [ ] Set up monitoring and logging
-- [ ] Test payment flows end-to-end
+**Before going live:**
 
-### Deployment Options
+- [ ] Configure production Supabase project (Cloud) or run migrations (Full Stack)
+- [ ] Set up Stripe webhook endpoints (`/api/webhooks/stripe`)
+- [ ] Update all environment variables with production values
+- [ ] Configure custom domain and DNS
+- [ ] Enable SSL/TLS certificates (via Nginx Proxy Manager, Caddy, or built-in)
+- [ ] Test magic link authentication
+- [ ] Test payment flows end-to-end (including webhooks)
+- [ ] Configure SMTP (Supabase Cloud or own server)
+- [ ] Verify backups are working (automatic in Cloud)
+- [ ] Review and test RLS policies
+- [ ] Configure firewall rules (only 22, 80, 443)
+- [ ] Secure `.env` files (`chmod 600`)
 
-#### Vercel (Recommended)
+### 📚 Detailed Documentation
 
-```bash
-npx vercel --prod
-```
+- **🚀 Simple Production** (Recommended): `DEPLOYMENT-SIMPLE.md` - Use `admin-panel/docker-compose.yml`
+- **🏢 Full Stack Self-Hosted**: `DEPLOYMENT.md` - Complete self-hosted stack (11 containers)
+- **🏗️ Architecture & Development**: `CLAUDE.md` - Technical details and development guide
+- **🎨 Templates Guide**: `templates/README.md` - Complete template customization documentation
 
-#### Traditional Hosting
+### 💡 About Nginx
 
-```bash
-npm run build
-npm start
-```
+**Do you need Nginx?**
 
-#### Docker
+❌ **NO** if you:
+- Already have reverse proxy (Nginx Proxy Manager, Caddy, Traefik)
+- Can expose ports directly on your VPS
+- Don't need to serve `/examples` or `/templates` publicly
 
-```bash
-docker build -t gateflow .
-docker run -p 3000:3000 gateflow
-```
+✅ **YES** if you:
+- Want to serve examples and templates
+- Need a simple fileserver for static content
+- Want everything in one compose file
+
+**Note**: The `nginx` service in compose files is ONLY for static files (examples/templates), NOT for reverse proxy or SSL. Use your existing reverse proxy solution!
 
 ## 🤝 Contributing
 

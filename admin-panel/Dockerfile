@@ -1,5 +1,20 @@
+# =============================================================================
 # GateFlow Admin Panel - Dockerfile
-FROM node:18-alpine AS base
+# =============================================================================
+# This Dockerfile is compatible with TWO deployment scenarios:
+#
+# 1. admin-panel/docker-compose.yml (YOUR CURRENT SETUP)
+#    - Environment variables from .env file
+#    - NO build args needed
+#    - Variables injected at runtime
+#
+# 2. docker-compose.fullstack.yml (Optional enterprise setup)
+#    - Can optionally use build args
+#    - But also works with runtime env vars
+#
+# Both work because Next.js 'standalone' mode reads NEXT_PUBLIC_* at runtime!
+# =============================================================================
+FROM node:20-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -53,6 +68,6 @@ USER nextjs
 EXPOSE 3000
 
 ENV PORT=3000
-ENV HOSTNAME=0.0.0.0
+ENV HOSTNAME="0.0.0.0"
 
 CMD ["node", "server.js"]
