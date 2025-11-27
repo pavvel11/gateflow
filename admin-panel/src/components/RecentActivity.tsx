@@ -52,14 +52,14 @@ export default function RecentActivity() {
           .limit(10)
 
         // Get user emails separately (since direct auth.users join might not work)
-        const userIds = [...new Set((accessGrants || []).map((grant) => (grant as { user_id: string }).user_id))]
+        const userIds = [...new Set((accessGrants || []).map((grant: AccessGrant) => grant.user_id))]
         const { data: users } = await supabase
           .from('user_access_stats')
           .select('user_id, email')
           .in('user_id', userIds)
 
         // Create user email lookup map
-        const userEmailMap = new Map((users || []).map(user => [(user as { user_id: string; email: string }).user_id, (user as { user_id: string; email: string }).email]))
+        const userEmailMap = new Map<string, string>((users || []).map((user: { user_id: string; email: string }) => [user.user_id, user.email]))
 
         // Get recent products
         const { data: recentProducts } = await supabase

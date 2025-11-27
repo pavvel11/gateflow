@@ -53,6 +53,11 @@ async function getRuntimeConfig(): Promise<RuntimeConfig> {
 let clientPromise: Promise<ReturnType<typeof createBrowserClient>> | null = null
 
 export function createClient() {
+  // Only create browser client on the client side
+  if (typeof window === 'undefined') {
+    throw new Error('createClient() can only be used in browser context')
+  }
+
   if (!clientPromise) {
     clientPromise = getRuntimeConfig().then(config => {
       return createBrowserClient(config.supabaseUrl, config.supabaseAnonKey)
