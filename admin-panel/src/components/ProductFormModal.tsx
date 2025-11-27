@@ -9,6 +9,7 @@ import { getIconEmoji } from '@/utils/themeUtils';
 import { CURRENCIES, getCurrencySymbol } from '@/lib/constants';
 import { BaseModal, ModalHeader, ModalBody, ModalFooter, ModalSection, Button, Message } from './ui/Modal';
 import { useTranslations } from 'next-intl';
+import { parseVideoUrl, isTrustedVideoPlatform } from '@/lib/videoUtils';
 
 interface ProductFormModalProps {
   product?: Product | null;
@@ -70,10 +71,13 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
   
   // Separate state for the displayed price input value
   const [priceDisplayValue, setPriceDisplayValue] = useState<string>('');
-  
+
   const [slugModified, setSlugModified] = useState(false);
   const [currentDomain, setCurrentDomain] = useState<string>('');
   const nameInputRef = useRef<HTMLInputElement>(null);
+
+  // URL validation state - maps content item index to validation status
+  const [urlValidation, setUrlValidation] = useState<Record<number, { isValid: boolean; message: string }>>({});
 
   useEffect(() => {
     if (product) {
@@ -195,6 +199,81 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
       icon: icon // The icon is already the emoji character
     }));
   };
+
+  // Validate content item URL
+  const validateContentItemUrl = useCallback((url: string, type: 'video_embed' | 'download_link'): { isValid: boolean; message: string } => {
+    if (!url || url.trim() === '') {
+      return { isValid: false, message: 'URL is required' };
+    }
+
+    if (type === 'video_embed') {
+      // Validate video embed URL
+      const parsed = parseVideoUrl(url);
+      if (!parsed.isValid) {
+        if (!isTrustedVideoPlatform(url)) {
+          return {
+            isValid: false,
+            message: 'Untrusted platform. Supported: YouTube, Vimeo, Bunny.net, Loom, Wistia, DailyMotion, Twitch'
+          };
+        }
+        return {
+          isValid: false,
+          message: 'Invalid video URL format. Please check the URL.'
+        };
+      }
+      return {
+        isValid: true,
+        message: `✓ ${parsed.platform === 'youtube' ? 'YouTube' : parsed.platform === 'vimeo' ? 'Vimeo' : parsed.platform === 'bunny' ? 'Bunny.net' : parsed.platform === 'loom' ? 'Loom' : parsed.platform === 'wistia' ? 'Wistia' : parsed.platform === 'dailymotion' ? 'DailyMotion' : parsed.platform === 'twitch' ? 'Twitch' : 'Valid'} video detected`
+      };
+    } else if (type === 'download_link') {
+      // Validate download URL
+      try {
+        const urlObj = new URL(url);
+
+        // Must be HTTPS
+        if (urlObj.protocol !== 'https:') {
+          return {
+            isValid: false,
+            message: 'Download URL must use HTTPS'
+          };
+        }
+
+        // Check for trusted storage providers
+        const trustedStorageProviders = [
+          'amazonaws.com',
+          'googleapis.com',
+          'supabase.co',
+          'cdn.',
+          'storage.',
+          'bunny.net',
+          'b-cdn.net'
+        ];
+
+        const isTrustedStorage = trustedStorageProviders.some(provider =>
+          urlObj.hostname.includes(provider)
+        );
+
+        if (!isTrustedStorage) {
+          return {
+            isValid: false,
+            message: 'URL must be from a trusted storage provider (AWS, Google Cloud, Supabase, Bunny CDN, etc.)'
+          };
+        }
+
+        return {
+          isValid: true,
+          message: '✓ Valid download URL'
+        };
+      } catch {
+        return {
+          isValid: false,
+          message: 'Invalid URL format'
+        };
+      }
+    }
+
+    return { isValid: false, message: 'Unknown type' };
+  }, []);
 
   if (!isOpen) return null;
 
@@ -599,24 +678,63 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                           }}
                           className="flex-1 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-white"
                         />
-                        <input
-                          type="text"
-                          placeholder={t('url')}
-                          value={item.config?.embed_url || item.config?.download_url || ''}
-                          onChange={(e) => {
-                            const newItems = [...((formData.content_config as ProductContentConfig)?.content_items || [])];
-                            const configKey = item.type === 'video_embed' ? 'embed_url' : 'download_url';
-                            newItems[index] = { 
-                              ...item, 
-                              config: { ...item.config, [configKey]: e.target.value } 
-                            };
-                            setFormData(prev => ({ 
-                              ...prev, 
-                              content_config: { ...prev.content_config, content_items: newItems }
-                            }));
-                          }}
-                          className="flex-1 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-white"
-                        />
+                        <div className="flex-1 relative">
+                          <input
+                            type="text"
+                            placeholder={t('url')}
+                            value={item.config?.embed_url || item.config?.download_url || ''}
+                            onChange={(e) => {
+                              const newItems = [...((formData.content_config as ProductContentConfig)?.content_items || [])];
+                              const configKey = item.type === 'video_embed' ? 'embed_url' : 'download_url';
+                              newItems[index] = {
+                                ...item,
+                                config: { ...item.config, [configKey]: e.target.value }
+                              };
+                              setFormData(prev => ({
+                                ...prev,
+                                content_config: { ...prev.content_config, content_items: newItems }
+                              }));
+                            }}
+                            onBlur={(e) => {
+                              // Validate URL on blur
+                              const url = e.target.value;
+                              if (url) {
+                                const validation = validateContentItemUrl(url, item.type);
+                                setUrlValidation(prev => ({
+                                  ...prev,
+                                  [index]: validation
+                                }));
+                              } else {
+                                // Remove validation if URL is empty
+                                setUrlValidation(prev => {
+                                  const newValidation = { ...prev };
+                                  delete newValidation[index];
+                                  return newValidation;
+                                });
+                              }
+                            }}
+                            className={`w-full px-2 py-1 pr-8 border rounded text-sm dark:bg-gray-700 dark:text-white ${
+                              urlValidation[index]
+                                ? urlValidation[index].isValid
+                                  ? 'border-green-500 dark:border-green-600'
+                                  : 'border-red-500 dark:border-red-600'
+                                : 'border-gray-300 dark:border-gray-600'
+                            }`}
+                          />
+                          {urlValidation[index] && (
+                            <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                              {urlValidation[index].isValid ? (
+                                <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              ) : (
+                                <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              )}
+                            </div>
+                          )}
+                        </div>
                         <button
                           type="button"
                           onClick={() => {
@@ -631,6 +749,24 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                           {t('remove')}
                         </button>
                         </div>
+
+                        {/* URL Validation Message */}
+                        {urlValidation[index] && (
+                          <div className={`mt-2 text-xs flex items-start space-x-1 ${
+                            urlValidation[index].isValid ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                          }`}>
+                            {urlValidation[index].isValid ? (
+                              <svg className="w-3 h-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            ) : (
+                              <svg className="w-3 h-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 15.5c-.77.833.192 2.5 1.732 2.5z" />
+                              </svg>
+                            )}
+                            <span>{urlValidation[index].message}</span>
+                          </div>
+                        )}
 
                         {/* Video Embed Options */}
                         {item.type === 'video_embed' && (
