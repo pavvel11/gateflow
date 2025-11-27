@@ -7,17 +7,22 @@ Lista pomysłów i planowanych funkcjonalności do rozwoju platformy.
 ### 🟢 High Priority
 
 #### Bunny.net Video Embed Integration
-**Status**: 🏗️ In Progress
+**Status**: ✅ Done (2025-11-27)
 **Opis**: Podstawowa integracja - możliwość embedowania video z Bunny.net przez iframe
-**Techniczne**:
-- Dodać nowy typ content delivery: `bunny_video`
-- Dodać pole `bunny_video_id` w `content_config`
-- Wsparcie dla Bunny.net embed URL
-- Zabezpieczone streamowanie przez Bunny CDN
+**Zaimplementowane**:
+- ✅ Inteligentny parser video URLs (`videoUtils.ts`)
+- ✅ Automatyczna konwersja YouTube watch URLs → embed URLs
+- ✅ Wsparcie dla Bunny.net (iframe.mediadelivery.net)
+- ✅ Wsparcie dla Vimeo, Loom, Wistia, DailyMotion, Twitch
+- ✅ Platform badges na video playerze
+- ✅ Zabezpieczenia - tylko trusted platforms
+- ✅ Lepsze error messages z wyświetlaniem błędnego URL
+- ✅ Helpful hints w formularzu produktu
 
-**Problem do rozwiązania**:
-- YouTube embeds (`www.youtube.com refused to connect`) - YouTube blokuje embedowanie w iframe z względów bezpieczeństwa
-- Bunny.net rozwiązuje ten problem + dodaje bezpieczne streamowanie
+**Rozwiązane problemy**:
+- ✅ YouTube embeds (`www.youtube.com refused to connect`) - teraz automatycznie konwertujemy do embed URL
+- ✅ Wsparcie dla różnych formatów YouTube URL (watch, youtu.be, embed, mobile)
+- ✅ Bunny.net działa out-of-the-box
 
 ---
 
@@ -186,14 +191,21 @@ Lista pomysłów i planowanych funkcjonalności do rozwoju platformy.
 
 ## 🎯 Current Sprint
 
-### Sprint 1: Bunny.net Basic Integration
-- [ ] Dodać typ `bunny_video` do content_delivery_type
-- [ ] UI w admin panelu do konfiguracji Bunny video
-- [ ] Embed iframe w produktach
-- [ ] Testowanie z różnymi formatami Bunny.net URLs
-- [ ] Dokumentacja użycia
+### Sprint 1: Bunny.net Basic Integration ✅ COMPLETED
+- [x] ~~Dodać typ `bunny_video` do content_delivery_type~~ (Używamy istniejącego `video_embed`)
+- [x] UI w admin panelu do konfiguracji Bunny video
+- [x] Embed iframe w produktach
+- [x] Testowanie z różnymi formatami Bunny.net URLs
+- [x] Parser dla wielu platform (YouTube, Vimeo, Bunny, etc.)
+- [x] Platform badges
+- [x] Helpful hints
+
+### Sprint 2: Next Steps
+- [ ] Pełna integracja z Bunny.net API (upload z admin panelu)
+- [ ] Zaawansowana stylizacja video playera (PrestoPlayer-style)
+- [ ] Video analytics tracking
 
 ---
 
 **Last Updated**: 2025-11-27
-**Version**: 1.0
+**Version**: 1.1
