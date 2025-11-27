@@ -10,8 +10,8 @@ const intlMiddleware = createMiddleware({
   localePrefix: 'as-needed'
 })
 
-export async function middleware(request: NextRequest) {
-  // Skip middleware for API routes and static files
+export async function proxy(request: NextRequest) {
+  // Skip proxy processing for API routes and static files
   if (
     request.nextUrl.pathname.startsWith('/api') ||
     request.nextUrl.pathname.startsWith('/_next') ||
