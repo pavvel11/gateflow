@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ContentItem } from '@/types';
+import { parseVideoUrl, isTrustedVideoPlatform } from '@/lib/videoUtils';
 
 interface DigitalContentRendererProps {
   contentItems: ContentItem[];
@@ -44,38 +45,56 @@ export default function DigitalContentRenderer({ contentItems, productName }: Di
               <div className="aspect-video bg-black/20 rounded-lg overflow-hidden">
                 {(() => {
                   const url = item.config.embed_url;
-                  // Validate URL to prevent XSS and malicious redirects
-                  const isValidUrl = url && (
-                    url.startsWith('https://www.youtube.com/') ||
-                    url.startsWith('https://player.vimeo.com/') ||
-                    url.startsWith('https://www.loom.com/') ||
-                    url.startsWith('https://fast.wistia.com/') ||
-                    url.startsWith('https://streamable.com/') ||
-                    url.startsWith('https://www.dailymotion.com/') ||
-                    url.startsWith('https://www.twitch.tv/')
-                  );
-                  
-                  if (!isValidUrl) {
+
+                  // Parse and validate the video URL
+                  const parsed = parseVideoUrl(url);
+
+                  if (!parsed.isValid || !parsed.embedUrl) {
                     return (
                       <div className="flex items-center justify-center h-full p-4">
                         <div className="text-center">
-                          <div className="text-red-500 font-bold mb-2">⚠️ SECURITY: Invalid embed URL</div>
-                          <div className="text-sm text-gray-500">Only trusted video platforms are allowed</div>
+                          <div className="text-red-500 font-bold mb-2">⚠️ Invalid Video URL</div>
+                          <div className="text-sm text-gray-500 mb-2">
+                            {!isTrustedVideoPlatform(url)
+                              ? 'Only trusted video platforms are allowed'
+                              : 'Unable to parse video URL. Please check the format.'}
+                          </div>
+                          <div className="text-xs text-gray-600 font-mono bg-gray-800 p-2 rounded">
+                            {url}
+                          </div>
                         </div>
                       </div>
                     );
                   }
-                  
+
+                  // Show platform badge
+                  const platformBadge = parsed.platform !== 'unknown' && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-black/50 text-white backdrop-blur-sm">
+                        {parsed.platform === 'youtube' && '📺 YouTube'}
+                        {parsed.platform === 'vimeo' && '🎬 Vimeo'}
+                        {parsed.platform === 'bunny' && '🐰 Bunny.net'}
+                        {parsed.platform === 'loom' && '🎥 Loom'}
+                        {parsed.platform === 'wistia' && '📹 Wistia'}
+                        {parsed.platform === 'dailymotion' && '🎞️ DailyMotion'}
+                        {parsed.platform === 'twitch' && '🎮 Twitch'}
+                      </span>
+                    </div>
+                  );
+
                   return (
-                    <iframe
-                      src={url}
-                      className="w-full h-full"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      title={item.title}
-                      sandbox="allow-scripts allow-same-origin allow-presentation"
-                    />
+                    <div className="relative">
+                      {platformBadge}
+                      <iframe
+                        src={parsed.embedUrl}
+                        className="w-full h-full"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        title={item.title}
+                        sandbox="allow-scripts allow-same-origin allow-presentation"
+                      />
+                    </div>
                   );
                 })()}
               </div>
