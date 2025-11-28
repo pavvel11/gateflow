@@ -12,7 +12,7 @@ interface CodeGeneratorModalProps {
 }
 
 interface CodeOptions {
-  mode: 'page' | 'element';
+  mode: 'page' | 'element' | 'embed';
 }
 
 export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGeneratorModalProps) {
@@ -24,9 +24,23 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
 
   const generateCode = () => {
     const domain = window.location.origin;
-    
+
     if (options.mode === 'page') {
       return `<script src="${domain}/api/gatekeeper?productSlug=${product.slug}"></script><noscript><meta http-equiv="refresh" content="0;url=${domain}/p/${product.slug}"></noscript>`;
+    } else if (options.mode === 'embed') {
+      // Embed widget mode - only for free products
+      return `<!-- GateFlow Free Product Embed -->
+<div data-gateflow-product="${product.slug}"></div>
+<script src="${domain}/gateflow-embed.js"></script>
+
+<!-- Optional: Customize API URL and Turnstile key -->
+<!--
+<script
+  src="${domain}/gateflow-embed.js"
+  data-api-url="${domain}"
+  data-turnstile-key="your-turnstile-site-key"
+></script>
+-->`;
     } else {
       return `<!-- Add this to your page head -->
 <script src="${domain}/api/gatekeeper"></script><noscript><meta http-equiv="refresh" content="0;url=${domain}/p/${product.slug}"></noscript>
@@ -35,7 +49,7 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
 <div data-gatekeeper-product="${product.slug}">
   <h2>Protected Content</h2>
   <p>This content is only visible to users with access to ${product.name}.</p>
-  
+
   <!-- Fallback content for users without access -->
   <div data-no-access>
     <h2>🔒 Premium Content</h2>
@@ -81,7 +95,7 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('protectionMode')}
               </label>
-              <div className="grid grid-cols-2 gap-4">
+              <div className={`grid gap-4 ${product.price === 0 ? 'grid-cols-3' : 'grid-cols-2'}`}>
                 <button
                   onClick={() => setOptions({...options, mode: 'page'})}
                   className={`p-3 rounded-lg border text-left ${
@@ -108,6 +122,21 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
                     {t('elementDescription')}
                   </div>
                 </button>
+                {product.price === 0 && (
+                  <button
+                    onClick={() => setOptions({...options, mode: 'embed'})}
+                    className={`p-3 rounded-lg border text-left ${
+                      options.mode === 'embed'
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    <div className="font-medium">🎁 Embed Widget</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Embeddable form for landing pages
+                    </div>
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -146,6 +175,13 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
                   <p dangerouslySetInnerHTML={{ __html: t('pageInstructions.step2') }} />
                   <p dangerouslySetInnerHTML={{ __html: t('pageInstructions.step3') }} />
                 </>
+              ) : options.mode === 'embed' ? (
+                <>
+                  <p>1. Paste the code anywhere in your landing page HTML</p>
+                  <p>2. The widget will auto-initialize and display a beautiful signup form</p>
+                  <p>3. Users enter their email → receive magic link → get instant access</p>
+                  <p>4. Perfect for AI-generated landing pages or custom websites</p>
+                </>
               ) : (
                 <>
                   <p dangerouslySetInnerHTML={{ __html: t('elementInstructions.step1') }} />
@@ -170,6 +206,21 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
                   </p>
                   <p>
                     <strong>{t('useCase')}:</strong> {t('pageModeUseCase')}
+                  </p>
+                </>
+              ) : options.mode === 'embed' ? (
+                <>
+                  <p>
+                    <strong>🎁 Free Products Only:</strong> This embed widget only works for free products (price = $0)
+                  </p>
+                  <p>
+                    <strong>🔒 Security:</strong> Rate limiting (3 req/5min), Turnstile CAPTCHA, disposable email filter
+                  </p>
+                  <p>
+                    <strong>🎨 Customizable:</strong> Beautiful gradient design, auto-responsive, works on any website
+                  </p>
+                  <p>
+                    <strong>✉️ Magic Link:</strong> Users receive instant access link via email - no password needed
                   </p>
                 </>
               ) : (

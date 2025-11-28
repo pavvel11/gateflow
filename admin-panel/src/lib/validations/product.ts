@@ -4,6 +4,8 @@
  * No external dependencies - pure TypeScript validation
  */
 
+import { parseVideoUrl, isTrustedVideoPlatform } from '@/lib/videoUtils';
+
 // Validation result type
 export interface ValidationResult {
   isValid: boolean;
@@ -223,13 +225,120 @@ function validateDuration(duration: number | null): ValidationResult {
 function validateUUID(uuid: string): ValidationResult {
   const errors: string[] = [];
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  
+
   if (!uuid || typeof uuid !== 'string') {
     errors.push('UUID is required');
   } else if (!uuidRegex.test(uuid)) {
     errors.push('Invalid UUID format');
   }
-  
+
+  return { isValid: errors.length === 0, errors };
+}
+
+function validateContentConfig(contentConfig: unknown): ValidationResult {
+  const errors: string[] = [];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const config = contentConfig as any;
+
+  if (!config || typeof config !== 'object') {
+    return { isValid: true, errors }; // Content config is optional
+  }
+
+  // Validate content items if present
+  if (config.content_items && Array.isArray(config.content_items)) {
+    config.content_items.forEach((item: any, index: number) => {
+      if (!item || typeof item !== 'object') {
+        errors.push(`Content item ${index + 1}: Invalid format`);
+        return;
+      }
+
+      const itemType = item.type;
+
+      // Validate video embed URLs
+      if (itemType === 'video_embed') {
+        const embedUrl = item.config?.embed_url;
+
+        if (embedUrl) {
+          if (typeof embedUrl !== 'string') {
+            errors.push(`Content item ${index + 1}: Video embed URL must be a string`);
+          } else {
+            // Check if it's from a trusted platform
+            if (!isTrustedVideoPlatform(embedUrl)) {
+              errors.push(
+                `Content item ${index + 1}: Video URL must be from a trusted platform (YouTube, Vimeo, Bunny.net, Loom, Wistia, DailyMotion, Twitch)`
+              );
+            } else {
+              // Validate that it's a parseable video URL
+              const parsed = parseVideoUrl(embedUrl);
+              if (!parsed.isValid) {
+                errors.push(`Content item ${index + 1}: Invalid video URL format`);
+              }
+            }
+          }
+        }
+      }
+
+      // Validate download link URLs
+      else if (itemType === 'download_link') {
+        const downloadUrl = item.config?.download_url;
+
+        if (downloadUrl) {
+          if (typeof downloadUrl !== 'string') {
+            errors.push(`Content item ${index + 1}: Download URL must be a string`);
+          } else {
+            try {
+              const urlObj = new URL(downloadUrl);
+
+              // Must be HTTPS
+              if (urlObj.protocol !== 'https:') {
+                errors.push(`Content item ${index + 1}: Download URL must use HTTPS`);
+              }
+
+              // Check for trusted storage providers
+              const trustedStorageProviders = [
+                'amazonaws.com',        // AWS S3
+                'googleapis.com',       // Google Cloud Storage
+                'supabase.co',          // Supabase Storage
+                'cdn.',                 // Generic CDN
+                'storage.',             // Generic Storage
+                'bunny.net',            // Bunny CDN
+                'b-cdn.net',            // Bunny CDN
+                'drive.google.com',     // Google Drive
+                'docs.google.com',      // Google Drive
+                'dropbox.com',          // Dropbox
+                'dl.dropboxusercontent.com', // Dropbox direct links
+                'onedrive.live.com',    // OneDrive
+                '1drv.ms',              // OneDrive short links
+                'sharepoint.com',       // Microsoft SharePoint
+                'box.com',              // Box
+                'mega.nz',              // Mega
+                'mediafire.com',        // MediaFire
+                'wetransfer.com',       // WeTransfer
+                'sendspace.com',        // SendSpace
+                'cloudinary.com',       // Cloudinary
+                'imgix.net',            // Imgix CDN
+                'fastly.net'            // Fastly CDN
+              ];
+
+              const isTrustedStorage = trustedStorageProviders.some(provider =>
+                urlObj.hostname.includes(provider)
+              );
+
+              if (!isTrustedStorage) {
+                errors.push(
+                  `Content item ${index + 1}: Download URL must be from a trusted storage provider (AWS, Google Drive, Dropbox, OneDrive, CDN, etc.)`
+                );
+              }
+            } catch {
+              errors.push(`Content item ${index + 1}: Invalid download URL format`);
+            }
+          }
+        }
+      }
+    });
+  }
+
   return { isValid: errors.length === 0, errors };
 }
 
@@ -277,7 +386,13 @@ export function validateCreateProduct(data: unknown): ValidationResult {
     const durationResult = validateDuration(input.auto_grant_duration_days);
     errors.push(...durationResult.errors);
   }
-  
+
+  // Validate content config
+  if (input.content_config) {
+    const contentConfigResult = validateContentConfig(input.content_config);
+    errors.push(...contentConfigResult.errors);
+  }
+
   // Validate date range
   if (input.available_from && input.available_until) {
     const fromDate = new Date(input.available_from);
@@ -286,7 +401,7 @@ export function validateCreateProduct(data: unknown): ValidationResult {
       errors.push('Available from date must be before available until date');
     }
   }
-  
+
   return { isValid: errors.length === 0, errors };
 }
 
@@ -345,7 +460,13 @@ export function validateUpdateProduct(data: unknown): ValidationResult {
     const durationResult = validateDuration(input.auto_grant_duration_days);
     errors.push(...durationResult.errors);
   }
-  
+
+  // Validate content config
+  if (input.content_config !== undefined) {
+    const contentConfigResult = validateContentConfig(input.content_config);
+    errors.push(...contentConfigResult.errors);
+  }
+
   // Validate date range if both are provided
   if (input.available_from && input.available_until) {
     const fromDate = new Date(input.available_from);
@@ -354,7 +475,7 @@ export function validateUpdateProduct(data: unknown): ValidationResult {
       errors.push('Available from date must be before available until date');
     }
   }
-  
+
   return { isValid: errors.length === 0, errors };
 }
 

@@ -188,6 +188,38 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate all content items with URLs before submission
+    if (formData.content_delivery_type === 'content') {
+      const contentItems = (formData.content_config as ProductContentConfig)?.content_items || [];
+      const invalidItems: number[] = [];
+
+      contentItems.forEach((item, index) => {
+        if (item.type === 'video_embed' || item.type === 'download_link') {
+          const url = item.type === 'video_embed'
+            ? item.config?.embed_url
+            : item.config?.download_url;
+
+          if (url) {
+            const validation = validateContentItemUrl(url, item.type);
+            if (!validation.isValid) {
+              invalidItems.push(index);
+              // Update validation state to show errors
+              setUrlValidation(prev => ({
+                ...prev,
+                [index]: validation
+              }));
+            }
+          }
+        }
+      });
+
+      // Block submission if there are invalid URLs
+      if (invalidItems.length > 0) {
+        return; // Don't submit the form
+      }
+    }
+
     onSubmit(formData);
   };
 
@@ -240,13 +272,28 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
         // Check for trusted storage providers
         const trustedStorageProviders = [
-          'amazonaws.com',
-          'googleapis.com',
-          'supabase.co',
-          'cdn.',
-          'storage.',
-          'bunny.net',
-          'b-cdn.net'
+          'amazonaws.com',        // AWS S3
+          'googleapis.com',       // Google Cloud Storage
+          'supabase.co',          // Supabase Storage
+          'cdn.',                 // Generic CDN
+          'storage.',             // Generic Storage
+          'bunny.net',            // Bunny CDN
+          'b-cdn.net',            // Bunny CDN
+          'drive.google.com',     // Google Drive
+          'docs.google.com',      // Google Drive
+          'dropbox.com',          // Dropbox
+          'dl.dropboxusercontent.com', // Dropbox direct links
+          'onedrive.live.com',    // OneDrive
+          '1drv.ms',              // OneDrive short links
+          'sharepoint.com',       // Microsoft SharePoint
+          'box.com',              // Box
+          'mega.nz',              // Mega
+          'mediafire.com',        // MediaFire
+          'wetransfer.com',       // WeTransfer
+          'sendspace.com',        // SendSpace
+          'cloudinary.com',       // Cloudinary
+          'imgix.net',            // Imgix CDN
+          'fastly.net'            // Fastly CDN
         ];
 
         const isTrustedStorage = trustedStorageProviders.some(provider =>
@@ -256,7 +303,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         if (!isTrustedStorage) {
           return {
             isValid: false,
-            message: 'URL must be from a trusted storage provider (AWS, Google Cloud, Supabase, Bunny CDN, etc.)'
+            message: 'URL must be from a trusted storage provider (AWS, Google Drive, Dropbox, OneDrive, CDN, etc.)'
           };
         }
 
@@ -625,25 +672,51 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     {t('contentItems')}
                   </label>
 
-                  {/* Helpful info about supported video platforms */}
-                  <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0">
-                        <svg className="h-5 w-5 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <div className="ml-3">
-                        <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">Supported Video Platforms</h4>
-                        <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                          Paste any URL format - we&apos;ll convert it to the proper embed URL automatically!
-                        </p>
-                        <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
-                          📺 YouTube • 🎬 Vimeo • 🐰 Bunny.net • 🎥 Loom • 📹 Wistia • 🎞️ DailyMotion • 🎮 Twitch
+                  {/* Helpful info boxes - show based on what types exist */}
+                  {((formData.content_config as ProductContentConfig)?.content_items || []).some(item => item.type === 'video_embed') && (
+                    <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                          <svg className="h-5 w-5 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">Supported Video Platforms</h4>
+                          <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                            Paste any URL format - we'll convert it to the proper embed URL automatically!
+                          </p>
+                          <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
+                            📺 YouTube • 🎬 Vimeo • 🐰 Bunny.net • 🎥 Loom • 📹 Wistia • 🎞️ DailyMotion • 🎮 Twitch
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  )}
+
+                  {((formData.content_config as ProductContentConfig)?.content_items || []).some(item => item.type === 'download_link') && (
+                    <div className="mb-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                          <svg className="h-5 w-5 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <h4 className="text-sm font-medium text-green-800 dark:text-green-200">Trusted Storage Providers for Downloads</h4>
+                          <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                            Download URLs must use HTTPS and be from trusted storage providers for security.
+                          </p>
+                          <div className="mt-2 text-xs text-green-600 dark:text-green-400 leading-relaxed">
+                            <div>☁️ Cloud: AWS S3, Google Cloud Storage, Supabase Storage</div>
+                            <div>📁 Personal: Google Drive, Dropbox, OneDrive, Box, SharePoint</div>
+                            <div>🌐 CDN: Bunny CDN, Cloudinary, Imgix, Fastly</div>
+                            <div>📤 File Sharing: Mega, MediaFire, WeTransfer, SendSpace</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="space-y-3">
                     {(formData.content_config as ProductContentConfig)?.content_items?.map((item, index) => (
@@ -654,10 +727,17 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                           onChange={(e) => {
                             const newItems = [...((formData.content_config as ProductContentConfig)?.content_items || [])];
                             newItems[index] = { ...item, type: e.target.value as 'video_embed' | 'download_link' };
-                            setFormData(prev => ({ 
-                              ...prev, 
+                            setFormData(prev => ({
+                              ...prev,
                               content_config: { ...prev.content_config, content_items: newItems }
                             }));
+
+                            // Clear validation for this item when type changes
+                            setUrlValidation(prev => {
+                              const newValidation = { ...prev };
+                              delete newValidation[index];
+                              return newValidation;
+                            });
                           }}
                           className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-white"
                         >
@@ -743,6 +823,23 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                               ...prev,
                               content_config: { ...prev.content_config, content_items: newItems }
                             }));
+
+                            // Rebuild validation state with shifted indices
+                            setUrlValidation(prev => {
+                              const newValidation: Record<number, { isValid: boolean; message: string }> = {};
+                              Object.keys(prev).forEach(key => {
+                                const idx = parseInt(key);
+                                if (idx < index) {
+                                  // Keep items before removed index
+                                  newValidation[idx] = prev[idx];
+                                } else if (idx > index) {
+                                  // Shift items after removed index down by 1
+                                  newValidation[idx - 1] = prev[idx];
+                                }
+                                // Skip the removed index
+                              });
+                              return newValidation;
+                            });
                           }}
                           className="px-2 py-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                         >

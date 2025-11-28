@@ -1,6 +1,6 @@
 # GateFlow - Product Backlog
 
-Lista pomysłów i planowanych funkcjonalności do rozwoju platformy.
+A list of ideas and planned features for the platform's development.
 
 ## 🎥 Video & Media
 
@@ -8,98 +8,105 @@ Lista pomysłów i planowanych funkcjonalności do rozwoju platformy.
 
 #### Bunny.net Video Embed Integration
 **Status**: ✅ Done (2025-11-27)
-**Opis**: Podstawowa integracja - możliwość embedowania video z Bunny.net przez iframe
-**Zaimplementowane**:
-- ✅ Inteligentny parser video URLs (`videoUtils.ts`)
-- ✅ Automatyczna konwersja YouTube watch URLs → embed URLs
-- ✅ Wsparcie dla Bunny.net (iframe.mediadelivery.net)
-- ✅ Wsparcie dla Vimeo, Loom, Wistia, DailyMotion, Twitch
-- ✅ Platform badges na video playerze
-- ✅ Zabezpieczenia - tylko trusted platforms
-- ✅ Lepsze error messages z wyświetlaniem błędnego URL
-- ✅ Helpful hints w formularzu produktu
+**Description**: Basic integration - ability to embed video from Bunny.net via iframe.
+**Implemented**:
+- ✅ Smart video URL parser (`videoUtils.ts`)
+- ✅ Automatic conversion of YouTube watch URLs → embed URLs
+- ✅ Support for Bunny.net (iframe.mediadelivery.net)
+- ✅ Support for Vimeo, Loom, Wistia, DailyMotion, Twitch
+- ✅ Platform badges on the video player
+- ✅ Security - only trusted platforms
+- ✅ Better error messages displaying the incorrect URL
+- ✅ Helpful hints in the product form
 
-**Rozwiązane problemy**:
-- ✅ YouTube embeds (`www.youtube.com refused to connect`) - teraz automatycznie konwertujemy do embed URL
-- ✅ Wsparcie dla różnych formatów YouTube URL (watch, youtu.be, embed, mobile)
-- ✅ Bunny.net działa out-of-the-box
+**Solved Issues**:
+- ✅ YouTube embeds (`www.youtube.com refused to connect`) - now automatically converted to embed URL
+- ✅ Support for various YouTube URL formats (watch, youtu.be, embed, mobile)
+- ✅ Bunny.net works out-of-the-box
 
 ---
 
 ### 🟡 Medium Priority
 
-#### Pełna Integracja z Bunny.net API
+#### Full Integration with Bunny.net API
 **Status**: 📋 Planned
-**Opis**: Upload filmów bezpośrednio z admin panelu GateFlow do Bunny.net
-**Wymagania**:
-- Konfiguracja Bunny.net API key w admin panelu
-- Upload interface w admin panelu
-- Progress bar podczas uploadu
-- Automatyczne generowanie embed code
-- Zarządzanie biblioteką video (lista, edycja, usuwanie)
+**Description**: Upload videos directly from the GateFlow admin panel to Bunny.net.
+**Requirements**:
+- Configuration of Bunny.net API key in the admin panel
+- Upload interface in the admin panel
+- Progress bar during upload
+- Automatic embed code generation
+- Video library management (list, edit, delete)
 
-**Techniczne**:
-- Nowa sekcja w Settings: "Video Hosting"
-- Integracja z Bunny.net Stream API
-- Pole w bazie: `bunny_api_key` (encrypted)
+**Technical**:
+- New section in Settings: "Video Hosting"
+- Integration with Bunny.net Stream API
+- Database field: `bunny_api_key` (encrypted)
 - Video library management UI
 
-**API Endpoints potrzebne**:
-- `POST /api/admin/video/upload` - upload do Bunny.net
-- `GET /api/admin/video/list` - lista filmów
-- `DELETE /api/admin/video/:id` - usuwanie filmu
+**API Endpoints Needed**:
+- `POST /api/admin/video/upload` - upload to Bunny.net
+- `GET /api/admin/video/list` - list videos
+- `DELETE /api/admin/video/:id` - delete a video
 
 ---
 
-#### Zaawansowana Stylizacja Video Player (inspiracja: PrestoPlayer)
+#### Advanced Video Player Styling (inspired by Presto Player)
 **Status**: 📋 Planned
-**Opis**: Customizacja wyglądu i funkcji video playera
+**Description**: Customization of the video player's appearance and features.
 
-**Funkcje**:
+**Features**:
 - 🎨 **Custom Styling**:
-  - Wybór kolorów UI playera
-  - Custom przyciski play/pause
-  - Logo overlay na video
+  - Player UI color selection
+  - Custom play/pause buttons
+  - Logo overlay on video
   - Custom progress bar
 
 - ⚙️ **Player Controls**:
-  - Włączanie/wyłączanie kontrolek
+  - Enable/disable controls
   - Auto-play configuration
+  - Muted Autoplay Preview
   - Playback speed control
   - Picture-in-Picture
   - Fullscreen options
+  - Sticky player (player stays visible on scroll)
 
-- 🎯 **Overlays & CTAs**:
-  - Text overlays na określonych momentach
-  - CTA buttons (np. "Kup teraz" na minute 5:00)
+- 🎯 **Overlays & CTAs (Layers)**:
+  - Text overlays at specific timestamps
+  - CTA buttons (e.g., "Buy Now" at 5:00)
   - Email capture overlay (lead generation)
-  - Custom thumbnail przed odtworzeniem
+  - Custom thumbnail before playback
+  - Action Bars with multiple buttons
+
+- 🧠 **Smart Features**:
+  - **Remember last playback position (per user/per video)**
+  - Video Chapters support
 
 - 📊 **Analytics**:
-  - Tracking % obejrzenia filmu
-  - Heat maps (które momenty są najczęściej przewijane)
+  - Video watch percentage tracking
+  - Heat maps (which moments are re-watched/skipped)
   - Drop-off points
   - Engagement metrics
 
-**UI w Admin Panelu**:
+**UI in Admin Panel**:
 - Visual player customizer
-- Timeline editor dla overlays
-- Preview przed zapisaniem
+- Timeline editor for overlays
+- Preview before saving
 
-**Inspiracja**: https://prestoplayer.com/
+**Inspiration**: https://prestoplayer.com/
 
 ---
 
 ### 🔵 Low Priority
 
-#### Hostowanie Plików w Aplikacji
+#### In-App File Hosting
 **Status**: 💭 Idea
-**Opis**: Możliwość uploadowania i hostowania plików bezpośrednio w GateFlow
+**Description**: Ability to upload and host files directly within GateFlow.
 
-**Obecnie**: Tylko URL do zewnętrznych plików
-**Przyszłość**: Upload plików do własnego storage
+**Currently**: Only URLs to external files.
+**Future**: Upload files to own storage.
 
-**Wymagania**:
+**Requirements**:
 - Supabase Storage integration
 - Upload limits per plan (Free/Pro/Enterprise)
 - File type validation
@@ -114,14 +121,51 @@ Lista pomysłów i planowanych funkcjonalności do rozwoju platformy.
 
 ---
 
+## 🛒 Checkout & Payments
+
+### 🟡 Medium Priority
+
+#### Configurable Stripe Checkout Experience
+**Status**: 📋 Planned
+**Description**: Allow administrators to choose and configure how users pay for products, aiming for greater flexibility and adaptation to various sales scenarios.
+
+**Required Implementation Options**:
+1.  **Redirect Checkout**:
+    - Classic, Stripe-hosted payment process.
+    - Simplest integration, highest level of security and PCI compliance.
+    - User is redirected to `checkout.stripe.com`.
+
+2.  **Embedded Checkout (Current Method)**:
+    - A complete payment form embedded directly on the product page (`/p/[slug]`).
+    - Uses Stripe's `CheckoutProvider` and `<PaymentElement>`.
+    - Provides a seamless experience without leaving the site.
+    - Currently implemented in `admin-panel/src/app/[locale]/checkout/[slug]/page.tsx`.
+
+3.  **Custom Checkout (Stripe Elements)**:
+    - Build a fully custom payment form using individual `Stripe Elements` components (`CardNumberElement`, `CardExpiryElement`, `CardCvcElement`, etc.).
+    - Allows for full control over the look and layout of each form field.
+    - Requires using the `Elements` provider instead of `CheckoutProvider`.
+    - Enables styling each element separately, similar to `easycart.pl`.
+
+**Implementation Proposal**:
+- In the admin panel, when creating/editing a product, add an option to select the checkout type: "Redirect", "Embedded", "Custom".
+- Based on this setting, the product page (`/p/[slug]`) will render the appropriate payment component.
+- This requires creating a new component for the "Custom Checkout" option and logic to switch between the three modes.
+
+**Inspiration**:
+- Stripe Docs: [React Stripe.js](https://docs.stripe.com/sdks/stripejs-react)
+- Example: `easycart.pl`
+
+---
+
 ## 📊 Analytics & Reporting
 
 ### Video Analytics
 **Status**: 📋 Planned
-**Opis**: Szczegółowe statystyki odtwarzania video
+**Description**: Detailed video playback statistics.
 
-**Metryki**:
-- Completion rate (% obejrzenia)
+**Metrics**:
+- Completion rate (%)
 - Average watch time
 - Most watched videos
 - Drop-off points
@@ -133,17 +177,17 @@ Lista pomysłów i planowanych funkcjonalności do rozwoju platformy.
 
 ### Content Delivery Type Refactoring
 **Status**: 💭 Idea
-**Opis**: Rozszerzenie systemu `content_delivery_type`
+**Description**: Extend the `content_delivery_type` system.
 
-**Obecne typy**:
-- `content` - chroniona treść na stronie
-- `redirect` - przekierowanie po zakupie
+**Current Types**:
+- `content` - protected content on the page
+- `redirect` - redirect after purchase
 
-**Nowe typy do dodania**:
+**New Types to Add**:
 - `bunny_video` - Bunny.net video embed 🟢
 - `download` - Direct file download
-- `video_course` - Seria filmów (kurs)
-- `membership` - Dostęp do membership area
+- `video_course` - A series of videos (course)
+- `membership` - Access to a membership area
 - `api_access` - API credentials delivery
 
 ---
@@ -152,24 +196,43 @@ Lista pomysłów i planowanych funkcjonalności do rozwoju platformy.
 
 ### Video Course Structure
 **Status**: 💭 Idea
-**Opis**: Wsparcie dla kursów składających się z wielu lekcji
+**Description**: Support for courses composed of multiple lessons.
 
-**Funkcje**:
+**Features**:
 - Chapters & Lessons hierarchy
 - Progress tracking
-- Sequential unlocking (lesson 2 po ukończeniu lesson 1)
-- Certificates po ukończeniu
+- Sequential unlocking (lesson 2 after completing lesson 1)
+- Certificates upon completion
 - Quiz integration
 
 ---
 
 ## 🔐 Security & Access Control
 
+### 🟡 Medium Priority
+
+#### Configurable URL Validation
+**Status**: 📋 Planned
+**Description**: Add a global setting in the admin panel to enable or disable strict URL validation for content links, such as `video_embed` or `download_link` fields.
+
+**Requirements**:
+- A toggle switch in the admin settings area (e.g., under "Security" or "General").
+- The setting should be **enabled by default** to ensure maximum security.
+- When disabled, the system should skip the whitelist/format validation for URLs, allowing administrators to use any URL format (e.g., for local development, testing, or unsupported providers).
+- A clear warning message should be displayed next to the setting, explaining the security risks of disabling validation (e.g., potential for embedding malicious content).
+
+**Use Case**:
+- Allows developers to test with `localhost` URLs.
+- Enables the use of video providers not yet officially supported by the internal parser.
+- Provides a quick workaround if a valid URL from a supported provider is incorrectly flagged as invalid.
+
+---
+
 ### Secure Video Streaming
 **Status**: 🏗️ In Progress (part of Bunny.net integration)
-**Opis**: Zabezpieczone streamowanie video przed nieautoryzowanym dostępem
+**Description**: Secure video streaming against unauthorized access.
 
-**Rozwiązanie**: Bunny.net z signed URLs i token authentication
+**Solution**: Bunny.net with signed URLs and token authentication.
 
 ---
 
@@ -181,31 +244,31 @@ Lista pomysłów i planowanych funkcjonalności do rozwoju platformy.
 - 🔵 Low Priority
 
 **Progress**:
-- 💭 Idea - pomysł do przemyślenia
-- 📋 Planned - zaplanowane do implementacji
-- 🏗️ In Progress - w trakcie implementacji
-- ✅ Done - zrobione
-- ❌ Cancelled - anulowane/porzucone
+- 💭 Idea - to be considered
+- 📋 Planned - scheduled for implementation
+- 🏗️ In Progress - currently being implemented
+- ✅ Done - completed
+- ❌ Cancelled - cancelled/abandoned
 
 ---
 
 ## 🎯 Current Sprint
 
 ### Sprint 1: Bunny.net Basic Integration ✅ COMPLETED
-- [x] ~~Dodać typ `bunny_video` do content_delivery_type~~ (Używamy istniejącego `video_embed`)
-- [x] UI w admin panelu do konfiguracji Bunny video
-- [x] Embed iframe w produktach
-- [x] Testowanie z różnymi formatami Bunny.net URLs
-- [x] Parser dla wielu platform (YouTube, Vimeo, Bunny, etc.)
+- [x] ~~Add `bunny_video` type to content_delivery_type~~ (Using existing `video_embed`)
+- [x] UI in admin panel for Bunny video configuration
+- [x] Embed iframe in products
+- [x] Testing with various Bunny.net URL formats
+- [x] Parser for multiple platforms (YouTube, Vimeo, Bunny, etc.)
 - [x] Platform badges
 - [x] Helpful hints
 
 ### Sprint 2: Next Steps
-- [ ] Pełna integracja z Bunny.net API (upload z admin panelu)
-- [ ] Zaawansowana stylizacja video playera (PrestoPlayer-style)
+- [ ] Full integration with Bunny.net API (upload from admin panel)
+- [ ] Advanced video player styling (PrestoPlayer-style)
 - [ ] Video analytics tracking
 
 ---
 
 **Last Updated**: 2025-11-27
-**Version**: 1.1
+**Version**: 1.2

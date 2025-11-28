@@ -182,12 +182,39 @@ export function parseVideoUrl(url: string): ParsedVideoUrl {
 
     // Wistia
     if (hostname.includes('wistia.com') || hostname.includes('wistia.net')) {
-      // Wistia URLs are complex, for now just validate
+      // Check if already embed URL
+      if (urlObj.pathname.includes('/embed/iframe/')) {
+        const match = urlObj.pathname.match(/\/embed\/iframe\/([a-zA-Z0-9]+)/);
+        if (match) {
+          return {
+            platform: 'wistia',
+            videoId: match[1],
+            embedUrl: url,
+            isValid: true
+          };
+        }
+      }
+
+      // Standard Wistia share URL: https://companyname.wistia.com/medias/VIDEO_ID
+      if (urlObj.pathname.includes('/medias/')) {
+        const match = urlObj.pathname.match(/\/medias\/([a-zA-Z0-9]+)/);
+        if (match) {
+          const videoId = match[1];
+          return {
+            platform: 'wistia',
+            videoId,
+            embedUrl: `https://fast.wistia.net/embed/iframe/${videoId}`,
+            isValid: true
+          };
+        }
+      }
+
+      // Legacy embed format check
       if (urlObj.pathname.includes('/embed/')) {
         return {
           platform: 'wistia',
           videoId: null,
-          embedUrl: url, // Already embed URL
+          embedUrl: url,
           isValid: true
         };
       }
