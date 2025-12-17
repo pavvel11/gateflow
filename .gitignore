@@ -48,3 +48,10 @@ build/
 
 # Personal configuration files with real credentials
 # config.personal.js
+
+# Gemini temporary files
+.gemini-clipboard/
+
+# PM2 and Caddy local configuration
+ecosystem.config.js
+Caddyfile

@@ -4,16 +4,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
+import { getStripeServer } from '@/lib/stripe/server';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-11-17.clover',
-});
-
-const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function POST(request: NextRequest) {
   try {
+    const stripe = getStripeServer();
+
     // Initialize Supabase client with service role for admin operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     

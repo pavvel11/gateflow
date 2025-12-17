@@ -18,7 +18,8 @@ export const getStripeServer = (): Stripe => {
     }
     
     stripe = new Stripe(secretKey, {
-      // Use default API version for this Stripe SDK
+      // Use specific API version to ensure compatibility
+      apiVersion: '2025-12-15.clover',
       typescript: true,
     });
   }
