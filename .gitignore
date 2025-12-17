@@ -55,3 +55,7 @@ build/
 # PM2 and Caddy local configuration
 ecosystem.config.js
 Caddyfile
+
+# Claude AI configuration
+.claude/
+CLAUDE.md
