@@ -500,13 +500,39 @@ Supported languages:
 - 🇵🇱 Polish
 - 🔄 More languages coming soon
 
-## 🚀 Deployment
+### 🚀 Deployment
 
-GateFlow offers **two deployment options** to suit different needs and budgets.
+GateFlow offers flexible deployment options:
 
-### 🌥️ Deployment Options
+#### Option 1: PM2 / VPS (Recommended for Performance) ⭐
+**File**: `AI-DEPLOYMENT.md`
 
-#### Option 1: Simple Production (Recommended) ⭐
+Run directly on a VPS using PM2 without Docker overhead. Best for performance and simplicity on managed servers like Mikrus.
+
+**Quick Start:**
+```bash
+# See AI-DEPLOYMENT.md for full copy-paste commands
+git clone ...
+npm install
+npm run build
+pm2 start ecosystem.config.js
+```
+
+#### Option 2: Docker Simple Production
+**Files**: `admin-panel/docker-compose.yml`, `DEPLOYMENT-SIMPLE.md`
+
+Great for containerized environments.
+
+#### Option 3: Full Stack Self-Hosted
+**Files**: `docker-compose.fullstack.yml`, `DEPLOYMENT.md`
+
+Runs everything locally including DB.
+
+---
+
+### 🌥️ Deployment Options Details
+
+#### Option 2: Simple Production (Docker)
 
 **Files**: `admin-panel/docker-compose.yml`, `DEPLOYMENT-SIMPLE.md`
 
