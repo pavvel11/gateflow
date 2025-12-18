@@ -73,21 +73,21 @@ export async function GET(request: NextRequest) {
   let error: AuthError | null = null;
   
   if (code) {
-    // For magic links, the code parameter is actually the token_hash
-    // Try verifyOtp first (for magic links)
-    const otpResponse = await supabase.auth.verifyOtp({
-      token_hash: code,
-      type: 'magiclink'
-    });
+    // Try OAuth code exchange first (standard PKCE flow for magic links and OAuth)
+    const oauthResponse = await supabase.auth.exchangeCodeForSession(code);
     
-    if (otpResponse.data.session) {
-      session = otpResponse.data.session;
-      error = otpResponse.error;
-    } else {
-      // If OTP verification fails, try OAuth code exchange
-      const oauthResponse = await supabase.auth.exchangeCodeForSession(code);
+    if (oauthResponse.data.session) {
       session = oauthResponse.data.session;
       error = oauthResponse.error;
+    } else {
+      // If code exchange fails, try verifyOtp (legacy/implicit flow or direct token)
+      // Note: In PKCE flow, 'code' is an auth code, not a token hash.
+      const otpResponse = await supabase.auth.verifyOtp({
+        token_hash: code,
+        type: 'magiclink'
+      });
+      session = otpResponse.data.session;
+      error = otpResponse.error;
     }
   }
   

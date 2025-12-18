@@ -147,23 +147,41 @@ export class CheckoutService {
    */
   async createStripeSession(options: CheckoutSessionOptions): Promise<{ clientSecret: string; sessionId: string }> {
     try {
+      // Build line items array (main product + optional bump)
+      const lineItems = [
+        {
+          price_data: {
+            currency: options.product.currency.toLowerCase(),
+            product_data: {
+              name: options.product.name,
+              description: options.product.description || undefined,
+            },
+            unit_amount: Math.round(options.product.price * 100),
+          },
+          quantity: 1,
+        },
+      ];
+
+      // Add bump product as second line item if provided
+      if (options.bumpProduct) {
+        lineItems.push({
+          price_data: {
+            currency: options.bumpProduct.currency.toLowerCase(),
+            product_data: {
+              name: options.bumpProduct.name,
+              description: options.bumpProduct.description || undefined,
+            },
+            unit_amount: Math.round(options.bumpProduct.price * 100),
+          },
+          quantity: 1,
+        });
+      }
+
       // Prepare session configuration
       const sessionConfig: Record<string, unknown> = {
         ui_mode: STRIPE_CONFIG.session.ui_mode,
         payment_method_types: [...STRIPE_CONFIG.payment_method_types],
-        line_items: [
-          {
-            price_data: {
-              currency: options.product.currency.toLowerCase(),
-              product_data: {
-                name: options.product.name,
-                description: options.product.description || undefined,
-              },
-              unit_amount: Math.round(options.product.price * 100),
-            },
-            quantity: 1,
-          },
-        ],
+        line_items: lineItems,
         mode: STRIPE_CONFIG.session.payment_mode,
         return_url: options.returnUrl,
         // Set redirect_on_completion to 'always' for proper server-side verification
@@ -172,6 +190,11 @@ export class CheckoutService {
           product_id: options.product.id,
           product_slug: options.product.slug,
           user_id: options.userId || null,
+          // Add bump product metadata if present
+          ...(options.bumpProduct && {
+            bump_product_id: options.bumpProduct.id,
+            has_bump: 'true',
+          }),
         },
         expires_at: Math.floor(Date.now() / 1000) + (STRIPE_CONFIG.session.expires_hours * 60 * 60),
         automatic_tax: STRIPE_CONFIG.session.automatic_tax,
@@ -225,31 +248,63 @@ export class CheckoutService {
    * Complete checkout flow - main orchestration method
    */
   async createCheckoutSession(
-    request: CreateCheckoutRequest, 
+    request: CreateCheckoutRequest,
     returnUrl: string,
     userId?: string
   ): Promise<{ clientSecret: string; sessionId: string }> {
     // Initialize service
     await this.initialize();
-    
+
     // Validate request
     await this.validateRequest(request);
-    
+
     // Rate limiting check
     await this.checkRateLimit();
-    
+
     // Get and validate product
     const product = await this.getProduct(request.productId);
     this.validateTemporalAvailability(product);
-    
+
     // Check existing access for logged-in users
     if (userId) {
       await this.checkExistingAccess(userId, product.id);
     }
-    
+
+    // Handle order bump if provided
+    let bumpProduct: ProductForCheckout | undefined;
+    if (request.bumpProductId) {
+      try {
+        bumpProduct = await this.getProduct(request.bumpProductId);
+        this.validateTemporalAvailability(bumpProduct);
+
+        // Fetch special bump price from order_bumps table
+        const { data: bumpData } = await this.supabase
+          .from('order_bumps')
+          .select('bump_price')
+          .eq('main_product_id', request.productId)
+          .eq('bump_product_id', request.bumpProductId)
+          .eq('is_active', true)
+          .single();
+
+        if (bumpData && bumpData.bump_price !== null) {
+          // Override the product price with the special bump price
+          // Create a new object to avoid mutating cached data if any
+          bumpProduct = {
+            ...bumpProduct,
+            price: bumpData.bump_price
+          };
+        }
+      } catch (error) {
+        console.error('Error validating bump product:', error);
+        // Continue without bump if validation fails
+        bumpProduct = undefined;
+      }
+    }
+
     // Create Stripe session
     return await this.createStripeSession({
       product,
+      bumpProduct,
       email: request.email,
       userId,
       returnUrl

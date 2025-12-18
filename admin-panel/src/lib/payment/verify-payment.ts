@@ -134,20 +134,34 @@ export async function verifyPaymentSession(
           }
           
           // Extract payment intent ID
-          const stripePaymentIntentId = typeof session.payment_intent === 'object' 
-            ? session.payment_intent?.id 
+          const stripePaymentIntentId = typeof session.payment_intent === 'object'
+            ? session.payment_intent?.id
             : session.payment_intent;
 
+          // Extract bump product ID from metadata if present
+          const bumpProductId = session.metadata?.bump_product_id || null;
+          const hasBump = session.metadata?.has_bump === 'true';
+
+          // Use new function that supports order bumps
+          const rpcParams = {
+            session_id_param: session.id,
+            product_id_param: productId,
+            customer_email_param: customerEmail,
+            amount_total: session.amount_total || 0,
+            currency_param: session.currency || 'usd',
+            stripe_payment_intent_id: stripePaymentIntentId || null,
+            user_id_param: user?.id || null,
+            bump_product_id_param: hasBump && bumpProductId ? bumpProductId : null
+          };
+          
+          console.log('Calling process_stripe_payment_completion_with_bump with:', JSON.stringify(rpcParams, null, 2));
+
           const { data: paymentResult, error: paymentError } = await serviceClient
-            .rpc('process_stripe_payment_completion', {
-              session_id_param: session.id,
-              product_id_param: productId,
-              customer_email_param: customerEmail,
-              amount_total: session.amount_total || 0,
-              currency_param: session.currency || 'usd',
-              stripe_payment_intent_id: stripePaymentIntentId || null,
-              user_id_param: user?.id || null
-            });
+            .rpc('process_stripe_payment_completion_with_bump', rpcParams);
+
+          if (paymentResult) {
+             console.log('Raw DB paymentResult:', JSON.stringify(paymentResult, null, 2));
+          }
 
           if (paymentError) {
             console.error('Database payment processing error:', paymentError);

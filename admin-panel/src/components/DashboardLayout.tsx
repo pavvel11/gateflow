@@ -60,6 +60,12 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
                           {t('products')}
                         </Link>
                         <Link
+                          href="/dashboard/order-bumps"
+                          className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                        >
+                          Order Bumps
+                        </Link>
+                        <Link
                           href="/dashboard/users"
                           className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                         >
@@ -178,6 +184,13 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         {t('products')}
+                      </Link>
+                      <Link
+                        href="/dashboard/order-bumps"
+                        className="block px-3 py-2 text-base font-medium text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        Order Bumps
                       </Link>
                       <Link
                         href="/dashboard/users"

@@ -24,6 +24,7 @@ export class CheckoutError extends Error {
 export interface CreateCheckoutRequest {
   productId: string;
   email?: string;
+  bumpProductId?: string; // Optional order bump product ID
 }
 
 export interface CreateCheckoutResponse {
@@ -59,6 +60,7 @@ export interface UserAccessData {
 // Checkout session options
 export interface CheckoutSessionOptions {
   product: ProductForCheckout;
+  bumpProduct?: ProductForCheckout; // Optional order bump product
   email?: string;
   userId?: string;
   returnUrl: string;

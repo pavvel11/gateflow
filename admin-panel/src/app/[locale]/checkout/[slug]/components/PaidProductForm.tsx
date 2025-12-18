@@ -10,6 +10,7 @@ import { signOutAndRedirectToCheckout } from '@/lib/actions/checkout';
 import { useRouter } from 'next/navigation';
 import { embeddedCheckoutOptions } from '@/lib/stripe/config';
 import { useConfig } from '@/components/providers/config-provider';
+import { useOrderBumps } from '@/hooks/useOrderBumps';
 
 interface PaidProductFormProps {
   product: Product;
@@ -24,6 +25,13 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
   const [hasAccess, setHasAccess] = useState(false);
   const [countdown, setCountdown] = useState(5);
 
+  // Order bump state
+  const { orderBump } = useOrderBumps(product.id);
+  const [bumpSelected, setBumpSelected] = useState(false);
+
+  // Check if currency matches (Stripe requires same currency for all line items)
+  const isCurrencyMatching = orderBump && product.currency.toLowerCase() === orderBump.bump_currency.toLowerCase();
+
   // Handle sign out and redirect to checkout as guest
   const handleSignOutAndCheckout = async () => {
     try {
@@ -35,10 +43,14 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
     }
   };
 
-  // Handle immediate redirect to product
+  // Handle immediate redirect to product or dashboard
   const handleRedirectToProduct = useCallback(() => {
-    router.push(`/p/${product.slug}`);
-  }, [product.slug, router]);
+    if (bumpSelected) {
+      router.push('/my-products');
+    } else {
+      router.push(`/p/${product.slug}`);
+    }
+  }, [product.slug, router, bumpSelected]);
 
   // Countdown effect for auto-redirect
   useEffect(() => {
@@ -61,6 +73,7 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
         body: JSON.stringify({
           productId: product.id,
           email: user?.email,
+          bumpProductId: bumpSelected && orderBump ? orderBump.bump_product_id : undefined,
         }),
       });
 
@@ -83,7 +96,7 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
       setError('Failed to load checkout. Please try again later.');
       throw err;
     }
-  }, [product.id, user?.email]);
+  }, [product.id, user?.email, bumpSelected, orderBump]);
 
   const renderProductInfo = () => (
     <div className="w-1/2 pr-8 border-r border-white/10">
@@ -120,7 +133,101 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
           </div>
         </div>
       )}
-      
+
+      {/* Order Bump - special offer */}
+      {orderBump && isCurrencyMatching && !hasAccess && !error && (
+        <div 
+          onClick={() => setBumpSelected(!bumpSelected)}
+          className={`
+            relative mb-6 group cursor-pointer overflow-hidden rounded-2xl border transition-all duration-300 ease-out
+            ${bumpSelected 
+              ? 'border-amber-400/50 bg-amber-950/20 shadow-[0_0_40px_-10px_rgba(251,191,36,0.15)]' 
+              : 'border-white/10 bg-white/5 hover:border-amber-400/30 hover:bg-white/10'}
+          `}
+        >
+          {/* Glow effects */}
+          <div className={`absolute -top-24 -right-24 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl transition-opacity duration-500 ${bumpSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`} />
+          
+          <div className="relative p-5 flex items-start gap-4">
+            {/* Custom Checkbox */}
+            <div className={`
+              mt-1 flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300
+              ${bumpSelected 
+                ? 'border-amber-400 bg-amber-400 text-slate-900 scale-110' 
+                : 'border-white/30 group-hover:border-amber-400/50 bg-white/5'}
+            `}>
+              <svg className={`w-4 h-4 transition-transform duration-300 ${bumpSelected ? 'scale-100' : 'scale-0'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+
+            <div className="flex-1">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+                <div className="flex items-center gap-3">
+                  {orderBump.bump_product_icon && (
+                    <span className="text-2xl">{orderBump.bump_product_icon}</span>
+                  )}
+                  <div>
+                    <h3 className={`text-lg font-bold transition-colors ${bumpSelected ? 'text-amber-100' : 'text-white group-hover:text-amber-50'}`}>
+                      {orderBump.bump_title}
+                    </h3>
+                    
+                    {/* Duration Badge */}
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className={`
+                        inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border
+                        ${bumpSelected 
+                          ? 'bg-amber-400/10 text-amber-300 border-amber-400/20' 
+                          : 'bg-white/5 text-gray-400 border-white/10 group-hover:border-amber-400/10'}
+                      `}>
+                        {orderBump.bump_access_duration && orderBump.bump_access_duration > 0 ? (
+                          <>
+                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {orderBump.bump_access_duration} Days Access
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            Lifetime Access
+                          </>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Price Section */}
+                <div className="text-left sm:text-right mt-2 sm:mt-0 bg-black/20 sm:bg-transparent p-2 sm:p-0 rounded-lg">
+                  {orderBump.original_price > orderBump.bump_price && (
+                    <div className="text-xs text-gray-400 line-through decoration-gray-500 mb-0.5">
+                      {formatPrice(orderBump.original_price, orderBump.bump_currency)} {orderBump.bump_currency}
+                    </div>
+                  )}
+                  <div className="text-xl font-black text-amber-400 leading-none tracking-tight filter drop-shadow-lg">
+                    {formatPrice(orderBump.bump_price, orderBump.bump_currency)} {orderBump.bump_currency}
+                  </div>
+                  {orderBump.original_price > orderBump.bump_price && (
+                    <div className="text-[10px] font-bold text-green-400 mt-1 uppercase tracking-wide">
+                      Save {formatPrice(orderBump.original_price - orderBump.bump_price, orderBump.bump_currency)}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {orderBump.bump_description && (
+                <p className={`text-sm leading-relaxed transition-colors ${bumpSelected ? 'text-amber-100/80' : 'text-gray-400 group-hover:text-gray-300'}`}>
+                  {orderBump.bump_description}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 border border-white/20">
         <h2 className="text-xl font-semibold text-white mb-4">Complete Your Purchase</h2>
         
@@ -177,6 +284,7 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
         {/* Only show checkout if no error and user doesn't have access */}
         {!error && !hasAccess && (
           <EmbeddedCheckoutProvider
+            key={`${product.id}-${bumpSelected}`}
             stripe={stripePromise}
             options={embeddedCheckoutOptions(fetchClientSecret)}
           >

@@ -146,7 +146,7 @@ CREATE TABLE IF NOT EXISTS guest_purchases (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   customer_email TEXT NOT NULL CHECK (public.validate_email_format(customer_email)),
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
-  transaction_amount NUMERIC NOT NULL CHECK (transaction_amount > 0 AND transaction_amount <= 99999999), -- Amount in cents, max $999,999.99
+  transaction_amount NUMERIC NOT NULL CHECK (transaction_amount >= 0 AND transaction_amount <= 99999999), -- Amount in cents, max $999,999.99
   session_id TEXT NOT NULL CHECK (
     length(session_id) BETWEEN 1 AND 255 AND 
     session_id ~* '^cs_[a-zA-Z0-9_]+$'
