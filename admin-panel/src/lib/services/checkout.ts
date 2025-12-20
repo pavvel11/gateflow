@@ -147,6 +147,19 @@ export class CheckoutService {
    */
   async createStripeSession(options: CheckoutSessionOptions): Promise<{ clientSecret: string; sessionId: string }> {
     try {
+      const { coupon } = options;
+      
+      // Calculate discounted price for main product
+      let mainProductPrice = options.product.price;
+      if (coupon) {
+        if (coupon.discount_type === 'percentage') {
+          mainProductPrice = mainProductPrice * (1 - coupon.discount_value / 100);
+        } else if (coupon.discount_type === 'fixed') {
+          // Subtract fixed amount from main product, minimum $0.50 (Stripe min)
+          mainProductPrice = Math.max(0.5, mainProductPrice - coupon.discount_value);
+        }
+      }
+
       // Build line items array (main product + optional bump)
       const lineItems = [
         {
@@ -156,7 +169,7 @@ export class CheckoutService {
               name: options.product.name,
               description: options.product.description || undefined,
             },
-            unit_amount: Math.round(options.product.price * 100),
+            unit_amount: Math.round(mainProductPrice * 100),
           },
           quantity: 1,
         },
@@ -164,6 +177,12 @@ export class CheckoutService {
 
       // Add bump product as second line item if provided
       if (options.bumpProduct) {
+        let bumpPrice = options.bumpProduct.price;
+        // Percentage discounts apply to bump unless excluded
+        if (coupon && coupon.discount_type === 'percentage' && !coupon.exclude_order_bumps) {
+          bumpPrice = bumpPrice * (1 - coupon.discount_value / 100);
+        }
+        
         lineItems.push({
           price_data: {
             currency: options.bumpProduct.currency.toLowerCase(),
@@ -171,7 +190,7 @@ export class CheckoutService {
               name: options.bumpProduct.name,
               description: options.bumpProduct.description || undefined,
             },
-            unit_amount: Math.round(options.bumpProduct.price * 100),
+            unit_amount: Math.round(bumpPrice * 100),
           },
           quantity: 1,
         });
@@ -194,6 +213,12 @@ export class CheckoutService {
           ...(options.bumpProduct && {
             bump_product_id: options.bumpProduct.id,
             has_bump: 'true',
+          }),
+          // Add coupon metadata if present
+          ...(coupon && {
+            coupon_id: coupon.id,
+            coupon_code: coupon.code,
+            has_coupon: 'true'
           }),
         },
         expires_at: Math.floor(Date.now() / 1000) + (STRIPE_CONFIG.session.expires_hours * 60 * 60),
@@ -301,13 +326,44 @@ export class CheckoutService {
       }
     }
 
+    // Handle coupon verification
+    let couponInfo: any = undefined;
+    if (request.couponCode) {
+      console.log(`🎟 Verifying coupon: ${request.couponCode} for email: ${request.email}`);
+      try {
+        const { data: vResult } = await this.supabase.rpc('verify_coupon', {
+          code_param: request.couponCode.toUpperCase(),
+          product_id_param: product.id,
+          customer_email_param: request.email || null
+        });
+
+        console.log(`🎟 Coupon verification result:`, JSON.stringify(vResult, null, 2));
+
+        if (vResult && vResult.valid) {
+          couponInfo = {
+            id: vResult.id,
+            code: vResult.code,
+            discount_type: vResult.discount_type,
+            discount_value: vResult.discount_value,
+            exclude_order_bumps: vResult.exclude_order_bumps
+          };
+          console.log(`🎟 Discount applied: ${couponInfo.discount_type} ${couponInfo.discount_value}`);
+        }
+      } catch (error) {
+        console.error('Error verifying coupon during checkout:', error);
+      }
+    } else {
+      console.log('🎟 No coupon code provided in request');
+    }
+
     // Create Stripe session
     return await this.createStripeSession({
       product,
       bumpProduct,
       email: request.email,
       userId,
-      returnUrl
+      returnUrl,
+      coupon: couponInfo
     });
   }
 }

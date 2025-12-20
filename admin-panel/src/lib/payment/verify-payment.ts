@@ -141,6 +141,10 @@ export async function verifyPaymentSession(
           // Extract bump product ID from metadata if present
           const bumpProductId = session.metadata?.bump_product_id || null;
           const hasBump = session.metadata?.has_bump === 'true';
+          
+          // Extract coupon ID from metadata if present
+          const couponId = session.metadata?.coupon_id || null;
+          const hasCoupon = session.metadata?.has_coupon === 'true';
 
           // Use new function that supports order bumps
           const rpcParams = {
@@ -151,7 +155,8 @@ export async function verifyPaymentSession(
             currency_param: session.currency || 'usd',
             stripe_payment_intent_id: stripePaymentIntentId || null,
             user_id_param: user?.id || null,
-            bump_product_id_param: hasBump && bumpProductId ? bumpProductId : null
+            bump_product_id_param: hasBump && bumpProductId ? bumpProductId : null,
+            coupon_id_param: hasCoupon && couponId ? couponId : null
           };
           
           console.log('Calling process_stripe_payment_completion_with_bump with:', JSON.stringify(rpcParams, null, 2));

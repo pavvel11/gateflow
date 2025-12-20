@@ -12,7 +12,8 @@ CREATE OR REPLACE FUNCTION process_stripe_payment_completion_with_bump(
     currency_param TEXT,
     stripe_payment_intent_id TEXT DEFAULT NULL,
     user_id_param UUID DEFAULT NULL,
-    bump_product_id_param UUID DEFAULT NULL
+    bump_product_id_param UUID DEFAULT NULL,
+    coupon_id_param UUID DEFAULT NULL  -- NEW: Optional coupon ID
 ) RETURNS JSONB AS $$
 DECLARE
     current_user_id UUID;
@@ -22,6 +23,7 @@ DECLARE
     access_expires_at TIMESTAMPTZ := NULL;
     bump_access_expires_at TIMESTAMPTZ := NULL;
     bump_found BOOLEAN := false;
+    transaction_id_var UUID; -- NEW
 BEGIN
     -- Initialize record variable
     bump_product_record := NULL;
@@ -129,10 +131,34 @@ BEGIN
         ) VALUES (
             session_id_param, current_user_id, product_id_param, customer_email_param, amount_total, upper(currency_param), 
             stripe_payment_intent_id, 'completed',
-            jsonb_build_object('has_bump', bump_found, 'bump_product_id', bump_product_id_param)
-        );
+            jsonb_build_object(
+                'has_bump', bump_found, 
+                'bump_product_id', bump_product_id_param,
+                'has_coupon', coupon_id_param IS NOT NULL,
+                'coupon_id', coupon_id_param
+            )
+        ) RETURNING id INTO transaction_id_var;
 
-        -- SCENARIO 1: Logged-in user
+        -- HANDLE COUPON REDEMPTION
+        IF coupon_id_param IS NOT NULL THEN
+            -- Insert redemption record
+            INSERT INTO public.coupon_redemptions (
+                coupon_id, user_id, customer_email, transaction_id, discount_amount
+            ) VALUES (
+                coupon_id_param, 
+                COALESCE(current_user_id, existing_user_id), 
+                customer_email_param, 
+                transaction_id_var, 
+                0 -- Amount tracking could be improved later
+            );
+            
+            -- Update usage count
+            UPDATE public.coupons 
+            SET current_usage_count = current_usage_count + 1 
+            WHERE id = coupon_id_param;
+        END IF;
+
+        -- SCENARIO 1: Logged-in user purchasing
         IF current_user_id IS NOT NULL THEN
             PERFORM public.grant_product_access_service_role(current_user_id, product_id_param);
             IF bump_found THEN

@@ -6,7 +6,7 @@ import { PaymentStatus } from './types';
 
 interface PageProps {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<{ session_id?: string }>;
+  searchParams: Promise<{ session_id?: string; success_url?: string }>;
 }
 
 export default async function PaymentStatusPage({ params, searchParams }: PageProps) {
@@ -30,7 +30,7 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
   // Get product details
   const { data: product, error: productError } = await supabase
     .from('products')
-    .select('id, name, slug, description, icon')
+    .select('id, name, slug, description, icon, success_redirect_url, pass_params_to_redirect')
     .eq('slug', resolvedParams.slug)
     .single();
 
@@ -49,6 +49,8 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
     if (isStripePayment) {
       // Handle paid product with Stripe session using direct function call
       const result = await verifyPaymentSession(session_id, user);
+      customerEmail = result.customer_email || '';
+      
       console.log('Payment verification result:', {
         scenario: result.scenario,
         access_granted: result.access_granted,
@@ -72,7 +74,6 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
           if (result.scenario === 'existing_user_email' && result.requires_login && result.send_magic_link) {
             // User exists but needs to login - let frontend handle magic link
             paymentStatus = 'magic_link_sent';
-            customerEmail = result.customer_email || '';
           }
         } else if (result.scenario === 'email_validation_failed_server_side') {
           // Email validation failed without refund
@@ -81,7 +82,6 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
         } else if (result.is_guest_purchase && result.send_magic_link) {
           // Guest purchase saved - let frontend handle magic link
           paymentStatus = 'magic_link_sent';
-          customerEmail = result.customer_email || '';
         } else {
           errorMessage = result.error || 'Unknown error occurred';
           paymentStatus = 'failed';
@@ -97,6 +97,8 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
       if (!user) {
         redirect('/login');
       }
+      
+      customerEmail = user.email || '';
       
       const { data: existingAccess } = await supabase
         .from('user_product_access')
@@ -144,6 +146,56 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
     errorMessage = 'An error occurred while verifying payment status';
   }
 
+  // Calculate Funnel/OTO Redirect URL
+  let finalRedirectUrl: string | undefined = undefined;
+
+  if (accessGranted && paymentStatus === 'completed') {
+    const params = resolvedSearchParams;
+    const overrideRedirectUrl = params.success_url;
+    const targetUrl = overrideRedirectUrl || product.success_redirect_url;
+
+    if (targetUrl) {
+      if (product.pass_params_to_redirect) {
+        try {
+          let urlObj: URL;
+          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+          if (targetUrl.startsWith('/')) {
+            // Relative URL - use base URL
+            urlObj = new URL(targetUrl, baseUrl);
+          } else if (targetUrl.startsWith('http')) {
+            // Absolute URL
+            urlObj = new URL(targetUrl);
+          } else {
+            // Domain only - assume https
+            urlObj = new URL(`https://${targetUrl}`);
+          }
+          
+          if (customerEmail) urlObj.searchParams.set('email', customerEmail);
+          urlObj.searchParams.set('productId', product.id);
+          if (session_id) urlObj.searchParams.set('sessionId', session_id);
+          
+          // Pass all other incoming search params except internal ones
+          Object.keys(params).forEach(key => {
+            if (!['session_id', 'success_url'].includes(key)) {
+              const val = params[key as keyof typeof params];
+              if (val) urlObj.searchParams.set(key, val);
+            }
+          });
+
+          finalRedirectUrl = urlObj.toString();
+        } catch (e) {
+          console.error('Error parsing redirect URL:', targetUrl);
+          // Fallback to raw URL if parsing fails, but respect relative paths
+          finalRedirectUrl = targetUrl;
+        }
+      } else {
+        finalRedirectUrl = targetUrl;
+      }
+      console.log('OTO Redirect configured:', finalRedirectUrl);
+    }
+  }
+
   // Check if terms are already handled:
   // 1. Stripe collects terms of service, OR
   // 2. User is authenticated (already accepted during registration), OR
@@ -162,6 +214,7 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
       customerEmail={customerEmail}
       sessionId={session_id}
       termsAlreadyHandled={termsAlreadyHandled}
+      redirectUrl={finalRedirectUrl}
     />
   );
 }

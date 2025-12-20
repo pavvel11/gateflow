@@ -25,6 +25,7 @@ export interface CreateCheckoutRequest {
   productId: string;
   email?: string;
   bumpProductId?: string; // Optional order bump product ID
+  couponCode?: string; // NEW: Optional discount code
 }
 
 export interface CreateCheckoutResponse {
@@ -64,4 +65,11 @@ export interface CheckoutSessionOptions {
   email?: string;
   userId?: string;
   returnUrl: string;
+  coupon?: {
+    id: string;
+    code: string;
+    discount_type: 'percentage' | 'fixed';
+    discount_value: number;
+    exclude_order_bumps?: boolean;
+  };
 }

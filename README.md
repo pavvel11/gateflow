@@ -27,6 +27,12 @@ GateFlow is a comprehensive content access control and monetization platform tha
 - **Refund Management**: Built-in refund tracking and administration
 - **Lead Generation**: Offer free products in exchange for email registration to build newsletter base
 
+### 🚀 **Marketing & Conversion**
+
+- **Smart Coupons**: Advanced discount system (percentage, fixed amount) with email/product restrictions and frictionless auto-apply links.
+- **Order Bumps**: One-click upsell offers directly in the checkout flow to increase Average Order Value (AOV).
+- **Sales Funnels (OTO)**: Post-purchase redirect logic to create simple One-Time Offer flows and thank-you pages.
+
 ### 🎨 **Rich User Experience**
 
 - **Magic Link Authentication**: Passwordless login via email

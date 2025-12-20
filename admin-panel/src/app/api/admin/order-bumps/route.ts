@@ -78,7 +78,8 @@ export async function GET(request: NextRequest) {
           bump_product:products!order_bumps_bump_product_id_fkey(id, name, slug, price, currency)
         `
         )
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: true });
 
       if (error) {
         console.error('Error fetching all order bumps:', error);

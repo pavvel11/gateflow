@@ -8,13 +8,15 @@ interface UseCountdownParams {
   accessGranted: boolean;
   isUserAuthenticated: boolean | null;
   productSlug: string;
+  redirectUrl?: string;
 }
 
 export function useCountdown({ 
   paymentStatus, 
   accessGranted, 
   isUserAuthenticated, 
-  productSlug 
+  productSlug,
+  redirectUrl
 }: UseCountdownParams) {
   const [countdown, setCountdown] = useState(COUNTDOWN_START);
   const router = useRouter();
@@ -25,14 +27,18 @@ export function useCountdown({
         if (countdown > 1) {
           setCountdown(countdown - 1);
         } else {
-          // Redirect back to product page
-          router.push(`/p/${productSlug}`);
+          // Redirect to custom URL or back to product page
+          if (redirectUrl) {
+            router.push(redirectUrl);
+          } else {
+            router.push(`/p/${productSlug}`);
+          }
         }
       }, 1000);
 
       return () => clearTimeout(timer);
     }
-  }, [countdown, router, productSlug, paymentStatus, accessGranted, isUserAuthenticated]);
+  }, [countdown, router, productSlug, paymentStatus, accessGranted, isUserAuthenticated, redirectUrl]);
 
   return countdown;
 }

@@ -13,6 +13,7 @@ interface UsePaymentStatusParams {
   product: Product;
   accessGranted: boolean;
   termsAlreadyHandled: boolean;
+  redirectUrl?: string;
 }
 
 export function usePaymentStatus({
@@ -22,6 +23,7 @@ export function usePaymentStatus({
   product,
   accessGranted,
   termsAlreadyHandled,
+  redirectUrl,
 }: UsePaymentStatusParams) {
   const terms = useTerms(termsAlreadyHandled);
   const turnstile = useTurnstile();
@@ -36,6 +38,7 @@ export function usePaymentStatus({
     accessGranted, 
     isUserAuthenticated: auth.isAuthenticated,
     productSlug: product.slug,
+    redirectUrl,
   });
   
   const windowDimensions = useWindowDimensions();

@@ -30,6 +30,7 @@ export interface PaymentStatusViewProps {
   customerEmail?: string;
   sessionId?: string;
   termsAlreadyHandled: boolean;
+  redirectUrl?: string;
 }
 
 export interface AuthStatus {

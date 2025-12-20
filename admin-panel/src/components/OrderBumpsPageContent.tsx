@@ -1,3 +1,14 @@
+/**
+ * Order Bumps Management Page Component
+ * 
+ * 🤖 AI MAINTAINER NOTE:
+ * Manages complementary product offers (upsells) displayed on the checkout page.
+ * Key features:
+ * - Links a main product to a bump product with a special price.
+ * - Supports custom access duration for the bump product.
+ * - Stable sorting by created_at DESC.
+ */
+
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -22,6 +33,7 @@ interface OrderBumpWithDetails {
     id: string;
     name: string;
     slug: string;
+    currency: string;
   };
   bump_product: {
     id: string;
@@ -83,7 +95,7 @@ const OrderBumpsPageContent: React.FC = () => {
       const data = await response.json();
       setOrderBumps(data || []);
     } catch (err) {
-      setError('Failed to load order bumps. Please try again later.');
+      setError('Failed to load order bumps');
       console.error('Error:', err);
     } finally {
       setLoading(false);
@@ -97,15 +109,7 @@ const OrderBumpsPageContent: React.FC = () => {
   }, [fetchOrderBumps, fetchProducts]);
 
   // CRUD Handlers
-  const handleCreateBump = async (formData: {
-    main_product_id: string;
-    bump_product_id: string;
-    bump_price: number | null;
-    bump_title: string;
-    bump_description: string | null;
-    is_active: boolean;
-    display_order: number;
-  }) => {
+  const handleCreateBump = async (formData: any) => {
     setSubmitting(true);
     try {
       const response = await fetch('/api/admin/order-bumps', {
@@ -121,7 +125,7 @@ const OrderBumpsPageContent: React.FC = () => {
 
       setShowBumpForm(false);
       await fetchOrderBumps();
-      addToast('Order bump created successfully', 'success');
+      addToast(t('createSuccess'), 'success');
     } catch (err) {
       addToast(err instanceof Error ? err.message : 'Failed to create order bump', 'error');
       return Promise.reject(err);
@@ -130,14 +134,7 @@ const OrderBumpsPageContent: React.FC = () => {
     }
   };
 
-  const handleUpdateBump = async (formData: {
-    bump_product_id?: string;
-    bump_price?: number | null;
-    bump_title?: string;
-    bump_description?: string | null;
-    is_active?: boolean;
-    display_order?: number;
-  }) => {
+  const handleUpdateBump = async (formData: any) => {
     if (!editingBump) return Promise.reject(new Error('No bump selected for editing'));
     setSubmitting(true);
 
@@ -156,7 +153,7 @@ const OrderBumpsPageContent: React.FC = () => {
       setShowBumpForm(false);
       setEditingBump(null);
       await fetchOrderBumps();
-      addToast('Order bump updated successfully', 'success');
+      addToast(t('updateSuccess'), 'success');
     } catch (err) {
       addToast(err instanceof Error ? err.message : 'Failed to update order bump', 'error');
       return Promise.reject(err);
@@ -178,7 +175,7 @@ const OrderBumpsPageContent: React.FC = () => {
 
       setBumpToDelete(null);
       await fetchOrderBumps();
-      addToast('Order bump deleted successfully', 'success');
+      addToast(t('deleteSuccess'), 'success');
     } catch (err) {
       addToast(err instanceof Error ? err.message : 'Failed to delete order bump', 'error');
     }
@@ -199,7 +196,7 @@ const OrderBumpsPageContent: React.FC = () => {
 
       await fetchOrderBumps();
       addToast(
-        `Order bump ${!bump.is_active ? 'activated' : 'deactivated'} successfully`,
+        t('toggleSuccess', { status: t(!bump.is_active ? 'activated' : 'deactivated') }),
         'success'
       );
     } catch (err) {
@@ -213,10 +210,10 @@ const OrderBumpsPageContent: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Order Bumps
+            {t('title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Increase AOV with one-click upsells during checkout
+            {t('description')}
           </p>
         </div>
         <button
@@ -224,12 +221,12 @@ const OrderBumpsPageContent: React.FC = () => {
             setEditingBump(null);
             setShowBumpForm(true);
           }}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 shadow-sm"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          <span>Create Order Bump</span>
+          <span>{t('create')}</span>
         </button>
       </div>
 
@@ -238,7 +235,7 @@ const OrderBumpsPageContent: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total Bumps</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('stats.total')}</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                 {orderBumps.length}
               </p>
@@ -254,7 +251,7 @@ const OrderBumpsPageContent: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Active Bumps</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('stats.active')}</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                 {orderBumps.filter(b => b.is_active).length}
               </p>
@@ -270,7 +267,7 @@ const OrderBumpsPageContent: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Inactive Bumps</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('stats.inactive')}</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                 {orderBumps.filter(b => !b.is_active).length}
               </p>
@@ -291,9 +288,7 @@ const OrderBumpsPageContent: React.FC = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
         ) : error ? (
-          <div className="text-center p-12">
-            <p className="text-red-600 dark:text-red-400">{error}</p>
-          </div>
+          <div className="text-center p-12 text-red-500">{error}</div>
         ) : orderBumps.length === 0 ? (
           <div className="text-center p-12">
             <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -302,79 +297,63 @@ const OrderBumpsPageContent: React.FC = () => {
               </svg>
             </div>
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No order bumps yet
+              {t('noBumps')}
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Create your first order bump to increase average order value
-            </p>
             <button
               onClick={() => {
                 setEditingBump(null);
                 setShowBumpForm(true);
               }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
             >
-              Create Order Bump
+              {t('create')}
             </button>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Main Product
+                    {t('mainProduct')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Bump Product
+                    {t('bumpProduct')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Bump Title
+                    {t('price')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Price
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Status
+                    {t('status')}
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Actions
+                    {t('actions')}
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {orderBumps.map((bump) => (
-                  <tr key={bump.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <tr key={bump.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
                         {bump.main_product.name}
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                      <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">
                         /{bump.main_product.slug}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {bump.bump_product.name}
-                      </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        Regular: {bump.bump_product.price} {bump.bump_product.currency}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 dark:text-white max-w-xs truncate">
+                      <div className="text-sm font-semibold text-blue-600 dark:text-blue-400">
                         {bump.bump_title}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {bump.bump_product.name}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-amber-600 dark:text-amber-400">
-                        {bump.bump_price !== null ? bump.bump_price : bump.bump_product.price} {bump.bump_product.currency}
+                      <div className="text-sm font-bold text-gray-900 dark:text-white">
+                        {bump.bump_price !== null ? bump.bump_price : bump.bump_product.price} {bump.main_product.currency}
                       </div>
-                      {bump.bump_price !== null && bump.bump_price < bump.bump_product.price && (
-                        <div className="text-xs text-green-600 dark:text-green-400">
-                          Save {bump.bump_product.price - bump.bump_price}!
-                        </div>
-                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
@@ -385,11 +364,11 @@ const OrderBumpsPageContent: React.FC = () => {
                             : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                       >
-                        {bump.is_active ? 'Active' : 'Inactive'}
+                        {t(bump.is_active ? 'active' : 'inactive')}
                       </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end space-x-2">
+                      <div className="flex items-center justify-end space-x-3">
                         <button
                           onClick={() => {
                             setEditingBump(bump);
@@ -397,13 +376,13 @@ const OrderBumpsPageContent: React.FC = () => {
                           }}
                           className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                         >
-                          Edit
+                          {t('edit')}
                         </button>
                         <button
                           onClick={() => setBumpToDelete(bump)}
                           className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                         >
-                          Delete
+                          {t('delete')}
                         </button>
                       </div>
                     </td>
@@ -432,27 +411,26 @@ const OrderBumpsPageContent: React.FC = () => {
 
       {/* Delete Confirmation Modal */}
       {bumpToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Delete Order Bump?
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6 border border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+              {t('confirmDelete')}
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Are you sure you want to delete the order bump for{' '}
-              <strong>{bumpToDelete.main_product.name}</strong>? This action cannot be undone.
+              {t('deleteMessage')}
             </p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setBumpToDelete(null)}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
-                Cancel
+                {t('form.cancel')}
               </button>
               <button
                 onClick={() => handleDeleteBump(bumpToDelete)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-sm"
               >
-                Delete
+                {t('delete')}
               </button>
             </div>
           </div>

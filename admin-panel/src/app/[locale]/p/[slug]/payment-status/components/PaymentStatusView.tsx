@@ -21,6 +21,7 @@ export default function PaymentStatusView({
   customerEmail,
   sessionId,
   termsAlreadyHandled,
+  redirectUrl,
 }: PaymentStatusViewProps) {
   const t = useTranslations('paymentStatus');
   
@@ -38,6 +39,7 @@ export default function PaymentStatusView({
     product,
     accessGranted,
     termsAlreadyHandled,
+    redirectUrl,
   });
 
   const statusInfo = getStatusInfo(paymentStatus, t);

@@ -65,6 +65,10 @@ To execute SQL queries directly on the local database, use `docker exec` with th
     ```
     *Replace `supabase_db_gemini-test` with your actual container name if different.*
 
+**CRITICAL MANDATES for DB Changes:**
+- **Representative Data**: Always add realistic sample data to `supabase/seed.sql` whenever the schema changes.
+- **Verification**: Always test new migrations or functions using the `docker exec` method described above before finalizing.
+
 ## Deployment Policy
 
 **CRITICAL**: Deployment to the remote server (e.g., "mikrus") is **RESTRICTED**.

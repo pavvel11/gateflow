@@ -11,19 +11,44 @@ import { useRouter } from 'next/navigation';
 import { embeddedCheckoutOptions } from '@/lib/stripe/config';
 import { useConfig } from '@/components/providers/config-provider';
 import { useOrderBumps } from '@/hooks/useOrderBumps';
+import { useSearchParams } from 'next/navigation';
+import { useToast } from '@/contexts/ToastContext';
+import { useTranslations } from 'next-intl';
 
 interface PaidProductFormProps {
   product: Product;
 }
 
 export default function PaidProductForm({ product }: PaidProductFormProps) {
+  const t = useTranslations('checkout');
   const { user } = useAuth();
+  const { addToast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const config = useConfig();
   const stripePromise = loadStripe(config.stripePublishableKey);
+  
   const [error, setError] = useState<string | null>(null);
   const [hasAccess, setHasAccess] = useState(false);
   const [countdown, setCountdown] = useState(5);
+
+  // Email state for guests (to support auto-apply coupons)
+  const [guestEmail, setGuestEmail] = useState('');
+  const email = user?.email || guestEmail;
+
+  // Coupon state
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [isVerifyingCoupon, setIsVerifyingCoupon] = useState(false);
+  const [showCouponInput, setShowCouponInput] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponManuallyRemoved, setCouponManuallyRemoved] = useState(false);
+  const [lastCheckedUrlCoupon, setLastCheckedUrlCoupon] = useState<string | null>(null);
+
+  // Reset manual removal flag when email changes to allow auto-apply for new email
+  useEffect(() => {
+    setCouponManuallyRemoved(false);
+  }, [email]);
 
   // Order bump state
   const { orderBump } = useOrderBumps(product.id);
@@ -32,18 +57,87 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
   // Check if currency matches (Stripe requires same currency for all line items)
   const isCurrencyMatching = orderBump && product.currency.toLowerCase() === orderBump.bump_currency.toLowerCase();
 
-  // Handle sign out and redirect to checkout as guest
+  // Handle coupon verification
+  const handleVerifyCoupon = useCallback(async (code: string, currentEmail?: string) => {
+    if (!code) return;
+    setIsVerifyingCoupon(true);
+    setCouponError(null);
+    setCouponManuallyRemoved(false); 
+    try {
+      const res = await fetch('/api/coupons/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          code, 
+          productId: product.id, 
+          email: currentEmail || email 
+        }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setAppliedCoupon(data);
+        setCouponCode(data.code);
+        setShowCouponInput(true);
+      } else {
+        setCouponError(data.error || t('invalidCoupon'));
+        setAppliedCoupon(null);
+      }
+    } catch (err) {
+      setCouponError(t('verifyError'));
+    } finally {
+      setIsVerifyingCoupon(false);
+    }
+  }, [product.id, email, t]);
+
+  // Auto-apply logic for email change
+  useEffect(() => {
+    const checkAutoApply = async () => {
+      if (!email || appliedCoupon || couponManuallyRemoved) return;
+      try {
+        const res = await fetch('/api/coupons/auto-apply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, productId: product.id }),
+        });
+        const data = await res.json();
+        if (data.found) {
+          setAppliedCoupon(data);
+          setCouponCode(data.code);
+          addToast?.(t('discountApplied', { discount: '' }).replace('  ', ' '), 'success');
+        }
+      } catch (err) {
+        // Silent fail
+      }
+    };
+
+    const timer = setTimeout(checkAutoApply, 500);
+    return () => clearTimeout(timer);
+  }, [email, product.id, appliedCoupon, couponManuallyRemoved, addToast, t]);
+
+  // Handle URL coupon param
+  useEffect(() => {
+    const urlCoupon = searchParams.get('coupon');
+    const showPromo = searchParams.get('show_promo');
+    
+    if (showPromo === 'true') {
+      setShowCouponInput(true);
+    }
+    
+    if (urlCoupon && urlCoupon !== lastCheckedUrlCoupon) {
+      setLastCheckedUrlCoupon(urlCoupon);
+      handleVerifyCoupon(urlCoupon);
+    }
+  }, [searchParams, handleVerifyCoupon, lastCheckedUrlCoupon]);
+
   const handleSignOutAndCheckout = async () => {
     try {
       await signOutAndRedirectToCheckout();
-      // Reload the page to clear auth state and reload as guest
       window.location.reload();
     } catch {
-      // Silent error handling - this is expected behavior for user action
+      // Silent error
     }
   };
 
-  // Handle immediate redirect to product or dashboard
   const handleRedirectToProduct = useCallback(() => {
     if (bumpSelected) {
       router.push('/my-products');
@@ -52,7 +146,6 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
     }
   }, [product.slug, router, bumpSelected]);
 
-  // Countdown effect for auto-redirect
   useEffect(() => {
     if (hasAccess && countdown > 0) {
       const timer = setTimeout(() => {
@@ -64,7 +157,6 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
     }
   }, [hasAccess, countdown, handleRedirectToProduct]);
 
-  // Fetch client secret for Stripe checkout
   const fetchClientSecret = useCallback(async () => {
     try {
       const response = await fetch('/api/create-embedded-checkout', {
@@ -72,31 +164,29 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           productId: product.id,
-          email: user?.email,
+          email: email,
           bumpProductId: bumpSelected && orderBump ? orderBump.bump_product_id : undefined,
+          couponCode: appliedCoupon?.code,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        
-        // Special handling for already has access error
         if (errorData.error === 'You already have access to this product') {
           setHasAccess(true);
-          return ''; // Return empty string to prevent checkout from loading
+          return '';
         }
-        
-        setError(errorData.error || 'Failed to create checkout session');
-        throw new Error(errorData.error || 'Failed to create checkout session');
+        setError(errorData.error || t('createSessionError'));
+        throw new Error(errorData.error || t('createSessionError'));
       }
 
       const data = await response.json();
       return data.clientSecret;
     } catch (err) {
-      setError('Failed to load checkout. Please try again later.');
+      setError(t('loadError'));
       throw err;
     }
-  }, [product.id, user?.email, bumpSelected, orderBump]);
+  }, [product.id, email, bumpSelected, orderBump, appliedCoupon, t]);
 
   const renderProductInfo = () => (
     <div className="w-1/2 pr-8 border-r border-white/10">
@@ -115,27 +205,42 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
 
   const renderCheckoutForm = () => (
     <div className="w-1/2 pl-8">
-      {/* User notification if logged in */}
-      {user && (
-        <div className="mb-4 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+      {user ? (
+        <div className="mb-4 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-blue-300">Adres email</h3>
-              <p className="text-white">{user.email}</p>
-              <p className="text-gray-300 text-sm">Przypiszemy ten zakup do Twojego konta.</p>
+              <h3 className="text-sm font-medium text-blue-300">{t('emailAddress')}</h3>
+              <p className="text-white font-medium">{user.email}</p>
+              <p className="text-blue-300/60 text-xs mt-1">{t('linkedToAccount')}</p>
             </div>
             <button
               onClick={handleSignOutAndCheckout}
-              className="text-blue-400 hover:text-blue-300 text-sm underline"
+              className="text-blue-400 hover:text-blue-300 text-sm underline transition-colors"
             >
-              Kup na inne konto
+              {t('changeAccount')}
             </button>
           </div>
+        </div>
+      ) : (
+        <div className="mb-4 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+          <label className="block text-sm font-medium text-gray-300 ml-1">
+            {t('emailAddress')}
+          </label>
+          <input
+            type="email"
+            value={guestEmail}
+            onChange={(e) => setGuestEmail(e.target.value)}
+            placeholder={t('emailPlaceholder')}
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+          />
+          <p className="text-[10px] text-gray-500 ml-1">
+            {t('emailHelp')}
+          </p>
         </div>
       )}
 
       {/* Order Bump - special offer */}
-      {orderBump && isCurrencyMatching && !hasAccess && !error && (
+      {orderBump && isCurrencyMatching && !hasAccess && !error && searchParams.get('hide_bump') !== 'true' && (
         <div 
           onClick={() => setBumpSelected(!bumpSelected)}
           className={`
@@ -145,11 +250,9 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
               : 'border-white/10 bg-white/5 hover:border-amber-400/30 hover:bg-white/10'}
           `}
         >
-          {/* Glow effects */}
           <div className={`absolute -top-24 -right-24 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl transition-opacity duration-500 ${bumpSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`} />
           
           <div className="relative p-5 flex items-start gap-4">
-            {/* Custom Checkbox */}
             <div className={`
               mt-1 flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300
               ${bumpSelected 
@@ -172,7 +275,6 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
                       {orderBump.bump_title}
                     </h3>
                     
-                    {/* Duration Badge */}
                     <div className="mt-1 flex items-center gap-2">
                       <span className={`
                         inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border
@@ -185,14 +287,14 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
                             <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            {orderBump.bump_access_duration} Days Access
+                            {t('daysAccess', { days: orderBump.bump_access_duration })}
                           </>
                         ) : (
                           <>
                             <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
-                            Lifetime Access
+                            {t('lifetimeAccess')}
                           </>
                         )}
                       </span>
@@ -200,7 +302,6 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
                   </div>
                 </div>
 
-                {/* Price Section */}
                 <div className="text-left sm:text-right mt-2 sm:mt-0 bg-black/20 sm:bg-transparent p-2 sm:p-0 rounded-lg">
                   {orderBump.original_price > orderBump.bump_price && (
                     <div className="text-xs text-gray-400 line-through decoration-gray-500 mb-0.5">
@@ -212,7 +313,7 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
                   </div>
                   {orderBump.original_price > orderBump.bump_price && (
                     <div className="text-[10px] font-bold text-green-400 mt-1 uppercase tracking-wide">
-                      Save {formatPrice(orderBump.original_price - orderBump.bump_price, orderBump.bump_currency)}
+                      {t('saveAmount', { amount: formatPrice(orderBump.original_price - orderBump.bump_price, orderBump.bump_currency) })}
                     </div>
                   )}
                 </div>
@@ -228,10 +329,74 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
         </div>
       )}
 
-      <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 border border-white/20">
-        <h2 className="text-xl font-semibold text-white mb-4">Complete Your Purchase</h2>
+      {!hasAccess && !error && (
+        <div className="mb-4">
+          {(showCouponInput || appliedCoupon) && (
+            <div className="animate-in fade-in slide-in-from-top-1 duration-300">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    placeholder={t('couponPlaceholder')}
+                    disabled={appliedCoupon || isVerifyingCoupon}
+                    className={`
+                      w-full px-3 py-2 bg-white/5 border rounded-lg text-sm transition-all outline-none
+                      ${appliedCoupon ? 'border-green-500/50 text-green-400 bg-green-500/5' : 'border-white/10 focus:border-blue-500/50'}
+                    `}
+                  />
+                  {appliedCoupon && (
+                    <div className="absolute right-3 inset-y-0 flex items-center">
+                      <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                {!appliedCoupon ? (
+                  <button
+                    onClick={() => handleVerifyCoupon(couponCode)}
+                    disabled={!couponCode || isVerifyingCoupon}
+                    className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition-all disabled:opacity-50"
+                  >
+                    {isVerifyingCoupon ? t('verifying') : t('applyCoupon')}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => { 
+                      setAppliedCoupon(null); 
+                      setCouponCode('');
+                      setCouponManuallyRemoved(true); 
+                    }}
+                    className="px-2 py-2 text-gray-500 hover:text-red-400 transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              {couponError && !appliedCoupon && (
+                <p className="text-[10px] text-red-400 mt-1 ml-1">{couponError}</p>
+              )}
+              {appliedCoupon && (
+                <p className="text-[10px] text-green-400 mt-1 ml-1 font-medium uppercase tracking-wider">
+                  🎉 {t('discountApplied', { discount: appliedCoupon.discount_type === 'percentage' ? `${appliedCoupon.discount_value}%` : `${appliedCoupon.discount_value} ${product.currency}` })}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 border border-white/20 shadow-xl relative overflow-hidden">
+        {isVerifyingCoupon && (
+          <div className="absolute top-0 left-0 h-0.5 bg-blue-500 animate-pulse w-full" />
+        )}
         
-        {/* Error message */}
+        <h2 className="text-xl font-semibold text-white mb-4">{t('title')}</h2>
+        
         {error && (
           <div className="mb-4 p-6 bg-gradient-to-r from-red-900/30 to-rose-900/30 border border-red-500/40 rounded-xl backdrop-blur-sm">
             <div className="flex items-center">
@@ -241,14 +406,13 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-red-300 mb-1">Payment Error</h3>
+                <h3 className="text-lg font-semibold text-red-300 mb-1">{t('paymentError')}</h3>
                 <p className="text-red-100/90 text-sm">{error}</p>
               </div>
             </div>
           </div>
         )}
         
-        {/* Show success message if user already has access */}
         {hasAccess && (
           <div className="mb-4 p-6 bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-500/40 rounded-xl backdrop-blur-sm">
             <div className="flex items-center justify-between">
@@ -259,15 +423,15 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-green-300 mb-1">Access Granted!</h3>
+                  <h3 className="text-lg font-semibold text-green-300 mb-1">{t('accessGranted')}</h3>
                   <p className="text-green-100/90 text-sm">
-                    You already have access to this product.
+                    {t('alreadyHasAccess')}
                   </p>
                   <p className="text-green-200/70 text-xs mt-1 flex items-center">
                     <svg className="w-3 h-3 mr-1 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    Auto-redirecting in {countdown} seconds...
+                    {t('autoRedirect', { seconds: countdown })}
                   </p>
                 </div>
               </div>
@@ -275,16 +439,15 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
                 onClick={handleRedirectToProduct}
                 className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-all duration-200 font-medium text-sm shadow-lg hover:shadow-xl transform hover:scale-105"
               >
-                Go to Product
+                {t('goToProduct')}
               </button>
             </div>
           </div>
         )}
         
-        {/* Only show checkout if no error and user doesn't have access */}
         {!error && !hasAccess && (
           <EmbeddedCheckoutProvider
-            key={`${product.id}-${bumpSelected}`}
+            key={`${product.id}-${bumpSelected}-${appliedCoupon?.id || 'no-coupon'}`}
             stripe={stripePromise}
             options={embeddedCheckoutOptions(fetchClientSecret)}
           >

@@ -34,6 +34,11 @@ CREATE TABLE IF NOT EXISTS products (
   content_delivery_type TEXT DEFAULT 'content' NOT NULL CHECK (content_delivery_type IN ('redirect', 'content')),
   content_config JSONB DEFAULT '{}' NOT NULL, -- Flexible content configuration
   tenant_id TEXT CHECK (tenant_id IS NULL OR (tenant_id ~ '^[a-zA-Z0-9_-]+$' AND length(tenant_id) BETWEEN 1 AND 50)), -- Multi-tenant ID: alphanumeric, hyphens, underscores
+  
+  -- Funnel / OTO settings
+  success_redirect_url TEXT, -- URL to redirect after successful purchase/signup
+  pass_params_to_redirect BOOLEAN DEFAULT false NOT NULL, -- Whether to pass email and other params to the redirect URL
+  
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   

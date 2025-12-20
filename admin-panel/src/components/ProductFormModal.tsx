@@ -40,6 +40,9 @@ export interface ProductFormData {
     redirect_url?: string;
     content_items?: ContentItem[]; // We'll manage content items separately
   };
+  // Funnel / OTO settings
+  success_redirect_url?: string | null;
+  pass_params_to_redirect: boolean;
 }
 
 const ProductFormModal: React.FC<ProductFormModalProps> = ({
@@ -66,7 +69,9 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
     content_delivery_type: 'content',
     content_config: {
       content_items: []
-    }
+    },
+    success_redirect_url: '',
+    pass_params_to_redirect: false
   });
   
   // Separate state for the displayed price input value
@@ -75,6 +80,10 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const [slugModified, setSlugModified] = useState(false);
   const [currentDomain, setCurrentDomain] = useState<string>('');
   const nameInputRef = useRef<HTMLInputElement>(null);
+
+  // Products list for OTO selection
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
 
   // URL validation state - maps content item index to validation status
   const [urlValidation, setUrlValidation] = useState<Record<number, { isValid: boolean; message: string }>>({});
@@ -95,7 +104,9 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         available_until: product.available_until || '',
         auto_grant_duration_days: product.auto_grant_duration_days || null,
         content_delivery_type: product.content_delivery_type || 'content',
-        content_config: product.content_config || { content_items: [] }
+        content_config: product.content_config || { content_items: [] },
+        success_redirect_url: product.success_redirect_url || '',
+        pass_params_to_redirect: product.pass_params_to_redirect || false
       });
       // Set display value for price - always show the value, even for zero
       setPriceDisplayValue(product.price.toString().replace('.', ','));
@@ -115,7 +126,9 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         available_until: '',
         auto_grant_duration_days: null,
         content_delivery_type: 'content',
-        content_config: { content_items: [] }
+        content_config: { content_items: [] },
+        success_redirect_url: '',
+        pass_params_to_redirect: false
       });
       setPriceDisplayValue('');
       setSlugModified(false);
@@ -129,6 +142,24 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
     }
   }, [product, isOpen]);
   
+  // Fetch products for OTO dropdown
+  useEffect(() => {
+    const fetchProducts = async () => {
+      if (!isOpen) return;
+      try {
+        setLoadingProducts(true);
+        const res = await fetch('/api/admin/products?limit=1000&status=active');
+        const data = await res.json();
+        setProducts(data.products || []);
+      } catch (err) {
+        console.error('Failed to fetch products', err);
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+    fetchProducts();
+  }, [isOpen]);
+
   // Get the current domain when the component mounts
   useEffect(() => {
     if (typeof window !== 'undefined' && isOpen) {
@@ -184,6 +215,54 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
       ...prev,
       [name]: checked
     }));
+  };
+
+  // Handler for product select dropdown
+  const handleProductSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedSlug = e.target.value;
+    if (!selectedSlug) return;
+    
+    // Preserve existing query params if any
+    const currentUrl = formData.success_redirect_url || '';
+    const queryParams = currentUrl.includes('?') ? currentUrl.split('?')[1] : '';
+    
+    // Construct new URL
+    const newUrl = `/checkout/${selectedSlug}${queryParams ? `?${queryParams}` : ''}`;
+    setFormData(prev => ({ ...prev, success_redirect_url: newUrl }));
+  };
+
+  // Handler for hide bump checkbox
+  const handleHideBumpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const isChecked = e.target.checked;
+    let currentUrl = formData.success_redirect_url || '';
+    
+    try {
+      // Use dummy base for relative URLs
+      const isRelative = currentUrl.startsWith('/');
+      const baseUrl = 'http://dummy.com';
+      const urlObj = new URL(currentUrl, baseUrl);
+      
+      if (isChecked) {
+        urlObj.searchParams.set('hide_bump', 'true');
+      } else {
+        urlObj.searchParams.delete('hide_bump');
+      }
+      
+      // Get the path + search
+      let newUrlString = isRelative 
+        ? urlObj.pathname + urlObj.search 
+        : urlObj.toString();
+        
+      setFormData(prev => ({ ...prev, success_redirect_url: newUrlString }));
+    } catch {
+      // Fallback for invalid URLs - simple string manipulation
+      if (isChecked && !currentUrl.includes('hide_bump=true')) {
+         const separator = currentUrl.includes('?') ? '&' : '?';
+         setFormData(prev => ({ ...prev, success_redirect_url: `${currentUrl}${separator}hide_bump=true` }));
+      } else if (!isChecked) {
+         setFormData(prev => ({ ...prev, success_redirect_url: currentUrl.replace(/[?&]hide_bump=true/, '') }));
+      }
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -651,7 +730,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     {t('redirectUrl')}
                   </label>
                   <input
-                    type="url"
+                    type="text"
                     placeholder={t('redirectPlaceholder')}
                     value={(formData.content_config as { redirect_url?: string })?.redirect_url || ''}
                     onChange={(e) => setFormData(prev => ({ 
@@ -1001,6 +1080,80 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   </div>
                 </div>
               )}
+            </div>
+          </ModalSection>
+
+          {/* Post-Purchase Redirect (Funnels/OTO) */}
+          <ModalSection title={t('postPurchase.title')}>
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <label htmlFor="success_redirect_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('postPurchase.redirectUrl')}
+                  <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">({t('postPurchase.optional')})</span>
+                </label>
+                
+                {/* Product Dropdown */}
+                <select
+                  onChange={handleProductSelect}
+                  className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  defaultValue=""
+                  disabled={loadingProducts}
+                >
+                  <option value="" disabled>{loadingProducts ? 'Loading...' : t('postPurchase.selectProductPlaceholder')}</option>
+                  {products.map(p => (
+                    <option key={p.id} value={p.slug}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+
+                <input
+                  type="text"
+                  id="success_redirect_url"
+                  name="success_redirect_url"
+                  value={formData.success_redirect_url || ''}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  placeholder={t('postPurchase.redirectUrlPlaceholder')}
+                />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {t('postPurchase.redirectUrlHelp')}
+                </p>
+              </div>
+
+              {/* Hide Order Bump Checkbox */}
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="hide_bump"
+                  checked={formData.success_redirect_url?.includes('hide_bump=true') || false}
+                  onChange={handleHideBumpChange}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="hide_bump" className="ml-3 block text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer">
+                  {t('postPurchase.hideBump')}
+                </label>
+              </div>
+              <p className="ml-7 text-xs text-gray-500 dark:text-gray-400">
+                {t('postPurchase.hideBumpHelp')}
+              </p>
+
+              <div className="flex items-center pt-2 border-t border-gray-200 dark:border-gray-700 mt-4">
+                <input
+                  type="checkbox"
+                  id="pass_params_to_redirect"
+                  name="pass_params_to_redirect"
+                  checked={formData.pass_params_to_redirect}
+                  onChange={handleCheckboxChange}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="pass_params_to_redirect" className="ml-3 block text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer">
+                  {t('postPurchase.passParams')}
+                </label>
+              </div>
+              <p className="ml-7 text-xs text-gray-500 dark:text-gray-400">
+                {t('postPurchase.passParamsHelp')}
+              </p>
             </div>
           </ModalSection>
 

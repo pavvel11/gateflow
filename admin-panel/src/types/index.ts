@@ -17,6 +17,9 @@ export interface Product {
   // Content delivery fields (clean implementation)
   content_delivery_type: 'redirect' | 'content'
   content_config: ProductContentConfig
+  // Funnel / OTO settings
+  success_redirect_url?: string | null
+  pass_params_to_redirect: boolean
   created_at: string
   updated_at: string
   tenant_id?: string
