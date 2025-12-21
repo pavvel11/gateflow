@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from '@/lib/rate-limiting';
+import { WebhookService } from '@/lib/services/webhook-service';
 
 export async function POST(
   request: NextRequest,
@@ -90,6 +91,15 @@ export async function POST(
     if (!grantResult) {
       return NextResponse.json({ error: 'Failed to grant access - product may not be free or active' }, { status: 400 });
     }
+
+    // Trigger webhook for lead capture
+    WebhookService.trigger('lead.captured', {
+      email: user.email,
+      productId: product.id,
+      productName: product.name,
+      userId: user.id,
+      timestamp: new Date().toISOString()
+    }).catch(err => console.error('Webhook trigger error:', err));
 
     return NextResponse.json({ 
       success: true, 

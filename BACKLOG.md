@@ -2,36 +2,43 @@
 
 A comprehensive list of planned features, technical improvements, and ideas for the platform.
 
+## 🔴 Critical Priority (Must Fix Before Production)
+
+#### Refactor: Migrate to Native Next.js Layouts & Server Auth
+**Status**: 📋 Planned
+**Description**: Currently, the dashboard uses a client-side HOC (`withAdminAuth`) and manual layout wrapping (`DashboardLayout`) on every page. This causes UI flickering, unnecessary re-renders, and is not idiomatic for Next.js App Router.
+**Required Changes**:
+1.  **Server-Side Auth**: Move authentication check from client HOC to `src/app/[locale]/dashboard/layout.tsx` (Server Component).
+    - Use `supabase.auth.getUser()` and `is_admin()` DB check.
+    - Perform server-side `redirect('/login')` if unauthorized (zero flicker).
+2.  **Native Layout**: Create `src/app/[locale]/dashboard/layout.tsx` that renders the sidebar/navigation once.
+    - Pass user data to the layout server-side.
+3.  **Cleanup Pages**: Remove `DashboardLayout` wrapper and `withAdminAuth` HOC from all dashboard pages (`products`, `users`, `webhooks`, etc.). They should only export the main content component.
+**Benefit**: Faster navigation (SPA feel), better security, cleaner code, no UI flashing.
+
+---
+
 ## 🟢 High Priority
 
 ### 🔌 Integrations & Automation
 
 #### Outgoing Webhooks (Automation)
-**Status**: 📋 Planned
+**Status**: 🏗️ Partially Done (v1.0 Implemented)
 **Description**: Trigger external automations when key events occur in GateFlow. Essential for CRM, Mailing, and Marketing Automation.
 
-**Technical Implementation Plan (v1.0)**:
-1.  **Database Schema**:
-    - `webhook_endpoints`: Stores user-defined URLs. Fields: `id`, `url`, `events` (array), `is_active`, `secret_key` (for HMAC), `created_at`.
-    - `webhook_logs`: History of delivery attempts. Fields: `id`, `endpoint_id`, `event_type`, `payload`, `response_status`, `response_body`, `created_at`.
-2.  **Backend Service (`WebhookService`)**:
-    - Logic to match events with endpoints.
-    - Async execution (fire-and-forget) to not block the user UI.
-    - Error handling and logging to `webhook_logs`.
-3.  **Admin UI**:
-    - Settings / Webhooks tab.
-    - List of configured endpoints with status indicators.
-    - "Add Endpoint" modal with Event Selector (checkboxes).
-    - "Delivery History" drawer showing request/response details for debugging.
-4.  **Feature: Test Endpoints (MVP Included)**:
-    - "Send Test Event" button on the endpoint list.
-    - Sends a dummy payload (e.g., "John Doe", "Test Product") to verify the connection immediately without making a real purchase.
+**v1.5 Implemented (Done 2025-12-19)**:
+- ✅ **Database Schema**: `webhook_endpoints` and `webhook_logs` with RLS.
+- ✅ **Secure Delivery (HMAC)**: Every request includes an `X-GateFlow-Signature` (HMAC-SHA256).
+- ✅ **Events Integration**: `purchase.completed` and `lead.captured` triggers.
+- ✅ **Management UI**: Full CRUD for endpoints.
+- ✅ **Testing System**: "Send Test Event" modal.
+- ✅ **Reliability**: Async delivery with 5s timeout and logging.
+- ✅ **Logs & Debugging**: Detailed logs viewer with filtering (Success/Failed) and manual "Retry" button for failed requests.
 
-**Supported Events**:
-- `purchase.completed`
-- `lead.captured`
-- `subscription.started` / `subscription.ended`
-- `refund.issued`
+**v2.0 Planned (Next Steps)**:
+- 📋 **Auto-Retry Logic**: Automatic background re-delivery using exponential backoff (requires cron/queue).
+- 📋 **Log Retention Policy**: Automatic cleanup of old webhook logs (e.g., delete success logs after 7 days, failed after 30 days) to save space.
+- 📋 **More Events**: Support for `subscription.started`, `subscription.ended`, `refund.issued`.
 
 **Integration Targets**: Zapier, Make (Integromat), ActiveCampaign, MailerLite, Custom URL.
 
@@ -44,6 +51,15 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 - Detect user location/TAX ID (NIP) during checkout (requires Stripe Tax or custom field).
 - Auto-send invoice PDF to customer email.
 - Sync invoices with payment transactions in database.
+
+#### Public Developer API
+**Status**: 📋 Planned
+**Description**: Expose a secure REST API for developers to integrate GateFlow with their own systems.
+**Features**:
+- **API Keys Management**: UI to generate/revoke keys with specific scopes (Read-only, Write).
+- **Endpoints**: `/v1/products`, `/v1/licenses`, `/v1/customers`.
+- **Documentation**: Swagger/OpenAPI spec.
+- **Rate Limiting**: Enforce limits per API key.
 
 ### 🎥 Video & Media
 
@@ -128,6 +144,24 @@ A comprehensive list of planned features, technical improvements, and ideas for 
     - Allows for full control over the look and layout of each form field.
     - Requires using the `Elements` provider instead of `CheckoutProvider`.
     - Enables styling each element separately, similar to `easycart.pl`.
+
+#### Stripe Subscriptions (Recurring Payments)
+**Status**: 📋 Planned
+**Description**: Support for recurring billing (monthly/yearly subscriptions).
+**Features**:
+- Integrate Stripe Billing.
+- Handle subscription lifecycle events (created, updated, canceled).
+- "My Subscription" portal for users to manage their plan.
+- Dunning management (failed payment retries).
+
+#### Advanced Refund Management
+**Status**: 📋 Planned
+**Description**: Comprehensive refund handling directly from the Admin Panel.
+**Features**:
+- **Refund Action**: Button to trigger Stripe refund API.
+- **Refund Window**: Configure "Days to Refund" per product (e.g., 30-day money-back guarantee).
+- **Auto-Revoke**: Automatically revoke access when a refund is processed.
+- **Partial Refunds**: Allow refunding specific amounts.
 
 ### 🎥 Video & Media
 

@@ -63,5 +63,58 @@ VALUES ('EXCLUSIVE90', 'VIP 90% Discount', 'percentage', 90, '["vip@example.com"
 INSERT INTO coupons (code, name, discount_type, discount_value, allowed_product_ids, is_active) 
 VALUES ('COURSE20', 'Course Special 20%', 'percentage', 20, (SELECT jsonb_build_array(id) FROM products WHERE slug = 'premium-course'), true);
 
+-- Insert sample webhook data
+-- 1. Sample Webhook Endpoint
+INSERT INTO webhook_endpoints (id, url, events, description, is_active, secret)
+VALUES (
+  '88888888-8888-4888-a888-888888888888',
+  'https://webhook.site/gateflow-test-endpoint',
+  ARRAY['purchase.completed', 'lead.captured'],
+  'Zapier CRM Integration',
+  true,
+  'sk_test_webhook_secret_key_12345'
+);
+
+-- 2. Sample Webhook Logs (Updated schema: status, http_status)
+-- Success Log
+INSERT INTO webhook_logs (endpoint_id, event_type, payload, status, http_status, response_body, duration_ms, created_at)
+VALUES (
+  '88888888-8888-4888-a888-888888888888',
+  'purchase.completed',
+  '{"event": "purchase.completed", "data": {"email": "success@example.com", "amount": 4900}}'::jsonb,
+  'success',
+  200,
+  '{"status": "ok", "message": "Received"}',
+  150,
+  NOW() - INTERVAL '1 hour'
+);
+
+-- Failed Log (Server Error)
+INSERT INTO webhook_logs (endpoint_id, event_type, payload, status, http_status, response_body, error_message, duration_ms, created_at)
+VALUES (
+  '88888888-8888-4888-a888-888888888888',
+  'purchase.completed',
+  '{"event": "purchase.completed", "data": {"email": "error@example.com", "amount": 9900}}'::jsonb,
+  'failed',
+  500,
+  'Internal Server Error',
+  'HTTP 500',
+  2500,
+  NOW() - INTERVAL '30 minutes'
+);
+
+-- Failed Log (Network Timeout)
+INSERT INTO webhook_logs (endpoint_id, event_type, payload, status, http_status, response_body, error_message, duration_ms, created_at)
+VALUES (
+  '88888888-8888-4888-a888-888888888888',
+  'lead.captured',
+  '{"event": "lead.captured", "data": {"email": "lead@example.com"}}'::jsonb,
+  'failed',
+  0,
+  NULL,
+  'Request timed out (5s)',
+  5001,
+  NOW() - INTERVAL '5 minutes'
+);
+
 -- Note: Users and user_product_access will be created through the admin panel interface
--- This allows for proper testing of the admin functionality

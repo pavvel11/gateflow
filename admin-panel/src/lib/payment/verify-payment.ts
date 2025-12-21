@@ -9,6 +9,7 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getStripeServer } from '@/lib/stripe/server';
 import type { User } from '@supabase/supabase-js';
+import { WebhookService } from '@/lib/services/webhook-service';
 
 export interface PaymentVerificationResult {
   session_id: string;
@@ -183,6 +184,20 @@ export async function verifyPaymentSession(
               access_granted: false,
               error: paymentResult?.error || 'Payment processing failed'
             };
+          }
+
+          // Trigger webhook for new successful purchases
+          if (!paymentResult.already_had_access) {
+            WebhookService.trigger('purchase.completed', {
+              email: customerEmail,
+              productId: productId,
+              amount: session.amount_total,
+              currency: session.currency,
+              sessionId: session.id,
+              isGuest: paymentResult.is_guest_purchase,
+              bumpProductId: hasBump && bumpProductId ? bumpProductId : null,
+              couponId: hasCoupon && couponId ? couponId : null
+            }).catch(err => console.error('Webhook trigger error:', err));
           }
 
           // Convert database response to our interface

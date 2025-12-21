@@ -7,10 +7,28 @@ import { withAdminAuth } from '@/components/withAdminAuth'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
+import { useState, useEffect } from 'react'
 
 function DashboardPage() {
   const { user } = useAuth()
   const t = useTranslations('admin.dashboard')
+  const [failedWebhooksCount, setFailedWebhooksCount] = useState(0)
+
+  useEffect(() => {
+    const fetchFailures = async () => {
+      try {
+        const res = await fetch('/api/admin/webhooks/failures?count=true')
+        if (res.ok) {
+          const data = await res.json()
+          setFailedWebhooksCount(data.count || 0)
+        }
+      } catch (error) {
+        console.error('Failed to fetch webhook failures', error)
+      }
+    }
+    
+    fetchFailures()
+  }, [])
 
   return (
     <DashboardLayout user={{ email: user!.email!, id: user!.id }}>
@@ -23,6 +41,32 @@ function DashboardPage() {
             {t('welcome')}
           </p>
         </div>
+        
+        {/* Webhook Failures Alert */}
+        {failedWebhooksCount > 0 && (
+          <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 dark:border-red-600 p-4 rounded-r-lg shadow-sm">
+            <div className="flex justify-between items-center">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400 dark:text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-700 dark:text-red-200 font-medium">
+                    {t('webhookFailuresAlert', { count: failedWebhooksCount })}
+                  </p>
+                </div>
+              </div>
+              <Link 
+                href="/dashboard/webhooks" 
+                className="text-sm font-bold text-red-700 dark:text-red-300 hover:text-red-600 dark:hover:text-red-200 whitespace-nowrap ml-4 flex items-center bg-white/50 dark:bg-black/20 px-3 py-1.5 rounded-md hover:bg-white/80 transition-colors"
+              >
+                {t('fixNow')} <span aria-hidden="true" className="ml-1">&rarr;</span>
+              </Link>
+            </div>
+          </div>
+        )}
         
         <StatsOverview />
         
@@ -65,23 +109,6 @@ function DashboardPage() {
                   </div>
                 </div>
               </Link>
-              
-              {/* <Link
-                href="/dashboard/payments"
-                className="block p-4 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30 transition-all"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900 dark:text-white">{t('managePayments')}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{t('managePaymentsDescription')}</p>
-                  </div>
-                </div>
-              </Link> */}
             </div>
           </div>
           
