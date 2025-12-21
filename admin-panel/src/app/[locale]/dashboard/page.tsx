@@ -17,7 +17,7 @@ function DashboardPage() {
   useEffect(() => {
     const fetchFailures = async () => {
       try {
-        const res = await fetch('/api/admin/webhooks/failures?count=true')
+        const res = await fetch('/api/admin/webhooks/logs?status=failed&count=true')
         if (res.ok) {
           const data = await res.json()
           setFailedWebhooksCount(data.count || 0)

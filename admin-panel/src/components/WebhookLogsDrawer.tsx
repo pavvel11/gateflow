@@ -20,13 +20,13 @@ export default function WebhookLogsDrawer({ endpoint, onClose, isOpen }: Webhook
   
   const [logs, setLogs] = useState<WebhookLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'success' | 'failed'>('failed');
+  const [filter, setFilter] = useState<'all' | 'success' | 'failed' | 'archived'>('failed');
   const [retrying, setRetrying] = useState<string | null>(null);
 
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/admin/webhooks/${endpoint.id}/logs?status=${filter}&limit=50`);
+      const res = await fetch(`/api/admin/webhooks/logs?endpointId=${endpoint.id}&status=${filter}&limit=50`);
       if (!res.ok) throw new Error('Failed to fetch logs');
       const data = await res.json();
       setLogs(data);
@@ -80,6 +80,7 @@ export default function WebhookLogsDrawer({ endpoint, onClose, isOpen }: Webhook
             <option value="all">{t('filterAll')}</option>
             <option value="success">{t('filterSuccess')}</option>
             <option value="failed">{t('filterFailed')}</option>
+            <option value="archived">{t('filterArchived')}</option>
           </select>
         </div>
 

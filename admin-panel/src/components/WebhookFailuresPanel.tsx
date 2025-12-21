@@ -22,7 +22,7 @@ export default function WebhookFailuresPanel({ refreshTrigger }: WebhookFailures
   const fetchFailures = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/admin/webhooks/failures?limit=5');
+      const res = await fetch('/api/admin/webhooks/logs?status=failed&limit=5');
       if (!res.ok) throw new Error('Failed to fetch failures');
       const data = await res.json();
       setFailures(data);
