@@ -1,23 +1,10 @@
-'use client'
+import UsersPageContent from '@/components/UsersPageContent';
+import { Metadata } from 'next';
 
-import DashboardLayout from '@/components/DashboardLayout'
-import UsersPageContent from '@/components/UsersPageContent'
-import { ToastProvider } from '@/contexts/ToastContext'
-import { withAdminAuth } from '@/components/withAdminAuth'
-import { useAuth } from '@/contexts/AuthContext'
+export const metadata: Metadata = {
+  title: 'Users - GateFlow Admin',
+};
 
-function UsersPage() {
-  const { user } = useAuth()
-
-  return (
-    <DashboardLayout user={{ email: user!.email!, id: user!.id }}>
-      <div className="space-y-6">
-        <ToastProvider>
-          <UsersPageContent />
-        </ToastProvider>
-      </div>
-    </DashboardLayout>
-  )
+export default function UsersPage() {
+  return <UsersPageContent />;
 }
-
-export default withAdminAuth(UsersPage)

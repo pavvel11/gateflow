@@ -12,13 +12,17 @@ interface DashboardLayoutProps {
     email: string
     id: string
   } | null
+  isAdmin?: boolean
 }
 
-export default function DashboardLayout({ children, user }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, user, isAdmin: isAdminProp }: DashboardLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
-  const { signOut, isAdmin } = useAuth()
+  const { signOut, isAdmin: isAdminContext } = useAuth()
   const t = useTranslations('navigation')
+
+  // Use prop if provided (from server), otherwise fallback to context (client)
+  const isAdmin = isAdminProp !== undefined ? isAdminProp : isAdminContext
 
   const handleSignOut = async () => {
     await signOut()

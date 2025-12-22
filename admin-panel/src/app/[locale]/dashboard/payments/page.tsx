@@ -1,26 +1,10 @@
-// app/[locale]/dashboard/payments/page.tsx
-// Admin payments management page
+import PaymentsDashboard from '@/components/admin/PaymentsDashboard';
+import { Metadata } from 'next';
 
-'use client'
+export const metadata: Metadata = {
+  title: 'Payments - GateFlow Admin',
+};
 
-import DashboardLayout from '@/components/DashboardLayout'
-import PaymentsDashboard from '@/components/admin/PaymentsDashboard'
-import { ToastProvider } from '@/contexts/ToastContext'
-import { withAdminAuth } from '@/components/withAdminAuth'
-import { useAuth } from '@/contexts/AuthContext'
-
-function PaymentsPage() {
-  const { user } = useAuth()
-
-  return (
-    <DashboardLayout user={{ email: user!.email!, id: user!.id }}>
-      <div className="space-y-6">
-        <ToastProvider>
-          <PaymentsDashboard />
-        </ToastProvider>
-      </div>
-    </DashboardLayout>
-  )
+export default function PaymentsPage() {
+  return <PaymentsDashboard />;
 }
-
-export default withAdminAuth(PaymentsPage)

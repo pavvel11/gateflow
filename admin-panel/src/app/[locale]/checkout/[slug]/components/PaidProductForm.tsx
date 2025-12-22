@@ -26,7 +26,11 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const config = useConfig();
-  const stripePromise = loadStripe(config.stripePublishableKey);
+  
+  // Safe loading of Stripe to prevent crashes if key is missing
+  const stripePromise = config.stripePublishableKey 
+    ? loadStripe(config.stripePublishableKey) 
+    : null;
   
   const [error, setError] = useState<string | null>(null);
   const [hasAccess, setHasAccess] = useState(false);
@@ -397,6 +401,23 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
         
         <h2 className="text-xl font-semibold text-white mb-4">{t('title')}</h2>
         
+        {/* Missing Config Alert */}
+        {!config.stripePublishableKey && (
+          <div className="mb-4 p-4 bg-red-900/30 border border-red-500/50 rounded-lg">
+            <div className="flex items-start">
+              <svg className="w-5 h-5 text-red-400 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 15.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <div>
+                <h3 className="text-sm font-bold text-red-200">Configuration Error</h3>
+                <p className="text-xs text-red-300/80 mt-1">
+                  Stripe API key is missing. Please check your environment variables (STRIPE_PUBLISHABLE_KEY).
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {error && (
           <div className="mb-4 p-6 bg-gradient-to-r from-red-900/30 to-rose-900/30 border border-red-500/40 rounded-xl backdrop-blur-sm">
             <div className="flex items-center">
@@ -445,7 +466,7 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
           </div>
         )}
         
-        {!error && !hasAccess && (
+        {!error && !hasAccess && stripePromise && (
           <EmbeddedCheckoutProvider
             key={`${product.id}-${bumpSelected}-${appliedCoupon?.id || 'no-coupon'}`}
             stripe={stripePromise}

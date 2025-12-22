@@ -1,18 +1,10 @@
-'use client'
+import ProductsPageContent from '@/components/ProductsPageContent';
+import { Metadata } from 'next';
 
-import DashboardLayout from '@/components/DashboardLayout'
-import ProductsPageContent from '@/components/ProductsPageContent'
-import { withAdminAuth } from '@/components/withAdminAuth'
-import { useAuth } from '@/contexts/AuthContext'
+export const metadata: Metadata = {
+  title: 'Products - GateFlow Admin',
+};
 
-function ProductsPage() {
-  const { user } = useAuth()
-
-  return (
-    <DashboardLayout user={{ email: user!.email!, id: user!.id }}>
-      <ProductsPageContent />
-    </DashboardLayout>
-  )
+export default function ProductsPage() {
+  return <ProductsPageContent />;
 }
-
-export default withAdminAuth(ProductsPage)

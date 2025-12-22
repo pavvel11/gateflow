@@ -1,18 +1,10 @@
-'use client'
+import OrderBumpsPageContent from '@/components/OrderBumpsPageContent';
+import { Metadata } from 'next';
 
-import DashboardLayout from '@/components/DashboardLayout'
-import OrderBumpsPageContent from '@/components/OrderBumpsPageContent'
-import { withAdminAuth } from '@/components/withAdminAuth'
-import { useAuth } from '@/contexts/AuthContext'
+export const metadata: Metadata = {
+  title: 'Order Bumps - GateFlow Admin',
+};
 
-function OrderBumpsPage() {
-  const { user } = useAuth()
-
-  return (
-    <DashboardLayout user={{ email: user!.email!, id: user!.id }}>
-      <OrderBumpsPageContent />
-    </DashboardLayout>
-  )
+export default function OrderBumpsPage() {
+  return <OrderBumpsPageContent />;
 }
-
-export default withAdminAuth(OrderBumpsPage)

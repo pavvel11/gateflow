@@ -16,7 +16,7 @@ interface CodeOptions {
 }
 
 export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGeneratorModalProps) {
-  const t = useTranslations('admin.codeGenerator');
+  const t = useTranslations('codeGenerator');
   const [options, setOptions] = useState<CodeOptions>({
     mode: 'page'
   });

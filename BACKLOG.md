@@ -5,16 +5,13 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 ## 🔴 Critical Priority (Must Fix Before Production)
 
 #### Refactor: Migrate to Native Next.js Layouts & Server Auth
-**Status**: 📋 Planned
-**Description**: Currently, the dashboard uses a client-side HOC (`withAdminAuth`) and manual layout wrapping (`DashboardLayout`) on every page. This causes UI flickering, unnecessary re-renders, and is not idiomatic for Next.js App Router.
-**Required Changes**:
-1.  **Server-Side Auth**: Move authentication check from client HOC to `src/app/[locale]/dashboard/layout.tsx` (Server Component).
-    - Use `supabase.auth.getUser()` and `is_admin()` DB check.
-    - Perform server-side `redirect('/login')` if unauthorized (zero flicker).
-2.  **Native Layout**: Create `src/app/[locale]/dashboard/layout.tsx` that renders the sidebar/navigation once.
-    - Pass user data to the layout server-side.
-3.  **Cleanup Pages**: Remove `DashboardLayout` wrapper and `withAdminAuth` HOC from all dashboard pages (`products`, `users`, `webhooks`, etc.). They should only export the main content component.
-**Benefit**: Faster navigation (SPA feel), better security, cleaner code, no UI flashing.
+**Status**: ✅ Done (2025-12-22)
+**Description**: Migrated the dashboard from client-side HOC auth to native Next.js Server Components and Nested Layouts.
+**Implemented Changes**:
+1.  **Server-Side Auth**: Created `verifyAdminAccess` utility using `supabase.auth.getUser()`.
+2.  **Native Layout**: Implemented `src/app/[locale]/dashboard/layout.tsx` as a Server Component wrapping the dashboard area.
+3.  **Page Cleanup**: Removed `withAdminAuth` HOC and manual `DashboardLayout` wrapping from all 7 dashboard sub-pages.
+**Result**: Zero flickering on navigation, instant redirects for unauthorized users, cleaner and more professional codebase.
 
 ---
 

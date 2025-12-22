@@ -1,21 +1,10 @@
-'use client';
-
-import DashboardLayout from '@/components/DashboardLayout';
 import WebhooksPageContent from '@/components/WebhooksPageContent';
-import { withAdminAuth } from '@/components/withAdminAuth';
-import { useAuth } from '@/contexts/AuthContext';
+import { Metadata } from 'next';
 
-function WebhooksPage() {
-  const { user } = useAuth();
+export const metadata: Metadata = {
+  title: 'Webhooks - GateFlow Admin',
+};
 
-  // Ensure user exists before rendering layout (though withAdminAuth handles this)
-  if (!user) return null;
-
-  return (
-    <DashboardLayout user={{ email: user.email!, id: user.id }}>
-      <WebhooksPageContent />
-    </DashboardLayout>
-  );
+export default function WebhooksPage() {
+  return <WebhooksPageContent />;
 }
-
-export default withAdminAuth(WebhooksPage);

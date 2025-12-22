@@ -824,6 +824,9 @@
   },
   "codeGenerator": {
     "title": "Generuj kod ochrony",
+    "product": "Produkt",
+    "slug": "Slug",
+    "protectionMode": "Tryb ochrony",
     "pageMode": "Chroń całą stronę",
     "elementMode": "Chroń elementy",
     "pageDescription": "Chroni całą zawartość strony",
