@@ -181,7 +181,19 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 - **Transaction List**: Comprehensive table showing Customer Email, Product, Amount, Currency, and Status.
 - **Stripe Integration**: Link each transaction to the Stripe Dashboard.
 - **Search & Filters**: Filter by date range, product, or transaction status.
-- **Export**: Basic CSV export for accounting.
+#### Audit Logging for Admin Operations
+**Status**: 📋 Planned
+**Description**: Log every administrative action (Create/Update/Delete) to a dedicated `admin_audit_logs` table for security compliance.
+**Features**:
+- **Automatic Logging**: Middleware or helper to log who did what and when.
+- **Webhook Operations**: Track changes to webhook configurations and manual retries.
+- **Product & Coupon changes**: Track price changes or discount updates.
+
+### 🏗️ Architecture & Security Improvements
+- 📋 **Custom Error Classes**: Implement strongly typed error classes (e.g., `UnauthorizedError`, `ForbiddenError`) with automatic HTTP status mapping for cleaner API code.
+- 📋 **API Middleware Wrapper**: Create a `withAdminAuth()` Higher-Order Function (HOF) to wrap admin routes, reducing boilerplate and centralizing security/error handling.
+- 📋 **Supabase Custom JWT Claims**: Integrate `is_admin` flag directly into the Supabase JWT token to enable stateless, lightning-fast admin verification in Edge Middleware.
+- 📋 **Standardized Rate Limiting**: Implement a global rate limiting strategy for all public and administrative API endpoints.
 
 ### 🎥 Video & Media
 

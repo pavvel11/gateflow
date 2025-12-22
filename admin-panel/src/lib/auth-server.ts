@@ -1,11 +1,16 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 export type AuthUser = {
   id: string;
   email: string;
 };
 
+/**
+ * Verifies admin access for Server Components (Page/Layout).
+ * Redirects on failure.
+ */
 export async function verifyAdminAccess(): Promise<AuthUser> {
   const supabase = await createClient();
 
@@ -17,7 +22,6 @@ export async function verifyAdminAccess(): Promise<AuthUser> {
   }
 
   // 2. Check Admin Status in Database
-  // We assume 'admin_users' table holds the admin registry
   const { data: adminNode, error: adminError } = await supabase
     .from('admin_users')
     .select('id')
@@ -27,11 +31,35 @@ export async function verifyAdminAccess(): Promise<AuthUser> {
   if (adminError || !adminNode) {
     // User is logged in but not an admin
     console.warn(`Unauthorized access attempt by ${user.email}`);
-    redirect('/'); // Redirect to home or specific access-denied page
+    redirect('/'); 
   }
 
   return {
     id: user.id,
     email: user.email,
   };
+}
+
+/**
+ * Verifies admin access for API Routes.
+ * Throws specific errors to be caught by the route handler.
+ */
+export async function requireAdminApi(supabase: SupabaseClient) {
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    throw new Error('Unauthorized');
+  }
+
+  const { data: admin, error: adminError } = await supabase
+    .from('admin_users')
+    .select('id')
+    .eq('user_id', user.id)
+    .single();
+
+  if (adminError || !admin) {
+    throw new Error('Forbidden');
+  }
+
+  return { user, admin };
 }

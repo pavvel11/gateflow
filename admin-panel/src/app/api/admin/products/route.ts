@@ -4,6 +4,7 @@ import {
   validateCreateProduct, 
   sanitizeProductData 
 } from '@/lib/validations/product';
+import { requireAdminApi } from '@/lib/auth-server';
 
 /**
  * Handle CORS preflight requests
@@ -22,22 +23,17 @@ export async function OPTIONS(request: Request) {
   });
 }
 
+// Helper to standard headers
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
-    // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { 
-        status: 401,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        }
-      });
-    }
+    await requireAdminApi(supabase); // Enforce Admin Access
 
     // Get search params
     const searchParams = request.nextUrl.searchParams;
@@ -77,11 +73,7 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching products:', error);
       return NextResponse.json({ error: 'Failed to fetch products' }, { 
         status: 500,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        }
+        headers: corsHeaders
       });
     }
 
@@ -94,21 +86,16 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil((count || 0) / limit)
       }
     }, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      }
+      headers: corsHeaders
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error instanceof Error && error.message === 'Unauthorized') return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
+    if (error instanceof Error && error.message === 'Forbidden') return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: corsHeaders });
+
     console.error('Error in GET /api/products:', error);
     return NextResponse.json({ error: 'Internal server error' }, { 
       status: 500,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      }
+      headers: corsHeaders
     });
   }
 }
@@ -116,19 +103,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
-    // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { 
-        status: 401,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        }
-      });
-    }
+    await requireAdminApi(supabase); // Enforce Admin Access
 
     // Parse and validate request body
     let body;
@@ -138,11 +113,7 @@ export async function POST(request: NextRequest) {
       console.error('Error parsing request body:', parseError);
       return NextResponse.json({ error: 'Invalid JSON in request body' }, { 
         status: 400,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        }
+        headers: corsHeaders
       });
     }
 
@@ -157,11 +128,7 @@ export async function POST(request: NextRequest) {
         details: validation.errors 
       }, { 
         status: 400,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        }
+        headers: corsHeaders
       });
     }
 
@@ -176,22 +143,14 @@ export async function POST(request: NextRequest) {
       console.error('Error checking slug availability:', slugCheckError);
       return NextResponse.json({ error: 'Failed to check slug availability' }, { 
         status: 500,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        }
+        headers: corsHeaders
       });
     }
     
     if (existingProduct) {
       return NextResponse.json({ error: 'A product with this slug already exists' }, { 
         status: 400,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        }
+        headers: corsHeaders
       });
     }
 
@@ -206,31 +165,22 @@ export async function POST(request: NextRequest) {
       console.error('Error creating product:', error);
       return NextResponse.json({ error: 'Failed to create product' }, { 
         status: 500,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        }
+        headers: corsHeaders
       });
     }
 
     return NextResponse.json(product, { 
       status: 201,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      }
+      headers: corsHeaders
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error instanceof Error && error.message === 'Unauthorized') return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
+    if (error instanceof Error && error.message === 'Forbidden') return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: corsHeaders });
+
     console.error('Error in POST /api/products:', error);
     return NextResponse.json({ error: 'Internal server error' }, { 
       status: 500,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      }
+      headers: corsHeaders
     });
   }
 }

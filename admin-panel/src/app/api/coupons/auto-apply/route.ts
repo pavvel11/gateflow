@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { checkRateLimit } from '@/lib/rate-limiting';
 
 export async function POST(request: NextRequest) {
   try {
+    // 1. Rate Limiting
+    const allowed = await checkRateLimit('coupon_auto_apply', 10, 60);
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const { email, productId } = await request.json();
 
     if (!email || !productId) {

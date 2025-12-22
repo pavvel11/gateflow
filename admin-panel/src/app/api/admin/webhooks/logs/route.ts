@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { requireAdminApi } from '@/lib/auth-server';
 
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    await requireAdminApi(supabase);
 
     const { searchParams } = new URL(request.url);
     const endpointId = searchParams.get('endpointId');
@@ -17,7 +14,6 @@ export async function GET(request: NextRequest) {
     const countOnly = searchParams.get('count') === 'true';
 
     // Base query
-    // We always join 'endpoint' to get details, it's efficient enough for 20 rows.
     let query = supabase
       .from('webhook_logs')
       .select(
@@ -78,6 +74,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(data);
   } catch (error) {
+    if (error instanceof Error && (error.message === 'Unauthorized')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (error instanceof Error && (error.message === 'Forbidden')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
     console.error('Error fetching webhook logs:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
