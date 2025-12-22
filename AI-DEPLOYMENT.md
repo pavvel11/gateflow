@@ -64,23 +64,28 @@ nano .env.local # Fill in SUPABASE_URL, STRIPE_KEYS, etc.
 Run these commands to update the application after pushing changes to git:
 
 ```bash
-# 1. Pull latest changes
+# 1. Database Migrations (CRITICAL)
+# Before deploying code, ensure the remote database has the latest schema.
+# Run this from your LOCAL machine if you have access, or from the server if configured.
+npx supabase db push
+
+# 2. Pull latest changes
 cd /path/to/gateflow
 git pull origin dev  # or main/infra/pm2-migration
 
-# 2. Update Configuration (if needed)
+# 3. Update Configuration (if needed)
 # Ensure ecosystem.config.js has PORT: 3333
 
-# 3. Install Dependencies & Build
+# 4. Install Dependencies & Build
 cd admin-panel
 npm install
-npm run build
+npm run build  # This will fail if DB types are outdated or schema doesn't match!
 
-# 4. Restart PM2
+# 5. Restart PM2
 cd ..
 pm2 restart gateflow-admin
 
-# 5. Verify
+# 6. Verify
 pm2 status
 pm2 logs gateflow-admin --lines 20 --nostream
 ```

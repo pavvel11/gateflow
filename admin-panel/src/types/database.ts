@@ -152,6 +152,118 @@ export type Database = {
           },
         ]
       }
+      coupon_redemptions: {
+        Row: {
+          coupon_id: string
+          customer_email: string
+          discount_amount: number
+          id: string
+          redeemed_at: string
+          transaction_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          coupon_id: string
+          customer_email: string
+          discount_amount: number
+          id?: string
+          redeemed_at?: string
+          transaction_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          coupon_id?: string
+          customer_email?: string
+          discount_amount?: number
+          id?: string
+          redeemed_at?: string
+          transaction_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_redemptions_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_redemptions_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "payment_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_redemptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_access_stats"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          allowed_emails: Json
+          allowed_product_ids: Json
+          code: string
+          created_at: string
+          currency: string | null
+          current_usage_count: number
+          discount_type: string
+          discount_value: number
+          exclude_order_bumps: boolean
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          name: string | null
+          starts_at: string
+          updated_at: string
+          usage_limit_global: number | null
+          usage_limit_per_user: number | null
+        }
+        Insert: {
+          allowed_emails?: Json
+          allowed_product_ids?: Json
+          code: string
+          created_at?: string
+          currency?: string | null
+          current_usage_count?: number
+          discount_type: string
+          discount_value: number
+          exclude_order_bumps?: boolean
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string | null
+          starts_at?: string
+          updated_at?: string
+          usage_limit_global?: number | null
+          usage_limit_per_user?: number | null
+        }
+        Update: {
+          allowed_emails?: Json
+          allowed_product_ids?: Json
+          code?: string
+          created_at?: string
+          currency?: string | null
+          current_usage_count?: number
+          discount_type?: string
+          discount_value?: number
+          exclude_order_bumps?: boolean
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string | null
+          starts_at?: string
+          updated_at?: string
+          usage_limit_global?: number | null
+          usage_limit_per_user?: number | null
+        }
+        Relationships: []
+      }
       guest_purchases: {
         Row: {
           claimed_at: string | null
@@ -202,6 +314,7 @@ export type Database = {
       }
       order_bumps: {
         Row: {
+          access_duration_days: number | null
           bump_description: string | null
           bump_price: number | null
           bump_product_id: string
@@ -214,6 +327,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          access_duration_days?: number | null
           bump_description?: string | null
           bump_price?: number | null
           bump_product_id: string
@@ -226,6 +340,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          access_duration_days?: number | null
           bump_description?: string | null
           bump_price?: number | null
           bump_product_id?: string
@@ -349,8 +464,10 @@ export type Database = {
           is_featured: boolean
           layout_template: string
           name: string
+          pass_params_to_redirect: boolean
           price: number
           slug: string
+          success_redirect_url: string | null
           tenant_id: string | null
           updated_at: string
         }
@@ -369,8 +486,10 @@ export type Database = {
           is_featured?: boolean
           layout_template?: string
           name: string
+          pass_params_to_redirect?: boolean
           price?: number
           slug: string
+          success_redirect_url?: string | null
           tenant_id?: string | null
           updated_at?: string
         }
@@ -389,8 +508,10 @@ export type Database = {
           is_featured?: boolean
           layout_template?: string
           name?: string
+          pass_params_to_redirect?: boolean
           price?: number
           slug?: string
+          success_redirect_url?: string | null
           tenant_id?: string | null
           updated_at?: string
         }
@@ -471,6 +592,175 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "user_access_stats"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      video_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          position_seconds: number
+          progress_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          position_seconds: number
+          progress_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          position_seconds?: number
+          progress_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_events_progress_id_fkey"
+            columns: ["progress_id"]
+            isOneToOne: false
+            referencedRelation: "video_progress"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_progress: {
+        Row: {
+          created_at: string
+          id: string
+          is_completed: boolean
+          last_position_seconds: number
+          max_position_seconds: number
+          product_id: string
+          updated_at: string
+          user_id: string
+          video_duration_seconds: number | null
+          video_id: string
+          view_count: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          last_position_seconds?: number
+          max_position_seconds?: number
+          product_id: string
+          updated_at?: string
+          user_id: string
+          video_duration_seconds?: number | null
+          video_id: string
+          view_count?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          last_position_seconds?: number
+          max_position_seconds?: number
+          product_id?: string
+          updated_at?: string
+          user_id?: string
+          video_duration_seconds?: number | null
+          video_id?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_progress_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_access_stats"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      webhook_endpoints: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          events: string[]
+          id: string
+          is_active: boolean | null
+          secret: string
+          updated_at: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          events?: string[]
+          id?: string
+          is_active?: boolean | null
+          secret?: string
+          updated_at?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          events?: string[]
+          id?: string
+          is_active?: boolean | null
+          secret?: string
+          updated_at?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
+      webhook_logs: {
+        Row: {
+          created_at: string | null
+          duration_ms: number | null
+          endpoint_id: string | null
+          error_message: string | null
+          event_type: string
+          http_status: number | null
+          id: string
+          payload: Json | null
+          response_body: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          duration_ms?: number | null
+          endpoint_id?: string | null
+          error_message?: string | null
+          event_type: string
+          http_status?: number | null
+          id?: string
+          payload?: Json | null
+          response_body?: string | null
+          status: string
+        }
+        Update: {
+          created_at?: string | null
+          duration_ms?: number | null
+          endpoint_id?: string | null
+          error_message?: string | null
+          event_type?: string
+          http_status?: number | null
+          id?: string
+          payload?: Json | null
+          response_body?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_logs_endpoint_id_fkey"
+            columns: ["endpoint_id"]
+            isOneToOne: false
+            referencedRelation: "webhook_endpoints"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -557,6 +847,7 @@ export type Database = {
       admin_get_product_order_bumps: {
         Args: { product_id_param: string }
         Returns: {
+          access_duration_days: number
           bump_description: string
           bump_id: string
           bump_price: number
@@ -604,6 +895,10 @@ export type Database = {
       }
       cleanup_rate_limits: { Args: never; Returns: number }
       clear_admin_cache: { Args: never; Returns: undefined }
+      find_auto_apply_coupon: {
+        Args: { customer_email_param: string; product_id_param: string }
+        Returns: Json
+      }
       get_cleanup_job_status: {
         Args: never
         Returns: {
@@ -621,6 +916,7 @@ export type Database = {
       get_product_order_bumps: {
         Args: { product_id_param: string }
         Returns: {
+          bump_access_duration: number
           bump_currency: string
           bump_description: string
           bump_id: string
@@ -631,6 +927,7 @@ export type Database = {
           bump_product_name: string
           bump_title: string
           display_order: number
+          original_price: number
         }[]
       }
       get_user_payment_history: {
@@ -703,6 +1000,7 @@ export type Database = {
         Args: {
           amount_total: number
           bump_product_id_param?: string
+          coupon_id_param?: string
           currency_param: string
           customer_email_param: string
           product_id_param: string
@@ -716,10 +1014,29 @@ export type Database = {
         Args: { alert_details: Json; alert_type: string }
         Returns: undefined
       }
+      update_video_progress: {
+        Args: {
+          completed_param?: boolean
+          duration_param?: number
+          position_param: number
+          product_id_param: string
+          video_id_param: string
+        }
+        Returns: Json
+      }
       validate_email_format: { Args: { email_param: string }; Returns: boolean }
       validate_payment_transaction: {
         Args: { transaction_id: string }
         Returns: boolean
+      }
+      verify_coupon: {
+        Args: {
+          code_param: string
+          currency_param?: string
+          customer_email_param?: string
+          product_id_param: string
+        }
+        Returns: Json
       }
     }
     Enums: {

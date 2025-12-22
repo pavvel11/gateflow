@@ -205,7 +205,7 @@ const CouponsPageContent: React.FC = () => {
                     <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                       {t(coupon.usage_limit_global ? 'usageCount' : 'usageUnlimited', { 
                         current: coupon.current_usage_count, 
-                        limit: coupon.usage_limit_global 
+                        limit: coupon.usage_limit_global || 0
                       })}
                     </td>
                     <td className="px-6 py-4">
