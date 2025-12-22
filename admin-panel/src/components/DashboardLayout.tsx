@@ -98,7 +98,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp }
     { href: '/products', label: t('store'), icon: Icons.store },
   ];
 
-  const NavItem = ({ href, label, icon, exact }: { href: string, label: string, icon: JSX.Element, exact?: boolean }) => {
+  const NavItem = ({ href, label, icon, exact }: { href: string, label: string, icon: React.ReactNode, exact?: boolean }) => {
     const active = exact ? pathname === href || pathname === href + '/' : pathname.includes(href);
     return (
       <Link
