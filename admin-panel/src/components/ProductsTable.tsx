@@ -52,11 +52,11 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
   const SortableHeader = ({ column, title, className = "" }: { column: string; title: string; className?: string }) => (
     <th
       scope="col"
-      className={`px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer ${className}`}
+      className={`px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer whitespace-nowrap ${className}`}
       onClick={() => onSort(column)}
     >
       <div className="flex items-center">
-        <span className="truncate">{title}</span>
+        <span>{title}</span>
         {sortBy === column && (
           <span className="ml-1 flex-shrink-0">
             {sortOrder === 'asc' ? '▲' : '▼'}
@@ -100,17 +100,17 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
       <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
         <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
           <div className="shadow-lg overflow-hidden border-b border-gray-200 dark:border-gray-700 sm:rounded-lg bg-white dark:bg-gray-800">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <SortableHeader column="name" title={t('name')} className="w-1/4" />
-                  <SortableHeader column="price" title={t('price')} className="w-20" />
-                  <SortableHeader column="is_active" title={t('status')} className="w-20" />
-                  <SortableHeader column="available_from" title={t('availableFrom')} className="w-24 hidden lg:table-cell" />
-                  <SortableHeader column="available_until" title={t('availableUntil')} className="w-24 hidden lg:table-cell" />
-                  <SortableHeader column="auto_grant_duration_days" title={t('autoDuration')} className="w-20 hidden xl:table-cell" />
-                  <SortableHeader column="created_at" title={t('createdAt')} className="w-24 hidden md:table-cell" />
-                  <th scope="col" className="relative px-3 py-3 w-32">
+                  <SortableHeader column="name" title={t('name')} />
+                  <SortableHeader column="price" title={t('price')} />
+                  <SortableHeader column="is_active" title={t('status')} />
+                  <SortableHeader column="available_from" title={t('availableFrom')} className="hidden 2xl:table-cell" />
+                  <SortableHeader column="available_until" title={t('availableUntil')} className="hidden 2xl:table-cell" />
+                  <SortableHeader column="auto_grant_duration_days" title={t('autoDuration')} className="hidden 2xl:table-cell" />
+                  <SortableHeader column="created_at" title={t('createdAt')} className="hidden xl:table-cell" />
+                  <th scope="col" className="relative px-3 py-3">
                     <span className="sr-only">{t('actions')}</span>
                   </th>
                 </tr>
@@ -119,14 +119,13 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                 {products.map((product) => (
                   <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
                     <td className="px-3 py-4">
-                      <div className="flex items-center">
+                      <div className="flex items-center max-w-[300px]">
                         <div className="flex-shrink-0 h-8 w-8">
                           <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-lg">
-                            {/* Jeśli ikona jest już emoji, wyświetl ją bezpośrednio, w przeciwnym razie użyj getIconEmoji */}
                             {product.icon?.length === 2 || product.icon?.match(/\p{Emoji}/u) ? product.icon : getIconEmoji(product.icon)}
                           </div>
                         </div>
-                        <div className="ml-3 min-w-0 flex-1">
+                        <div className="ml-3 min-w-0 flex-1 overflow-hidden">
                           <div className="flex items-center gap-1">
                             <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{product.name}</div>
                             {product.is_featured && (
@@ -139,7 +138,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                         </div>
                       </div>
                     </td>
-                    <td className="px-3 py-4 text-center">
+                    <td className="px-3 py-4 whitespace-nowrap text-center">
                       {product.price === 0 ? (
                         <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-700 dark:text-blue-100">
                           {t('free')}
@@ -148,7 +147,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                         <div className="text-sm text-gray-900 dark:text-white">{formatPrice(product.price, product.currency)}</div>
                       )}
                     </td>
-                    <td className="px-3 py-4 text-center">
+                    <td className="px-3 py-4 whitespace-nowrap text-center">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         product.is_active 
                           ? 'bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100' 
@@ -157,21 +156,21 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                         {product.is_active ? t('active') : t('inactive')}
                       </span>
                     </td>
-                    <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 hidden lg:table-cell">
+                    <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 hidden 2xl:table-cell whitespace-nowrap">
                       {product.available_from ? formatUTCForDisplay(product.available_from, {
                         year: '2-digit',
                         month: 'short',
                         day: 'numeric'
                       }) : '-'}
                     </td>
-                    <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 hidden lg:table-cell">
+                    <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 hidden 2xl:table-cell whitespace-nowrap">
                       {product.available_until ? formatUTCForDisplay(product.available_until, {
                         year: '2-digit',
                         month: 'short',
                         day: 'numeric'
                       }) : '-'}
                     </td>
-                    <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 hidden xl:table-cell text-center">
+                    <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 hidden 2xl:table-cell text-center whitespace-nowrap">
                       {product.auto_grant_duration_days ? (
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
                           {product.auto_grant_duration_days}d
@@ -180,14 +179,14 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                         <span className="text-gray-400">∞</span>
                       )}
                     </td>
-                    <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 hidden md:table-cell">
+                    <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 hidden xl:table-cell whitespace-nowrap">
                       {formatUTCForDisplay(product.created_at, {
                         year: '2-digit',
                         month: 'short',
                         day: 'numeric'
                       })}
                     </td>
-                    <td className="px-3 py-4 text-right text-sm font-medium">
+                    <td className="px-3 py-4 text-right text-sm font-medium whitespace-nowrap">
                       <div className="flex items-center justify-end space-x-1">
                         <button 
                           onClick={() => onGenerateCode(product)}
@@ -196,7 +195,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                           title={t('generateCode')}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                           </svg>
                         </button>
                         <button 
@@ -205,8 +204,8 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                           aria-label={t('previewLabel', { name: product.name })}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
                         </button>
                         <button 
@@ -215,7 +214,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                           aria-label={t('previewRedirectLabel', { name: product.name })}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                           </svg>
                         </button>
                         <button 

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from 'react';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
+import FloatingLanguageSwitcher from '@/components/FloatingLanguageSwitcher';
 
 export default function LandingPage() {
   const [mounted, setMounted] = useState(false);
@@ -82,7 +82,7 @@ export default function LandingPage() {
                   </Link>
                 </>
               )}
-              <LanguageSwitcher />
+              <FloatingLanguageSwitcher mode="static" variant="compact" />
             </div>
           </div>
         </div>
@@ -158,7 +158,7 @@ export default function LandingPage() {
               )}
               
               <a
-                href="https://github.com/gateflow/gateflow"
+                href="https://github.com/pavvel11/gateflow"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center px-8 py-4 border border-gray-300 dark:border-gray-600 rounded-xl text-lg font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200 shadow-lg hover:shadow-xl"
@@ -249,7 +249,7 @@ export default function LandingPage() {
             <div className="group p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-600">
               <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Analytics & Insights</h3>
@@ -331,7 +331,7 @@ export default function LandingPage() {
               Get Started Now
             </Link>
             <a
-              href="https://github.com/gateflow/gateflow"
+              href="https://github.com/pavvel11/gateflow"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center px-8 py-4 border border-white/30 rounded-xl text-lg font-medium text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white transition-all duration-200 shadow-lg hover:shadow-xl"

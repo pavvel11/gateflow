@@ -4,7 +4,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
-import LanguageSwitcher from './LanguageSwitcher'
+import { usePathname } from 'next/navigation'
+import FloatingLanguageSwitcher from './FloatingLanguageSwitcher'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -15,11 +16,65 @@ interface DashboardLayoutProps {
   isAdmin?: boolean
 }
 
+// Icons
+const Icons = {
+  dashboard: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+    </svg>
+  ),
+  products: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+    </svg>
+  ),
+  orderBumps: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+    </svg>
+  ),
+  coupons: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+    </svg>
+  ),
+  webhooks: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+    </svg>
+  ),
+  users: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+    </svg>
+  ),
+  payments: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+    </svg>
+  ),
+  myProducts: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+    </svg>
+  ),
+  store: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+    </svg>
+  ),
+  logout: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+    </svg>
+  )
+};
+
 export default function DashboardLayout({ children, user, isAdmin: isAdminProp }: DashboardLayoutProps) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const { signOut, isAdmin: isAdminContext } = useAuth()
   const t = useTranslations('navigation')
+  const pathname = usePathname()
 
   // Use prop if provided (from server), otherwise fallback to context (client)
   const isAdmin = isAdminProp !== undefined ? isAdminProp : isAdminContext
@@ -28,264 +83,241 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp }
     await signOut()
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Navigation */}
-      <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+  // Navigation Items Config
+  const adminLinks = [
+    { href: '/dashboard', label: t('dashboard'), icon: Icons.dashboard, exact: true },
+    { href: '/dashboard/products', label: t('products'), icon: Icons.products },
+    { href: '/dashboard/order-bumps', label: t('orderBumps'), icon: Icons.orderBumps },
+    { href: '/dashboard/coupons', label: t('coupons'), icon: Icons.coupons },
+    { href: '/dashboard/webhooks', label: t('webhooks'), icon: Icons.webhooks },
+    { href: '/dashboard/users', label: t('users'), icon: Icons.users },
+  ];
+
+  const userLinks = [
+    { href: '/my-products', label: t('myProducts'), icon: Icons.myProducts },
+    { href: '/products', label: t('store'), icon: Icons.store },
+  ];
+
+  const NavItem = ({ href, label, icon, exact }: { href: string, label: string, icon: JSX.Element, exact?: boolean }) => {
+    const active = exact ? pathname === href || pathname === href + '/' : pathname.includes(href);
+    return (
+      <Link
+        href={href}
+        onClick={() => setIsSidebarOpen(false)}
+        className={`flex items-center px-3 py-2.5 rounded-lg mb-1 transition-colors duration-200 group ${
+          active
+            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium'
+            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200'
+        }`}
+      >
+        <span className={`mr-3 ${active ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 group-hover:text-gray-500 dark:text-gray-500 dark:group-hover:text-gray-300'}`}>
+          {icon}
+        </span>
+        {label}
+      </Link>
+    );
+  };
+
+  // ---------------------------------------------------------------------------
+  // PUBLIC LAYOUT (No Sidebar) - For guests / login page / storefront
+  // ---------------------------------------------------------------------------
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+        {/* Simple Top Header for Guests */}
+        <header className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center shadow-sm sticky top-0 z-40">
+          <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <div className="flex items-center">
-              <div className="flex-shrink-0 flex items-center">
-                <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              <Link href="/" className="flex items-center group">
+                <div className="w-9 h-9 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center mr-3 shadow-md group-hover:scale-105 transition-transform">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <span className="ml-3 text-xl font-bold text-gray-900 dark:text-white">
+                <span className="text-xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 leading-none">
                   GateFlow
                 </span>
-              </div>
-              
-              <div className="hidden md:ml-10 md:flex md:space-x-8">
-                {user ? (
-                  <>
-                    {isAdmin && (
-                      <>
-                        <Link
-                          href="/dashboard"
-                          className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                        >
-                          {t('dashboard')}
-                        </Link>
-                        <Link
-                          href="/dashboard/products"
-                          className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                        >
-                          {t('products')}
-                        </Link>
-                        <Link
-                          href="/dashboard/order-bumps"
-                          className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                        >
-                          {t('orderBumps')}
-                        </Link>
-                        <Link
-                          href="/dashboard/coupons"
-                          className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                        >
-                          {t('coupons')}
-                        </Link>
-                        <Link
-                          href="/dashboard/webhooks"
-                          className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                        >
-                          {t('webhooks')}
-                        </Link>
-                        <Link
-                          href="/dashboard/users"
-                          className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                        >
-                          {t('users')}
-                        </Link>
-                      </>
-                    )}
-                    <Link
-                      href="/my-products"
-                      className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                    >
-                      {t('myProducts')}
-                    </Link>
-                  </>
-                ) : null}
-                <Link
-                  href="/products"
-                  className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  {t('store')}
-                </Link>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              {/* Mobile menu button */}
-              <div className="md:hidden">
-                <button
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white p-2 rounded-md transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    {isMobileMenuOpen ? (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    ) : (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                    )}
-                  </svg>
-                </button>
-              </div>
-              
-              {/* User menu or login button */}
-              {user ? (
-                <div className="hidden md:block relative">
-                  {/* Overlay to close user menu */}
-                  {isUserMenuOpen && (
-                    <div
-                      className="fixed inset-0 z-[55]"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    />
-                  )}
-                  
-                  <button
-                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center space-x-2 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors"
-                  >
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-medium">
-                        {user.email?.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  
-                  {isUserMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-[60]">
-                      <div className="py-1">
-                        <div className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700">
-                          {user.email}
-                        </div>
-                        <div className="border-b border-gray-200 dark:border-gray-700">
-                          <LanguageSwitcher />
-                        </div>
-                        <button
-                          onClick={handleSignOut}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        >
-                          {t('logout')}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <Link
-                  href="/login"
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors"
-                >
-                  {t('login')}
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
-        
-        {/* Mobile menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 dark:border-gray-700">
-            <div className="px-2 pt-2 pb-3 space-y-1 bg-white dark:bg-gray-800">
-              {user ? (
-                <>
-                  {isAdmin && (
-                    <>
-                      <Link
-                        href="/dashboard"
-                        className="block px-3 py-2 text-base font-medium text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        {t('dashboard')}
-                      </Link>
-                      <Link
-                        href="/dashboard/products"
-                        className="block px-3 py-2 text-base font-medium text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        {t('products')}
-                      </Link>
-                      <Link
-                        href="/dashboard/order-bumps"
-                        className="block px-3 py-2 text-base font-medium text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        {t('orderBumps')}
-                      </Link>
-                      <Link
-                        href="/dashboard/coupons"
-                        className="block px-3 py-2 text-base font-medium text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        {t('coupons')}
-                      </Link>
-                      <Link
-                        href="/dashboard/webhooks"
-                        className="block px-3 py-2 text-base font-medium text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        {t('webhooks')}
-                      </Link>
-                      <Link
-                        href="/dashboard/users"
-                        className="block px-3 py-2 text-base font-medium text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        {t('users')}
-                      </Link>
-                    </>
-                  )}
-                  <Link
-                    href="/my-products"
-                    className="block px-3 py-2 text-base font-medium text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {t('myProducts')}
-                  </Link>
-                </>
-              ) : null}
-              <Link
-                href="/products"
-                className="block px-3 py-2 text-base font-medium text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {t('store')}
               </Link>
-              
-              {/* Mobile user section */}
-              {user ? (
-                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-                    {user.email}
-                  </div>
-                  <div className="px-3 py-2">
-                    <LanguageSwitcher />
-                  </div>
-                  <button
-                    onClick={handleSignOut}
-                    className="block w-full text-left px-3 py-2 text-base font-medium text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
-                  >
-                    {t('logout')}
-                  </button>
-                </div>
-              ) : (
-                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <Link
-                    href="/login"
-                    className="block mx-3 px-3 py-2 text-base font-medium bg-blue-600 hover:bg-blue-700 text-white text-center rounded-md transition-colors"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {t('login')}
-                  </Link>
-                </div>
-              )}
+            </div>
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <div className="flex items-center h-full">
+                <FloatingLanguageSwitcher mode="static" variant="compact" />
+              </div>
+              <div className="h-8 w-px bg-gray-200 dark:bg-gray-700 mx-2 hidden sm:block"></div>
+              <Link 
+                href="/login" 
+                className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-all shadow-sm hover:shadow-md active:scale-95"
+              >
+                {t('login')}
+              </Link>
             </div>
           </div>
-        )}
-      </nav>
+        </header>
 
-      {/* Main content */}
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+        <main className="flex-1">
           {children}
+        </main>
+      </div>
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // AUTHENTICATED LAYOUT (With Sidebar)
+  // ---------------------------------------------------------------------------
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-screen sticky top-0">
+        <div className="h-16 flex items-center px-6 border-b border-gray-200 dark:border-gray-700">
+          <Link href="/dashboard" className="flex items-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mr-3 shadow-sm">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">
+              GateFlow
+            </span>
+          </Link>
         </div>
-      </main>
+
+        <div className="flex-1 overflow-y-auto py-6 px-4">
+          {user && isAdmin && (
+            <div className="mb-8">
+              <h3 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                Admin
+              </h3>
+              <nav className="space-y-0.5">
+                {adminLinks.map(link => (
+                  <NavItem key={link.href} {...link} />
+                ))}
+              </nav>
+            </div>
+          )}
+
+          <div>
+            <h3 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+              User
+            </h3>
+            <nav className="space-y-0.5">
+              {userLinks.map(link => (
+                <NavItem key={link.href} {...link} />
+              ))}
+            </nav>
+          </div>
+        </div>
+
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+          <div className="flex items-center w-full">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold mr-3 shadow-sm">
+              {user.email?.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                {user.email}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                {isAdmin ? 'Administrator' : 'User'}
+              </p>
+            </div>
+            <button 
+              onClick={handleSignOut}
+              className="ml-2 p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              title={t('logout')}
+            >
+              {Icons.logout}
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div 
+            className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" 
+            onClick={() => setIsSidebarOpen(false)}
+          />
+          
+          <div className="fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-800 shadow-2xl flex flex-col h-full transform transition-transform duration-300 ease-in-out">
+            <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <span className="text-xl font-bold text-gray-900 dark:text-white">GateFlow</span>
+              </div>
+              <button 
+                onClick={() => setIsSidebarOpen(false)}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto py-6 px-4">
+              {user && isAdmin && (
+                <div className="mb-8">
+                  <h3 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Admin</h3>
+                  {adminLinks.map(link => <NavItem key={link.href} {...link} />)}
+                </div>
+              )}
+              <div>
+                <h3 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">User</h3>
+                {userLinks.map(link => <NavItem key={link.href} {...link} />)}
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold mr-3">
+                    {user?.email?.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[120px]">
+                    {user?.email}
+                  </div>
+                </div>
+                <button onClick={handleSignOut} className="text-gray-500">{Icons.logout}</button>
+              </div>
+              <div className="flex justify-center">
+                <FloatingLanguageSwitcher mode="static" variant="compact" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <header className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-4 sm:px-6 lg:px-8">
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+          >
+            <span className="sr-only">Open sidebar</span>
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+
+          <div className="flex-1 flex justify-end items-center space-x-4">
+            <div className="hidden md:block">
+              <FloatingLanguageSwitcher mode="static" variant="compact" />
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
+        </main>
+      </div>
     </div>
   )
 }

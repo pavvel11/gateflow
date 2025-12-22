@@ -20,7 +20,7 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 ### 🔌 Integrations & Automation
 
 #### Outgoing Webhooks (Automation)
-**Status**: 🏗️ Partially Done (v1.0 Implemented)
+**Status**: 🏗️ Partially Done (v1.5 Implemented)
 **Description**: Trigger external automations when key events occur in GateFlow. Essential for CRM, Mailing, and Marketing Automation.
 
 **v1.5 Implemented (Done 2025-12-19)**:
@@ -39,12 +39,26 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 
 **Integration Targets**: Zapier, Make (Integromat), ActiveCampaign, MailerLite, Custom URL.
 
-#### Invoicing Integration (Fakturownia, iFirma)
+#### Transactional Emails & Logs
+**Status**: 📋 Planned
+**Description**: Advanced email delivery system with multiple providers and full history.
+**Features**:
+- **Providers**:
+    - **EmailLabs**: Integration with Polish provider for high deliverability in PL.
+    - **AWS SES**: Cost-effective global delivery.
+- **Email Logs**:
+    - Database table `email_logs` to track every sent message.
+    - Status tracking (Sent, Delivered, Bounced, Opened - via webhooks).
+    - Admin UI to view sent emails and their content/status.
+- **Templates**: Support for dynamic templates (e.g., React Email or MJML).
+
+#### Invoicing Integration (Fakturownia, iFirma, KSeF)
 **Status**: 📋 Planned
 **Description**: Automatically generate and send invoices for successful purchases.
 **Features**:
 - **Fakturownia (InvoiceOcean)** integration via API.
 - **iFirma** integration via API.
+- **KSeF (Krajowy System e-Faktur)**: Direct integration to push invoices to the Polish national e-invoice system (mandatory for B2B).
 - Detect user location/TAX ID (NIP) during checkout (requires Stripe Tax or custom field).
 - Auto-send invoice PDF to customer email.
 - Sync invoices with payment transactions in database.

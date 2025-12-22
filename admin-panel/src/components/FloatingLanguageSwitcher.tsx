@@ -2,7 +2,7 @@
 
 import { useLocale } from 'next-intl'
 import { useRouter, usePathname } from 'next/navigation'
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef, useEffect } from 'react'
 import { locales } from '@/lib/locales'
 
 const languages = {
@@ -12,38 +12,49 @@ const languages = {
 
 interface FloatingLanguageSwitcherProps {
   position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left'
-  variant?: 'minimal' | 'compact' | 'discrete' | 'full'
+  variant?: 'minimal' | 'compact' | 'discrete'
+  mode?: 'floating' | 'static'
 }
 
 export default function FloatingLanguageSwitcher({ 
   position = 'top-right',
-  variant = 'discrete'
+  variant = 'discrete',
+  mode = 'floating'
 }: FloatingLanguageSwitcherProps) {
   const locale = useLocale()
   const router = useRouter()
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [containerRef])
 
   const handleLanguageChange = (newLocale: string) => {
     startTransition(() => {
-      // Set cookie to persist language choice
       document.cookie = `locale=${newLocale}; path=/; max-age=31536000; SameSite=Lax`
       
-      // Remove current locale from pathname
       const segments = pathname.split('/').filter(Boolean)
       const currentLocale = segments[0]
       
       let newPath = ''
       if (locales.includes(currentLocale as (typeof locales)[number])) {
-        // Remove current locale and add new one
         newPath = `/${newLocale}/${segments.slice(1).join('/')}`
       } else {
-        // Add new locale to current path
         newPath = `/${newLocale}${pathname}`
       }
       
-      // Navigate to new path
       router.push(newPath)
       setIsOpen(false)
     })
@@ -58,114 +69,39 @@ export default function FloatingLanguageSwitcher({
 
   const currentLanguage = languages[locale as keyof typeof languages]
 
-  // Discrete variant - very subtle, small, only shows flag
-  if (variant === 'discrete') {
-    return (
-      <div className={`fixed ${positionClasses[position]} z-50 opacity-70 hover:opacity-100 transition-opacity duration-300`}>
-        <div className="relative">
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            disabled={isPending}
-            className={`group flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 bg-black/20 backdrop-blur-sm border border-white/10 rounded-lg hover:bg-black/30 hover:border-white/20 transition-all duration-200 ${
-              isPending ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-            aria-label="Switch language"
-          >
-            <span className="text-sm">{currentLanguage.flag}</span>
-          </button>
+  const wrapperClasses = mode === 'floating' 
+    ? `fixed ${positionClasses[position]} z-50` 
+    : 'relative inline-block';
 
-          {isOpen && (
-            <>
-              <div className="absolute top-full right-0 mt-1 w-28 bg-black/40 backdrop-blur-md border border-white/20 rounded-lg shadow-xl z-50">
-                <div className="p-1">
-                  {Object.entries(languages).map(([code, lang]) => (
-                    <button
-                      key={code}
-                      onClick={() => handleLanguageChange(code)}
-                      className={`flex items-center gap-2 w-full px-2 py-1.5 text-xs rounded-md transition-colors ${
-                        locale === code
-                          ? 'bg-white/20 text-white'
-                          : 'text-white/70 hover:bg-white/10 hover:text-white'
-                      }`}
-                    >
-                      <span className="text-sm">{lang.flag}</span>
-                      <span className="font-medium">{lang.short}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setIsOpen(false)}
-              />
-            </>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  if (variant === 'minimal') {
-    return (
-      <div className={`fixed ${positionClasses[position]} z-50 opacity-60 hover:opacity-100 transition-opacity duration-300`}>
-        <div className="relative">
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            disabled={isPending}
-            className={`group flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 bg-black/10 backdrop-blur-sm border border-white/10 rounded-full hover:bg-black/20 hover:border-white/20 transition-all duration-200 shadow-sm hover:shadow-md ${
-              isPending ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
-            }`}
-            aria-label="Switch language"
-          >
-            <span className="text-base sm:text-lg">{currentLanguage.flag}</span>
-          </button>
-
-          {isOpen && (
-            <>
-              <div className="absolute top-full right-0 mt-2 w-32 bg-black/20 backdrop-blur-md border border-white/20 rounded-xl shadow-xl z-50">
-                <div className="p-1">
-                  {Object.entries(languages).map(([code, lang]) => (
-                    <button
-                      key={code}
-                      onClick={() => handleLanguageChange(code)}
-                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition-colors ${
-                        locale === code
-                          ? 'bg-white/20 text-white'
-                          : 'text-white/80 hover:bg-white/10 hover:text-white'
-                      }`}
-                    >
-                      <span>{lang.flag}</span>
-                      <span className="font-medium">{lang.short}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setIsOpen(false)}
-              />
-            </>
-          )}
-        </div>
-      </div>
-    )
-  }
+  // Base button styles - adjusted for both light/dark mode compatibility
+  const buttonBaseClasses = mode === 'floating'
+    // Floating style (dark overlay typically)
+    ? 'bg-black/20 backdrop-blur-sm border-white/10 hover:bg-black/30 hover:border-white/20 text-white'
+    // Static style (fits into layout, handles light/dark)
+    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200';
 
   return (
-    <div className={`fixed ${positionClasses[position]} z-50 opacity-80 hover:opacity-100 transition-opacity duration-300`}>
+    <div className={wrapperClasses} ref={containerRef}>
       <div className="relative">
         <button
           onClick={() => setIsOpen(!isOpen)}
           disabled={isPending}
-          className={`group flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-black/20 backdrop-blur-md border border-white/15 rounded-full hover:bg-black/30 hover:border-white/25 transition-all duration-200 shadow-md hover:shadow-lg ${
-            isPending ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
-          }`}
+          className={`
+            group flex items-center justify-center gap-2 border rounded-lg transition-all duration-200 shadow-sm
+            ${buttonBaseClasses}
+            ${isPending ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md'}
+            ${variant === 'discrete' ? 'p-2' : 'px-3 py-2'}
+          `}
+          aria-label="Switch language"
         >
-          <span className="text-base">{currentLanguage.flag}</span>
-          <span className="hidden sm:inline text-sm font-medium text-white">{currentLanguage.name}</span>
-          <span className="sm:hidden text-sm font-medium text-white">{currentLanguage.short}</span>
+          <span className="text-lg leading-none">{currentLanguage.flag}</span>
+          {variant !== 'discrete' && (
+            <span className="text-xs font-bold uppercase tracking-wider opacity-80">
+              {currentLanguage.short}
+            </span>
+          )}
           <svg
-            className={`w-3 h-3 text-white/50 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            className={`w-3 h-3 opacity-50 transition-transform ${isOpen ? 'rotate-180' : ''}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -175,35 +111,31 @@ export default function FloatingLanguageSwitcher({
         </button>
 
         {isOpen && (
-          <>
-            <div className="absolute top-full right-0 mt-2 w-40 sm:w-48 bg-black/30 backdrop-blur-md border border-white/20 rounded-xl shadow-xl z-50">
-              <div className="p-1">
-                {Object.entries(languages).map(([code, lang]) => (
-                  <button
-                    key={code}
-                    onClick={() => handleLanguageChange(code)}
-                    className={`flex items-center gap-3 w-full px-3 py-2.5 text-sm rounded-lg transition-colors ${
-                      locale === code
-                        ? 'bg-white/20 text-white'
-                        : 'text-white/70 hover:bg-white/10 hover:text-white'
-                    }`}
-                  >
-                    <span className="text-base">{lang.flag}</span>
-                    <span className="font-medium">{lang.name}</span>
-                    {locale === code && (
-                      <svg className="w-4 h-4 ml-auto text-white/60" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </button>
-                ))}
-              </div>
+          <div className={`
+            absolute mt-2 w-32 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200
+            ${mode === 'floating' 
+              ? 'top-full right-0 bg-black/40 backdrop-blur-md border border-white/20' 
+              : 'top-full right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'}
+          `}>
+            <div className="p-1">
+              {Object.entries(languages).map(([code, lang]) => (
+                <button
+                  key={code}
+                  onClick={() => handleLanguageChange(code)}
+                  className={`
+                    flex items-center gap-3 w-full px-3 py-2 text-sm rounded-lg transition-colors
+                    ${mode === 'floating'
+                      ? (locale === code ? 'bg-white/20 text-white' : 'text-white/80 hover:bg-white/10 hover:text-white')
+                      : (locale === code ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700')
+                    }
+                  `}
+                >
+                  <span className="text-base leading-none">{lang.flag}</span>
+                  <span className="font-medium text-xs">{lang.name}</span>
+                </button>
+              ))}
             </div>
-            <div
-              className="fixed inset-0 z-40"
-              onClick={() => setIsOpen(false)}
-            />
-          </>
+          </div>
         )}
       </div>
     </div>
