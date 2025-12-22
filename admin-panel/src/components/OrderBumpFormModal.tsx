@@ -274,6 +274,7 @@ const OrderBumpFormModal: React.FC<OrderBumpFormModalProps> = ({
                       <div className="mt-3">
                         <input
                           type="number"
+                          name="bump_price"
                           step="0.01"
                           min="0"
                           value={bumpPrice}

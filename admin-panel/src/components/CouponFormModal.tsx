@@ -192,6 +192,7 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({
                 <div className="relative">
                   <input
                     type="number"
+                    name="discount_value"
                     min="0"
                     step={formData.discount_type === 'percentage' ? "1" : "0.01"}
                     max={formData.discount_type === 'percentage' ? "100" : undefined}

@@ -190,6 +190,7 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 - **Product & Coupon changes**: Track price changes or discount updates.
 
 ### 🏗️ Architecture & Security Improvements
+- 🔴 **Cookie Consent Management**: Implement open-source solution **Klaro** to handle cookie consent and GDPR compliance. Ensure it blocks tracking scripts (Analytics, Stripe, etc.) until consent is granted.
 - 📋 **Custom Error Classes**: Implement strongly typed error classes (e.g., `UnauthorizedError`, `ForbiddenError`) with automatic HTTP status mapping for cleaner API code.
 - 📋 **API Middleware Wrapper**: Create a `withAdminAuth()` Higher-Order Function (HOF) to wrap admin routes, reducing boilerplate and centralizing security/error handling.
 - 📋 **Supabase Custom JWT Claims**: Integrate `is_admin` flag directly into the Supabase JWT token to enable stateless, lightning-fast admin verification in Edge Middleware.
