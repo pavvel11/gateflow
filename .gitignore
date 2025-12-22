@@ -34,7 +34,12 @@ yarn-error.log*
 # Node modules
 node_modules/
 
-# Build outputs
+# AI Agents Instructions
+CLAUDE.md
+GEMINI.md
+AGENTS.md
+
+# Next.js build outputs
 dist/*.map
 build/
 

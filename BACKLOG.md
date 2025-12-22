@@ -174,6 +174,15 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 - **Auto-Revoke**: Automatically revoke access when a refund is processed.
 - **Partial Refunds**: Allow refunding specific amounts.
 
+#### Payment Transactions History UI
+**Status**: 📋 Planned
+**Description**: A dedicated view to monitor all purchase attempts and successful payments.
+**Features**:
+- **Transaction List**: Comprehensive table showing Customer Email, Product, Amount, Currency, and Status.
+- **Stripe Integration**: Link each transaction to the Stripe Dashboard.
+- **Search & Filters**: Filter by date range, product, or transaction status.
+- **Export**: Basic CSV export for accounting.
+
 ### 🎥 Video & Media
 
 #### Full Integration with Bunny.net API
