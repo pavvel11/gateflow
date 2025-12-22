@@ -83,7 +83,7 @@ GRANT EXECUTE ON FUNCTION validate_email_format TO service_role, authenticated;
 
 -- Create admin_actions table for audit logging (SECURITY)
 CREATE TABLE IF NOT EXISTS admin_actions (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   admin_id UUID REFERENCES auth.users(id) ON DELETE CASCADE, -- Nullable for system/guest operations
   action VARCHAR(100) NOT NULL CHECK (length(action) BETWEEN 1 AND 100),
   target_type VARCHAR(50) NOT NULL CHECK (length(target_type) BETWEEN 1 AND 50),
@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS admin_actions (
 -- Note: For high-volume applications, consider partitioning by created_at (monthly/yearly)
 -- to improve query performance and maintenance operations
 CREATE TABLE IF NOT EXISTS payment_transactions (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   session_id TEXT NOT NULL CHECK (
     length(session_id) BETWEEN 1 AND 255 AND 
     session_id ~* '^cs_[a-zA-Z0-9_]+$'
@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS payment_transactions (
 
 -- Create guest_purchases table to track purchases by email before account creation
 CREATE TABLE IF NOT EXISTS guest_purchases (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   customer_email TEXT NOT NULL CHECK (public.validate_email_format(customer_email)),
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
   transaction_amount NUMERIC NOT NULL CHECK (transaction_amount >= 0 AND transaction_amount <= 99999999), -- Amount in cents, max $999,999.99

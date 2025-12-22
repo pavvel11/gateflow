@@ -10,7 +10,7 @@ BEGIN;
 
 -- Tracks individual user progress for each video/product
 CREATE TABLE IF NOT EXISTS public.video_progress (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   product_id UUID REFERENCES public.products(id) ON DELETE CASCADE NOT NULL,
   
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS public.video_progress (
 
 -- Stores raw interaction events for deep analytics
 CREATE TABLE IF NOT EXISTS public.video_events (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   progress_id UUID REFERENCES public.video_progress(id) ON DELETE CASCADE NOT NULL,
   
   event_type TEXT NOT NULL CHECK (event_type IN ('play', 'pause', 'seek', 'heartbeat', 'complete')),

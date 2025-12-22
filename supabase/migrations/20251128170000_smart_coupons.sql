@@ -9,7 +9,7 @@ BEGIN;
 -- =============================================================================
 
 CREATE TABLE IF NOT EXISTS public.coupons (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   code TEXT NOT NULL CHECK (length(code) >= 3),
   
   -- Discount configuration
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS public.coupons (
 -- =============================================================================
 
 CREATE TABLE IF NOT EXISTS public.coupon_redemptions (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   coupon_id UUID REFERENCES public.coupons(id) ON DELETE RESTRICT NOT NULL,
   
   -- User info (linked user or guest email)

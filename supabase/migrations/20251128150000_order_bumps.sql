@@ -13,7 +13,7 @@ BEGIN;
 -- Example: Main product is a course ($99), bump is a bonus workbook ($7)
 -- The bump appears as a checkbox on the checkout page
 CREATE TABLE IF NOT EXISTS order_bumps (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
 
   -- Product relationships
   main_product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,

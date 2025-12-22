@@ -10,7 +10,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Create products table 
 CREATE TABLE IF NOT EXISTS products (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL CHECK (length(name) <= 255), -- Product name limited to 255 characters
   slug TEXT UNIQUE NOT NULL CHECK (slug ~ '^[a-zA-Z0-9_-]+$' AND length(slug) BETWEEN 1 AND 100), -- URL-safe slug: alphanumeric, hyphens, underscores only
   description TEXT CHECK (length(description) <= 2000), -- Product description limited to 2000 characters
@@ -53,7 +53,7 @@ COMMENT ON COLUMN products.tenant_id IS 'Multi-tenant support - allows product i
 
 -- Create user_product_access table with product_id reference for better data integrity
 CREATE TABLE IF NOT EXISTS user_product_access (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL, -- Improved data integrity
   -- Temporal access fields
@@ -589,14 +589,14 @@ COMMENT ON FUNCTION get_user_profile IS 'Get complete user profile with access s
 
 -- Create admin_users table to track who is an admin
 CREATE TABLE IF NOT EXISTS admin_users (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
 -- Create audit table for security monitoring
 CREATE TABLE IF NOT EXISTS audit_log (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   table_name TEXT NOT NULL,
   operation TEXT NOT NULL CHECK (operation IN ('INSERT', 'UPDATE', 'DELETE')),
   old_values JSONB,
