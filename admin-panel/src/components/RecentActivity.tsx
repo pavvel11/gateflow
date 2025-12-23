@@ -1,8 +1,8 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { getRecentActivity } from '@/lib/actions/dashboard'
 
 interface ActivityItem {
   id: string
@@ -15,75 +15,32 @@ interface ActivityItem {
   color: string
 }
 
-interface AccessGrant {
-  id: string
-  created_at: string
-  user_id: string
-  product_id: string
-  products: { name: string } | null
-}
-
-interface Product {
-  id: string
-  name: string
-  created_at: string
-}
-
 export default function RecentActivity() {
   const t = useTranslations('admin.dashboard');
   const [activities, setActivities] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function fetchRecentActivity() {
+    async function fetchActivity() {
       try {
-        const supabase = await createClient()
-        // Get recent access grants with user email
-        const { data: accessGrants } = await supabase
-          .from('user_product_access')
-          .select(`
-            id,
-            created_at,
-            user_id,
-            product_id,
-            products(name)
-          `)
-          .order('created_at', { ascending: false })
-          .limit(10)
-
-        // Get user emails separately (since direct auth.users join might not work)
-        const userIds = [...new Set((accessGrants || []).map((grant: AccessGrant) => grant.user_id))]
-        const { data: users } = await supabase
-          .from('user_access_stats')
-          .select('user_id, email')
-          .in('user_id', userIds)
-
-        // Create user email lookup map
-        const userEmailMap = new Map<string, string>((users || []).map((user: { user_id: string; email: string }) => [user.user_id, user.email]))
-
-        // Get recent products
-        const { data: recentProducts } = await supabase
-          .from('products')
-          .select('id, name, created_at')
-          .order('created_at', { ascending: false })
-          .limit(5)
+        const data: any = await getRecentActivity()
+        if (!data) {
+          setActivities([])
+          return
+        }
 
         const activityItems: ActivityItem[] = []
 
         // Process access grants
-        if (accessGrants) {
-          (accessGrants as AccessGrant[]).forEach((grant) => {
-            // For one-to-one relation, Supabase returns single object, not array
-            const product = grant.products as unknown as { name: string } | null
-            const productName = product?.name || 'Unknown product'
-            const userEmail = userEmailMap.get(grant.user_id) || grant.user_id
-            
+        if (data.accessGrants) {
+          data.accessGrants.forEach((grant: any) => {
+            const productName = grant.products?.name || 'Unknown product'
             activityItems.push({
               id: `access_${grant.id}`,
               type: 'access_granted',
               message: t('recentActivity.accessGranted', { product: productName }),
               timestamp: grant.created_at,
-              user_email: userEmail,
+              user_email: grant.user_email,
               product_name: productName,
               icon: 'access',
               color: 'green'
@@ -92,8 +49,8 @@ export default function RecentActivity() {
         }
 
         // Process new products
-        if (recentProducts) {
-          (recentProducts as Product[]).forEach((product) => {
+        if (data.recentProducts) {
+          data.recentProducts.forEach((product: any) => {
             activityItems.push({
               id: `product_${product.id}`,
               type: 'product_created',
@@ -110,14 +67,14 @@ export default function RecentActivity() {
         activityItems.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
         setActivities(activityItems.slice(0, 8))
 
-      } catch {
-        // Silent error handling
+      } catch (err) {
+        console.error('Failed to fetch activity', err)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchRecentActivity()
+    fetchActivity()
   }, [t])
 
   const formatTimeAgo = (timestamp: string) => {

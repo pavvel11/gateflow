@@ -1,69 +1,31 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { getDashboardStats } from '@/lib/actions/dashboard'
 
 interface Stats {
   totalProducts: number
   totalUsers: number
   totalAccess: number
   activeUsers: number
+  totalRevenue: number
 }
 
 export default function StatsOverview() {
   const t = useTranslations('admin.dashboard')
-  const [stats, setStats] = useState<Stats>({
-    totalProducts: 0,
-    totalUsers: 0,
-    totalAccess: 0,
-    activeUsers: 0
-  })
+  const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchStats() {
       try {
-        const supabase = await createClient()
-        // Get total products
-        const { count: productsCount } = await supabase
-          .from('products')
-          .select('*', { count: 'exact', head: true })
-
-        // Get total unique users from user_product_access
-        const { data: accessUsers } = await supabase
-          .from('user_product_access')
-          .select('user_id')
-        
-        const uniqueUsers = new Set((accessUsers || []).map((record: { user_id: string }) => record.user_id))
-        const totalUsers = uniqueUsers.size
-
-        // Get total access records
-        const { count: accessCount } = await supabase
-          .from('user_product_access')
-          .select('*', { count: 'exact', head: true })
-
-        // Get active users (users who have accessed products recently)
-        // Since we don't have last_login tracking yet, we'll use recent access grants as a proxy
-        const sevenDaysAgo = new Date()
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-        
-        const { data: recentAccessUsers } = await supabase
-          .from('user_product_access')
-          .select('user_id, created_at')
-          .gte('created_at', sevenDaysAgo.toISOString())
-        
-        const activeUniqueUsers = new Set((recentAccessUsers || []).map((record: { user_id: string }) => record.user_id))
-        const activeUsers = activeUniqueUsers.size
-
-        setStats({
-          totalProducts: productsCount || 0,
-          totalUsers: totalUsers,
-          totalAccess: accessCount || 0,
-          activeUsers: activeUsers,
-        })
-      } catch {
-        // Silent error handling
+        const data = await getDashboardStats()
+        if (data) {
+          setStats(data as Stats)
+        }
+      } catch (err) {
+        console.error('Failed to fetch stats', err)
       } finally {
         setLoading(false)
       }
@@ -75,7 +37,7 @@ export default function StatsOverview() {
   const statItems = [
     {
       name: t('totalProducts'),
-      value: stats.totalProducts,
+      value: stats?.totalProducts ?? 0,
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -86,7 +48,7 @@ export default function StatsOverview() {
     },
     {
       name: t('totalUsers'),
-      value: stats.totalUsers,
+      value: stats?.totalUsers ?? 0,
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
@@ -97,7 +59,7 @@ export default function StatsOverview() {
     },
     {
       name: t('accessRecords'),
-      value: stats.totalAccess,
+      value: stats?.totalAccess ?? 0,
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -108,7 +70,7 @@ export default function StatsOverview() {
     },
     {
       name: t('activeUsers'),
-      value: stats.activeUsers,
+      value: stats?.activeUsers ?? 0,
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />

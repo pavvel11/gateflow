@@ -1,20 +1,27 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { Database } from '@/types/database'
 
-// Note: This client should ONLY be used in server-side contexts where admin privileges are required.
-// NEVER expose this client to the browser.
-
+/**
+ * Creates a Supabase client with the Service Role key.
+ * CRITICAL: This client bypasses RLS. ONLY use in secure server-side environments (API routes, server actions)
+ * after verifying that the requesting user has the necessary permissions.
+ */
 export function createAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error('Missing Supabase URL or Service Role Key')
+  if (!serviceRoleKey) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not defined. Admin client cannot be created.')
   }
 
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
+  return createSupabaseClient<Database>(
+    supabaseUrl,
+    serviceRoleKey,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
     }
-  })
+  )
 }

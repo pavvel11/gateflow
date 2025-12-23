@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { requireAdminApi } from '@/lib/auth-server';
 import { 
   validateGrantAccess, 
   sanitizeGrantAccessData 
@@ -14,14 +16,17 @@ export async function GET(
     const { id: userId } = await params;
     const supabase = await createClient();
     
-    // Check if user is authenticated
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Verify admin access
+    try {
+      await requireAdminApi(supabase);
+    } catch (authError: any) {
+      return NextResponse.json({ error: authError.message || 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user's product access with product details using the detailed view
-    const { data: userAccess, error: accessError } = await supabase
+    const adminClient = createAdminClient();
+
+    // Get user's product access using adminClient to access restricted view
+    const { data: userAccess, error: accessError } = await adminClient
       .from('user_product_access_detailed')
       .select(`
         id,
@@ -64,13 +69,15 @@ export async function POST(
     const { id: userId } = await params;
     const supabase = await createClient();
     
-    // Check if user is authenticated
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Verify admin access
+    try {
+      await requireAdminApi(supabase);
+    } catch (authError: any) {
+      return NextResponse.json({ error: authError.message || 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
+    const adminClient = createAdminClient();
 
     // Sanitize input data
     const sanitizedData = sanitizeGrantAccessData(body);
@@ -85,15 +92,16 @@ export async function POST(
     }
 
     // Validate request body
-    if (!sanitizedData.product_id) {
+    const productId = sanitizedData.product_id as string;
+    if (!productId) {
       return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
     }
 
-    // Check if product exists and is active
-    const { data: product, error: productError } = await supabase
+    // Check if product exists using adminClient
+    const { data: product, error: productError } = await adminClient
       .from('products')
       .select('id, name, is_active')
-      .eq('id', sanitizedData.product_id)
+      .eq('id', productId)
       .single();
 
     if (productError || !product) {
@@ -104,12 +112,12 @@ export async function POST(
       return NextResponse.json({ error: 'Cannot grant access to inactive product' }, { status: 400 });
     }
 
-    // Check if user already has access to this product
-    const { data: existingAccess, error: existingError } = await supabase
+    // Check if user already has access using adminClient
+    const { data: existingAccess, error: existingError } = await adminClient
       .from('user_product_access')
       .select('id')
       .eq('user_id', userId)
-      .eq('product_id', sanitizedData.product_id)
+      .eq('product_id', productId)
       .single();
 
     if (existingError && existingError.code !== 'PGRST116') {
@@ -121,23 +129,15 @@ export async function POST(
       return NextResponse.json({ error: 'User already has access to this product' }, { status: 409 });
     }
 
-    // Grant access
-    const accessData: {
-      user_id: string;
-      product_id: string;
-      created_at: string;
-      access_duration_days?: number;
-      access_expires_at?: string;
-    } = {
+    // Grant access using adminClient
+    const accessData: any = {
       user_id: userId,
       product_id: sanitizedData.product_id as string,
       created_at: new Date().toISOString()
     };
 
-    // Add temporal access fields if provided
     if (sanitizedData.access_duration_days) {
       accessData.access_duration_days = sanitizedData.access_duration_days as number;
-      // Calculate expiration date based on duration
       const expirationDate = new Date();
       expirationDate.setDate(expirationDate.getDate() + (sanitizedData.access_duration_days as number));
       accessData.access_expires_at = expirationDate.toISOString();
@@ -145,7 +145,7 @@ export async function POST(
       accessData.access_expires_at = sanitizedData.access_expires_at as string;
     }
 
-    const { data: newAccess, error: accessError } = await supabase
+    const { data: newAccess, error: accessError } = await adminClient
       .from('user_product_access')
       .insert(accessData)
       .select('id, product_id, created_at, access_expires_at, access_duration_days')
@@ -175,12 +175,14 @@ export async function DELETE(
     const { id: userId } = await params;
     const supabase = await createClient();
     
-    // Check if user is authenticated
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Verify admin access
+    try {
+      await requireAdminApi(supabase);
+    } catch (authError: any) {
+      return NextResponse.json({ error: authError.message || 'Unauthorized' }, { status: 401 });
     }
 
+    const adminClient = createAdminClient();
     const { searchParams } = new URL(request.url);
     const productId = searchParams.get('product_id');
 
@@ -188,8 +190,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
     }
 
-    // Check if access exists
-    const { data: existingAccess, error: existingError } = await supabase
+    // Check if access exists using adminClient
+    const { data: existingAccess, error: existingError } = await adminClient
       .from('user_product_access')
       .select('id')
       .eq('user_id', userId)
@@ -200,8 +202,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Access not found' }, { status: 404 });
     }
 
-    // Remove access
-    const { error: deleteError } = await supabase
+    // Remove access using adminClient
+    const { error: deleteError } = await adminClient
       .from('user_product_access')
       .delete()
       .eq('id', existingAccess.id);

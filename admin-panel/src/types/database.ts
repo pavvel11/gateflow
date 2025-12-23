@@ -1088,6 +1088,7 @@ export type Database = {
           schedule: string
         }[]
       }
+      get_dashboard_stats: { Args: never; Returns: Json }
       get_payment_statistics: {
         Args: { end_date?: string; start_date?: string }
         Returns: Json

@@ -127,6 +127,10 @@ export class WebhookService {
       throw new Error('Log entry not found');
     }
 
+    if (!log.endpoint_id) {
+      throw new Error('Endpoint ID is missing in log entry');
+    }
+
     const { data: endpoint, error: endpointError } = await supabase
       .from('webhook_endpoints')
       .select('id, url, secret')

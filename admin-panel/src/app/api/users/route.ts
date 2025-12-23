@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { requireAdminApi } from '@/lib/auth-server';
 import { 
   validateUserAction, 
   sanitizeUserActionData 
@@ -15,15 +17,19 @@ export async function GET(request: NextRequest) {
     const sortOrder = searchParams.get('sortOrder') || 'desc';
 
     const supabase = await createClient();
-
-    // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    
+    // CRITICAL: Verify admin access before using adminClient
+    try {
+      await requireAdminApi(supabase);
+    } catch (authError: any) {
+      return NextResponse.json({ error: authError.message || 'Unauthorized' }, { status: 401 });
     }
 
-    // Base query
-    let query = supabase
+    // Use Admin Client (Service Role) to bypass RLS on sensitive views
+    const adminClient = createAdminClient();
+
+    // Base query using adminClient
+    let query = adminClient
       .from('user_access_stats')
       .select('*', { count: 'exact' });
 
@@ -43,7 +49,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get detailed product access for all users
-    const { data: userAccess, error: accessError } = await supabase
+    const { data: userAccess, error: accessError } = await adminClient
       .from('user_product_access_detailed')
       .select('*')
       .order('access_created_at', { ascending: false });
@@ -103,10 +109,11 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
 
-    // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Verify admin access
+    try {
+      await requireAdminApi(supabase);
+    } catch (authError: any) {
+      return NextResponse.json({ error: authError.message || 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -123,7 +130,9 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const { userId, productId, action } = sanitizedData;
+    const userId = sanitizedData.userId as string;
+    const productId = sanitizedData.productId as string;
+    const action = sanitizedData.action as string;
 
     if (!userId || !productId || !action) {
       return NextResponse.json(
@@ -132,9 +141,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Use Admin Client for data modification
+    const adminClient = createAdminClient();
+
     if (action === 'grant') {
       // Grant access to a product
-      const { error } = await supabase
+      const { error } = await adminClient
         .from('user_product_access')
         .insert([{ user_id: userId, product_id: productId }]);
 
@@ -146,7 +158,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, message: 'Access granted' });
     } else if (action === 'revoke') {
       // Revoke access to a product
-      const { error } = await supabase
+      const { error } = await adminClient
         .from('user_product_access')
         .delete()
         .eq('user_id', userId)
