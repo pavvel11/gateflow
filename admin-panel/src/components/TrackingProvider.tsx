@@ -2,15 +2,21 @@
 
 import { useEffect } from 'react'
 import Script from 'next/script'
-import { usePathname, useSearchParams } from 'next/navigation'
+
+interface CustomScript {
+  id: string
+  name: string
+  location: 'head' | 'body'
+  content: string
+  category: 'essential' | 'analytics' | 'marketing'
+}
 
 interface PublicIntegrationsConfig {
   gtm_container_id?: string | null
   facebook_pixel_id?: string | null
   cookie_consent_enabled?: boolean
   consent_logging_enabled?: boolean
-  custom_head_code?: string | null
-  custom_body_code?: string | null
+  scripts?: CustomScript[]
 }
 
 interface TrackingProviderProps {
@@ -18,35 +24,16 @@ interface TrackingProviderProps {
 }
 
 export default function TrackingProvider({ config }: TrackingProviderProps) {
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
   if (!config) return null
 
   const {
     gtm_container_id,
     facebook_pixel_id,
     cookie_consent_enabled,
-    consent_logging_enabled,
-    custom_head_code,
-    custom_body_code
+    scripts = []
   } = config
 
-  // Inject Raw Custom Code
-  // Note: We use dangerouslySetInnerHTML in a Script tag for JS, but for HTML (like <noscript>) 
-  // we might need a different approach. For simplicity, we assume <script> mostly.
-  // Actually, putting raw HTML into head/body in React is tricky.
-  // We'll use a simple effect for body/head injection if possible, or just standard rendered elements.
-  
-  // HEAD custom code: We can try to render it. But React escapes HTML.
-  // Best approach for arbitrary HTML in head/body in Next.js App Router is usually via layout.tsx directly.
-  // But here we are a client component.
-  // We will leave custom_head_code/custom_body_code for the Server Component (layout.tsx) to handle 
-  // via dangerouslySetInnerHTML if possible, or we do it here via effects (less reliable for SEO).
-  // Let's assume this component ONLY handles the Managed Integrations (GTM/FB/Klaro).
-  // I will update layout.tsx to inject custom codes separately.
-
-  // --- KLARO CONFIG GENERATION ---
+  // --- KLARO CONFIG ---
   const klaroConfig = {
     version: 1,
     elementID: 'klaro',
@@ -78,37 +65,77 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
     apps: [] as any[],
   }
 
-  // Helper to add GTM
+  // 1. Add Managed Apps
   if (gtm_container_id) {
     klaroConfig.apps.push({
       name: 'google-tag-manager',
       title: 'Google Tag Manager',
       purposes: ['analytics'],
-      cookies: ['_ga', '_gid', '_gat'],
       required: false,
-      optOut: false,
-      onlyOnce: true,
     })
   }
-
-  // Helper to add Facebook
   if (facebook_pixel_id) {
     klaroConfig.apps.push({
       name: 'facebook-pixel',
       title: 'Meta Pixel',
       purposes: ['marketing'],
-      cookies: ['_fbp'],
       required: false,
-      optOut: false,
-      onlyOnce: true,
     })
   }
 
-  // --- RENDER LOGIC ---
+  // 2. Add Custom Scripts to Klaro (if consent required)
+  scripts.forEach(script => {
+    if (cookie_consent_enabled && script.category !== 'essential') {
+        klaroConfig.apps.push({
+            name: `script-${script.id}`,
+            title: script.name,
+            purposes: [script.category],
+            required: false
+        })
+    }
+  })
+
+  // --- RENDER HELPERS ---
+
+  const renderScript = (script: CustomScript) => {
+    // Basic heuristics to detect if content is wrapped in <script> tags
+    // If user pasted "<script>...</script>", we strip tags to use with Next/Script or DangerouslySet
+    // If user pasted raw JS "console.log()", we wrap it.
+    
+    let content = script.content.trim()
+    const hasScriptTag = content.startsWith('<script')
+    
+    // Extract inner content if wrapped
+    if (hasScriptTag) {
+        content = content.replace(/^<script[^>]*>|<\/script>$/g, '')
+    }
+
+    // Determine Logic
+    const requiresConsent = cookie_consent_enabled && script.category !== 'essential'
+    
+    // Props for the script
+    const scriptProps: any = {
+        id: `script-${script.id}`,
+        dangerouslySetInnerHTML: { __html: content }
+    }
+
+    if (requiresConsent) {
+        scriptProps.type = 'text/plain'
+        scriptProps['data-type'] = 'application/javascript'
+        scriptProps['data-name'] = `script-${script.id}`
+    }
+
+    // Use Next Script for Head/Body injection
+    // Note: strategy='afterInteractive' is default. 
+    // For 'head', we can try 'beforeInteractive' or rely on Next.js placement.
+    // Ideally we'd use portal to head for 'head' scripts, but Script handles it.
+    
+    return <Script key={script.id} {...scriptProps} />
+  }
 
   return (
     <>
-      {/* 1. Cookie Consent Enabled: Load Klaro + Scripts with data-name */}
+      {/* KLARO INIT */}
       {cookie_consent_enabled && (
         <>
           <Script
@@ -123,86 +150,49 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
             src="https://cdn.kiprotect.com/klaro/v0.7/klaro.js"
             strategy="afterInteractive"
           />
-
-          {/* GTM (Managed by Klaro) */}
-          {gtm_container_id && (
-            <Script
-              id="gtm-script"
-              type="text/plain"
-              data-type="application/javascript"
-              data-name="google-tag-manager"
-              dangerouslySetInnerHTML={{
-                __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-                new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-                j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-                'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-                })(window,document,'script','dataLayer','${gtm_container_id}');`
-              }}
-            />
-          )}
-
-          {/* Facebook Pixel (Managed by Klaro) */}
-          {facebook_pixel_id && (
-            <Script
-              id="fb-pixel"
-              type="text/plain"
-              data-type="application/javascript"
-              data-name="facebook-pixel"
-              dangerouslySetInnerHTML={{
-                __html: `!function(f,b,e,v,n,t,s)
-                {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-                n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-                if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-                n.queue=[];t=b.createElement(e);t.async=!0;
-                t.src=v;s=b.getElementsByTagName(e)[0];
-                s.parentNode.insertBefore(t,s)}(window, document,'script',
-                'https://connect.facebook.net/en_US/fbevents.js');
-                fbq('init', '${facebook_pixel_id}');
-                fbq('track', 'PageView');`
-              }}
-            />
-          )}
         </>
       )}
 
-      {/* 2. No Consent Required: Load Scripts Directly */}
-      {!cookie_consent_enabled && (
-        <>
-          {gtm_container_id && (
-            <Script
-              id="gtm-script"
-              strategy="afterInteractive"
-              dangerouslySetInnerHTML={{
-                __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-                new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-                j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-                'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-                })(window,document,'script','dataLayer','${gtm_container_id}');`
-              }}
-            />
-          )}
-
-          {/* Facebook Pixel */}
-          {facebook_pixel_id && (
-            <Script
-              id="fb-pixel"
-              strategy="afterInteractive"
-              dangerouslySetInnerHTML={{
-                __html: `!function(f,b,e,v,n,t,s)
-                {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-                n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-                if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-                n.queue=[];t=b.createElement(e);t.async=!0;
-                t.src=v;s=b.getElementsByTagName(e)[0];
-                s.parentNode.insertBefore(t,s)}(window, document,'script',
-                'https://connect.facebook.net/en_US/fbevents.js');
-                fbq('init', '${facebook_pixel_id}');
-                fbq('track', 'PageView');`
-              }}
-            />
-          )}
-        </>
+      {/* MANAGED SCRIPTS */}
+      {gtm_container_id && (
+        <Script
+          id="gtm-script"
+          type={cookie_consent_enabled ? "text/plain" : "text/javascript"}
+          data-type={cookie_consent_enabled ? "application/javascript" : undefined}
+          data-name={cookie_consent_enabled ? "google-tag-manager" : undefined}
+          dangerouslySetInnerHTML={{
+            __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+            })(window,document,'script','dataLayer','${gtm_container_id}');`
+          }}
+        />
       )}
+
+      {facebook_pixel_id && (
+        <Script
+          id="fb-pixel"
+          type={cookie_consent_enabled ? "text/plain" : "text/javascript"}
+          data-type={cookie_consent_enabled ? "application/javascript" : undefined}
+          data-name={cookie_consent_enabled ? "facebook-pixel" : undefined}
+          dangerouslySetInnerHTML={{
+            __html: `!function(f,b,e,v,n,t,s)
+            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)}(window, document,'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '${facebook_pixel_id}');
+            fbq('track', 'PageView');`
+          }}
+        />
+      )}
+
+      {/* CUSTOM SCRIPTS */}
+      {scripts.map(script => renderScript(script))}
     </>
   )
 }

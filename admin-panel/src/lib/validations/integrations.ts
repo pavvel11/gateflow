@@ -1,6 +1,6 @@
 /**
  * Integrations validation utilities
- * No external dependencies - pure TypeScript validation matching project style
+ * Pure TypeScript validation
  */
 
 export interface ValidationResult {
@@ -17,8 +17,14 @@ export interface IntegrationsInput {
   facebook_test_event_code?: string | null;
   cookie_consent_enabled?: boolean;
   consent_logging_enabled?: boolean;
-  custom_head_code?: string | null;
-  custom_body_code?: string | null;
+}
+
+export interface CustomScriptInput {
+  name: string;
+  script_location: 'head' | 'body';
+  script_content: string;
+  category: 'essential' | 'analytics' | 'marketing';
+  is_active: boolean;
 }
 
 export function validateIntegrations(data: IntegrationsInput): ValidationResult {
@@ -29,34 +35,29 @@ export function validateIntegrations(data: IntegrationsInput): ValidationResult 
     errors[field].push(message);
   };
 
-  // GTM ID validation (e.g. GTM-XXXXXX)
-  if (data.gtm_container_id) {
-    if (!/^GTM-[A-Z0-9]+$/.test(data.gtm_container_id)) {
-      addError('gtm_container_id', 'Invalid GTM Container ID format (should be GTM-XXXXXX)');
-    }
+  // GTM ID validation
+  if (data.gtm_container_id && !/^GTM-[A-Z0-9]+$/.test(data.gtm_container_id)) {
+    addError('gtm_container_id', 'Invalid GTM Container ID format');
   }
 
-  // Google Ads Conversion ID validation (e.g. AW-XXXXXX)
-  if (data.google_ads_conversion_id) {
-    if (!/^AW-[0-9]+$/.test(data.google_ads_conversion_id)) {
-      addError('google_ads_conversion_id', 'Invalid Google Ads ID format (should be AW-XXXXXX)');
-    }
+  // Google Ads ID
+  if (data.google_ads_conversion_id && !/^AW-[0-9]+$/.test(data.google_ads_conversion_id)) {
+    addError('google_ads_conversion_id', 'Invalid Google Ads ID format');
   }
 
-  // FB Pixel ID validation (numeric)
-  if (data.facebook_pixel_id) {
-    if (!/^[0-9]+$/.test(data.facebook_pixel_id)) {
-      addError('facebook_pixel_id', 'Facebook Pixel ID must be numeric');
-    }
+  // FB Pixel
+  if (data.facebook_pixel_id && !/^[0-9]+$/.test(data.facebook_pixel_id)) {
+    addError('facebook_pixel_id', 'Facebook Pixel ID must be numeric');
   }
 
-  // CAPI Token - just length check if provided
-  if (data.facebook_capi_token && data.facebook_capi_token.length < 10) {
-    addError('facebook_capi_token', 'Facebook CAPI Token seems too short');
-  }
+  return { isValid: Object.keys(errors).length === 0, errors };
+}
 
-  return {
-    isValid: Object.keys(errors).length === 0,
-    errors
-  };
+export function validateScript(data: CustomScriptInput): ValidationResult {
+  const errors: Record<string, string[]> = {};
+  
+  if (!data.name || data.name.length < 2) errors['name'] = ['Name is too short'];
+  if (!data.script_content || data.script_content.length < 5) errors['script_content'] = ['Script content is too short'];
+  
+  return { isValid: Object.keys(errors).length === 0, errors };
 }

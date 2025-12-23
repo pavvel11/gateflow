@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { acceptAllCookies } from './helpers/consent';
 
 // Enforce single worker
 test.describe.configure({ mode: 'serial' });
@@ -20,6 +21,9 @@ test.describe('Authenticated Admin Dashboard', () => {
 
   // Helper to login in any test
   const loginAsAdmin = async (page: Page) => {
+    // Set consent cookie first to avoid banner
+    await acceptAllCookies(page);
+    
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 

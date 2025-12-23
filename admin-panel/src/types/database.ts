@@ -297,6 +297,39 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_scripts: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          script_content: string
+          script_location: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          script_content: string
+          script_location: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          script_content?: string
+          script_location?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       guest_purchases: {
         Row: {
           claimed_at: string | null
@@ -350,8 +383,6 @@ export type Database = {
           consent_logging_enabled: boolean | null
           cookie_consent_enabled: boolean | null
           created_at: string | null
-          custom_body_code: string | null
-          custom_head_code: string | null
           facebook_capi_token: string | null
           facebook_pixel_id: string | null
           facebook_test_event_code: string | null
@@ -365,8 +396,6 @@ export type Database = {
           consent_logging_enabled?: boolean | null
           cookie_consent_enabled?: boolean | null
           created_at?: string | null
-          custom_body_code?: string | null
-          custom_head_code?: string | null
           facebook_capi_token?: string | null
           facebook_pixel_id?: string | null
           facebook_test_event_code?: string | null
@@ -380,8 +409,6 @@ export type Database = {
           consent_logging_enabled?: boolean | null
           cookie_consent_enabled?: boolean | null
           created_at?: string | null
-          custom_body_code?: string | null
-          custom_head_code?: string | null
           facebook_capi_token?: string | null
           facebook_pixel_id?: string | null
           facebook_test_event_code?: string | null
@@ -1082,17 +1109,7 @@ export type Database = {
           original_price: number
         }[]
       }
-      get_public_integrations_config: {
-        Args: never
-        Returns: {
-          consent_logging_enabled: boolean
-          cookie_consent_enabled: boolean
-          custom_body_code: string
-          custom_head_code: string
-          facebook_pixel_id: string
-          gtm_container_id: string
-        }[]
-      }
+      get_public_integrations_config: { Args: never; Returns: Json }
       get_user_payment_history: {
         Args: { user_id_param: string }
         Returns: {

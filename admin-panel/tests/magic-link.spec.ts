@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { waitForEmail, extractMagicLink } from './helpers/mailpit';
+import { acceptAllCookies } from './helpers/consent';
 
 // Enforce single worker
 test.describe.configure({ mode: 'serial' });
@@ -10,6 +11,7 @@ test.describe('Magic Link Authentication (Mailpit)', () => {
     const testEmail = `magiclink-${Date.now()}@example.com`;
 
     // 1. Navigate to login page
+    await acceptAllCookies(page);
     await page.goto('/login');
     await expect(page.locator('h1').filter({ hasText: /GateFlow/i })).toBeVisible();
 

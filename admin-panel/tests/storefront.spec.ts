@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { waitForEmail, extractMagicLink } from './helpers/mailpit';
+import { acceptAllCookies } from './helpers/consent';
 
 // Enforce single worker
 test.describe.configure({ mode: 'serial' });
@@ -24,6 +25,7 @@ test.describe('Storefront & Checkout Flows', () => {
 
   // Helper to login as admin
   const loginAsAdmin = async (page: Page) => {
+    await acceptAllCookies(page);
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 

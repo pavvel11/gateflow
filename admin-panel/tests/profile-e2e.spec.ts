@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { waitForEmail, extractMagicLink, deleteAllMessages } from './helpers/mailpit';
+import { acceptAllCookies } from './helpers/consent';
 
 test.describe('Profile Management E2E', () => {
   const testEmail = `profile-test-${Date.now()}@example.com`;
@@ -15,6 +16,7 @@ test.describe('Profile Management E2E', () => {
 
   test('should update user profile successfully', async ({ page }) => {
     // 1. Login Logic
+    await acceptAllCookies(page);
     await page.goto('/login');
     
     // Fill email

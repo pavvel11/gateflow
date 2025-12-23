@@ -15,7 +15,7 @@ test.describe('Integrations Validation Logic', () => {
       gtm_container_id: 'INVALID-ID'
     });
     expect(result.isValid).toBe(false);
-    expect(result.errors.gtm_container_id).toContain('Invalid GTM Container ID format (should be GTM-XXXXXX)');
+    expect(result.errors.gtm_container_id).toContain('Invalid GTM Container ID format');
   });
 
   test('should accept valid FB Pixel ID', () => {

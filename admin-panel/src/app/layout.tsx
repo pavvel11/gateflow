@@ -33,12 +33,7 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* Custom Body Code Injection (Start of Body) */}
-        {config?.custom_body_code && (
-          <div dangerouslySetInnerHTML={{ __html: config.custom_body_code }} />
-        )}
-        
-        {/* Tracking Scripts (GTM, Pixel, Klaro) */}
+        {/* Tracking Scripts (GTM, Pixel, Klaro, Custom Scripts) */}
         <Suspense fallback={null}>
           <TrackingProvider config={config} />
         </Suspense>
