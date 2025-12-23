@@ -152,6 +152,39 @@ export type Database = {
           },
         ]
       }
+      consent_logs: {
+        Row: {
+          anonymous_id: string | null
+          consent_version: string | null
+          consents: Json | null
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          anonymous_id?: string | null
+          consent_version?: string | null
+          consents?: Json | null
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          anonymous_id?: string | null
+          consent_version?: string | null
+          consents?: Json | null
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       coupon_redemptions: {
         Row: {
           coupon_id: string
@@ -311,6 +344,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      integrations_config: {
+        Row: {
+          consent_logging_enabled: boolean | null
+          cookie_consent_enabled: boolean | null
+          created_at: string | null
+          custom_body_code: string | null
+          custom_head_code: string | null
+          facebook_capi_token: string | null
+          facebook_pixel_id: string | null
+          facebook_test_event_code: string | null
+          google_ads_conversion_id: string | null
+          google_ads_conversion_label: string | null
+          gtm_container_id: string | null
+          id: number
+          updated_at: string | null
+        }
+        Insert: {
+          consent_logging_enabled?: boolean | null
+          cookie_consent_enabled?: boolean | null
+          created_at?: string | null
+          custom_body_code?: string | null
+          custom_head_code?: string | null
+          facebook_capi_token?: string | null
+          facebook_pixel_id?: string | null
+          facebook_test_event_code?: string | null
+          google_ads_conversion_id?: string | null
+          google_ads_conversion_label?: string | null
+          gtm_container_id?: string | null
+          id?: number
+          updated_at?: string | null
+        }
+        Update: {
+          consent_logging_enabled?: boolean | null
+          cookie_consent_enabled?: boolean | null
+          created_at?: string | null
+          custom_body_code?: string | null
+          custom_head_code?: string | null
+          facebook_capi_token?: string | null
+          facebook_pixel_id?: string | null
+          facebook_test_event_code?: string | null
+          google_ads_conversion_id?: string | null
+          google_ads_conversion_label?: string | null
+          gtm_container_id?: string | null
+          id?: number
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       order_bumps: {
         Row: {
@@ -516,6 +597,77 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      profiles: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          avatar_url: string | null
+          city: string | null
+          company_name: string | null
+          country: string | null
+          created_at: string | null
+          display_name: string | null
+          first_name: string | null
+          full_name: string | null
+          id: string
+          last_name: string | null
+          preferred_language: string | null
+          state: string | null
+          tax_id: string | null
+          timezone: string | null
+          updated_at: string | null
+          zip_code: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          avatar_url?: string | null
+          city?: string | null
+          company_name?: string | null
+          country?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          first_name?: string | null
+          full_name?: string | null
+          id: string
+          last_name?: string | null
+          preferred_language?: string | null
+          state?: string | null
+          tax_id?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+          zip_code?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          avatar_url?: string | null
+          city?: string | null
+          company_name?: string | null
+          country?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          first_name?: string | null
+          full_name?: string | null
+          id?: string
+          last_name?: string | null
+          preferred_language?: string | null
+          state?: string | null
+          tax_id?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+          zip_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "user_access_stats"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       rate_limits: {
         Row: {
@@ -928,6 +1080,17 @@ export type Database = {
           bump_title: string
           display_order: number
           original_price: number
+        }[]
+      }
+      get_public_integrations_config: {
+        Args: never
+        Returns: {
+          consent_logging_enabled: boolean
+          cookie_consent_enabled: boolean
+          custom_body_code: string
+          custom_head_code: string
+          facebook_pixel_id: string
+          gtm_container_id: string
         }[]
       }
       get_user_payment_history: {

@@ -56,6 +56,7 @@
     "orderBumps": "Order Bumps",
     "coupons": "Coupons",
     "webhooks": "Webhooks",
+    "integrations": "Integrations",
     "users": "Users",
     "payments": "Payments",
     "settings": "Settings",
@@ -64,6 +65,93 @@
     "profile": "Profile",
     "myProducts": "My Products",
     "store": "Store"
+  },
+  "integrations": {
+    "title": "Integrations & Tracking",
+    "subtitle": "Configure analytics, marketing pixels, and consent management.",
+    "tabs": {
+      "analytics": "Analytics (GTM/GA4)",
+      "marketing": "Marketing (FB/Ads)",
+      "consents": "Consents (GDPR/Klaro)",
+      "code": "Custom Code (Raw)"
+    },
+    "gtm": {
+      "title": "Google Tag Manager",
+      "containerId": "Container ID",
+      "help": "Primary container. Will be automatically blocked if consent is required."
+    },
+    "googleAds": {
+      "title": "Google Ads",
+      "conversionId": "Conversion ID",
+      "conversionLabel": "Conversion Label"
+    },
+    "facebook": {
+      "title": "Meta (Facebook)",
+      "pixelId": "Pixel ID",
+      "pixelHelp": "Standard client-side Pixel.",
+      "capiTitle": "Server-Side Tracking (Conversions API)",
+      "capiHelp": "Required for reliable tracking (bypasses AdBlock/iOS14+). Data is sent directly from the server.",
+      "accessToken": "CAPI Access Token",
+      "tokenHelp": "Keep this secret. It is never exposed to the client.",
+      "testCode": "Test Event Code (Optional)",
+      "testCodeHelp": "Use this to verify server events in Facebook Events Manager."
+    },
+    "cookieConsent": {
+      "title": "Cookie Consent (GDPR/RODO)",
+      "requireConsent": "Require Consent (Recommended for EU)",
+      "requireConsentHelp": "If enabled, GTM, Pixel, and other trackers will NOT load until the user clicks \"Accept\". GateFlow uses Klaro to manage this automatically.",
+      "enableLogging": "Enable Consent Audit Logging",
+      "enableLoggingHelp": "If enabled, every consent choice is logged to the database for legal proof.",
+      "loggingWarning": "Warning: Can generate large amounts of data."
+    },
+    "customCode": {
+      "warning": "Any code pasted here will be injected raw. Ensure it is valid HTML/JS.",
+      "headCode": "Custom Head Code",
+      "headHelp": "Injected at the end of the <head> tag.",
+      "bodyCode": "Custom Body Code",
+      "bodyHelp": "Injected at the start of the <body> tag."
+    },
+    "messages": {
+      "saveSuccess": "Settings saved successfully",
+      "saveError": "Error saving settings: {error}",
+      "saving": "Saving..."
+    }
+  },
+  "profile": {
+    "title": "Your Profile",
+    "subtitle": "Manage your personal and business information.",
+    "personalInfo": {
+      "title": "Personal Information",
+      "subtitle": "Basic details about you."
+    },
+    "billingInfo": {
+      "title": "Billing & Company",
+      "subtitle": "Information used for invoices and business transactions.",
+      "addressTitle": "Business Address"
+    },
+    "fields": {
+      "email": "Email Address",
+      "emailHelp": "Email cannot be changed here.",
+      "firstName": "First Name",
+      "firstNamePlaceholder": "John",
+      "lastName": "Last Name",
+      "lastNamePlaceholder": "Doe",
+      "companyName": "Company Name",
+      "companyNamePlaceholder": "Acme Inc.",
+      "taxId": "Tax ID (NIP)",
+      "taxIdPlaceholder": "PL1234567890",
+      "taxIdHelp": "European VAT ID or local tax identifier.",
+      "address": "Street Address",
+      "addressPlaceholder": "123 Main St",
+      "address2Placeholder": "Suite 4",
+      "city": "City",
+      "zipCode": "ZIP / Postal Code",
+      "country": "Country"
+    },
+    "messages": {
+      "saveSuccess": "Profile updated successfully",
+      "saveError": "Error updating profile: {error}"
+    }
   },
   "auth": {
     "login": "Login",

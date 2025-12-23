@@ -43,6 +43,11 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
     </svg>
   ),
+  integrations: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+    </svg>
+  ),
   users: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
@@ -61,6 +66,11 @@ const Icons = {
   store: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+    </svg>
+  ),
+  profile: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
     </svg>
   ),
   logout: (
@@ -90,12 +100,14 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp }
     { href: '/dashboard/order-bumps', label: t('orderBumps'), icon: Icons.orderBumps },
     { href: '/dashboard/coupons', label: t('coupons'), icon: Icons.coupons },
     { href: '/dashboard/webhooks', label: t('webhooks'), icon: Icons.webhooks },
+    { href: '/dashboard/integrations', label: t('integrations'), icon: Icons.integrations },
     { href: '/dashboard/users', label: t('users'), icon: Icons.users },
   ];
 
   const userLinks = [
     { href: '/my-products', label: t('myProducts'), icon: Icons.myProducts },
     { href: '/products', label: t('store'), icon: Icons.store },
+    { href: '/profile', label: t('profile'), icon: Icons.profile },
   ];
 
   const NavItem = ({ href, label, icon, exact }: { href: string, label: string, icon: React.ReactNode, exact?: boolean }) => {

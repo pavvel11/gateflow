@@ -132,12 +132,27 @@ test.describe('Storefront & Checkout Flows', () => {
     await expect(page).toHaveURL(new RegExp(`/p/${freeProductSlug}`), { timeout: 30000 });
     await expect(page.getByText(/Welcome Video/i)).toBeVisible({ timeout: 15000 });
 
+    // NEW: Verify on My Products dashboard
+    await page.goto('/en/my-products');
+    await expect(page.getByText(freeProductName)).toBeVisible({ timeout: 10000 });
+
     // 7. BACKEND VERIFICATION
     const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
     const newUser = users.find(u => u.email === userEmail);
     
     expect(newUser).toBeDefined();
     console.log(`Verified user created in Auth: ${newUser?.id}`);
+
+    // NEW: Verify public.profiles record was created by trigger
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .select('*')
+      .eq('id', newUser!.id)
+      .single();
+    
+    expect(profileError).toBeNull();
+    expect(profile).toBeDefined();
+    console.log(`Verified profile record created for user: ${profile.id}`);
 
     const { data: accessRecord, error: accessError } = await supabaseAdmin
       .from('user_product_access')
@@ -195,6 +210,10 @@ test.describe('Storefront & Checkout Flows', () => {
     await expect(page).toHaveURL(new RegExp(`/p/${freeProductSlug}$`));
     await expect(page.getByText(/Welcome Video/i)).toBeVisible();
 
+    // NEW: Verify on My Products dashboard
+    await page.goto('/en/my-products');
+    await expect(page.getByText(freeProductName)).toBeVisible({ timeout: 10000 });
+
     // 5. BACKEND VERIFICATION
     const { data: accessRecord, error: accessError } = await supabaseAdmin
       .from('user_product_access')
@@ -205,6 +224,14 @@ test.describe('Storefront & Checkout Flows', () => {
 
     expect(accessError).toBeNull();
     expect(accessRecord).toBeDefined();
+
+    // NEW: Verify profile exists
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('id', userId)
+      .single();
+    expect(profile).toBeDefined();
     console.log(`Verified access record in DB: ${accessRecord.id}`);
   });
 

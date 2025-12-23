@@ -17,6 +17,49 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 
 ## 🟢 High Priority
 
+### 📊 Analytics & Marketing Integrations
+**Status**: 📋 Planned
+**Goal**: Robust tracking infrastructure compatible with modern privacy standards (Server-Side) and ease of use (GTM).
+
+#### 1. Google Tag Manager (GTM) Integration
+*   **Phase 1 (Manual)**: Admin field for `GTM-XXXX` ID. Provide a downloadable `gtm_template.json` with pre-configured Triggers & Tags for GateFlow events (Purchase, Lead, ViewContent).
+*   **Phase 2 (Automated)**: Google OAuth App integration. One-click setup where GateFlow creates the Container and Tags automatically via GTM API.
+
+#### 2. Server-Side Tracking (Conversions API)
+*   **Meta (Facebook) CAPI**: Send `Purchase` and `Lead` events directly from backend (Stripe Webhook / Access Grant) to bypass AdBlockers.
+*   **Google Enhanced Conversions**: Backend integration to send hashed user data (email) with conversion events to Google Ads.
+
+#### 3. Cookie Consent (Klaro)
+*   Implement **Klaro** (open-source) to manage consents.
+*   **Critical**: Must block GTM script execution (or set specific GTM consent modes) until user approval.
+
+#### 4. Real-time Sales Dashboard (Live Stats)
+**Status**: 📋 Planned
+**Description**: A comprehensive, real-time dashboard for monitoring sales performance, inspired by the provided design.
+**Features**:
+- **Key Metrics Cards**:
+    - **Total Revenue**: All-time earnings display (Large card).
+    - **Today's Revenue**: Earnings for the current day.
+    - **Today's Orders**: Count of transactions today.
+    - **Last Order**: Time elapsed since the last purchase (e.g., "just now").
+- **Goal Tracking**: Progress bar showing current revenue vs. a configurable revenue goal (e.g., 1M PLN).
+- **Charts**:
+    - **Hourly Revenue**: Line chart showing sales distribution throughout the current day.
+    - **Revenue Trend**: Line chart with date range filters (7d, 14d, 30d, Custom).
+- **Real-time Notifications**:
+    - **"New Order" Popup**: A prominent, celebratory modal/toast (green) appearing instantly when a purchase occurs, showing the amount.
+    - **Live Updates**: Charts and counters update automatically without page refresh.
+- **Date Filtering**: Global date picker to adjust the view.
+
+#### 5. Real-time Social Proof Notifications (Client-side)
+**Status**: 📋 Planned
+**Description**: Increase urgency and trust by showing live activity notifications to users browsing the product page.
+**Features**:
+- **"Just Bought" Popup**: Small toast notification showing "Someone from [City] just purchased this product" (anonymized).
+- **Aggregate Activity**: "X people purchased this product in the last 24 hours".
+- **Live Viewer Count**: "X people are viewing this offer right now".
+- **Configuration**: Options to enable/disable per product and configure thresholds to avoid showing low numbers (fake data option for new products?).
+
 ### 🔌 Integrations & Automation
 
 #### Outgoing Webhooks (Automation)
@@ -59,6 +102,7 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 - **Fakturownia (InvoiceOcean)** integration via API.
 - **iFirma** integration via API.
 - **KSeF (Krajowy System e-Faktur)**: Direct integration to push invoices to the Polish national e-invoice system (mandatory for B2B).
+    - **⚠️ Complexity Warning**: KSeF integration is highly complex (XML structure, sync/async handling, error management). Requires careful architecture for queueing, handling immutability (no edits allowed), and strict data validation (FA(2) schema). Implementation estimate: 2-4 months. Dates: Feb/Apr 2026.
 - Detect user location/TAX ID (NIP) during checkout (requires Stripe Tax or custom field).
 - Auto-send invoice PDF to customer email.
 - Sync invoices with payment transactions in database.

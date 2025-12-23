@@ -56,6 +56,7 @@
     "orderBumps": "Order Bumps",
     "coupons": "Kupony",
     "webhooks": "Webhooki",
+    "integrations": "Integracje",
     "users": "Użytkownicy",
     "payments": "Płatności",
     "settings": "Ustawienia",
@@ -64,6 +65,93 @@
     "profile": "Profil",
     "myProducts": "Moje Produkty",
     "store": "Sklep"
+  },
+  "integrations": {
+    "title": "Integracje i Śledzenie",
+    "subtitle": "Konfiguruj analitykę, pixele marketingowe i zarządzanie zgodami.",
+    "tabs": {
+      "analytics": "Analityka (GTM/GA4)",
+      "marketing": "Marketing (FB/Ads)",
+      "consents": "Zgody (RODO/Klaro)",
+      "code": "Własny Kod (Raw)"
+    },
+    "gtm": {
+      "title": "Google Tag Manager",
+      "containerId": "ID Kontenera",
+      "help": "Główny kontener GTM. Zostanie automatycznie zablokowany, jeśli wymagana jest zgoda."
+    },
+    "googleAds": {
+      "title": "Google Ads",
+      "conversionId": "ID Konwersji",
+      "conversionLabel": "Etykieta Konwersji"
+    },
+    "facebook": {
+      "title": "Meta (Facebook)",
+      "pixelId": "Pixel ID",
+      "pixelHelp": "Standardowy Pixel po stronie przeglądarki.",
+      "capiTitle": "Śledzenie Server-Side (Conversions API)",
+      "capiHelp": "Wymagane dla rzetelnego śledzenia (pomija AdBlock/iOS14+). Dane są wysyłane bezpośrednio z serwera.",
+      "accessToken": "Token dostępu CAPI",
+      "tokenHelp": "Trzymaj ten token w tajemnicy. Nigdy nie jest on wysyłany do przeglądarki klienta.",
+      "testCode": "Kod zdarzenia testowego (Opcjonalnie)",
+      "testCodeHelp": "Użyj go, aby zweryfikować zdarzenia serwerowe w Menedżerze Zdarzeń Facebooka."
+    },
+    "cookieConsent": {
+      "title": "Zgoda na Cookies (RODO)",
+      "requireConsent": "Wymagaj zgody (Zalecane w UE)",
+      "requireConsentHelp": "Jeśli włączone, GTM, Pixel i inne skrypty NIE załadują się, dopóki użytkownik nie kliknie \"Akceptuję\". GateFlow używa Klaro do automatycznego zarządzania tym procesem.",
+      "enableLogging": "Włącz logowanie audytowe zgód",
+      "enableLoggingHelp": "Jeśli włączone, każdy wybór zgody jest zapisywany w bazie danych jako dowód prawny.",
+      "loggingWarning": "Uwaga: Może generować duże ilości danych."
+    },
+    "customCode": {
+      "warning": "Każdy kod wklejony tutaj zostanie wstrzyknięty w czystej formie. Upewnij się, że to poprawny HTML/JS.",
+      "headCode": "Własny kod w <head>",
+      "headHelp": "Wstrzykiwany na końcu sekcji <head>.",
+      "bodyCode": "Własny kod w <body>",
+      "bodyHelp": "Wstrzykiwany na początku sekcji <body>."
+    },
+    "messages": {
+      "saveSuccess": "Ustawienia zapisane pomyślnie",
+      "saveError": "Błąd podczas zapisywania: {error}",
+      "saving": "Zapisywanie..."
+    }
+  },
+  "profile": {
+    "title": "Twój Profil",
+    "subtitle": "Zarządzaj swoimi danymi osobistymi i firmowymi.",
+    "personalInfo": {
+      "title": "Dane Osobowe",
+      "subtitle": "Podstawowe informacje o Tobie."
+    },
+    "billingInfo": {
+      "title": "Dane Firmowe i Faktury",
+      "subtitle": "Informacje używane do wystawiania faktur i transakcji.",
+      "addressTitle": "Adres Siedziby"
+    },
+    "fields": {
+      "email": "Adres Email",
+      "emailHelp": "Adresu email nie można tu zmienić.",
+      "firstName": "Imię",
+      "firstNamePlaceholder": "Jan",
+      "lastName": "Nazwisko",
+      "lastNamePlaceholder": "Kowalski",
+      "companyName": "Nazwa Firmy",
+      "companyNamePlaceholder": "Moja Firma Sp. z o.o.",
+      "taxId": "NIP",
+      "taxIdPlaceholder": "PL1234567890",
+      "taxIdHelp": "Numer NIP (z prefiksem kraju dla transakcji wewnątrzunijnych).",
+      "address": "Ulica i numer",
+      "addressPlaceholder": "ul. Wiejska 1",
+      "address2Placeholder": "lokal 2",
+      "city": "Miasto",
+      "zipCode": "Kod pocztowy",
+      "country": "Kraj"
+    },
+    "messages": {
+      "saveSuccess": "Profil został pomyślnie zaktualizowany",
+      "saveError": "Błąd podczas aktualizacji profilu: {error}"
+    }
   },
   "auth": {
     "login": "Zaloguj się",
