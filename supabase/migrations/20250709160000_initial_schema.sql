@@ -312,7 +312,7 @@ DECLARE
     clean_slug TEXT;
 BEGIN
     -- Rate limiting: 1000 calls per hour per user (increased for checkout)
-    IF NOT check_rate_limit('check_user_product_access', 1000, 3600) THEN
+    IF NOT check_rate_limit('check_user_product_access'::TEXT, 1000, 3600) THEN
         RAISE EXCEPTION 'Rate limit exceeded for check_user_product_access';
     END IF;
 
@@ -368,7 +368,7 @@ DECLARE
     safe_key TEXT;
 BEGIN
     -- Rate limiting: 200 calls per hour per user (increased for checkout)
-    IF NOT check_rate_limit('batch_check_user_product_access', 200, 3600) THEN
+    IF NOT check_rate_limit('batch_check_user_product_access'::TEXT, 200, 3600) THEN
         RAISE EXCEPTION 'Rate limit exceeded for batch_check_user_product_access';
     END IF;
 

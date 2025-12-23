@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { waitForEmail, extractMagicLink } from './helpers/mailpit';
 
 // Enforce single worker
 test.describe.configure({ mode: 'serial' });
@@ -18,6 +19,8 @@ test.describe('Storefront & Checkout Flows', () => {
   let adminEmail: string;
   const adminPassword = 'password123';
   let freeProductSlug: string;
+  let freeProductName: string;
+  let freeProductId: string;
 
   // Helper to login as admin
   const loginAsAdmin = async (page: Page) => {
@@ -52,54 +55,157 @@ test.describe('Storefront & Checkout Flows', () => {
     await supabaseAdmin
       .from('admin_users')
       .insert({ user_id: user!.id });
-  });
-
-  test('should allow claiming a free product (Lead Magnet flow)', async ({ page }) => {
-    // 1. Create Free Product as Admin
-    await loginAsAdmin(page);
-    await page.goto('/dashboard/products');
-    
-    await page.getByRole('button', { name: /Product/i }).first().click();
-    
-    const productName = `Magnet-${Date.now()}`;
+      
+    // Create Free Product
+    freeProductName = `Magnet-${Date.now()}`;
     freeProductSlug = `m-${Date.now()}`;
     
-    const modal = page.locator('div.fixed').filter({ hasText: /Cancel|Anuluj/i });
-    await modal.locator('input[name="name"]').fill(productName);
-    await modal.locator('input[name="slug"]').fill(freeProductSlug);
-    await modal.locator('textarea[name="description"]').fill('Get this for free!');
-    await modal.locator('input[name="price"]').fill('0');
+    const { data: product } = await supabaseAdmin.from('products').insert({
+        name: freeProductName,
+        slug: freeProductSlug,
+        description: 'Get this for free!',
+        price: 0,
+        currency: 'USD',
+        is_active: true,
+        content_delivery_type: 'content',
+        content_config: { 
+            content_items: [{ 
+                id: 'item-1', 
+                type: 'video_embed', 
+                title: 'Welcome Video', 
+                config: { embed_url: 'https://youtube.com/embed/dQw4w9WgXcQ' }, 
+                order: 1, 
+                is_active: true 
+            }] 
+        }
+    }).select().single();
     
-    await modal.locator('button[type="submit"]').click();
-    await expect(page.locator('table').getByText(productName).first()).toBeVisible({ timeout: 15000 });
+    freeProductId = product!.id;
+  });
 
-    // 2. Open Product Page as Anonymous User
+  test('UNAUTHENTICATED user should claim free product via Magic Link flow', async ({ page }) => {
+    // Log browser errors
+    page.on('console', msg => {
+      if (msg.type() === 'error') console.log(`BROWSER ERROR: ${msg.text()}`);
+    });
+
+    // 1. Open Product Page
     await page.context().clearCookies();
     await page.goto(`/p/${freeProductSlug}`);
     
-    // Redirect check
     await expect(page).toHaveURL(new RegExp(`/checkout/${freeProductSlug}`), { timeout: 10000 });
 
-    // 3. Fill the Free Product Form
+    // 2. Fill the Free Product Form
     const userEmail = `lead-${Date.now()}@example.com`;
     await page.locator('input[type="email"]').fill(userEmail);
     
-    // Accept Terms (using the label or force click on hidden input)
-    // In our UI, clicking the label is most reliable
+    // Accept Terms
     const termsLabel = page.locator('label').filter({ hasText: /I agree|Akceptuję|regulamin/i });
     await termsLabel.click();
     
-    // Wait for Captcha & Submit
-    const submitBtn = page.locator('button[type="submit"]');
+    // Wait for Turnstile Captcha to auto-verify
+    console.log('Waiting for Captcha auto-verify...');
+    await page.waitForTimeout(4000);
     
-    // Verify button becomes enabled (Turnstile verification)
+    // Submit
+    const submitBtn = page.getByRole('button', { name: /Get|Odbierz|Send|Wyślij/i });
     await expect(submitBtn).toBeEnabled({ timeout: 15000 });
     await submitBtn.click();
 
-    // 4. Verify Success Message
-    // Check for success text or specific UI change
-    // Using a more flexible check for "email" which is common in success messages
-    await expect(page.getByText(/email/i)).toBeVisible({ timeout: 15000 });
+    // 3. Verify Success Message UI
+    await expect(page.getByText(/check your email|sprawdź swoją skrzynkę/i).first()).toBeVisible({ timeout: 20000 });
+    
+    // 4. CHECK EMAIL (Mailpit)
+    console.log(`Waiting for email to ${userEmail}...`);
+    const message = await waitForEmail(userEmail, { timeout: 25000 });
+    expect(message).toBeTruthy();
+    
+    // 5. Click Magic Link
+    const magicLink = extractMagicLink(message.Text || message.HTML || '');
+    expect(magicLink).toBeTruthy();
+    console.log(`Clicking magic link: ${magicLink}`);
+    
+    const fixedLink = magicLink!.replace('127.0.0.1', 'localhost');
+    await page.goto(fixedLink);
+    
+    // 6. Verify Access Granted (UI)
+    await expect(page).toHaveURL(new RegExp(`/p/${freeProductSlug}`), { timeout: 30000 });
+    await expect(page.getByText(/Welcome Video/i)).toBeVisible({ timeout: 15000 });
+
+    // 7. BACKEND VERIFICATION
+    const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
+    const newUser = users.find(u => u.email === userEmail);
+    
+    expect(newUser).toBeDefined();
+    console.log(`Verified user created in Auth: ${newUser?.id}`);
+
+    const { data: accessRecord, error: accessError } = await supabaseAdmin
+      .from('user_product_access')
+      .select('*')
+      .eq('user_id', newUser!.id)
+      .eq('product_id', freeProductId)
+      .single();
+
+    expect(accessError).toBeNull();
+    expect(accessRecord).toBeDefined();
+    console.log(`Verified access record in DB: ${accessRecord.id}`);
+  });
+
+  test('AUTHENTICATED user should claim free product instantly', async ({ page }) => {
+    // 1. Fresh user
+    const userEmail = `auth-user-${Date.now()}@example.com`;
+    const userPassword = 'password123';
+    
+    const { data: { user }, error } = await supabaseAdmin.auth.admin.createUser({
+        email: userEmail,
+        password: userPassword,
+        email_confirm: true
+    });
+    if (error) throw error;
+    const userId = user!.id;
+
+    await page.goto('/');
+    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
+      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
+      const supabase = createBrowserClient(supabaseUrl, anonKey);
+      await supabase.auth.signInWithPassword({ email, password });
+    }, {
+      email: userEmail,
+      password: userPassword,
+      supabaseUrl: SUPABASE_URL,
+      anonKey: ANON_KEY,
+    });
+    await page.waitForTimeout(1000);
+
+    // 2. Go to Product Page -> Redirect to Checkout
+    await page.goto(`/p/${freeProductSlug}`);
+    await expect(page).toHaveURL(new RegExp(`/checkout/${freeProductSlug}`), { timeout: 10000 });
+    
+    // 3. Click "Get Free Access"
+    const getAccessBtn = page.getByRole('button', { name: /Get Free Access|Odbierz darmowy dostęp/i });
+    await expect(getAccessBtn).toBeVisible();
+    await getAccessBtn.click();
+    
+    // 4. Verify Instant Success (UI)
+    await expect(page).toHaveURL(new RegExp(`/p/${freeProductSlug}/payment-status`), { timeout: 15000 });
+    await expect(page.getByText(/Success|Sukces|Granted/i).first()).toBeVisible();
+    
+    // Verify content access (UI)
+    await page.goto(`/p/${freeProductSlug}`);
+    await expect(page).toHaveURL(new RegExp(`/p/${freeProductSlug}$`));
+    await expect(page.getByText(/Welcome Video/i)).toBeVisible();
+
+    // 5. BACKEND VERIFICATION
+    const { data: accessRecord, error: accessError } = await supabaseAdmin
+      .from('user_product_access')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('product_id', freeProductId)
+      .single();
+
+    expect(accessError).toBeNull();
+    expect(accessRecord).toBeDefined();
+    console.log(`Verified access record in DB: ${accessRecord.id}`);
   });
 
 });
