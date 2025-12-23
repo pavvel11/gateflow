@@ -1,0 +1,86 @@
+'use server'
+
+import { createClient } from '@/lib/supabase/server'
+
+export interface RevenueStats {
+  totalRevenue: number
+  todayRevenue: number
+  todayOrders: number
+  lastOrderAt: string | null
+}
+
+export interface ChartDataPoint {
+  date: string
+  amount: number
+  orders: number
+}
+
+export async function getRevenueStats(productId?: string): Promise<RevenueStats | null> {
+  const supabase = await createClient()
+  
+  const { data, error } = await supabase.rpc('get_detailed_revenue_stats', {
+    p_product_id: productId || null
+  })
+  
+  if (error) {
+    console.error('Error fetching revenue stats:', error)
+    return null
+  }
+  
+  return data as RevenueStats
+}
+
+export async function getSalesChartData(days: number = 30, customStart?: Date, customEnd?: Date, productId?: string): Promise<ChartDataPoint[]> {
+  const supabase = await createClient()
+  
+  let startDate: Date
+  let endDate: Date
+
+  if (customStart && customEnd) {
+    startDate = customStart
+    endDate = customEnd
+  } else {
+    endDate = new Date()
+    startDate = new Date()
+    startDate.setDate(startDate.getDate() - days)
+  }
+  
+  const { data, error } = await supabase.rpc('get_sales_chart_data', {
+    p_start_date: startDate.toISOString(),
+    p_end_date: endDate.toISOString(),
+    p_product_id: productId || null
+  })
+  
+  if (error) {
+    console.error('Error fetching sales chart data:', error)
+    return []
+  }
+  
+  return (data as any[]).map(item => ({
+    date: item.date,
+    amount: Number(item.amount), // Ensure number
+    orders: Number(item.orders)
+  }))
+}
+
+export async function getHourlyRevenueStats(date?: string, productId?: string): Promise<{ hour: number, amount: number, orders: number }[]> {
+  const supabase = await createClient()
+  
+  const targetDate = date ? new Date(date) : new Date()
+  
+  const { data, error } = await supabase.rpc('get_hourly_revenue_stats', {
+    p_target_date: targetDate.toISOString().split('T')[0], // Send YYYY-MM-DD
+    p_product_id: productId || null
+  })
+  
+  if (error) {
+    console.error('Error fetching hourly revenue stats:', error)
+    return []
+  }
+  
+  return (data as any[]).map(item => ({
+    hour: item.hour,
+    amount: Number(item.amount),
+    orders: Number(item.orders)
+  }))
+}

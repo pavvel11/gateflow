@@ -14,6 +14,8 @@ interface CustomScript {
 interface PublicIntegrationsConfig {
   gtm_container_id?: string | null
   facebook_pixel_id?: string | null
+  umami_website_id?: string | null
+  umami_script_url?: string | null
   cookie_consent_enabled?: boolean
   consent_logging_enabled?: boolean
   scripts?: CustomScript[]
@@ -29,6 +31,8 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
   const {
     gtm_container_id,
     facebook_pixel_id,
+    umami_website_id,
+    umami_script_url = 'https://cloud.umami.is/script.js',
     cookie_consent_enabled,
     scripts = []
   } = config
@@ -79,6 +83,14 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
       name: 'facebook-pixel',
       title: 'Meta Pixel',
       purposes: ['marketing'],
+      required: false,
+    })
+  }
+  if (umami_website_id) {
+    klaroConfig.apps.push({
+      name: 'umami-analytics',
+      title: 'Umami Analytics',
+      purposes: ['analytics'],
       required: false,
     })
   }
@@ -188,6 +200,18 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
             fbq('init', '${facebook_pixel_id}');
             fbq('track', 'PageView');`
           }}
+        />
+      )}
+
+      {umami_website_id && (
+        <Script
+          id="umami-script"
+          src={umami_script_url || 'https://cloud.umami.is/script.js'}
+          strategy="afterInteractive"
+          data-website-id={umami_website_id}
+          type={cookie_consent_enabled ? "text/plain" : "text/javascript"}
+          data-type={cookie_consent_enabled ? "application/javascript" : undefined}
+          data-name={cookie_consent_enabled ? "umami-analytics" : undefined}
         />
       )}
 

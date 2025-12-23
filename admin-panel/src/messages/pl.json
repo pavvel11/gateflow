@@ -215,29 +215,83 @@
   },
   "dashboard": {
     "title": "Pulpit",
+    "welcome": "Witamy w panelu admina GateFlow",
     "overview": "Przegląd",
     "stats": "Statystyki",
     "recentActivity": "Ostatnia aktywność",
-    "totalProducts": "Łączna liczba produktów",
-    "totalUsers": "Łączna liczba użytkowników",
-    "revenue": "Przychody",
-    "growth": "Wzrost",
-    "accessRecords": "Rekordy dostępu",
-    "activeUsers": "Aktywni użytkownicy (7d)"
+    "totalProducts": "Produkty ogółem",
+    "totalUsers": "Użytkownicy ogółem",
+    "totalRevenue": "Przychody ogółem",
+    "monthlyGrowth": "Wzrost miesięczny",
+    "revenueGoal": "Cel Sprzedaży",
+    "setGoal": "Ustaw Cel",
+    "webhookFailuresAlert": "Masz {count} nieudanych dostarczeń webhooków.",
+    "fixNow": "Napraw teraz",
+    "quickActions": "Szybkie akcje",
+    "createProduct": "Utwórz produkt",
+    "createProductDescription": "Dodaj, edytuj lub usuń produkty",
+    "manageUsers": "Zarządzaj użytkownikami",
+    "manageUsersDescription": "Zarządzaj uprawnieniami użytkowników",
+    "managePayments": "Zarządzaj płatnościami",
+    "managePaymentsDescription": "Monitoruj transakcje i przetwarzaj zwroty",
+    "viewReports": "Pokaż raporty",
+    "settings": "Ustawienia",
+    "accessRecords": "Zapisy dostępu",
+    "activeUsers": "Aktywni użytkownicy (7d)",
+    "stats": {
+      "totalRevenue": "Przychody ogółem",
+      "todayRevenue": "Dzisiejszy przychód",
+      "todayOrders": "Dzisiejsze zamówienia"
+    },
+    "revenueChart": {
+      "title": "Trend przychodów",
+      "subtitle": "Wyniki z ostatnich 30 dni",
+      "hourlyTitle": "Dzisiejszy przychód",
+      "hourlySubtitle": "Podział godzinowy"
+    },
+    "recentActivity": {
+      "title": "Ostatnia aktywność",
+      "accessGranted": "Przyznano dostęp do {product}",
+      "productCreated": "Nowy produkt utworzony: {product}",
+      "noActivity": "Brak ostatniej aktywności"
+    }
   },
   "codeGenerator": {
     "title": "Generuj kod ochrony",
+    "product": "Produkt",
+    "slug": "Slug",
+    "protectionMode": "Tryb ochrony",
     "pageMode": "Chroń całą stronę",
     "elementMode": "Chroń elementy",
     "pageDescription": "Chroni całą zawartość strony",
     "elementDescription": "Chroni określone elementy strony",
     "generatedCode": "Wygenerowany kod",
+    "copied": "✓ Skopiowano!",
+    "copyCode": "📋 Kopiuj kod",
     "instructions": "Instrukcje implementacji",
+    "pageInstructions": {
+      "step1": "1. Skopiuj powyższy tag script",
+      "step2": "2. Wklej go do sekcji &lt;head&gt; chronionej strony",
+      "step3": "3. Cała strona zostanie automatycznie zabezpieczona"
+    },
+    "elementInstructions": {
+      "step1": "1. Dodaj tag script do sekcji &lt;head&gt; strony",
+      "step2": "2. Owiń treść, którą chcesz chronić w data-gatekeeper-product=\"{slug}\"",
+      "step3": "3. Dodaj treść zastępczą z data-no-access dla użytkowników bez dostępu",
+      "step4": "4. Skrypt automatycznie pokaże/ukryje treść w zależności od dostępu użytkownika"
+    },
+    "importantInfo": "Ważne informacje",
     "frontendProtection": "Ochrona frontendowa",
+    "frontendProtectionDescription": "To rozwiązanie działa w pełni po stronie klienta, co czyni je kompatybilnym z dowolnym konstruktorem stron jak WordPress, Webflow, Squarespace lub statycznym HTML. Chociaż to podejście jest mniej bezpieczne niż ochrona po stronie serwera, zaimplementowaliśmy kilka technik zaciemniania, aby obejście było trudniejsze niż w typowych rozwiązaniach frontend.",
+    "useCase": "Przypadek użycia",
+    "pageModeUseCase": "Idealne do ochrony stron docelowych, treści kursów lub dowolnej samodzielnej strony, gdzie chcesz kontrolować dostęp w oparciu o zakupy lub subskrypcje użytkowników.",
     "selectiveDisplay": "Selektywne wyświetlanie treści",
+    "selectiveDisplayDescription": "Ta metoda pozwala pokazywać lub ukrywać określone sekcje strony w zależności od dostępu użytkownika. Jest szczególnie użyteczna na stronach sprzedażowych, gdzie chcesz wyświetlać różną treść płacącym klientom a potencjalnym klientom.",
     "implementation": "Implementacja",
-    "useCase": "Zastosowanie",
-    "commonUseCase": "Typowe zastosowanie"
+    "implementationDescription": "Dodaj data-gatekeeper-product=\"{slug}\" do treści, która powinna być widoczna dla użytkowników z dostępem, i data-no-access=\"true\" do treści zastępczej dla użytkowników bez dostępu. Skrypt automatycznie zarządza widocznością.",
+    "commonUseCase": "Powszechny przypadek użycia",
+    "elementModeUseCase": "Zamień przyciski \"Kup teraz\" na przyciski \"Uzyskaj dostęp do produktu\" dla istniejących klientów, lub pokaż sekcje premium tylko subskrybentom.",
+    "close": "Zamknij"
   },
   "messages": {
     "productCreated": "Produkt został utworzony pomyślnie",
@@ -512,6 +566,8 @@
       "totalUsers": "Użytkownicy ogółem",
       "totalRevenue": "Przychody ogółem",
       "monthlyGrowth": "Wzrost miesięczny",
+      "revenueGoal": "Cel Sprzedaży",
+      "setGoal": "Ustaw Cel",
       "webhookFailuresAlert": "Masz {count} nieudanych dostarczeń webhooków.",
       "fixNow": "Napraw teraz",
       "quickActions": "Szybkie akcje",
@@ -525,6 +581,17 @@
       "settings": "Ustawienia",
       "accessRecords": "Zapisy dostępu",
       "activeUsers": "Aktywni użytkownicy (7d)",
+      "stats": {
+        "totalRevenue": "Przychody ogółem",
+        "todayRevenue": "Dzisiejszy przychód",
+        "todayOrders": "Dzisiejsze zamówienia"
+      },
+      "revenueChart": {
+        "title": "Trend przychodów",
+        "subtitle": "Wyniki z ostatnich 30 dni",
+        "hourlyTitle": "Dzisiejszy przychód",
+        "hourlySubtitle": "Podział godzinowy"
+      },
       "recentActivity": {
         "title": "Ostatnia aktywność",
         "accessGranted": "Przyznano dostęp do {product}",
@@ -784,11 +851,12 @@
         "response": "Odpowiedź",
         "payload": "Treść (Payload)",
         "retry": "Ponów",
-                    "filterAll": "Wszystkie statusy",
-                    "filterSuccess": "Tylko udane",
-                    "filterFailed": "Tylko nieudane",
-                    "filterArchived": "Zarchiwizowane",
-                    "noLogs": "Brak logów dla tego filtra.",        "retrySuccess": "Ponowienie uruchomione pomyślnie",
+        "filterAll": "Wszystkie statusy",
+        "filterSuccess": "Tylko udane",
+        "filterFailed": "Tylko nieudane",
+        "filterArchived": "Zarchiwizowane",
+        "noLogs": "Brak logów dla tego filtra.",
+        "retrySuccess": "Ponowienie uruchomione pomyślnie",
         "failuresTitle": "Ostatnie błędy dostarczenia",
         "errorDetails": "Szczegóły błędu",
         "endpoint": "Endpoint"
@@ -935,7 +1003,7 @@
       "step4": "4. Skrypt automatycznie pokaże/ukryje treść w zależności od dostępu użytkownika"
     },
     "importantInfo": "Ważne informacje",
-    "frontendProtection": "Ochrona frontend",
+    "frontendProtection": "Ochrona frontendowa",
     "frontendProtectionDescription": "To rozwiązanie działa w pełni po stronie klienta, co czyni je kompatybilnym z dowolnym konstruktorem stron jak WordPress, Webflow, Squarespace lub statycznym HTML. Chociaż to podejście jest mniej bezpieczne niż ochrona po stronie serwera, zaimplementowaliśmy kilka technik zaciemniania, aby obejście było trudniejsze niż w typowych rozwiązaniach frontend.",
     "useCase": "Przypadek użycia",
     "pageModeUseCase": "Idealne do ochrony stron docelowych, treści kursów lub dowolnej samodzielnej strony, gdzie chcesz kontrolować dostęp w oparciu o zakupy lub subskrypcje użytkowników.",

@@ -215,15 +215,16 @@
   },
   "dashboard": {
     "title": "Dashboard",
+    "welcome": "Welcome to GateFlow Admin",
     "overview": "Overview",
     "stats": "Statistics",
     "recentActivity": "Recent Activity",
     "totalProducts": "Total Products",
     "totalUsers": "Total Users",
-    "revenue": "Revenue",
-    "growth": "Growth",
-    "accessRecords": "Access Records",
-    "activeUsers": "Active Users (7d)",
+    "totalRevenue": "Total Revenue",
+    "monthlyGrowth": "Monthly Growth",
+    "revenueGoal": "Revenue Goal",
+    "setGoal": "Set Goal",
     "webhookFailuresAlert": "You have {count} failed webhook deliveries.",
     "fixNow": "Fix now",
     "quickActions": "Quick Actions",
@@ -237,6 +238,17 @@
     "settings": "Settings",
     "accessRecords": "Access Records",
     "activeUsers": "Active Users (7d)",
+    "stats": {
+      "totalRevenue": "Total Revenue",
+      "todayRevenue": "Today's Revenue",
+      "todayOrders": "Today's Orders"
+    },
+    "revenueChart": {
+      "title": "Revenue Trend",
+      "subtitle": "Last 30 days performance",
+      "hourlyTitle": "Today's Revenue",
+      "hourlySubtitle": "Hourly breakdown"
+    },
     "recentActivity": {
       "title": "Recent Activity",
       "accessGranted": "Access granted to {product}",
@@ -392,7 +404,7 @@
     "getYourFreeProduct": "Get your free product",
     "clickForInstantAccess": "Click below to get instant access to this free product.",
     "gettingAccess": "Getting Access...",
-    "getInstantAccess": "Get Instant Access",
+    "getInstantAccess": "Get Instant Instant Access",
     "enterEmailForDownload": "Enter your email below to receive a secure download link.",
     "emailAddressLabel": "Email address",
     "emailPlaceholder": "name@example.com",
@@ -550,10 +562,14 @@
       "title": "Dashboard",
       "welcome": "Welcome to GateFlow Admin",
       "overview": "Overview",
+      "stats": "Statistics",
+      "recentActivity": "Recent Activity",
       "totalProducts": "Total Products",
       "totalUsers": "Total Users",
       "totalRevenue": "Total Revenue",
       "monthlyGrowth": "Monthly Growth",
+      "revenueGoal": "Revenue Goal",
+      "setGoal": "Set Goal",
       "webhookFailuresAlert": "You have {count} failed webhook deliveries.",
       "fixNow": "Fix now",
       "quickActions": "Quick Actions",
@@ -567,6 +583,17 @@
       "settings": "Settings",
       "accessRecords": "Access Records",
       "activeUsers": "Active Users (7d)",
+      "stats": {
+        "totalRevenue": "Total Revenue",
+        "todayRevenue": "Today's Revenue",
+        "todayOrders": "Today's Orders"
+      },
+      "revenueChart": {
+        "title": "Revenue Trend",
+        "subtitle": "Last 30 days performance",
+        "hourlyTitle": "Today's Revenue",
+        "hourlySubtitle": "Hourly breakdown"
+      },
       "recentActivity": {
         "title": "Recent Activity",
         "accessGranted": "Access granted to {product}",

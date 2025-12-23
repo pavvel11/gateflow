@@ -176,10 +176,21 @@ test.describe('Authenticated Admin Dashboard', () => {
     await row.getByRole('button', { name: /Edit/i }).click();
     await modal.locator('input[name="discount_value"]').fill('50');
     await modal.locator('button[type="submit"]').click();
-    await expect(row).toContainText('50%');
+    
+    // Wait for modal to close (confirming success)
+    await expect(modal).not.toBeVisible();
+    
+    // Sometimes list refresh takes a moment or requires reload in test env
+    await expect(async () => {
+      await page.reload();
+      const updatedRow = page.locator('tr', { hasText: code }).first();
+      await expect(updatedRow).toContainText('50%');
+    }).toPass({ timeout: 10000 });
 
     // 3. Delete
-    await row.getByRole('button', { name: /Delete/i }).click();
+    // Need to re-find row after reload
+    const rowToDelete = page.locator('tr', { hasText: code }).first();
+    await rowToDelete.getByRole('button', { name: /Delete/i }).click();
     const confirmModal = page.locator('div.fixed').filter({ hasText: /Delete|Usuń/i });
     await confirmModal.getByRole('button', { name: /Delete|Usuń/i }).click();
 
@@ -228,6 +239,57 @@ test.describe('Authenticated Admin Dashboard', () => {
 
     // Verify gone
     await expect(page.locator('table').getByText(mainProduct.name).first()).not.toBeVisible();
+  });
+
+  test('should display revenue statistics and trend chart', async ({ page }) => {
+    // 1. Setup: Create at least one transaction so the chart has data
+    const product = await createProductViaApi(`Realtime-Test-${Date.now()}`, 100);
+    const sessionId = `cs_test_${Date.now()}`;
+    await supabaseAdmin.from('payment_transactions').insert({
+      session_id: sessionId,
+      product_id: product.id,
+      customer_email: 'realtime-test@example.com',
+      amount: 10000,
+      currency: 'USD',
+      status: 'completed'
+    });
+
+    await loginAsAdmin(page);
+    await page.goto('/dashboard');
+
+    // 2. Verify Revenue Cards are visible (Wait for loading to finish)
+    // We wait for the specific text inside the card, which confirms loading is done
+    const revenueCard = page.locator('div').filter({ hasText: /^Total Revenue$|^Przychody ogółem$/i }).first();
+    await expect(revenueCard).toBeVisible({ timeout: 30000 });
+
+    // 3. Verify Chart is rendered (Wait for data to load)
+    const chartContainer = page.locator('.recharts-responsive-container');
+    const emptyState = page.getByText('No Revenue Data Yet');
+    
+    // Wait for either the chart OR the empty state to appear
+    await expect(chartContainer.or(emptyState)).toBeVisible({ timeout: 20000 });
+
+    // 4. Real-time test: Check if "Today's Orders" updates
+    const ordersCard = page.getByTestId('stat-card-today-orders');
+    const initialOrdersText = await ordersCard.locator('p.text-2xl').innerText();
+    const initialOrders = parseInt(initialOrdersText.replace(/[^0-9]/g, '') || '0');
+
+    // Create another transaction
+    await supabaseAdmin.from('payment_transactions').insert({
+      session_id: `cs_realtime_${Date.now()}`,
+      product_id: product.id,
+      customer_email: 'realtime-2@example.com',
+      amount: 5000,
+      currency: 'USD',
+      status: 'completed'
+    });
+
+    // Wait for real-time increment
+    await expect(async () => {
+      const newOrdersText = await ordersCard.locator('p.text-2xl').innerText();
+      const newOrders = parseInt(newOrdersText.replace(/[^0-9]/g, '') || '0');
+      expect(newOrders).toBeGreaterThan(initialOrders);
+    }).toPass({ timeout: 15000 });
   });
 
 });

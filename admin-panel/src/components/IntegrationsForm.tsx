@@ -123,6 +123,26 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
                     </div>
                   </div>
                 </div>
+
+                <div className="border-t border-gray-100 dark:border-gray-700 my-6"></div>
+
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">Umami Analytics (Open Source)</h3>
+                    <span className="px-2 py-0.5 rounded text-xs bg-green-100 text-green-800 font-medium">Privacy Focused</span>
+                  </div>
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Website ID (UUID)</label>
+                      <input type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" value={formData.umami_website_id || ''} onChange={(e) => handleChange('umami_website_id', e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Script URL (Optional)</label>
+                      <input type="text" placeholder="https://cloud.umami.is/script.js" value={formData.umami_script_url || ''} onChange={(e) => handleChange('umami_script_url', e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none" />
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Default: https://cloud.umami.is/script.js</p>
+                    </div>
+                  </div>
+                </div>
                 {/* ... Google Ads ... */}
               </div>
             )}

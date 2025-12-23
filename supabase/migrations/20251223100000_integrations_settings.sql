@@ -10,6 +10,10 @@ CREATE TABLE IF NOT EXISTS public.integrations_config (
     google_ads_conversion_id TEXT,
     google_ads_conversion_label TEXT,
     
+    -- Umami Analytics (Open Source)
+    umami_website_id TEXT,
+    umami_script_url TEXT DEFAULT 'https://cloud.umami.is/script.js',
+
     -- Global Settings
     cookie_consent_enabled BOOLEAN DEFAULT true,
     consent_logging_enabled BOOLEAN DEFAULT false,
@@ -66,6 +70,8 @@ BEGIN
     RETURN jsonb_build_object(
         'gtm_container_id', config_record.gtm_container_id,
         'facebook_pixel_id', config_record.facebook_pixel_id,
+        'umami_website_id', config_record.umami_website_id,
+        'umami_script_url', config_record.umami_script_url,
         'cookie_consent_enabled', config_record.cookie_consent_enabled,
         'consent_logging_enabled', config_record.consent_logging_enabled,
         'scripts', COALESCE(scripts_json, '[]'::jsonb)
@@ -221,7 +227,11 @@ GRANT SELECT ON public.user_product_access_detailed TO service_role;
 GRANT SELECT ON public.rate_limit_summary TO service_role;
 GRANT SELECT ON public.payment_system_health TO service_role;
 
--- 4. RPC Helper for Dashboard Stats (High Performance)
+-- 4. FIX Permissions for security_invoker = on
+-- Since the view runs as the invoker (service_role), it needs direct access to auth.users.
+GRANT SELECT ON auth.users TO service_role;
+
+-- 5. RPC Helper for Dashboard Stats (High Performance)
 -- This allows the dashboard to get aggregate numbers quickly via a secure function call.
 CREATE OR REPLACE FUNCTION public.get_dashboard_stats()
 RETURNS JSONB

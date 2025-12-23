@@ -229,7 +229,10 @@ export class CheckoutService {
 
       // Only add customer_email if it's a valid email
       if (options.email && options.email.trim() !== '') {
+        console.log(`📧 Passing customer_email to Stripe: ${options.email}`);
         sessionConfig.customer_email = options.email;
+      } else {
+        console.log('📧 No customer_email available for Stripe session');
       }
 
       // Add terms of service collection if enabled

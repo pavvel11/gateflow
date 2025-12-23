@@ -15,6 +15,8 @@ export interface IntegrationsInput {
   facebook_pixel_id?: string | null;
   facebook_capi_token?: string | null;
   facebook_test_event_code?: string | null;
+  umami_website_id?: string | null;
+  umami_script_url?: string | null;
   cookie_consent_enabled?: boolean;
   consent_logging_enabled?: boolean;
 }
@@ -38,6 +40,15 @@ export function validateIntegrations(data: IntegrationsInput): ValidationResult 
   // GTM ID validation
   if (data.gtm_container_id && !/^GTM-[A-Z0-9]+$/.test(data.gtm_container_id)) {
     addError('gtm_container_id', 'Invalid GTM Container ID format');
+  }
+
+  // Umami validation
+  if (data.umami_website_id && !/^[0-9a-fA-F-]{36}$/.test(data.umami_website_id)) {
+    addError('umami_website_id', 'Invalid Website ID (must be a UUID)');
+  }
+
+  if (data.umami_script_url && !/^https?:\/\/.+/.test(data.umami_script_url)) {
+    addError('umami_script_url', 'Invalid Script URL');
   }
 
   // Google Ads ID

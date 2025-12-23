@@ -18,22 +18,21 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 ## 🟢 High Priority
 
 ### 📊 Analytics & Marketing Integrations
-**Status**: 📋 Planned
-**Goal**: Robust tracking infrastructure compatible with modern privacy standards (Server-Side) and ease of use (GTM).
+**Status**: 🏗️ Partially Done
+**Goal**: Robust tracking infrastructure compatible with modern privacy standards (Server-Side) and ease of use.
 
-#### 1. Google Tag Manager (GTM) Integration
-*   **Phase 1 (Manual)**: Admin field for `GTM-XXXX` ID. Provide a downloadable `gtm_template.json` with pre-configured Triggers & Tags for GateFlow events (Purchase, Lead, ViewContent).
+#### 1. Google Tag Manager (GTM) Integration - Phase 2
+**Status**: 📋 Planned
 *   **Phase 2 (Automated)**: Google OAuth App integration. One-click setup where GateFlow creates the Container and Tags automatically via GTM API.
 
 #### 2. Server-Side Tracking (Conversions API)
+**Status**: 🏗️ Partially Done (DB & UI Ready)
 *   **Meta (Facebook) CAPI**: Send `Purchase` and `Lead` events directly from backend (Stripe Webhook / Access Grant) to bypass AdBlockers.
+    *   ✅ Database Schema & Admin UI (Token storage)
+    *   📋 Backend Logic (Sending events to FB Graph API)
 *   **Google Enhanced Conversions**: Backend integration to send hashed user data (email) with conversion events to Google Ads.
 
-#### 3. Cookie Consent (Klaro)
-*   Implement **Klaro** (open-source) to manage consents.
-*   **Critical**: Must block GTM script execution (or set specific GTM consent modes) until user approval.
-
-#### 4. Real-time Sales Dashboard (Live Stats)
+#### 3. Real-time Sales Dashboard (Live Stats)
 **Status**: 📋 Planned
 **Description**: A comprehensive, real-time dashboard for monitoring sales performance, inspired by the provided design.
 **Features**:
@@ -51,7 +50,7 @@ A comprehensive list of planned features, technical improvements, and ideas for 
     - **Live Updates**: Charts and counters update automatically without page refresh.
 - **Date Filtering**: Global date picker to adjust the view.
 
-#### 5. Real-time Social Proof Notifications (Client-side)
+#### 4. Real-time Social Proof Notifications (Client-side)
 **Status**: 📋 Planned
 **Description**: Increase urgency and trust by showing live activity notifications to users browsing the product page.
 **Features**:
@@ -234,7 +233,6 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 - **Product & Coupon changes**: Track price changes or discount updates.
 
 ### 🏗️ Architecture & Security Improvements
-- 🔴 **Cookie Consent Management**: Implement open-source solution **Klaro** to handle cookie consent and GDPR compliance. Ensure it blocks tracking scripts (Analytics, Stripe, etc.) until consent is granted.
 - 📋 **Custom Error Classes**: Implement strongly typed error classes (e.g., `UnauthorizedError`, `ForbiddenError`) with automatic HTTP status mapping for cleaner API code.
 - 📋 **API Middleware Wrapper**: Create a `withAdminAuth()` Higher-Order Function (HOF) to wrap admin routes, reducing boilerplate and centralizing security/error handling.
 - 📋 **Supabase Custom JWT Claims**: Integrate `is_admin` flag directly into the Supabase JWT token to enable stateless, lightning-fast admin verification in Edge Middleware.
@@ -315,6 +313,22 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 **Status**: 💭 Idea
 **Description**: Allow administrators to group multiple products into a single "bundle" that can be purchased as one item, often at a discounted price.
 
+#### Product Categories
+**Status**: 📋 Planned
+**Description**: Organize products into a hierarchical or flat category structure for better navigation and management.
+**Features**:
+- **Category Management**: CRUD for categories (Name, Slug, Description).
+- **Product Assignment**: UI to assign one or multiple categories to a product.
+- **Frontend filtering**: Filter products by category on the storefront/dashboard.
+
+#### Product Tags
+**Status**: 📋 Planned
+**Description**: Flexible tagging system for products to enable advanced filtering, marketing segmentation, and automation.
+**Features**:
+- **Tag Management**: Create/Edit tags on the fly or in a dedicated view.
+- **Usage**: Assign tags like "Promo", "Bestseller", "New" to products.
+- **Automation**: Use tags as triggers for discounts or webhooks (e.g. "Apply coupon to all products with tag 'BlackFriday'").
+
 #### Content Delivery Type Refactoring
 **Status**: 💭 Idea
 **Description**: Extend the `content_delivery_type` system.
@@ -328,6 +342,23 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 ---
 
 ## ✅ Completed Features
+
+### 📊 Analytics & Integrations (2025-12-23)
+
+#### Google Tag Manager (GTM) - Phase 1
+- ✅ Admin UI to input `GTM-XXXX` ID.
+- ✅ Client-side script injection via `TrackingProvider`.
+- ✅ Validation for GTM ID format.
+
+#### Cookie Consent (Klaro)
+- ✅ Implemented open-source `Klaro` for GDPR compliance.
+- ✅ Integration with `TrackingProvider` to block scripts until consent is given.
+- ✅ "Require Consent" toggle in admin settings.
+
+#### Script Manager
+- ✅ Structured management of custom scripts (Essential, Marketing, Analytics).
+- ✅ Dynamic injection based on consent category.
+- ✅ Secure database storage (`integrations_config`).
 
 ### 🛒 Sales Mechanics
 

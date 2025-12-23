@@ -193,7 +193,7 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
   }, [product.id, email, bumpSelected, orderBump, appliedCoupon, t]);
 
   const renderProductInfo = () => (
-    <div className="w-1/2 pr-8 border-r border-white/10">
+    <div className="w-full md:w-1/2 md:pr-8 md:border-r border-white/10 mb-8 md:mb-0">
       <div className="flex items-center mb-6">
         <div className="text-5xl mr-6">{product.icon}</div>
         <div>
@@ -208,7 +208,7 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
   );
 
   const renderCheckoutForm = () => (
-    <div className="w-1/2 pl-8">
+    <div className="w-full md:w-1/2 md:pl-8">
       {user ? (
         <div className="mb-4 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="flex items-center justify-between">
@@ -480,9 +480,9 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
   );
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
-      <div className="max-w-4xl mx-auto p-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl">
-        <div className="flex">
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-4 md:p-8">
+      <div className="w-full max-w-7xl mx-auto p-6 md:p-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl">
+        <div className="flex flex-col md:flex-row">
           {renderProductInfo()}
           {renderCheckoutForm()}
         </div>

@@ -16,6 +16,17 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sortBy') || 'user_created_at';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
 
+    // Map frontend sort keys to database view columns to prevent SQL injection or invalid column errors
+    const sortMapping: Record<string, string> = {
+      'user_created_at': 'user_created_at',
+      'email': 'email',
+      'last_sign_in_at': 'last_sign_in_at',
+      'total_products': 'total_products',
+      'total_value': 'total_value',
+      'last_access_granted_at': 'last_access_granted_at'
+    };
+    const mappedSortBy = sortMapping[sortBy] || 'user_created_at';
+
     const supabase = await createClient();
     
     // CRITICAL: Verify admin access before using adminClient
@@ -40,12 +51,12 @@ export async function GET(request: NextRequest) {
     
     // Get users with their access statistics from the view
     const { data: userStats, error: statsError, count } = await query
-      .order(sortBy, { ascending: sortOrder === 'asc' })
+      .order(mappedSortBy, { ascending: sortOrder === 'asc' })
       .range((page - 1) * limit, page * limit - 1);
 
     if (statsError) {
       console.error('Error fetching user stats:', statsError);
-      return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to fetch users', details: statsError.message }, { status: 500 });
     }
 
     // Get detailed product access for all users

@@ -390,6 +390,8 @@ export type Database = {
           google_ads_conversion_label: string | null
           gtm_container_id: string | null
           id: number
+          umami_website_id: string | null
+          umami_script_url: string | null
           updated_at: string | null
         }
         Insert: {
@@ -403,6 +405,8 @@ export type Database = {
           google_ads_conversion_label?: string | null
           gtm_container_id?: string | null
           id?: number
+          umami_website_id?: string | null
+          umami_script_url?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -416,6 +420,8 @@ export type Database = {
           google_ads_conversion_label?: string | null
           gtm_container_id?: string | null
           id?: number
+          umami_website_id?: string | null
+          umami_script_url?: string | null
           updated_at?: string | null
         }
         Relationships: []

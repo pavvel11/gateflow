@@ -1,6 +1,7 @@
 import { verifyAdminAccess } from '@/lib/auth-server';
 import DashboardLayout from '@/components/DashboardLayout';
 import { ReactNode } from 'react';
+import { RealtimeProvider } from '@/contexts/RealtimeContext';
 
 export default async function Layout({ children }: { children: ReactNode }) {
   // Server-side auth check (blocking)
@@ -8,8 +9,10 @@ export default async function Layout({ children }: { children: ReactNode }) {
   const user = await verifyAdminAccess();
 
   return (
-    <DashboardLayout user={user} isAdmin={true}>
-      {children}
-    </DashboardLayout>
+    <RealtimeProvider>
+      <DashboardLayout user={user} isAdmin={true}>
+        {children}
+      </DashboardLayout>
+    </RealtimeProvider>
   );
 }
