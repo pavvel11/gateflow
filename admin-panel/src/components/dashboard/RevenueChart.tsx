@@ -6,6 +6,7 @@ import { getSalesChartData, getHourlyRevenueStats } from '@/lib/actions/analytic
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { useRealtime } from '@/contexts/RealtimeContext';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import DateRangeFilter from './DateRangeFilter';
 
 type ViewMode = 'daily' | 'hourly';
@@ -15,6 +16,7 @@ export default function RevenueChart() {
   const searchParams = useSearchParams();
   const productId = searchParams.get('productId') || undefined;
   const { addRefreshListener, removeRefreshListener } = useRealtime();
+  const { hideValues } = useUserPreferences();
   
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +30,7 @@ export default function RevenueChart() {
   const handleRangeChange = (start: Date | null, end: Date | null) => {
     setDateRange({ start, end });
     if (start && end) {
-      setViewMode('daily'); 
+      setViewMode('daily');
     }
   };
 
@@ -79,6 +81,7 @@ export default function RevenueChart() {
   }, [fetchData, addRefreshListener, removeRefreshListener]);
 
   const formatCurrency = (value: number) => {
+    if (hideValues) return '****';
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -87,9 +90,12 @@ export default function RevenueChart() {
     }).format(value / 100);
   };
 
-  const daysDiff = dateRange.start && dateRange.end 
+  const daysDiff = dateRange.start && dateRange.end
     ? Math.round((dateRange.end.getTime() - dateRange.start.getTime()) / (1000 * 60 * 60 * 24))
     : 30;
+
+  // Calculate total revenue for the selected period
+  const totalRevenue = data.reduce((sum, item) => sum + (item.amount || 0), 0);
 
   if (loading) {
     return (
@@ -103,17 +109,28 @@ export default function RevenueChart() {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {viewMode === 'daily' 
-              ? t('revenueChart.title', { defaultValue: 'Revenue Trend' })
-              : t('revenueChart.hourlyTitle', { defaultValue: "Today's Revenue" })}
-          </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {viewMode === 'daily'
-              ? t('revenueChart.subtitle', { days: daysDiff, defaultValue: 'Performance over time' })
-              : t('revenueChart.hourlySubtitle', { defaultValue: 'Hourly breakdown' })}
-          </p>
+        <div className="flex items-center gap-6">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              {viewMode === 'daily'
+                ? t('revenueChart.title', { defaultValue: 'Revenue Trend' })
+                : t('revenueChart.hourlyTitle', { defaultValue: "Today's Revenue" })}
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {viewMode === 'daily'
+                ? t('revenueChart.subtitle', { days: daysDiff, defaultValue: 'Performance over time' })
+                : t('revenueChart.hourlySubtitle', { defaultValue: 'Hourly breakdown' })}
+            </p>
+          </div>
+          <div className="hidden sm:block h-12 w-px bg-gray-300 dark:bg-gray-600"></div>
+          <div className="flex flex-col">
+            <span className="text-2xl font-bold text-gray-900 dark:text-white">
+              {formatCurrency(totalRevenue)}
+            </span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              total revenue
+            </span>
+          </div>
         </div>
         
         <div className="flex flex-wrap items-center gap-2">

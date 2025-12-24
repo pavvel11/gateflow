@@ -16,6 +16,16 @@ export default function DateRangeFilter({ startDate, endDate, onChange }: DateRa
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Local state for partial selection (before both dates are selected)
+  const [localStart, setLocalStart] = useState<Date | null>(startDate);
+  const [localEnd, setLocalEnd] = useState<Date | null>(endDate);
+
+  // Sync local state with props when they change externally (e.g., preset buttons)
+  useEffect(() => {
+    setLocalStart(startDate);
+    setLocalEnd(endDate);
+  }, [startDate, endDate]);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -48,10 +58,14 @@ export default function DateRangeFilter({ startDate, endDate, onChange }: DateRa
 
   const handleChange = (dates: [Date | null, Date | null]) => {
     const [start, end] = dates;
-    onChange(start, end);
-    
-    // Only close the calendar when the range is fully selected (both start and end dates)
+
+    // Update local state immediately for visual feedback
+    setLocalStart(start);
+    setLocalEnd(end);
+
+    // Only propagate to parent and close when both dates are selected
     if (start && end) {
+      onChange(start, end);
       setIsOpen(false);
     }
   };
@@ -80,10 +94,10 @@ export default function DateRangeFilter({ startDate, endDate, onChange }: DateRa
       {isOpen && (
         <div className="absolute right-0 z-50 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl p-4">
           <DatePicker
-            selected={startDate}
+            selected={localStart}
             onChange={handleChange}
-            startDate={startDate}
-            endDate={endDate}
+            startDate={localStart}
+            endDate={localEnd}
             selectsRange
             inline
             monthsShown={2}
