@@ -79,7 +79,12 @@ export default function RevenueChart() {
     } finally {
       setLoading(false);
     }
-  }, [viewMode, dateRange.start, dateRange.end, productId]); // Precise dependencies
+  }, [
+    viewMode,
+    dateRange.start?.getTime(), // Use timestamp instead of Date object
+    dateRange.end?.getTime(),   // Use timestamp instead of Date object
+    productId
+  ]);
 
   useEffect(() => {
     setLoading(true);

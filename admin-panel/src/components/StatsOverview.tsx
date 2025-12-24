@@ -40,10 +40,10 @@ export default function StatsOverview() {
   const prevTotalRevenueRef = useRef<CurrencyAmount>({}); // Track previous revenue using ref to avoid dependency loop
   const isInitialLoadRef = useRef(true);
 
-  // Helper to sum all currency amounts
-  const sumAllCurrencies = (amounts: CurrencyAmount): number => {
+  // Helper to sum all currency amounts (stable, no dependencies)
+  const sumAllCurrencies = useCallback((amounts: CurrencyAmount): number => {
     return Object.values(amounts).reduce((sum, amount) => sum + amount, 0);
-  };
+  }, []);
 
   // Stable fetch function - only depends on productId, NOT on revenueStats to avoid infinite loop
   const fetchAllStats = useCallback(async () => {
@@ -96,7 +96,7 @@ export default function StatsOverview() {
       setLoading(false);
       isInitialLoadRef.current = false;
     }
-  }, [productId]); // ONLY productId - removing revenueStats prevents infinite loop
+  }, [productId, sumAllCurrencies]); // ONLY productId and stable helper
 
   useEffect(() => {
     // Initial fetch

@@ -22,10 +22,10 @@ export default function RevenueGoal() {
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // Helper to sum all currency amounts to a single number
-  const sumAllCurrencies = (amounts: CurrencyAmount): number => {
+  // Helper to sum all currency amounts to a single number (stable, no dependencies)
+  const sumAllCurrencies = useCallback((amounts: CurrencyAmount): number => {
     return Object.values(amounts).reduce((sum, amount) => sum + amount, 0);
-  };
+  }, []);
 
   // Fetch both Goal configuration and Current Revenue
   const fetchData = useCallback(async () => {
@@ -56,7 +56,7 @@ export default function RevenueGoal() {
     } finally {
       setLoading(false);
     }
-  }, [productId]);
+  }, [productId, sumAllCurrencies]);
 
   useEffect(() => {
     // Load goal and start date from local storage (backup/optimistic)
