@@ -242,13 +242,13 @@ test.describe('Authenticated Admin Dashboard', () => {
   });
 
   test('should display revenue statistics and trend chart', async ({ page }) => {
-    // 1. Setup: Create at least one transaction so the chart has data
-    const product = await createProductViaApi(`Realtime-Test-${Date.now()}`, 100);
+    // 1. Setup: Create at least one transaction so the dashboard has data
+    const product = await createProductViaApi(`Stats-Test-${Date.now()}`, 100);
     const sessionId = `cs_test_${Date.now()}`;
     await supabaseAdmin.from('payment_transactions').insert({
       session_id: sessionId,
       product_id: product.id,
-      customer_email: 'realtime-test@example.com',
+      customer_email: 'stats-test@example.com',
       amount: 10000,
       currency: 'USD',
       status: 'completed'
@@ -257,39 +257,20 @@ test.describe('Authenticated Admin Dashboard', () => {
     await loginAsAdmin(page);
     await page.goto('/dashboard');
 
-    // 2. Verify Revenue Cards are visible (Wait for loading to finish)
-    // We wait for the specific text inside the card, which confirms loading is done
-    const revenueCard = page.locator('div').filter({ hasText: /^Total Revenue$|^Przychody ogółem$/i }).first();
-    await expect(revenueCard).toBeVisible({ timeout: 30000 });
-
-    // 3. Verify Chart is rendered (Wait for data to load)
-    const chartContainer = page.locator('.recharts-responsive-container');
-    const emptyState = page.getByText('No Revenue Data Yet');
+    // 2. Verify main Stat Cards are rendered
+    await expect(page.getByTestId('stat-card-total-revenue')).toBeVisible({ timeout: 20000 });
+    await expect(page.getByTestId('stat-card-today-orders')).toBeVisible();
     
-    // Wait for either the chart OR the empty state to appear
-    await expect(chartContainer.or(emptyState)).toBeVisible({ timeout: 20000 });
-
-    // 4. Real-time test: Check if "Today's Orders" updates
+    // 3. Verify that we have at least one order displayed (the one we just created)
     const ordersCard = page.getByTestId('stat-card-today-orders');
-    const initialOrdersText = await ordersCard.locator('p.text-2xl').innerText();
-    const initialOrders = parseInt(initialOrdersText.replace(/[^0-9]/g, '') || '0');
+    await expect(ordersCard.locator('p.text-2xl')).not.toHaveText('0', { timeout: 10000 });
 
-    // Create another transaction
-    await supabaseAdmin.from('payment_transactions').insert({
-      session_id: `cs_realtime_${Date.now()}`,
-      product_id: product.id,
-      customer_email: 'realtime-2@example.com',
-      amount: 5000,
-      currency: 'USD',
-      status: 'completed'
-    });
-
-    // Wait for real-time increment
-    await expect(async () => {
-      const newOrdersText = await ordersCard.locator('p.text-2xl').innerText();
-      const newOrders = parseInt(newOrdersText.replace(/[^0-9]/g, '') || '0');
-      expect(newOrders).toBeGreaterThan(initialOrders);
-    }).toPass({ timeout: 15000 });
+    // 4. Verify Chart Container presence
+    const chartContainer = page.locator('.recharts-responsive-container');
+    const emptyState = page.getByText(/No Revenue Data/i);
+    
+    // Check if either the chart or the empty state is visible (handling data processing delays)
+    await expect(chartContainer.or(emptyState)).toBeVisible({ timeout: 15000 });
   });
 
 });

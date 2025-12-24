@@ -15,11 +15,11 @@ export default function RevenueChart() {
   const searchParams = useSearchParams();
   const productId = searchParams.get('productId') || undefined;
   const { addRefreshListener, removeRefreshListener } = useRealtime();
+  
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('daily');
   
-  // Default to 30 days for daily view
   const [dateRange, setDateRange] = useState<{ start: Date | null, end: Date | null }>({
     start: new Date(new Date().setDate(new Date().getDate() - 30)),
     end: new Date()
@@ -27,7 +27,6 @@ export default function RevenueChart() {
 
   const handleRangeChange = (start: Date | null, end: Date | null) => {
     setDateRange({ start, end });
-    // When a custom range is selected, force view mode to daily
     if (start && end) {
       setViewMode('daily'); 
     }
@@ -36,7 +35,6 @@ export default function RevenueChart() {
   const setPredefinedRange = (days: number) => {
     if (days === 0) { // "Today" button
       setViewMode('hourly');
-      // For hourly view, the backend defaults to current date, so we can reset dateRange or leave it
       setDateRange({ start: new Date(), end: new Date() }); 
     } else {
       setViewMode('daily');
@@ -47,52 +45,43 @@ export default function RevenueChart() {
     }
   };
 
+  // Stable fetch function
   const fetchData = useCallback(async () => {
-    setLoading(true);
     try {
       if (viewMode === 'hourly') {
         const hourlyData = await getHourlyRevenueStats(undefined, productId);
         setData(hourlyData);
-      } else { // daily view mode
+      } else {
         if (dateRange.start && dateRange.end) {
-          // Pass explicit dates to getSalesChartData
           const chartData = await getSalesChartData(0, dateRange.start, dateRange.end, productId);
           setData(chartData);
         } else {
-          // Fallback for daily view if dates are somehow null, though shouldn't happen
-          const chartData = await getSalesChartData(30, undefined, undefined, productId); // Default to 30 days
+          const chartData = await getSalesChartData(30, undefined, undefined, productId);
           setData(chartData);
         }
       }
     } catch (err) {
       console.error('Failed to fetch chart data', err);
-      setData([]); // Ensure data is empty on error
+      setData([]);
     } finally {
       setLoading(false);
     }
-  }, [viewMode, dateRange, productId]);
+  }, [viewMode, dateRange.start, dateRange.end, productId]); // Precise dependencies
 
   useEffect(() => {
-    // Register listener for global refresh events from RealtimeContext
-    // This ensures chart data is refreshed when new orders come in
-    const refreshListener = () => {
-      console.log('[RevenueChart] Refresh requested via context.');
-      fetchData();
-    };
-    addRefreshListener(refreshListener);
-    
-    fetchData(); // Initial fetch
+    setLoading(true);
+    fetchData();
 
+    addRefreshListener(fetchData);
     return () => {
-      removeRefreshListener(refreshListener);
+      removeRefreshListener(fetchData);
     };
   }, [fetchData, addRefreshListener, removeRefreshListener]);
 
-  // Format currency
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD', // TODO: Make dynamic from config
+      currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value / 100);
@@ -138,7 +127,7 @@ export default function RevenueChart() {
             <button
               onClick={() => setPredefinedRange(7)}
               className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-                viewMode === 'daily' && dateRange.start && (new Date().getTime() - dateRange.start.getTime()) < 8 * 24 * 3600 * 1000 // Roughly check if 7 days
+                viewMode === 'daily' && dateRange.start && (new Date().getTime() - dateRange.start.getTime()) < 8 * 24 * 3600 * 1000
                   ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
@@ -219,7 +208,7 @@ export default function RevenueChart() {
                   border: '1px solid #E5E7EB',
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' 
                 }}
-                formatter={(value: number | string | (number | string)[] | undefined) => {
+                formatter={(value: any) => {
                   const numericValue = typeof value === 'number' ? value : 0;
                   return [formatCurrency(numericValue), 'Revenue'];
                 }}

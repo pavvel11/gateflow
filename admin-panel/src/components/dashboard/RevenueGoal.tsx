@@ -1,82 +1,122 @@
-'use client'
+'use client';
 
-import { useState, useEffect, useCallback } from 'react'
-import { useTranslations } from 'next-intl'
-import { getRevenueStats } from '@/lib/actions/analytics'
-import { useRealtime } from '@/contexts/RealtimeContext'
+import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
+import { getRevenueStats, getRevenueGoal, setRevenueGoal } from '@/lib/actions/analytics';
+import { useRealtime } from '@/contexts/RealtimeContext';
+import { useSearchParams } from 'next/navigation';
 
 export default function RevenueGoal() {
-  const t = useTranslations('admin.dashboard')
-  const { addRefreshListener, removeRefreshListener } = useRealtime()
-  const [goal, setGoal] = useState(1000000)
-  const [currentRevenue, setCurrentRevenue] = useState(0)
-  const [isEditing, setIsEditing] = useState(false)
-  const [inputValue, setInputValue] = useState('')
+  const t = useTranslations('admin.dashboard');
+  const searchParams = useSearchParams();
+  const productId = searchParams.get('productId') || undefined;
+  const { addRefreshListener, removeRefreshListener } = useRealtime();
+  
+  const [goal, setGoal] = useState(1000000); // Default $10k in cents
+  const [goalStartDate, setGoalStartDate] = useState<string | null>(null);
+  const [currentRevenue, setCurrentRevenue] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const fetchRevenue = useCallback(async () => {
+  // Fetch both Goal configuration and Current Revenue
+  const fetchData = useCallback(async () => {
     try {
-      const stats = await getRevenueStats()
+      // 1. Get Goal Config from DB
+      const goalData = await getRevenueGoal(productId);
+      let startDateForStats = undefined;
+
+      if (goalData) {
+        setGoal(goalData.amount);
+        setGoalStartDate(goalData.startDate);
+        startDateForStats = new Date(goalData.startDate);
+      } else {
+        // No goal set for this context? Use defaults or fallback to global if implemented on backend
+        // For now, if no goal, we default to 1M and no start date (all time revenue)
+        setGoal(1000000);
+        setGoalStartDate(null);
+      }
+
+      // 2. Get Revenue Stats based on goal start date
+      const stats = await getRevenueStats(productId, startDateForStats);
       if (stats) {
-        setCurrentRevenue(stats.totalRevenue)
+        setCurrentRevenue(stats.totalRevenue);
       }
     } catch (err) {
-      console.error('Failed to fetch revenue for goal', err)
+      console.error('Failed to fetch revenue data', err);
+    } finally {
+      setLoading(false);
     }
-  }, [])
+  }, [productId]);
 
   useEffect(() => {
-    // Load goal from local storage
-    const savedGoal = localStorage.getItem('revenue_goal')
-    if (savedGoal) {
-      setGoal(parseInt(savedGoal, 10))
-    }
+    fetchData();
+    addRefreshListener(fetchData);
+    return () => removeRefreshListener(fetchData);
+  }, [fetchData, addRefreshListener, removeRefreshListener]);
+
+  const handleSave = async () => {
+    const newGoalCents = parseFloat(inputValue) * 100;
+    if (isNaN(newGoalCents)) return;
     
-    addRefreshListener(fetchRevenue)
-    fetchRevenue() // Initial fetch
+    // If no start date exists (first time setting), set it to now. 
+    // If it exists, keep it (user is just changing the amount).
+    // Unless they explicitly reset, we don't change start date on amount edit.
+    const startDate = goalStartDate || new Date().toISOString();
 
-    return () => {
-      removeRefreshListener(fetchRevenue)
+    try {
+      await setRevenueGoal(newGoalCents, startDate, productId);
+      setGoal(newGoalCents);
+      setGoalStartDate(startDate);
+      setIsEditing(false);
+      fetchData(); // Refresh revenue with new context
+    } catch (err) {
+      console.error('Failed to save goal', err);
+      // Maybe show a toast error here
     }
-  }, [addRefreshListener, removeRefreshListener, fetchRevenue])
+  };
 
-  const handleSave = () => {
-    const newGoal = parseInt(inputValue.replace(/[^0-9]/g, ''), 10) * 100 // Convert to cents
-    if (newGoal > 0) {
-      setGoal(newGoal)
-      localStorage.setItem('revenue_goal', newGoal.toString())
+  const handleResetGoal = async () => {
+    // Reset means: Start counting from NOW.
+    // We can also reset amount to default, or keep current. Let's keep current amount for UX, or default?
+    // User requested "reset revenue sum", so keep goal amount, change date.
+    
+    const now = new Date().toISOString();
+    
+    try {
+      await setRevenueGoal(goal, now, productId); // Keep current goal amount, update date
+      setGoalStartDate(now);
+      setIsEditing(false);
+      fetchData(); // Refresh revenue (should drop to 0)
+    } catch (err) {
+      console.error('Failed to reset goal', err);
     }
-    setIsEditing(false)
-  }
+  };
 
-  // Calculate raw percentage for display (can exceed 100%)
-  const rawPercentage = goal > 0 ? Math.round((currentRevenue / goal) * 100) : 0
-  // Calculate visual percentage for progress bar (capped at 100%)
-  const visualPercentage = Math.min(rawPercentage, 100)
-
-  // Listen for storage changes to sync goal across tabs
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const savedGoal = localStorage.getItem('revenue_goal')
-      if (savedGoal) {
-        setGoal(parseInt(savedGoal, 10))
-      }
-    }
-    window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
-  }, [])
+  const rawPercentage = goal > 0 ? Math.round((currentRevenue / goal) * 100) : 0;
+  const visualPercentage = Math.min(rawPercentage, 100);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       maximumFractionDigits: 0,
-    }).format(amount / 100)
+    }).format(amount / 100);
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 h-[140px] animate-pulse">
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
+        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+      </div>
+    );
   }
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="font-semibold text-gray-900 dark:text-white">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+        <h3 className="font-semibold text-gray-900 dark:text-white text-lg">
           {t('revenueGoal', { defaultValue: 'Revenue Goal' })}
         </h3>
         {isEditing ? (
@@ -85,8 +125,8 @@ export default function RevenueGoal() {
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder="e.g. 50000"
-              className="w-24 px-2 py-1 text-sm border rounded dark:bg-gray-700 dark:border-gray-600"
+              placeholder={(goal / 100).toString()}
+              className="w-24 px-2 py-1 text-sm border rounded dark:bg-gray-800 dark:border-gray-700 dark:text-white"
               autoFocus
             />
             <button 
@@ -95,17 +135,31 @@ export default function RevenueGoal() {
             >
               Save
             </button>
+            <button 
+              onClick={handleResetGoal}
+              className="text-xs text-gray-500 dark:text-gray-400 hover:underline"
+              title="Reset progress (start counting from now)"
+            >
+              Reset
+            </button>
           </div>
         ) : (
-          <button 
-            onClick={() => {
-              setInputValue((goal / 100).toString())
-              setIsEditing(true)
-            }}
-            className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-          >
-            {t('setGoal', { defaultValue: 'Set Goal' })}
-          </button>
+          <div className="flex items-center space-x-2">
+            <button 
+              onClick={() => {
+                setInputValue((goal / 100).toString());
+                setIsEditing(true);
+              }}
+              className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              {t('setGoal', { defaultValue: 'Set Goal' })}
+            </button>
+             {goalStartDate && (
+              <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                ({t('stats.since', { date: new Date(goalStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) })})
+              </span>
+            )}
+          </div>
         )}
       </div>
 
@@ -136,5 +190,5 @@ export default function RevenueGoal() {
         </div>
       </div>
     </div>
-  )
+  );
 }

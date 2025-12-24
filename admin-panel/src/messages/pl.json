@@ -48,7 +48,8 @@
     "updated": "Zaktualizowano",
     "refresh": "Odśwież",
     "retry": "Spróbuj ponownie",
-    "language": "Język"
+    "language": "Język",
+    "allProducts": "Wszystkie produkty"
   },
   "navigation": {
     "dashboard": "Pulpit",
@@ -241,7 +242,8 @@
     "stats": {
       "totalRevenue": "Przychody ogółem",
       "todayRevenue": "Dzisiejszy przychód",
-      "todayOrders": "Dzisiejsze zamówienia"
+      "todayOrders": "Dzisiejsze zamówienia",
+      "since": "Od: {date}"
     },
     "revenueChart": {
       "title": "Trend przychodów",

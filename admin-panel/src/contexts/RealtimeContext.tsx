@@ -38,7 +38,6 @@ export const RealtimeProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const notifyListeners = () => {
-    console.log(`📣 Notifying ${listeners.length} listeners to refresh data.`);
     listeners.forEach(listener => listener());
   };
 
@@ -47,15 +46,13 @@ export const RealtimeProvider = ({ children }: { children: ReactNode }) => {
 
     const setupSubscription = async () => {
       const client = await createClient();
-      console.log('🔌 [RealtimeProvider] Setting up subscription...');
-
+      
       channel = client
         .channel('global-admin-realtime')
         .on(
           'postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'payment_transactions' },
           (payload: any) => {
-            console.log('⚡️ [RealtimeProvider] Event received:', payload);
             if (payload.new?.status === 'completed') {
               // 1. Notify all components to refresh their data
               notifyListeners();
@@ -73,16 +70,13 @@ export const RealtimeProvider = ({ children }: { children: ReactNode }) => {
             }
           }
         )
-        .subscribe((status: string) => {
-          console.log('📡 [RealtimeProvider] Subscription status:', status);
-        });
+        .subscribe();
     };
 
     setupSubscription();
 
     return () => {
       if (channel) {
-        console.log('🔌 [RealtimeProvider] Removing subscription.');
         createClient().then(client => client.removeChannel(channel));
       }
     };

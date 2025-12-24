@@ -4,7 +4,8 @@
 -- 1. Function: Get Detailed Revenue Stats
 -- Returns comprehensive revenue metrics for the dashboard
 CREATE OR REPLACE FUNCTION public.get_detailed_revenue_stats(
-    p_product_id UUID DEFAULT NULL
+    p_product_id UUID DEFAULT NULL,
+    p_goal_start_date TIMESTAMPTZ DEFAULT NULL
 )
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -22,11 +23,12 @@ BEGIN
         RAISE EXCEPTION 'Access denied';
     END IF;
 
-    -- Total Revenue (All time, completed)
+    -- Total Revenue (All time or since goal start, completed)
     SELECT COALESCE(SUM(pt.amount), 0) INTO v_total_revenue 
     FROM public.payment_transactions pt
     WHERE pt.status = 'completed'
-      AND (p_product_id IS NULL OR pt.product_id = p_product_id);
+      AND (p_product_id IS NULL OR pt.product_id = p_product_id)
+      AND (p_goal_start_date IS NULL OR pt.created_at >= p_goal_start_date);
 
     -- Today's stats (Since midnight server time)
     SELECT 
@@ -55,10 +57,10 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.get_detailed_revenue_stats(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_detailed_revenue_stats(UUID, TIMESTAMPTZ) TO authenticated;
 
+-- ... rest of the file remains same ...
 -- 2. Function: Get Sales Chart Data
--- Returns daily revenue for the specified date range
 CREATE OR REPLACE FUNCTION public.get_sales_chart_data(
     p_start_date TIMESTAMPTZ,
     p_end_date TIMESTAMPTZ,
@@ -97,7 +99,6 @@ $$;
 GRANT EXECUTE ON FUNCTION public.get_sales_chart_data(TIMESTAMPTZ, TIMESTAMPTZ, UUID) TO authenticated;
 
 -- 3. Function: Get Hourly Revenue Stats
--- Returns revenue grouped by hour for a specific date (default: today)
 CREATE OR REPLACE FUNCTION public.get_hourly_revenue_stats(
     p_target_date DATE DEFAULT CURRENT_DATE,
     p_product_id UUID DEFAULT NULL
@@ -146,10 +147,8 @@ $$;
 GRANT EXECUTE ON FUNCTION public.get_hourly_revenue_stats(DATE, UUID) TO authenticated;
 
 -- 4. Realtime Setup
--- Force replica identity full for payment_transactions to ensure Realtime works reliably
 ALTER TABLE payment_transactions REPLICA IDENTITY FULL;
 
--- Add table to publication if not already present
 DO $$
 BEGIN
   IF NOT EXISTS (
