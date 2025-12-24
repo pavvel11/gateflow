@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { getSalesChartData, getHourlyRevenueStats } from '@/lib/actions/analytics';
+import { getSalesChartData, getHourlyRevenueStats, CurrencyAmount } from '@/lib/actions/analytics';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { useRealtime } from '@/contexts/RealtimeContext';
@@ -10,6 +10,17 @@ import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import DateRangeFilter from './DateRangeFilter';
 
 type ViewMode = 'daily' | 'hourly';
+
+// Currency colors for the chart
+const CURRENCY_COLORS: { [key: string]: string } = {
+  'USD': '#3B82F6', // blue
+  'EUR': '#10B981', // green
+  'GBP': '#8B5CF6', // purple
+  'PLN': '#F59E0B', // amber
+  'CAD': '#EF4444', // red
+  'AUD': '#14B8A6', // teal
+  'JPY': '#F97316', // orange
+};
 
 export default function RevenueChart() {
   const t = useTranslations('admin.dashboard');
@@ -80,22 +91,55 @@ export default function RevenueChart() {
     };
   }, [fetchData, addRefreshListener, removeRefreshListener]);
 
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value: number, currency: string = 'USD') => {
     if (hideValues) return '****';
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: currency,
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value / 100);
+  };
+
+  // Helper to format multi-currency amounts
+  const formatMultiCurrency = (amounts: CurrencyAmount) => {
+    if (hideValues) return '****';
+    const currencies = Object.keys(amounts);
+    if (currencies.length === 0) return formatCurrency(0);
+    if (currencies.length === 1) {
+      const currency = currencies[0];
+      return formatCurrency(amounts[currency], currency);
+    }
+    // Multiple currencies - show them all
+    return currencies
+      .sort() // Sort for consistency
+      .map(currency => formatCurrency(amounts[currency], currency))
+      .join(' + ');
+  };
+
+  // Helper to sum multi-currency amounts across all data points
+  const sumMultiCurrency = (dataPoints: any[]): CurrencyAmount => {
+    const totals: CurrencyAmount = {};
+    dataPoints.forEach(point => {
+      const amounts = point.amount || {};
+      Object.keys(amounts).forEach(currency => {
+        totals[currency] = (totals[currency] || 0) + amounts[currency];
+      });
+    });
+    return totals;
   };
 
   const daysDiff = dateRange.start && dateRange.end
     ? Math.round((dateRange.end.getTime() - dateRange.start.getTime()) / (1000 * 60 * 60 * 24))
     : 30;
 
-  // Calculate total revenue for the selected period
-  const totalRevenue = data.reduce((sum, item) => sum + (item.amount || 0), 0);
+  // Calculate total revenue for the selected period (multi-currency)
+  const totalRevenue = sumMultiCurrency(data);
+
+  // Get all unique currencies present in the data for chart rendering
+  const allCurrencies = Array.from(
+    new Set(data.flatMap(item => Object.keys(item.amount || {})))
+  ).sort();
 
   if (loading) {
     return (
@@ -124,9 +168,9 @@ export default function RevenueChart() {
           </div>
           <div className="hidden sm:block h-12 w-px bg-gray-300 dark:bg-gray-600"></div>
           <div className="flex flex-col">
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">
-              {formatCurrency(totalRevenue)}
-            </span>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+              {formatMultiCurrency(totalRevenue)}
+            </div>
             <span className="text-xs text-gray-500 dark:text-gray-400">
               total revenue
             </span>
@@ -193,18 +237,31 @@ export default function RevenueChart() {
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
-              data={data}
+              data={data.map(item => {
+                // Transform data to have currencies as separate fields for chart
+                const transformed: any = {
+                  [viewMode === 'daily' ? 'date' : 'hour']: viewMode === 'daily' ? item.date : item.hour,
+                  orders: item.orders
+                };
+                // Add each currency amount as a separate field
+                Object.keys(item.amount || {}).forEach(currency => {
+                  transformed[currency] = item.amount[currency];
+                });
+                return transformed;
+              })}
               margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
             >
               <defs>
-                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
-                </linearGradient>
+                {allCurrencies.map(currency => (
+                  <linearGradient key={`gradient-${currency}`} id={`color${currency}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={CURRENCY_COLORS[currency] || '#3B82F6'} stopOpacity={0.3} />
+                    <stop offset="95%" stopColor={CURRENCY_COLORS[currency] || '#3B82F6'} stopOpacity={0} />
+                  </linearGradient>
+                ))}
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-              <XAxis 
-                dataKey={viewMode === 'daily' ? 'date' : 'hour'} 
+              <XAxis
+                dataKey={viewMode === 'daily' ? 'date' : 'hour'}
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: '#6B7280', fontSize: 12 }}
@@ -215,37 +272,42 @@ export default function RevenueChart() {
                   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                 }}
               />
-              <YAxis 
+              <YAxis
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: '#6B7280', fontSize: 12 }}
-                tickFormatter={formatCurrency}
-                width={60}
+                tickFormatter={(value) => formatCurrency(value, allCurrencies[0] || 'USD')}
+                width={70}
               />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)', 
-                  borderRadius: '8px', 
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: '8px',
                   border: '1px solid #E5E7EB',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' 
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                 }}
-                formatter={(value: any) => {
+                formatter={(value: any, name: string | undefined) => {
                   const numericValue = typeof value === 'number' ? value : 0;
-                  return [formatCurrency(numericValue), 'Revenue'];
+                  const currencyName = name || 'USD';
+                  return [formatCurrency(numericValue, currencyName), currencyName];
                 }}
                 labelFormatter={(label) => {
                   if (viewMode === 'hourly') return `Today, ${label}:00 - ${label}:59`;
                   return new Date(label).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
                 }}
               />
-              <Area 
-                type="monotone" 
-                dataKey="amount" 
-                stroke="#3B82F6" 
-                strokeWidth={3}
-                fillOpacity={1} 
-                fill="url(#colorRevenue)" 
-              />
+              {allCurrencies.map((currency, index) => (
+                <Area
+                  key={currency}
+                  type="monotone"
+                  dataKey={currency}
+                  stroke={CURRENCY_COLORS[currency] || '#3B82F6'}
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill={`url(#color${currency})`}
+                  name={currency}
+                />
+              ))}
             </AreaChart>
           </ResponsiveContainer>
         </div>

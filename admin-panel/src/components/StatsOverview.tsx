@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { getDashboardStats } from '@/lib/actions/dashboard';
-import { getRevenueStats, RevenueStats } from '@/lib/actions/analytics';
+import { getRevenueStats, RevenueStats, CurrencyAmount } from '@/lib/actions/analytics';
 import { useRealtime } from '@/contexts/RealtimeContext';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import NewOrderNotification from './dashboard/NewOrderNotification';
@@ -37,8 +37,13 @@ export default function StatsOverview() {
 
   // Store previous order time to detect new orders for notification purposes
   const prevLastOrderTimeRef = useRef<string | null>(null);
-  const prevTotalRevenueRef = useRef<number>(0); // Track previous revenue using ref to avoid dependency loop
+  const prevTotalRevenueRef = useRef<CurrencyAmount>({}); // Track previous revenue using ref to avoid dependency loop
   const isInitialLoadRef = useRef(true);
+
+  // Helper to sum all currency amounts
+  const sumAllCurrencies = (amounts: CurrencyAmount): number => {
+    return Object.values(amounts).reduce((sum, amount) => sum + amount, 0);
+  };
 
   // Stable fetch function - only depends on productId, NOT on revenueStats to avoid infinite loop
   const fetchAllStats = useCallback(async () => {
@@ -54,15 +59,26 @@ export default function StatsOverview() {
 
         // Trigger notification if a new order has arrived AND it's not the initial load
         if (!isInitialLoadRef.current && prevLastOrderTimeRef.current && revenueData.lastOrderAt && revenueData.lastOrderAt !== prevLastOrderTimeRef.current) {
-           const currentTotalRevenue = revenueData.totalRevenue;
-           const previousTotalRevenue = prevTotalRevenueRef.current; // Use ref instead of state
+           const currentTotalRevenue = sumAllCurrencies(revenueData.totalRevenue);
+           const previousTotalRevenue = sumAllCurrencies(prevTotalRevenueRef.current); // Use ref instead of state
            const newAmount = (currentTotalRevenue - previousTotalRevenue) / 100;
 
            if (newAmount > 0) {
-             const formattedAmount = newAmount.toLocaleString('en-US', { style: 'currency', currency: 'USD' }); // Assuming USD for now or logic to get currency
+             // Get the currency of the new order (first currency that increased)
+             let detectedCurrency = 'USD';
+             for (const currency in revenueData.totalRevenue) {
+               const current = revenueData.totalRevenue[currency] || 0;
+               const previous = prevTotalRevenueRef.current[currency] || 0;
+               if (current > previous) {
+                 detectedCurrency = currency;
+                 break;
+               }
+             }
+
+             const formattedAmount = newAmount.toLocaleString('en-US', { style: 'currency', currency: detectedCurrency });
              setNewOrder({
                amount: formattedAmount,
-               currency: 'USD',
+               currency: detectedCurrency,
                id: Date.now().toString()
              });
            }
@@ -96,12 +112,30 @@ export default function StatsOverview() {
     };
   }, [addRefreshListener, removeRefreshListener, fetchAllStats]); // fetchAllStats depends on productId
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number, currency: string = 'USD') => {
     if (hideValues) return '****';
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(amount / 100);
+  };
+
+  // Helper to format multi-currency amounts
+  const formatMultiCurrency = (amounts: CurrencyAmount) => {
+    if (hideValues) return '****';
+    const currencies = Object.keys(amounts);
+    if (currencies.length === 0) return formatCurrency(0);
+    if (currencies.length === 1) {
+      const currency = currencies[0];
+      return formatCurrency(amounts[currency], currency);
+    }
+    // Multiple currencies - show them all
+    return currencies
+      .sort() // Sort for consistency
+      .map(currency => formatCurrency(amounts[currency], currency))
+      .join(' + ');
   };
 
   const formatNumber = (num: number) => {
@@ -127,7 +161,7 @@ export default function StatsOverview() {
     {
       id: 'total-revenue',
       name: t('stats.totalRevenue', { defaultValue: 'Total Revenue' }),
-      value: formatCurrency(revenueStats?.totalRevenue ?? 0),
+      value: formatMultiCurrency(revenueStats?.totalRevenue ?? {}),
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -135,7 +169,7 @@ export default function StatsOverview() {
       ),
       color: 'from-green-500 to-green-600',
       bgColor: 'from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20',
-      change: revenueStats?.todayRevenue ? `+${formatCurrency(revenueStats.todayRevenue)} today` : null,
+      change: revenueStats?.todayRevenue ? `+${formatMultiCurrency(revenueStats.todayRevenue)} today` : null,
       changeType: 'positive'
     },
     {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { getRevenueStats, getRevenueGoal, setRevenueGoal } from '@/lib/actions/analytics';
+import { getRevenueStats, getRevenueGoal, setRevenueGoal, CurrencyAmount } from '@/lib/actions/analytics';
 import { useRealtime } from '@/contexts/RealtimeContext';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { useSearchParams } from 'next/navigation';
@@ -21,6 +21,11 @@ export default function RevenueGoal() {
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(true);
+
+  // Helper to sum all currency amounts to a single number
+  const sumAllCurrencies = (amounts: CurrencyAmount): number => {
+    return Object.values(amounts).reduce((sum, amount) => sum + amount, 0);
+  };
 
   // Fetch both Goal configuration and Current Revenue
   const fetchData = useCallback(async () => {
@@ -43,7 +48,8 @@ export default function RevenueGoal() {
       // 2. Get Revenue Stats based on goal start date
       const stats = await getRevenueStats(productId, startDateForStats);
       if (stats) {
-        setCurrentRevenue(stats.totalRevenue);
+        // Sum all currencies for the goal comparison
+        setCurrentRevenue(sumAllCurrencies(stats.totalRevenue));
       }
     } catch (err) {
       console.error('Failed to fetch revenue data', err);
