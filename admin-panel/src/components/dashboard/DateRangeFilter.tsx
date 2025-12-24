@@ -18,9 +18,7 @@ export default function DateRangeFilter({ startDate, endDate, onChange }: DateRa
   const handleChange = (dates: [Date | null, Date | null]) => {
     const [start, end] = dates;
     onChange(start, end);
-    if (start && end) {
-      setIsOpen(false);
-    }
+    // Removed conditional setIsOpen(false) to keep calendar open for second date selection
   };
 
   const formatDate = (date: Date | null) => {
