@@ -27,19 +27,21 @@ export const useRealtime = () => {
 
 export const RealtimeProvider = ({ children }: { children: ReactNode }) => {
   const [newOrder, setNewOrder] = useState<NewOrder | null>(null);
-  const [listeners, setListeners] = useState<(() => void)[]>([]);
+  const listenersRef = React.useRef<(() => void)[]>([]);
 
   const addRefreshListener = useCallback((listener: () => void) => {
-    setListeners(prev => [...prev, listener]);
+    listenersRef.current.push(listener);
   }, []);
 
   const removeRefreshListener = useCallback((listener: () => void) => {
-    setListeners(prev => prev.filter(l => l !== listener));
+    listenersRef.current = listenersRef.current.filter(l => l !== listener);
   }, []);
 
-  const notifyListeners = () => {
-    listeners.forEach(listener => listener());
-  };
+  // Stable context value
+  const contextValue = React.useMemo(() => ({
+    addRefreshListener,
+    removeRefreshListener
+  }), [addRefreshListener, removeRefreshListener]);
 
   useEffect(() => {
     let channel: any = null;
@@ -55,7 +57,8 @@ export const RealtimeProvider = ({ children }: { children: ReactNode }) => {
           (payload: any) => {
             if (payload.new?.status === 'completed') {
               // 1. Notify all components to refresh their data
-              notifyListeners();
+              // Access current listeners from ref
+              listenersRef.current.forEach(listener => listener());
 
               // 2. Trigger the visual notification
               const amount = (payload.new.amount / 100).toLocaleString('en-US', {
@@ -80,10 +83,10 @@ export const RealtimeProvider = ({ children }: { children: ReactNode }) => {
         createClient().then(client => client.removeChannel(channel));
       }
     };
-  }, [listeners]); // Re-subscribing when listeners change is not ideal, but simple for this case
+  }, []); // Only run once on mount
 
   return (
-    <RealtimeContext.Provider value={{ addRefreshListener, removeRefreshListener }}>
+    <RealtimeContext.Provider value={contextValue}>
       {children}
       {newOrder && (
         <NewOrderNotification

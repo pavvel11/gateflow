@@ -26,6 +26,7 @@ export interface CreateCheckoutRequest {
   email?: string;
   bumpProductId?: string; // Optional order bump product ID
   couponCode?: string; // NEW: Optional discount code
+  successUrl?: string; // NEW: Optional OTO redirect URL
 }
 
 export interface CreateCheckoutResponse {

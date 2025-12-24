@@ -36,6 +36,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const productSlug = searchParams.get('product');
   const returnUrl = searchParams.get('return_url');
+  const successUrl = searchParams.get('success_url');
 
   // If no product slug is provided, redirect to homepage
   if (!productSlug) {
@@ -103,7 +104,8 @@ export async function GET(request: Request) {
           return;
         } else if (accessResult) {
           // For free products, redirect to payment success page to show confetti
-          handleRedirect(`/p/${productSlug}/payment-status`, returnUrl);
+          const paymentStatusUrl = `/p/${productSlug}/payment-status${successUrl ? `?success_url=${encodeURIComponent(successUrl)}` : ''}`;
+          handleRedirect(paymentStatusUrl, returnUrl);
           return;
         } else {
           console.error(`[ProductAccess] grant_free_product_access returned false - product might not exist or not be free`);

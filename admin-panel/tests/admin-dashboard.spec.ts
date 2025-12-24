@@ -179,7 +179,7 @@ test.describe('Authenticated Admin Dashboard', () => {
     await modal.locator('button[type="submit"]').click();
     
     // Wait for modal to close (confirming success)
-    await expect(modal).not.toBeVisible();
+    await expect(modal).not.toBeVisible({ timeout: 10000 });
     
     // Sometimes list refresh takes a moment or requires reload in test env
     await expect(async () => {

@@ -33,7 +33,12 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreateChe
     
     // Use the same return URL for both logged-in and guest users
     // The payment-status page will handle both scenarios intelligently
-    const returnUrl = `${origin}/p/${product.slug}/payment-status?session_id={CHECKOUT_SESSION_ID}`;
+    let returnUrl = `${origin}/p/${product.slug}/payment-status?session_id={CHECKOUT_SESSION_ID}`;
+    
+    // Append success_url if provided (for OTO/Funnels)
+    if (finalRequestData.successUrl) {
+      returnUrl += `&success_url=${encodeURIComponent(finalRequestData.successUrl)}`;
+    }
     
     const result = await checkoutService.createCheckoutSession(
       finalRequestData,

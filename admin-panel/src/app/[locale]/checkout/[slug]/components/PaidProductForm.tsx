@@ -36,9 +36,8 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
   const [hasAccess, setHasAccess] = useState(false);
   const [countdown, setCountdown] = useState(5);
 
-  // Email state for guests (to support auto-apply coupons)
-  const [guestEmail, setGuestEmail] = useState('');
-  const email = user?.email || guestEmail;
+  // Email state (only from logged in user now, guests enter email in Stripe)
+  const email = user?.email;
 
   // Coupon state
   const [couponCode, setCouponCode] = useState('');
@@ -129,6 +128,8 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
     
     if (urlCoupon && urlCoupon !== lastCheckedUrlCoupon) {
       setLastCheckedUrlCoupon(urlCoupon);
+      setCouponCode(urlCoupon); // Populate input immediately
+      setShowCouponInput(true); // Always show input if coupon is in URL
       handleVerifyCoupon(urlCoupon);
     }
   }, [searchParams, handleVerifyCoupon, lastCheckedUrlCoupon]);
@@ -171,6 +172,7 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
           email: email,
           bumpProductId: bumpSelected && orderBump ? orderBump.bump_product_id : undefined,
           couponCode: appliedCoupon?.code,
+          successUrl: searchParams.get('success_url') || undefined,
         }),
       });
 
@@ -225,23 +227,7 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
             </button>
           </div>
         </div>
-      ) : (
-        <div className="mb-4 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-          <label className="block text-sm font-medium text-gray-300 ml-1">
-            {t('emailAddress')}
-          </label>
-          <input
-            type="email"
-            value={guestEmail}
-            onChange={(e) => setGuestEmail(e.target.value)}
-            placeholder={t('emailPlaceholder')}
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-          />
-          <p className="text-[10px] text-gray-500 ml-1">
-            {t('emailHelp')}
-          </p>
-        </div>
-      )}
+      ) : null}
 
       {/* Order Bump - special offer */}
       {orderBump && isCurrencyMatching && !hasAccess && !error && searchParams.get('hide_bump') !== 'true' && (

@@ -58,15 +58,11 @@ test.describe('Payment E2E Flow', () => {
     await page.goto(`/checkout/${testProduct.slug}`);
     await expect(page.locator('h1')).toContainText(testProduct.name);
 
-    // 2. Fill guest email
-    const emailInput = page.locator('input[type="email"]');
-    await emailInput.fill(guestEmail);
-    await page.waitForTimeout(1000); // Wait for email to be processed
-
-    // 3. Wait for Stripe Embedded Checkout to load
+    // 2. Wait for Stripe Embedded Checkout to load
+    // Note: guest email is now collected inside Stripe iframe
     await page.waitForTimeout(3000);
 
-    // 4. Fill Stripe payment form in iframe
+    // 3. Fill Stripe payment form in iframe
     // Stripe Embedded Checkout uses a single iframe
     // Note: This test requires real Stripe API keys and may take longer to load
     await page.waitForTimeout(5000); // Wait for Stripe to initialize

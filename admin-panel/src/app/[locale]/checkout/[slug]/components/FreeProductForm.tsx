@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Product } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { validateEmailAction } from '@/lib/actions/validate-email';
 import TurnstileWidget from '@/components/TurnstileWidget';
 import TermsCheckbox from '@/components/TermsCheckbox';
@@ -22,6 +22,8 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
   const { user } = useAuth();
   const { addToast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const successUrl = searchParams.get('success_url');
   
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -65,7 +67,8 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
         addToast(data.message || 'Access granted successfully!', 'success');
         
         // Redirect to success page (no session_id needed for free products)
-        router.push(`/p/${product.slug}/payment-status`);
+        const redirectPath = `/p/${product.slug}/payment-status${successUrl ? `?success_url=${encodeURIComponent(successUrl)}` : ''}`;
+        router.push(redirectPath);
       } catch {
         addToast('An unexpected error occurred', 'error');
       } finally {
@@ -117,7 +120,8 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
     try {
       const supabase = await createClient();
       
-      const redirectUrl = `${window.location.origin}/auth/callback?redirect_to=${encodeURIComponent(`/auth/product-access?product=${product.slug}`)}`;
+      const authRedirectPath = `/auth/product-access?product=${product.slug}${successUrl ? `&success_url=${encodeURIComponent(successUrl)}` : ''}`;
+      const redirectUrl = `${window.location.origin}/auth/callback?redirect_to=${encodeURIComponent(authRedirectPath)}`;
       
       const { error } = await supabase.auth.signInWithOtp({
         email,
