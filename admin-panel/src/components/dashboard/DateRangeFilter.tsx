@@ -21,10 +21,15 @@ export default function DateRangeFilter({ startDate, endDate, onChange }: DateRa
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
       
+      // Ignore clicks on elements that are no longer in the DOM (e.g. after React re-render)
+      if (!target.isConnected) {
+        return;
+      }
+      
       // Check if click is inside the container
       const isInsideContainer = containerRef.current && containerRef.current.contains(target as Node);
       
-      // Check if click is inside the datepicker portal (which renders outside the container)
+      // Check if click is inside the datepicker portal (just in case, though we use inline)
       const isInsideDatepicker = target.closest('.react-datepicker-popper') || target.closest('.react-datepicker');
 
       if (!isInsideContainer && !isInsideDatepicker) {
