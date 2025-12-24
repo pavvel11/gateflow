@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { useTranslations } from 'next-intl';
@@ -14,11 +14,41 @@ interface DateRangeFilterProps {
 export default function DateRangeFilter({ startDate, endDate, onChange }: DateRangeFilterProps) {
   const t = useTranslations('common');
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      
+      // Check if click is inside the container
+      const isInsideContainer = containerRef.current && containerRef.current.contains(target as Node);
+      
+      // Check if click is inside the datepicker portal (which renders outside the container)
+      const isInsideDatepicker = target.closest('.react-datepicker-popper') || target.closest('.react-datepicker');
+
+      if (!isInsideContainer && !isInsideDatepicker) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   const handleChange = (dates: [Date | null, Date | null]) => {
     const [start, end] = dates;
     onChange(start, end);
-    // Removed conditional setIsOpen(false) to keep calendar open for second date selection
+    
+    // Only close the calendar when the range is fully selected (both start and end dates)
+    if (start && end) {
+      setIsOpen(false);
+    }
   };
 
   const formatDate = (date: Date | null) => {
@@ -27,7 +57,7 @@ export default function DateRangeFilter({ startDate, endDate, onChange }: DateRa
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-2 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -53,6 +83,7 @@ export default function DateRangeFilter({ startDate, endDate, onChange }: DateRa
             inline
             monthsShown={2}
             maxDate={new Date()}
+            shouldCloseOnSelect={false} // Explicitly prevent auto-closing
           />
         </div>
       )}

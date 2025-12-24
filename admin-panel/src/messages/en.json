@@ -720,6 +720,8 @@
         "cancel": "Cancel",
         "updateProduct": "Update Product",
         "createProduct": "Create Product",
+        "organization": "Organization",
+        "categories": "Categories",
         "postPurchase": {
           "title": "Post-Purchase Redirect (Funnels)",
           "redirectUrl": "Success Redirect URL",

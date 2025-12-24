@@ -1193,11 +1193,11 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
           </ModalSection>
 
           {/* Organization / Categories */}
-          <ModalSection title="Organization">
+          <ModalSection title={t('organization', { defaultValue: 'Organization' })}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Categories
+                  {t('categories', { defaultValue: 'Categories' })}
                 </label>
                 <div className="border border-gray-300 dark:border-gray-600 rounded-lg max-h-40 overflow-y-auto p-2 bg-white dark:bg-gray-700">
                   {loadingCategories ? (
@@ -1206,18 +1206,18 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     <div className="text-sm text-gray-500 p-2">No categories found. Create one in Settings &gt; Categories.</div>
                   ) : (
                     <div className="space-y-2">
-                      {allCategories.map(cat => (
+                      {allCategories.map((cat) => (
                         <label key={cat.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 p-1 rounded">
                           <input
                             type="checkbox"
                             checked={formData.categories.includes(cat.id)}
                             onChange={(e) => {
                               const checked = e.target.checked;
-                              setFormData(prev => ({
+                              setFormData((prev) => ({
                                 ...prev,
-                                categories: checked 
+                                categories: checked
                                   ? [...prev.categories, cat.id]
-                                  : prev.categories.filter(id => id !== cat.id)
+                                  : prev.categories.filter((id) => id !== cat.id),
                               }));
                             }}
                             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
@@ -1233,8 +1233,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
           </ModalSection>
 
           {/* Advanced Settings */}
-          <ModalSection title={t('advancedSettings')}>
-            <div className="space-y-4">
+          <ModalSection title={t('advancedSettings')}>            <div className="space-y-4">
               <div className="flex items-center">
                 <input
                   type="checkbox"

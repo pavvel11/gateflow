@@ -718,6 +718,8 @@
         "cancel": "Anuluj",
         "updateProduct": "Aktualizuj produkt",
         "createProduct": "Utwórz produkt",
+        "organization": "Organizacja",
+        "categories": "Kategorie",
         "postPurchase": {
           "title": "Przekierowanie po zakupie (Lejki/OTO)",
           "redirectUrl": "URL Przekierowania Sukcesu",
