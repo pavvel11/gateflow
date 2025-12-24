@@ -1,11 +1,37 @@
 #!/bin/bash
 # Quick script to insert a new test payment and trigger Realtime notification
+# Usage: ./test-new-payment.sh [amount] [currency]
+# Examples:
+#   ./test-new-payment.sh 9900 USD    # $99.00
+#   ./test-new-payment.sh 8500 EUR    # €85.00
+#   ./test-new-payment.sh 39900 PLN   # 399.00zł
+#   ./test-new-payment.sh 7500 GBP    # £75.00
 
-AMOUNT=${1:-9900}  # Default $99.00 (in cents)
-PRODUCT_ID="2a6bce45-1678-4c49-bcac-c074d800dba0"  # Premium Course
+AMOUNT=${1:-9900}  # Default 9900 cents
+CURRENCY=${2:-USD} # Default USD
+PRODUCT_ID="30c8e784-eda2-472e-85d2-3d12873fb71b"  # Premium Course
 RANDOM_ID=$(openssl rand -hex 8)
 
-echo "💳 Creating new payment of \$$(echo "scale=2; $AMOUNT/100" | bc)..."
+# Currency symbols map
+case $CURRENCY in
+  USD) SYMBOL="$" ;;
+  EUR) SYMBOL="€" ;;
+  GBP) SYMBOL="£" ;;
+  PLN) SYMBOL="" SUFFIX="zł" ;;
+  JPY) SYMBOL="¥" ;;
+  CAD) SYMBOL="C$" ;;
+  AUD) SYMBOL="A$" ;;
+  *) SYMBOL="" SUFFIX=" $CURRENCY" ;;
+esac
+
+# Format amount based on currency (JPY has no decimal)
+if [ "$CURRENCY" = "JPY" ]; then
+  FORMATTED="${SYMBOL}${AMOUNT}"
+else
+  FORMATTED="${SYMBOL}$(echo "scale=2; $AMOUNT/100" | bc)${SUFFIX}"
+fi
+
+echo "💳 Creating new payment of ${FORMATTED} (${CURRENCY})..."
 
 docker exec supabase_db_gemini-test psql -U postgres -d postgres -c "
 INSERT INTO payment_transactions (
@@ -22,13 +48,14 @@ INSERT INTO payment_transactions (
   '$PRODUCT_ID',
   'test_$RANDOM_ID@example.com',
   $AMOUNT,
-  'USD',
+  '$CURRENCY',
   'pi_test_$RANDOM_ID',
   'completed',
-  '{\"test\": true, \"realtime_test\": true}'
+  '{\"test\": true, \"realtime_test\": true, \"currency\": \"$CURRENCY\"}'
 );
 "
 
 echo "✅ Payment created! Check your dashboard for the notification."
 echo "📧 Customer: test_$RANDOM_ID@example.com"
-echo "💰 Amount: \$$(echo "scale=2; $AMOUNT/100" | bc)"
+echo "💰 Amount: ${FORMATTED}"
+echo "💱 Currency: $CURRENCY"
