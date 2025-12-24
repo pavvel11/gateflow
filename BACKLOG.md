@@ -32,24 +32,6 @@ A comprehensive list of planned features, technical improvements, and ideas for 
     *   📋 Backend Logic (Sending events to FB Graph API)
 *   **Google Enhanced Conversions**: Backend integration to send hashed user data (email) with conversion events to Google Ads.
 
-#### 3. Real-time Sales Dashboard (Live Stats)
-**Status**: 📋 Planned
-**Description**: A comprehensive, real-time dashboard for monitoring sales performance, inspired by the provided design.
-**Features**:
-- **Key Metrics Cards**:
-    - **Total Revenue**: All-time earnings display (Large card).
-    - **Today's Revenue**: Earnings for the current day.
-    - **Today's Orders**: Count of transactions today.
-    - **Last Order**: Time elapsed since the last purchase (e.g., "just now").
-- **Goal Tracking**: Progress bar showing current revenue vs. a configurable revenue goal (e.g., 1M PLN).
-- **Charts**:
-    - **Hourly Revenue**: Line chart showing sales distribution throughout the current day.
-    - **Revenue Trend**: Line chart with date range filters (7d, 14d, 30d, Custom).
-- **Real-time Notifications**:
-    - **"New Order" Popup**: A prominent, celebratory modal/toast (green) appearing instantly when a purchase occurs, showing the amount.
-    - **Live Updates**: Charts and counters update automatically without page refresh.
-- **Date Filtering**: Global date picker to adjust the view.
-
 #### 4. Real-time Social Proof Notifications (Client-side)
 **Status**: 📋 Planned
 **Description**: Increase urgency and trust by showing live activity notifications to users browsing the product page.
@@ -343,7 +325,14 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 
 ## ✅ Completed Features
 
-### 📊 Analytics & Integrations (2025-12-23)
+### 📊 Analytics & Integrations (2025-12-24)
+
+#### Real-time Sales Dashboard
+- ✅ **Live Updates**: Instant notifications and chart updates via Supabase Realtime + Polling fallback.
+- ✅ **Revenue Goal**: Progress bar with database persistence per product and global targets.
+- ✅ **Filtering**: Advanced Combobox filter by product.
+- ✅ **Charts**: Hourly (today) and Daily (30d) revenue visualization using Recharts.
+- ✅ **UX**: "New Order" confetti popup accessible globally in admin panel.
 
 #### Google Tag Manager (GTM) - Phase 1
 - ✅ Admin UI to input `GTM-XXXX` ID.

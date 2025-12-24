@@ -87,6 +87,10 @@ export default function RevenueChart() {
     }).format(value / 100);
   };
 
+  const daysDiff = dateRange.start && dateRange.end 
+    ? Math.round((dateRange.end.getTime() - dateRange.start.getTime()) / (1000 * 60 * 60 * 24))
+    : 30;
+
   if (loading) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 h-[400px] animate-pulse">
@@ -107,7 +111,7 @@ export default function RevenueChart() {
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             {viewMode === 'daily'
-              ? t('revenueChart.subtitle', { defaultValue: 'Performance over time' })
+              ? t('revenueChart.subtitle', { days: daysDiff, defaultValue: 'Performance over time' })
               : t('revenueChart.hourlySubtitle', { defaultValue: 'Hourly breakdown' })}
           </p>
         </div>

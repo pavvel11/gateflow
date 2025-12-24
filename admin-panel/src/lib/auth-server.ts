@@ -1,17 +1,12 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { SupabaseClient } from '@supabase/supabase-js';
-
-export type AuthUser = {
-  id: string;
-  email: string;
-};
+import { SupabaseClient, User } from '@supabase/supabase-js';
 
 /**
  * Verifies admin access for Server Components (Page/Layout).
  * Redirects on failure.
  */
-export async function verifyAdminAccess(): Promise<AuthUser> {
+export async function verifyAdminAccess(): Promise<User> {
   const supabase = await createClient();
 
   // 1. Check Auth Session
@@ -34,10 +29,7 @@ export async function verifyAdminAccess(): Promise<AuthUser> {
     redirect('/'); 
   }
 
-  return {
-    id: user.id,
-    email: user.email,
-  };
+  return user;
 }
 
 /**

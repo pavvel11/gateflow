@@ -10,6 +10,7 @@ import { CURRENCIES, getCurrencySymbol } from '@/lib/constants';
 import { BaseModal, ModalHeader, ModalBody, ModalFooter, ModalSection, Button, Message } from './ui/Modal';
 import { useTranslations } from 'next-intl';
 import { parseVideoUrl, isTrustedVideoPlatform } from '@/lib/videoUtils';
+import { getCategories, getProductCategories, Category } from '@/lib/actions/categories';
 
 interface ProductFormModalProps {
   product?: Product | null;
@@ -43,6 +44,8 @@ export interface ProductFormData {
   // Funnel / OTO settings
   success_redirect_url?: string | null;
   pass_params_to_redirect: boolean;
+  // Categories
+  categories: string[];
 }
 
 const ProductFormModal: React.FC<ProductFormModalProps> = ({
@@ -71,7 +74,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
       content_items: []
     },
     success_redirect_url: '',
-    pass_params_to_redirect: false
+    pass_params_to_redirect: false,
+    categories: []
   });
   
   // Separate state for the displayed price input value
@@ -85,8 +89,30 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
 
+  // Categories management
+  const [allCategories, setAllCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+
   // URL validation state - maps content item index to validation status
   const [urlValidation, setUrlValidation] = useState<Record<number, { isValid: boolean; message: string }>>({});
+
+  useEffect(() => {
+    if (isOpen) {
+        // Fetch all categories
+        const fetchCats = async () => {
+            setLoadingCategories(true);
+            try {
+                const cats = await getCategories();
+                setAllCategories(cats);
+            } catch (err) {
+                console.error('Failed to fetch categories', err);
+            } finally {
+                setLoadingCategories(false);
+            }
+        };
+        fetchCats();
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (product) {
@@ -106,8 +132,15 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         content_delivery_type: product.content_delivery_type || 'content',
         content_config: product.content_config || { content_items: [] },
         success_redirect_url: product.success_redirect_url || '',
-        pass_params_to_redirect: product.pass_params_to_redirect || false
+        pass_params_to_redirect: product.pass_params_to_redirect || false,
+        categories: [] // Will be populated below
       });
+      
+      // Fetch assigned categories
+      getProductCategories(product.id).then(catIds => {
+          setFormData(prev => ({ ...prev, categories: catIds }));
+      }).catch(err => console.error(err));
+
       // Set display value for price - always show the value, even for zero
       setPriceDisplayValue(product.price.toString().replace('.', ','));
       setSlugModified(true); // Don't auto-generate slug when editing
@@ -128,7 +161,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         content_delivery_type: 'content',
         content_config: { content_items: [] },
         success_redirect_url: '',
-        pass_params_to_redirect: false
+        pass_params_to_redirect: false,
+        categories: []
       });
       setPriceDisplayValue('');
       setSlugModified(false);
@@ -141,6 +175,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
       }, 100);
     }
   }, [product, isOpen]);
+
   
   // Fetch products for OTO dropdown
   useEffect(() => {
@@ -1154,6 +1189,46 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
               <p className="ml-7 text-xs text-gray-500 dark:text-gray-400">
                 {t('postPurchase.passParamsHelp')}
               </p>
+            </div>
+          </ModalSection>
+
+          {/* Organization / Categories */}
+          <ModalSection title="Organization">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Categories
+                </label>
+                <div className="border border-gray-300 dark:border-gray-600 rounded-lg max-h-40 overflow-y-auto p-2 bg-white dark:bg-gray-700">
+                  {loadingCategories ? (
+                    <div className="text-sm text-gray-500 p-2">Loading categories...</div>
+                  ) : allCategories.length === 0 ? (
+                    <div className="text-sm text-gray-500 p-2">No categories found. Create one in Settings &gt; Categories.</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {allCategories.map(cat => (
+                        <label key={cat.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 p-1 rounded">
+                          <input
+                            type="checkbox"
+                            checked={formData.categories.includes(cat.id)}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              setFormData(prev => ({
+                                ...prev,
+                                categories: checked 
+                                  ? [...prev.categories, cat.id]
+                                  : prev.categories.filter(id => id !== cat.id)
+                              }));
+                            }}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <span className="text-sm text-gray-900 dark:text-gray-100">{cat.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </ModalSection>
 

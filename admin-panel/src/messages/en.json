@@ -54,6 +54,7 @@
   "navigation": {
     "dashboard": "Dashboard",
     "products": "Products",
+    "categories": "Categories",
     "orderBumps": "Order Bumps",
     "coupons": "Coupons",
     "webhooks": "Webhooks",
@@ -593,7 +594,7 @@
       },
       "revenueChart": {
         "title": "Revenue Trend",
-        "subtitle": "Last 30 days performance",
+        "subtitle": "Last {days} days performance",
         "hourlyTitle": "Today's Revenue",
         "hourlySubtitle": "Hourly breakdown"
       },
@@ -733,6 +734,22 @@
           "hideBumpHelp": "Appends ?hide_bump=true to the URL. Useful if you want to skip the bump offer in the next step."
         }
       }
+    },
+    "categories": {
+      "title": "Categories",
+      "createCategory": "Create Category",
+      "editCategory": "Edit Category",
+      "deleteCategory": "Delete Category",
+      "noCategories": "No categories found. Create your first one!",
+      "name": "Name",
+      "slug": "Slug",
+      "description": "Description",
+      "parent": "Parent Category",
+      "actions": "Actions",
+      "createSuccess": "Category created successfully",
+      "updateSuccess": "Category updated successfully",
+      "deleteSuccess": "Category deleted successfully",
+      "error": "Operation failed"
     },
     "users": {
       "title": "Users",

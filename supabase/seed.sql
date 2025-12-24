@@ -117,4 +117,38 @@ VALUES (
   NOW() - INTERVAL '5 minutes'
 );
 
+-- Insert sample Categories
+INSERT INTO categories (name, slug, description) VALUES
+('Courses', 'courses', 'Educational video courses and tutorials'),
+('Tools', 'tools', 'Software tools and utilities'),
+('Templates', 'templates', 'Ready-to-use templates for developers'),
+('Bundles', 'bundles', 'Value packages with multiple products');
+
+-- Insert sample Tags
+INSERT INTO tags (name, slug) VALUES
+('JavaScript', 'javascript'),
+('React', 'react'),
+('Bestseller', 'bestseller'),
+('New', 'new'),
+('Free', 'free');
+
+-- Assign Categories to Products
+INSERT INTO product_categories (product_id, category_id) VALUES
+((SELECT id FROM products WHERE slug = 'free-tutorial'), (SELECT id FROM categories WHERE slug = 'courses')),
+((SELECT id FROM products WHERE slug = 'premium-course'), (SELECT id FROM categories WHERE slug = 'courses')),
+((SELECT id FROM products WHERE slug = 'vip-masterclass'), (SELECT id FROM categories WHERE slug = 'courses')),
+((SELECT id FROM products WHERE slug = 'pro-toolkit'), (SELECT id FROM categories WHERE slug = 'tools')),
+((SELECT id FROM products WHERE slug = 'pro-toolkit'), (SELECT id FROM categories WHERE slug = 'templates')),
+((SELECT id FROM products WHERE slug = 'enterprise-package'), (SELECT id FROM categories WHERE slug = 'bundles'));
+
+-- Assign Tags to Products
+INSERT INTO product_tags (product_id, tag_id) VALUES
+((SELECT id FROM products WHERE slug = 'free-tutorial'), (SELECT id FROM tags WHERE slug = 'free')),
+((SELECT id FROM products WHERE slug = 'free-tutorial'), (SELECT id FROM tags WHERE slug = 'javascript')),
+((SELECT id FROM products WHERE slug = 'premium-course'), (SELECT id FROM tags WHERE slug = 'javascript')),
+((SELECT id FROM products WHERE slug = 'premium-course'), (SELECT id FROM tags WHERE slug = 'react')),
+((SELECT id FROM products WHERE slug = 'premium-course'), (SELECT id FROM tags WHERE slug = 'bestseller')),
+((SELECT id FROM products WHERE slug = 'pro-toolkit'), (SELECT id FROM tags WHERE slug = 'new')),
+((SELECT id FROM products WHERE slug = 'vip-masterclass'), (SELECT id FROM tags WHERE slug = 'bestseller'));
+
 -- Note: Users and user_product_access will be created through the admin panel interface

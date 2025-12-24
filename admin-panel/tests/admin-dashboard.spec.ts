@@ -82,6 +82,7 @@ test.describe('Authenticated Admin Dashboard', () => {
     const pages = [
       '/dashboard',
       '/dashboard/products',
+      '/dashboard/categories',
       '/dashboard/coupons',
       '/dashboard/webhooks',
       '/dashboard/users',

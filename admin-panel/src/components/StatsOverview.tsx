@@ -6,6 +6,8 @@ import { useSearchParams } from 'next/navigation';
 import { getDashboardStats } from '@/lib/actions/dashboard';
 import { getRevenueStats, RevenueStats } from '@/lib/actions/analytics';
 import { useRealtime } from '@/contexts/RealtimeContext';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
+import NewOrderNotification from './dashboard/NewOrderNotification';
 
 interface DashboardStats {
   totalProducts: number;
@@ -15,50 +17,96 @@ interface DashboardStats {
   totalRevenue: number;
 }
 
+interface NewOrder {
+  amount: string;
+  currency: string;
+  id: string; // unique ID to force re-render
+}
+
 export default function StatsOverview() {
   const t = useTranslations('admin.dashboard');
   const searchParams = useSearchParams();
   const productId = searchParams.get('productId') || undefined;
   const { addRefreshListener, removeRefreshListener } = useRealtime();
+  const { hideValues } = useUserPreferences();
   
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [revenueStats, setRevenueStats] = useState<RevenueStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [newOrder, setNewOrder] = useState<NewOrder | null>(null); // State to trigger notification
 
-  // Stable fetch function
+  // Store previous order time to detect new orders for notification purposes
+  const prevLastOrderTimeRef = useRef<string | null>(null);
+  const prevTotalRevenueRef = useRef<number>(0); // Track previous revenue using ref to avoid dependency loop
+  const isInitialLoadRef = useRef(true);
+
+  // Stable fetch function - only depends on productId, NOT on revenueStats to avoid infinite loop
   const fetchAllStats = useCallback(async () => {
     try {
       const [dashboardData, revenueData] = await Promise.all([
-        getDashboardStats(),
-        getRevenueStats(productId),
+        getDashboardStats(), // Currently global
+        getRevenueStats(productId), // Filtered by product
       ]);
+
       if (dashboardData) setStats(dashboardData as DashboardStats);
-      if (revenueData) setRevenueStats(revenueData);
+      if (revenueData) {
+        setRevenueStats(revenueData);
+
+        // Trigger notification if a new order has arrived AND it's not the initial load
+        if (!isInitialLoadRef.current && prevLastOrderTimeRef.current && revenueData.lastOrderAt && revenueData.lastOrderAt !== prevLastOrderTimeRef.current) {
+           const currentTotalRevenue = revenueData.totalRevenue;
+           const previousTotalRevenue = prevTotalRevenueRef.current; // Use ref instead of state
+           const newAmount = (currentTotalRevenue - previousTotalRevenue) / 100;
+
+           if (newAmount > 0) {
+             const formattedAmount = newAmount.toLocaleString('en-US', { style: 'currency', currency: 'USD' }); // Assuming USD for now or logic to get currency
+             setNewOrder({
+               amount: formattedAmount,
+               currency: 'USD',
+               id: Date.now().toString()
+             });
+           }
+        }
+
+        if (revenueData.lastOrderAt) {
+          prevLastOrderTimeRef.current = revenueData.lastOrderAt;
+        }
+        // Update ref with current revenue for next comparison
+        prevTotalRevenueRef.current = revenueData.totalRevenue;
+      }
     } catch (err) {
       console.error('Failed to fetch stats', err);
     } finally {
       setLoading(false);
+      isInitialLoadRef.current = false;
     }
-  }, [productId]); // Only depend on productId
+  }, [productId]); // ONLY productId - removing revenueStats prevents infinite loop
 
   useEffect(() => {
-    // Initial load
+    // Initial fetch
     setLoading(true);
     fetchAllStats();
 
-    // Register refresh listener
+    // Register listener for global refresh events
+    // Pass fetchAllStats directly as it's stable via useCallback
     addRefreshListener(fetchAllStats);
 
     return () => {
       removeRefreshListener(fetchAllStats);
     };
-  }, [productId, addRefreshListener, removeRefreshListener, fetchAllStats]);
+  }, [addRefreshListener, removeRefreshListener, fetchAllStats]); // fetchAllStats depends on productId
 
   const formatCurrency = (amount: number) => {
+    if (hideValues) return '****';
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
     }).format(amount / 100);
+  };
+
+  const formatNumber = (num: number) => {
+    if (hideValues) return '****';
+    return num.toLocaleString();
   };
 
   const timeAgo = (dateString: string | null) => {
@@ -93,7 +141,7 @@ export default function StatsOverview() {
     {
       id: 'today-orders',
       name: t('stats.todayOrders', { defaultValue: "Today's Orders" }),
-      value: revenueStats?.todayOrders ?? 0,
+      value: formatNumber(revenueStats?.todayOrders ?? 0),
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -106,7 +154,7 @@ export default function StatsOverview() {
     {
       id: 'total-users',
       name: t('totalUsers'),
-      value: stats?.totalUsers ?? 0,
+      value: formatNumber(stats?.totalUsers ?? 0),
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
@@ -118,7 +166,7 @@ export default function StatsOverview() {
     {
       id: 'active-users',
       name: t('activeUsers'),
-      value: stats?.activeUsers ?? 0,
+      value: formatNumber(stats?.activeUsers ?? 0),
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -145,35 +193,46 @@ export default function StatsOverview() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {statItems.map((item) => (
-        <div
-          key={item.id}
-          data-testid={`stat-card-${item.id}`}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow relative overflow-hidden"
-        >
-          <div className="flex items-center justify-between">
-            <div className="relative z-10">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                {item.name}
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                {typeof item.value === 'number' ? item.value.toLocaleString() : item.value}
-              </p>
-              {item.change && (
-                 <p className={`text-xs font-medium mt-1 ${item.changeType === 'positive' ? 'text-green-600 dark:text-green-400' : 'text-gray-500'}`}>
-                   {item.change}
-                 </p>
-              )}
-            </div>
-            <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${item.bgColor} flex items-center justify-center relative z-10`}>
-              <div className={`text-white bg-gradient-to-r ${item.color} rounded-lg p-2`}>
-                {item.icon}
+    <>
+      {newOrder && (
+        <NewOrderNotification 
+          key={newOrder.id}
+          amount={newOrder.amount} 
+          currency={newOrder.currency} 
+          onClose={() => setNewOrder(null)} 
+        />
+      )}
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {statItems.map((item) => (
+          <div
+            key={item.id}
+            data-testid={`stat-card-${item.id}`}
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow relative overflow-hidden"
+          >
+            <div className="flex items-center justify-between">
+              <div className="relative z-10">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  {item.name}
+                </p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                  {item.value}
+                </p>
+                {item.change && (
+                   <p className={`text-xs font-medium mt-1 ${item.changeType === 'positive' ? 'text-green-600 dark:text-green-400' : 'text-gray-500'}`}>
+                     {item.change}
+                   </p>
+                )}
+              </div>
+              <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${item.bgColor} flex items-center justify-center relative z-10`}>
+                <div className={`text-white bg-gradient-to-r ${item.color} rounded-lg p-2`}>
+                  {item.icon}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      ))}
-    </div>
-  );
+        ))}
+      </div>
+    </>
+  )
 }

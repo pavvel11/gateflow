@@ -182,8 +182,11 @@ export async function PUT(
       });
     }
 
+    // Extract categories
+    const { categories, ...productDataRaw } = body;
+
     // Sanitize input data
-    const sanitizedData = sanitizeProductData(body);
+    const sanitizedData = sanitizeProductData(productDataRaw);
 
     // Validate update data
     const validation = validateUpdateProduct(sanitizedData);
@@ -263,6 +266,33 @@ export async function PUT(
           'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         }
       });
+    }
+
+    // Update categories if present in request
+    if (categories && Array.isArray(categories)) {
+      // 1. Delete existing
+      const { error: deleteError } = await supabase
+        .from('product_categories')
+        .delete()
+        .eq('product_id', id);
+      
+      if (deleteError) {
+        console.error('Error deleting old categories:', deleteError);
+      } else if (categories.length > 0) {
+        // 2. Insert new
+        const categoryInserts = categories.map((catId: string) => ({
+          product_id: id,
+          category_id: catId
+        }));
+        
+        const { error: insertError } = await supabase
+          .from('product_categories')
+          .insert(categoryInserts);
+          
+        if (insertError) {
+          console.error('Error inserting new categories:', insertError);
+        }
+      }
     }
 
     return NextResponse.json(updatedProduct, {

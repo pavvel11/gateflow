@@ -117,8 +117,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Extract categories
+    const { categories, ...productDataRaw } = body;
+
     // Sanitize input data
-    const sanitizedData = sanitizeProductData(body);
+    const sanitizedData = sanitizeProductData(productDataRaw);
 
     // Validate create data
     const validation = validateCreateProduct(sanitizedData);
@@ -167,6 +170,23 @@ export async function POST(request: NextRequest) {
         status: 500,
         headers: corsHeaders
       });
+    }
+
+    // Insert categories if present
+    if (product && categories && Array.isArray(categories) && categories.length > 0) {
+      const categoryInserts = categories.map((catId: string) => ({
+        product_id: product.id,
+        category_id: catId
+      }));
+      
+      const { error: catError } = await supabase
+        .from('product_categories')
+        .insert(categoryInserts);
+      
+      if (catError) {
+        console.error('Error adding categories:', catError);
+        // We don't fail the whole request if categories fail, but we log it
+      }
     }
 
     return NextResponse.json(product, { 

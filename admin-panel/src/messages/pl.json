@@ -54,6 +54,7 @@
   "navigation": {
     "dashboard": "Pulpit",
     "products": "Produkty",
+    "categories": "Kategorie",
     "orderBumps": "Order Bumps",
     "coupons": "Kupony",
     "webhooks": "Webhooki",
@@ -591,7 +592,7 @@
       },
       "revenueChart": {
         "title": "Trend przychodów",
-        "subtitle": "Wyniki z ostatnich 30 dni",
+        "subtitle": "Wyniki z ostatnich {days} dni",
         "hourlyTitle": "Dzisiejszy przychód",
         "hourlySubtitle": "Podział godzinowy"
       },
@@ -731,6 +732,22 @@
           "hideBumpHelp": "Dodaje ?hide_bump=true do URL. Przydatne, jeśli chcesz pominąć ofertę bump w następnym kroku."
         }
       }
+    },
+    "categories": {
+      "title": "Kategorie",
+      "createCategory": "Utwórz kategorię",
+      "editCategory": "Edytuj kategorię",
+      "deleteCategory": "Usuń kategorię",
+      "noCategories": "Brak kategorii. Utwórz pierwszą!",
+      "name": "Nazwa",
+      "slug": "Slug",
+      "description": "Opis",
+      "parent": "Kategoria nadrzędna",
+      "actions": "Akcje",
+      "createSuccess": "Kategoria utworzona pomyślnie",
+      "updateSuccess": "Kategoria zaktualizowana pomyślnie",
+      "deleteSuccess": "Kategoria usunięta pomyślnie",
+      "error": "Błąd operacji"
     },
     "users": {
       "title": "Użytkownicy",

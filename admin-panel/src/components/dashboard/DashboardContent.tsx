@@ -7,6 +7,8 @@ import RevenueGoal from '@/components/dashboard/RevenueGoal';
 import ProductFilter from '@/components/dashboard/ProductFilter';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface DashboardContentProps {
   failedWebhooksCount: number;
@@ -14,6 +16,7 @@ interface DashboardContentProps {
 
 export default function DashboardContent({ failedWebhooksCount }: DashboardContentProps) {
   const t = useTranslations('admin.dashboard');
+  const { hideValues, toggleHideValues } = useUserPreferences();
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -26,7 +29,16 @@ export default function DashboardContent({ failedWebhooksCount }: DashboardConte
             {t('welcome')}
           </p>
         </div>
-        <ProductFilter />
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleHideValues}
+            className="p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
+            title={hideValues ? "Show values" : "Hide values"}
+          >
+            {hideValues ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+          <ProductFilter />
+        </div>
       </div>
       
       {/* Webhook Failures Alert */}

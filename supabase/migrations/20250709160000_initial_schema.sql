@@ -51,6 +51,41 @@ COMMENT ON COLUMN products.slug IS 'URL-safe unique identifier for gatekeeper sy
 COMMENT ON COLUMN products.content_config IS 'JSON configuration for content delivery and gatekeeper integration';
 COMMENT ON COLUMN products.tenant_id IS 'Multi-tenant support - allows product isolation by tenant';
 
+-- Create categories table for product organization
+CREATE TABLE IF NOT EXISTS categories (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL CHECK (length(name) <= 100),
+  slug TEXT UNIQUE NOT NULL CHECK (slug ~ '^[a-zA-Z0-9_-]+$' AND length(slug) BETWEEN 1 AND 100),
+  description TEXT CHECK (length(description) <= 500),
+  parent_id UUID REFERENCES categories(id) ON DELETE SET NULL, -- Hierarchy support
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+-- Create junction table for Product <-> Category (Many-to-Many)
+CREATE TABLE IF NOT EXISTS product_categories (
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
+  category_id UUID REFERENCES categories(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  PRIMARY KEY (product_id, category_id)
+);
+
+-- Create tags table for flexible product filtering
+CREATE TABLE IF NOT EXISTS tags (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL CHECK (length(name) <= 50),
+  slug TEXT UNIQUE NOT NULL CHECK (slug ~ '^[a-zA-Z0-9_-]+$' AND length(slug) BETWEEN 1 AND 50),
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+-- Create junction table for Product <-> Tag (Many-to-Many)
+CREATE TABLE IF NOT EXISTS product_tags (
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
+  tag_id UUID REFERENCES tags(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  PRIMARY KEY (product_id, tag_id)
+);
+
 -- Create user_product_access table with product_id reference for better data integrity
 CREATE TABLE IF NOT EXISTS user_product_access (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -625,6 +660,13 @@ CREATE INDEX IF NOT EXISTS idx_products_is_active ON products(is_active);
 CREATE INDEX IF NOT EXISTS idx_products_is_featured ON products(is_featured);
 CREATE INDEX IF NOT EXISTS idx_products_price ON products(price);
 CREATE INDEX IF NOT EXISTS idx_products_created_at ON products(created_at);
+CREATE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug);
+CREATE INDEX IF NOT EXISTS idx_categories_parent_id ON categories(parent_id);
+CREATE INDEX IF NOT EXISTS idx_product_categories_product_id ON product_categories(product_id);
+CREATE INDEX IF NOT EXISTS idx_product_categories_category_id ON product_categories(category_id);
+CREATE INDEX IF NOT EXISTS idx_tags_slug ON tags(slug);
+CREATE INDEX IF NOT EXISTS idx_product_tags_product_id ON product_tags(product_id);
+CREATE INDEX IF NOT EXISTS idx_product_tags_tag_id ON product_tags(tag_id);
 CREATE INDEX IF NOT EXISTS idx_user_product_access_user_id ON user_product_access(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_product_access_product_id ON user_product_access(product_id);
 CREATE INDEX IF NOT EXISTS idx_user_product_access_unique ON user_product_access(user_id, product_id);
@@ -646,6 +688,10 @@ CREATE INDEX IF NOT EXISTS idx_audit_log_performed_at ON audit_log(performed_at 
 
 -- Enable Row Level Security
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE product_categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tags ENABLE ROW LEVEL SECURITY;
+ALTER TABLE product_tags ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_product_access ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
@@ -701,6 +747,41 @@ CREATE POLICY "Allow admin users to delete products" ON products
     )
   );
 
+-- RLS Policies for categories
+CREATE POLICY "Public read access for categories" ON categories
+  FOR SELECT USING (true);
+
+CREATE POLICY "Admins full access for categories" ON categories
+  FOR ALL
+  USING (EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()));
+
+-- RLS Policies for product_categories
+CREATE POLICY "Public read access for product_categories" ON product_categories
+  FOR SELECT USING (true);
+
+CREATE POLICY "Admins full access for product_categories" ON product_categories
+  FOR ALL
+  USING (EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()));
+
+-- RLS Policies for tags
+CREATE POLICY "Public read access for tags" ON tags
+  FOR SELECT USING (true);
+
+CREATE POLICY "Admins full access for tags" ON tags
+  FOR ALL
+  USING (EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()));
+
+-- RLS Policies for product_tags
+CREATE POLICY "Public read access for product_tags" ON product_tags
+  FOR SELECT USING (true);
+
+CREATE POLICY "Admins full access for product_tags" ON product_tags
+  FOR ALL
+  USING (EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()));
 
 
 -- RLS Policies for user_product_access table
@@ -1076,6 +1157,11 @@ GRANT EXECUTE ON FUNCTION log_audit_entry TO service_role, authenticated;
 -- Create trigger for products table
 CREATE TRIGGER update_products_updated_at
   BEFORE UPDATE ON products
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_categories_updated_at
+  BEFORE UPDATE ON categories
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
