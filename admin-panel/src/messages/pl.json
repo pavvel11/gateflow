@@ -71,47 +71,58 @@
   "integrations": {
     "title": "Integracje i Śledzenie",
     "subtitle": "Konfiguruj analitykę, pixele marketingowe i zarządzanie zgodami.",
+    "saveConfig": "Zapisz Konfigurację",
     "tabs": {
-      "analytics": "Analityka (GTM/GA4)",
-      "marketing": "Marketing (FB/Ads)",
-      "consents": "Zgody (RODO/Klaro)",
-      "code": "Własny Kod (Raw)"
+      "analytics": "Analityka",
+      "marketing": "Marketing",
+      "consents": "Zgody",
+      "code": "Menedżer Skryptów"
     },
     "gtm": {
       "title": "Google Tag Manager",
-      "containerId": "ID Kontenera",
-      "help": "Główny kontener GTM. Zostanie automatycznie zablokowany, jeśli wymagana jest zgoda."
+      "containerId": "ID Kontenera"
     },
-    "googleAds": {
-      "title": "Google Ads",
-      "conversionId": "ID Konwersji",
-      "conversionLabel": "Etykieta Konwersji"
+    "umami": {
+      "title": "Umami Analytics (Open Source)",
+      "privacyFocused": "Prywatność",
+      "websiteId": "ID Strony (UUID)",
+      "scriptUrl": "URL Skryptu (Opcjonalne)",
+      "default": "Domyślnie"
     },
     "facebook": {
       "title": "Meta (Facebook)",
       "pixelId": "Pixel ID",
-      "pixelHelp": "Standardowy Pixel po stronie przeglądarki.",
-      "capiTitle": "Śledzenie Server-Side (Conversions API)",
-      "capiHelp": "Wymagane dla rzetelnego śledzenia (pomija AdBlock/iOS14+). Dane są wysyłane bezpośrednio z serwera.",
-      "accessToken": "Token dostępu CAPI",
-      "tokenHelp": "Trzymaj ten token w tajemnicy. Nigdy nie jest on wysyłany do przeglądarki klienta.",
-      "testCode": "Kod zdarzenia testowego (Opcjonalnie)",
-      "testCodeHelp": "Użyj go, aby zweryfikować zdarzenia serwerowe w Menedżerze Zdarzeń Facebooka."
+      "capiToken": "Token CAPI"
     },
     "cookieConsent": {
-      "title": "Zgoda na Cookies (RODO)",
-      "requireConsent": "Wymagaj zgody (Zalecane w UE)",
-      "requireConsentHelp": "Jeśli włączone, GTM, Pixel i inne skrypty NIE załadują się, dopóki użytkownik nie kliknie \"Akceptuję\". GateFlow używa Klaro do automatycznego zarządzania tym procesem.",
-      "enableLogging": "Włącz logowanie audytowe zgód",
-      "enableLoggingHelp": "Jeśli włączone, każdy wybór zgody jest zapisywany w bazie danych jako dowód prawny.",
-      "loggingWarning": "Uwaga: Może generować duże ilości danych."
+      "requireConsent": "Wymagaj Zgody (Zalecane)"
     },
-    "customCode": {
-      "warning": "Każdy kod wklejony tutaj zostanie wstrzyknięty w czystej formie. Upewnij się, że to poprawny HTML/JS.",
-      "headCode": "Własny kod w <head>",
-      "headHelp": "Wstrzykiwany na końcu sekcji <head>.",
-      "bodyCode": "Własny kod w <body>",
-      "bodyHelp": "Wstrzykiwany na początku sekcji <body>."
+    "scripts": {
+      "title": "Własne Skrypty",
+      "addScript": "Dodaj Skrypt",
+      "noScripts": "Brak własnych skryptów.",
+      "deleteConfirm": "Usunąć skrypt?",
+      "table": {
+        "name": "Nazwa",
+        "location": "Lokalizacja",
+        "category": "Kategoria (RODO)",
+        "status": "Status",
+        "actions": "Akcje"
+      },
+      "categories": {
+        "marketing": "Marketing",
+        "analytics": "Analityka",
+        "essential": "Niezbędne"
+      },
+      "modal": {
+        "title": "Dodaj Nowy Skrypt",
+        "name": "Nazwa",
+        "location": "Lokalizacja",
+        "category": "Kategoria (RODO)",
+        "code": "Kod Skryptu",
+        "cancel": "Anuluj",
+        "add": "Dodaj Skrypt"
+      }
     },
     "messages": {
       "saveSuccess": "Ustawienia zapisane pomyślnie",

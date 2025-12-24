@@ -71,47 +71,58 @@
   "integrations": {
     "title": "Integrations & Tracking",
     "subtitle": "Configure analytics, marketing pixels, and consent management.",
+    "saveConfig": "Save Config",
     "tabs": {
-      "analytics": "Analytics (GTM/GA4)",
-      "marketing": "Marketing (FB/Ads)",
-      "consents": "Consents (GDPR/Klaro)",
-      "code": "Custom Code (Raw)"
+      "analytics": "Analytics",
+      "marketing": "Marketing",
+      "consents": "Consents",
+      "code": "Script Manager"
     },
     "gtm": {
       "title": "Google Tag Manager",
-      "containerId": "Container ID",
-      "help": "Primary container. Will be automatically blocked if consent is required."
+      "containerId": "Container ID"
     },
-    "googleAds": {
-      "title": "Google Ads",
-      "conversionId": "Conversion ID",
-      "conversionLabel": "Conversion Label"
+    "umami": {
+      "title": "Umami Analytics (Open Source)",
+      "privacyFocused": "Privacy Focused",
+      "websiteId": "Website ID (UUID)",
+      "scriptUrl": "Script URL (Optional)",
+      "default": "Default"
     },
     "facebook": {
       "title": "Meta (Facebook)",
       "pixelId": "Pixel ID",
-      "pixelHelp": "Standard client-side Pixel.",
-      "capiTitle": "Server-Side Tracking (Conversions API)",
-      "capiHelp": "Required for reliable tracking (bypasses AdBlock/iOS14+). Data is sent directly from the server.",
-      "accessToken": "CAPI Access Token",
-      "tokenHelp": "Keep this secret. It is never exposed to the client.",
-      "testCode": "Test Event Code (Optional)",
-      "testCodeHelp": "Use this to verify server events in Facebook Events Manager."
+      "capiToken": "CAPI Token"
     },
     "cookieConsent": {
-      "title": "Cookie Consent (GDPR/RODO)",
-      "requireConsent": "Require Consent (Recommended for EU)",
-      "requireConsentHelp": "If enabled, GTM, Pixel, and other trackers will NOT load until the user clicks \"Accept\". GateFlow uses Klaro to manage this automatically.",
-      "enableLogging": "Enable Consent Audit Logging",
-      "enableLoggingHelp": "If enabled, every consent choice is logged to the database for legal proof.",
-      "loggingWarning": "Warning: Can generate large amounts of data."
+      "requireConsent": "Require Consent (Recommended)"
     },
-    "customCode": {
-      "warning": "Any code pasted here will be injected raw. Ensure it is valid HTML/JS.",
-      "headCode": "Custom Head Code",
-      "headHelp": "Injected at the end of the <head> tag.",
-      "bodyCode": "Custom Body Code",
-      "bodyHelp": "Injected at the start of the <body> tag."
+    "scripts": {
+      "title": "Custom Scripts",
+      "addScript": "Add Script",
+      "noScripts": "No custom scripts added.",
+      "deleteConfirm": "Delete script?",
+      "table": {
+        "name": "Name",
+        "location": "Location",
+        "category": "Category (GDPR)",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "categories": {
+        "marketing": "Marketing",
+        "analytics": "Analytics",
+        "essential": "Essential"
+      },
+      "modal": {
+        "title": "Add New Script",
+        "name": "Name",
+        "location": "Location",
+        "category": "Category (GDPR)",
+        "code": "Script Code",
+        "cancel": "Cancel",
+        "add": "Add Script"
+      }
     },
     "messages": {
       "saveSuccess": "Settings saved successfully",
