@@ -21,6 +21,29 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 **Status**: 🏗️ Partially Done
 **Goal**: Robust tracking infrastructure compatible with modern privacy standards (Server-Side) and ease of use.
 
+#### 0. Multi-Currency Conversion (Unified View)
+**Status**: 📋 Planned
+**Description**: Convert all revenue to a single base currency for unified analytics and easier comparison across markets.
+**Current State**: ✅ Multi-currency support implemented (2025-12-24) - revenue is tracked and displayed grouped by currency.
+**Next Steps**:
+- **Exchange Rate API Integration**: Connect to a currency exchange API (e.g., exchangerate-api.com, fixer.io, or ECB API).
+  - Cache rates in database/Redis with hourly refresh
+  - Historical rates storage for accurate past data conversion
+- **Conversion Layer**:
+  - Add `convertToSingleCurrency(amounts: CurrencyAmount, target: string, rates: ExchangeRates): number` helper
+  - Optionally add `p_convert_to` parameter to SQL functions for server-side conversion
+- **UI Toggle**:
+  - Add currency selector in dashboard: "View in: [Multiple ▼] [USD] [EUR] [PLN]"
+  - Store user preference in localStorage/user_preferences table
+  - Show original currency on hover when converted
+- **Admin Settings**:
+  - Configure default/base currency for the business
+  - Option to display both views (e.g., "$100 USD ($110.50 in EUR)")
+- **Architecture Notes**:
+  - Current JSONB-based structure is ideal for this feature
+  - Can be implemented without breaking changes (additive only)
+  - Maintains backward compatibility
+
 #### 1. Google Tag Manager (GTM) Integration - Phase 2
 **Status**: 📋 Planned
 *   **Phase 2 (Automated)**: Google OAuth App integration. One-click setup where GateFlow creates the Container and Tags automatically via GTM API.
@@ -333,6 +356,7 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 - ✅ **Filtering**: Advanced Combobox filter by product.
 - ✅ **Charts**: Hourly (today) and Daily (30d) revenue visualization using Recharts.
 - ✅ **UX**: "New Order" confetti popup accessible globally in admin panel.
+- ✅ **Multi-Currency Support**: Revenue tracking and display grouped by currency (USD, EUR, PLN, GBP, etc.) with color-coded chart lines.
 
 #### Google Tag Manager (GTM) - Phase 1
 - ✅ Admin UI to input `GTM-XXXX` ID.
