@@ -15,11 +15,12 @@ export interface ChartDataPoint {
   orders: number
 }
 
-export async function getRevenueStats(productId?: string): Promise<RevenueStats | null> {
+export async function getRevenueStats(productId?: string, goalStartDate?: Date): Promise<RevenueStats | null> {
   const supabase = await createClient()
   
   const { data, error } = await supabase.rpc('get_detailed_revenue_stats', {
-    p_product_id: productId || null
+    p_product_id: productId || null,
+    p_goal_start_date: goalStartDate ? goalStartDate.toISOString() : null
   })
   
   if (error) {

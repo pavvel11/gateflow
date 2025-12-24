@@ -588,7 +588,8 @@
       "stats": {
         "totalRevenue": "Total Revenue",
         "todayRevenue": "Today's Revenue",
-        "todayOrders": "Today's Orders"
+        "todayOrders": "Today's Orders",
+        "since": "Since: {date}"
       },
       "revenueChart": {
         "title": "Revenue Trend",

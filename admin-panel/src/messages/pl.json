@@ -586,7 +586,8 @@
       "stats": {
         "totalRevenue": "Przychody ogółem",
         "todayRevenue": "Dzisiejszy przychód",
-        "todayOrders": "Dzisiejsze zamówienia"
+        "todayOrders": "Dzisiejsze zamówienia",
+        "since": "Od: {date}"
       },
       "revenueChart": {
         "title": "Trend przychodów",
