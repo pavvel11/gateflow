@@ -2,29 +2,50 @@ import { test, expect } from '@playwright/test';
 
 test.describe('API Validation Logic', () => {
   
-  test('should validate disposable email addresses', async ({ request }) => {
-    // 1. Valid Email
-    const validRes = await request.post('/api/validate-email', {
+  test('should accept a valid, non-disposable email', async ({ request }) => {
+    const res = await request.post('/api/validate-email', {
       data: { email: 'test@gmail.com' }
     });
-    expect(validRes.ok()).toBeTruthy();
-    const validJson = await validRes.json();
+    expect(res.ok()).toBeTruthy();
+    const json = await res.json();
     
-    // Structure is { success: true, data: { isValid: true, ... } }
-    expect(validJson.success).toBe(true);
-    expect(validJson.data.isValid).toBe(true);
+    expect(json.success).toBe(true);
+    expect(json.data.isValid).toBe(true);
+    expect(json.data.isDisposable).toBe(false);
+  });
 
-    // 2. Disposable Email
-    const disposableRes = await request.post('/api/validate-email', {
-      data: { email: 'spammer@temp-mail.org' }
+  test('should reject disposable email addresses from a list of known providers', async ({ request }) => {
+    const disposableDomains = [
+      'temp-mail.org',
+      'mailinator.com',
+      '10minutemail.com',
+      'guerrillamail.com',
+      'throwawaymail.com'
+    ];
+
+    for (const domain of disposableDomains) {
+      console.log(`Testing disposable domain: ${domain}`);
+      const res = await request.post('/api/validate-email', {
+        data: { email: `test@${domain}` }
+      });
+      
+      const json = await res.json();
+      
+      expect(json.success).toBe(true); // The API request itself should succeed
+      expect(json.data.isValid).toBe(false);
+      expect(json.data.isDisposable).toBe(true);
+    }
+  });
+
+  test('should reject an email with an invalid format', async ({ request }) => {
+    const res = await request.post('/api/validate-email', {
+      data: { email: 'invalid-email' }
     });
-    
-    const disposableJson = await disposableRes.json();
-    
-    // We expect valid: false
-    expect(disposableJson.success).toBe(true); // Request succeeded
-    expect(disposableJson.data.isValid).toBe(false);
-    expect(disposableJson.data.isDisposable).toBe(true);
+    const json = await res.json();
+
+    expect(json.success).toBe(false);
+    expect(res.status()).toBe(400);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
   });
 
 });
