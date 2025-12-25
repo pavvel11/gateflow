@@ -203,9 +203,18 @@ test.describe('Integrations & Script Injection', () => {
     await loginAsAdmin(page);
     await page.goto('/dashboard/integrations');
     
+    // Hide Klaro on dashboard to avoid blocking clicks
+    await page.addStyleTag({ content: '#klaro { display: none !important; }' });
+
     await page.getByRole('button', { name: 'Analytics' }).click();
-    const gtmId = 'GTM-CONSENT-TEST';
-    await page.locator('input[placeholder="GTM-XXXXXX"]').fill(gtmId);
+    const gtmId = 'GTMCONSENT1'; // Must match ^GTM-[A-Z0-9]+$ so no hyphens allowed in suffix? Wait, prefix is GTM-. 
+    // Regex is ^GTM-[A-Z0-9]+$. So suffix must be alphanumeric.
+    // So 'GTM-CONSENT1' is valid.
+    const validGtmId = 'GTM-CONSENT1'; 
+    await page.locator('input[placeholder="GTM-XXXXXX"]').fill(validGtmId);
+    
+    // Verify input value before switching tabs
+    await expect(page.locator('input[placeholder="GTM-XXXXXX"]')).toHaveValue(validGtmId);
     
     await page.getByRole('button', { name: 'Consents' }).click();
     // Ensure "Require Consent" is checked
@@ -213,10 +222,26 @@ test.describe('Integrations & Script Injection', () => {
     if (!(await consentCheckbox.isChecked())) {
         await consentCheckbox.check();
     }
-    
+
     // Save
     const saveBtn = page.locator('button[type="submit"]');
+    
+    // Setup listener for Server Action response
+    const responsePromise = page.waitForResponse(async response => {
+        if (response.url().includes('/dashboard/integrations') && response.request().method() === 'POST') {
+            console.log(`Save Response Status: ${response.status()}`);
+            try {
+                const body = await response.text();
+                console.log(`Save Response Body: ${body.substring(0, 200)}...`); 
+            } catch (e) {}
+            return true;
+        }
+        return false;
+    }, { timeout: 10000 });
+
     await saveBtn.click({ force: true });
+    
+    await responsePromise;
     await expect(page.locator('div.fixed.bottom-4.right-4')).toBeVisible({ timeout: 15000 });
     
     // Wait for cache revalidation propagation
@@ -245,7 +270,7 @@ test.describe('Integrations & Script Injection', () => {
 
     const gtmActive = await page.evaluate((id) => {
         return Array.from(document.scripts).some(s => s.src.includes('googletagmanager') && s.src.includes(id));
-    }, gtmId);
+    }, validGtmId);
     expect(gtmActive).toBeFalsy();
 
     // 2. Accept Consent
@@ -261,7 +286,7 @@ test.describe('Integrations & Script Injection', () => {
     try {
         await page.waitForFunction(
             (id) => document.head.innerHTML.includes(id) || document.body.innerHTML.includes(id),
-            gtmId,
+            validGtmId,
             { timeout: 10000 }
         );
     } catch (e) {
@@ -269,7 +294,7 @@ test.describe('Integrations & Script Injection', () => {
     }
     
     pageContent = await page.content();
-    expect(pageContent).toContain(gtmId);
+    expect(pageContent).toContain(validGtmId);
     
     // Check if dataLayer is initialized
     const dataLayerExists = await page.evaluate(() => typeof window['dataLayer'] !== 'undefined');
