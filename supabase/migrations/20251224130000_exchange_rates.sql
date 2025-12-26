@@ -132,9 +132,8 @@ CREATE POLICY "exchange_rates_read_all" ON public.exchange_rates
   FOR SELECT TO authenticated
   USING (true);
 
-CREATE POLICY "exchange_rates_admin_all" ON public.exchange_rates
-  FOR ALL TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()));
+-- Admin policy will be added later after admin_users table exists
+-- For now, only service_role can modify rates via server actions
 
 -- Grant permissions
 GRANT SELECT ON public.exchange_rates TO authenticated;

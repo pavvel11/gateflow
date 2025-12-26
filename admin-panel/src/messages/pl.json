@@ -49,7 +49,11 @@
     "refresh": "Odśwież",
     "retry": "Spróbuj ponownie",
     "language": "Język",
-    "allProducts": "Wszystkie produkty"
+    "allProducts": "Wszystkie produkty",
+    "currency": {
+      "grouped": "Pogrupowane według Waluty",
+      "convertTo": "Przelicz na"
+    }
   },
   "navigation": {
     "dashboard": "Pulpit",

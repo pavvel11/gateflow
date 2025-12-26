@@ -3,8 +3,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { getRevenueStats, getRevenueGoal, setRevenueGoal, CurrencyAmount } from '@/lib/actions/analytics';
+import { getDefaultCurrency } from '@/lib/actions/shop-config';
 import { useRealtime } from '@/contexts/RealtimeContext';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
+import { useCurrencyConversion } from '@/hooks/useCurrencyConversion';
+import { convertCurrencyAmount } from '@/lib/actions/currency';
 import { useSearchParams } from 'next/navigation';
 
 export default function RevenueGoal() {
@@ -12,12 +15,16 @@ export default function RevenueGoal() {
   const searchParams = useSearchParams();
   const productId = searchParams.get('productId') || undefined;
   const { addRefreshListener, removeRefreshListener } = useRealtime();
-  const { hideValues } = useUserPreferences();
-  
+  const { hideValues, currencyViewMode, displayCurrency } = useUserPreferences();
+  const { convertToSingleCurrency } = useCurrencyConversion();
+
   const [goal, setGoal] = useState(1000000); // Default $10k in cents
+  const [goalCurrency, setGoalCurrency] = useState<string>('USD'); // Currency in which goal is stored
+  const [displayGoal, setDisplayGoal] = useState(1000000); // Goal converted to display currency
   // Goal start date determines the period for 'currentRevenue' displayed on the goal bar
   const [goalStartDate, setGoalStartDate] = useState<string | null>(null);
   const [currentRevenue, setCurrentRevenue] = useState(0);
+  const [currentRevenueRaw, setCurrentRevenueRaw] = useState<CurrencyAmount>({}); // Store raw multi-currency data
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(true);
@@ -36,19 +43,23 @@ export default function RevenueGoal() {
 
       if (goalData) {
         setGoal(goalData.amount);
+        setGoalCurrency(goalData.currency);
         setGoalStartDate(goalData.startDate);
         startDateForStats = new Date(goalData.startDate);
       } else {
-        // No goal set for this context? Use defaults or fallback to global if implemented on backend
-        // For now, if no goal, we default to 1M and no start date (all time revenue)
+        // No goal set for this context? Use shop default currency
+        const defaultCurrency = await getDefaultCurrency();
         setGoal(1000000);
+        setGoalCurrency(defaultCurrency);
         setGoalStartDate(null);
       }
 
       // 2. Get Revenue Stats based on goal start date
       const stats = await getRevenueStats(productId, startDateForStats);
       if (stats) {
-        // Sum all currencies for the goal comparison
+        // Store raw multi-currency data
+        setCurrentRevenueRaw(stats.totalRevenue);
+        // Sum all currencies for the goal comparison (fallback)
         setCurrentRevenue(sumAllCurrencies(stats.totalRevenue));
       }
     } catch (err) {
@@ -57,6 +68,58 @@ export default function RevenueGoal() {
       setLoading(false);
     }
   }, [productId, sumAllCurrencies]);
+
+  // Convert goal to display currency
+  useEffect(() => {
+    async function convertGoal() {
+      if (currencyViewMode === 'converted' && displayCurrency && goalCurrency) {
+        if (displayCurrency === goalCurrency) {
+          // Same currency, no conversion needed
+          setDisplayGoal(goal);
+        } else {
+          // Convert goal to display currency
+          try {
+            const converted = await convertCurrencyAmount(goal, goalCurrency, displayCurrency);
+            if (converted !== null) {
+              setDisplayGoal(converted);
+            } else {
+              // Conversion failed, keep original
+              setDisplayGoal(goal);
+            }
+          } catch (error) {
+            console.error('Error converting goal:', error);
+            setDisplayGoal(goal);
+          }
+        }
+      } else {
+        // Grouped mode: show goal in its original currency
+        setDisplayGoal(goal);
+      }
+    }
+
+    convertGoal();
+  }, [goal, goalCurrency, displayCurrency, currencyViewMode]);
+
+  // Convert revenue when currency view mode changes
+  useEffect(() => {
+    async function convertRevenue() {
+      if (currencyViewMode === 'converted' && displayCurrency && Object.keys(currentRevenueRaw).length > 0) {
+        try {
+          const converted = await convertToSingleCurrency(currentRevenueRaw, displayCurrency);
+          setCurrentRevenue(converted);
+        } catch (error) {
+          console.error('Error converting revenue goal:', error);
+          // Fall back to sum
+          setCurrentRevenue(sumAllCurrencies(currentRevenueRaw));
+        }
+      } else {
+        // Grouped mode: sum all currencies
+        setCurrentRevenue(sumAllCurrencies(currentRevenueRaw));
+      }
+    }
+
+    convertRevenue();
+  }, [currentRevenueRaw, currencyViewMode, displayCurrency, convertToSingleCurrency, sumAllCurrencies]);
 
   useEffect(() => {
     // Load goal and start date from local storage (backup/optimistic)
@@ -82,15 +145,18 @@ export default function RevenueGoal() {
   const handleSave = async () => {
     const newGoalCents = parseFloat(inputValue) * 100;
     if (isNaN(newGoalCents)) return;
-    
+
     const startDate = goalStartDate || new Date().toISOString();
 
     try {
-      await setRevenueGoal(newGoalCents, startDate, productId);
+      // Save goal in shop's default currency (or current goal currency if already set)
+      const currency = goalCurrency || await getDefaultCurrency();
+      await setRevenueGoal(newGoalCents, startDate, currency, productId);
       setGoal(newGoalCents);
+      setGoalCurrency(currency);
       setGoalStartDate(startDate);
       setIsEditing(false);
-      fetchData(); 
+      fetchData();
     } catch (err) {
       console.error('Failed to save goal', err);
     }
@@ -98,25 +164,29 @@ export default function RevenueGoal() {
 
   const handleResetGoal = async () => {
     const now = new Date().toISOString();
-    
+
     try {
-      await setRevenueGoal(goal, now, productId); 
+      await setRevenueGoal(goal, now, goalCurrency, productId);
       setGoalStartDate(now);
       setIsEditing(false);
-      fetchData(); 
+      fetchData();
     } catch (err) {
       console.error('Failed to reset goal', err);
     }
   };
 
-  const rawPercentage = goal > 0 ? Math.round((currentRevenue / goal) * 100) : 0;
+  // Calculate percentage based on displayed values (both in same currency)
+  const rawPercentage = displayGoal > 0 ? Math.round((currentRevenue / displayGoal) * 100) : 0;
   const visualPercentage = Math.min(rawPercentage, 100);
+
+  // Determine which currency to use for display
+  const activeCurrency = (currencyViewMode === 'converted' && displayCurrency) ? displayCurrency : goalCurrency;
 
   const formatCurrency = (amount: number) => {
     if (hideValues) return '****';
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: activeCurrency,
       maximumFractionDigits: 0,
     }).format(amount / 100);
   };
@@ -137,28 +207,38 @@ export default function RevenueGoal() {
           {t('revenueGoal', { defaultValue: 'Revenue Goal' })}
         </h3>
         {isEditing ? (
-          <div className="flex items-center space-x-2">
-            <input
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder={hideValues ? '****' : (goal / 100).toString()}
-              className="w-24 px-2 py-1 text-sm border rounded dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-              autoFocus
-            />
-            <button 
-              onClick={handleSave}
-              className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
-            >
-              Save
-            </button>
-            <button 
-              onClick={handleResetGoal}
-              className="text-xs text-gray-500 dark:text-gray-400 hover:underline"
-              title="Reset progress (start counting from now)"
-            >
-              Reset
-            </button>
+          <div className="flex flex-col items-end space-y-1">
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder={hideValues ? '****' : (goal / 100).toString()}
+                  className="w-24 px-2 py-1 text-sm border rounded dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                  autoFocus
+                />
+                <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                  {goalCurrency}
+                </span>
+              </div>
+              <button
+                onClick={handleSave}
+                className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
+              >
+                Save
+              </button>
+              <button
+                onClick={handleResetGoal}
+                className="text-xs text-gray-500 dark:text-gray-400 hover:underline"
+                title="Reset progress (start counting from now)"
+              >
+                Reset
+              </button>
+            </div>
+            <span className="text-[10px] text-gray-500 dark:text-gray-500">
+              Goal is saved in shop's default currency
+            </span>
           </div>
         ) : (
           <div className="flex items-center space-x-2">
@@ -193,7 +273,7 @@ export default function RevenueGoal() {
           </div>
           <div className="text-right">
             <span className="text-xs font-semibold inline-block text-blue-600 dark:text-blue-400">
-              {formatCurrency(currentRevenue)} / {formatCurrency(goal)}
+              {formatCurrency(currentRevenue)} / {formatCurrency(displayGoal)}
             </span>
           </div>
         </div>

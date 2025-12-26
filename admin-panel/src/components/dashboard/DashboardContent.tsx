@@ -5,6 +5,7 @@ import RecentActivity from '@/components/RecentActivity';
 import RevenueChart from '@/components/dashboard/RevenueChart';
 import RevenueGoal from '@/components/dashboard/RevenueGoal';
 import ProductFilter from '@/components/dashboard/ProductFilter';
+import CurrencySelector from '@/components/dashboard/CurrencySelector';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
@@ -37,6 +38,7 @@ export default function DashboardContent({ failedWebhooksCount }: DashboardConte
           >
             {hideValues ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
+          <CurrencySelector />
           <ProductFilter />
         </div>
       </div>

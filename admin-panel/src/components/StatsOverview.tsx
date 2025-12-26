@@ -7,6 +7,7 @@ import { getDashboardStats } from '@/lib/actions/dashboard';
 import { getRevenueStats, RevenueStats, CurrencyAmount } from '@/lib/actions/analytics';
 import { useRealtime } from '@/contexts/RealtimeContext';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
+import { useCurrencyConversion } from '@/hooks/useCurrencyConversion';
 import NewOrderNotification from './dashboard/NewOrderNotification';
 
 interface DashboardStats {
@@ -28,12 +29,14 @@ export default function StatsOverview() {
   const searchParams = useSearchParams();
   const productId = searchParams.get('productId') || undefined;
   const { addRefreshListener, removeRefreshListener } = useRealtime();
-  const { hideValues } = useUserPreferences();
-  
+  const { hideValues, currencyViewMode, displayCurrency } = useUserPreferences();
+  const { convertToSingleCurrency } = useCurrencyConversion();
+
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [revenueStats, setRevenueStats] = useState<RevenueStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [newOrder, setNewOrder] = useState<NewOrder | null>(null); // State to trigger notification
+  const [convertedRevenue, setConvertedRevenue] = useState<{ total: number; today: number } | null>(null);
 
   // Store previous order time to detect new orders for notification purposes
   const prevLastOrderTimeRef = useRef<string | null>(null);
@@ -112,6 +115,28 @@ export default function StatsOverview() {
     };
   }, [addRefreshListener, removeRefreshListener, fetchAllStats]); // fetchAllStats depends on productId
 
+  // Convert revenue when currency view mode changes
+  useEffect(() => {
+    async function convertRevenue() {
+      if (currencyViewMode === 'converted' && displayCurrency && revenueStats) {
+        try {
+          const [totalConverted, todayConverted] = await Promise.all([
+            convertToSingleCurrency(revenueStats.totalRevenue, displayCurrency),
+            convertToSingleCurrency(revenueStats.todayRevenue, displayCurrency)
+          ]);
+          setConvertedRevenue({ total: totalConverted, today: todayConverted });
+        } catch (error) {
+          console.error('Error converting revenue:', error);
+          setConvertedRevenue(null);
+        }
+      } else {
+        setConvertedRevenue(null);
+      }
+    }
+
+    convertRevenue();
+  }, [revenueStats, currencyViewMode, displayCurrency, convertToSingleCurrency]);
+
   const formatCurrency = (amount: number, currency: string = 'USD') => {
     if (hideValues) return '****';
     return new Intl.NumberFormat('en-US', {
@@ -122,9 +147,16 @@ export default function StatsOverview() {
     }).format(amount / 100);
   };
 
-  // Helper to format multi-currency amounts
-  const formatMultiCurrency = (amounts: CurrencyAmount) => {
+  // Helper to format multi-currency amounts (or converted single currency)
+  const formatMultiCurrency = useCallback((amounts: CurrencyAmount, convertedAmount?: number) => {
     if (hideValues) return '****';
+
+    // If in converted mode and we have a converted amount, show that
+    if (currencyViewMode === 'converted' && displayCurrency && convertedAmount !== undefined) {
+      return formatCurrency(convertedAmount, displayCurrency);
+    }
+
+    // Otherwise show grouped currencies
     const currencies = Object.keys(amounts);
     if (currencies.length === 0) return formatCurrency(0);
     if (currencies.length === 1) {
@@ -136,7 +168,7 @@ export default function StatsOverview() {
       .sort() // Sort for consistency
       .map(currency => formatCurrency(amounts[currency], currency))
       .join(' + ');
-  };
+  }, [hideValues, currencyViewMode, displayCurrency]);
 
   const formatNumber = (num: number) => {
     if (hideValues) return '****';
@@ -161,7 +193,7 @@ export default function StatsOverview() {
     {
       id: 'total-revenue',
       name: t('stats.totalRevenue', { defaultValue: 'Total Revenue' }),
-      value: formatMultiCurrency(revenueStats?.totalRevenue ?? {}),
+      value: formatMultiCurrency(revenueStats?.totalRevenue ?? {}, convertedRevenue?.total),
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -169,7 +201,7 @@ export default function StatsOverview() {
       ),
       color: 'from-green-500 to-green-600',
       bgColor: 'from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20',
-      change: revenueStats?.todayRevenue ? `+${formatMultiCurrency(revenueStats.todayRevenue)} today` : null,
+      change: revenueStats?.todayRevenue ? `+${formatMultiCurrency(revenueStats.todayRevenue, convertedRevenue?.today)} today` : null,
       changeType: 'positive'
     },
     {

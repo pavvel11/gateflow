@@ -9,7 +9,20 @@
 
 AMOUNT=${1:-9900}  # Default 9900 cents
 CURRENCY=${2:-USD} # Default USD
-PRODUCT_ID="30c8e784-eda2-472e-85d2-3d12873fb71b"  # Premium Course
+
+# Get first active product from database dynamically
+PRODUCT_ID=$(docker exec supabase_db_gemini-test psql -U postgres -d postgres -t -c "SELECT id FROM products WHERE is_active = true LIMIT 1;" | tr -d ' ')
+
+if [ -z "$PRODUCT_ID" ]; then
+  echo "❌ Error: No active products found in database!"
+  echo "Creating a test product first..."
+  PRODUCT_ID=$(docker exec supabase_db_gemini-test psql -U postgres -d postgres -t -c "
+    INSERT INTO products (name, slug, price, currency, is_active, description)
+    VALUES ('Test Product', 'test-product-$(date +%s)', 5000, 'USD', true, 'Auto-created test product')
+    RETURNING id;
+  " | tr -d ' ')
+fi
+
 RANDOM_ID=$(openssl rand -hex 8)
 
 # Currency symbols map

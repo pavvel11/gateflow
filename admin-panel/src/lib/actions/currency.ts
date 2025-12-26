@@ -1,106 +1,58 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { createCurrencyService } from '@/lib/services/currencyService'
+import { createCurrencyService, type ExchangeRates } from '@/lib/services/currencyService'
 
 /**
- * Sync exchange rates from external API to database
+ * Fetch exchange rates (cached by Next.js for 1 hour)
+ * This is a server action that uses Next.js fetch cache
  */
-export async function syncExchangeRates(baseCurrency: string = 'USD'): Promise<{
-  success: boolean
-  message: string
-  ratesCount?: number
-}> {
+export async function getExchangeRates(baseCurrency: string = 'USD'): Promise<ExchangeRates | null> {
   try {
-    const supabase = await createClient()
-
-    // Verify admin access
-    const { data: userData } = await supabase.auth.getUser()
-    if (!userData?.user) {
-      return { success: false, message: 'Unauthorized' }
-    }
-
-    const { data: adminData } = await supabase
-      .from('admin_users')
-      .select('user_id')
-      .eq('user_id', userData.user.id)
-      .single()
-
-    if (!adminData) {
-      return { success: false, message: 'Admin access required' }
-    }
-
-    // Fetch rates from API
     const currencyService = createCurrencyService()
-    const ratesData = await currencyService.fetchRates(baseCurrency)
-
-    // Prepare batch insert
-    const ratesToInsert = Object.entries(ratesData.rates).map(([targetCurrency, rate]) => ({
-      base_currency: ratesData.base,
-      target_currency: targetCurrency,
-      rate,
-      source: ratesData.source,
-      fetched_at: new Date(ratesData.timestamp).toISOString(),
-    }))
-
-    // Insert rates into database
-    const { error: insertError } = await supabase
-      .from('exchange_rates')
-      .insert(ratesToInsert)
-
-    if (insertError) {
-      console.error('Error inserting exchange rates:', insertError)
-      return { success: false, message: `Database error: ${insertError.message}` }
-    }
-
-    // Refresh materialized view
-    const { error: refreshError } = await supabase.rpc('refresh_latest_exchange_rates')
-
-    if (refreshError) {
-      console.warn('Warning: Could not refresh materialized view:', refreshError)
-      // Non-critical, continue
-    }
-
-    return {
-      success: true,
-      message: `Successfully synced ${ratesToInsert.length} rates from ${ratesData.source}`,
-      ratesCount: ratesToInsert.length,
-    }
+    const rates = await currencyService.fetchRates(baseCurrency)
+    return rates
   } catch (error: any) {
-    console.error('Error syncing exchange rates:', error)
-    return { success: false, message: error.message || 'Unknown error' }
+    console.error('Error fetching exchange rates:', error)
+    return null
   }
 }
 
 /**
- * Get latest exchange rates from database
+ * Convert amount from one currency to another using cached rates
  */
-export async function getLatestExchangeRates(): Promise<{
-  [pair: string]: { rate: number; source: string; fetchedAt: string }
-}> {
-  const supabase = await createClient()
+export async function convertCurrencyAmount(
+  amount: number,
+  fromCurrency: string,
+  toCurrency: string
+): Promise<number | null> {
+  try {
+    if (fromCurrency === toCurrency) return amount
 
-  const { data, error } = await supabase
-    .from('latest_exchange_rates')
-    .select('base_currency, target_currency, rate, source, fetched_at')
+    const currencyService = createCurrencyService()
 
-  if (error) {
-    console.error('Error fetching exchange rates:', error)
-    return {}
-  }
+    console.log(`[convertCurrencyAmount] Converting ${amount} from ${fromCurrency} to ${toCurrency}`)
 
-  // Convert to key-value format
-  const rates: any = {}
-  data?.forEach((row) => {
-    const key = `${row.base_currency}/${row.target_currency}`
-    rates[key] = {
-      rate: row.rate,
-      source: row.source,
-      fetchedAt: row.fetched_at,
+    // Fetch rates with 'from' as base currency
+    const rates = await currencyService.fetchRates(fromCurrency)
+
+    if (!rates) {
+      console.error(`[convertCurrencyAmount] No rates returned for base ${fromCurrency}`)
+      return null
     }
-  })
 
-  return rates
+    if (!rates.rates[toCurrency]) {
+      console.error(`[convertCurrencyAmount] No rate found for ${fromCurrency} → ${toCurrency}. Available rates:`, Object.keys(rates.rates))
+      return null
+    }
+
+    const convertedAmount = currencyService.convert(amount, fromCurrency, toCurrency, rates)
+    console.log(`[convertCurrencyAmount] Converted ${amount} ${fromCurrency} → ${Math.round(convertedAmount)} ${toCurrency} (rate: ${rates.rates[toCurrency]})`)
+    return Math.round(convertedAmount) // Round to nearest cent
+  } catch (error: any) {
+    console.error(`[convertCurrencyAmount] Error converting ${amount} from ${fromCurrency} to ${toCurrency}:`, error.message)
+    return null
+  }
 }
 
 /**

@@ -49,7 +49,11 @@
     "refresh": "Refresh",
     "language": "Language",
     "retry": "Retry",
-    "allProducts": "All Products"
+    "allProducts": "All Products",
+    "currency": {
+      "grouped": "Grouped by Currency",
+      "convertTo": "Convert to"
+    }
   },
   "navigation": {
     "dashboard": "Dashboard",

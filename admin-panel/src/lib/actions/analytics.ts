@@ -90,37 +90,39 @@ export async function getHourlyRevenueStats(date?: string, productId?: string): 
   }))
 }
 
-export async function getRevenueGoal(productId?: string): Promise<{ amount: number, startDate: string } | null> {
+export async function getRevenueGoal(productId?: string): Promise<{ amount: number, startDate: string, currency: string } | null> {
   const supabase = await createClient()
-  
+
   const { data, error } = await supabase.rpc('get_revenue_goal', {
     p_product_id: productId || null
   })
-  
+
   if (error) {
     console.error('Error fetching revenue goal:', error)
     return null
   }
-  
+
   if (data && data.length > 0) {
     return {
       amount: Number(data[0].goal_amount),
-      startDate: data[0].start_date
+      startDate: data[0].start_date,
+      currency: data[0].currency || 'USD'
     }
   }
-  
+
   return null
 }
 
-export async function setRevenueGoal(amount: number, startDate: string, productId?: string): Promise<void> {
+export async function setRevenueGoal(amount: number, startDate: string, currency: string, productId?: string): Promise<void> {
   const supabase = await createClient()
-  
+
   const { error } = await supabase.rpc('set_revenue_goal', {
     p_goal_amount: amount,
     p_start_date: startDate,
+    p_currency: currency,
     p_product_id: productId || null
   })
-  
+
   if (error) {
     console.error('Error setting revenue goal:', error)
     throw new Error('Failed to set revenue goal')

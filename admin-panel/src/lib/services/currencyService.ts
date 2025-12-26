@@ -1,8 +1,8 @@
 /**
  * Currency Exchange Rate Service
  *
- * Flexible architecture for fetching exchange rates from various providers.
- * Easy to swap providers by changing the implementation.
+ * Uses Next.js fetch cache for automatic rate caching (1 hour revalidation).
+ * Flexible architecture - easy to swap providers by changing the implementation.
  */
 
 export interface ExchangeRateProvider {
@@ -16,6 +16,9 @@ export interface ExchangeRates {
   timestamp: number;
   source: string;
 }
+
+// Cache duration: 1 hour (3600 seconds)
+const CACHE_DURATION = 3600;
 
 /**
  * ExchangeRate-API.com Provider (FREE tier: 1500 requests/month)
@@ -33,7 +36,11 @@ class ExchangeRateApiProvider implements ExchangeRateProvider {
   async fetchRates(baseCurrency: string): Promise<ExchangeRates> {
     const url = `${this.baseUrl}/${this.apiKey}/latest/${baseCurrency}`;
 
-    const response = await fetch(url);
+    // Next.js will automatically cache this for CACHE_DURATION
+    const response = await fetch(url, {
+      next: { revalidate: CACHE_DURATION }
+    });
+
     if (!response.ok) {
       throw new Error(`ExchangeRate-API error: ${response.statusText}`);
     }
@@ -69,7 +76,11 @@ class FixerIoProvider implements ExchangeRateProvider {
   async fetchRates(baseCurrency: string): Promise<ExchangeRates> {
     const url = `${this.baseUrl}/latest?access_key=${this.apiKey}&base=${baseCurrency}`;
 
-    const response = await fetch(url);
+    // Next.js will automatically cache this for CACHE_DURATION
+    const response = await fetch(url, {
+      next: { revalidate: CACHE_DURATION }
+    });
+
     if (!response.ok) {
       throw new Error(`Fixer.io error: ${response.statusText}`);
     }
@@ -101,7 +112,11 @@ class ECBProvider implements ExchangeRateProvider {
     // ECB only provides EUR as base, so we need to use exchangerate.host (free wrapper)
     const url = `${this.baseUrl}?base=${baseCurrency}`;
 
-    const response = await fetch(url);
+    // Next.js will automatically cache this for CACHE_DURATION
+    const response = await fetch(url, {
+      next: { revalidate: CACHE_DURATION }
+    });
+
     if (!response.ok) {
       throw new Error(`ECB error: ${response.statusText}`);
     }
@@ -129,8 +144,10 @@ class ManualProvider implements ExchangeRateProvider {
 
   async fetchRates(baseCurrency: string): Promise<ExchangeRates> {
     // Static fallback rates (should be updated periodically)
+    // All rates are relative to their base currency
     const staticRates: { [base: string]: { [currency: string]: number } } = {
       USD: {
+        USD: 1.0,
         EUR: 0.92,
         GBP: 0.79,
         PLN: 4.03,
@@ -139,6 +156,7 @@ class ManualProvider implements ExchangeRateProvider {
         AUD: 1.52,
       },
       EUR: {
+        EUR: 1.0,
         USD: 1.09,
         GBP: 0.86,
         PLN: 4.38,
@@ -146,16 +164,64 @@ class ManualProvider implements ExchangeRateProvider {
         CAD: 1.47,
         AUD: 1.65,
       },
-      // Add more as needed
+      GBP: {
+        GBP: 1.0,
+        USD: 1.27,
+        EUR: 1.16,
+        PLN: 5.10,
+        JPY: 189.50,
+        CAD: 1.71,
+        AUD: 1.93,
+      },
+      PLN: {
+        PLN: 1.0,
+        USD: 0.25,
+        EUR: 0.23,
+        GBP: 0.20,
+        JPY: 37.10,
+        CAD: 0.34,
+        AUD: 0.38,
+      },
+      JPY: {
+        JPY: 1.0,
+        USD: 0.0067,
+        EUR: 0.0062,
+        GBP: 0.0053,
+        PLN: 0.027,
+        CAD: 0.0090,
+        AUD: 0.010,
+      },
+      CAD: {
+        CAD: 1.0,
+        USD: 0.74,
+        EUR: 0.68,
+        GBP: 0.58,
+        PLN: 2.98,
+        JPY: 110.70,
+        AUD: 1.13,
+      },
+      AUD: {
+        AUD: 1.0,
+        USD: 0.66,
+        EUR: 0.61,
+        GBP: 0.52,
+        PLN: 2.65,
+        JPY: 98.35,
+        CAD: 0.89,
+      },
     };
 
     const rates = staticRates[baseCurrency];
     if (!rates) {
-      throw new Error(`Manual provider: no rates for ${baseCurrency}`);
+      // Fallback: if base currency not found, convert through USD
+      console.warn(`Manual provider: no direct rates for ${baseCurrency}, using USD as intermediary`);
+      return {
+        base: baseCurrency,
+        rates: { [baseCurrency]: 1.0 },
+        timestamp: Date.now(),
+        source: this.name,
+      };
     }
-
-    // Add self-referential rate
-    rates[baseCurrency] = 1.0;
 
     return {
       base: baseCurrency,

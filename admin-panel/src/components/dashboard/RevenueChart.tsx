@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { getSalesChartData, getHourlyRevenueStats, CurrencyAmount } from '@/lib/actions/analytics';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { useRealtime } from '@/contexts/RealtimeContext';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
+import { useCurrencyConversion } from '@/hooks/useCurrencyConversion';
 import DateRangeFilter from './DateRangeFilter';
 
 type ViewMode = 'daily' | 'hourly';
@@ -27,12 +28,15 @@ export default function RevenueChart() {
   const searchParams = useSearchParams();
   const productId = searchParams.get('productId') || undefined;
   const { addRefreshListener, removeRefreshListener } = useRealtime();
-  const { hideValues } = useUserPreferences();
-  
+  const { hideValues, currencyViewMode, displayCurrency } = useUserPreferences();
+  const { convertToSingleCurrency, converting } = useCurrencyConversion();
+
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('daily');
-  
+  const [convertedData, setConvertedData] = useState<any[]>([]);
+  const [convertedTotal, setConvertedTotal] = useState<number>(0);
+
   const [dateRange, setDateRange] = useState<{ start: Date | null, end: Date | null }>({
     start: new Date(new Date().setDate(new Date().getDate() - 30)),
     end: new Date()
@@ -96,6 +100,41 @@ export default function RevenueChart() {
     };
   }, [fetchData, addRefreshListener, removeRefreshListener]);
 
+  // Convert data when currency view mode changes or data updates
+  useEffect(() => {
+    async function convertData() {
+      if (currencyViewMode === 'converted' && displayCurrency && data.length > 0) {
+        try {
+          // Convert each data point to target currency
+          const converted = await Promise.all(
+            data.map(async (item) => {
+              const amount = await convertToSingleCurrency(item.amount || {}, displayCurrency);
+              return {
+                [viewMode === 'daily' ? 'date' : 'hour']: viewMode === 'daily' ? item.date : item.hour,
+                amount,
+                orders: item.orders
+              };
+            })
+          );
+          setConvertedData(converted);
+
+          // Calculate converted total
+          const total = converted.reduce((sum, item) => sum + item.amount, 0);
+          setConvertedTotal(total);
+        } catch (error) {
+          console.error('Error converting currency data:', error);
+          setConvertedData([]);
+          setConvertedTotal(0);
+        }
+      } else {
+        setConvertedData([]);
+        setConvertedTotal(0);
+      }
+    }
+
+    convertData();
+  }, [data, currencyViewMode, displayCurrency, viewMode, convertToSingleCurrency]);
+
   const formatCurrency = (value: number, currency: string = 'USD') => {
     if (hideValues) return '****';
     return new Intl.NumberFormat('en-US', {
@@ -138,13 +177,19 @@ export default function RevenueChart() {
     ? Math.round((dateRange.end.getTime() - dateRange.start.getTime()) / (1000 * 60 * 60 * 24))
     : 30;
 
-  // Calculate total revenue for the selected period (multi-currency)
-  const totalRevenue = sumMultiCurrency(data);
+  // Determine which data to display based on view mode
+  const isConverted = currencyViewMode === 'converted' && displayCurrency && convertedData.length > 0;
+  const displayData = isConverted ? convertedData : data;
+
+  // Calculate total revenue for the selected period
+  const totalRevenue = isConverted
+    ? { [displayCurrency!]: convertedTotal }
+    : sumMultiCurrency(data);
 
   // Get all unique currencies present in the data for chart rendering
-  const allCurrencies = Array.from(
-    new Set(data.flatMap(item => Object.keys(item.amount || {})))
-  ).sort();
+  const allCurrencies = isConverted
+    ? [displayCurrency!]
+    : Array.from(new Set(data.flatMap(item => Object.keys(item.amount || {})))).sort();
 
   if (loading) {
     return (
@@ -242,16 +287,25 @@ export default function RevenueChart() {
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
-              data={data.map(item => {
+              data={displayData.map(item => {
                 // Transform data to have currencies as separate fields for chart
                 const transformed: any = {
                   [viewMode === 'daily' ? 'date' : 'hour']: viewMode === 'daily' ? item.date : item.hour,
                   orders: item.orders
                 };
-                // Add each currency amount as a separate field
-                Object.keys(item.amount || {}).forEach(currency => {
-                  transformed[currency] = item.amount[currency];
-                });
+
+                if (isConverted) {
+                  // Converted mode: single amount field
+                  transformed[displayCurrency!] = item.amount;
+                } else {
+                  // Grouped mode: multiple currency fields
+                  // IMPORTANT: For stacked areas, ALL currencies must be present in EVERY data point
+                  // even if value is 0, otherwise the stack won't render correctly
+                  allCurrencies.forEach(currency => {
+                    transformed[currency] = item.amount?.[currency] || 0;
+                  });
+                }
+
                 return transformed;
               })}
               margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
@@ -259,8 +313,17 @@ export default function RevenueChart() {
               <defs>
                 {allCurrencies.map(currency => (
                   <linearGradient key={`gradient-${currency}`} id={`color${currency}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CURRENCY_COLORS[currency] || '#3B82F6'} stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={CURRENCY_COLORS[currency] || '#3B82F6'} stopOpacity={0} />
+                    {/* Higher opacity for stacked mode so all currencies are visible */}
+                    <stop
+                      offset="5%"
+                      stopColor={CURRENCY_COLORS[currency] || '#3B82F6'}
+                      stopOpacity={!isConverted && allCurrencies.length > 1 ? 0.8 : 0.3}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor={CURRENCY_COLORS[currency] || '#3B82F6'}
+                      stopOpacity={!isConverted && allCurrencies.length > 1 ? 0.3 : 0}
+                    />
                   </linearGradient>
                 ))}
               </defs>
@@ -281,7 +344,17 @@ export default function RevenueChart() {
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: '#6B7280', fontSize: 12 }}
-                tickFormatter={(value) => formatCurrency(value, allCurrencies[0] || 'USD')}
+                tickFormatter={(value) => {
+                  // In grouped mode (multiple currencies), show just numbers without currency symbol
+                  if (!isConverted && allCurrencies.length > 1) {
+                    return new Intl.NumberFormat('en-US', {
+                      notation: 'compact',
+                      maximumFractionDigits: 0
+                    }).format(value / 100);
+                  }
+                  // In converted mode (single currency), show with currency symbol
+                  return formatCurrency(value, allCurrencies[0] || 'USD');
+                }}
                 width={70}
               />
               <Tooltip
@@ -301,15 +374,25 @@ export default function RevenueChart() {
                   return new Date(label).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
                 }}
               />
+              {/* Legend only in grouped mode with multiple currencies */}
+              {!isConverted && allCurrencies.length > 1 && (
+                <Legend
+                  verticalAlign="top"
+                  height={36}
+                  iconType="line"
+                  formatter={(value) => `${value}`}
+                />
+              )}
               {allCurrencies.map((currency, index) => (
                 <Area
                   key={currency}
                   type="monotone"
                   dataKey={currency}
+                  stackId={!isConverted && allCurrencies.length > 1 ? "stack" : undefined}
                   stroke={CURRENCY_COLORS[currency] || '#3B82F6'}
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill={`url(#color${currency})`}
+                  strokeWidth={!isConverted && allCurrencies.length > 1 ? 2 : 2}
+                  fillOpacity={!isConverted && allCurrencies.length > 1 ? 0.6 : 1}
+                  fill={!isConverted && allCurrencies.length > 1 ? CURRENCY_COLORS[currency] || '#3B82F6' : `url(#color${currency})`}
                   name={currency}
                 />
               ))}

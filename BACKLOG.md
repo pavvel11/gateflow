@@ -17,32 +17,64 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 
 ## 🟢 High Priority
 
+### 🛒 Checkout & Payments (Visuals & Logic)
+
+#### Pixel-Perfect Checkout UI & Invoice Handling (EasyCart Style)
+**Status**: 🟢 High Priority (Top)
+**Description**: Comprehensive redesign of the cart and checkout experience to match the polish and usability of EasyCart (mobile & desktop).
+**Requirements**:
+- **Visuals**: Pixel-perfect design for both Desktop and Mobile versions. The cart must look flawless.
+- **Invoice Data (Dane do Faktury)**:
+    - Implement input fields for full invoice data (Company Name, VAT ID/NIP, Address).
+    - **Guest to User Sync**: Logic to capture billing details entered in the Stripe form during a guest checkout and automatically save them to the new User Profile upon account creation.
+- **Configurable Experience Options (Stripe Implementation)**:
+    1.  **Redirect Checkout**: Classic, Stripe-hosted payment process.
+    2.  **Embedded Checkout**: Seamless on-page form (Current Method).
+    3.  **Custom Checkout (Stripe Elements)**: Build a fully custom payment form using individual Elements for maximum layout control, similar to `easycart.pl`.
+
+#### Stripe Connect Onboarding (OAuth) - SaaS Mode
+**Status**: 🟢 High Priority (Next Up)
+**Description**: Replace manual API Key entry with official Stripe Connect integration (Standard Accounts). Allows creators to connect or create a Stripe account via a secure OAuth flow, similar to "Login with Google". This transforms GateFlow into a real SaaS platform.
+**Why**:
+- **UX**: Zero configuration for the user (no copying/pasting secret keys).
+- **Onboarding**: "Connect Stripe" button handles both login and new account creation.
+- **Security**: We store `stripe_account_id` instead of raw API keys.
+- **KYC & Tax**: Stripe handles identity verification and tax collection on their hosted pages.
+**Implementation**:
+1.  **Platform Account**: Configure GateFlow as a Connect Platform.
+2.  **OAuth Flow**: Implement `/api/auth/stripe/connect` (redirect) and `/api/auth/stripe/callback` (token exchange).
+3.  **Payment Routing**: Update checkout logic to charge on behalf of the connected `stripe_account_id`.
+
 ### 📊 Analytics & Marketing Integrations
 **Status**: 🏗️ Partially Done
 **Goal**: Robust tracking infrastructure compatible with modern privacy standards (Server-Side) and ease of use.
 
 #### 0. Multi-Currency Conversion (Unified View)
-**Status**: 📋 Planned
+**Status**: ✅ Done (MVP) - 2025-12-26
 **Description**: Convert all revenue to a single base currency for unified analytics and easier comparison across markets.
-**Current State**: ✅ Multi-currency support implemented (2025-12-24) - revenue is tracked and displayed grouped by currency.
-**Next Steps**:
-- **Exchange Rate API Integration**: Connect to a currency exchange API (e.g., exchangerate-api.com, fixer.io, or ECB API).
+
+**Implemented Features**:
+- ✅ **Currency Conversion System**: Manual exchange rate provider with support for USD, EUR, GBP, PLN, JPY, CAD, AUD
+- ✅ **Conversion Layer**: `useCurrencyConversion` hook with `convertToSingleCurrency()` helper
+- ✅ **UI Toggle**: `CurrencySelector` component with "Grouped by Currency" and "Convert to [CURRENCY]" modes
+- ✅ **User Preferences**: Currency view mode and display currency stored in `user_metadata` via `UserPreferencesContext`
+- ✅ **Admin Settings**: Shop configuration system (`shop_config` table) with default currency setting
+- ✅ **Dashboard Integration**:
+  - Revenue chart with stacked areas visualization for multi-currency grouped view
+  - Chart Y-axis adapts (no currency symbol in grouped mode)
+  - Legend showing all currencies in grouped mode
+  - Revenue goal converts to display currency automatically
+- ✅ **Stats Overview**: All stat cards support both grouped and converted display modes
+- ✅ **E2E Tests**: 11 comprehensive Playwright tests covering currency conversion, persistence, and chart rendering
+- ✅ **Test Infrastructure**: Fixed `test-new-payment.sh` with dynamic product lookup and multi-currency test data
+
+**Next Steps (Future Enhancement)**:
+- 📋 **Live Exchange Rate API Integration**: Replace manual rates with real-time data from exchangerate-api.com, fixer.io, or ECB API
   - Cache rates in database/Redis with hourly refresh
   - Historical rates storage for accurate past data conversion
-- **Conversion Layer**:
-  - Add `convertToSingleCurrency(amounts: CurrencyAmount, target: string, rates: ExchangeRates): number` helper
-  - Optionally add `p_convert_to` parameter to SQL functions for server-side conversion
-- **UI Toggle**:
-  - Add currency selector in dashboard: "View in: [Multiple ▼] [USD] [EUR] [PLN]"
-  - Store user preference in localStorage/user_preferences table
-  - Show original currency on hover when converted
-- **Admin Settings**:
-  - Configure default/base currency for the business
-  - Option to display both views (e.g., "$100 USD ($110.50 in EUR)")
-- **Architecture Notes**:
-  - Current JSONB-based structure is ideal for this feature
-  - Can be implemented without breaking changes (additive only)
-  - Maintains backward compatibility
+  - Admin UI to view current rates and last update timestamp
+- 📋 **Hover Enhancement**: Show original currency amount on hover when in converted mode (e.g., "$100 USD (€92 EUR original)")
+- 📋 **SQL Server-Side Conversion**: Add `p_convert_to` parameter to analytics functions for better performance
 
 #### 1. Google Tag Manager (GTM) Integration - Phase 2
 **Status**: 📋 Planned
@@ -182,28 +214,6 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 - **Automated Follow-up**: Trigger a webhook or internal email system to send a recovery link (optionally with a dynamic coupon code).
 - **Inspiration**: `easy.app` / `easycart.pl` recovery system.
 
-#### Configurable Stripe Checkout Experience
-**Status**: 📋 Planned
-**Description**: Allow administrators to choose and configure how users pay for products, aiming for greater flexibility and adaptation to various sales scenarios.
-
-**Required Implementation Options**:
-1.  **Redirect Checkout**:
-    - Classic, Stripe-hosted payment process.
-    - Simplest integration, highest level of security and PCI compliance.
-    - User is redirected to `checkout.stripe.com`.
-
-2.  **Embedded Checkout (Current Method)**:
-    - A complete payment form embedded directly on the product page (`/p/[slug]`).
-    - Uses Stripe's `CheckoutProvider` and `<PaymentElement>`.
-    - Provides a seamless experience without leaving the site.
-    - Currently implemented in `admin-panel/src/app/[locale]/checkout/[slug]/page.tsx`.
-
-3.  **Custom Checkout (Stripe Elements)**:
-    - Build a fully custom payment form using individual `Stripe Elements` components (`CardNumberElement`, `CardExpiryElement`, `CardCvcElement`, etc.).
-    - Allows for full control over the look and layout of each form field.
-    - Requires using the `Elements` provider instead of `CheckoutProvider`.
-    - Enables styling each element separately, similar to `easycart.pl`.
-
 #### Stripe Subscriptions (Recurring Payments)
 **Status**: 📋 Planned
 **Description**: Support for recurring billing (monthly/yearly subscriptions).
@@ -229,6 +239,27 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 - **Transaction List**: Comprehensive table showing Customer Email, Product, Amount, Currency, and Status.
 - **Stripe Integration**: Link each transaction to the Stripe Dashboard.
 - **Search & Filters**: Filter by date range, product, or transaction status.
+
+#### Polish Payment Gateways (PayU, Przelewy24, Tpay)
+**Status**: 📋 Planned
+**Description**: Add native support for key Polish payment providers to maximize conversion in the PL market.
+**Integrations**: PayU, Przelewy24, Tpay.
+**Requirements**:
+- **Payment Generation**: Create transactions via API (Redirect/Embedded).
+- **Webhooks**: Handle asynchronous status updates (Success, Failed) securely.
+- **Validation**: Verify transaction signatures/checksums to prevent fraud.
+- **Refunds**: Support full and partial refunds via Admin Panel.
+- **Error Handling**: Graceful handling of timeouts and API errors.
+
+#### Payment Balancer & Smart Routing
+**Status**: 📋 Planned
+**Description**: Architecture to switch between payment providers instantly without negative impact on users. Critical for business continuity.
+**Features**:
+- **Failover**: Automatically switch to a backup provider if the primary API is down.
+- **Smart Switch**: One-click admin toggle to change providers (e.g., if Stripe blocks the account) without deploying code.
+- **Routing Rules**: Route transactions based on currency (e.g., USD -> Stripe, PLN -> Tpay) or lowest fees.
+- **Seamless Experience**: Frontend adapts the payment form automatically based on the active backend provider so the user experience remains consistent.
+
 #### Audit Logging for Admin Operations
 **Status**: 📋 Planned
 **Description**: Log every administrative action (Create/Update/Delete) to a dedicated `admin_audit_logs` table for security compliance.
@@ -285,6 +316,27 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 #### Configurable URL Validation
 **Status**: 📋 Planned
 **Description**: Add a global setting in the admin panel to enable or disable strict URL validation for content links, such as `video_embed` or `download_link` fields.
+
+#### Self-Service Account Deletion (GDPR)
+**Status**: 📋 Planned
+**Description**: Allow users to permanently delete their account from the profile settings, requiring explicit confirmation of the consequences.
+**Warning Message (PL)**:
+> **UWAGA! Usunięcie konta wiąże się z:**
+> 1.  Automatycznym usunięciem konta w platformie **GateFlow**.
+> 2.  Automatycznym anulowaniem wszystkich aktywnych subskrypcji, ze skutkiem natychmiastowym.
+> 3.  Brakiem możliwości pobrania wystawionych wcześniej faktur i rachunków.
+> 4.  Brakiem możliwości pobrania plików dołączonych do zakupionych produktów (np. PDF).
+>
+> *Dostęp do produktów zakupionych pojedynczo może zostać utracony, jeśli sprzedawca korzysta z logowania GateFlow do zabezpieczenia treści.*
+>
+> W związku z tym, polecamy wcześniejsze pobranie swoich plików, faktur czy rachunków.
+> **Twoje konto zostanie deaktywowane natychmiastowo i nie będziesz mógł/mogła już się zalogować.**
+
+**Technical Requirements**:
+- **Stripe Integration**: Immediately cancel all active subscriptions via API.
+- **Data Cleanup**: Anonymize or delete user record in Supabase (handle foreign key constraints with `ON DELETE SET NULL` or soft delete).
+- **Session**: Invalidate all active user sessions immediately.
+- **Safety**: "Danger Zone" UI with double confirmation (e.g., type "DELETE").
 
 ### 🎨 UI & Branding
 
@@ -345,6 +397,17 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 **Description**: Support for courses composed of multiple lessons.
 **Features**: Chapters & Lessons hierarchy, Progress tracking, Sequential unlocking, Certificates, Quiz integration.
 
+#### Interactive Onboarding Checklist
+**Status**: 💭 Idea
+**Description**: A "Getting Started" guide displayed after the first login to help users set up their store.
+**Checklist (0/5 Tasks)**:
+1.  **Create your first product**: Guide to the product creation form.
+2.  **Store Details**: Configure store name, logo, and subdomain/domain.
+3.  **Connect Stripe**: Link a Stripe account to enable payments.
+4.  **Company Details**: Fill in business address and tax information.
+5.  **Billing & Taxes**: Configure VAT/Tax rates and invoicing settings.
+**UX**: Progress bar at the top of the dashboard until all steps are completed.
+
 ---
 
 ## ✅ Completed Features
@@ -357,7 +420,18 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 - ✅ **Filtering**: Advanced Combobox filter by product.
 - ✅ **Charts**: Hourly (today) and Daily (30d) revenue visualization using Recharts.
 - ✅ **UX**: "New Order" confetti popup accessible globally in admin panel.
-- ✅ **Multi-Currency Support**: Revenue tracking and display grouped by currency (USD, EUR, PLN, GBP, etc.) with color-coded chart lines.
+
+#### Multi-Currency Conversion System (2025-12-26)
+- ✅ **Currency Support**: USD, EUR, GBP, PLN, JPY, CAD, AUD with manual exchange rates.
+- ✅ **View Modes**: Toggle between "Grouped by Currency" and "Convert to [TARGET]" modes.
+- ✅ **Currency Selector**: Dropdown UI component with currency symbols and real-time switching.
+- ✅ **User Preferences**: Persistent storage of selected currency view mode and display currency.
+- ✅ **Shop Configuration**: Global default currency setting via `/dashboard/settings`.
+- ✅ **Chart Visualization**: Stacked area chart with color-coded currencies (blue=USD, green=EUR, purple=GBP, orange=PLN).
+- ✅ **Smart Y-Axis**: Removes currency symbols in grouped mode, shows symbol in converted mode.
+- ✅ **Revenue Goal Conversion**: Automatically converts goal and progress to display currency.
+- ✅ **Stats Cards**: All dashboard statistics support both view modes.
+- ✅ **Testing**: 11 E2E Playwright tests covering conversion, persistence, and visualization.
 
 #### Google Tag Manager (GTM) - Phase 1
 - ✅ Admin UI to input `GTM-XXXX` ID.
@@ -422,5 +496,5 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 
 ---
 
-**Last Updated**: 2025-12-19
-**Version**: 1.5
+**Last Updated**: 2025-12-26
+**Version**: 1.6
