@@ -19,9 +19,9 @@ export async function POST(request: NextRequest) {
       successUrl
     } = await request.json();
 
-    if (!productId || !email) {
+    if (!productId) {
       return NextResponse.json(
-        { error: 'Product ID and email are required' },
+        { error: 'Product ID is required' },
         { status: 400 }
       );
     }
@@ -30,6 +30,15 @@ export async function POST(request: NextRequest) {
 
     // Get authenticated user (if any)
     const { data: { user } } = await supabase.auth.getUser();
+
+    // Email is required for guests, optional for logged-in users
+    const finalEmail = email || user?.email;
+    if (!finalEmail) {
+      return NextResponse.json(
+        { error: 'Email is required for guest checkout' },
+        { status: 400 }
+      );
+    }
 
     // 1. Fetch product
     const { data: product, error: productError } = await supabase
@@ -118,12 +127,12 @@ export async function POST(request: NextRequest) {
       automatic_payment_methods: {
         enabled: true,
       },
-      receipt_email: email,
+      receipt_email: finalEmail,
       metadata: {
         product_id: productId,
         product_name: product.name,
         user_id: user?.id || '',
-        email: email,
+        email: finalEmail,
         bump_product_id: bumpProductId || '',
         bump_product_name: bumpProduct?.name || '',
         coupon_code: appliedCoupon?.code || '',
