@@ -378,14 +378,52 @@
       "welcome": "Welcome to {shopName}",
       "defaultTagline": "Discover premium digital products and resources",
       "freeResources": "{count} Free Resources",
-      "premiumSolutions": "{count} Premium Solutions"
+      "premiumSolutions": "{count} Premium Solutions",
+      "freeOnly": {
+        "title": "Start Your Journey",
+        "titleHighlight": "Completely Free",
+        "description": "Access {count} premium resources at no cost. No credit card required, no hidden fees—ever."
+      },
+      "paidOnly": {
+        "title": "Premium Quality",
+        "titleHighlight": "Professional Results",
+        "description": "Invest in excellence with {count} carefully crafted premium products designed to transform your work."
+      },
+      "mixed": {
+        "title": "From Free",
+        "titleHighlight": "To Professional",
+        "description": "Start with {freeCount} free resources, upgrade to {paidCount} premium when you're ready. Your growth journey starts here."
+      },
+      "badges": {
+        "productsAvailable": "{count, plural, one {# Product Available} other {# Products Available}}",
+        "limitedTime": "Limited Time Offers",
+        "comingSoon": "Coming Soon"
+      }
     },
     "featured": {
       "title": "Featured Products",
       "subtitle": "Our hand-picked selection for you"
     },
     "sections": {
-      "viewAll": "View All Products"
+      "viewAll": "View All Products",
+      "free": {
+        "titleFreeOnly": "Everything You Need",
+        "titleMixed": "Start Free, Learn Fast",
+        "subtitleFreeOnly": "High-quality content accessible to everyone, no strings attached",
+        "subtitleMixed": "Get a taste of what we offer—no credit card required",
+        "badge": "{count, plural, one {# Free Resource} other {# Free Resources}}"
+      },
+      "premium": {
+        "titlePaidOnly": "Professional Excellence",
+        "titleMixed": "Ready to Level Up?",
+        "subtitlePaidOnly": "Carefully crafted solutions for professionals who demand the best",
+        "subtitleMixed": "Unlock exclusive content and accelerate your results",
+        "badge": "{count, plural, one {# Premium Product} other {# Premium Products}}"
+      },
+      "showAll": {
+        "free": "Show All {count} Free Resources",
+        "premium": "Show All {count} Premium Products"
+      }
     },
     "freeSection": {
       "title": "Start Free",
@@ -401,6 +439,19 @@
       "featured": "Featured",
       "purchaseAccess": "Purchase Access"
     },
+    "product": {
+      "free": "FREE",
+      "featured": "Featured",
+      "premium": "Premium",
+      "limited": "Limited",
+      "comingSoon": "Coming Soon",
+      "daysAccess": "{days} days access",
+      "daysAccessShort": "{days}d access",
+      "getFreeAccess": "Get Free Access",
+      "getAccessNow": "Get Access Now",
+      "getFreeAccessIcon": "🎁 Get Free Access",
+      "getAccessNowIcon": "🚀 Get Access Now"
+    },
     "emptyState": {
       "title": "No Products Available Yet",
       "subtitle": "We're preparing something amazing for you. Check back soon!",
@@ -410,7 +461,21 @@
       "title": "Ready to Get Started?",
       "subtitle": "Join thousands of users who have already transformed their workflow with our products.",
       "createAccount": "Create Account",
-      "learnMore": "Learn More"
+      "learnMore": "Learn More",
+      "freeOnly": {
+        "title": "Ready to Start Learning?",
+        "description": "Access all our free resources and join a community of learners"
+      },
+      "paidOnly": {
+        "title": "Ready to Transform Your Work?",
+        "description": "Invest in yourself and unlock your full potential"
+      },
+      "mixed": {
+        "title": "Your Journey Starts Now",
+        "description": "Start free, upgrade when ready. No pressure, just progress."
+      },
+      "browseAll": "Browse All Products",
+      "poweredBy": "{count, plural, one {# product} other {# products}} available • Powered by {shopName}"
     },
     "footer": {
       "copyright": "© 2025 Powered by GateFlow • Secure Product Access Management"
@@ -1118,7 +1183,7 @@
       "of": "of",
       "confirmExit": {
         "title": "Exit configuration?",
-        "message": "Your progress has been saved. You can continue later from where you left off.",
+        "message": "Your progress will not be saved. You'll need to start over if you exit now.",
         "cancel": "Continue Setup",
         "confirm": "Exit Anyway"
       },

@@ -378,14 +378,52 @@
       "welcome": "Witaj w {shopName}",
       "defaultTagline": "Odkryj produkty cyfrowe i zasoby premium",
       "freeResources": "{count} Darmowe zasoby",
-      "premiumSolutions": "{count} Rozwiązania premium"
+      "premiumSolutions": "{count} Rozwiązania premium",
+      "freeOnly": {
+        "title": "Rozpocznij swoją podróż",
+        "titleHighlight": "Całkowicie za darmo",
+        "description": "Uzyskaj dostęp do {count} zasobów premium bez żadnych kosztów. Nie wymagamy karty kredytowej, brak ukrytych opłat—zawsze."
+      },
+      "paidOnly": {
+        "title": "Jakość premium",
+        "titleHighlight": "Profesjonalne rezultaty",
+        "description": "Zainwestuj w doskonałość dzięki {count} starannie przygotowanym produktom premium zaprojektowanym, aby przekształcić Twoją pracę."
+      },
+      "mixed": {
+        "title": "Od darmowych",
+        "titleHighlight": "Do profesjonalnych",
+        "description": "Zacznij od {freeCount} darmowych zasobów, przejdź na {paidCount} premium, gdy będziesz gotowy. Twoja podróż rozwojowa zaczyna się tutaj."
+      },
+      "badges": {
+        "productsAvailable": "{count, plural, one {Dostępny # produkt} few {Dostępne # produkty} other {Dostępnych # produktów}}",
+        "limitedTime": "Oferty czasowe",
+        "comingSoon": "Wkrótce"
+      }
     },
     "featured": {
       "title": "Polecane produkty",
       "subtitle": "Nasza starannie wyselekcjonowana oferta dla Ciebie"
     },
     "sections": {
-      "viewAll": "Zobacz wszystkie produkty"
+      "viewAll": "Zobacz wszystkie produkty",
+      "free": {
+        "titleFreeOnly": "Wszystko, czego potrzebujesz",
+        "titleMixed": "Zacznij za darmo, ucz się szybko",
+        "subtitleFreeOnly": "Wysokiej jakości treści dostępne dla każdego, bez żadnych zobowiązań",
+        "subtitleMixed": "Sprawdź, co oferujemy—nie potrzebujesz karty kredytowej",
+        "badge": "{count, plural, one {# darmowy zasób} few {# darmowe zasoby} other {# darmowych zasobów}}"
+      },
+      "premium": {
+        "titlePaidOnly": "Profesjonalna doskonałość",
+        "titleMixed": "Gotowy na wyższy poziom?",
+        "subtitlePaidOnly": "Starannie przygotowane rozwiązania dla profesjonalistów, którzy wymagają najlepszych",
+        "subtitleMixed": "Odblokuj ekskluzywne treści i przyspiesz swoje rezultaty",
+        "badge": "{count, plural, one {# produkt premium} few {# produkty premium} other {# produktów premium}}"
+      },
+      "showAll": {
+        "free": "Pokaż wszystkie {count} darmowe zasoby",
+        "premium": "Pokaż wszystkie {count} produkty premium"
+      }
     },
     "freeSection": {
       "title": "Zacznij za darmo",
@@ -401,6 +439,19 @@
       "featured": "Polecane",
       "purchaseAccess": "Kup dostęp"
     },
+    "product": {
+      "free": "DARMOWE",
+      "featured": "Polecane",
+      "premium": "Premium",
+      "limited": "Ograniczone",
+      "comingSoon": "Wkrótce",
+      "daysAccess": "{days} dni dostępu",
+      "daysAccessShort": "{days}d dostęp",
+      "getFreeAccess": "Uzyskaj darmowy dostęp",
+      "getAccessNow": "Uzyskaj dostęp teraz",
+      "getFreeAccessIcon": "🎁 Uzyskaj darmowy dostęp",
+      "getAccessNowIcon": "🚀 Uzyskaj dostęp teraz"
+    },
     "emptyState": {
       "title": "Brak dostępnych produktów",
       "subtitle": "Przygotowujemy coś niesamowitego dla Ciebie. Sprawdź wkrótce!",
@@ -410,7 +461,21 @@
       "title": "Gotowy na start?",
       "subtitle": "Dołącz do tysięcy użytkowników, którzy już przekształcili swój przepływ pracy dzięki naszym produktom.",
       "createAccount": "Utwórz konto",
-      "learnMore": "Dowiedz się więcej"
+      "learnMore": "Dowiedz się więcej",
+      "freeOnly": {
+        "title": "Gotowy, aby zacząć naukę?",
+        "description": "Uzyskaj dostęp do wszystkich naszych darmowych zasobów i dołącz do społeczności uczących się"
+      },
+      "paidOnly": {
+        "title": "Gotowy, aby przekształcić swoją pracę?",
+        "description": "Zainwestuj w siebie i odblokuj swój pełny potencjał"
+      },
+      "mixed": {
+        "title": "Twoja podróż zaczyna się teraz",
+        "description": "Zacznij za darmo, uaktualnij, gdy będziesz gotowy. Bez presji, tylko postęp."
+      },
+      "browseAll": "Przeglądaj wszystkie produkty",
+      "poweredBy": "{count, plural, one {# produkt} few {# produkty} other {# produktów}} dostępnych • Napędzane przez {shopName}"
     },
     "footer": {
       "copyright": "© 2025 Napędzane przez GateFlow • Bezpieczne zarządzanie dostępem do produktów"
@@ -1153,7 +1218,7 @@
       "of": "z",
       "confirmExit": {
         "title": "Wyjść z konfiguracji?",
-        "message": "Twój postęp został zapisany. Możesz kontynuować później od miejsca, w którym skończyłeś.",
+        "message": "Twój postęp nie zostanie zapisany. Będziesz musiał zacząć od nowa po wyjściu.",
         "cancel": "Kontynuuj konfigurację",
         "confirm": "Wyjdź mimo to"
       },

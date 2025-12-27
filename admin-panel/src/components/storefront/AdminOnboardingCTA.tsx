@@ -44,7 +44,7 @@ export default function AdminOnboardingCTA({ shopName, shopEmail }: AdminOnboard
 
           {/* Main CTA Button */}
           <Link
-            href="/dashboard/products/new"
+            href="/dashboard/products?open=new"
             className="inline-flex items-center px-8 py-4 border border-transparent rounded-xl text-lg font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
           >
             <svg className="-ml-1 mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,7 +162,7 @@ export default function AdminOnboardingCTA({ shopName, shopEmail }: AdminOnboard
           </Link>
 
           <Link
-            href="/dashboard/stripe-config"
+            href="/dashboard/settings"
             className="group p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600"
           >
             <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">

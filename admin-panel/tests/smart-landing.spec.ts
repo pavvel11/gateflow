@@ -175,8 +175,8 @@ test.describe('Smart Landing Page', () => {
     const welcomeHeading = page.locator('h1, h2').filter({ hasText: /Welcome to|Witaj w/i });
     await expect(welcomeHeading.first()).toBeVisible({ timeout: 15000 });
 
-    // Should see "Add Your First Product" button (EN or PL) - try multiple selectors
-    const addProductButton = page.locator('a[href="/dashboard/products/new"], a:has-text("Add Your First Product"), a:has-text("Dodaj pierwszy produkt")');
+    // Should see "Add Your First Product" button (EN or PL) - should link to products with ?open=new
+    const addProductButton = page.locator('a[href="/dashboard/products?open=new"], a:has-text("Add Your First Product"), a:has-text("Dodaj pierwszy produkt")');
     await expect(addProductButton.first()).toBeVisible({ timeout: 10000 });
 
     // Should see setup checklist items
@@ -281,31 +281,31 @@ test.describe('Smart Landing Page', () => {
     await acceptAllCookies(page);
     await page.goto('/about');
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
 
-    // Should see GateFlow branding
-    const gateflowTitle = page.locator('h1', { hasText: /GateFlow/i });
-    await expect(gateflowTitle).toBeVisible({ timeout: 10000 });
+    // Should see main headline "Your Products. Your Rules."
+    const mainHeadline = page.locator('h1', { hasText: /Your Products.*Your Rules/i });
+    await expect(mainHeadline).toBeVisible({ timeout: 10000 });
 
-    // Should see "Self-Hosted" or marketing subtitle
-    const subtitle = page.locator('text=/Self-Hosted Product Access Management/i');
+    // Should see "Self-Hosted" in subtitle
+    const subtitle = page.locator('text=/Self-hosted.*secure.*fully customizable/i').first();
     await expect(subtitle).toBeVisible();
 
-    // Should see "Back to Store" link
-    const backLink = page.locator('a', { hasText: /Back to Store|Powrót do Sklepu/i });
-    await expect(backLink).toBeVisible();
-    await expect(backLink).toHaveAttribute('href', '/');
-
-    // Should see GitHub link
+    // Should see GitHub link in navigation or CTA section
     const githubLink = page.locator('a[href*="github.com/pavvel11/gateflow"]');
     await expect(githubLink.first()).toBeVisible();
 
-    // Should see features section
-    const featuresHeading = page.locator('h2', { hasText: /Why Choose GateFlow/i });
-    await expect(featuresHeading).toBeVisible();
+    // Should see "Open Source" badge or text
+    const openSourceBadge = page.locator('text=/Open Source/i').first();
+    await expect(openSourceBadge).toBeVisible();
 
-    // Should see tech stack section
-    const techStackHeading = page.locator('h2', { hasText: /Modern Tech Stack/i });
-    await expect(techStackHeading).toBeVisible();
+    // Should see GateFlow branding in navigation
+    const gateflowBrand = page.locator('text=GateFlow').first();
+    await expect(gateflowBrand).toBeVisible();
+
+    // Should see "Start Free Demo" or similar CTA
+    const ctaButton = page.locator('a', { hasText: /Start Free Demo|Get Started/i }).first();
+    await expect(ctaButton).toBeVisible();
   });
 
   test('Navigation sidebar should include About link', async ({ page }) => {
@@ -325,9 +325,9 @@ test.describe('Smart Landing Page', () => {
     // Should be on about page
     expect(page.url()).toContain('/about');
 
-    // Should see marketing content
-    const gateflowTitle = page.locator('h1', { hasText: /GateFlow/i });
-    await expect(gateflowTitle).toBeVisible();
+    // Should see marketing content with new headline
+    const mainHeadline = page.locator('h1', { hasText: /Your Products.*Your Rules/i });
+    await expect(mainHeadline).toBeVisible({ timeout: 10000 });
   });
 
   test('Onboarding CTA quick links should navigate correctly', async ({ page }) => {
@@ -351,24 +351,25 @@ test.describe('Smart Landing Page', () => {
     const productsLink = onboardingSection.locator('a[href="/dashboard/products"]').first();
     await expect(productsLink).toBeVisible({ timeout: 5000 });
 
-    // Check that Stripe quick link exists
-    const stripeLink = onboardingSection.locator('a[href="/dashboard/stripe-config"]').first();
+    // Check that Stripe/Settings quick link exists
+    const stripeLink = onboardingSection.locator('a[href="/dashboard/settings"]').first();
     await expect(stripeLink).toBeVisible({ timeout: 5000 });
 
     // Check that Dashboard quick link exists
     const dashboardLink = onboardingSection.locator('a[href="/dashboard"]').first();
     await expect(dashboardLink).toBeVisible({ timeout: 5000 });
 
-    // Click main "Add Your First Product" CTA and verify navigation
-    const mainCTA = page.locator('a[href="/dashboard/products/new"]').first();
+    // Click main "Add Your First Product" CTA and verify navigation with modal
+    const mainCTA = page.locator('a[href="/dashboard/products?open=new"]').first();
     await expect(mainCTA).toBeVisible({ timeout: 10000 });
 
     await mainCTA.click();
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
-    // Should navigate to new product page
+    // Should navigate to products page with ?open=new param
     expect(page.url()).toContain('/dashboard/products');
+    expect(page.url()).toContain('open=new');
   });
 
   test('Storefront should link to /products catalog', async ({ page }) => {

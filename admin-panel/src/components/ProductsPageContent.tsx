@@ -9,11 +9,14 @@ import ProductFormModal, { ProductFormData } from './ProductFormModal';
 import CodeGeneratorModal from './CodeGeneratorModal';
 import { exportProductsToCsv } from '@/utils/csvExport';
 import { useTranslations } from 'next-intl';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 const ProductsPageContent: React.FC = () => {
   const { addToast } = useToast();
   const addButtonRef = useRef<HTMLButtonElement>(null);
   const t = useTranslations('admin.products');
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   // State for products and loading status
   const [products, setProducts] = useState<Product[]>([]);
@@ -102,6 +105,14 @@ const ProductsPageContent: React.FC = () => {
     fetchProducts();
   }, [fetchProducts]);
 
+  // Open modal if ?open=new query param is present
+  useEffect(() => {
+    if (searchParams.get('open') === 'new') {
+      setShowProductForm(true);
+      setEditingProduct(null);
+    }
+  }, [searchParams]);
+
   // CRUD Handlers
   const handleCreateProduct = async (formData: ProductFormData) => {
     setSubmitting(true);
@@ -116,6 +127,10 @@ const ProductsPageContent: React.FC = () => {
         throw new Error(errorData.error || 'Failed to create product');
       }
       setShowProductForm(false);
+      // Remove query param if present
+      if (searchParams.get('open')) {
+        router.replace('/dashboard/products');
+      }
       await fetchProducts();
       addToast(t('createSuccess', { name: formData.name }), 'success');
       setTimeout(() => {
@@ -284,6 +299,10 @@ const ProductsPageContent: React.FC = () => {
           onClose={() => {
             setShowProductForm(false);
             setEditingProduct(null);
+            // Remove query param if present
+            if (searchParams.get('open')) {
+              router.replace('/dashboard/products');
+            }
           }}
           onSubmit={handleProductSubmit}
           product={editingProduct}
