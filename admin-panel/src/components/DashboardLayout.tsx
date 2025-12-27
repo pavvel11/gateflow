@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import FloatingLanguageSwitcher from './FloatingLanguageSwitcher'
+import type { ShopConfig } from '@/lib/actions/shop-config'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -14,6 +15,7 @@ interface DashboardLayoutProps {
     id: string
   } | null
   isAdmin?: boolean
+  shopConfig?: ShopConfig | null
 }
 
 // Icons
@@ -96,7 +98,7 @@ const Icons = {
   )
 };
 
-export default function DashboardLayout({ children, user, isAdmin: isAdminProp }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, user, isAdmin: isAdminProp, shopConfig }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const { signOut, isAdmin: isAdminContext } = useAuth()
   const t = useTranslations('navigation')
@@ -104,6 +106,12 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp }
 
   // Use prop if provided (from server), otherwise fallback to context (client)
   const isAdmin = isAdminProp !== undefined ? isAdminProp : isAdminContext
+
+  // Extract branding from shop config
+  const shopName = shopConfig?.shop_name || 'GateFlow'
+  const logoUrl = shopConfig?.logo_url
+  const primaryColor = shopConfig?.primary_color || '#9333ea'
+  const secondaryColor = shopConfig?.secondary_color || '#ec4899'
 
   const handleSignOut = async () => {
     await signOut()
@@ -160,13 +168,22 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp }
           <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <div className="flex items-center">
               <Link href="/" className="flex items-center group">
-                <div className="w-9 h-9 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center mr-3 shadow-md group-hover:scale-105 transition-transform">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
+                {logoUrl ? (
+                  <img src={logoUrl} alt={shopName} className="w-9 h-9 object-contain mr-3 group-hover:scale-105 transition-transform" />
+                ) : (
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center mr-3 shadow-md group-hover:scale-105 transition-transform"
+                    style={{
+                      background: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`
+                    }}
+                  >
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                  </div>
+                )}
                 <span className="text-xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 leading-none">
-                  GateFlow
+                  {shopName}
                 </span>
               </Link>
             </div>
@@ -200,14 +217,23 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp }
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-screen sticky top-0">
         <div className="h-16 flex items-center px-6 border-b border-gray-200 dark:border-gray-700">
-          <Link href="/dashboard" className="flex items-center">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mr-3 shadow-sm">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
+          <Link href="/" className="flex items-center">
+            {logoUrl ? (
+              <img src={logoUrl} alt={shopName} className="w-8 h-8 object-contain mr-3" />
+            ) : (
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center mr-3 shadow-sm"
+                style={{
+                  background: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`
+                }}
+              >
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+              </div>
+            )}
             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">
-              GateFlow
+              {shopName}
             </span>
           </Link>
         </div>
@@ -240,7 +266,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp }
 
         <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
           <div className="flex items-center w-full">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold mr-3 shadow-sm">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold mr-3 shadow-sm">
               {user.email?.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
@@ -273,12 +299,21 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp }
           <div className="fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-800 shadow-2xl flex flex-col h-full transform transition-transform duration-300 ease-in-out">
             <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <span className="text-xl font-bold text-gray-900 dark:text-white">GateFlow</span>
+                {logoUrl ? (
+                  <img src={logoUrl} alt={shopName} className="w-8 h-8 object-contain mr-3" />
+                ) : (
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center mr-3"
+                    style={{
+                      background: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`
+                    }}
+                  >
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                  </div>
+                )}
+                <span className="text-xl font-bold text-gray-900 dark:text-white">{shopName}</span>
               </div>
               <button 
                 onClick={() => setIsSidebarOpen(false)}
@@ -306,7 +341,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp }
             <div className="p-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center">
-                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold mr-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold mr-3">
                     {user?.email?.charAt(0).toUpperCase()}
                   </div>
                   <div className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[120px]">
