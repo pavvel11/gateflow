@@ -49,7 +49,7 @@ export function AboutPagePL() {
               <Link href="/" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
                 Start
               </Link>
-              <Link href="/products" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+              <Link href="/" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
                 Produkty
               </Link>
               <a href="https://github.com/pavvel11/gateflow" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
@@ -341,53 +341,23 @@ export function AboutPagePL() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-3">Hosting Wideo</h3>
+              <h3 className="text-2xl font-bold text-white mb-3">Osadzanie Wideo</h3>
               <p className="text-yellow-100">
-                Bunny.net CDN, YouTube, Vimeo, Loom. Śledzenie postępu (Wkrótce)
+                YouTube, Vimeo, Bunny.net, Loom - wsparcie embed. Śledzenie postępu i upload (Wkrótce)
               </p>
             </div>
 
-            {/* Funkcja 7 - Large */}
-            <div className="lg:col-span-2 group p-8 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-500 hover:scale-105 transition-transform duration-300">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-6">
-                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-3">Szybka Konfiguracja</h3>
-                  <p className="text-emerald-100 mb-4">
-                    Uruchom swój sklep cyfrowy w minuty, nie dni. Prosta konfiguracja, natychmiastowe wdrożenie
-                  </p>
-                  <div className="grid grid-cols-2 gap-3 text-sm text-white/90">
-                    <div className="flex items-center">
-                      <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      Konfiguracja Stripe jednym kliknięciem
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      Automatyczne certyfikaty SSL
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      Wstępnie skonfigurowane zabezpieczenia
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      Wdrożenie Docker
-                    </div>
-                  </div>
-                </div>
+            {/* Funkcja 7 */}
+            <div className="group p-8 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-500 hover:scale-105 transition-transform duration-300">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-6">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
               </div>
+              <h3 className="text-2xl font-bold text-white mb-3">Szybka Konfiguracja</h3>
+              <p className="text-emerald-100">
+                Wdrożenie w minuty z Dockerem i auto SSL. Prosta konfiguracja, natychmiastowy start.
+              </p>
             </div>
 
             {/* Funkcja 8 */}
@@ -668,30 +638,30 @@ export function AboutPagePL() {
               Wdróż gdzie chcesz, jak chcesz
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300">
-              Od 20 zł/mies VPS do infrastruktury korporacyjnej
+              Od 11 zł/mies VPS dla hobbystów do gotowej infrastruktury produkcyjnej
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Option 1 */}
             <div className="p-8 rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border-2 border-blue-200 dark:border-blue-800">
               <div className="text-4xl mb-4">🚀</div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Szybki Start</h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Wdróż na mikr.us lub dowolnym VPS
+              <p className="text-gray-600 dark:text-gray-300 mb-4 text-sm">
+                mikr.us (darmowy SSL) lub inny VPS + Caddy
               </p>
               <ul className="space-y-2 text-gray-700 dark:text-gray-400 text-sm mb-6">
                 <li className="flex items-center">
                   <svg className="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  Docker Compose
+                  Menedżer procesów PM2
                 </li>
                 <li className="flex items-center">
                   <svg className="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  Automatyczny SSL z Caddy
+                  Automatyczny SSL
                 </li>
                 <li className="flex items-center">
                   <svg className="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
@@ -700,14 +670,15 @@ export function AboutPagePL() {
                   Supabase Cloud
                 </li>
               </ul>
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">~64 zł/mies</div>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">~11 zł/mies</div>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">~300MB zużycia RAM</p>
             </div>
 
             {/* Option 2 */}
             <div className="p-8 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 border-2 border-purple-200 dark:border-purple-800 transform scale-105 shadow-2xl">
               <div className="inline-block px-3 py-1 rounded-full bg-purple-600 text-white text-xs font-bold mb-4">POLECANE</div>
               <div className="text-4xl mb-4">⚡</div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Zrównoważony</h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Produkcja</h3>
               <p className="text-gray-600 dark:text-gray-300 mb-4">
                 Najlepszy stosunek ceny do wydajności
               </p>
@@ -731,37 +702,8 @@ export function AboutPagePL() {
                   Wdrożenia bez przestojów
                 </li>
               </ul>
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">~100 zł/mies</div>
-            </div>
-
-            {/* Option 3 */}
-            <div className="p-8 rounded-2xl bg-gradient-to-br from-gray-50 to-slate-50 dark:from-gray-900 dark:to-slate-900 border-2 border-gray-200 dark:border-gray-800">
-              <div className="text-4xl mb-4">🏢</div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Enterprise</h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Pełna zgodność z RODO
-              </p>
-              <ul className="space-y-2 text-gray-700 dark:text-gray-400 text-sm mb-6">
-                <li className="flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  Własna baza danych
-                </li>
-                <li className="flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  Gotowe na Kubernetes
-                </li>
-                <li className="flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  Pełna suwerenność danych
-                </li>
-              </ul>
-              <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">Indywidualnie</div>
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">~17-56 zł/mies</div>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">2-rdzeniowy CPU, 8GB RAM, 100GB NVMe</p>
             </div>
           </div>
 
@@ -794,7 +736,7 @@ export function AboutPagePL() {
             {[
               {
                 q: "Czy GateFlow naprawdę jest darmowy?",
-                a: "Tak! GateFlow jest w 100% open source (licencja MIT). Płacisz tylko za hosting (~64 zł/mies za VPS) i opłaty Stripe za przetwarzanie płatności (2,9% + 1,20 zł). Bez opłat platformy, bez miesięcznych abonamentów, bez uzależnienia od dostawcy."
+                a: "Tak! GateFlow jest w 100% open source (licencja MIT). Płacisz tylko za hosting (11-56 zł/mies za VPS) i opłaty Stripe za przetwarzanie płatności (2,9% + 1,20 zł). Bez opłat platformy, bez miesięcznych abonamentów, bez uzależnienia od dostawcy."
               },
               {
                 q: "Czym różni się od Gumroad czy Teachable?",
@@ -814,15 +756,15 @@ export function AboutPagePL() {
               },
               {
                 q: "Czy jest gotowy do produkcji?",
-                a: "Tak! GateFlow jest zbudowany na technologiach korporacyjnych (Next.js, PostgreSQL, Supabase). Zawiera funkcje bezpieczeństwa takie jak RLS, ograniczanie częstotliwości, logi audytu i zaszyfrowane przechowywanie kluczy. Przetestowano tysiące transakcji."
+                a: "Tak! GateFlow jest zbudowany na technologiach korporacyjnych (Next.js, PostgreSQL, Supabase). Zawiera funkcje bezpieczeństwa takie jak polityki RLS, webhooki zabezpieczone HMAC, zaszyfrowane przechowywanie kluczy i kompleksową walidację danych wejściowych."
               },
               {
                 q: "Co jeśli potrzebuję pomocy?",
-                a: "Sprawdź naszą obszerną dokumentację, problemy na GitHub i dyskusje społeczności. Ponieważ jest to open source, możesz również zatrudnić dowolnego programistę Next.js, aby dostosował go do Twoich potrzeb."
+                a: "Sprawdź naszą obszerną dokumentację i problemy na GitHub. Ponieważ jest to open source, możesz również zatrudnić dowolnego programistę Next.js, aby dostosował go do Twoich potrzeb."
               },
               {
                 q: "Czy poradzi sobie z dużym ruchem?",
-                a: "Tak! Zbudowany na Next.js 16 i PostgreSQL, skaluje się horyzontalnie. Możesz wdrożyć na dowolnej infrastrukturze - od VPS za 20 zł do klastrów Kubernetes. Dołączone są cache'owanie, pooling połączeń i zoptymalizowane zapytania."
+                a: "Tak! Zbudowany na Next.js 16 i PostgreSQL, skaluje się horyzontalnie. Możesz wdrożyć na dowolnej infrastrukturze - od VPS za 11 zł do klastrów Kubernetes. Supabase zapewnia pooling połączeń domyślnie."
               }
             ].map((faq, i) => (
               <div key={i} className="p-6 rounded-xl bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600 transition-colors">
@@ -921,7 +863,7 @@ export function AboutPagePL() {
               <ul className="space-y-2 text-sm text-gray-400">
                 <li><Link href="/" className="hover:text-white transition-colors">Funkcje</Link></li>
                 <li><a href="https://github.com/pavvel11/gateflow" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Dokumentacja</a></li>
-                <li><Link href="/products" className="hover:text-white transition-colors">Produkty</Link></li>
+                <li><Link href="/" className="hover:text-white transition-colors">Produkty</Link></li>
               </ul>
             </div>
 

@@ -132,7 +132,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
 
   const userLinks = [
     { href: '/my-products', label: t('myProducts'), icon: Icons.myProducts },
-    { href: '/products', label: t('store'), icon: Icons.store },
+    { href: '/', label: t('store'), icon: Icons.store },
     { href: '/profile', label: t('profile'), icon: Icons.profile },
     { href: '/about', label: t('about'), icon: Icons.about },
   ];

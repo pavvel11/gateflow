@@ -156,6 +156,27 @@ A comprehensive list of planned features, technical improvements, and ideas for 
     - Admin UI to view sent emails and their content/status.
 - **Templates**: Support for dynamic templates (e.g., React Email or MJML).
 
+#### Follow-up Email Sequences per Product
+**Status**: 📋 Planned
+**Description**: Automated email campaigns triggered after product purchase or free download to nurture customers and increase engagement.
+**Features**:
+- **Per-Product Configuration**: Each product can have its own email sequence (e.g., onboarding for courses, upsell for lead magnets).
+- **Email Sequence Builder**: Admin UI to create/edit email sequences with drag-and-drop or timeline interface.
+- **Delay Configuration**: Set time delays between emails (e.g., Day 1, Day 3, Day 7).
+- **Dynamic Variables**: Personalize emails with customer name, product name, access links, etc.
+- **Trigger Events**:
+  - Purchase completed
+  - Free product downloaded
+  - Access granted (guest or registered)
+- **Email Types**:
+  - Welcome & Onboarding (tips for using the product)
+  - Educational content (tutorials, best practices)
+  - Upsell/Cross-sell (related products, premium upgrades)
+  - Re-engagement (inactive users)
+- **Analytics**: Track open rates, click rates, conversion rates per email.
+- **Unsubscribe Management**: One-click unsubscribe links and preference center.
+- **Integration**: Works with "Transactional Emails & Logs" system for delivery and tracking.
+
 #### Invoicing Integration (Fakturownia, iFirma, KSeF)
 **Status**: 📋 Planned
 **Description**: Automatically generate and send invoices for successful purchases.
@@ -379,10 +400,42 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 
 ## 🔵 Low Priority / Ideas
 
-#### In-App File Hosting
+#### In-App File Hosting & Cloud Storage Integration
 **Status**: 💭 Idea
-**Description**: Ability to upload and host files directly within GateFlow.
-**Requirements**: Supabase Storage integration, Upload limits per plan.
+**Description**: Ability to upload and host files directly within GateFlow, with support for multiple storage providers.
+**Storage Providers**:
+- **Supabase Storage** (Native):
+  - Direct integration with existing Supabase instance
+  - Built-in RLS policies for secure file access
+  - Signed URLs for time-limited downloads
+  - Best for: Self-hosted instances with existing Supabase infrastructure
+- **AWS S3**:
+  - Industry-standard object storage
+  - Global CDN via CloudFront
+  - Best for: High-traffic products with international audience
+- **Cloudinary**:
+  - Image/video optimization and transformation
+  - Automatic format conversion and responsive images
+  - Best for: Visual content (images, videos, PDFs with previews)
+- **Bunny.net CDN**:
+  - Cost-effective CDN with storage
+  - Low latency, high performance
+  - Best for: European market, budget-conscious hosting
+- **Google Drive / Dropbox**:
+  - External integration for existing file storage
+  - OAuth-based authorization
+  - Best for: Creators who already manage files in these platforms
+
+**Features**:
+- **Upload UI**: Drag-and-drop file uploader in Product Form
+- **File Management**: Library view with preview, rename, delete, copy URL
+- **Storage Limits**: Configurable per-plan limits (e.g., 100MB free, 10GB pro, unlimited enterprise)
+- **File Types**: Support for PDFs, videos, images, archives (.zip), ebooks (.epub, .mobi)
+- **Secure Access**: Signed URLs with expiration, watermarking for images/PDFs
+- **Bandwidth Monitoring**: Track download usage per product
+- **Migration Tool**: Easy migration between storage providers without broken links
+
+**Implementation Priority**: Low (most users already use external CDNs or Google Drive links)
 
 #### Mux Video Integration (Alternative Provider)
 **Status**: 💭 Idea
@@ -521,5 +574,5 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 
 ---
 
-**Last Updated**: 2025-12-26
-**Version**: 1.6
+**Last Updated**: 2025-12-27
+**Version**: 1.7

@@ -681,8 +681,8 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     await expect(paidCTA).toBeVisible();
     await expect(paidCTA).toHaveClass(/from-purple-600.*to-pink-600/);
 
-    // Verify "Browse All Products" button at bottom
-    const browseAllButton = page.locator('a[href="/products"]').filter({ hasText: /Browse All Products/i });
+    // Verify "Browse All Products" button at bottom (smooth scroll to #products)
+    const browseAllButton = page.locator('a[href="#products"]').filter({ hasText: /Browse All Products/i });
     await expect(browseAllButton).toBeVisible();
   });
 

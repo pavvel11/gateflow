@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Product } from '@/types';
 import { formatPrice } from '@/lib/constants';
+import { useState, useEffect } from 'react';
 
 interface StorefrontProps {
   products: Product[];
@@ -21,184 +22,294 @@ export default function Storefront({
   paidProducts,
 }: StorefrontProps) {
   const t = useTranslations('storefront');
+  const [mounted, setMounted] = useState(false);
+  const [showAllFree, setShowAllFree] = useState(false);
+  const [showAllPaid, setShowAllPaid] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Determine shop personality based on product mix
+  const isFreeOnly = freeProducts.length > 0 && paidProducts.length === 0;
+  const isPaidOnly = paidProducts.length > 0 && freeProducts.length === 0;
+  const isMixed = freeProducts.length > 0 && paidProducts.length > 0;
+
+  // Check for temporal availability badges
+  const hasLimitedTimeProducts = products.some(p => p.available_until);
+  const hasComingSoonProducts = products.some(p => p.available_from && new Date(p.available_from) > new Date());
+
+  // Display logic - show 6 initially, then all on click
+  const displayedFreeProducts = showAllFree ? freeProducts : freeProducts.slice(0, 6);
+  const displayedPaidProducts = showAllPaid ? paidProducts : paidProducts.slice(0, 6);
+
+  if (!mounted) {
+    return (
+      <div className="w-full bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
-      {/* Hero Section */}
-      <section className="relative pt-20 pb-16 overflow-hidden">
-        {/* Background aurora effect */}
-        <div
-          className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_20%_20%,#3a2d5b_0%,transparent_40%),radial-gradient(circle_at_80%_70%,#0f3460_0%,transparent_40%)]"
-          style={{ animation: 'aurora 20s infinite linear' }}
-        />
+    <div className="w-full bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 relative overflow-hidden">
+      {/* Animated gradient mesh background */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-purple-900/20 via-pink-900/20 to-blue-900/20 animate-gradient-xy"></div>
+        <div className="absolute top-1/4 -left-48 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+        <div className="absolute top-1/3 -right-48 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-32 left-1/3 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+      </div>
 
-        <style jsx>{`
-          @keyframes aurora {
-            0% {
-              background-position: 0% 50%;
-            }
-            50% {
-              background-position: 100% 50%;
-            }
-            100% {
-              background-position: 0% 50%;
-            }
+      <style jsx>{`
+        @keyframes gradient-xy {
+          0%, 100% {
+            background-position: 0% 50%;
           }
-        `}</style>
+          50% {
+            background-position: 100% 50%;
+          }
+        }
+        @keyframes blob {
+          0%, 100% {
+            transform: translate(0, 0) scale(1);
+          }
+          25% {
+            transform: translate(20px, -50px) scale(1.1);
+          }
+          50% {
+            transform: translate(-20px, 20px) scale(0.9);
+          }
+          75% {
+            transform: translate(50px, 50px) scale(1.05);
+          }
+        }
+        .animate-blob {
+          animation: blob 20s infinite;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+          animation-delay: 4s;
+        }
+        .animate-gradient-xy {
+          background-size: 400% 400%;
+          animation: gradient-xy 15s ease infinite;
+        }
+      `}</style>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          {/* Shop Name Badge */}
-          <div className="mb-6 inline-block">
-            <div className="px-6 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full">
-              <span className="text-sm font-medium text-gray-300">{shopName}</span>
+      {/* Hero Section - Dynamic based on product mix */}
+      <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 z-10">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            {/* Shop name badge with pulse effect */}
+            <div className="mb-8 inline-block group">
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
+                <div className="relative px-8 py-3 bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-full">
+                  <span className="text-lg font-semibold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    {shopName}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Dynamic hero headline based on shop type */}
+            {isFreeOnly && (
+              <div className="space-y-6">
+                <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-tight">
+                  {t('hero.freeOnly.title')}
+                  <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 animate-gradient-xy">
+                    {t('hero.freeOnly.titleHighlight')}
+                  </span>
+                </h1>
+                <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+                  {t('hero.freeOnly.description', { count: freeProducts.length })}
+                </p>
+              </div>
+            )}
+
+            {isPaidOnly && (
+              <div className="space-y-6">
+                <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-tight">
+                  {t('hero.paidOnly.title')}
+                  <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 animate-gradient-xy">
+                    {t('hero.paidOnly.titleHighlight')}
+                  </span>
+                </h1>
+                <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+                  {t('hero.paidOnly.description', { count: paidProducts.length })}
+                </p>
+              </div>
+            )}
+
+            {isMixed && (
+              <div className="space-y-6">
+                <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-tight">
+                  {t('hero.mixed.title')}
+                  <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-purple-400 to-pink-400 animate-gradient-xy">
+                    {t('hero.mixed.titleHighlight')}
+                  </span>
+                </h1>
+                <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+                  {t('hero.mixed.description', { freeCount: freeProducts.length, paidCount: paidProducts.length })}
+                </p>
+              </div>
+            )}
+
+            {/* Dynamic badges */}
+            <div className="flex flex-wrap justify-center gap-4 mt-12">
+              <div className="flex items-center gap-3 px-6 py-3 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full group hover:bg-white/10 transition-all duration-300">
+                <div className="relative">
+                  <div className="absolute -inset-1 bg-purple-500 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-300"></div>
+                  <div className="relative w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">{products.length}</span>
+                  </div>
+                </div>
+                <span className="text-white font-medium">
+                  {t('hero.badges.productsAvailable', { count: products.length })}
+                </span>
+              </div>
+
+              {hasLimitedTimeProducts && (
+                <div className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500/20 to-red-500/20 backdrop-blur-xl border border-orange-500/30 rounded-full">
+                  <svg className="w-5 h-5 text-orange-400 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-orange-300 font-medium text-sm">{t('hero.badges.limitedTime')}</span>
+                </div>
+              )}
+
+              {hasComingSoonProducts && (
+                <div className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 backdrop-blur-xl border border-blue-500/30 rounded-full">
+                  <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+                  </svg>
+                  <span className="text-blue-300 font-medium text-sm">{t('hero.badges.comingSoon')}</span>
+                </div>
+              )}
             </div>
           </div>
-
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-            {t('hero.welcome', { shopName })}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
-              {" "}
-              {t('hero.defaultTagline')}
-            </span>
-          </h1>
-
-          {products.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-4 mb-8">
-              {freeProducts.length > 0 && (
-                <div className="flex items-center px-4 py-2 bg-green-500/20 border border-green-500/30 rounded-full">
-                  <svg
-                    className="w-5 h-5 text-green-400 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-                    />
-                  </svg>
-                  <span className="text-green-300 font-medium">
-                    {freeProducts.length}{' '}
-                    {freeProducts.length === 1 ? 'Free Resource' : 'Free Resources'}
-                  </span>
-                </div>
-              )}
-
-              {paidProducts.length > 0 && (
-                <div className="flex items-center px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-full">
-                  <svg
-                    className="w-5 h-5 text-purple-400 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                    />
-                  </svg>
-                  <span className="text-purple-300 font-medium">
-                    {paidProducts.length}{' '}
-                    {paidProducts.length === 1 ? 'Premium Product' : 'Premium Products'}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-
-          <Link
-            href="/products"
-            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
-          >
-            {t('sections.viewAll')}
-            <svg
-              className="w-5 h-5 ml-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 8l4 4m0 0l-4 4m4-4H3"
-              />
-            </svg>
-          </Link>
         </div>
       </section>
 
-      {/* Featured Products Section */}
+      {/* Featured Products - Bento Grid */}
       {featuredProducts.length > 0 && (
-        <section className="py-16 relative z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+        <section className="relative py-20 px-4 sm:px-6 lg:px-8 z-10">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+              <div className="inline-block mb-4">
+                <div className="flex items-center gap-2 px-4 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-full">
+                  <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  <span className="text-yellow-300 font-semibold text-sm uppercase tracking-wide">Featured</span>
+                </div>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
                 {t('featured.title')}
               </h2>
-              <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+              <p className="text-xl text-gray-400 max-w-2xl mx-auto">
                 {t('featured.subtitle')}
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {featuredProducts.slice(0, 3).map((product) => (
-                <div
-                  key={product.id}
-                  className="group bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:shadow-2xl relative overflow-hidden"
-                >
-                  {/* Featured badge */}
-                  <div className="absolute top-4 right-4">
-                    <div className="flex items-center px-3 py-1 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-xs font-medium text-yellow-300">
-                      <svg
-                        className="w-3 h-3 text-yellow-400 mr-1"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      Featured
-                    </div>
-                  </div>
+            {/* Bento Grid Layout - responsive and dynamic */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredProducts.map((product, index) => {
+                const isLimitedTime = product.available_until && new Date(product.available_until) > new Date();
+                const isComingSoon = product.available_from && new Date(product.available_from) > new Date();
+                const hasAccessDuration = product.auto_grant_duration_days && product.auto_grant_duration_days > 0;
 
-                  <div className="flex items-center mb-4">
-                    <div className="text-4xl mr-4">{product.icon || '📦'}</div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-white group-hover:text-purple-300 transition-colors">
-                        {product.name}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        {product.price === 0 ? (
-                          <span className="inline-flex items-center px-2 py-1 bg-green-500/20 border border-green-500/30 rounded text-xs font-medium text-green-300">
-                            Free
-                          </span>
-                        ) : (
-                          <div className="text-2xl font-bold text-purple-400">
-                            {formatPrice(product.price, product.currency)}
+                // First featured product gets larger card
+                const isHero = index === 0 && featuredProducts.length > 1;
+
+                return (
+                  <div
+                    key={product.id}
+                    className={`group relative ${
+                      isHero ? 'md:col-span-2 md:row-span-2' : ''
+                    }`}
+                  >
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
+                    <div className="relative h-full bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl p-6 md:p-8 hover:border-white/20 transition-all duration-300 flex flex-col">
+                      {/* Badges */}
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        <div className="flex items-center px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/30 rounded-full">
+                          <svg className="w-4 h-4 text-yellow-400 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                          <span className="text-yellow-300 font-semibold text-xs uppercase">{t('product.featured')}</span>
+                        </div>
+                        {isLimitedTime && (
+                          <div className="flex items-center px-3 py-1.5 bg-orange-500/20 border border-orange-500/30 rounded-full animate-pulse">
+                            <svg className="w-4 h-4 text-orange-400 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-orange-300 font-semibold text-xs uppercase">{t('product.limited')}</span>
+                          </div>
+                        )}
+                        {isComingSoon && (
+                          <div className="flex items-center px-3 py-1.5 bg-blue-500/20 border border-blue-500/30 rounded-full">
+                            <span className="text-blue-300 font-semibold text-xs uppercase">{t('product.comingSoon')}</span>
                           </div>
                         )}
                       </div>
+
+                      {/* Icon */}
+                      <div className={`${isHero ? 'text-6xl md:text-8xl' : 'text-5xl'} mb-4 transform group-hover:scale-110 transition-transform duration-300`}>
+                        {product.icon || '📦'}
+                      </div>
+
+                      {/* Content */}
+                      <h3 className={`${isHero ? 'text-3xl md:text-4xl' : 'text-2xl'} font-bold text-white mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 transition-all duration-300`}>
+                        {product.name}
+                      </h3>
+
+                      <p className={`${isHero ? 'text-lg' : 'text-base'} text-gray-400 mb-6 flex-grow`}>
+                        {product.description}
+                      </p>
+
+                      {/* Price & Duration */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          {product.price === 0 ? (
+                            <div className="flex items-center gap-2 px-4 py-2 bg-green-500/20 border border-green-500/30 rounded-lg">
+                              <span className="text-2xl font-black text-green-400">{t('product.free')}</span>
+                            </div>
+                          ) : (
+                            <div className={`${isHero ? 'text-4xl md:text-5xl' : 'text-3xl'} font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400`}>
+                              {formatPrice(product.price, product.currency)}
+                            </div>
+                          )}
+                          {hasAccessDuration && (
+                            <div className="px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                              <span className="text-blue-300 text-sm font-medium">
+                                {t('product.daysAccess', { days: product.auto_grant_duration_days! })}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        <Link
+                          href={`/p/${product.slug}`}
+                          className={`block w-full text-center font-bold ${isHero ? 'py-5 text-lg' : 'py-4'} px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl ${
+                            product.price === 0
+                              ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white'
+                              : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'
+                          }`}
+                        >
+                          {product.price === 0 ? t('product.getFreeAccessIcon') : t('product.getAccessNowIcon')}
+                        </Link>
+                      </div>
                     </div>
                   </div>
-
-                  <p className="text-gray-300 mb-6 min-h-[3rem]">{product.description}</p>
-
-                  <Link
-                    href={`/p/${product.slug}`}
-                    className={`block w-full text-white text-center font-semibold py-3 px-4 rounded-lg transition-all duration-200 hover:shadow-lg ${
-                      product.price === 0
-                        ? 'bg-green-600 hover:bg-green-700'
-                        : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'
-                    }`}
-                  >
-                    {product.price === 0 ? 'Get Free Access' : 'Purchase Access'}
-                  </Link>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
@@ -206,154 +317,230 @@ export default function Storefront({
 
       {/* Free Products Section */}
       {freeProducts.length > 0 && (
-        <section className="py-16 relative z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                Free Resources
+        <section id="products" className="relative py-20 px-4 sm:px-6 lg:px-8 z-10">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+              <div className="inline-block mb-4">
+                <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/20 rounded-full">
+                  <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-green-300 font-semibold text-sm uppercase tracking-wide">
+                    {t('sections.free.badge', { count: freeProducts.length })}
+                  </span>
+                </div>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
+                {isFreeOnly ? t('sections.free.titleFreeOnly') : t('sections.free.titleMixed')}
               </h2>
-              <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-                Start learning today with our free content
+              <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                {isFreeOnly
+                  ? t('sections.free.subtitleFreeOnly')
+                  : t('sections.free.subtitleMixed')}
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {freeProducts.slice(0, 3).map((product) => (
-                <div
-                  key={product.id}
-                  className="group bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:shadow-2xl relative overflow-hidden"
-                >
-                  <div className="flex items-center mb-4">
-                    <div className="text-4xl mr-4">{product.icon || '📦'}</div>
-                    <div>
-                      <h3 className="text-xl font-semibold text-white group-hover:text-green-300 transition-colors">
-                        {product.name}
-                      </h3>
-                      <div className="flex items-center mt-1">
-                        <span className="inline-flex items-center px-2 py-1 bg-green-500/20 border border-green-500/30 rounded text-xs font-medium text-green-300">
-                          Free
-                        </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {displayedFreeProducts.map((product) => (
+                <div key={product.id} className="group relative">
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
+                  <div className="relative h-full bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-all duration-300 flex flex-col">
+                    <div className="text-4xl mb-4 transform group-hover:scale-110 transition-transform duration-300">
+                      {product.icon || '🎁'}
+                    </div>
+
+                    <h3 className="text-xl font-bold text-white mb-3 group-hover:text-green-400 transition-colors duration-300">
+                      {product.name}
+                    </h3>
+
+                    <p className="text-gray-400 mb-6 flex-grow">
+                      {product.description}
+                    </p>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/20 border border-green-500/30 rounded-lg">
+                          <span className="text-xl font-black text-green-400">{t('product.free')}</span>
+                        </div>
+                        {product.auto_grant_duration_days && product.auto_grant_duration_days > 0 && (
+                          <div className="px-2 py-1 bg-blue-500/10 border border-blue-500/20 rounded text-xs text-blue-300">
+                            {t('product.daysAccessShort', { days: product.auto_grant_duration_days! })}
+                          </div>
+                        )}
                       </div>
+
+                      <Link
+                        href={`/p/${product.slug}`}
+                        className="block w-full text-center font-bold py-3 px-6 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white transition-all duration-300 transform hover:scale-105"
+                      >
+                        {t('product.getFreeAccess')}
+                      </Link>
                     </div>
                   </div>
-
-                  <p className="text-gray-300 mb-6 min-h-[3rem]">{product.description}</p>
-
-                  <Link
-                    href={`/p/${product.slug}`}
-                    className="block w-full bg-green-600 hover:bg-green-700 text-white text-center font-semibold py-3 px-4 rounded-lg transition-all duration-200 hover:shadow-lg"
-                  >
-                    Get Free Access
-                  </Link>
                 </div>
               ))}
             </div>
+
+            {freeProducts.length > 6 && !showAllFree && (
+              <div className="text-center mt-12">
+                <button
+                  onClick={() => setShowAllFree(true)}
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 hover:border-white/20 rounded-xl text-white font-semibold transition-all duration-300 transform hover:scale-105"
+                >
+                  <span>{t('sections.showAll.free', { count: freeProducts.length })}</span>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
         </section>
       )}
 
       {/* Premium Products Section */}
       {paidProducts.length > 0 && (
-        <section className="py-16 relative z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                Premium Products
+        <section id={freeProducts.length === 0 ? "products" : undefined} className="relative py-20 px-4 sm:px-6 lg:px-8 z-10">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+              <div className="inline-block mb-4">
+                <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full">
+                  <svg className="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  <span className="text-purple-300 font-semibold text-sm uppercase tracking-wide">
+                    {t('sections.premium.badge', { count: paidProducts.length })}
+                  </span>
+                </div>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
+                {isPaidOnly ? t('sections.premium.titlePaidOnly') : t('sections.premium.titleMixed')}
               </h2>
-              <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-                Unlock exclusive content and advanced features
+              <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                {isPaidOnly
+                  ? t('sections.premium.subtitlePaidOnly')
+                  : t('sections.premium.subtitleMixed')}
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {paidProducts.slice(0, 3).map((product) => (
-                <div
-                  key={product.id}
-                  className="group bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:shadow-2xl relative overflow-hidden"
-                >
-                  {/* Premium badge */}
-                  <div className="absolute top-4 right-4">
-                    <div className="flex items-center px-2 py-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full">
-                      <svg
-                        className="w-3 h-3 text-purple-400 mr-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                        />
-                      </svg>
-                      <span className="text-xs font-medium text-purple-300">Premium</span>
-                    </div>
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {displayedPaidProducts.map((product) => {
+                const isLimitedTime = product.available_until && new Date(product.available_until) > new Date();
 
-                  <div className="flex items-center mb-4">
-                    <div className="text-4xl mr-4">{product.icon || '📦'}</div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-white group-hover:text-purple-300 transition-colors">
+                return (
+                  <div key={product.id} className="group relative">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
+                    <div className="relative h-full bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-all duration-300 flex flex-col">
+                      {/* Badges */}
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        <div className="flex items-center px-2 py-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full">
+                          <svg className="w-3 h-3 text-purple-400 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                          <span className="text-xs font-semibold text-purple-300 uppercase">{t('product.premium')}</span>
+                        </div>
+                        {isLimitedTime && (
+                          <div className="flex items-center px-2 py-1 bg-orange-500/20 border border-orange-500/30 rounded-full animate-pulse">
+                            <svg className="w-3 h-3 text-orange-400 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-xs font-semibold text-orange-300 uppercase">{t('product.limited')}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="text-4xl mb-4 transform group-hover:scale-110 transition-transform duration-300">
+                        {product.icon || '💎'}
+                      </div>
+
+                      <h3 className="text-xl font-bold text-white mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 transition-all duration-300">
                         {product.name}
                       </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="text-2xl font-bold text-purple-400">
-                          {formatPrice(product.price, product.currency)}
+
+                      <p className="text-gray-400 mb-6 flex-grow">
+                        {product.description}
+                      </p>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                            {formatPrice(product.price, product.currency)}
+                          </div>
+                          {product.auto_grant_duration_days && product.auto_grant_duration_days > 0 && (
+                            <div className="px-2 py-1 bg-blue-500/10 border border-blue-500/20 rounded text-xs text-blue-300">
+                              {t('product.daysAccessShort', { days: product.auto_grant_duration_days! })}
+                            </div>
+                          )}
                         </div>
+
+                        <Link
+                          href={`/p/${product.slug}`}
+                          className="block w-full text-center font-bold py-3 px-6 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
+                        >
+                          {t('product.getAccessNow')}
+                        </Link>
                       </div>
                     </div>
                   </div>
-
-                  <p className="text-gray-300 mb-6 min-h-[3rem]">{product.description}</p>
-
-                  <Link
-                    href={`/p/${product.slug}`}
-                    className="block w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-center font-semibold py-3 px-4 rounded-lg transition-all duration-200 hover:shadow-lg"
-                  >
-                    Purchase Access
-                  </Link>
-                </div>
-              ))}
+                );
+              })}
             </div>
+
+            {paidProducts.length > 6 && !showAllPaid && (
+              <div className="text-center mt-12">
+                <button
+                  onClick={() => setShowAllPaid(true)}
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600/20 to-pink-600/20 hover:from-purple-600/30 hover:to-pink-600/30 backdrop-blur-xl border border-purple-500/30 hover:border-purple-500/50 rounded-xl text-white font-semibold transition-all duration-300 transform hover:scale-105"
+                >
+                  <span>{t('sections.showAll.premium', { count: paidProducts.length })}</span>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
         </section>
       )}
 
-      {/* CTA Section */}
-      <section className="py-20 relative z-10">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-md border border-purple-500/30 rounded-2xl p-8">
-            <h2 className="text-3xl font-bold text-white mb-4">
-              Ready to Get Started?
-            </h2>
-            <p className="text-lg text-gray-300 mb-8">
-              Browse our full catalog of products and start your journey today
-            </p>
+      {/* Final CTA Section - Dynamic */}
+      <section className="relative py-32 px-4 sm:px-6 lg:px-8 z-10">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="relative">
+            <div className="absolute -inset-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl blur-2xl opacity-20"></div>
+            <div className="relative bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-3xl p-12 md:p-16">
+              <h2 className="text-4xl md:text-5xl font-black text-white mb-6">
+                {isFreeOnly && t('cta.freeOnly.title')}
+                {isPaidOnly && t('cta.paidOnly.title')}
+                {isMixed && t('cta.mixed.title')}
+              </h2>
+              <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
+                {isFreeOnly && t('cta.freeOnly.description')}
+                {isPaidOnly && t('cta.paidOnly.description')}
+                {isMixed && t('cta.mixed.description')}
+              </p>
 
-            <Link
-              href="/products"
-              className="inline-flex items-center px-8 py-4 bg-white text-purple-600 hover:bg-gray-100 rounded-lg font-semibold transition-colors"
-            >
-              {t('sections.viewAll')}
-              <svg
-                className="w-5 h-5 ml-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              <a
+                href="#products"
+                className="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-black text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('products')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 8l4 4m0 0l-4 4m4-4H3"
-                />
-              </svg>
-            </Link>
+                <span>{t('cta.browseAll')}</span>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </a>
+
+              <p className="mt-8 text-sm text-gray-500">
+                {t('cta.poweredBy', { count: products.length, shopName })}
+              </p>
+            </div>
           </div>
         </div>
       </section>
-
     </div>
   );
 }
