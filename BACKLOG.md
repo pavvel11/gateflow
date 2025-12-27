@@ -32,18 +32,43 @@ A comprehensive list of planned features, technical improvements, and ideas for 
     2.  **Embedded Checkout**: Seamless on-page form (Current Method).
     3.  **Custom Checkout (Stripe Elements)**: Build a fully custom payment form using individual Elements for maximum layout control, similar to `easycart.pl`.
 
-#### Stripe Connect Onboarding (OAuth) - SaaS Mode
+#### Stripe Apps OAuth Integration (Self-Hosted Single Shop)
 **Status**: 🟢 High Priority (Next Up)
-**Description**: Replace manual API Key entry with official Stripe Connect integration (Standard Accounts). Allows creators to connect or create a Stripe account via a secure OAuth flow, similar to "Login with Google". This transforms GateFlow into a real SaaS platform.
-**Why**:
-- **UX**: Zero configuration for the user (no copying/pasting secret keys).
-- **Onboarding**: "Connect Stripe" button handles both login and new account creation.
-- **Security**: We store `stripe_account_id` instead of raw API keys.
-- **KYC & Tax**: Stripe handles identity verification and tax collection on their hosted pages.
+**Description**: Replace manual API Key entry with **Stripe Apps OAuth 2.0** authentication. Allows self-hosted GateFlow instance owners to connect their Stripe account with a single "Connect with Stripe" button - no API keys to copy/paste.
+**Current State**: Using standard Stripe API with manual `STRIPE_SECRET_KEY` from .env (requires technical knowledge).
+**Why Stripe Apps (not Connect)**:
+- **Perfect for Self-Hosted**: Each GateFlow instance = one shop owner with their own Stripe account
+- **Zero Config UX**: "Connect with Stripe" button → OAuth authorization → done (like WooCommerce, Shopify plugins)
+- **Security**: OAuth token instead of full access API keys
+- **No Platform Fees**: Payments go directly to shop owner's Stripe account (no splitting, no marketplace logic)
+- **Stripe Recommendation**: For self-hosted integrations, Stripe recommends Apps with OAuth or Restricted API Keys
 **Implementation**:
-1.  **Platform Account**: Configure GateFlow as a Connect Platform.
-2.  **OAuth Flow**: Implement `/api/auth/stripe/connect` (redirect) and `/api/auth/stripe/callback` (token exchange).
-3.  **Payment Routing**: Update checkout logic to charge on behalf of the connected `stripe_account_id`.
+1.  **Stripe App Registration**: Register GateFlow as a Stripe App in Stripe Dashboard
+2.  **OAuth Flow**:
+    - User clicks "Connect Stripe" → redirect to Stripe OAuth (`/api/auth/stripe-apps/authorize`)
+    - User authorizes their own Stripe account
+    - Callback receives OAuth token → store in database (`/api/auth/stripe-apps/callback`)
+3.  **API Calls**: Use OAuth token to make charges directly to shop owner's account (same as current logic, just different auth)
+4.  **Fallback**: Keep manual API key option for advanced users who prefer it
+**References**:
+- [Stripe Apps OAuth 2.0 docs](https://docs.stripe.com/stripe-apps/api-authentication/oauth)
+- [WooCommerce migration example](https://woocommerce.com/document/stripe/admin-experience/updated-requirements-for-stripe-plugin-mid-2024/)
+
+#### Stripe Connect Platform (Future - Multi-Vendor SaaS Mode)
+**Status**: 📋 Planned (Low Priority - Only if GateFlow becomes multi-vendor platform)
+**Description**: Full Stripe Connect integration for marketplace/SaaS model where multiple creators sell on one GateFlow instance.
+**When Needed**: Only if business model changes from "self-hosted single shop" to "hosted platform with multiple vendors"
+**Why NOT Now**:
+- GateFlow is currently self-hosted (one instance = one shop owner)
+- Stripe Connect is for marketplaces with payment splitting and platform fees
+- Adds significant complexity: KYC, compliance, connected account management, destination charges
+- Not needed when each installation has one Stripe account
+**Future Implementation** (if needed):
+1.  **Platform Registration**: Configure GateFlow as Stripe Connect Platform
+2.  **Connect Onboarding**: Create connected accounts for each vendor via Account Links API
+3.  **Payment Routing**: Implement destination charges or direct charges with `Stripe-Account` header
+4.  **Platform Fee**: Add application fee logic for revenue share
+**Decision Point**: Revisit this when/if GateFlow pivots to multi-vendor hosted SaaS model.
 
 ### 📊 Analytics & Marketing Integrations
 **Status**: 🏗️ Partially Done
