@@ -156,4 +156,119 @@ INSERT INTO product_tags (product_id, tag_id) VALUES
 ((SELECT id FROM products WHERE slug = 'pro-toolkit'), (SELECT id FROM tags WHERE slug = 'new')),
 ((SELECT id FROM products WHERE slug = 'vip-masterclass'), (SELECT id FROM tags WHERE slug = 'bestseller'));
 
--- Note: Users and user_product_access will be created through the admin panel interface
+-- =====================================================
+-- SAMPLE USERS & PAYMENT TRANSACTIONS (Multi-Currency)
+-- =====================================================
+-- Purpose: Seed data for testing currency conversion feature
+-- Creates users and transactions in USD, EUR, and PLN
+
+-- Create sample users for payment history
+DO $$
+DECLARE
+  user1_id UUID;
+  user2_id UUID;
+  user3_id UUID;
+  premium_product_id UUID;
+  pro_toolkit_id UUID;
+  vip_masterclass_id UUID;
+BEGIN
+  -- Get product IDs
+  SELECT id INTO premium_product_id FROM products WHERE slug = 'premium-course';
+  SELECT id INTO pro_toolkit_id FROM products WHERE slug = 'pro-toolkit';
+  SELECT id INTO vip_masterclass_id FROM products WHERE slug = 'vip-masterclass';
+
+  -- User 1: US Customer (USD transactions)
+  INSERT INTO auth.users (
+    instance_id, id, aud, role, email, encrypted_password,
+    email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+  ) VALUES (
+    '00000000-0000-0000-0000-000000000000',
+    'aaaaaaaa-1111-4111-a111-111111111111',
+    'authenticated',
+    'authenticated',
+    'john.doe@example.com',
+    crypt('password123', gen_salt('bf')),
+    NOW(),
+    '{"provider":"email","providers":["email"]}'::jsonb,
+    '{"full_name":"John Doe"}'::jsonb,
+    NOW(),
+    NOW()
+  ) RETURNING id INTO user1_id;
+
+  -- User 2: EU Customer (EUR transactions)
+  INSERT INTO auth.users (
+    instance_id, id, aud, role, email, encrypted_password,
+    email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+  ) VALUES (
+    '00000000-0000-0000-0000-000000000000',
+    'bbbbbbbb-2222-4222-a222-222222222222',
+    'authenticated',
+    'authenticated',
+    'maria.schmidt@example.com',
+    crypt('password123', gen_salt('bf')),
+    NOW(),
+    '{"provider":"email","providers":["email"]}'::jsonb,
+    '{"full_name":"Maria Schmidt"}'::jsonb,
+    NOW(),
+    NOW()
+  ) RETURNING id INTO user2_id;
+
+  -- User 3: PL Customer (PLN transactions)
+  INSERT INTO auth.users (
+    instance_id, id, aud, role, email, encrypted_password,
+    email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+  ) VALUES (
+    '00000000-0000-0000-0000-000000000000',
+    'cccccccc-3333-4333-a333-333333333333',
+    'authenticated',
+    'authenticated',
+    'anna.kowalska@example.com',
+    crypt('password123', gen_salt('bf')),
+    NOW(),
+    '{"provider":"email","providers":["email"]}'::jsonb,
+    '{"full_name":"Anna Kowalska"}'::jsonb,
+    NOW(),
+    NOW()
+  ) RETURNING id INTO user3_id;
+
+  -- Insert payment transactions in USD
+  INSERT INTO payment_transactions (
+    session_id, user_id, product_id, customer_email, amount, currency,
+    status, stripe_payment_intent_id, created_at
+  ) VALUES
+  ('cs_test_usd_001', user1_id, premium_product_id, 'john.doe@example.com', 49.99, 'USD', 'completed', 'pi_usd_001', NOW() - INTERVAL '7 days'),
+  ('cs_test_usd_002', user1_id, pro_toolkit_id, 'john.doe@example.com', 99.99, 'USD', 'completed', 'pi_usd_002', NOW() - INTERVAL '5 days'),
+  ('cs_test_usd_003', user1_id, vip_masterclass_id, 'john.doe@example.com', 199.99, 'USD', 'completed', 'pi_usd_003', NOW() - INTERVAL '2 days');
+
+  -- Insert payment transactions in EUR
+  INSERT INTO payment_transactions (
+    session_id, user_id, product_id, customer_email, amount, currency,
+    status, stripe_payment_intent_id, created_at
+  ) VALUES
+  ('cs_test_eur_001', user2_id, premium_product_id, 'maria.schmidt@example.com', 45.99, 'EUR', 'completed', 'pi_eur_001', NOW() - INTERVAL '6 days'),
+  ('cs_test_eur_002', user2_id, pro_toolkit_id, 'maria.schmidt@example.com', 89.99, 'EUR', 'completed', 'pi_eur_002', NOW() - INTERVAL '4 days'),
+  ('cs_test_eur_003', user2_id, vip_masterclass_id, 'maria.schmidt@example.com', 179.99, 'EUR', 'completed', 'pi_eur_003', NOW() - INTERVAL '1 day');
+
+  -- Insert payment transactions in PLN
+  INSERT INTO payment_transactions (
+    session_id, user_id, product_id, customer_email, amount, currency,
+    status, stripe_payment_intent_id, created_at
+  ) VALUES
+  ('cs_test_pln_001', user3_id, premium_product_id, 'anna.kowalska@example.com', 199.99, 'PLN', 'completed', 'pi_pln_001', NOW() - INTERVAL '8 days'),
+  ('cs_test_pln_002', user3_id, pro_toolkit_id, 'anna.kowalska@example.com', 399.99, 'PLN', 'completed', 'pi_pln_002', NOW() - INTERVAL '3 days'),
+  ('cs_test_pln_003', user3_id, vip_masterclass_id, 'anna.kowalska@example.com', 799.99, 'PLN', 'completed', 'pi_pln_003', NOW());
+
+  -- Grant product access to these users
+  INSERT INTO user_product_access (user_id, product_id, access_granted_at)
+  VALUES
+  (user1_id, premium_product_id, NOW() - INTERVAL '7 days'),
+  (user1_id, pro_toolkit_id, NOW() - INTERVAL '5 days'),
+  (user1_id, vip_masterclass_id, NOW() - INTERVAL '2 days'),
+  (user2_id, premium_product_id, NOW() - INTERVAL '6 days'),
+  (user2_id, pro_toolkit_id, NOW() - INTERVAL '4 days'),
+  (user2_id, vip_masterclass_id, NOW() - INTERVAL '1 day'),
+  (user3_id, premium_product_id, NOW() - INTERVAL '8 days'),
+  (user3_id, pro_toolkit_id, NOW() - INTERVAL '3 days'),
+  (user3_id, vip_masterclass_id, NOW());
+
+END $$;

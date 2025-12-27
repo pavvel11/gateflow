@@ -223,27 +223,27 @@ test.describe('Currency Conversion Feature', () => {
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
 
-    // Set to GBP
+    // Set to EUR
     const currencyButton = page.locator('button', { hasText: /Grouped|Convert/i }).first();
     await currencyButton.click();
     await page.waitForTimeout(300);
 
-    const gbpOption = page.locator('button', { hasText: 'GBP' }).filter({ has: page.locator('span', { hasText: '£' }) }).first();
-    await gbpOption.click();
+    const eurOption = page.locator('button', { hasText: 'EUR' }).filter({ has: page.locator('span', { hasText: '€' }) }).first();
+    await eurOption.click();
     await page.waitForTimeout(1000);
 
     // Reload page
     await page.reload();
     await page.waitForLoadState('networkidle');
 
-    // Should still show "Convert to GBP"
-    await expect(page.locator('button', { hasText: /Convert to GBP/i }).first()).toBeVisible({ timeout: 10000 });
+    // Should still show "Convert to EUR"
+    await expect(page.locator('button', { hasText: /Convert to EUR/i }).first()).toBeVisible({ timeout: 10000 });
 
-    // Revenue should still show £
+    // Revenue should still show €
     const revenueCard = page.getByTestId('stat-card-total-revenue');
     const revenueValue = revenueCard.locator('p.text-2xl').first();
     const revenueText = await revenueValue.textContent();
-    expect(revenueText).toContain('£');
+    expect(revenueText).toContain('€');
   });
 
   test('should switch back to grouped mode', async ({ page }) => {
