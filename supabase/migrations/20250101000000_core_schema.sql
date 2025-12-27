@@ -13,14 +13,29 @@ CREATE TABLE IF NOT EXISTS products (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL CHECK (length(name) <= 255), -- Product name limited to 255 characters
   slug TEXT UNIQUE NOT NULL CHECK (slug ~ '^[a-zA-Z0-9_-]+$' AND length(slug) BETWEEN 1 AND 100), -- URL-safe slug: alphanumeric, hyphens, underscores only
-  description TEXT CHECK (length(description) <= 2000), -- Product description limited to 2000 characters
+  description TEXT CHECK (length(description) <= 2000), -- Product description limited to 2000 characters (short description for listings)
+  long_description TEXT, -- Detailed product description for checkout page (unlimited length)
   icon TEXT CHECK (length(icon) <= 500), -- Icon URL/path limited to 500 characters
+
+  -- Product images for enhanced checkout experience
+  image_url TEXT, -- Main product image URL (stored in Supabase Storage or external CDN)
+  thumbnail_url TEXT, -- Smaller thumbnail for listings/previews
+
   price NUMERIC DEFAULT 0 NOT NULL CHECK (price >= 0), -- Price must be non-negative
   currency TEXT DEFAULT 'USD' NOT NULL CHECK (
-    length(currency) = 3 AND 
+    length(currency) = 3 AND
     upper(currency) ~ '^[A-Z]{3}$' AND
     upper(currency) IN ('USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'CNY', 'SEK', 'NOK', 'DKK', 'PLN', 'CZK', 'HUF', 'RON', 'BGN', 'HRK', 'RUB', 'TRY', 'BRL', 'MXN', 'INR', 'KRW', 'SGD', 'HKD', 'NZD', 'ZAR', 'ILS', 'THB', 'MYR', 'PHP', 'IDR', 'VND')
   ), -- Enhanced ISO 4217 currency codes validation
+
+  -- VAT/Tax configuration
+  vat_rate DECIMAL(5,2) DEFAULT 23.00, -- VAT rate percentage (e.g., 23.00 for 23%)
+  price_includes_vat BOOLEAN DEFAULT true NOT NULL, -- Whether price already includes VAT
+
+  -- Structured features for better product presentation
+  features JSONB DEFAULT '[]'::jsonb, -- Array of feature sections with titles and items
+  -- Example: [{"title": "What you'll get", "items": ["Feature 1", "Feature 2"]}]
+
   layout_template TEXT DEFAULT 'default' NOT NULL CHECK (length(layout_template) <= 100), -- Layout template name
 
   is_active BOOLEAN NOT NULL DEFAULT true, -- Product availability toggle
@@ -34,14 +49,14 @@ CREATE TABLE IF NOT EXISTS products (
   content_delivery_type TEXT DEFAULT 'content' NOT NULL CHECK (content_delivery_type IN ('redirect', 'content')),
   content_config JSONB DEFAULT '{}' NOT NULL, -- Flexible content configuration
   tenant_id TEXT CHECK (tenant_id IS NULL OR (tenant_id ~ '^[a-zA-Z0-9_-]+$' AND length(tenant_id) BETWEEN 1 AND 50)), -- Multi-tenant ID: alphanumeric, hyphens, underscores
-  
+
   -- Funnel / OTO settings
   success_redirect_url TEXT, -- URL to redirect after successful purchase/signup
   pass_params_to_redirect BOOLEAN DEFAULT false NOT NULL, -- Whether to pass email and other params to the redirect URL
-  
+
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-  
+
   -- Ensure temporal availability makes sense
   CONSTRAINT check_availability_dates CHECK (available_from IS NULL OR available_until IS NULL OR available_from < available_until) -- Available from must be before available until
 );

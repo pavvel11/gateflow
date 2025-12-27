@@ -25,6 +25,7 @@ export interface ProductFormData {
   name: string;
   slug: string;
   description: string;
+  long_description?: string | null; // Detailed Markdown description for checkout
   price: number;
   currency: string;
   is_active: boolean;
@@ -61,6 +62,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
     name: '',
     slug: '',
     description: '',
+    long_description: '',
     price: 0,
     currency: 'USD',
     is_active: true,
@@ -121,6 +123,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         name: product.name,
         slug: product.slug,
         description: product.description,
+        long_description: product.long_description || '',
         price: product.price,
         currency: product.currency || 'USD',
         is_active: product.is_active,
@@ -150,6 +153,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         name: '',
         slug: '',
         description: '',
+        long_description: '',
         price: 0,
         currency: 'USD',
         is_active: true,
@@ -570,6 +574,26 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 placeholder="Describe your product"
                 required
               />
+            </div>
+
+            <div>
+              <label htmlFor="long_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Detailed Description (Markdown)
+                <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">(Optional - for checkout page)</span>
+              </label>
+              <textarea
+                id="long_description"
+                name="long_description"
+                value={formData.long_description || ''}
+                onChange={handleInputChange}
+                rows={8}
+                className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white font-mono text-sm"
+                placeholder="## What's included?&#10;&#10;- Feature 1&#10;- Feature 2&#10;&#10;### Why choose this?&#10;&#10;Because it's **awesome**!"
+              />
+              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 flex items-start gap-1">
+                <span>💡</span>
+                <span>Tip: If you don't know Markdown syntax, ask any AI to create formatted content for you</span>
+              </p>
             </div>
           </ModalSection>
 

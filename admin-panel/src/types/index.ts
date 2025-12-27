@@ -3,9 +3,18 @@ export interface Product {
   name: string
   slug: string
   description: string
+  long_description?: string | null
   icon: string
+  // Product images for enhanced checkout
+  image_url?: string | null
+  thumbnail_url?: string | null
   price: number
   currency: string
+  // VAT/Tax configuration
+  vat_rate?: number | null
+  price_includes_vat: boolean
+  // Structured features for product presentation
+  features?: ProductFeature[] | null
   layout_template: string
   is_active: boolean
   is_featured: boolean
@@ -23,6 +32,11 @@ export interface Product {
   created_at: string
   updated_at: string
   tenant_id?: string
+}
+
+export interface ProductFeature {
+  title: string
+  items: string[]
 }
 
 export interface ProductContentConfig {

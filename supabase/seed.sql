@@ -24,12 +24,134 @@ INSERT INTO shop_config (
 ON CONFLICT DO NOTHING;
 
 -- Insert sample products for testing
-INSERT INTO products (name, slug, description, price, currency, is_active, is_featured, auto_grant_duration_days, success_redirect_url, pass_params_to_redirect) VALUES
-  ('Free Tutorial', 'free-tutorial', 'Free introductory tutorial - accessible to everyone.', 0, 'USD', true, true, NULL, '/checkout/premium-course', true),
-  ('Premium Course', 'premium-course', 'Advanced JavaScript course with exclusive content.', 49.99, 'USD', true, true, NULL, NULL, false),
-  ('Pro Toolkit', 'pro-toolkit', 'Professional development tools and templates.', 99.99, 'USD', true, false, NULL, NULL, false),
-  ('VIP Masterclass', 'vip-masterclass', 'Exclusive masterclass with live Q&A sessions.', 199.99, 'USD', true, true, NULL, NULL, false),
-  ('Enterprise Package', 'enterprise-package', 'Full enterprise solution with priority support.', 499.99, 'USD', true, false, 3, NULL, false);
+INSERT INTO products (
+  name,
+  slug,
+  description,
+  long_description,
+  icon,
+  image_url,
+  thumbnail_url,
+  price,
+  currency,
+  vat_rate,
+  price_includes_vat,
+  features,
+  is_active,
+  is_featured,
+  auto_grant_duration_days,
+  success_redirect_url,
+  pass_params_to_redirect
+) VALUES
+  (
+    'Free Tutorial',
+    'free-tutorial',
+    'Free introductory tutorial - accessible to everyone.',
+    'Complete introduction to our platform with step-by-step guidance. Perfect for beginners who want to get started quickly.',
+    '📚',
+    NULL,
+    NULL,
+    0,
+    'USD',
+    23.00,
+    true,
+    '[{"title": "What you''ll get", "items": ["30-minute video tutorial", "PDF guide", "Starter templates"]}]'::jsonb,
+    true,
+    true,
+    NULL,
+    '/checkout/premium-course',
+    true
+  ),
+  (
+    'Premium Course',
+    'premium-course',
+    'Advanced JavaScript course with exclusive content.',
+    E'## Master Modern JavaScript
+
+Deep dive into **modern JavaScript** with real-world projects. Learn advanced patterns, async programming, and build production-ready applications.
+
+### What makes this course special?
+
+- 🎯 **Project-based learning** - Build 3 real apps
+- 💡 **Advanced concepts** - Closures, async/await, modules
+- 🚀 **Production-ready** - Deploy to cloud platforms
+
+> "Best JavaScript course I''ve taken. The projects are incredibly practical!" - Sarah K.
+
+### Prerequisites
+
+Basic JavaScript knowledge required. Familiarity with HTML/CSS recommended.',
+    '🚀',
+    NULL,
+    NULL,
+    49.99,
+    'USD',
+    23.00,
+    true,
+    '[{"title": "Course content", "items": ["12 hours of video", "20+ coding exercises", "Final capstone project", "Certificate of completion"]}, {"title": "Bonuses", "items": ["Source code access", "Private Discord community", "Monthly live Q&A"]}]'::jsonb,
+    true,
+    true,
+    NULL,
+    NULL,
+    false
+  ),
+  (
+    'Pro Toolkit',
+    'pro-toolkit',
+    'Professional development tools and templates.',
+    'Complete collection of production-ready templates, UI components, and development tools to accelerate your workflow.',
+    '🛠️',
+    NULL,
+    NULL,
+    99.99,
+    'USD',
+    23.00,
+    true,
+    '[{"title": "What''s included", "items": ["50+ React components", "10 complete templates", "Figma design system", "VS Code snippets"]}, {"title": "Updates", "items": ["Lifetime access", "Free future updates", "Priority support"]}]'::jsonb,
+    true,
+    false,
+    NULL,
+    NULL,
+    false
+  ),
+  (
+    'VIP Masterclass',
+    'vip-masterclass',
+    'Exclusive masterclass with live Q&A sessions.',
+    'Join elite developers in this intensive 6-week program. Direct mentorship, code reviews, and career guidance from industry experts.',
+    '👨‍🏫',
+    NULL,
+    NULL,
+    199.99,
+    'USD',
+    23.00,
+    true,
+    '[{"title": "Program details", "items": ["6 live sessions (2h each)", "Personal code reviews", "Career coaching", "Small group (max 10 people)"]}, {"title": "Bonus access", "items": ["All course materials", "Pro toolkit included", "Alumni network", "Job board access"]}]'::jsonb,
+    true,
+    true,
+    NULL,
+    NULL,
+    false
+  ),
+  (
+    'Enterprise Package',
+    'enterprise-package',
+    'Full enterprise solution with priority support.',
+    'Complete white-label solution with dedicated support, custom integrations, and SLA guarantees for large organizations.',
+    '🏢',
+    NULL,
+    NULL,
+    499.99,
+    'USD',
+    23.00,
+    true,
+    '[{"title": "Enterprise features", "items": ["Unlimited team seats", "Custom branding", "SSO integration", "Dedicated account manager"]}, {"title": "Support & SLA", "items": ["24/7 priority support", "99.9% uptime guarantee", "Custom integrations", "Quarterly business reviews"]}]'::jsonb,
+    true,
+    false,
+    3,
+    NULL,
+    false
+  );
 
 -- Insert sample order bumps
 -- Bump 1: Add Pro Toolkit to Premium Course for $29.99 (Huge discount!)

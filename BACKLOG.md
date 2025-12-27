@@ -539,6 +539,40 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 
 ## 🔵 Low Priority / Ideas
 
+#### Anonymous Analytics & Usage Statistics
+**Status**: 💭 Idea
+**Description**: Collect anonymous usage statistics with user consent to improve the platform and understand user behavior.
+**Privacy-First Approach**:
+- **Opt-In Only**: Require explicit user consent before collecting any data
+- **Anonymous Data**: No personal identifiers, emails, or IP addresses stored
+- **Transparent**: Clear explanation of what data is collected and why
+- **Revocable**: Easy opt-out at any time in user settings
+**Data to Collect** (anonymous):
+- **Platform Usage**:
+  - Number of products created/published
+  - Feature adoption (order bumps, coupons, webhooks usage)
+  - Average revenue per shop (currency-converted to USD)
+  - Payment methods used (Stripe only, alternative providers in future)
+- **Performance Metrics**:
+  - Page load times
+  - API response times
+  - Error rates (without sensitive details)
+- **Deployment Stats**:
+  - Platform (mikr.us, VPS, Docker, PM2)
+  - Region (country-level, not city)
+  - Self-hosted vs managed
+**Use Cases**:
+- Prioritize features based on actual usage
+- Identify performance bottlenecks across deployments
+- Understand which deployment paths are most popular
+- Showcase aggregate stats (e.g., "GateFlow powers X shops processing $Y globally")
+**Implementation**:
+- **Consent UI**: Modal on first login with clear explanation
+- **Settings Toggle**: Enable/disable in user profile
+- **Storage**: Aggregated data only, no individual shop tracking
+- **Technology**: PostHog (self-hosted) or simple beacon API
+**Note**: This is controversial for privacy-focused users. Only proceed if community supports it.
+
 #### In-App File Hosting & Cloud Storage Integration
 **Status**: 💭 Idea
 **Description**: Ability to upload and host files directly within GateFlow, with support for multiple storage providers.
