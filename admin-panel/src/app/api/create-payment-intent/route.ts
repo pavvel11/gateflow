@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 import { createClient } from '@/lib/supabase/server';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia',
+  apiVersion: '2025-12-15.clover',
 });
 
 export async function POST(request: NextRequest) {
@@ -31,14 +31,9 @@ export async function POST(request: NextRequest) {
     // Get authenticated user (if any)
     const { data: { user } } = await supabase.auth.getUser();
 
-    // Email is required for guests, optional for logged-in users
-    const finalEmail = email || user?.email;
-    if (!finalEmail) {
-      return NextResponse.json(
-        { error: 'Email is required for guest checkout' },
-        { status: 400 }
-      );
-    }
+    // Use email from request if provided, otherwise from user session
+    // For guests without email, we'll let Stripe collect it via billing details
+    const finalEmail = email || user?.email || null;
 
     // 1. Fetch product
     const { data: product, error: productError } = await supabase
@@ -121,18 +116,17 @@ export async function POST(request: NextRequest) {
     totalAmount = Math.max(totalAmount, 50);
 
     // 4. Create PaymentIntent
-    const paymentIntent = await stripe.paymentIntents.create({
+    const paymentIntentParams: Stripe.PaymentIntentCreateParams = {
       amount: totalAmount,
       currency: product.currency.toLowerCase(),
       automatic_payment_methods: {
         enabled: true,
       },
-      receipt_email: finalEmail,
       metadata: {
         product_id: productId,
         product_name: product.name,
         user_id: user?.id || '',
-        email: finalEmail,
+        email: finalEmail || '',
         bump_product_id: bumpProductId || '',
         bump_product_name: bumpProduct?.name || '',
         coupon_code: appliedCoupon?.code || '',
@@ -142,7 +136,14 @@ export async function POST(request: NextRequest) {
         company_name: companyName || '',
         success_url: successUrl || '',
       },
-    });
+    };
+
+    // Only set receipt_email if we have an email
+    if (finalEmail) {
+      paymentIntentParams.receipt_email = finalEmail;
+    }
+
+    const paymentIntent = await stripe.paymentIntents.create(paymentIntentParams);
 
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,

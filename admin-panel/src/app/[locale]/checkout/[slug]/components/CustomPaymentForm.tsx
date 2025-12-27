@@ -86,7 +86,7 @@ export default function CustomPaymentForm({
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${window.location.origin}/checkout/success?product_id=${product.id}${successUrl ? `&success_url=${encodeURIComponent(successUrl)}` : ''}`,
+          return_url: `${window.location.origin}/payment/success?product_id=${product.id}&product=${product.slug}${successUrl ? `&success_url=${encodeURIComponent(successUrl)}` : ''}`,
           receipt_email: finalEmail,
         },
       });
@@ -239,7 +239,15 @@ export default function CustomPaymentForm({
 
       {/* Payment Element */}
       <div>
-        <PaymentElement />
+        <PaymentElement
+          options={{
+            defaultValues: {
+              billingDetails: {
+                email: email || guestEmail || undefined,
+              },
+            },
+          }}
+        />
       </div>
 
       {/* Error Message */}

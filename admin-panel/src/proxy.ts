@@ -11,10 +11,11 @@ const intlMiddleware = createMiddleware({
 })
 
 export async function proxy(request: NextRequest) {
-  // Skip proxy processing for API routes and static files
+  // Skip proxy processing for API routes, static files, and payment success page
   if (
     request.nextUrl.pathname.startsWith('/api') ||
     request.nextUrl.pathname.startsWith('/_next') ||
+    request.nextUrl.pathname.startsWith('/payment') ||
     request.nextUrl.pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico)$/)
   ) {
     return NextResponse.next()

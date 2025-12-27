@@ -1,24 +1,58 @@
 // app/payment/success/page.tsx
-// Payment success page
+// Payment success page - handles both Embedded Checkout and PaymentIntent flows
 
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 
 interface PaymentSuccessPageProps {
-  searchParams: Promise<{ session_id?: string; product?: string }>;
+  searchParams: Promise<{
+    session_id?: string;
+    product?: string;
+    payment_intent?: string;
+    product_id?: string;
+    redirect_status?: string;
+    success_url?: string;
+  }>;
 }
 
 async function PaymentSuccessContent({ searchParams }: PaymentSuccessPageProps) {
   const params = await searchParams;
+
+  // Handle new PaymentIntent flow
+  const paymentIntent = params.payment_intent;
+  const productId = params.product_id;
+  const redirectStatus = params.redirect_status;
+  const successUrl = params.success_url;
+
+  // Handle old Embedded Checkout flow
   const sessionId = params.session_id;
   const productSlug = params.product;
 
-  // If we have a product slug, redirect to it with success parameter
+  // If we have success_url from OTO/funnel, redirect there
+  if (successUrl && redirectStatus === 'succeeded') {
+    redirect(successUrl);
+  }
+
+  // If we have a product slug (old flow), redirect to it with success parameter
   if (productSlug) {
     redirect(`/p/${productSlug}?payment=success`);
   }
 
-  // If we have a session ID but no product slug, show generic success page
+  // If we have product_id (new flow), fetch product and redirect
+  if (productId && redirectStatus === 'succeeded') {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/products/${productId}`);
+      const data = await response.json();
+      if (data.product?.slug) {
+        redirect(`/p/${data.product.slug}?payment=success`);
+      }
+    } catch (error) {
+      // If fetch fails, show success page anyway
+      console.error('Failed to fetch product:', error);
+    }
+  }
+
+  // If we have a session ID but no product slug, show generic success page (old flow)
   if (sessionId) {
     // You could fetch additional details here if needed
   }
