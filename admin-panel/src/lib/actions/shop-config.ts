@@ -8,6 +8,14 @@ export interface ShopConfig {
   shop_name: string
   contact_email?: string | null
   tax_rate?: number | null
+
+  // Branding & Whitelabel
+  logo_url?: string | null
+  primary_color?: string | null
+  secondary_color?: string | null
+  accent_color?: string | null
+  font_family?: 'system' | 'inter' | 'roboto' | 'montserrat' | 'poppins' | 'playfair' | null
+
   custom_settings: Record<string, any>
   created_at: string
   updated_at: string
@@ -46,13 +54,20 @@ export async function getDefaultCurrency(): Promise<string> {
 export async function updateShopConfig(updates: Partial<Omit<ShopConfig, 'id' | 'created_at' | 'updated_at'>>): Promise<boolean> {
   const supabase = await createClient()
 
+  // Get current config first
+  const config = await getShopConfig()
+  if (!config) {
+    console.error('No shop config found to update')
+    return false
+  }
+
   const { error } = await supabase
     .from('shop_config')
     .update({
       ...updates,
       updated_at: new Date().toISOString()
     })
-    .eq('id', (await getShopConfig())?.id)
+    .eq('id', config.id)
 
   if (error) {
     console.error('Error updating shop config:', error)

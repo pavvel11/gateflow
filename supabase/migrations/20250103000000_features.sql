@@ -298,6 +298,14 @@ CREATE TABLE IF NOT EXISTS public.shop_config (
   contact_email TEXT,
   default_currency TEXT NOT NULL DEFAULT 'USD',
   tax_rate DECIMAL(5,2) DEFAULT 0,
+
+  -- Branding & Whitelabel
+  logo_url TEXT,
+  primary_color TEXT DEFAULT '#9333ea', -- purple-600
+  secondary_color TEXT DEFAULT '#ec4899', -- pink-600
+  accent_color TEXT DEFAULT '#8b5cf6', -- violet-500
+  font_family TEXT DEFAULT 'system' CHECK (font_family IN ('system', 'inter', 'roboto', 'montserrat', 'poppins', 'playfair')),
+
   custom_settings JSONB DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
@@ -1393,15 +1401,18 @@ CREATE POLICY "Admins full access to stripe_configurations" ON public.stripe_con
 -- SHOP CONFIG POLICIES
 -- -----------------------------------------------------------------------------
 
+-- Admin write access (INSERT, UPDATE, DELETE)
 CREATE POLICY "Admins full access to shop_config" ON public.shop_config
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()) OR
-    (SELECT current_setting('role', true) = 'service_role')
+  FOR ALL TO authenticated USING (
+    EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid())
   )
   WITH CHECK (
-    EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()) OR
-    (SELECT current_setting('role', true) = 'service_role')
+    EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid())
   );
+
+-- Public read access (shop configuration needs to be visible to all users including guests)
+CREATE POLICY "Public read access to shop_config" ON public.shop_config
+  FOR SELECT TO public USING (true);
 
 -- =============================================================================
 -- INITIAL DATA

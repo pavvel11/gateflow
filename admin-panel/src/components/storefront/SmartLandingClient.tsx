@@ -6,17 +6,7 @@ import AdminOnboardingCTA from './AdminOnboardingCTA';
 import ComingSoonEmptyState from './ComingSoonEmptyState';
 import Storefront from './Storefront';
 import DashboardLayout from '@/components/DashboardLayout';
-
-interface ShopConfig {
-  id: string;
-  default_currency: string;
-  shop_name: string;
-  contact_email?: string | null;
-  tax_rate?: number | null;
-  custom_settings: Record<string, any>;
-  created_at: string;
-  updated_at: string;
-}
+import type { ShopConfig } from '@/lib/actions/shop-config';
 
 interface SmartLandingClientProps {
   hasProducts: boolean;
@@ -46,7 +36,7 @@ export default function SmartLandingClient({
   // SCENARIO 1: No products + Admin user → Show onboarding
   if (!hasProducts && isAdmin) {
     return (
-      <DashboardLayout user={user ? { email: user.email || '', id: user.id || '' } : null}>
+      <DashboardLayout user={user ? { email: user.email || '', id: user.id || '' } : null} shopConfig={shopConfig}>
         <AdminOnboardingCTA shopName={shopName} shopEmail={contactEmail} />
       </DashboardLayout>
     );
@@ -55,7 +45,7 @@ export default function SmartLandingClient({
   // SCENARIO 2: No products + Guest/Regular user → Show coming soon
   if (!hasProducts && !isAdmin) {
     return (
-      <DashboardLayout user={user ? { email: user.email || '', id: user.id || '' } : null}>
+      <DashboardLayout user={user ? { email: user.email || '', id: user.id || '' } : null} shopConfig={shopConfig}>
         <ComingSoonEmptyState shopName={shopName} contactEmail={contactEmail} />
       </DashboardLayout>
     );
@@ -67,7 +57,7 @@ export default function SmartLandingClient({
   const paidProducts = products.filter((p) => p.price > 0);
 
   return (
-    <DashboardLayout user={user ? { email: user.email || '', id: user.id || '' } : null}>
+    <DashboardLayout user={user ? { email: user.email || '', id: user.id || '' } : null} shopConfig={shopConfig}>
       <Storefront
         products={products}
         shopName={shopName}

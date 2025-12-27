@@ -2,8 +2,25 @@
 -- Sample products for testing different GateFlow protection modes
 
 -- Insert shop configuration (singleton)
-INSERT INTO shop_config (default_currency, shop_name, custom_settings) VALUES
-  ('USD', 'GateFlow Demo Shop', '{}'::jsonb)
+INSERT INTO shop_config (
+  default_currency,
+  shop_name,
+  logo_url,
+  primary_color,
+  secondary_color,
+  accent_color,
+  font_family,
+  custom_settings
+) VALUES (
+  'USD',
+  'GateFlow Demo Shop',
+  NULL, -- Upload logo to imgbb.com
+  '#9333ea', -- purple-600
+  '#ec4899', -- pink-600
+  '#8b5cf6', -- violet-500
+  'system',
+  '{}'::jsonb
+)
 ON CONFLICT DO NOTHING;
 
 -- Insert sample products for testing
@@ -180,7 +197,9 @@ BEGIN
   -- User 1: US Customer (USD transactions)
   INSERT INTO auth.users (
     instance_id, id, aud, role, email, encrypted_password,
-    email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+    email_confirmed_at, confirmation_token, recovery_token,
+    email_change_token_new, email_change, email_change_token_current, reauthentication_token,
+    raw_app_meta_data, raw_user_meta_data, created_at, updated_at
   ) VALUES (
     '00000000-0000-0000-0000-000000000000',
     'aaaaaaaa-1111-4111-a111-111111111111',
@@ -189,16 +208,32 @@ BEGIN
     'john.doe@example.com',
     crypt('password123', gen_salt('bf')),
     NOW(),
+    '', '', '', '', '', '',
     '{"provider":"email","providers":["email"]}'::jsonb,
     '{"full_name":"John Doe"}'::jsonb,
     NOW(),
     NOW()
   ) RETURNING id INTO user1_id;
 
+  -- Create identity for User 1
+  INSERT INTO auth.identities (
+    provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
+  ) VALUES (
+    'aaaaaaaa-1111-4111-a111-111111111111',
+    'aaaaaaaa-1111-4111-a111-111111111111',
+    jsonb_build_object('sub', 'aaaaaaaa-1111-4111-a111-111111111111', 'email', 'john.doe@example.com'),
+    'email',
+    NOW(),
+    NOW(),
+    NOW()
+  );
+
   -- User 2: EU Customer (EUR transactions)
   INSERT INTO auth.users (
     instance_id, id, aud, role, email, encrypted_password,
-    email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+    email_confirmed_at, confirmation_token, recovery_token,
+    email_change_token_new, email_change, email_change_token_current, reauthentication_token,
+    raw_app_meta_data, raw_user_meta_data, created_at, updated_at
   ) VALUES (
     '00000000-0000-0000-0000-000000000000',
     'bbbbbbbb-2222-4222-a222-222222222222',
@@ -207,16 +242,32 @@ BEGIN
     'maria.schmidt@example.com',
     crypt('password123', gen_salt('bf')),
     NOW(),
+    '', '', '', '', '', '',
     '{"provider":"email","providers":["email"]}'::jsonb,
     '{"full_name":"Maria Schmidt"}'::jsonb,
     NOW(),
     NOW()
   ) RETURNING id INTO user2_id;
 
+  -- Create identity for User 2
+  INSERT INTO auth.identities (
+    provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
+  ) VALUES (
+    'bbbbbbbb-2222-4222-a222-222222222222',
+    'bbbbbbbb-2222-4222-a222-222222222222',
+    jsonb_build_object('sub', 'bbbbbbbb-2222-4222-a222-222222222222', 'email', 'maria.schmidt@example.com'),
+    'email',
+    NOW(),
+    NOW(),
+    NOW()
+  );
+
   -- User 3: PL Customer (PLN transactions)
   INSERT INTO auth.users (
     instance_id, id, aud, role, email, encrypted_password,
-    email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+    email_confirmed_at, confirmation_token, recovery_token,
+    email_change_token_new, email_change, email_change_token_current, reauthentication_token,
+    raw_app_meta_data, raw_user_meta_data, created_at, updated_at
   ) VALUES (
     '00000000-0000-0000-0000-000000000000',
     'cccccccc-3333-4333-a333-333333333333',
@@ -225,11 +276,25 @@ BEGIN
     'anna.kowalska@example.com',
     crypt('password123', gen_salt('bf')),
     NOW(),
+    '', '', '', '', '', '',
     '{"provider":"email","providers":["email"]}'::jsonb,
     '{"full_name":"Anna Kowalska"}'::jsonb,
     NOW(),
     NOW()
   ) RETURNING id INTO user3_id;
+
+  -- Create identity for User 3
+  INSERT INTO auth.identities (
+    provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
+  ) VALUES (
+    'cccccccc-3333-4333-a333-333333333333',
+    'cccccccc-3333-4333-a333-333333333333',
+    jsonb_build_object('sub', 'cccccccc-3333-4333-a333-333333333333', 'email', 'anna.kowalska@example.com'),
+    'email',
+    NOW(),
+    NOW(),
+    NOW()
+  );
 
   -- Insert payment transactions in USD
   INSERT INTO payment_transactions (
@@ -270,5 +335,8 @@ BEGIN
   (user3_id, premium_product_id, NOW() - INTERVAL '8 days'),
   (user3_id, pro_toolkit_id, NOW() - INTERVAL '3 days'),
   (user3_id, vip_masterclass_id, NOW());
+
+  -- Note: john.doe@example.com is automatically made admin by handle_new_user_registration() trigger
+  -- since it's the first user created in the system
 
 END $$;
