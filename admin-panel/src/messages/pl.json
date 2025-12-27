@@ -70,7 +70,12 @@
     "login": "Zaloguj",
     "profile": "Profil",
     "myProducts": "Moje Produkty",
-    "store": "Sklep"
+    "store": "Sklep",
+    "about": "O GateFlow"
+  },
+  "about": {
+    "title": "O GateFlow",
+    "backToStore": "Powrót do Sklepu"
   },
   "integrations": {
     "title": "Integracje i Śledzenie",
@@ -345,12 +350,42 @@
       "login": "Zaloguj się",
       "getStarted": "Rozpocznij"
     },
+    "onboarding": {
+      "welcome": "Witaj w {shopName}",
+      "subtitle": "Skonfigurujmy Twój sklep w kilku prostych krokach",
+      "addFirstProduct": "Dodaj pierwszy produkt",
+      "checklist": {
+        "shopConfigured": "Sklep skonfigurowany",
+        "addProduct": "Dodaj pierwszy produkt",
+        "configurePayments": "Skonfiguruj płatności Stripe",
+        "launch": "Uruchom swój sklep"
+      },
+      "stats": {
+        "products": "{count, plural, =0 {Brak produktów} one {1 Produkt} few {# Produkty} other {# Produktów}}",
+        "customers": "{count, plural, =0 {Brak klientów} one {1 Klient} few {# Klienci} other {# Klientów}}",
+        "ready": "Gotowy do uruchomienia"
+      }
+    },
+    "comingSoon": {
+      "title": "Przygotowujemy sklep!",
+      "subtitle": "Nasz sklep jest przygotowywany z niesamowitymi produktami. Wróć wkrótce!",
+      "contactUs": "Pytania? Napisz do nas na {email}"
+    },
     "hero": {
       "title": "Odkryj nasze",
       "titleHighlight": "Produkty premium",
       "subtitle": "Odblokuj ekskluzywne treści, narzędzia i zasoby zaprojektowane, aby pomóc Ci odnieść sukces. Od darmowych zasobów początkowych po rozwiązania premium.",
+      "welcome": "Witaj w {shopName}",
+      "defaultTagline": "Odkryj produkty cyfrowe i zasoby premium",
       "freeResources": "{count} Darmowe zasoby",
       "premiumSolutions": "{count} Rozwiązania premium"
+    },
+    "featured": {
+      "title": "Polecane produkty",
+      "subtitle": "Nasza starannie wyselekcjonowana oferta dla Ciebie"
+    },
+    "sections": {
+      "viewAll": "Zobacz wszystkie produkty"
     },
     "freeSection": {
       "title": "Zacznij za darmo",

@@ -1,0 +1,80 @@
+'use client';
+
+import { useAuth } from '@/contexts/AuthContext';
+import { Product } from '@/types';
+import AdminOnboardingCTA from './AdminOnboardingCTA';
+import ComingSoonEmptyState from './ComingSoonEmptyState';
+import Storefront from './Storefront';
+import DashboardLayout from '@/components/DashboardLayout';
+
+interface ShopConfig {
+  id: string;
+  default_currency: string;
+  shop_name: string;
+  contact_email?: string | null;
+  tax_rate?: number | null;
+  custom_settings: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+interface SmartLandingClientProps {
+  hasProducts: boolean;
+  products: Product[];
+  shopConfig: ShopConfig | null;
+}
+
+export default function SmartLandingClient({
+  hasProducts,
+  products,
+  shopConfig,
+}: SmartLandingClientProps) {
+  const { user, isAdmin, loading } = useAuth();
+
+  // Show loading spinner while auth is loading
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
+
+  const shopName = shopConfig?.shop_name || 'GateFlow';
+  const contactEmail = shopConfig?.contact_email || null;
+
+  // SCENARIO 1: No products + Admin user → Show onboarding
+  if (!hasProducts && isAdmin) {
+    return (
+      <DashboardLayout user={user ? { email: user.email || '', id: user.id || '' } : null}>
+        <AdminOnboardingCTA shopName={shopName} shopEmail={contactEmail} />
+      </DashboardLayout>
+    );
+  }
+
+  // SCENARIO 2: No products + Guest/Regular user → Show coming soon
+  if (!hasProducts && !isAdmin) {
+    return (
+      <DashboardLayout user={user ? { email: user.email || '', id: user.id || '' } : null}>
+        <ComingSoonEmptyState shopName={shopName} contactEmail={contactEmail} />
+      </DashboardLayout>
+    );
+  }
+
+  // SCENARIO 3: Products exist → Show storefront
+  const featuredProducts = products.filter((p) => p.is_featured);
+  const freeProducts = products.filter((p) => p.price === 0);
+  const paidProducts = products.filter((p) => p.price > 0);
+
+  return (
+    <DashboardLayout user={user ? { email: user.email || '', id: user.id || '' } : null}>
+      <Storefront
+        products={products}
+        shopName={shopName}
+        featuredProducts={featuredProducts}
+        freeProducts={freeProducts}
+        paidProducts={paidProducts}
+      />
+    </DashboardLayout>
+  );
+}
