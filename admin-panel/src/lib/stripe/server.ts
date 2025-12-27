@@ -2,43 +2,115 @@
 // Secure Stripe server configuration for Next.js Server Actions and API routes
 
 import Stripe from 'stripe';
+import { getDecryptedStripeKey } from '@/lib/actions/stripe-config';
+import type { StripeMode } from '@/types/stripe-config';
 
 let stripe: Stripe | null = null;
+let stripeInitPromise: Promise<Stripe> | null = null;
 
 /**
- * Get Stripe instance with secret key from environment
- * Only for use in server-side code (Server Actions, API routes)
+ * Determines the Stripe mode based on environment
  */
-export const getStripeServer = (): Stripe => {
-  if (!stripe) {
-    const secretKey = process.env.STRIPE_SECRET_KEY;
-    
-    if (!secretKey) {
-      throw new Error('STRIPE_SECRET_KEY is not set');
-    }
-    
-    stripe = new Stripe(secretKey, {
-      // Use specific API version to ensure compatibility
-      apiVersion: '2025-12-15.clover',
-      typescript: true,
-    });
+function getStripeMode(): StripeMode {
+  // In production, use live mode; otherwise use test mode
+  return process.env.NODE_ENV === 'production' ? 'live' : 'test';
+}
+
+/**
+ * Get Stripe instance with automatic configuration.
+ *
+ * Two equal configuration methods:
+ * 1. Database config (encrypted Restricted API Keys via Settings wizard) - easier for non-technical users
+ * 2. .env config (STRIPE_SECRET_KEY) - preferred by developers, Docker deployments, CI/CD
+ *
+ * Both methods are fully supported and equal. Choose what works best for your deployment.
+ *
+ * Only for use in server-side code (Server Actions, API routes)
+ *
+ * @returns Promise<Stripe> - Initialized Stripe instance
+ * @throws {Error} if Stripe is not configured
+ */
+export const getStripeServer = async (): Promise<Stripe> => {
+  // Return cached instance if available
+  if (stripe) {
+    return stripe;
   }
-  
-  return stripe;
+
+  // Return existing initialization promise if in progress
+  if (stripeInitPromise) {
+    return stripeInitPromise;
+  }
+
+  // Create new initialization promise
+  stripeInitPromise = (async () => {
+    const mode = getStripeMode();
+
+    // Priority 1: Try database configuration
+    try {
+      const dbKey = await getDecryptedStripeKey(mode);
+      if (dbKey) {
+        console.log(`[Stripe] Using database configuration (${mode} mode)`);
+        stripe = new Stripe(dbKey, {
+          apiVersion: '2025-12-15.clover',
+          typescript: true,
+        });
+        return stripe;
+      }
+    } catch (error) {
+      console.warn('[Stripe] Failed to retrieve database configuration:', error);
+      // Continue to fallback
+    }
+
+    // Priority 2: .env configuration (alternative method)
+    const envKey = process.env.STRIPE_SECRET_KEY;
+    if (envKey) {
+      console.log(`[Stripe] Using .env configuration (${mode} mode)`);
+      stripe = new Stripe(envKey, {
+        apiVersion: '2025-12-15.clover',
+        typescript: true,
+      });
+      return stripe;
+    }
+
+    // No configuration found
+    throw new Error(
+      'Stripe is not configured. Please configure Stripe via Settings or set STRIPE_SECRET_KEY in .env'
+    );
+  })();
+
+  return stripeInitPromise;
 };
 
 /**
  * Verify webhook signature for security
  */
-export const verifyWebhookSignature = (
+export const verifyWebhookSignature = async (
   body: string | Buffer,
   signature: string
-): Stripe.Event => {
+): Promise<Stripe.Event> => {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  
+
   if (!webhookSecret) {
     throw new Error('STRIPE_WEBHOOK_SECRET is not set');
   }
-  
-  return getStripeServer().webhooks.constructEvent(body, signature, webhookSecret);
+
+  const stripeInstance = await getStripeServer();
+  return stripeInstance.webhooks.constructEvent(body, signature, webhookSecret);
+};
+
+/**
+ * Checks which Stripe configuration method is currently active
+ * Used to show informational banner in Settings about alternative config method
+ *
+ * @returns Promise<boolean> - true if using .env config, false if using database config
+ */
+export const isUsingEnvConfig = async (): Promise<boolean> => {
+  const mode = getStripeMode();
+
+  try {
+    const dbKey = await getDecryptedStripeKey(mode);
+    return !dbKey; // If no DB key, we're using env fallback
+  } catch (error) {
+    return true; // If error retrieving DB key, assume env fallback
+  }
 };

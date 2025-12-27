@@ -11,11 +11,11 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function POST(request: NextRequest) {
   try {
-    const stripe = getStripeServer();
+    const stripe = await getStripeServer();
 
     // Initialize Supabase client with service role for admin operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
+
     // Get authorization header
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {

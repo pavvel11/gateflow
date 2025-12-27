@@ -1056,5 +1056,234 @@
     "loadingConfiguration": "Ładowanie konfiguracji...",
     "configurationError": "Błąd konfiguracji",
     "errorLoadingConfiguration": "Nie można załadować konfiguracji aplikacji. Sprawdź połączenie i spróbuj ponownie."
+  },
+  "settings": {
+    "title": "Ustawienia",
+    "subtitle": "Skonfiguruj ustawienia sklepu i integracje",
+    "shop": {
+      "title": "Konfiguracja sklepu",
+      "subtitle": "Podstawowe ustawienia i preferencje sklepu",
+      "shopName": "Nazwa sklepu",
+      "shopNamePlaceholder": "Mój wspaniały sklep",
+      "contactEmail": "Email kontaktowy",
+      "contactEmailPlaceholder": "kontakt@przyklad.pl",
+      "defaultCurrency": "Domyślna waluta",
+      "taxRate": "Stawka VAT (%)",
+      "taxRatePlaceholder": "0",
+      "saveButton": "Zapisz ustawienia",
+      "saving": "Zapisywanie...",
+      "saveSuccess": "Ustawienia zapisane pomyślnie",
+      "saveError": "Nie udało się zapisać ustawień"
+    },
+    "stripe": {
+      "title": "Konfiguracja Stripe",
+      "subtitle": "Zarządzaj kluczami API Stripe i ustawieniami integracji płatności",
+      "currentMethod": {
+        "env": {
+          "title": "Obecnie używana: konfiguracja .env",
+          "description": "Twój Stripe jest skonfigurowany poprzez zmienną środowiskową STRIPE_SECRET_KEY. To idealne rozwiązanie dla deweloperów, wdrożeń Docker i CI/CD.",
+          "alternative": "💡 Alternatywa: Możesz opcjonalnie użyć kreatora poniżej, aby zarządzać kluczami poprzez bazę danych z szyfrowaniem, wizualnymi przewodnikami i automatyczną walidacją."
+        },
+        "database": {
+          "title": "Obecnie używana: konfiguracja bazy danych",
+          "description": "Twoje klucze Stripe są bezpiecznie zaszyfrowane przy użyciu AES-256-GCM i przechowywane w bazie danych.",
+          "alternative": "💡 Alternatywa: Deweloperzy mogą również skonfigurować Stripe poprzez STRIPE_SECRET_KEY w pliku .env."
+        }
+      },
+      "activeConfigs": "Aktywne konfiguracje",
+      "mode": {
+        "test": "Tryb testowy",
+        "live": "Tryb produkcyjny"
+      },
+      "verified": "Zweryfikowany",
+      "account": "Konto",
+      "created": "Utworzono",
+      "rotationReminder": "Przypomnienie o rotacji",
+      "configureButton": "Skonfiguruj Stripe",
+      "configureAnother": "Skonfiguruj inny tryb",
+      "openDashboard": "Otwórz panel Stripe",
+      "infoBox": {
+        "title": "ℹ️ Dwie metody konfiguracji",
+        "method1": "Metoda 1 (.env): Ustaw STRIPE_SECRET_KEY - zalecane dla deweloperów, Docker, CI/CD",
+        "method2": "Metoda 2 (Kreator bazy danych): Użyj kreatora powyżej - zalecane dla użytkowników nietechnicznych, zawiera wizualne przewodniki i walidację",
+        "footer": "Obie metody są w pełni wspierane. Wybierz tę, która najlepiej Ci odpowiada."
+      }
+    }
+  },
+  "stripe": {
+    "wizard": {
+      "title": "Konfiguracja Stripe",
+      "subtitle": "Skonfiguruj swój klucz API Stripe z ograniczonymi uprawnieniami",
+      "step": "Krok",
+      "of": "z",
+      "confirmExit": {
+        "title": "Wyjść z konfiguracji?",
+        "message": "Twój postęp został zapisany. Możesz kontynuować później od miejsca, w którym skończyłeś.",
+        "cancel": "Kontynuuj konfigurację",
+        "confirm": "Wyjdź mimo to"
+      },
+      "step1": {
+        "title": "Bezpieczna integracja ze Stripe",
+        "subtitle": "Skonfiguruj swoje klucze API Stripe używając kluczy z ograniczonymi uprawnieniami (RAK) dla maksymalnego bezpieczeństwa",
+        "whatIsRAK": {
+          "title": "Czym są klucze z ograniczonymi uprawnieniami?",
+          "description": "Klucze z ograniczonymi uprawnieniami (RAK) pozwalają na nadanie określonych uprawnień dla Twojej aplikacji, zgodnie z zasadą najmniejszych przywilejów. Zamiast używać kluczy z pełnym dostępem, nadajesz tylko uprawnienia, których GateFlow rzeczywiście potrzebuje.",
+          "recommended": "Zalecane przez Stripe",
+          "recommendedText": "dla integracji self-hosted i środowisk produkcyjnych."
+        },
+        "benefits": {
+          "title": "Dlaczego warto skorzystać z tego kreato ra?",
+          "encrypted": {
+            "title": "Zaszyfrowane przechowywanie",
+            "description": "Twoje klucze API są szyfrowane algorytmem AES-256-GCM przed zapisaniem w bazie danych."
+          },
+          "guided": {
+            "title": "Konfiguracja krok po kroku",
+            "description": "Szczegółowe instrukcje z wizualnymi poradnikami jak utworzyć klucz z ograniczonymi uprawnieniami w Stripe."
+          },
+          "validation": {
+            "title": "Automatyczna walidacja",
+            "description": "Automatycznie testujemy Twój klucz i weryfikujemy czy ma wszystkie wymagane uprawnienia."
+          },
+          "rotation": {
+            "title": "Przypomnienia o rotacji kluczy",
+            "description": "Otrzymasz przypomnienie co 90 dni o rotacji kluczy zgodnie z najlepszymi praktykami bezpieczeństwa."
+          }
+        },
+        "alternative": {
+          "title": "Alternatywa: konfiguracja .env",
+          "description": "Developerzy mogą również skonfigurować Stripe ustawiając STRIPE_SECRET_KEY bezpośrednio w pliku .env. Obie metody są równorzędnie wspierane."
+        },
+        "timeEstimate": "Szacowany czas: 5-10 minut",
+        "startButton": "Rozpocznij konfigurację"
+      },
+      "step2": {
+        "title": "Wybierz tryb środowiska",
+        "subtitle": "Wybierz czy chcesz skonfigurować tryb testowy czy produkcyjny",
+        "test": {
+          "title": "Tryb testowy",
+          "badge": "Zalecany na początek",
+          "description": "Użyj trybu testowego aby bezpiecznie przetestować i zweryfikować swoją integrację bez przetwarzania prawdziwych płatności.",
+          "benefit1": "Brak prawdziwych pieniędzy",
+          "benefit2": "Testowanie z fikcyjnymi kartami",
+          "benefit3": "Idealny do rozwoju"
+        },
+        "live": {
+          "title": "Tryb produkcyjny",
+          "badge": "Produkcja",
+          "description": "Użyj trybu produkcyjnego dla środowiska produkcyjnego aby akceptować prawdziwe płatności od klientów.",
+          "benefit1": "Prawdziwe płatności klientów",
+          "benefit2": "Gotowe do produkcji",
+          "benefit3": "Wymaga zweryfikowanego konta Stripe"
+        },
+        "info": {
+          "title": "Możesz skonfigurować oba później",
+          "description": "Możesz osobno skonfigurować tryb testowy i produkcyjny. Zacznij od trybu testowego aby poćwiczyć, a następnie dodaj tryb produkcyjny gdy będziesz gotowy."
+        },
+        "backButton": "Wstecz",
+        "nextButton": "Kontynuuj"
+      },
+      "step3": {
+        "title": "Utwórz klucz z ograniczonymi uprawnieniami",
+        "subtitle": "Postępuj według poniższych kroków aby utworzyć bezpieczny klucz API z ograniczonymi uprawnieniami w Stripe",
+        "mode": {
+          "test": "Tryb testowy",
+          "live": "Tryb produkcyjny"
+        },
+        "openDashboard": {
+          "title": "Krok 1: Otwórz panel Stripe",
+          "description": "Kliknij poniżej aby otworzyć stronę kluczy API w nowej karcie",
+          "button": "Otwórz Stripe"
+        },
+        "step2": {
+          "title": "Utwórz klucz z ograniczonymi uprawnieniami",
+          "description": "W panelu Stripe, kliknij przycisk \"Create restricted key\" (nie \"Create secret key\")"
+        },
+        "step3": {
+          "title": "Nazwij swój klucz",
+          "description": "Nadaj swojemu kluczowi opisową nazwę, na przykład:"
+        },
+        "step4": {
+          "title": "Ustaw wymagane uprawnienia",
+          "description": "Skonfiguruj poniższe uprawnienia aby GateFlow działał prawidłowo:",
+          "important": "Ważne",
+          "importantText": "Wymagane uprawnienia są oznaczone ⚠️. Bez nich GateFlow nie będzie działał prawidłowo."
+        },
+        "step5": {
+          "title": "Utwórz i skopiuj klucz",
+          "description": "Kliknij \"Create key\" i natychmiast go skopiuj. Wkleisz go w następnym kroku.",
+          "warning": "Klucz jest pokazywany tylko raz! Upewnij się, że go skopiowałeś."
+        },
+        "backButton": "Wstecz",
+        "nextButton": "Utworzyłem klucz"
+      },
+      "step4": {
+        "title": "Wprowadź swój klucz API",
+        "subtitle": "Wklej klucz z ograniczonymi uprawnieniami, który utworzyłeś w Stripe",
+        "input": {
+          "label": "Klucz API Stripe",
+          "placeholder": "rk_test_... lub rk_live_...",
+          "help": "Twój klucz zostanie zaszyfrowany algorytmem AES-256-GCM przed zapisaniem."
+        },
+        "errors": {
+          "format": {
+            "title": "Nieprawidłowy format"
+          },
+          "connection": {
+            "title": "Połączenie nie powiodło się"
+          },
+          "permissions": {
+            "title": "Brakujące wymagane uprawnienia",
+            "help": "Wróć do Stripe i zaktualizuj uprawnienia swojego klucza."
+          }
+        },
+        "success": {
+          "title": "Klucz API zwalidowany pomyślnie!",
+          "description": "Twój klucz został zweryfikowany i ma wszystkie wymagane uprawnienia."
+        },
+        "validateButton": {
+          "validate": "Waliduj klucz API",
+          "validating": "Walidacja..."
+        },
+        "saveButton": {
+          "save": "Zapisz i zakończ",
+          "saving": "Zapisywanie..."
+        },
+        "backButton": "Wstecz"
+      },
+      "step5": {
+        "title": "Konfiguracja zakończona!",
+        "subtitle": "Twoja integracja ze Stripe jest teraz skonfigurowana i gotowa do użycia",
+        "summary": {
+          "mode": "Skonfigurowany tryb",
+          "test": "Tryb testowy 🧪",
+          "live": "Tryb produkcyjny 🚀",
+          "active": "Aktywny"
+        },
+        "security": {
+          "title": "Zaszyfrowane i bezpieczne",
+          "description": "Twój klucz API został zaszyfrowany algorytmem AES-256-GCM i bezpiecznie przechowany w bazie danych."
+        },
+        "rotation": {
+          "title": "Przypomnienie o rotacji ustawione",
+          "description": "Otrzymasz przypomnienie za 90 dni o rotacji klucza API zgodnie z najlepszymi praktykami bezpieczeństwa."
+        },
+        "nextSteps": {
+          "title": "💡 Następne kroki",
+          "test": "Przetestuj swoją integrację za pomocą testowych numerów kart Stripe",
+          "verify": "Zweryfikuj, że płatności są prawidłowo przetwarzane w trybie testowym",
+          "live": "Gdy będziesz gotowy do produkcji, skonfiguruj tryb produkcyjny używając tego samego kreatora",
+          "learnMore": "Dowiedz się więcej o testowych kartach Stripe"
+        },
+        "live": {
+          "title": "🎉 Jesteś na żywo!",
+          "description": "Twoja integracja ze Stripe jest teraz skonfigurowana dla produkcji. Możesz akceptować prawdziwe płatności od klientów.",
+          "reminder": "Upewnij się, że prawidłowo skonfigurowałeś endpointy webhook i przetestowałeś wszystkie przepływy płatności."
+        },
+        "doneButton": "Gotowe",
+        "stripeButton": "Otwórz panel Stripe",
+        "finePrint": "Możesz zawsze zaktualizować lub zrotować swoje klucze API ze strony Ustawień."
+      }
+    }
   }
 }

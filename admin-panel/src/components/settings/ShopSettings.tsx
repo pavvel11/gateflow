@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getShopConfig, updateShopConfig, type ShopConfig } from '@/lib/actions/shop-config';
+import { useTranslations } from 'next-intl';
 
 const CURRENCIES = [
   { code: 'USD', symbol: '$', name: 'US Dollar' },
@@ -14,6 +15,7 @@ const CURRENCIES = [
 ];
 
 export default function ShopSettings() {
+  const t = useTranslations('settings.shop');
   const [config, setConfig] = useState<ShopConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -64,16 +66,16 @@ export default function ShopSettings() {
       const success = await updateShopConfig(updates);
 
       if (success) {
-        setMessage({ type: 'success', text: 'Settings saved successfully!' });
+        setMessage({ type: 'success', text: t('saveSuccess') });
         // Reload config
         const newConfig = await getShopConfig();
         if (newConfig) setConfig(newConfig);
       } else {
-        setMessage({ type: 'error', text: 'Failed to save settings' });
+        setMessage({ type: 'error', text: t('saveError') });
       }
     } catch (error) {
       console.error('Error saving settings:', error);
-      setMessage({ type: 'error', text: 'An error occurred' });
+      setMessage({ type: 'error', text: t('saveError') });
     } finally {
       setSaving(false);
     }
@@ -94,7 +96,7 @@ export default function ShopSettings() {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-        Shop Settings
+        {t('title')}
       </h2>
 
       {message && (
@@ -111,13 +113,14 @@ export default function ShopSettings() {
         {/* Shop Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Shop Name
+            {t('shopName')}
           </label>
           <input
             type="text"
             value={formData.shop_name}
             onChange={(e) => setFormData({ ...formData, shop_name: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder={t('shopNamePlaceholder')}
             required
           />
         </div>
@@ -125,7 +128,7 @@ export default function ShopSettings() {
         {/* Default Currency */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Default Currency
+            {t('defaultCurrency')}
             <span className="block text-xs text-gray-500 dark:text-gray-400 font-normal mt-1">
               This currency will be used for revenue goals and as the default display currency for all admins.
             </span>
@@ -146,21 +149,21 @@ export default function ShopSettings() {
         {/* Contact Email */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Contact Email (Optional)
+            {t('contactEmail')}
           </label>
           <input
             type="email"
             value={formData.contact_email}
             onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="contact@example.com"
+            placeholder={t('contactEmailPlaceholder')}
           />
         </div>
 
         {/* Tax Rate */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Tax Rate (Optional)
+            {t('taxRate')}
             <span className="block text-xs text-gray-500 dark:text-gray-400 font-normal mt-1">
               Enter as decimal (e.g., 0.23 for 23% VAT)
             </span>
@@ -173,7 +176,7 @@ export default function ShopSettings() {
             value={formData.tax_rate}
             onChange={(e) => setFormData({ ...formData, tax_rate: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="0.23"
+            placeholder={t('taxRatePlaceholder')}
           />
         </div>
 
@@ -184,7 +187,7 @@ export default function ShopSettings() {
             disabled={saving}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {saving ? 'Saving...' : 'Save Settings'}
+            {saving ? t('saving') : t('saveButton')}
           </button>
         </div>
       </form>

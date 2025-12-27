@@ -6,16 +6,17 @@
 
 ## ✨ Key Features
 
-- **💳 Stripe Integration**: Complete checkout flow, order bumps, smart coupons, and refunds.
+- **💳 Stripe Integration**: Complete checkout flow with **visual wizard** for easy setup (2 configuration methods: .env or encrypted database).
 - **🔐 Content Protection**: Protect pages, elements, or specific resources.
 - **⚡ Funnels & OTO**: Create One-Time Offers and upsell flows.
 - **🔌 Webhooks Automation**: Connect with Zapier, Make, or custom endpoints (with HMAC security).
 - **🌍 Internationalization**: Ready for global sales (EN/PL included).
+- **⚙️ Settings Dashboard**: Shop configuration, multi-currency support, Stripe management.
 - **🎨 Modern UI**: Beautiful, responsive dashboard built with Tailwind CSS.
 
 ## 🏗️ Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
+- **Framework**: Next.js 16 (App Router, Turbopack)
 - **Database**: Supabase (PostgreSQL + Auth + RLS)
 - **Styling**: Tailwind CSS
 - **Payments**: Stripe Elements & Checkout
@@ -24,7 +25,7 @@
 ## 🚀 Quick Start (Local Development)
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 20+ (required by Next.js 16)
 - Docker (for local Supabase)
 - Stripe Account (for test keys)
 
@@ -71,13 +72,31 @@ Visit **http://localhost:3000** to see your GateFlow instance.
 
 ## 📦 Deployment
 
-We offer three flexible deployment strategies. Choose the one that fits your needs:
+**Want to deploy GateFlow?** Choose your guide:
 
-| Strategy | Best For | Complexity | Guide |
-|----------|----------|------------|-------|
-| **Simple Production** | Startups, Small Business | ⭐ Easy | [DEPLOYMENT-SIMPLE.md](./DEPLOYMENT-SIMPLE.md) |
-| **PM2 / VPS** | Performance, Low Overhead | ⭐⭐ Medium | [AI-DEPLOYMENT.md](./AI-DEPLOYMENT.md) |
-| **Full Stack** | Enterprise, Compliance | ⭐⭐⭐⭐ Advanced | [DEPLOYMENT.md](./DEPLOYMENT.md) |
+### 🚀 [DEPLOYMENT.md](./DEPLOYMENT.md) - For Humans
+
+Simple step-by-step guide for deploying to **mikr.us** or any Ubuntu VPS.
+
+- ✅ Works with Docker + Supabase Cloud
+- ✅ Auto SSL with Caddy
+- ✅ ~16 zł/month total cost
+- ✅ Perfect for 90% of users
+
+### 🤖 [AI-DEPLOYMENT.md](./AI-DEPLOYMENT.md) - For AI Agents
+
+Comprehensive guide for AI-assisted deployment with decision trees and automation.
+
+- ✅ Docker & PM2 methods
+- ✅ Troubleshooting diagnostics
+- ✅ Success criteria validation
+- ✅ Automated update workflows
+
+### Advanced Options
+
+For specific needs, see `deployment/advanced/`:
+- **Full Self-Hosted** (no Supabase Cloud, GDPR) → [FULL-STACK.md](./deployment/advanced/FULL-STACK.md)
+- **PM2 without Docker** (Node.js experts) → [PM2-VPS.md](./deployment/advanced/PM2-VPS.md)
 
 ## 📚 Documentation
 

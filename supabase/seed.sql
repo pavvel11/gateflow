@@ -1,6 +1,11 @@
 -- Seed data for GateFlow Admin Panel
 -- Sample products for testing different GateFlow protection modes
 
+-- Insert shop configuration (singleton)
+INSERT INTO shop_config (default_currency, shop_name, custom_settings) VALUES
+  ('USD', 'GateFlow Demo Shop', '{}'::jsonb)
+ON CONFLICT DO NOTHING;
+
 -- Insert sample products for testing
 INSERT INTO products (name, slug, description, price, currency, is_active, is_featured, auto_grant_duration_days, success_redirect_url, pass_params_to_redirect) VALUES
   ('Free Tutorial', 'free-tutorial', 'Free introductory tutorial - accessible to everyone.', 0, 'USD', true, true, NULL, '/checkout/premium-course', true),

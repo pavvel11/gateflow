@@ -17,18 +17,15 @@ type ProductForCheckout = ValidatedProduct;
  */
 export class CheckoutService {
   private supabase!: Awaited<ReturnType<typeof createClient>>;
-  private stripe: ReturnType<typeof getStripeServer>;
+  private stripe!: Awaited<ReturnType<typeof getStripeServer>>;
   private validationService!: ProductValidationService;
-
-  constructor() {
-    this.stripe = getStripeServer();
-  }
 
   /**
    * Initialize the service (must be called before using other methods)
    */
   async initialize(): Promise<void> {
     this.supabase = await createClient();
+    this.stripe = await getStripeServer();
     this.validationService = new ProductValidationService(this.supabase);
   }
 

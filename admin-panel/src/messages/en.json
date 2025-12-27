@@ -1021,5 +1021,234 @@
     "loadingConfiguration": "Loading configuration...",
     "configurationError": "Configuration Error",
     "errorLoadingConfiguration": "Unable to load application configuration. Please check your connection and try again."
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Configure your shop settings and integrations",
+    "shop": {
+      "title": "Shop Configuration",
+      "subtitle": "Basic shop settings and preferences",
+      "shopName": "Shop Name",
+      "shopNamePlaceholder": "My Awesome Shop",
+      "contactEmail": "Contact Email",
+      "contactEmailPlaceholder": "contact@example.com",
+      "defaultCurrency": "Default Currency",
+      "taxRate": "Tax Rate (%)",
+      "taxRatePlaceholder": "0",
+      "saveButton": "Save Settings",
+      "saving": "Saving...",
+      "saveSuccess": "Settings saved successfully",
+      "saveError": "Failed to save settings"
+    },
+    "stripe": {
+      "title": "Stripe Configuration",
+      "subtitle": "Manage your Stripe API keys and payment integration settings",
+      "currentMethod": {
+        "env": {
+          "title": "Currently using: .env configuration",
+          "description": "Your Stripe is configured via STRIPE_SECRET_KEY environment variable. This is perfectly fine for developers, Docker deployments, and CI/CD.",
+          "alternative": "💡 Alternative: You can optionally use the wizard below to manage keys via database with encrypted storage, visual guides, and automatic validation."
+        },
+        "database": {
+          "title": "Currently using: Database configuration",
+          "description": "Your Stripe keys are securely encrypted with AES-256-GCM and stored in the database.",
+          "alternative": "💡 Alternative: Developers can also configure Stripe via STRIPE_SECRET_KEY in .env file."
+        }
+      },
+      "activeConfigs": "Active Configurations",
+      "mode": {
+        "test": "Test Mode",
+        "live": "Live Mode"
+      },
+      "verified": "Verified",
+      "account": "Account",
+      "created": "Created",
+      "rotationReminder": "Rotation reminder",
+      "configureButton": "Configure Stripe",
+      "configureAnother": "Configure Another Mode",
+      "openDashboard": "Open Stripe Dashboard",
+      "infoBox": {
+        "title": "ℹ️ Two Configuration Methods",
+        "method1": "Method 1 (.env): Set STRIPE_SECRET_KEY - recommended for developers, Docker, CI/CD",
+        "method2": "Method 2 (Database wizard): Use the wizard above - recommended for non-technical users, includes visual guides and validation",
+        "footer": "Both methods are equally supported. Choose what works best for you."
+      }
+    }
+  },
+  "stripe": {
+    "wizard": {
+      "title": "Stripe Configuration",
+      "subtitle": "Configure your Stripe Restricted API Key",
+      "step": "Step",
+      "of": "of",
+      "confirmExit": {
+        "title": "Exit configuration?",
+        "message": "Your progress has been saved. You can continue later from where you left off.",
+        "cancel": "Continue Setup",
+        "confirm": "Exit Anyway"
+      },
+      "step1": {
+        "title": "Secure Stripe Integration",
+        "subtitle": "Configure your Stripe API keys using Restricted API Keys (RAK) for maximum security",
+        "whatIsRAK": {
+          "title": "What are Restricted API Keys?",
+          "description": "Restricted API Keys (RAK) allow you to grant specific permissions to your application, following the principle of least privilege. Instead of using full access keys, you only grant the permissions GateFlow actually needs.",
+          "recommended": "Recommended by Stripe",
+          "recommendedText": "for self-hosted integrations and production environments."
+        },
+        "benefits": {
+          "title": "Why use this wizard?",
+          "encrypted": {
+            "title": "Encrypted Storage",
+            "description": "Your API keys are encrypted with AES-256-GCM before being stored in the database."
+          },
+          "guided": {
+            "title": "Guided Setup",
+            "description": "Step-by-step instructions with visual guides to create your Restricted API Key in Stripe."
+          },
+          "validation": {
+            "title": "Automatic Validation",
+            "description": "We automatically test your key and verify it has all required permissions."
+          },
+          "rotation": {
+            "title": "Key Rotation Reminders",
+            "description": "Get reminded every 90 days to rotate your keys for security best practices."
+          }
+        },
+        "alternative": {
+          "title": "Alternative: .env Configuration",
+          "description": "Developers can also configure Stripe by setting STRIPE_SECRET_KEY directly in .env file. Both methods are equally supported."
+        },
+        "timeEstimate": "Estimated time: 5-10 minutes",
+        "startButton": "Start Configuration"
+      },
+      "step2": {
+        "title": "Choose Environment Mode",
+        "subtitle": "Select whether you want to configure Test or Live mode",
+        "test": {
+          "title": "Test Mode",
+          "badge": "Recommended First",
+          "description": "Use test mode to safely practice and verify your integration without processing real payments.",
+          "benefit1": "No real money involved",
+          "benefit2": "Test with fake card numbers",
+          "benefit3": "Perfect for development"
+        },
+        "live": {
+          "title": "Live Mode",
+          "badge": "Production",
+          "description": "Use live mode for your production environment to accept real payments from customers.",
+          "benefit1": "Real customer payments",
+          "benefit2": "Production-ready",
+          "benefit3": "Requires verified Stripe account"
+        },
+        "info": {
+          "title": "You can configure both later",
+          "description": "You can set up both Test and Live mode separately. Start with Test mode to practice, then add Live mode when ready for production."
+        },
+        "backButton": "Back",
+        "nextButton": "Continue"
+      },
+      "step3": {
+        "title": "Create Your Restricted API Key",
+        "subtitle": "Follow these steps to create a secure Restricted API Key in Stripe",
+        "mode": {
+          "test": "Test Mode",
+          "live": "Live Mode"
+        },
+        "openDashboard": {
+          "title": "Step 1: Open Stripe Dashboard",
+          "description": "Click below to open the API Keys page in a new tab",
+          "button": "Open Stripe"
+        },
+        "step2": {
+          "title": "Create a Restricted Key",
+          "description": "In the Stripe dashboard, click \"Create restricted key\" button (not \"Create secret key\")"
+        },
+        "step3": {
+          "title": "Name Your Key",
+          "description": "Give your key a descriptive name, for example:"
+        },
+        "step4": {
+          "title": "Set Required Permissions",
+          "description": "Configure the following permissions for GateFlow to work properly:",
+          "important": "Important",
+          "importantText": "Required permissions are marked with ⚠️. Without these, GateFlow will not function properly."
+        },
+        "step5": {
+          "title": "Create & Copy the Key",
+          "description": "Click \"Create key\" and immediately copy it. You will paste it in the next step.",
+          "warning": "The key is only shown once! Make sure to copy it."
+        },
+        "backButton": "Back",
+        "nextButton": "I've Created the Key"
+      },
+      "step4": {
+        "title": "Enter Your API Key",
+        "subtitle": "Paste the Restricted API Key you created in Stripe",
+        "input": {
+          "label": "Stripe API Key",
+          "placeholder": "rk_test_... or rk_live_...",
+          "help": "Your key will be encrypted with AES-256-GCM before being stored."
+        },
+        "errors": {
+          "format": {
+            "title": "Invalid Format"
+          },
+          "connection": {
+            "title": "Connection Failed"
+          },
+          "permissions": {
+            "title": "Missing Required Permissions",
+            "help": "Go back to Stripe and update your key permissions."
+          }
+        },
+        "success": {
+          "title": "API Key Validated Successfully!",
+          "description": "Your key has been verified and all required permissions are granted."
+        },
+        "validateButton": {
+          "validate": "Validate API Key",
+          "validating": "Validating..."
+        },
+        "saveButton": {
+          "save": "Save & Complete",
+          "saving": "Saving..."
+        },
+        "backButton": "Back"
+      },
+      "step5": {
+        "title": "Configuration Complete!",
+        "subtitle": "Your Stripe integration is now configured and ready to use",
+        "summary": {
+          "mode": "Configured Mode",
+          "test": "Test Mode 🧪",
+          "live": "Live Mode 🚀",
+          "active": "Active"
+        },
+        "security": {
+          "title": "Encrypted & Secure",
+          "description": "Your API key has been encrypted with AES-256-GCM and securely stored in the database."
+        },
+        "rotation": {
+          "title": "Rotation Reminder Set",
+          "description": "You'll receive a reminder in 90 days to rotate your API key as a security best practice."
+        },
+        "nextSteps": {
+          "title": "💡 Next Steps",
+          "test": "Test your integration with Stripe test card numbers",
+          "verify": "Verify that payments are processing correctly in test mode",
+          "live": "When ready for production, configure Live mode using the same wizard",
+          "learnMore": "Learn about Stripe test cards"
+        },
+        "live": {
+          "title": "🎉 You're Live!",
+          "description": "Your Stripe integration is now configured for production. You can accept real payments from customers.",
+          "reminder": "Make sure you have properly configured your webhook endpoints and tested all payment flows."
+        },
+        "doneButton": "Done",
+        "stripeButton": "Open Stripe Dashboard",
+        "finePrint": "You can always update or rotate your API keys from the Settings page."
+      }
+    }
   }
 }

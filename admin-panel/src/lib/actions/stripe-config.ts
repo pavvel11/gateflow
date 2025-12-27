@@ -1,0 +1,597 @@
+'use server'
+
+import { createClient } from '@/lib/supabase/server'
+import { encryptStripeKey, decryptStripeKey } from '@/lib/services/stripe-encryption'
+import Stripe from 'stripe'
+import type {
+  StripeConfiguration,
+  StripeMode,
+  StripeKeyPrefix,
+  KeyFormatValidationResult,
+  ConnectionTestResult,
+  PermissionVerificationResult,
+  PermissionStatus,
+  ValidationResult,
+  ActionResponse,
+  GetActiveConfigResponse,
+  SaveConfigResponse,
+  DeleteConfigResponse,
+  ValidateKeyResponse,
+  TestConnectionResponse,
+  VerifyPermissionsResponse,
+  CreateStripeConfigInput,
+  REQUIRED_PERMISSIONS,
+} from '@/types/stripe-config'
+import { revalidatePath } from 'next/cache'
+
+/**
+ * Validates Stripe API key format
+ */
+export async function validateStripeKeyFormat(apiKey: string): Promise<KeyFormatValidationResult> {
+  const errors: string[] = []
+
+  // Trim whitespace
+  const trimmedKey = apiKey.trim()
+
+  // Check if empty
+  if (!trimmedKey) {
+    errors.push('API key is required')
+    return { isValid: false, errors }
+  }
+
+  // Check minimum length (Stripe keys are typically 30+ characters)
+  if (trimmedKey.length < 30) {
+    errors.push('API key is too short (minimum 30 characters)')
+  }
+
+  // Detect prefix and mode
+  let detectedPrefix: StripeKeyPrefix | undefined
+  let detectedMode: StripeMode | undefined
+
+  if (trimmedKey.startsWith('rk_test_')) {
+    detectedPrefix = 'rk_test_'
+    detectedMode = 'test'
+  } else if (trimmedKey.startsWith('rk_live_')) {
+    detectedPrefix = 'rk_live_'
+    detectedMode = 'live'
+  } else if (trimmedKey.startsWith('sk_test_')) {
+    detectedPrefix = 'sk_test_'
+    detectedMode = 'test'
+  } else if (trimmedKey.startsWith('sk_live_')) {
+    detectedPrefix = 'sk_live_'
+    detectedMode = 'live'
+  } else {
+    errors.push('Invalid key prefix. Must start with rk_test_, rk_live_, sk_test_, or sk_live_')
+  }
+
+  // Check for valid characters (alphanumeric + underscores)
+  if (!/^[a-zA-Z0-9_]+$/.test(trimmedKey)) {
+    errors.push('API key contains invalid characters')
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    detectedMode,
+    detectedPrefix,
+  }
+}
+
+/**
+ * Tests connection to Stripe API and retrieves account info
+ */
+export async function testStripeKeyConnection(apiKey: string): Promise<TestConnectionResponse> {
+  try {
+    // Validate format first
+    const formatValidation = await validateStripeKeyFormat(apiKey)
+    if (!formatValidation.isValid) {
+      return {
+        success: false,
+        error: formatValidation.errors.join(', '),
+        errorCode: 'INVALID_FORMAT',
+      }
+    }
+
+    // Initialize Stripe client with the provided key
+    const stripe = new Stripe(apiKey.trim(), {
+      apiVersion: '2025-12-15.clover',
+      typescript: true,
+    })
+
+    // Test connection by retrieving account info
+    const account = await stripe.accounts.retrieve()
+
+    return {
+      success: true,
+      data: {
+        success: true,
+        accountId: account.id,
+        accountName: account.business_profile?.name || account.email || 'Unknown',
+      },
+    }
+  } catch (error) {
+    if (error instanceof Stripe.errors.StripeAuthenticationError) {
+      return {
+        success: false,
+        error: 'Invalid API key. Please check your key and try again.',
+        errorCode: 'AUTHENTICATION_FAILED',
+      }
+    }
+
+    if (error instanceof Stripe.errors.StripePermissionError) {
+      return {
+        success: false,
+        error: 'API key does not have permission to retrieve account information.',
+        errorCode: 'PERMISSION_DENIED',
+      }
+    }
+
+    if (error instanceof Stripe.errors.StripeAPIError) {
+      return {
+        success: false,
+        error: `Stripe API error: ${error.message}`,
+        errorCode: error.code || 'API_ERROR',
+      }
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+      errorCode: 'UNKNOWN_ERROR',
+    }
+  }
+}
+
+/**
+ * Verifies that the API key has all required permissions
+ */
+export async function verifyStripeKeyPermissions(apiKey: string): Promise<VerifyPermissionsResponse> {
+  try {
+    const stripe = new Stripe(apiKey.trim(), {
+      apiVersion: '2025-12-15.clover',
+      typescript: true,
+    })
+
+    // Clone required permissions to track verification
+    const permissions: PermissionStatus[] = (
+      [
+        {
+          resource: 'charges',
+          operation: 'write',
+          required: true,
+          verified: false,
+        },
+        {
+          resource: 'customers',
+          operation: 'write',
+          required: true,
+          verified: false,
+        },
+        {
+          resource: 'checkout.sessions',
+          operation: 'write',
+          required: true,
+          verified: false,
+        },
+        {
+          resource: 'payment_intents',
+          operation: 'read',
+          required: true,
+          verified: false,
+        },
+        {
+          resource: 'webhooks',
+          operation: 'read',
+          required: false,
+          verified: false,
+        },
+        {
+          resource: 'products',
+          operation: 'read',
+          required: false,
+          verified: false,
+        },
+        {
+          resource: 'prices',
+          operation: 'read',
+          required: false,
+          verified: false,
+        },
+      ] as const
+    ).map(p => ({ ...p }))
+
+    // Test each permission by attempting a minimal operation
+    // Note: For restricted keys, Stripe will return permission errors if access is denied
+
+    // Test charges (write) - List charges (read-like but requires charges scope)
+    try {
+      await stripe.charges.list({ limit: 1 })
+      const chargesPerm = permissions.find(p => p.resource === 'charges')
+      if (chargesPerm) chargesPerm.verified = true
+    } catch (error) {
+      if (error instanceof Stripe.errors.StripePermissionError) {
+        const chargesPerm = permissions.find(p => p.resource === 'charges')
+        if (chargesPerm) chargesPerm.errorMessage = 'Missing charges permission'
+      }
+    }
+
+    // Test customers (write)
+    try {
+      await stripe.customers.list({ limit: 1 })
+      const customersPerm = permissions.find(p => p.resource === 'customers')
+      if (customersPerm) customersPerm.verified = true
+    } catch (error) {
+      if (error instanceof Stripe.errors.StripePermissionError) {
+        const customersPerm = permissions.find(p => p.resource === 'customers')
+        if (customersPerm) customersPerm.errorMessage = 'Missing customers permission'
+      }
+    }
+
+    // Test checkout.sessions (write)
+    try {
+      await stripe.checkout.sessions.list({ limit: 1 })
+      const sessionsPerm = permissions.find(p => p.resource === 'checkout.sessions')
+      if (sessionsPerm) sessionsPerm.verified = true
+    } catch (error) {
+      if (error instanceof Stripe.errors.StripePermissionError) {
+        const sessionsPerm = permissions.find(p => p.resource === 'checkout.sessions')
+        if (sessionsPerm) sessionsPerm.errorMessage = 'Missing checkout sessions permission'
+      }
+    }
+
+    // Test payment_intents (read)
+    try {
+      await stripe.paymentIntents.list({ limit: 1 })
+      const piPerm = permissions.find(p => p.resource === 'payment_intents')
+      if (piPerm) piPerm.verified = true
+    } catch (error) {
+      if (error instanceof Stripe.errors.StripePermissionError) {
+        const piPerm = permissions.find(p => p.resource === 'payment_intents')
+        if (piPerm) piPerm.errorMessage = 'Missing payment intents permission'
+      }
+    }
+
+    // Test webhooks (read) - Optional
+    try {
+      await stripe.webhookEndpoints.list({ limit: 1 })
+      const webhooksPerm = permissions.find(p => p.resource === 'webhooks')
+      if (webhooksPerm) webhooksPerm.verified = true
+    } catch (error) {
+      // Webhooks permission is optional, so we don't fail on this
+      const webhooksPerm = permissions.find(p => p.resource === 'webhooks')
+      if (webhooksPerm && error instanceof Stripe.errors.StripePermissionError) {
+        webhooksPerm.errorMessage = 'Missing webhooks permission (optional)'
+      }
+    }
+
+    // Test products (read) - Optional
+    try {
+      await stripe.products.list({ limit: 1 })
+      const productsPerm = permissions.find(p => p.resource === 'products')
+      if (productsPerm) productsPerm.verified = true
+    } catch (error) {
+      const productsPerm = permissions.find(p => p.resource === 'products')
+      if (productsPerm && error instanceof Stripe.errors.StripePermissionError) {
+        productsPerm.errorMessage = 'Missing products permission (optional)'
+      }
+    }
+
+    // Test prices (read) - Optional
+    try {
+      await stripe.prices.list({ limit: 1 })
+      const pricesPerm = permissions.find(p => p.resource === 'prices')
+      if (pricesPerm) pricesPerm.verified = true
+    } catch (error) {
+      const pricesPerm = permissions.find(p => p.resource === 'prices')
+      if (pricesPerm && error instanceof Stripe.errors.StripePermissionError) {
+        pricesPerm.errorMessage = 'Missing prices permission (optional)'
+      }
+    }
+
+    // Check if all required permissions are granted
+    const missingPermissions = permissions.filter(p => p.required && !p.verified)
+    const allGranted = missingPermissions.length === 0
+
+    return {
+      success: true,
+      data: {
+        allGranted,
+        permissions,
+        missingPermissions,
+      },
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error during permission verification',
+      errorCode: 'PERMISSION_CHECK_FAILED',
+    }
+  }
+}
+
+/**
+ * Complete validation: format + connection + permissions
+ */
+export async function validateStripeKey(apiKey: string, expectedMode?: StripeMode): Promise<ValidateKeyResponse> {
+  // Step 1: Format validation
+  const formatValidation = await validateStripeKeyFormat(apiKey)
+
+  if (!formatValidation.isValid) {
+    return {
+      success: true,
+      data: {
+        isValid: false,
+        formatValidation,
+      },
+    }
+  }
+
+  // Check if mode matches expected mode
+  if (expectedMode && formatValidation.detectedMode !== expectedMode) {
+    return {
+      success: true,
+      data: {
+        isValid: false,
+        formatValidation: {
+          ...formatValidation,
+          isValid: false,
+          errors: [
+            ...formatValidation.errors,
+            `You selected ${expectedMode} mode but pasted a ${formatValidation.detectedMode} key`,
+          ],
+        },
+      },
+    }
+  }
+
+  // Step 2: Connection test
+  const connectionTest = await testStripeKeyConnection(apiKey)
+
+  if (!connectionTest.success || !connectionTest.data?.success) {
+    return {
+      success: true,
+      data: {
+        isValid: false,
+        formatValidation,
+        connectionTest: connectionTest.data || {
+          success: false,
+          error: connectionTest.error,
+          errorCode: connectionTest.errorCode,
+        },
+      },
+    }
+  }
+
+  // Step 3: Permission verification
+  const permissionVerification = await verifyStripeKeyPermissions(apiKey)
+
+  if (!permissionVerification.success || !permissionVerification.data) {
+    return {
+      success: true,
+      data: {
+        isValid: false,
+        formatValidation,
+        connectionTest: connectionTest.data,
+        permissionVerification: {
+          allGranted: false,
+          permissions: [],
+          missingPermissions: [],
+        },
+      },
+    }
+  }
+
+  return {
+    success: true,
+    data: {
+      isValid: permissionVerification.data.allGranted,
+      formatValidation,
+      connectionTest: connectionTest.data,
+      permissionVerification: permissionVerification.data,
+    },
+  }
+}
+
+/**
+ * Saves a new Stripe configuration to the database (encrypted)
+ */
+export async function saveStripeConfig(input: CreateStripeConfigInput): Promise<SaveConfigResponse> {
+  try {
+    const supabase = await createClient()
+
+    // Validate the key first
+    const validation = await validateStripeKey(input.apiKey, input.mode)
+    if (!validation.success || !validation.data?.isValid) {
+      return {
+        success: false,
+        error: 'API key validation failed',
+        errorCode: 'VALIDATION_FAILED',
+      }
+    }
+
+    const formatResult = validation.data.formatValidation
+
+    // Encrypt the API key
+    const encrypted = await encryptStripeKey(input.apiKey.trim())
+
+    // Extract last 4 characters
+    const keyLast4 = input.apiKey.trim().slice(-4)
+
+    // Deactivate any existing active configurations for this mode
+    await supabase
+      .from('stripe_configurations')
+      .update({ is_active: false })
+      .eq('mode', input.mode)
+      .eq('is_active', true)
+
+    // Insert new configuration
+    const { data, error } = await supabase
+      .from('stripe_configurations')
+      .insert({
+        mode: input.mode,
+        encrypted_key: encrypted.encryptedKey,
+        encryption_iv: encrypted.iv,
+        encryption_tag: encrypted.tag,
+        key_last_4: keyLast4,
+        key_prefix: formatResult.detectedPrefix!,
+        permissions_verified: true,
+        last_validated_at: new Date().toISOString(),
+        account_id: validation.data.connectionTest?.accountId || null,
+        expires_at: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(), // 90 days
+        is_active: true,
+      })
+      .select('id, mode')
+      .single()
+
+    if (error) {
+      console.error('Failed to save Stripe configuration:', error)
+      return {
+        success: false,
+        error: 'Failed to save configuration to database',
+        errorCode: 'DATABASE_ERROR',
+      }
+    }
+
+    revalidatePath('/dashboard/settings')
+
+    return {
+      success: true,
+      data: {
+        id: data.id,
+        mode: data.mode as StripeMode,
+      },
+    }
+  } catch (error) {
+    console.error('Error saving Stripe configuration:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+      errorCode: 'UNKNOWN_ERROR',
+    }
+  }
+}
+
+/**
+ * Retrieves the active Stripe configuration for a given mode
+ */
+export async function getActiveStripeConfig(mode: StripeMode): Promise<GetActiveConfigResponse> {
+  try {
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from('stripe_configurations')
+      .select('*')
+      .eq('mode', mode)
+      .eq('is_active', true)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No rows found
+        return { success: true, data: null }
+      }
+      console.error('Failed to retrieve Stripe configuration:', error)
+      return {
+        success: false,
+        error: 'Failed to retrieve configuration',
+        errorCode: 'DATABASE_ERROR',
+      }
+    }
+
+    return { success: true, data: data as StripeConfiguration }
+  } catch (error) {
+    console.error('Error retrieving Stripe configuration:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+      errorCode: 'UNKNOWN_ERROR',
+    }
+  }
+}
+
+/**
+ * Retrieves and decrypts the active Stripe API key for a given mode
+ */
+export async function getDecryptedStripeKey(mode: StripeMode): Promise<string | null> {
+  try {
+    const configResponse = await getActiveStripeConfig(mode)
+
+    if (!configResponse.success || !configResponse.data) {
+      return null
+    }
+
+    const decrypted = await decryptStripeKey({
+      encrypted_key: configResponse.data.encrypted_key,
+      encryption_iv: configResponse.data.encryption_iv,
+      encryption_tag: configResponse.data.encryption_tag,
+    })
+
+    return decrypted
+  } catch (error) {
+    console.error('Error decrypting Stripe key:', error)
+    return null
+  }
+}
+
+/**
+ * Deletes a Stripe configuration
+ */
+export async function deleteStripeConfig(id: string): Promise<DeleteConfigResponse> {
+  try {
+    const supabase = await createClient()
+
+    const { error } = await supabase.from('stripe_configurations').delete().eq('id', id)
+
+    if (error) {
+      console.error('Failed to delete Stripe configuration:', error)
+      return {
+        success: false,
+        error: 'Failed to delete configuration',
+        errorCode: 'DATABASE_ERROR',
+      }
+    }
+
+    revalidatePath('/dashboard/settings')
+
+    return { success: true }
+  } catch (error) {
+    console.error('Error deleting Stripe configuration:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+      errorCode: 'UNKNOWN_ERROR',
+    }
+  }
+}
+
+/**
+ * Lists all Stripe configurations (active and inactive)
+ */
+export async function listStripeConfigs(): Promise<ActionResponse<StripeConfiguration[]>> {
+  try {
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from('stripe_configurations')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Failed to list Stripe configurations:', error)
+      return {
+        success: false,
+        error: 'Failed to retrieve configurations',
+        errorCode: 'DATABASE_ERROR',
+      }
+    }
+
+    return { success: true, data: data as StripeConfiguration[] }
+  } catch (error) {
+    console.error('Error listing Stripe configurations:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+      errorCode: 'UNKNOWN_ERROR',
+    }
+  }
+}

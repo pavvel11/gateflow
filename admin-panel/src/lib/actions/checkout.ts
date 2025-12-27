@@ -55,8 +55,8 @@ export async function fetchClientSecret(options: CreateEmbeddedCheckoutOptions):
     const validationService = new ProductValidationService(supabase);
     const { product } = await validationService.validateForCheckout(productId, user);
 
-    const stripe = getStripeServer();
-    
+    const stripe = await getStripeServer();
+
     // Prepare session configuration
     const sessionConfig = {
       ui_mode: 'embedded' as const,

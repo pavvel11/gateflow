@@ -66,9 +66,9 @@ export async function createCheckoutSession(
   // Validate product and check user access
   const validationService = new ProductValidationService(supabase);
   const { product } = await validationService.validateForCheckout(data.productId, user);
-  
-  const stripe = getStripeServer();
-  
+
+  const stripe = await getStripeServer();
+
   // Create secure Stripe checkout session
   const session = await stripe.checkout.sessions.create({
     customer_email: data.email || user?.email,
@@ -144,9 +144,9 @@ export async function processRefund(data: RefundRequest): Promise<RefundResponse
   if (transactionError || !transaction) {
     throw new Error('Transaction not found or already refunded');
   }
-  
-  const stripe = getStripeServer();
-  
+
+  const stripe = await getStripeServer();
+
   try {
     // Calculate refund amount
     const refundAmount = data.amount || transaction.amount;

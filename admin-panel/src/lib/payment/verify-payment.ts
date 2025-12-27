@@ -60,8 +60,6 @@ export async function verifyPaymentSession(
     };
   }
 
-  const stripe = getStripeServer();
-  
   // Create Service Role client for secure operations
   const serviceClient = createServiceClient(
     process.env.SUPABASE_URL!,
@@ -75,6 +73,9 @@ export async function verifyPaymentSession(
   );
 
   try {
+    // Get Stripe instance
+    const stripe = await getStripeServer();
+
     // Retrieve session from Stripe
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
       expand: ['line_items', 'payment_intent']
