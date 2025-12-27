@@ -21,7 +21,9 @@
     "autoRedirect": "Przekierowanie za {seconds} s...",
     "goToProduct": "Przejdź do Produktu",
     "loadError": "Nie udało się załadować płatności. Spróbuj ponownie później.",
-    "createSessionError": "Nie udało się utworzyć sesji płatności"
+    "createSessionError": "Nie udało się utworzyć sesji płatności",
+    "netPrice": "Cena netto",
+    "vat": "VAT"
   },
   "common": {
     "loading": "Ładowanie...",

@@ -5,12 +5,14 @@ import { formatPrice } from '@/lib/constants';
 import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useTranslations } from 'next-intl';
 
 interface ProductShowcaseProps {
   product: Product;
 }
 
 export default function ProductShowcase({ product }: ProductShowcaseProps) {
+  const t = useTranslations('checkout');
   // Calculate net price if VAT is included
   const vatRate = product.vat_rate || 23;
   const grossPrice = product.price;
@@ -64,11 +66,11 @@ export default function ProductShowcase({ product }: ProductShowcaseProps) {
         {product.vat_rate && product.vat_rate > 0 && (
           <div className="text-sm text-gray-400 space-y-1">
             <div className="flex justify-between">
-              <span>Net price:</span>
+              <span>{t('netPrice')}:</span>
               <span>{formatPrice(netPrice, product.currency)} {product.currency}</span>
             </div>
             <div className="flex justify-between">
-              <span>VAT {vatRate}%:</span>
+              <span>{t('vat')} {vatRate}%:</span>
               <span>{formatPrice(vatAmount, product.currency)} {product.currency}</span>
             </div>
           </div>

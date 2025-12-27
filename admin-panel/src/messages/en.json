@@ -21,7 +21,9 @@
     "autoRedirect": "Auto-redirecting in {seconds} seconds...",
     "goToProduct": "Go to Product",
     "loadError": "Failed to load checkout. Please try again later.",
-    "createSessionError": "Failed to create checkout session"
+    "createSessionError": "Failed to create checkout session",
+    "netPrice": "Net price",
+    "vat": "VAT"
   },
   "common": {
     "loading": "Loading...",
