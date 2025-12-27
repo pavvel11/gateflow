@@ -172,7 +172,7 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           productId: product.id,
-          email: email || '',
+          email: email || undefined, // Pass undefined instead of empty string for logged-in users
           bumpProductId: bumpSelected && orderBump ? orderBump.bump_product_id : undefined,
           couponCode: appliedCoupon?.code,
           successUrl: searchParams.get('success_url') || undefined,
