@@ -23,7 +23,17 @@
     "loadError": "Failed to load checkout. Please try again later.",
     "createSessionError": "Failed to create checkout session",
     "netPrice": "Net price",
-    "vat": "VAT"
+    "vat": "VAT",
+    "payButton": "Pay {amount}",
+    "processing": "Processing payment...",
+    "paymentSuccessful": "Payment Successful!",
+    "needInvoice": "I need an invoice",
+    "nipLabel": "NIP (Tax ID)",
+    "companyNameLabel": "Company Name",
+    "priceSummary": "Price Summary",
+    "couponDiscount": "Discount",
+    "total": "Total",
+    "emailRequired": "Email is required"
   },
   "common": {
     "loading": "Loading...",

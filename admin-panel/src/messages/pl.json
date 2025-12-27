@@ -23,7 +23,17 @@
     "loadError": "Nie udało się załadować płatności. Spróbuj ponownie później.",
     "createSessionError": "Nie udało się utworzyć sesji płatności",
     "netPrice": "Cena netto",
-    "vat": "VAT"
+    "vat": "VAT",
+    "payButton": "Zapłać {amount}",
+    "processing": "Przetwarzanie płatności...",
+    "paymentSuccessful": "Płatność Zakończona Sukcesem!",
+    "needInvoice": "Potrzebuję faktury",
+    "nipLabel": "NIP",
+    "companyNameLabel": "Nazwa Firmy",
+    "priceSummary": "Podsumowanie Ceny",
+    "couponDiscount": "Rabat",
+    "total": "Razem",
+    "emailRequired": "Email jest wymagany"
   },
   "common": {
     "loading": "Ładowanie...",

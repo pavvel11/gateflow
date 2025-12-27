@@ -1,20 +1,20 @@
 'use client';
 
 import { useCallback, useState, useEffect } from 'react';
-import { EmbeddedCheckout, EmbeddedCheckoutProvider } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
 import { Product } from '@/types';
 import { formatPrice } from '@/lib/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { signOutAndRedirectToCheckout } from '@/lib/actions/checkout';
 import { useRouter } from 'next/navigation';
-import { embeddedCheckoutOptions } from '@/lib/stripe/config';
 import { useConfig } from '@/components/providers/config-provider';
 import { useOrderBumps } from '@/hooks/useOrderBumps';
 import { useSearchParams } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { useTranslations } from 'next-intl';
 import ProductShowcase from './ProductShowcase';
+import CustomPaymentForm from './CustomPaymentForm';
 
 interface PaidProductFormProps {
   product: Product;
@@ -163,14 +163,16 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
     }
   }, [hasAccess, countdown, handleRedirectToProduct]);
 
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+
   const fetchClientSecret = useCallback(async () => {
     try {
-      const response = await fetch('/api/create-embedded-checkout', {
+      const response = await fetch('/api/create-payment-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           productId: product.id,
-          email: email,
+          email: email || '',
           bumpProductId: bumpSelected && orderBump ? orderBump.bump_product_id : undefined,
           couponCode: appliedCoupon?.code,
           successUrl: searchParams.get('success_url') || undefined,
@@ -181,19 +183,26 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
         const errorData = await response.json();
         if (errorData.error === 'You already have access to this product') {
           setHasAccess(true);
-          return '';
+          return;
         }
         setError(errorData.error || t('createSessionError'));
         throw new Error(errorData.error || t('createSessionError'));
       }
 
       const data = await response.json();
-      return data.clientSecret;
+      setClientSecret(data.clientSecret);
     } catch (err) {
       setError(t('loadError'));
       throw err;
     }
-  }, [product.id, email, bumpSelected, orderBump, appliedCoupon, t]);
+  }, [product.id, email, bumpSelected, orderBump, appliedCoupon, searchParams, t]);
+
+  // Fetch client secret when component mounts or dependencies change
+  useEffect(() => {
+    if (!hasAccess && !error) {
+      fetchClientSecret();
+    }
+  }, [fetchClientSecret, hasAccess, error]);
 
   const renderCheckoutForm = () => (
     <div className="w-full lg:w-1/2 lg:pl-8">
@@ -438,14 +447,34 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
           </div>
         )}
         
-        {!error && !hasAccess && stripePromise && (
-          <EmbeddedCheckoutProvider
+        {!error && !hasAccess && stripePromise && clientSecret && (
+          <Elements
             key={`${product.id}-${bumpSelected}-${appliedCoupon?.id || 'no-coupon'}`}
             stripe={stripePromise}
-            options={embeddedCheckoutOptions(fetchClientSecret)}
+            options={{
+              clientSecret,
+              appearance: {
+                theme: 'night',
+                variables: {
+                  colorPrimary: '#3b82f6',
+                  colorBackground: '#1e293b',
+                  colorText: '#ffffff',
+                  colorDanger: '#ef4444',
+                  fontFamily: 'system-ui, sans-serif',
+                  borderRadius: '8px',
+                },
+              },
+            } as StripeElementsOptions}
           >
-            <EmbeddedCheckout />
-          </EmbeddedCheckoutProvider>
+            <CustomPaymentForm
+              product={product}
+              email={email}
+              bumpProduct={orderBump}
+              bumpSelected={bumpSelected}
+              appliedCoupon={appliedCoupon}
+              successUrl={searchParams.get('success_url') || undefined}
+            />
+          </Elements>
         )}
       </div>
     </div>
