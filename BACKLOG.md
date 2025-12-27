@@ -32,24 +32,54 @@ A comprehensive list of planned features, technical improvements, and ideas for 
     2.  **Embedded Checkout**: Seamless on-page form (Current Method).
     3.  **Custom Checkout (Stripe Elements)**: Build a fully custom payment form using individual Elements for maximum layout control, similar to `easycart.pl`.
 
-#### Stripe Apps OAuth Integration (Self-Hosted Single Shop)
-**Status**: 🟢 High Priority (Next Up)
-**Description**: Replace manual API Key entry with **Stripe Apps OAuth 2.0** authentication. Allows self-hosted GateFlow instance owners to connect their Stripe account with a single "Connect with Stripe" button - no API keys to copy/paste.
-**Current State**: Using standard Stripe API with manual `STRIPE_SECRET_KEY` from .env (requires technical knowledge).
-**Why Stripe Apps (not Connect)**:
-- **Perfect for Self-Hosted**: Each GateFlow instance = one shop owner with their own Stripe account
-- **Zero Config UX**: "Connect with Stripe" button → OAuth authorization → done (like WooCommerce, Shopify plugins)
-- **Security**: OAuth token instead of full access API keys
-- **No Platform Fees**: Payments go directly to shop owner's Stripe account (no splitting, no marketplace logic)
-- **Stripe Recommendation**: For self-hosted integrations, Stripe recommends Apps with OAuth or Restricted API Keys
-**Implementation**:
+#### Stripe Configuration Wizard (Restricted API Keys)
+**Status**: ✅ Done - 2025-12-27
+**Description**: Interactive 5-step wizard for secure Stripe integration using Restricted API Keys (RAK) - Stripe's recommended approach for self-hosted integrations.
+**Implemented Features**:
+- ✅ **5-Step Wizard Flow**:
+  1. **Welcome**: Introduction to secure Stripe integration and RAK benefits
+  2. **Mode Selection**: Choose between Test Mode (sandbox) and Live Mode (production)
+  3. **Create Key**: Step-by-step guide with Stripe Dashboard screenshots showing how to create RAK with exact permissions
+  4. **Enter Key**: Paste and validate the RAK (test connection + verify permissions)
+  5. **Success**: Configuration complete with next steps
+- ✅ **Security Features**:
+  - Encrypted storage using AES-256-GCM encryption
+  - Key validation before saving (test API call + permission verification)
+  - Separate Test/Live mode keys with visual indicators
+  - Exit confirmation modal (prevents accidental data loss)
+- ✅ **Required Permissions Detection**: Automatically validates that RAK has all required permissions:
+  - Checkout Sessions (write), Payment Intents (write), Customers (write), Products (read), Prices (read), Payment Links (write), Refunds (write), Webhook Endpoints (write)
+- ✅ **Context-Aware UI**:
+  - Current mode indicator (Test/Live with color coding)
+  - Webhook endpoint URL with copy button
+  - Test connection status feedback
+  - Error handling with actionable messages
+- ✅ **Comprehensive Testing**: 7 E2E Playwright tests covering full wizard flow, validation, mode switching
+- ✅ **Settings Integration**: Embedded in `/dashboard/settings` with StripeSettings component
+- ✅ **Documentation**: STRIPE-TESTING-GUIDE.md with setup instructions and testing scenarios
+
+**Why RAK (not OAuth)**:
+- **Stripe Recommendation**: For self-hosted single-shop installations, Stripe recommends RAK or OAuth
+- **No Platform Registration**: RAK doesn't require registering GateFlow as a Stripe App
+- **Granular Control**: Admin can see exactly which permissions are granted
+- **Easy Revocation**: Can be revoked instantly from Stripe Dashboard
+- **Production Ready**: Works immediately without OAuth app approval process
+
+**Next Steps** (Future Enhancement):
+- 📋 **Stripe Apps OAuth**: Alternative "Connect with Stripe" button for even easier setup (requires Stripe App registration)
+- 📋 **Auto-Webhook Setup**: Use RAK to automatically create webhook endpoint via API (currently manual)
+
+#### Stripe Apps OAuth Integration (Alternative Method)
+**Status**: 📋 Planned (Low Priority - Alternative to RAK)
+**Description**: Add optional OAuth flow as an alternative to manual RAK entry. "Connect with Stripe" button → OAuth authorization → done.
+**Why Keep RAK**:
+- RAK is production-ready and working now
+- OAuth requires Stripe App registration (takes time)
+- Some users prefer manual control over OAuth
+**Implementation** (if needed):
 1.  **Stripe App Registration**: Register GateFlow as a Stripe App in Stripe Dashboard
-2.  **OAuth Flow**:
-    - User clicks "Connect Stripe" → redirect to Stripe OAuth (`/api/auth/stripe-apps/authorize`)
-    - User authorizes their own Stripe account
-    - Callback receives OAuth token → store in database (`/api/auth/stripe-apps/callback`)
-3.  **API Calls**: Use OAuth token to make charges directly to shop owner's account (same as current logic, just different auth)
-4.  **Fallback**: Keep manual API key option for advanced users who prefer it
+2.  **OAuth Flow**: Add "Connect with Stripe" button alongside existing RAK wizard
+3.  **Fallback**: Keep RAK wizard for users who prefer it or for advanced use cases
 **References**:
 - [Stripe Apps OAuth 2.0 docs](https://docs.stripe.com/stripe-apps/api-authentication/oauth)
 - [WooCommerce migration example](https://woocommerce.com/document/stripe/admin-experience/updated-requirements-for-stripe-plugin-mid-2024/)
@@ -386,15 +416,124 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 
 ### 🎨 UI & Branding
 
-#### Custom Application Branding
-**Status**: 📋 Planned
-**Description**: Ability to configure the application's appearance per instance (white-labeling).
-**Features**:
-- Custom logo and favicon
-- Primary and secondary color configuration
-- Font selection
-- Custom CSS injection
-- White-labeling options
+#### Custom Application Branding & Whitelabel
+**Status**: ✅ Done (MVP) - 2025-12-27
+**Description**: Comprehensive branding system allowing shop owners to customize the application's appearance and create a white-labeled experience.
+**Implemented Features**:
+- ✅ **Logo Upload**: Custom logo with preview and removal (stored in Supabase Storage)
+- ✅ **Color Customization**:
+  - Primary Color (main brand color)
+  - Secondary Color (accents and secondary elements)
+  - Accent Color (CTAs, highlights)
+  - Live preview with real-time updates
+- ✅ **Font Selection**: Choose from 6 professional font families:
+  - System Default (native OS fonts)
+  - Inter (modern, geometric)
+  - Roboto (neutral, versatile)
+  - Montserrat (elegant, modern)
+  - Poppins (friendly, geometric)
+  - Playfair Display (classic, serif)
+- ✅ **Settings UI**: Full BrandingSettings component in `/dashboard/settings` with:
+  - Image upload with drag-and-drop
+  - Color pickers with hex input
+  - Font dropdown with previews
+  - Reset to defaults button
+- ✅ **Database Schema**: `shop_config` table extended with branding fields
+- ✅ **Type Safety**: ShopConfig interface with branding properties
+- ✅ **E2E Tests**: 11 comprehensive Playwright tests covering all branding features
+
+**Next Steps** (Future Enhancement):
+- 📋 **Custom CSS Injection**: Allow advanced users to inject custom CSS for ultimate control
+- 📋 **Favicon Upload**: Separate favicon configuration
+- 📋 **Theme Presets**: Pre-configured color schemes (e.g., "Dark Mode", "Pastel", "Bold")
+- 📋 **Custom Domain Branding**: Hide "Powered by GateFlow" when using custom domain
+
+#### Smart Landing Page (Dynamic Storefront)
+**Status**: ✅ Done - 2025-12-27
+**Description**: Intelligent landing page that adapts based on user role and product availability, providing optimal experience for each scenario.
+**Implemented Features**:
+- ✅ **4 Adaptive Scenarios**:
+  1. **Admin without products**: Onboarding CTA with setup checklist
+  2. **Guest without products**: "Coming Soon" empty state with shop branding
+  3. **Admin with products**: Full storefront (same as guests)
+  4. **Guest with products**: Modern product showcase with free/premium sections
+- ✅ **Admin Onboarding CTA** (`AdminOnboardingCTA.tsx`):
+  - Welcome message with shop name
+  - Setup progress checklist (Shop configured, Add product, Configure payments, Launch)
+  - Primary CTA: "Add Your First Product" (opens modal via `?open=new`)
+  - Quick links to Products, Payments (Settings), Dashboard
+  - Animated gradient background with floating blobs
+- ✅ **Coming Soon State** (`ComingSoonEmptyState.tsx`):
+  - Branded empty state for guests when no products exist
+  - Shop name and contact email display
+  - Friendly message encouraging return visit
+- ✅ **Modern Storefront** (`Storefront.tsx`):
+  - Hero section with dynamic content based on product mix (free-only, paid-only, mixed)
+  - Separate sections for Free and Premium products
+  - Featured products with bento grid layout (first product larger)
+  - Temporal badges (Limited Time, Coming Soon) based on availability dates
+  - Access duration badges (e.g., "30d access")
+  - Show All functionality for products over limit (6 initial, expand on click)
+  - Smooth scroll navigation to product sections
+  - Responsive design (mobile, tablet, desktop)
+- ✅ **Smart Hero Variants**:
+  - Free-only: "Start Your Journey - Completely Free"
+  - Paid-only: "Premium Quality - Professional Results"
+  - Mixed: "From Free To Professional"
+  - Product count badges dynamically updated
+- ✅ **E2E Tests**: 24 comprehensive Playwright tests covering:
+  - All 4 scenarios with different user/product combinations
+  - Onboarding flow and navigation
+  - Storefront rendering for free, paid, and mixed shops
+  - Featured products, temporal badges, duration badges
+  - Show All functionality, animations, responsive design
+
+**Technical Architecture**:
+- `SmartLandingClient.tsx`: Main logic for scenario detection and routing
+- `src/app/[locale]/page.tsx`: Server-side data fetching and user detection
+- Context-aware rendering based on `isAdmin` flag and `products.length`
+- Integrated with DashboardLayout for consistent navigation
+
+#### About Page (Marketing & Lead Generation)
+**Status**: ✅ Done - 2025-12-27
+**Description**: Professional marketing page showcasing GateFlow's features, benefits, and deployment options to attract potential users.
+**Implemented Features**:
+- ✅ **Hero Section**:
+  - Animated gradient background with floating shapes
+  - Clear value proposition: "Self-Hosted Digital Product Platform"
+  - Dual CTAs: "View Documentation" and "See Demo"
+- ✅ **8 Feature Cards** with gradient backgrounds:
+  - Payment Processing (Stripe integration)
+  - Product Management (digital delivery)
+  - Email Verification (secure access)
+  - Lead Collection (guest checkout)
+  - Customer Dashboard (product access)
+  - Video Embeds (YouTube, Vimeo, Bunny.net, Loom)
+  - Quick Setup (Deploy in minutes)
+  - Open Source (MIT license)
+- ✅ **Deployment Options Section**:
+  - Quick Start: mikr.us with PM2 (~$3/mo, ~300MB RAM, free SSL)
+  - Production: VPS with Docker (~$4-14/mo, managed DB, zero-downtime deploys)
+  - Clear pricing and technical specifications
+- ✅ **Why Choose GateFlow Section**:
+  - No platform fees comparison
+  - Full control over data and payments
+  - Open source benefits
+- ✅ **FAQ Section**: 6 common questions with accurate, honest answers
+- ✅ **Technical Stack Section**: Next.js, PostgreSQL, Supabase, Stripe badges
+- ✅ **Footer**: Links to features, documentation, products, GitHub
+- ✅ **Bilingual**: Full EN/PL translations
+- ✅ **Removed Inaccuracies**:
+  - Fixed deployment pricing to realistic amounts
+  - Removed "Stripe one-click" claim (not accurate)
+  - Changed "Video Hosting" to "Video Embeds" (only embed support)
+  - Removed Enterprise tier (not ready yet)
+  - Fixed FAQ claims (removed "thousands of transactions tested", "community discussions")
+
+**Navigation**:
+- Added to main navigation in `DashboardLayout.tsx`
+- Route: `/[locale]/about`
+- Accessible to both authenticated and guest users
 
 ---
 
@@ -476,15 +615,27 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 **Features**: Chapters & Lessons hierarchy, Progress tracking, Sequential unlocking, Certificates, Quiz integration.
 
 #### Interactive Onboarding Checklist
-**Status**: 💭 Idea
-**Description**: A "Getting Started" guide displayed after the first login to help users set up their store.
-**Checklist (0/5 Tasks)**:
-1.  **Create your first product**: Guide to the product creation form.
-2.  **Store Details**: Configure store name, logo, and subdomain/domain.
-3.  **Connect Stripe**: Link a Stripe account to enable payments.
-4.  **Company Details**: Fill in business address and tax information.
-5.  **Billing & Taxes**: Configure VAT/Tax rates and invoicing settings.
-**UX**: Progress bar at the top of the dashboard until all steps are completed.
+**Status**: ✅ Done (Basic MVP) - 2025-12-27
+**Description**: Admin onboarding experience displayed when no products exist, guiding shop setup with visual checklist and CTAs.
+**Implemented Features**:
+- ✅ **Smart Detection**: Automatically shown when admin user has 0 products
+- ✅ **Setup Checklist** (4 tasks with visual indicators):
+  1. ✅ Shop configured (auto-completed)
+  2. ⏳ Add first product (links to product creation modal)
+  3. ⏳ Configure payments (links to Stripe settings)
+  4. ⏳ Launch store (ready when above are done)
+- ✅ **Primary CTA**: "Add Your First Product" button (opens modal via `?open=new` query param)
+- ✅ **Quick Links Section**: Direct access to Products, Payments, Dashboard
+- ✅ **Visual Design**: Animated gradient background, stat cards showing 0 products/customers
+- ✅ **Component**: `AdminOnboardingCTA.tsx` integrated into Smart Landing Page
+- ✅ **E2E Tests**: Covered by smart-landing.spec.ts tests
+
+**Next Steps** (Future Enhancement):
+- 📋 **Progress Persistence**: Track completed tasks in database (currently all pending except first)
+- 📋 **Dynamic Task Completion**: Auto-mark tasks as done when actions are completed
+- 📋 **More Tasks**: Add "Configure taxes", "Upload logo", "Test checkout" to checklist
+- 📋 **Dismissible**: Allow admin to hide onboarding once comfortable
+- 📋 **Re-open Option**: "Show me setup guide" link in dashboard for returning to checklist
 
 ---
 
@@ -575,4 +726,4 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 ---
 
 **Last Updated**: 2025-12-27
-**Version**: 1.7
+**Version**: 1.8
