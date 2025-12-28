@@ -199,11 +199,9 @@ test.describe('GUS Integration - Profile Update After Payment', () => {
       .from('guest_purchases')
       .insert({
         product_id: testProduct.id,
-        email: guestEmail,
-        stripe_session_id: `pi_guest_${Date.now()}`,
-        stripe_payment_intent_id: `pi_guest_${Date.now()}`,
-        amount_paid: 100,
-        currency: 'PLN',
+        customer_email: guestEmail,
+        session_id: `pi_guest_${Date.now()}`,
+        transaction_amount: 10000, // 100 PLN in cents
         metadata: companyData,
       })
       .select()
@@ -231,6 +229,10 @@ test.describe('GUS Integration - API Metadata Update', () => {
         nip: '5261040828',
         companyName: 'TEST',
       },
+      headers: {
+        'origin': 'http://localhost:3000',
+        'referer': 'http://localhost:3000/',
+      },
     });
 
     expect(response.status()).toBe(400);
@@ -257,6 +259,10 @@ test.describe('GUS Integration - API Metadata Update', () => {
         postalCode: '00-000',
         country: 'PL',
       },
+      headers: {
+        'origin': 'http://localhost:3000',
+        'referer': 'http://localhost:3000/',
+      },
     });
 
     // Will fail because Stripe is not actually configured in tests,
@@ -279,6 +285,10 @@ test.describe('GUS Integration - API Metadata Update', () => {
           clientSecret: mockClientSecret,
           needsInvoice: true,
           nip: '5261040828',
+        },
+        headers: {
+          'origin': 'http://localhost:3000',
+          'referer': 'http://localhost:3000/',
         },
       });
       requests.push(promise);

@@ -11,11 +11,17 @@ export async function POST(request: NextRequest) {
     const {
       productId,
       email,
+      firstName,
+      lastName,
       bumpProductId,
       couponCode,
       needsInvoice,
       nip,
       companyName,
+      address,
+      city,
+      postalCode,
+      country,
       successUrl
     } = await request.json();
 
@@ -136,6 +142,8 @@ export async function POST(request: NextRequest) {
         product_name: product.name,
         user_id: user?.id || '',
         email: finalEmail || '',
+        first_name: firstName || '',
+        last_name: lastName || '',
         bump_product_id: bumpProductId || '',
         bump_product_name: bumpProduct?.name || '',
         coupon_code: appliedCoupon?.code || '',
@@ -143,6 +151,10 @@ export async function POST(request: NextRequest) {
         needs_invoice: needsInvoice ? 'true' : 'false',
         nip: nip || '',
         company_name: companyName || '',
+        address: address || '',
+        city: city || '',
+        postal_code: postalCode || '',
+        country: country || '',
         success_url: successUrl || '',
       },
     };

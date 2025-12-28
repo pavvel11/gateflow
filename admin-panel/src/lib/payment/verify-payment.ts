@@ -12,41 +12,50 @@ import type { User } from '@supabase/supabase-js';
 import { WebhookService } from '@/lib/services/webhook-service';
 
 /**
- * Helper function to update user profile with company data from invoice
+ * Helper function to update user profile with customer data from payment
+ * Saves first_name and last_name always, company data only if invoice was requested
  */
 async function updateProfileWithCompanyData(
   serviceClient: any,
   userId: string,
   metadata: Record<string, any>
 ): Promise<void> {
-  if (metadata.needs_invoice !== 'true') return;
-
   try {
     const updateData: Record<string, any> = {
       updated_at: new Date().toISOString()
     };
 
-    if (metadata.company_name) updateData.company_name = metadata.company_name;
-    if (metadata.nip) updateData.tax_id = metadata.nip;
-    if (metadata.address) updateData.address_line1 = metadata.address;
-    if (metadata.city) updateData.city = metadata.city;
-    if (metadata.postal_code) updateData.zip_code = metadata.postal_code;
-    if (metadata.country) updateData.country = metadata.country;
+    // Always save customer name
+    if (metadata.first_name) updateData.first_name = metadata.first_name;
+    if (metadata.last_name) updateData.last_name = metadata.last_name;
 
-    const { error } = await serviceClient
-      .from('profiles')
-      .upsert({
-        id: userId,
-        ...updateData
-      });
+    // Save company data only if invoice was requested
+    if (metadata.needs_invoice === 'true') {
+      if (metadata.company_name) updateData.company_name = metadata.company_name;
+      if (metadata.nip) updateData.tax_id = metadata.nip;
+      if (metadata.address) updateData.address_line1 = metadata.address;
+      if (metadata.city) updateData.city = metadata.city;
+      if (metadata.postal_code) updateData.zip_code = metadata.postal_code;
+      if (metadata.country) updateData.country = metadata.country;
+    }
 
-    if (error) {
-      console.error('Failed to update profile with company data:', error);
-    } else {
-      console.log('Successfully updated profile with company data for user:', userId);
+    // Only update if we have data to save
+    if (Object.keys(updateData).length > 1) { // > 1 because updated_at is always present
+      const { error } = await serviceClient
+        .from('profiles')
+        .upsert({
+          id: userId,
+          ...updateData
+        });
+
+      if (error) {
+        console.error('Failed to update profile with customer data:', error);
+      } else {
+        console.log('Successfully updated profile with customer data for user:', userId);
+      }
     }
   } catch (error) {
-    console.error('Error updating profile with company data:', error);
+    console.error('Error updating profile with customer data:', error);
   }
 }
 

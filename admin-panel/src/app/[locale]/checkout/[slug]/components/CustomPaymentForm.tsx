@@ -33,6 +33,12 @@ export default function CustomPaymentForm({
   const router = useRouter();
 
   const [guestEmail, setGuestEmail] = useState('');
+
+  // Customer data - always collected
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+
+  // Invoice data - optional
   const [needsInvoice, setNeedsInvoice] = useState(false);
   const [nip, setNip] = useState('');
   const [companyName, setCompanyName] = useState('');
@@ -40,9 +46,11 @@ export default function CustomPaymentForm({
   const [city, setCity] = useState('');
   const [postalCode, setPostalCode] = useState('');
   const [country, setCountry] = useState('PL');
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
 
   // GUS integration state
   const [isLoadingGUS, setIsLoadingGUS] = useState(false);
@@ -73,6 +81,50 @@ export default function CustomPaymentForm({
     ? totalGross / (1 + vatRate / 100)
     : totalGross;
   const vatAmount = totalGross - totalNet;
+
+  // Auto-load profile data for logged-in users
+  useEffect(() => {
+    async function loadProfileData() {
+      if (!email) {
+        setIsLoadingProfile(false);
+        return; // Only load for logged-in users
+      }
+
+      setIsLoadingProfile(true);
+      try {
+        const response = await fetch('/api/profile/get', {
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (response.ok) {
+          const { data } = await response.json();
+          if (data) {
+            // Load customer data
+            if (data.first_name) setFirstName(data.first_name);
+            if (data.last_name) setLastName(data.last_name);
+
+            // Load invoice data if available
+            if (data.tax_id) {
+              setNip(data.tax_id);
+              setNeedsInvoice(true);
+            }
+            if (data.company_name) setCompanyName(data.company_name);
+            if (data.address_line1) setAddress(data.address_line1);
+            if (data.city) setCity(data.city);
+            if (data.zip_code) setPostalCode(data.zip_code);
+            if (data.country) setCountry(data.country);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load profile data:', error);
+        // Silent fail - user can enter data manually
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    }
+
+    loadProfileData();
+  }, [email]);
 
   // GUS NIP auto-fill handler
   const handleNIPBlur = async () => {
@@ -153,6 +205,11 @@ export default function CustomPaymentForm({
       return;
     }
 
+    if (!firstName || !lastName) {
+      setErrorMessage(t('nameRequired', { defaultValue: 'First and last name are required' }));
+      return;
+    }
+
     if (needsInvoice && (!nip || !companyName)) {
       setErrorMessage('NIP and Company Name are required for invoice');
       return;
@@ -185,6 +242,8 @@ export default function CustomPaymentForm({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               clientSecret: paymentIntent.paymentIntent.client_secret,
+              firstName,
+              lastName,
               needsInvoice: true,
               nip,
               companyName,
@@ -275,6 +334,40 @@ export default function CustomPaymentForm({
             )}
           </div>
         )}
+      </div>
+
+      {/* First and Last Name - always required */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-2">
+            {t('firstName', { defaultValue: 'First Name' })}
+          </label>
+          <input
+            type="text"
+            id="firstName"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            placeholder="Jan"
+            required
+            disabled={isLoadingProfile}
+            className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed"
+          />
+        </div>
+        <div>
+          <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-2">
+            {t('lastName', { defaultValue: 'Last Name' })}
+          </label>
+          <input
+            type="text"
+            id="lastName"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            placeholder="Kowalski"
+            required
+            disabled={isLoadingProfile}
+            className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed"
+          />
+        </div>
       </div>
 
       {/* Price Summary */}

@@ -74,6 +74,8 @@ export async function POST(request: NextRequest) {
     // 3. Parse and validate request
     const {
       clientSecret,
+      firstName,
+      lastName,
       needsInvoice,
       nip,
       companyName,
@@ -98,9 +100,11 @@ export async function POST(request: NextRequest) {
 
     const stripe = await getStripeServer();
 
-    // Update Payment Intent with invoice metadata
+    // Update Payment Intent with customer and invoice metadata
     await stripe.paymentIntents.update(paymentIntentId, {
       metadata: {
+        first_name: firstName || '',
+        last_name: lastName || '',
         needs_invoice: needsInvoice ? 'true' : 'false',
         nip: nip || '',
         company_name: companyName || '',
