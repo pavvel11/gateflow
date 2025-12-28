@@ -38,6 +38,9 @@ export default function CustomPaymentForm({
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
 
+  // Terms & Conditions - only for guests (!email)
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
   // Invoice data - optional
   const [needsInvoice, setNeedsInvoice] = useState(false);
   const [nip, setNip] = useState('');
@@ -210,6 +213,12 @@ export default function CustomPaymentForm({
       return;
     }
 
+    // Require T&C acceptance for guests
+    if (!email && !termsAccepted) {
+      setErrorMessage(t('termsRequired', { defaultValue: 'Please accept Terms and Conditions' }));
+      return;
+    }
+
     if (needsInvoice && (!nip || !companyName)) {
       setErrorMessage('NIP and Company Name are required for invoice');
       return;
@@ -244,6 +253,7 @@ export default function CustomPaymentForm({
               clientSecret: paymentIntent.paymentIntent.client_secret,
               firstName,
               lastName,
+              termsAccepted: !email ? termsAccepted : undefined, // Only for guests
               needsInvoice: true,
               nip,
               companyName,
@@ -369,6 +379,32 @@ export default function CustomPaymentForm({
           />
         </div>
       </div>
+
+      {/* Terms & Conditions - only for guests */}
+      {!email && (
+        <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+          <label className="flex items-start cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              className="mt-1 w-4 h-4 text-blue-500 bg-transparent border-2 border-blue-500/50 rounded focus:ring-blue-500 focus:ring-2"
+              required
+            />
+            <span className="ml-3 text-sm text-gray-300">
+              {t('iAgree', { defaultValue: 'I agree to the' })}{' '}
+              <a href="/terms" target="_blank" className="text-blue-400 hover:text-blue-300 underline">
+                {t('termsOfService', { defaultValue: 'Terms of Service' })}
+              </a>
+              {' '}{t('and', { defaultValue: 'and' })}{' '}
+              <a href="/privacy" target="_blank" className="text-blue-400 hover:text-blue-300 underline">
+                {t('privacyPolicy', { defaultValue: 'Privacy Policy' })}
+              </a>
+              <span className="text-red-400 ml-1">*</span>
+            </span>
+          </label>
+        </div>
+      )}
 
       {/* Price Summary */}
       <div className="p-4 bg-white/5 border border-white/10 rounded-lg space-y-2 text-sm">

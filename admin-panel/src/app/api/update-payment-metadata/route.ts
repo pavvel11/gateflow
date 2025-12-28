@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
       clientSecret,
       firstName,
       lastName,
+      termsAccepted,
       needsInvoice,
       nip,
       companyName,
@@ -105,6 +106,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         first_name: firstName || '',
         last_name: lastName || '',
+        terms_accepted: termsAccepted ? 'true' : '',
         needs_invoice: needsInvoice ? 'true' : 'false',
         nip: nip || '',
         company_name: companyName || '',

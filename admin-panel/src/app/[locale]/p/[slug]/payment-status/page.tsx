@@ -244,13 +244,15 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
   }
 
   // Check if terms are already handled:
-  // 1. Stripe collects terms of service, OR
-  // 2. User is authenticated (already accepted during registration), OR
-  // 3. User exists in database (email registered, even if not logged in)
-  const stripeCollectsTerms = process.env.STRIPE_COLLECT_TERMS_OF_SERVICE === 'true';
+  // NEW LOGIC: T&C are now accepted in checkout, not on payment-status page
+  // - Logged in users: already accepted during registration
+  // - Guests: accept T&C in checkout form (stored in metadata.terms_accepted)
   const userIsAuthenticated = !!user;
-  
-  const termsAlreadyHandled = stripeCollectsTerms || userIsAuthenticated || userExistsInDatabase;
+
+  // Always true now because:
+  // - Authenticated users already accepted terms during registration
+  // - Guests accept terms in checkout (verified in payment processing)
+  const termsAlreadyHandled = true;
 
   return (
     <PaymentStatusView
