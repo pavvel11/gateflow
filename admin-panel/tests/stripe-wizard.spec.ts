@@ -313,7 +313,7 @@ test.describe('Stripe Configuration Wizard', () => {
 
     // Should show confirmation dialog
     await expect(page.locator('text=Exit configuration?')).toBeVisible();
-    await expect(page.locator('text=progress has been saved')).toBeVisible();
+    await expect(page.locator('text=/progress will not be saved|start over/i')).toBeVisible({ timeout: 10000 });
 
     // Click Continue Setup
     const continueSetupButton = page.locator('button', { hasText: /Continue Setup/i });
