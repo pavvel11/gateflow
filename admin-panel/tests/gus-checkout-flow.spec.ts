@@ -79,7 +79,7 @@ test.describe('GUS Checkout Flow - NIP Validation', () => {
     await page.waitForSelector('input[type="email"], input#firstName', { timeout: 30000 });
 
     // Check invoice checkbox
-    await page.click('text=Potrzebuję faktury');
+    await page.locator('input[type="checkbox"]').first().check();
 
     // Fill invalid NIP
     const nipInput = page.locator('input#nip');
@@ -102,7 +102,7 @@ test.describe('GUS Checkout Flow - NIP Validation', () => {
     await page.waitForSelector('input[type="email"], input#firstName', { timeout: 30000 });
 
     // Check invoice checkbox
-    await page.click('text=Potrzebuję faktury');
+    await page.locator('input[type="checkbox"]').first().check();
 
     // Fill valid NIP
     const nipInput = page.locator('input#nip');
@@ -119,7 +119,7 @@ test.describe('GUS Checkout Flow - NIP Validation', () => {
     await page.waitForSelector('input[type="email"], input#firstName', { timeout: 30000 });
 
     // Check invoice checkbox
-    await page.click('text=Potrzebuję faktury');
+    await page.locator('input[type="checkbox"]').first().check();
 
     // Try to fill more than 10 digits
     const nipInput = page.locator('input#nip');
@@ -191,7 +191,7 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
     await page.waitForSelector('input[type="email"], input#firstName', { timeout: 30000 });
 
     // Check invoice checkbox
-    await page.click('text=Potrzebuję faktury');
+    await page.locator('input[type="checkbox"]').first().check();
 
     // Fill valid NIP
     const nipInput = page.locator('input#nip');
@@ -236,7 +236,7 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
     await page.waitForSelector('input[type="email"], input#firstName', { timeout: 30000 });
 
     // Check invoice checkbox
-    await page.click('text=Potrzebuję faktury');
+    await page.locator('input[type="checkbox"]').first().check();
 
     // Fill valid NIP and blur
     const nipInput = page.locator('input#nip');
@@ -275,7 +275,7 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
     await page.waitForSelector('input[type="email"], input#firstName', { timeout: 30000 });
 
     // Check invoice checkbox
-    await page.click('text=Potrzebuję faktury');
+    await page.locator('input[type="checkbox"]').first().check();
 
     // Fill NIP and blur
     const nipInput = page.locator('input#nip');
@@ -317,7 +317,7 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
     await page.waitForSelector('input[type="email"], input#firstName', { timeout: 30000 });
 
     // Check invoice checkbox
-    await page.click('text=Potrzebuję faktury');
+    await page.locator('input[type="checkbox"]').first().check();
 
     // Fill NIP and blur
     const nipInput = page.locator('input#nip');
@@ -350,7 +350,7 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
     await page.waitForSelector('input[type="email"], input#firstName', { timeout: 30000 });
 
     // Check invoice checkbox
-    await page.click('text=Potrzebuję faktury');
+    await page.locator('input[type="checkbox"]').first().check();
 
     // Fill NIP and blur (will fail)
     const nipInput = page.locator('input#nip');
@@ -402,7 +402,7 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
     await page.waitForSelector('input[type="email"], input#firstName', { timeout: 30000 });
 
     // Check invoice checkbox
-    await page.click('text=Potrzebuję faktury');
+    await page.locator('input[type="checkbox"]').first().check();
 
     // Fill NIP and blur
     const nipInput = page.locator('input#nip');

@@ -159,11 +159,11 @@ export default function CustomPaymentForm({
         setCompanyName(result.data.nazwa);
 
         // Build address string
-        const addressParts = [result.data.ulica, result.data.nrNieruchomosci];
+        let addressStr = `${result.data.ulica} ${result.data.nrNieruchomosci}`;
         if (result.data.nrLokalu) {
-          addressParts.push(`/${result.data.nrLokalu}`);
+          addressStr += `/${result.data.nrLokalu}`;
         }
-        setAddress(addressParts.join(' ').trim());
+        setAddress(addressStr.trim());
 
         setCity(result.data.miejscowosc);
         setPostalCode(result.data.kodPocztowy);
