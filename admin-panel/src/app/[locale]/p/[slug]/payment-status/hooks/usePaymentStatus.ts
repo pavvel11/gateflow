@@ -10,6 +10,7 @@ interface UsePaymentStatusParams {
   paymentStatus: PaymentStatus;
   customerEmail?: string;
   sessionId?: string;
+  paymentIntentId?: string;
   product: Product;
   accessGranted: boolean;
   termsAlreadyHandled: boolean;
@@ -20,6 +21,7 @@ export function usePaymentStatus({
   paymentStatus,
   customerEmail,
   sessionId,
+  paymentIntentId,
   product,
   accessGranted,
   termsAlreadyHandled,
@@ -47,6 +49,7 @@ export function usePaymentStatus({
     paymentStatus,
     customerEmail,
     sessionId,
+    paymentIntentId,
     product,
     termsAlreadyHandled: terms.alreadyHandled,
     termsAccepted: terms.accepted,

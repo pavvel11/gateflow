@@ -29,6 +29,7 @@ export interface PaymentStatusViewProps {
   paymentStatus: PaymentStatus;
   customerEmail?: string;
   sessionId?: string;
+  paymentIntentId?: string;
   termsAlreadyHandled: boolean;
   redirectUrl?: string;
 }

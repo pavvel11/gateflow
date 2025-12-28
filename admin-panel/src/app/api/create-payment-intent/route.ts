@@ -31,6 +31,8 @@ export async function POST(request: NextRequest) {
     // Get authenticated user (if any)
     const { data: { user } } = await supabase.auth.getUser();
 
+    console.log('[CreatePaymentIntent] User from session:', user ? { id: user.id, email: user.email } : 'null');
+
     // Use email from request if provided, otherwise from user session
     // For guests without email, we'll let Stripe collect it via billing details
     const finalEmail = email || user?.email || null;

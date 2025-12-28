@@ -1,20 +1,24 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import PaymentStatusView from './components/PaymentStatusView';
-import { verifyPaymentSession } from '@/lib/payment/verify-payment';
+import { verifyPaymentSession, verifyPaymentIntent } from '@/lib/payment/verify-payment';
 import { PaymentStatus } from './types';
 
 interface PageProps {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<{ session_id?: string; success_url?: string }>;
+  searchParams: Promise<{
+    session_id?: string;
+    payment_intent?: string;
+    success_url?: string
+  }>;
 }
 
 export default async function PaymentStatusPage({ params, searchParams }: PageProps) {
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
-  
-  const { session_id } = resolvedSearchParams;
-  const isStripePayment = !!session_id; // Has session_id = paid product, no session_id = free product
+
+  const { session_id, payment_intent } = resolvedSearchParams;
+  const isStripePayment = !!(session_id || payment_intent); // Has session_id or payment_intent = paid product
   
   const supabase = await createClient();
   
@@ -46,8 +50,8 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
   let userExistsInDatabase = false; // Track if user exists in database
 
   try {
-    if (isStripePayment) {
-      // Handle paid product with Stripe session using direct function call
+    if (isStripePayment && session_id) {
+      // Handle paid product with Stripe Checkout Session (embedded checkout flow)
       const result = await verifyPaymentSession(session_id, user);
       customerEmail = result.customer_email || '';
       
@@ -92,8 +96,51 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
       } else {
         paymentStatus = 'processing';
       }
+    } else if (isStripePayment && payment_intent) {
+      // Handle Payment Intent flow (custom payment form)
+      const result = await verifyPaymentIntent(payment_intent, user);
+      customerEmail = result.customer_email || '';
+
+      console.log('Payment Intent verification result:', {
+        status: result.status,
+        access_granted: result.access_granted,
+        send_magic_link: result.send_magic_link,
+        requires_login: result.requires_login,
+        is_guest_purchase: result.is_guest_purchase,
+        user_id: user?.id || 'null'
+      });
+
+      // Check if user exists in database based on scenario
+      userExistsInDatabase = result.scenario === 'existing_user_email';
+
+      if (result.status === 'succeeded') {
+        if (result.access_granted) {
+          accessGranted = true;
+          paymentStatus = 'completed';
+
+          if (result.scenario === 'existing_user_email' && result.requires_login && result.send_magic_link) {
+            // User exists but needs to login - let frontend handle magic link
+            paymentStatus = 'magic_link_sent';
+          }
+        } else if (result.scenario === 'email_validation_failed_server_side') {
+          // Email validation failed without refund
+          paymentStatus = 'email_validation_failed';
+          errorMessage = result.error || 'Invalid email address detected.';
+        } else if (result.is_guest_purchase && result.send_magic_link) {
+          // Guest purchase saved - let frontend handle magic link
+          paymentStatus = 'magic_link_sent';
+        } else {
+          errorMessage = result.error || 'Unknown error occurred';
+          paymentStatus = 'failed';
+        }
+      } else if (result.error) {
+        errorMessage = result.error;
+        paymentStatus = 'failed';
+      } else {
+        paymentStatus = 'processing';
+      }
     } else {
-      // Handle free product (no session_id) - user must be logged in
+      // Handle free product (no session_id and no payment_intent) - user must be logged in
       if (!user) {
         redirect('/login');
       }
@@ -213,6 +260,7 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
       errorMessage={errorMessage}
       customerEmail={customerEmail}
       sessionId={session_id}
+      paymentIntentId={payment_intent}
       termsAlreadyHandled={termsAlreadyHandled}
       redirectUrl={finalRedirectUrl}
     />

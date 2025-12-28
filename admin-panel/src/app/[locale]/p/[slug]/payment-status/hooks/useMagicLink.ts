@@ -8,6 +8,7 @@ interface UseMagicLinkParams {
   paymentStatus: PaymentStatus;
   customerEmail?: string;
   sessionId?: string;
+  paymentIntentId?: string;
   product: Product;
   termsAlreadyHandled: boolean;
   termsAccepted: boolean;
@@ -19,6 +20,7 @@ export function useMagicLink({
   paymentStatus,
   customerEmail,
   sessionId,
+  paymentIntentId,
   product,
   termsAlreadyHandled,
   termsAccepted,
@@ -33,16 +35,22 @@ export function useMagicLink({
   const t = useTranslations('paymentStatus');
   
   const sendMagicLinkInternal = useCallback(async () => {
-    if (!customerEmail || !sessionId) return;
-    
+    // Need either sessionId (embedded checkout) or paymentIntentId (payment intent)
+    const paymentId = sessionId || paymentIntentId;
+    if (!customerEmail || !paymentId) return;
+
     // Don't send if we already have an error
     if (error) return;
-    
+
     setSendingMagicLink(true);
     setError(null); // Clear previous errors
-    
+
     try {
-      const redirectUrl = `${window.location.origin}/auth/callback?redirect_to=${encodeURIComponent(`/p/${product.slug}/payment-status?session_id=${sessionId}`)}`;
+      // Build redirect URL with appropriate parameter
+      const paymentParam = sessionId
+        ? `session_id=${sessionId}`
+        : `payment_intent=${paymentIntentId}`;
+      const redirectUrl = `${window.location.origin}/auth/callback?redirect_to=${encodeURIComponent(`/p/${product.slug}/payment-status?${paymentParam}`)}`;
       const supabase = await createClient();
       const { error: authError } = await supabase.auth.signInWithOtp({
         email: customerEmail,
@@ -75,35 +83,37 @@ export function useMagicLink({
     } finally {
       setSendingMagicLink(false);
     }
-  }, [customerEmail, sessionId, product.slug, captchaToken, error, t]);
+  }, [customerEmail, sessionId, paymentIntentId, product.slug, captchaToken, error, t]);
 
   // Auto-send magic link when conditions are met
   useEffect(() => {
     const termsOk = termsAlreadyHandled || termsAccepted;
     const turnstileOk = captchaToken;
-    
-    if (paymentStatus === 'magic_link_sent' && 
-        customerEmail && 
-        sessionId && 
-        !magicLinkSent && 
-        termsOk && 
-        turnstileOk && 
+    const paymentId = sessionId || paymentIntentId;
+
+    if (paymentStatus === 'magic_link_sent' &&
+        customerEmail &&
+        paymentId &&
+        !magicLinkSent &&
+        termsOk &&
+        turnstileOk &&
         !sendingMagicLink &&
         !error) { // Don't auto-send if there's an error
       sendMagicLinkInternal();
     }
-  }, [paymentStatus, customerEmail, sessionId, magicLinkSent, sendingMagicLink, termsAccepted, captchaToken, termsAlreadyHandled, sendMagicLinkInternal, error]);
+  }, [paymentStatus, customerEmail, sessionId, paymentIntentId, magicLinkSent, sendingMagicLink, termsAccepted, captchaToken, termsAlreadyHandled, sendMagicLinkInternal, error]);
 
   // Show spinner for minimum time - different logic for invisible vs interactive
   useEffect(() => {
     const termsOk = termsAlreadyHandled || termsAccepted;
-    
+    const paymentId = sessionId || paymentIntentId;
+
     // For invisible captcha: show spinner early (when terms OK)
     // For interactive captcha: show spinner only when captcha token received
-    const shouldTriggerSpinner = paymentStatus === 'magic_link_sent' && 
-                                customerEmail && 
-                                sessionId && 
-                                termsOk && 
+    const shouldTriggerSpinner = paymentStatus === 'magic_link_sent' &&
+                                customerEmail &&
+                                paymentId &&
+                                termsOk &&
                                 (captchaToken || !showInteractiveWarning); // Show early for invisible, late for interactive
     
     if (shouldTriggerSpinner && !showSpinnerForMinTime && !magicLinkSent) {
@@ -115,7 +125,7 @@ export function useMagicLink({
       
       return () => clearTimeout(timer);
     }
-  }, [paymentStatus, customerEmail, sessionId, magicLinkSent, showSpinnerForMinTime, termsAlreadyHandled, termsAccepted, captchaToken, showInteractiveWarning]); // Added showInteractiveWarning
+  }, [paymentStatus, customerEmail, sessionId, paymentIntentId, magicLinkSent, showSpinnerForMinTime, termsAlreadyHandled, termsAccepted, captchaToken, showInteractiveWarning]); // Added showInteractiveWarning
 
   return {
     sent: magicLinkSent,

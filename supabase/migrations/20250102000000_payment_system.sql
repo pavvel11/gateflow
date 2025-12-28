@@ -102,8 +102,8 @@ CREATE TABLE IF NOT EXISTS admin_actions (
 CREATE TABLE IF NOT EXISTS payment_transactions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   session_id TEXT NOT NULL CHECK (
-    length(session_id) BETWEEN 1 AND 255 AND 
-    session_id ~* '^cs_[a-zA-Z0-9_]+$'
+    length(session_id) BETWEEN 1 AND 255 AND
+    session_id ~* '^(cs_|pi_)[a-zA-Z0-9_]+$'
   ),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE, -- Nullable for guest purchases
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
@@ -148,8 +148,8 @@ CREATE TABLE IF NOT EXISTS guest_purchases (
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
   transaction_amount NUMERIC NOT NULL CHECK (transaction_amount >= 0 AND transaction_amount <= 99999999), -- Amount in cents, max $999,999.99
   session_id TEXT NOT NULL CHECK (
-    length(session_id) BETWEEN 1 AND 255 AND 
-    session_id ~* '^cs_[a-zA-Z0-9_]+$'
+    length(session_id) BETWEEN 1 AND 255 AND
+    session_id ~* '^(cs_|pi_)[a-zA-Z0-9_]+$'
   ),
   claimed_by_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL, -- When user creates account and claims
   claimed_at TIMESTAMPTZ,
@@ -630,8 +630,8 @@ BEGIN
         RETURN jsonb_build_object('success', false, 'error', 'Invalid session ID');
     END IF;
     
-    -- Validate session_id format (Stripe sessions start with 'cs_')
-    IF NOT (session_id_param ~* '^cs_[a-zA-Z0-9_]+$') THEN
+    -- Validate session_id format (Stripe sessions start with 'cs_' or Payment Intents with 'pi_')
+    IF NOT (session_id_param ~* '^(cs_|pi_)[a-zA-Z0-9_]+$') THEN
         RETURN jsonb_build_object('success', false, 'error', 'Invalid session ID format');
     END IF;
     

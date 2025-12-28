@@ -1,6 +1,6 @@
 /**
  * Payment verification utilities
- * 
+ *
  * SECURITY WARNING: This file contains server-side only code.
  * Contains Service Role keys and must never be executed in the browser.
  * Only use in Server Components and API Routes.
@@ -10,6 +10,22 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getStripeServer } from '@/lib/stripe/server';
 import type { User } from '@supabase/supabase-js';
 import { WebhookService } from '@/lib/services/webhook-service';
+
+export interface PaymentIntentVerificationResult {
+  payment_intent_id: string;
+  status: string;
+  customer_email?: string;
+  amount?: number;
+  currency?: string;
+  metadata?: Record<string, unknown>;
+  created?: number;
+  access_granted?: boolean;
+  requires_login?: boolean;
+  is_guest_purchase?: boolean;
+  scenario?: string;
+  send_magic_link?: boolean;
+  error?: string;
+}
 
 export interface PaymentVerificationResult {
   session_id: string;
@@ -254,6 +270,205 @@ export async function verifyPaymentSession(
       status: 'error',
       payment_status: null,
       error: 'Payment verification failed'
+    };
+  }
+}
+
+/**
+ * Verify Payment Intent and process payment
+ * Used for custom payment form flow (not embedded checkout)
+ */
+export async function verifyPaymentIntent(
+  paymentIntentId: string,
+  user?: User | null
+): Promise<PaymentIntentVerificationResult> {
+  // SECURITY: This function must only run on the server
+  if (typeof window !== 'undefined') {
+    throw new Error('verifyPaymentIntent can only be called on the server');
+  }
+
+  // Validate input
+  if (!paymentIntentId || typeof paymentIntentId !== 'string') {
+    return {
+      payment_intent_id: paymentIntentId || 'invalid',
+      status: 'error',
+      error: 'Invalid payment intent ID'
+    };
+  }
+
+  // Check environment variables
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return {
+      payment_intent_id: paymentIntentId,
+      status: 'error',
+      error: 'Server configuration error'
+    };
+  }
+
+  // Create Service Role client for secure operations
+  const serviceClient = createServiceClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  );
+
+  try {
+    // Get Stripe instance
+    const stripe = await getStripeServer();
+
+    // Retrieve payment intent from Stripe
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+    if (!paymentIntent) {
+      return {
+        payment_intent_id: paymentIntentId,
+        status: 'not_found',
+        error: 'Payment intent not found'
+      };
+    }
+
+    // Base response
+    const baseResponse: PaymentIntentVerificationResult = {
+      payment_intent_id: paymentIntent.id,
+      status: paymentIntent.status,
+      customer_email: paymentIntent.receipt_email || undefined,
+      amount: paymentIntent.amount,
+      currency: paymentIntent.currency,
+      metadata: paymentIntent.metadata || undefined,
+      created: paymentIntent.created,
+    };
+
+    // If payment is successful, process it
+    if (paymentIntent.status === 'succeeded') {
+      const productId = paymentIntent.metadata?.product_id;
+      const customerEmail = paymentIntent.receipt_email || paymentIntent.metadata?.email;
+
+      if (productId && customerEmail) {
+        try {
+          // Validate email for disposable domains
+          const { ProductValidationService } = await import('@/lib/services/product-validation');
+          const isValidEmail = await ProductValidationService.validateEmail(customerEmail);
+          if (!isValidEmail) {
+            return {
+              ...baseResponse,
+              access_granted: false,
+              error: 'Invalid email address detected. Temporary email addresses are not allowed for purchases. Please contact support for assistance.',
+              scenario: 'email_validation_failed_server_side'
+            };
+          }
+
+          // Extract metadata
+          const bumpProductId = paymentIntent.metadata?.bump_product_id || null;
+          const couponId = paymentIntent.metadata?.coupon_id || null;
+
+          // Process payment using database function
+          // For Payment Intent flow, use payment_intent_id as session_id for uniqueness tracking
+          const rpcParams = {
+            session_id_param: paymentIntent.id, // Use payment_intent_id as session_id for Payment Intent flow
+            product_id_param: productId,
+            customer_email_param: customerEmail,
+            amount_total: paymentIntent.amount,
+            currency_param: paymentIntent.currency,
+            stripe_payment_intent_id: paymentIntent.id,
+            user_id_param: user?.id || null,
+            bump_product_id_param: bumpProductId || null,
+            coupon_id_param: couponId || null
+          };
+
+          console.log('Calling process_stripe_payment_completion_with_bump for PaymentIntent:', JSON.stringify(rpcParams, null, 2));
+
+          const { data: paymentResult, error: paymentError } = await serviceClient
+            .rpc('process_stripe_payment_completion_with_bump', rpcParams);
+
+          if (paymentResult) {
+            console.log('Raw DB paymentResult for PaymentIntent:', JSON.stringify(paymentResult, null, 2));
+          }
+
+          if (paymentError) {
+            console.error('Database payment processing error:', paymentError);
+            return {
+              ...baseResponse,
+              access_granted: false,
+              error: 'Failed to process payment'
+            };
+          }
+
+          if (!paymentResult?.success) {
+            return {
+              ...baseResponse,
+              access_granted: false,
+              error: paymentResult?.error || 'Payment processing failed'
+            };
+          }
+
+          // Trigger webhook for new successful purchases
+          if (!paymentResult.already_had_access) {
+            WebhookService.trigger('purchase.completed', {
+              email: customerEmail,
+              productId: productId,
+              amount: paymentIntent.amount,
+              currency: paymentIntent.currency,
+              paymentIntentId: paymentIntent.id,
+              isGuest: paymentResult.is_guest_purchase,
+              bumpProductId: bumpProductId,
+              couponId: couponId
+            }).catch(err => console.error('Webhook trigger error:', err));
+          }
+
+          // Convert database response to our interface
+          return {
+            ...baseResponse,
+            access_granted: paymentResult.access_granted || false,
+            requires_login: paymentResult.requires_login || false,
+            is_guest_purchase: paymentResult.is_guest_purchase || false,
+            scenario: paymentResult.scenario,
+            send_magic_link: paymentResult.send_magic_link || false,
+            customer_email: paymentResult.customer_email
+          };
+
+        } catch (error) {
+          console.error('Payment processing error:', error);
+          return {
+            ...baseResponse,
+            access_granted: false,
+            error: 'Failed to process payment completion'
+          };
+        }
+      }
+
+      // Missing required data
+      return {
+        ...baseResponse,
+        access_granted: false,
+        error: !productId ? 'Product ID missing from payment intent metadata' : 'Customer email missing from payment intent'
+      };
+    }
+
+    return baseResponse;
+
+  } catch (error) {
+    // Handle Stripe errors
+    if (error && typeof error === 'object' && 'type' in error) {
+      const stripeError = error as { type: string; message: string };
+      if (stripeError.type === 'StripeInvalidRequestError') {
+        return {
+          payment_intent_id: paymentIntentId,
+          status: 'invalid',
+          error: 'Invalid payment intent ID'
+        };
+      }
+    }
+
+    console.error('Payment intent verification error:', error);
+    return {
+      payment_intent_id: paymentIntentId,
+      status: 'error',
+      error: 'Payment intent verification failed'
     };
   }
 }

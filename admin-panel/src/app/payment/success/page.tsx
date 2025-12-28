@@ -33,23 +33,39 @@ async function PaymentSuccessContent({ searchParams }: PaymentSuccessPageProps) 
     redirect(successUrl);
   }
 
-  // If we have a product slug (old flow), redirect to it with success parameter
-  if (productSlug) {
-    redirect(`/p/${productSlug}?payment=success`);
+  // NEW FLOW: If we have payment_intent, use the new Payment Intent flow
+  if (paymentIntent && redirectStatus === 'succeeded') {
+    // Use productSlug if available (it's in URL as 'product' param from CustomPaymentForm)
+    // Otherwise fetch product by ID
+    if (productSlug) {
+      const locale = 'pl'; // TODO: get from Accept-Language header or cookie
+      let redirectUrl = `/${locale}/p/${productSlug}/payment-status?payment_intent=${paymentIntent}`;
+      if (successUrl) {
+        redirectUrl += `&success_url=${encodeURIComponent(successUrl)}`;
+      }
+      redirect(redirectUrl);
+    } else if (productId) {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/products/${productId}`);
+        const data = await response.json();
+        if (data.product?.slug) {
+          const locale = 'pl'; // TODO: get from Accept-Language header or cookie
+          let redirectUrl = `/${locale}/p/${data.product.slug}/payment-status?payment_intent=${paymentIntent}`;
+          if (successUrl) {
+            redirectUrl += `&success_url=${encodeURIComponent(successUrl)}`;
+          }
+          redirect(redirectUrl);
+        }
+      } catch (error) {
+        // If fetch fails, show success page anyway
+        console.error('Failed to fetch product:', error);
+      }
+    }
   }
 
-  // If we have product_id (new flow), fetch product and redirect
-  if (productId && redirectStatus === 'succeeded') {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/products/${productId}`);
-      const data = await response.json();
-      if (data.product?.slug) {
-        redirect(`/p/${data.product.slug}?payment=success`);
-      }
-    } catch (error) {
-      // If fetch fails, show success page anyway
-      console.error('Failed to fetch product:', error);
-    }
+  // OLD FLOW: If we have a product slug (embedded checkout), redirect to it
+  if (productSlug && !paymentIntent) {
+    redirect(`/p/${productSlug}?payment=success`);
   }
 
   // If we have a session ID but no product slug, show generic success page (old flow)

@@ -20,6 +20,7 @@ export default function PaymentStatusView({
   paymentStatus,
   customerEmail,
   sessionId,
+  paymentIntentId,
   termsAlreadyHandled,
   redirectUrl,
 }: PaymentStatusViewProps) {
@@ -36,6 +37,7 @@ export default function PaymentStatusView({
     paymentStatus,
     customerEmail,
     sessionId,
+    paymentIntentId,
     product,
     accessGranted,
     termsAlreadyHandled,

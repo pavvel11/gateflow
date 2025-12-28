@@ -530,7 +530,8 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'error', 'Invalid session ID');
   END IF;
 
-  IF NOT (session_id_param ~* '^cs_[a-zA-Z0-9_]+$') THEN
+  -- Accept both Checkout Session (cs_) and Payment Intent (pi_) formats
+  IF NOT (session_id_param ~* '^(cs_|pi_)[a-zA-Z0-9_]+$') THEN
     RETURN jsonb_build_object('success', false, 'error', 'Invalid session ID format');
   END IF;
 
@@ -561,13 +562,28 @@ BEGIN
 
   -- Idempotency check
   IF EXISTS (SELECT 1 FROM public.payment_transactions WHERE session_id = session_id_param) THEN
-    RETURN jsonb_build_object(
-      'success', true,
-      'scenario', 'already_processed_idempotent',
-      'access_granted', true,
-      'already_had_access', true,
-      'message', 'Payment already processed (idempotent)'
-    );
+    -- Check if this was a guest purchase to return consistent values
+    IF EXISTS (SELECT 1 FROM public.guest_purchases WHERE session_id = session_id_param) THEN
+      -- Guest purchase - return same values as original guest purchase scenario
+      RETURN jsonb_build_object(
+        'success', true,
+        'scenario', 'guest_purchase_new_user_with_bump',
+        'access_granted', false,
+        'is_guest_purchase', true,
+        'send_magic_link', true,
+        'customer_email', customer_email_param,
+        'message', 'Payment already processed (idempotent)'
+      );
+    ELSE
+      -- Logged-in user purchase
+      RETURN jsonb_build_object(
+        'success', true,
+        'scenario', 'already_processed_idempotent',
+        'access_granted', true,
+        'already_had_access', true,
+        'message', 'Payment already processed (idempotent)'
+      );
+    END IF;
   END IF;
 
   -- Get product
