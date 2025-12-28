@@ -5,12 +5,10 @@ test.describe('E2E Critical Flows', () => {
   // 1. Internationalization Check
   test('should switch languages correctly', async ({ page }) => {
     await page.goto('/');
-
-    // Wait for page to load - check for any content
-    await page.waitForLoadState('networkidle');
-    const body = page.locator('body');
-    await expect(body).not.toBeEmpty();
-
+    
+    // Check default English
+    await expect(page.locator('text=Self-Hosted Product Access Management')).toBeVisible();
+    
     // Switch to Polish (assuming we have a switcher)
     const plButton = page.locator('button', { hasText: 'PL' }).first();
     if (await plButton.isVisible()) {
@@ -18,30 +16,36 @@ test.describe('E2E Critical Flows', () => {
       // Wait for navigation or text change
       await expect(page).toHaveURL(/\/pl/);
       // Allow for either full translation or fallback
-      await expect(page.locator('body')).not.toBeEmpty();
+      await expect(page.locator('body')).not.toBeEmpty(); 
     }
   });
 
-  // 2. Product Page Flow - Smart Landing (shows onboarding, coming soon, or storefront)
+  // 2. Product Page Flow
   test('should display product details OR empty state', async ({ page }) => {
-    // Go to homepage (smart landing)
-    await page.goto('/');
+    // Go to storefront
+    await page.goto('/products');
+    
+    // Check if either products grid OR empty state is visible
+    const productsGrid = page.locator('.grid').first();
+    const emptyState = page.locator('text=No Products Available').or(page.locator('text=No products found'));
+    
+    // Wait for content to load
+    await expect(productsGrid.or(emptyState)).toBeVisible({ timeout: 10000 });
 
-    // Wait for page to load
-    await page.waitForLoadState('networkidle');
+    // If products exist, try to click purchase
+    if (await productsGrid.isVisible()) {
+      // Find first "Purchase" or "Get Access" button
+      const purchaseBtn = page.locator('text=Purchase Access').or(page.locator('text=Get Access')).first();
+      
+      if (await purchaseBtn.isVisible()) {
+        await purchaseBtn.click();
+        // Should verify redirect to product page, checkout, or login
+        await expect(page).toHaveURL(/\/(p|checkout|login)\//);
 
-    // Homepage can show: onboarding (admin), coming soon (guest no products), or storefront (products exist)
-    // Just verify the page loaded without errors
-    const body = page.locator('body');
-    await expect(body).not.toBeEmpty();
-    const text = await body.textContent();
-    expect(text).not.toContain('Application error');
-
-    // If storefront exists, check for product cards or empty states
-    const storefront = page.locator('text=Products').or(page.locator('text=Produkty'));
-    if (await storefront.isVisible()) {
-      // Should have some content
-      await expect(body).toContainText(/Products|Produkty|Welcome|Witaj/i);
+        // Check for price display or checkout page
+        const priceDisplay = page.locator('text=$').or(page.locator('text=PLN')).or(page.locator('text=GateFlow')).first();
+        await expect(priceDisplay).toBeVisible();
+      }
     }
   });
 
