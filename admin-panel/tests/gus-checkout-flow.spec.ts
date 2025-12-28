@@ -55,13 +55,15 @@ test.describe('GUS Checkout Flow - NIP Validation', () => {
   test('should show invoice fields when checkbox is checked', async ({ page }) => {
     // Navigate to checkout
     await page.goto(`/pl/checkout/${testProduct.slug}`);
-    await page.waitForLoadState('networkidle');
+
+    // Wait for checkout form to load (wait for email or firstName field)
+    await page.waitForSelector('input[type="email"], input#firstName', { timeout: 30000 });
 
     // Invoice fields should be hidden initially
     await expect(page.locator('input#nip')).not.toBeVisible();
 
-    // Check "I need an invoice"
-    await page.click('text=Potrzebuję faktury');
+    // Check "I need an invoice" - use checkbox selector instead of text
+    await page.locator('input[type="checkbox"]').first().check();
 
     // Invoice fields should now be visible
     await expect(page.locator('input#nip')).toBeVisible();
@@ -74,7 +76,7 @@ test.describe('GUS Checkout Flow - NIP Validation', () => {
   test('should validate NIP checksum and show error for invalid NIP', async ({ page }) => {
     // Navigate to checkout
     await page.goto(`/pl/checkout/${testProduct.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('input[type="email"], input#firstName', { timeout: 30000 });
 
     // Check invoice checkbox
     await page.click('text=Potrzebuję faktury');
@@ -97,7 +99,7 @@ test.describe('GUS Checkout Flow - NIP Validation', () => {
   test('should accept valid NIP format (10 digits)', async ({ page }) => {
     // Navigate to checkout
     await page.goto(`/pl/checkout/${testProduct.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('input[type="email"], input#firstName', { timeout: 30000 });
 
     // Check invoice checkbox
     await page.click('text=Potrzebuję faktury');
@@ -114,7 +116,7 @@ test.describe('GUS Checkout Flow - NIP Validation', () => {
   test('should enforce maxLength=10 on NIP input', async ({ page }) => {
     // Navigate to checkout
     await page.goto(`/pl/checkout/${testProduct.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('input[type="email"], input#firstName', { timeout: 30000 });
 
     // Check invoice checkbox
     await page.click('text=Potrzebuję faktury');
@@ -186,7 +188,7 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
 
     // Navigate to checkout
     await page.goto(`/pl/checkout/${testProduct.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('input[type="email"], input#firstName', { timeout: 30000 });
 
     // Check invoice checkbox
     await page.click('text=Potrzebuję faktury');
@@ -231,7 +233,7 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
 
     // Navigate to checkout
     await page.goto(`/pl/checkout/${testProduct.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('input[type="email"], input#firstName', { timeout: 30000 });
 
     // Check invoice checkbox
     await page.click('text=Potrzebuję faktury');
@@ -270,7 +272,7 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
 
     // Navigate to checkout
     await page.goto(`/pl/checkout/${testProduct.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('input[type="email"], input#firstName', { timeout: 30000 });
 
     // Check invoice checkbox
     await page.click('text=Potrzebuję faktury');
@@ -312,7 +314,7 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
 
     // Navigate to checkout
     await page.goto(`/pl/checkout/${testProduct.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('input[type="email"], input#firstName', { timeout: 30000 });
 
     // Check invoice checkbox
     await page.click('text=Potrzebuję faktury');
@@ -345,7 +347,7 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
 
     // Navigate to checkout
     await page.goto(`/pl/checkout/${testProduct.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('input[type="email"], input#firstName', { timeout: 30000 });
 
     // Check invoice checkbox
     await page.click('text=Potrzebuję faktury');
@@ -397,7 +399,7 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
 
     // Navigate to checkout
     await page.goto(`/pl/checkout/${testProduct.slug}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('input[type="email"], input#firstName', { timeout: 30000 });
 
     // Check invoice checkbox
     await page.click('text=Potrzebuję faktury');
