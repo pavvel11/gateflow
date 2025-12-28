@@ -1,8 +1,9 @@
 /**
- * Stripe API Key Encryption Service
+ * API Key Encryption Service
  *
- * Implements AES-256-GCM encryption for secure storage of Stripe API keys in the database.
- * Uses the STRIPE_ENCRYPTION_KEY environment variable for encryption/decryption.
+ * Implements AES-256-GCM encryption for secure storage of API keys in the database.
+ * Uses the APP_ENCRYPTION_KEY environment variable for encryption/decryption.
+ * (Backward compatible with STRIPE_ENCRYPTION_KEY for existing installations)
  *
  * Security features:
  * - AES-256-GCM authenticated encryption
@@ -37,14 +38,15 @@ export interface EncryptedConfig {
 
 /**
  * Validates that the encryption key is properly configured
- * @throws {Error} if STRIPE_ENCRYPTION_KEY is missing or invalid
+ * @throws {Error} if APP_ENCRYPTION_KEY is missing or invalid
  */
 function validateEncryptionKey(): Buffer {
-  const encryptionKey = process.env.STRIPE_ENCRYPTION_KEY;
+  // Backward compatibility: try APP_ENCRYPTION_KEY first, then fall back to STRIPE_ENCRYPTION_KEY
+  const encryptionKey = process.env.APP_ENCRYPTION_KEY || process.env.STRIPE_ENCRYPTION_KEY;
 
   if (!encryptionKey) {
     throw new Error(
-      'STRIPE_ENCRYPTION_KEY is not configured. Generate one with: openssl rand -base64 32'
+      'APP_ENCRYPTION_KEY is not configured. Generate one with: openssl rand -base64 32'
     );
   }
 
@@ -54,7 +56,7 @@ function validateEncryptionKey(): Buffer {
     // AES-256 requires 32 bytes
     if (keyBuffer.length !== 32) {
       throw new Error(
-        `STRIPE_ENCRYPTION_KEY must be 32 bytes (256 bits). Current length: ${keyBuffer.length} bytes. ` +
+        `APP_ENCRYPTION_KEY must be 32 bytes (256 bits). Current length: ${keyBuffer.length} bytes. ` +
         'Generate a new key with: openssl rand -base64 32'
       );
     }
@@ -65,7 +67,7 @@ function validateEncryptionKey(): Buffer {
       throw error;
     }
     throw new Error(
-      'STRIPE_ENCRYPTION_KEY is not valid base64. Generate a new key with: openssl rand -base64 32'
+      'APP_ENCRYPTION_KEY is not valid base64. Generate a new key with: openssl rand -base64 32'
     );
   }
 }

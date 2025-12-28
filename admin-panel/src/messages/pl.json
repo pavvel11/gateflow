@@ -1172,6 +1172,34 @@
   "settings": {
     "title": "Ustawienia",
     "subtitle": "Skonfiguruj ustawienia sklepu i integracje",
+    "gus": {
+      "title": "Integracja GUS REGON API",
+      "subtitle": "Konfiguracja dostępu do bazy danych firm GUS (Główny Urząd Statystyczny) dla automatycznego wypełniania danych firmowych na podstawie NIP.",
+      "status": {
+        "active": "GUS API jest aktywny",
+        "activeDescription": "Dane firm będą automatycznie pobierane z bazy GUS podczas wprowadzania NIP w procesie zakupu.",
+        "disabled": "GUS API jest wyłączony",
+        "disabledDescription": "Klucz API jest skonfigurowany, ale integracja jest wyłączona. Włącz ją poniżej, aby aktywować automatyczne pobieranie danych."
+      },
+      "apiKeyLabel": "Klucz API GUS REGON",
+      "apiKeyPlaceholder": "Wprowadź klucz API",
+      "apiKeyHelp": "Klucz API do systemu REGON. Uzyskaj klucz na",
+      "getApiKey": "api.stat.gov.pl",
+      "enableLabel": "Włącz automatyczne pobieranie danych z GUS",
+      "enableHelp": "Gdy włączone, dane firmy będą automatycznie pobierane po wprowadzeniu NIP podczas procesu zakupu.",
+      "saveButton": "Zapisz konfigurację",
+      "deleteButton": "Usuń klucz API",
+      "confirmDelete": "Czy na pewno chcesz usunąć klucz API GUS? Ta operacja jest nieodwracalna.",
+      "messages": {
+        "saved": "Konfiguracja GUS została pomyślnie zapisana",
+        "deleted": "Klucz API GUS został pomyślnie usunięty"
+      },
+      "errors": {
+        "apiKeyRequired": "Klucz API jest wymagany",
+        "saveFailed": "Nie udało się zapisać konfiguracji",
+        "deleteFailed": "Nie udało się usunąć klucza API"
+      }
+    },
     "shop": {
       "title": "Konfiguracja sklepu",
       "subtitle": "Podstawowe ustawienia i preferencje sklepu",

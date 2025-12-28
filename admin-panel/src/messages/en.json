@@ -1137,6 +1137,34 @@
   "settings": {
     "title": "Settings",
     "subtitle": "Configure your shop settings and integrations",
+    "gus": {
+      "title": "GUS REGON API Integration",
+      "subtitle": "Configure access to the GUS (Central Statistical Office) company database for automatic company data autofill based on NIP (Polish Tax ID).",
+      "status": {
+        "active": "GUS API is active",
+        "activeDescription": "Company data will be automatically fetched from the GUS database when entering NIP during checkout.",
+        "disabled": "GUS API is disabled",
+        "disabledDescription": "API key is configured, but the integration is disabled. Enable it below to activate automatic data fetching."
+      },
+      "apiKeyLabel": "GUS REGON API Key",
+      "apiKeyPlaceholder": "Enter API key",
+      "apiKeyHelp": "API key for the REGON system. Get your key at",
+      "getApiKey": "api.stat.gov.pl",
+      "enableLabel": "Enable automatic data fetching from GUS",
+      "enableHelp": "When enabled, company data will be automatically fetched when NIP is entered during checkout.",
+      "saveButton": "Save Configuration",
+      "deleteButton": "Delete API Key",
+      "confirmDelete": "Are you sure you want to delete the GUS API key? This action cannot be undone.",
+      "messages": {
+        "saved": "GUS configuration saved successfully",
+        "deleted": "GUS API key deleted successfully"
+      },
+      "errors": {
+        "apiKeyRequired": "API key is required",
+        "saveFailed": "Failed to save configuration",
+        "deleteFailed": "Failed to delete API key"
+      }
+    },
     "shop": {
       "title": "Shop Configuration",
       "subtitle": "Basic shop settings and preferences",

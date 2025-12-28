@@ -1,10 +1,11 @@
 import { getIntegrationsConfig, getScripts } from '@/lib/actions/integrations'
 import IntegrationsForm from '@/components/IntegrationsForm'
+import GUSSettings from '@/components/settings/GUSSettings'
 import { verifyAdminAccess } from '@/lib/auth-server'
 
 export default async function IntegrationsPage() {
   await verifyAdminAccess()
-  
+
   const [config, scripts] = await Promise.all([
     getIntegrationsConfig(),
     getScripts()
@@ -22,6 +23,8 @@ export default async function IntegrationsPage() {
       </div>
 
       <IntegrationsForm initialData={config} initialScripts={scripts || []} />
+
+      <GUSSettings />
     </div>
   )
 }

@@ -6,6 +6,7 @@ import { Product } from '@/types';
 import { formatPrice } from '@/lib/constants';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
+import { validateNIPChecksum, normalizeNIP } from '@/lib/validation/nip';
 
 interface CustomPaymentFormProps {
   product: Product;
@@ -35,9 +36,19 @@ export default function CustomPaymentForm({
   const [needsInvoice, setNeedsInvoice] = useState(false);
   const [nip, setNip] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [postalCode, setPostalCode] = useState('');
+  const [country, setCountry] = useState('PL');
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+
+  // GUS integration state
+  const [isLoadingGUS, setIsLoadingGUS] = useState(false);
+  const [gusError, setGusError] = useState<string | null>(null);
+  const [nipError, setNipError] = useState<string | null>(null);
+  const [gusSuccess, setGusSuccess] = useState(false);
 
   // Calculate prices
   const vatRate = product.vat_rate || 23;
@@ -63,6 +74,72 @@ export default function CustomPaymentForm({
     : totalGross;
   const vatAmount = totalGross - totalNet;
 
+  // GUS NIP auto-fill handler
+  const handleNIPBlur = async () => {
+    if (!nip || nip.length < 10) return;
+
+    const normalized = normalizeNIP(nip);
+
+    // Validate NIP checksum before calling API
+    if (!validateNIPChecksum(normalized)) {
+      setNipError('Nieprawidłowy numer NIP (błędna suma kontrolna)');
+      setGusError(null);
+      setGusSuccess(false);
+      return;
+    }
+
+    setNipError(null);
+    setIsLoadingGUS(true);
+    setGusError(null);
+    setGusSuccess(false);
+
+    try {
+      const response = await fetch('/api/gus/fetch-company-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nip: normalized }),
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        // Autofill company data
+        setCompanyName(result.data.nazwa);
+
+        // Build address string
+        const addressParts = [result.data.ulica, result.data.nrNieruchomosci];
+        if (result.data.nrLokalu) {
+          addressParts.push(`/${result.data.nrLokalu}`);
+        }
+        setAddress(addressParts.join(' ').trim());
+
+        setCity(result.data.miejscowosc);
+        setPostalCode(result.data.kodPocztowy);
+        setCountry('PL');
+        setGusSuccess(true);
+      } else {
+        // GUS API returned error
+        if (result.code === 'RATE_LIMIT_EXCEEDED') {
+          setGusError('Zbyt wiele zapytań. Poczekaj chwilę i spróbuj ponownie.');
+        } else if (result.code === 'NOT_FOUND') {
+          setGusError('Nie znaleziono firmy w bazie GUS');
+        } else if (result.code === 'NOT_CONFIGURED') {
+          // Silent fail - GUS not configured, user can enter manually
+          setGusError(null);
+        } else if (result.code === 'INVALID_ORIGIN') {
+          setGusError('Błąd bezpieczeństwa. Odśwież stronę i spróbuj ponownie.');
+        } else {
+          setGusError('Nie udało się pobrać danych z GUS. Wprowadź dane ręcznie.');
+        }
+      }
+    } catch (error) {
+      console.error('GUS fetch error:', error);
+      setGusError('Nie udało się pobrać danych z GUS. Wprowadź dane ręcznie.');
+    } finally {
+      setIsLoadingGUS(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -85,6 +162,46 @@ export default function CustomPaymentForm({
     setErrorMessage('');
 
     try {
+      // Update Payment Intent metadata with invoice data before confirming
+      if (needsInvoice) {
+        // Get the client secret from the PaymentElement
+        const { error: submitError } = await elements.submit();
+        if (submitError) {
+          setErrorMessage(submitError.message || 'Failed to prepare payment');
+          setIsProcessing(false);
+          return;
+        }
+
+        // Get the payment intent client secret
+        const paymentIntent = await stripe.retrievePaymentIntent(
+          // The client secret is stored in the Elements context
+          (elements as any)._commonOptions.clientSecret
+        );
+
+        if (paymentIntent.paymentIntent) {
+          // Update metadata via API
+          const updateResponse = await fetch('/api/update-payment-metadata', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              clientSecret: paymentIntent.paymentIntent.client_secret,
+              needsInvoice: true,
+              nip,
+              companyName,
+              address,
+              city,
+              postalCode,
+              country,
+            }),
+          });
+
+          if (!updateResponse.ok) {
+            console.error('Failed to update payment metadata');
+            // Continue anyway - metadata update is not critical for payment
+          }
+        }
+      }
+
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
@@ -229,15 +346,45 @@ export default function CustomPaymentForm({
               <label htmlFor="nip" className="block text-sm font-medium text-gray-300 mb-2">
                 {t('nipLabel', { defaultValue: 'NIP (Tax ID)' })}
               </label>
-              <input
-                type="text"
-                id="nip"
-                value={nip}
-                onChange={(e) => setNip(e.target.value)}
-                placeholder="0000000000"
-                required={needsInvoice}
-                className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  id="nip"
+                  value={nip}
+                  onChange={(e) => {
+                    setNip(e.target.value);
+                    setNipError(null);
+                    setGusError(null);
+                    setGusSuccess(false);
+                  }}
+                  onBlur={handleNIPBlur}
+                  placeholder="0000000000"
+                  maxLength={10}
+                  required={needsInvoice}
+                  className={`w-full px-3 py-2.5 bg-white/5 border ${
+                    nipError ? 'border-red-500/50' : gusSuccess ? 'border-green-500/50' : 'border-white/10'
+                  } rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    isLoadingGUS ? 'pr-10' : ''
+                  }`}
+                />
+                {isLoadingGUS && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <svg className="animate-spin h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+              {nipError && (
+                <p className="mt-1 text-xs text-red-400">{nipError}</p>
+              )}
+              {gusError && (
+                <p className="mt-1 text-xs text-yellow-400">⚠️ {gusError}</p>
+              )}
+              {gusSuccess && !isLoadingGUS && (
+                <p className="mt-1 text-xs text-green-400">✓ Dane pobrane z bazy GUS</p>
+              )}
             </div>
             <div>
               <label htmlFor="companyName" className="block text-sm font-medium text-gray-300 mb-2">
@@ -252,6 +399,47 @@ export default function CustomPaymentForm({
                 required={needsInvoice}
                 className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+            </div>
+            <div>
+              <label htmlFor="address" className="block text-sm font-medium text-gray-300 mb-2">
+                Adres
+              </label>
+              <input
+                type="text"
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="ul. Przykładowa 123"
+                className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="postalCode" className="block text-sm font-medium text-gray-300 mb-2">
+                  Kod pocztowy
+                </label>
+                <input
+                  type="text"
+                  id="postalCode"
+                  value={postalCode}
+                  onChange={(e) => setPostalCode(e.target.value)}
+                  placeholder="00-000"
+                  className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label htmlFor="city" className="block text-sm font-medium text-gray-300 mb-2">
+                  Miasto
+                </label>
+                <input
+                  type="text"
+                  id="city"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  placeholder="Warszawa"
+                  className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
             </div>
           </div>
         )}

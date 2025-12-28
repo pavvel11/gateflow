@@ -11,6 +11,45 @@ import { getStripeServer } from '@/lib/stripe/server';
 import type { User } from '@supabase/supabase-js';
 import { WebhookService } from '@/lib/services/webhook-service';
 
+/**
+ * Helper function to update user profile with company data from invoice
+ */
+async function updateProfileWithCompanyData(
+  serviceClient: any,
+  userId: string,
+  metadata: Record<string, any>
+): Promise<void> {
+  if (metadata.needs_invoice !== 'true') return;
+
+  try {
+    const updateData: Record<string, any> = {
+      updated_at: new Date().toISOString()
+    };
+
+    if (metadata.company_name) updateData.company_name = metadata.company_name;
+    if (metadata.nip) updateData.tax_id = metadata.nip;
+    if (metadata.address) updateData.address_line1 = metadata.address;
+    if (metadata.city) updateData.city = metadata.city;
+    if (metadata.postal_code) updateData.zip_code = metadata.postal_code;
+    if (metadata.country) updateData.country = metadata.country;
+
+    const { error } = await serviceClient
+      .from('profiles')
+      .upsert({
+        id: userId,
+        ...updateData
+      });
+
+    if (error) {
+      console.error('Failed to update profile with company data:', error);
+    } else {
+      console.log('Successfully updated profile with company data for user:', userId);
+    }
+  } catch (error) {
+    console.error('Error updating profile with company data:', error);
+  }
+}
+
 export interface PaymentIntentVerificationResult {
   payment_intent_id: string;
   status: string;
@@ -418,6 +457,15 @@ export async function verifyPaymentIntent(
               bumpProductId: bumpProductId,
               couponId: couponId
             }).catch(err => console.error('Webhook trigger error:', err));
+          }
+
+          // Update user profile with company data if invoice was requested
+          if (user?.id && paymentIntent.metadata) {
+            await updateProfileWithCompanyData(
+              serviceClient,
+              user.id,
+              paymentIntent.metadata
+            );
           }
 
           // Convert database response to our interface

@@ -17,6 +17,146 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 
 ## 🟢 High Priority
 
+### 🔒 Security & Infrastructure
+
+#### Upgrade Rate Limiting to Upstash Redis
+**Status**: 📋 Planned (Recommended for Production)
+**Effort**: ~2-3 hours
+**Priority**: High (Critical for scaling beyond development)
+
+**Current State:**
+- ✅ In-memory rate limiting implemented for GUS API endpoints
+- ⚠️ Resets on server restart
+- ❌ Does NOT work in serverless/distributed environments (Vercel, AWS Lambda)
+
+**Problem:**
+W serverless (Vercel, AWS Lambda) każda instancja ma własną pamięć:
+- User może obejść rate limit wysyłając requesty do różnych instancji
+- Limit resetuje się przy każdym cold start
+- Brak współdzielonego stanu między instanceami
+
+**Rozwiązanie: Upstash Redis**
+
+**Czym jest Upstash Redis?**
+Serverless Redis database zaprojektowany dla edge computing i serverless apps.
+
+**Kluczowe różnice:**
+```
+Traditional Redis          vs    Upstash Redis
+─────────────────────────────────────────────────
+- Wymaga serwera           │  - Serverless
+- TCP connections          │  - HTTP REST API
+- Always running ($)       │  - Pay per request
+- Manual scaling           │  - Auto-scaling
+- Single region            │  - Global edge (16+ regionów)
+- Connection limits        │  - Unlimited connections
+```
+
+**Dlaczego Upstash?**
+1. **Serverless-First**: Działa idealnie z Vercel/Netlify/AWS Lambda
+2. **HTTP-Based**: Nie wymaga persistent connections (idealne dla serverless)
+3. **Global Edge**: Ultra-low latency <10ms z 16+ regionów
+4. **Built-in Rate Limiting**: Gotowe algorytmy (sliding window, token bucket)
+5. **Zero Maintenance**: Fully managed, auto-scaling
+6. **Analytics**: Dashboard z metrykami abuse'u
+
+**Pricing:**
+```
+Free Tier (Development):
+- 10,000 requests/day
+- 256 MB storage
+- Perfect for testing
+
+Pro ($10/month):
+- 100,000 requests/day
+- 1 GB storage
+
+Pay-as-you-go:
+- $0.20 per 100,000 requests
+- $0.25 per GB storage
+```
+
+**Implementation:**
+```bash
+# 1. Install
+npm install @upstash/redis @upstash/ratelimit
+
+# 2. Create account: https://upstash.com
+# 3. Create Redis database
+# 4. Add to .env
+UPSTASH_REDIS_REST_URL=https://your-region.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your-token
+```
+
+**Code Changes:**
+
+Update `/lib/rate-limit.ts`:
+```typescript
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
+
+export async function rateLimit(
+  identifier: string,
+  config: { maxRequests: number; windowMs: number }
+) {
+  const ratelimit = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(
+      config.maxRequests,
+      `${config.windowMs}ms`
+    ),
+    analytics: true,
+  });
+
+  const result = await ratelimit.limit(identifier);
+
+  return {
+    success: result.success,
+    limit: result.limit,
+    remaining: result.remaining,
+    reset: result.reset,
+  };
+}
+```
+
+**Benefits:**
+✅ **Production-Ready**: Works in Vercel, AWS Lambda, Cloudflare Workers
+✅ **Accurate Limiting**: Shared state across all instances
+✅ **Analytics**: Track abuse patterns, violations
+✅ **Persistent**: Survives restarts and deployments
+✅ **Low Latency**: <10ms global edge network
+✅ **Zero Maintenance**: Fully managed
+
+**Decision Matrix:**
+
+| Factor | In-Memory (Current) | Upstash Redis | Self-Hosted Redis |
+|--------|---------------------|---------------|-------------------|
+| Serverless | ❌ No | ✅ Yes | ⚠️ Complex |
+| Accuracy | ❌ Per-instance | ✅ Global | ✅ Global |
+| Setup | ✅ Easy | ✅ Easy | ❌ Complex |
+| Cost | ✅ Free | ✅ Free tier | 💰 $20+/mo |
+| Latency | ✅ 0ms | ✅ <10ms | ⚠️ 20-50ms |
+| Maintenance | ✅ None | ✅ None | ❌ High |
+
+**Recommendation:**
+- **Development**: In-memory (current) OK ✅
+- **Production/Scale**: Upgrade to Upstash Redis 🚀
+- **Enterprise**: Consider self-hosted Redis cluster
+
+**Files to Update:**
+- `/lib/rate-limit.ts` - Replace in-memory with Upstash
+- `.env.local` - Add Upstash credentials
+- `SECURITY-GUS-API.md` - Update documentation
+
+**Note:** API endpoints już używają `rate-limit.ts`, więc po zamianie implementacji wszystko działa automatycznie!
+
+---
+
 ### 🛒 Checkout & Payments (Visuals & Logic)
 
 #### Pixel-Perfect Checkout UI & Invoice Handling (EasyCart Style)
