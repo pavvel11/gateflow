@@ -123,6 +123,13 @@ export async function POST(request: NextRequest) {
       currency: product.currency.toLowerCase(),
       automatic_payment_methods: {
         enabled: true,
+        allow_redirects: 'always',
+      },
+      // Disable Link to prevent LinkAuthenticationElement from showing
+      payment_method_options: {
+        link: {
+          setup_future_usage: 'none',
+        },
       },
       metadata: {
         product_id: productId,

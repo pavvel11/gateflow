@@ -14,6 +14,7 @@ interface CustomPaymentFormProps {
   bumpSelected: boolean;
   appliedCoupon?: any;
   successUrl?: string;
+  onChangeAccount?: () => void;
 }
 
 export default function CustomPaymentForm({
@@ -22,7 +23,8 @@ export default function CustomPaymentForm({
   bumpProduct,
   bumpSelected,
   appliedCoupon,
-  successUrl
+  successUrl,
+  onChangeAccount
 }: CustomPaymentFormProps) {
   const t = useTranslations('checkout');
   const stripe = useStripe();
@@ -88,6 +90,11 @@ export default function CustomPaymentForm({
         confirmParams: {
           return_url: `${window.location.origin}/payment/success?product_id=${product.id}&product=${product.slug}${successUrl ? `&success_url=${encodeURIComponent(successUrl)}` : ''}`,
           receipt_email: finalEmail,
+          payment_method_data: {
+            billing_details: {
+              email: finalEmail,
+            },
+          },
         },
       });
 
@@ -121,24 +128,37 @@ export default function CustomPaymentForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Guest Email Input */}
-      {!email && (
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-            {t('emailAddress')}
-          </label>
-          <input
-            type="email"
-            id="email"
-            value={guestEmail}
-            onChange={(e) => setGuestEmail(e.target.value)}
-            placeholder={t('emailPlaceholder')}
-            required
-            className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          <p className="mt-1 text-xs text-gray-400">{t('emailHelp')}</p>
-        </div>
-      )}
+      {/* Email Input - always visible at top */}
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+          {t('emailAddress')}
+        </label>
+        <input
+          type="email"
+          id="email"
+          value={email || guestEmail}
+          onChange={(e) => setGuestEmail(e.target.value)}
+          placeholder={t('emailPlaceholder')}
+          required
+          disabled={!!email} // Disabled if user is logged in
+          className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed"
+        />
+        {!email && <p className="mt-1 text-xs text-gray-400">{t('emailHelp')}</p>}
+        {email && (
+          <div className="mt-1 flex items-center justify-between">
+            <p className="text-xs text-green-400">✓ {t('linkedToAccount')}</p>
+            {onChangeAccount && (
+              <button
+                type="button"
+                onClick={onChangeAccount}
+                className="text-blue-400 hover:text-blue-300 text-xs underline transition-colors"
+              >
+                {t('changeAccount')}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Price Summary */}
       <div className="p-4 bg-white/5 border border-white/10 rounded-lg space-y-2 text-sm">
@@ -239,11 +259,39 @@ export default function CustomPaymentForm({
 
       {/* Payment Element */}
       <div>
+        {/*
+          Payment methods must be enabled in Stripe Dashboard:
+          https://dashboard.stripe.com/settings/payment_methods
+
+          For Poland (PLN): Enable BLIK, Przelewy24, Cards
+          For EUR: Enable SEPA Debit, iDEAL, Cards, Klarna
+          For USD: Enable Cards, Cash App, Affirm
+        */}
         <PaymentElement
           options={{
-            defaultValues: {
+            layout: {
+              type: 'tabs',
+              defaultCollapsed: false,
+            },
+            // Set payment method order based on currency
+            // For PLN (Poland): BLIK is most popular (65%+ market share), then Przelewy24, then card
+            // For other currencies: optimize for that region
+            paymentMethodOrder: product.currency === 'PLN'
+              ? ['blik', 'p24', 'card']
+              : product.currency === 'EUR'
+              ? ['sepa_debit', 'ideal', 'card', 'klarna']
+              : product.currency === 'USD'
+              ? ['card', 'cashapp', 'affirm']
+              : undefined, // Let Stripe determine optimal order for other currencies
+            // Explicitly disable wallets including Link to prevent LinkAuthenticationElement
+            wallets: {
+              applePay: 'never',
+              googlePay: 'never',
+            },
+            // Hide email field in PaymentElement since we collect it above
+            fields: {
               billingDetails: {
-                email: email || guestEmail || undefined,
+                email: 'never',
               },
             },
           }}

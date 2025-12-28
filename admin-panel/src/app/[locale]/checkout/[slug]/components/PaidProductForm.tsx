@@ -206,24 +206,6 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
 
   const renderCheckoutForm = () => (
     <div className="w-full lg:w-1/2 lg:pl-8">
-      {user ? (
-        <div className="mb-4 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-blue-300">{t('emailAddress')}</h3>
-              <p className="text-white font-medium">{user.email}</p>
-              <p className="text-blue-300/60 text-xs mt-1">{t('linkedToAccount')}</p>
-            </div>
-            <button
-              onClick={handleSignOutAndCheckout}
-              className="text-blue-400 hover:text-blue-300 text-sm underline transition-colors"
-            >
-              {t('changeAccount')}
-            </button>
-          </div>
-        </div>
-      ) : null}
-
       {/* Order Bump - special offer */}
       {orderBump && isCurrencyMatching && !hasAccess && !error && searchParams.get('hide_bump') !== 'true' && (
         <div 
@@ -473,6 +455,7 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
               bumpSelected={bumpSelected}
               appliedCoupon={appliedCoupon}
               successUrl={searchParams.get('success_url') || undefined}
+              onChangeAccount={handleSignOutAndCheckout}
             />
           </Elements>
         )}
