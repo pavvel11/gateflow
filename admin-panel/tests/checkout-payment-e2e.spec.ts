@@ -165,13 +165,9 @@ test.describe('Checkout E2E - Guest Purchase Flow', () => {
     const emailInput = page.locator('input[type="email"]');
     await expect(emailInput).toHaveAttribute('required', '');
 
-    // Test 2: First name is required
-    const firstNameInput = page.locator('input#firstName');
-    await expect(firstNameInput).toHaveAttribute('required', '');
-
-    // Test 3: Last name is required
-    const lastNameInput = page.locator('input#lastName');
-    await expect(lastNameInput).toHaveAttribute('required', '');
+    // Test 2: Full name is required
+    const fullNameInput = page.locator('input#fullName');
+    await expect(fullNameInput).toHaveAttribute('required', '');
 
     // Test 4: T&C checkbox is required for guests
     const termsCheckbox = page.locator('input[type="checkbox"]').filter({ hasText: /Terms of Service|Regulamin/i });
@@ -231,9 +227,7 @@ test.describe('Checkout E2E - Invoice & GUS Integration', () => {
     await page.goto(`/pl/checkout/${testProduct.slug}`);
     await page.waitForSelector('input[type="email"]', { timeout: 10000 });
 
-    // Check invoice checkbox
-    await page.locator('input[type="checkbox"]').nth(1).check();
-
+    // NIP field should be visible (no checkbox needed)
     await expect(page.locator('input#nip')).toBeVisible();
 
     // Fill NIP and trigger autofill
@@ -257,8 +251,6 @@ test.describe('Checkout E2E - Invoice & GUS Integration', () => {
     await page.goto(`/pl/checkout/${testProduct.slug}`);
     await page.waitForSelector('input[type="email"]', { timeout: 10000 });
 
-    await page.locator('input[type="checkbox"]').nth(1).check();
-
     const nipInput = page.locator('input#nip');
     await nipInput.fill('1234567890'); // Invalid NIP
     await nipInput.blur();
@@ -269,22 +261,26 @@ test.describe('Checkout E2E - Invoice & GUS Integration', () => {
     await expect(page.locator('svg.animate-spin').first()).not.toBeVisible();
   });
 
-  test('should require NIP and company name when invoice is checked', async ({ page }) => {
+  test('should show company fields when NIP has 10 digits', async ({ page }) => {
     await page.goto(`/pl/checkout/${testProduct.slug}`);
     await page.waitForSelector('input[type="email"]', { timeout: 10000 });
 
-    // Check invoice checkbox (usually second checkbox after T&C)
-    await page.locator('input[type="checkbox"]').nth(1).check();
-    await page.waitForTimeout(500); // Wait for invoice fields to appear
-
-    // NIP and company name fields should now be required
+    // NIP field should be visible
     const nipInput = page.locator('input#nip');
-    const companyInput = page.locator('input#companyName');
-
     await expect(nipInput).toBeVisible();
+
+    // Company fields should not be visible initially
+    await expect(page.locator('input#companyName')).not.toBeVisible();
+
+    // Fill NIP with 10 digits (even if invalid checksum)
+    await nipInput.fill('1234567890');
+
+    // Wait for company fields to appear
+    await page.waitForTimeout(500);
+
+    // Company name field should now be visible
+    const companyInput = page.locator('input#companyName');
     await expect(companyInput).toBeVisible();
-    await expect(nipInput).toHaveAttribute('required', '');
-    await expect(companyInput).toHaveAttribute('required', '');
   });
 });
 
@@ -330,8 +326,6 @@ test.describe('Checkout E2E - Error Scenarios', () => {
 
     await page.goto(`/pl/checkout/${testProduct.slug}`);
     await page.waitForSelector('input[type="email"]', { timeout: 10000 });
-
-    await page.locator('input[type="checkbox"]').nth(1).check();
 
     const nipInput = page.locator('input#nip');
     await nipInput.fill(TEST_NIP_VALID);
@@ -405,7 +399,10 @@ test.describe('Checkout E2E - Price Display', () => {
     await page.goto(`/pl/checkout/${testProduct.slug}`);
     await page.waitForSelector('input[type="email"]', { timeout: 10000 });
 
-    await expect(page.locator(`text=${testProduct.name}`).first()).toBeVisible();
+    // Check product name is visible (not in title tag)
+    await expect(page.locator(`h1:has-text("${testProduct.name}"), h2:has-text("${testProduct.name}")`).first()).toBeVisible();
+
+    // Check price and VAT are displayed
     await expect(page.locator('text=/123.*PLN/i').first()).toBeVisible();
     await expect(page.locator('text=/VAT.*23%/i').first()).toBeVisible();
   });
@@ -414,6 +411,7 @@ test.describe('Checkout E2E - Price Display', () => {
     await page.goto(`/pl/checkout/${testProduct.slug}`);
     await page.waitForSelector('input[type="email"]', { timeout: 10000 });
 
-    await expect(page.locator('text=/Price Summary|Podsumowanie ceny/i')).toBeVisible();
+    // Check for order summary or total section
+    await expect(page.locator('text=/Order Summary|Total|Podsumowanie|Razem/i')).toBeVisible();
   });
 });

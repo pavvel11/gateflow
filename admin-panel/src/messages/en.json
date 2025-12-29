@@ -42,7 +42,8 @@
     "priceSummary": "Price Summary",
     "couponDiscount": "Discount",
     "total": "Total",
-    "emailRequired": "Email is required"
+    "emailRequired": "Email is required",
+    "fullName": "Full Name"
   },
   "common": {
     "loading": "Loading...",
@@ -260,8 +261,18 @@
     "title": "Dashboard",
     "welcome": "Welcome to GateFlow Admin",
     "overview": "Overview",
-    "stats": "Statistics",
-    "recentActivity": "Recent Activity",
+    "stats": {
+      "totalRevenue": "Total Revenue",
+      "todayRevenue": "Today's Revenue",
+      "todayOrders": "Today's Orders",
+      "since": "Since: {date}"
+    },
+    "recentActivity": {
+      "title": "Recent Activity",
+      "accessGranted": "Access granted to {product}",
+      "productCreated": "New product created: {product}",
+      "noActivity": "No recent activity"
+    },
     "totalProducts": "Total Products",
     "totalUsers": "Total Users",
     "totalRevenue": "Total Revenue",
@@ -281,23 +292,11 @@
     "settings": "Settings",
     "accessRecords": "Access Records",
     "activeUsers": "Active Users (7d)",
-    "stats": {
-      "totalRevenue": "Total Revenue",
-      "todayRevenue": "Today's Revenue",
-      "todayOrders": "Today's Orders",
-      "since": "Since: {date}"
-    },
     "revenueChart": {
       "title": "Revenue Trend",
       "subtitle": "Last 30 days performance",
       "hourlyTitle": "Today's Revenue",
       "hourlySubtitle": "Hourly breakdown"
-    },
-    "recentActivity": {
-      "title": "Recent Activity",
-      "accessGranted": "Access granted to {product}",
-      "productCreated": "New product created: {product}",
-      "noActivity": "No recent activity"
     }
   },
   "codeGenerator": {
@@ -692,7 +691,7 @@
     "days": "day",
     "daysPlural": "days",
     "hours": "hour",
-    "hoursPlural": "hours", 
+    "hoursPlural": "hours",
     "minutes": "minute",
     "minutesPlural": "minutes"
   },
@@ -701,8 +700,18 @@
       "title": "Dashboard",
       "welcome": "Welcome to GateFlow Admin",
       "overview": "Overview",
-      "stats": "Statistics",
-      "recentActivity": "Recent Activity",
+      "stats": {
+        "totalRevenue": "Total Revenue",
+        "todayRevenue": "Today's Revenue",
+        "todayOrders": "Today's Orders",
+        "since": "Since: {date}"
+      },
+      "recentActivity": {
+        "title": "Recent Activity",
+        "accessGranted": "Access granted to {product}",
+        "productCreated": "New product created: {product}",
+        "noActivity": "No recent activity"
+      },
       "totalProducts": "Total Products",
       "totalUsers": "Total Users",
       "totalRevenue": "Total Revenue",
@@ -722,23 +731,11 @@
       "settings": "Settings",
       "accessRecords": "Access Records",
       "activeUsers": "Active Users (7d)",
-      "stats": {
-        "totalRevenue": "Total Revenue",
-        "todayRevenue": "Today's Revenue",
-        "todayOrders": "Today's Orders",
-        "since": "Since: {date}"
-      },
       "revenueChart": {
         "title": "Revenue Trend",
         "subtitle": "Last {days} days performance",
         "hourlyTitle": "Today's Revenue",
         "hourlySubtitle": "Hourly breakdown"
-      },
-      "recentActivity": {
-        "title": "Recent Activity",
-        "accessGranted": "Access granted to {product}",
-        "productCreated": "New product created: {product}",
-        "noActivity": "No recent activity"
       }
     },
     "products": {

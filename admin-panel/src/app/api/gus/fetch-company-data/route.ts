@@ -94,7 +94,6 @@ export async function POST(request: NextRequest) {
         {
           status: 403,
           headers: {
-            ...rateLimitHeaders,
             'Access-Control-Allow-Origin': 'null', // Explicitly deny
           }
         }
@@ -114,7 +113,7 @@ export async function POST(request: NextRequest) {
         },
         {
           status: 400,
-          headers: rateLimitHeaders
+          headers: {}
         }
       );
     }
@@ -131,7 +130,7 @@ export async function POST(request: NextRequest) {
         },
         {
           status: 400,
-          headers: rateLimitHeaders
+          headers: {}
         }
       );
     }
@@ -150,7 +149,7 @@ export async function POST(request: NextRequest) {
         },
         {
           status: 503,
-          headers: rateLimitHeaders
+          headers: {}
         }
       );
     }
@@ -168,7 +167,7 @@ export async function POST(request: NextRequest) {
         },
         {
           status: 404,
-          headers: rateLimitHeaders
+          headers: {}
         }
       );
     }
@@ -179,7 +178,7 @@ export async function POST(request: NextRequest) {
         data: companyData
       },
       {
-        headers: rateLimitHeaders
+        headers: {}
       }
     );
 

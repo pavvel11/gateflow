@@ -34,9 +34,8 @@ export default function CustomPaymentForm({
 
   const [guestEmail, setGuestEmail] = useState('');
 
-  // Customer data - always collected
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  // Customer data - single name field
+  const [fullName, setFullName] = useState('');
 
   // Terms & Conditions - only for guests (!email)
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -102,15 +101,15 @@ export default function CustomPaymentForm({
         if (response.ok) {
           const { data } = await response.json();
           if (data) {
-            // Load customer data
-            if (data.first_name) setFirstName(data.first_name);
-            if (data.last_name) setLastName(data.last_name);
+            // Load customer name (prefer full_name, fallback to first + last)
+            if (data.full_name) {
+              setFullName(data.full_name);
+            } else if (data.first_name || data.last_name) {
+              setFullName(`${data.first_name || ''} ${data.last_name || ''}`.trim());
+            }
 
             // Load invoice data if available
-            if (data.tax_id) {
-              setNip(data.tax_id);
-              setNeedsInvoice(true);
-            }
+            if (data.tax_id) setNip(data.tax_id);
             if (data.company_name) setCompanyName(data.company_name);
             if (data.address_line1) setAddress(data.address_line1);
             if (data.city) setCity(data.city);
@@ -211,8 +210,8 @@ export default function CustomPaymentForm({
       return;
     }
 
-    if (!firstName || !lastName) {
-      setErrorMessage(t('nameRequired', { defaultValue: 'First and last name are required' }));
+    if (!fullName || fullName.trim().length === 0) {
+      setErrorMessage(t('nameRequired', { defaultValue: 'Name is required' }));
       return;
     }
 
@@ -255,8 +254,7 @@ export default function CustomPaymentForm({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               clientSecret: paymentIntent.paymentIntent.client_secret,
-              firstName,
-              lastName,
+              fullName,
               termsAccepted: !email ? termsAccepted : undefined, // Only for guests
               needsInvoice: true,
               nip,
@@ -283,7 +281,7 @@ export default function CustomPaymentForm({
           payment_method_data: {
             billing_details: {
               email: finalEmail,
-              name: `${firstName} ${lastName}`,
+              name: fullName,
             },
           },
         },
@@ -351,38 +349,21 @@ export default function CustomPaymentForm({
         )}
       </div>
 
-      {/* First and Last Name - always required */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-2">
-            {t('firstName', { defaultValue: 'First Name' })}
-          </label>
-          <input
-            type="text"
-            id="firstName"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            placeholder="Jan"
-            required
-            disabled={isLoadingProfile}
-            className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed"
-          />
-        </div>
-        <div>
-          <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-2">
-            {t('lastName', { defaultValue: 'Last Name' })}
-          </label>
-          <input
-            type="text"
-            id="lastName"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            placeholder="Kowalski"
-            required
-            disabled={isLoadingProfile}
-            className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed"
-          />
-        </div>
+      {/* Full Name - single field */}
+      <div>
+        <label htmlFor="fullName" className="block text-sm font-medium text-gray-300 mb-2">
+          {t('fullName', { defaultValue: 'Imię i nazwisko' })}
+        </label>
+        <input
+          type="text"
+          id="fullName"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          placeholder="Jan Kowalski"
+          required
+          disabled={isLoadingProfile}
+          className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed"
+        />
       </div>
 
       {/* Terms & Conditions - only for guests */}
@@ -411,6 +392,55 @@ export default function CustomPaymentForm({
         </div>
       )}
 
+      {/* Payment Element */}
+      <div>
+        {/*
+          Payment methods must be enabled in Stripe Dashboard:
+          https://dashboard.stripe.com/settings/payment_methods
+
+          For Poland (PLN): Enable BLIK, Przelewy24, Cards
+          For EUR: Enable SEPA Debit, iDEAL, Cards, Klarna
+          For USD: Enable Cards, Cash App, Affirm
+        */}
+        <PaymentElement
+          options={{
+            layout: {
+              type: 'tabs',
+              defaultCollapsed: false,
+            },
+            // Set payment method order based on currency
+            // For PLN (Poland): BLIK is most popular (65%+ market share), then Przelewy24, then card
+            // For other currencies: optimize for that region
+            paymentMethodOrder: product.currency === 'PLN'
+              ? ['blik', 'p24', 'card']
+              : product.currency === 'EUR'
+              ? ['sepa_debit', 'ideal', 'card', 'klarna']
+              : product.currency === 'USD'
+              ? ['card', 'cashapp', 'affirm']
+              : undefined, // Let Stripe determine optimal order for other currencies
+            // Enable wallets and Link for supported currencies (USD, EUR, GBP, etc.)
+            // Link provides 1-click autofill, Apple/Google Pay provide express checkout
+            wallets: {
+              applePay: 'auto',
+              googlePay: 'auto',
+            },
+            // Hide email and name fields since we collect them above
+            fields: {
+              billingDetails: {
+                email: 'never',
+                name: 'never',
+              },
+            },
+          }}
+        />
+      </div>
+
+      {/* Error Message */}
+      {errorMessage && (
+        <div className="p-4 bg-red-900/30 border border-red-500/50 rounded-lg">
+          <p className="text-red-300 text-sm">{errorMessage}</p>
+        </div>
+      )}
 
       {/* NIP Field - Optional, triggers company fields */}
       <div className="space-y-3">
@@ -434,29 +464,29 @@ export default function CustomPaymentForm({
               placeholder="0000000000"
               maxLength={10}
               className={`w-full px-3 py-2.5 bg-white/5 border ${
-                    nipError ? 'border-red-500/50' : gusSuccess ? 'border-green-500/50' : 'border-white/10'
-                  } rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    isLoadingGUS ? 'pr-10' : ''
-                  }`}
-                />
-                {isLoadingGUS && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <svg className="animate-spin h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                  </div>
-                )}
+                nipError ? 'border-red-500/50' : gusSuccess ? 'border-green-500/50' : 'border-white/10'
+              } rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                isLoadingGUS ? 'pr-10' : ''
+              }`}
+            />
+            {isLoadingGUS && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <svg className="animate-spin h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
               </div>
-              {nipError && (
-                <p className="mt-1 text-xs text-red-400">{nipError}</p>
-              )}
-              {gusError && (
-                <p className="mt-1 text-xs text-yellow-400">⚠️ {gusError}</p>
-              )}
-              {gusSuccess && !isLoadingGUS && (
-                <p className="mt-1 text-xs text-green-400">✓ Dane pobrane z bazy GUS</p>
-              )}
+            )}
+          </div>
+          {nipError && (
+            <p className="mt-1 text-xs text-red-400">{nipError}</p>
+          )}
+          {gusError && (
+            <p className="mt-1 text-xs text-yellow-400">⚠️ {gusError}</p>
+          )}
+          {gusSuccess && !isLoadingGUS && (
+            <p className="mt-1 text-xs text-green-400">✓ Dane pobrane z bazy GUS</p>
+          )}
         </div>
 
         {/* Company fields - show when NIP is provided or GUS data fetched */}
@@ -519,56 +549,6 @@ export default function CustomPaymentForm({
           </div>
         )}
       </div>
-
-      {/* Payment Element */}
-      <div>
-        {/*
-          Payment methods must be enabled in Stripe Dashboard:
-          https://dashboard.stripe.com/settings/payment_methods
-
-          For Poland (PLN): Enable BLIK, Przelewy24, Cards
-          For EUR: Enable SEPA Debit, iDEAL, Cards, Klarna
-          For USD: Enable Cards, Cash App, Affirm
-        */}
-        <PaymentElement
-          options={{
-            layout: {
-              type: 'tabs',
-              defaultCollapsed: false,
-            },
-            // Set payment method order based on currency
-            // For PLN (Poland): BLIK is most popular (65%+ market share), then Przelewy24, then card
-            // For other currencies: optimize for that region
-            paymentMethodOrder: product.currency === 'PLN'
-              ? ['blik', 'p24', 'card']
-              : product.currency === 'EUR'
-              ? ['sepa_debit', 'ideal', 'card', 'klarna']
-              : product.currency === 'USD'
-              ? ['card', 'cashapp', 'affirm']
-              : undefined, // Let Stripe determine optimal order for other currencies
-            // Enable wallets and Link for supported currencies (USD, EUR, GBP, etc.)
-            // Link provides 1-click autofill, Apple/Google Pay provide express checkout
-            wallets: {
-              applePay: 'auto',
-              googlePay: 'auto',
-            },
-            // Hide email and name fields since we collect them above
-            fields: {
-              billingDetails: {
-                email: 'never',
-                name: 'never',
-              },
-            },
-          }}
-        />
-      </div>
-
-      {/* Error Message */}
-      {errorMessage && (
-        <div className="p-4 bg-red-900/30 border border-red-500/50 rounded-lg">
-          <p className="text-red-300 text-sm">{errorMessage}</p>
-        </div>
-      )}
 
       {/* Order Summary - Compact (Zanfia/EasyCart-inspired) */}
       <div className="space-y-2 py-4 border-t border-white/10">
