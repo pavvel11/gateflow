@@ -241,8 +241,7 @@ test.describe('Rate Limiting', () => {
       await page.goto(`/pl/checkout/${testProduct.slug}`);
       await page.waitForSelector('input[type="email"]', { timeout: 10000 });
 
-      // Check invoice checkbox to reveal NIP field
-      await page.locator('input[type="checkbox"]').nth(1).check();
+      // NIP field is now always visible (no checkbox needed)
       await page.waitForTimeout(500);
 
       // Mock GUS API to always succeed
