@@ -1190,6 +1190,21 @@
       "saveSuccess": "Settings saved successfully",
       "saveError": "Failed to save settings"
     },
+    "omnibus": {
+      "title": "EU Omnibus Directive",
+      "description": "Compliance settings for EU Directive 2019/2161 on price transparency",
+      "whatIsOmnibus": "What is the Omnibus Directive?",
+      "omnibusExplanation": "EU Directive 2019/2161 (Omnibus) requires displaying the lowest price from the last 30 days when showing discounts. It has been in effect since May 28, 2022 for all EU customers.",
+      "enableOmnibus": "Enable Omnibus price tracking",
+      "currentlyEnabled": "Feature enabled - 30-day lowest price will be displayed",
+      "currentlyDisabled": "Feature disabled - price history will not be displayed",
+      "saveSuccess": "Omnibus settings saved successfully",
+      "saveError": "Failed to save Omnibus settings",
+      "additionalInfo": "Additional Information",
+      "info1": "You can exempt individual products in their settings (perishable goods, new products <30 days)",
+      "info2": "Price history is automatically tracked with every product price change",
+      "info3": "Prices are displayed only when current price is lower than historical lowest"
+    },
     "stripe": {
       "title": "Stripe Configuration",
       "subtitle": "Manage your Stripe API keys and payment integration settings",

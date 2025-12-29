@@ -1225,6 +1225,21 @@
       "saveSuccess": "Ustawienia zapisane pomyślnie",
       "saveError": "Nie udało się zapisać ustawień"
     },
+    "omnibus": {
+      "title": "Dyrektywa Omnibus EU",
+      "description": "Ustawienia zgodności z dyrektywą UE 2019/2161 dotyczącą przejrzystości cen",
+      "whatIsOmnibus": "Co to jest dyrektywa Omnibus?",
+      "omnibusExplanation": "Dyrektywa UE 2019/2161 (Omnibus) wymaga wyświetlania najniższej ceny z ostatnich 30 dni przy pokazywaniu rabatów. Obowiązuje od 28 maja 2022 r. dla wszystkich klientów z UE.",
+      "enableOmnibus": "Włącz śledzenie cen Omnibus",
+      "currentlyEnabled": "Funkcja włączona - najniższa cena z 30 dni będzie wyświetlana",
+      "currentlyDisabled": "Funkcja wyłączona - historia cen nie będzie wyświetlana",
+      "saveSuccess": "Ustawienia Omnibus zapisane pomyślnie",
+      "saveError": "Nie udało się zapisać ustawień Omnibus",
+      "additionalInfo": "Dodatkowe informacje",
+      "info1": "Możesz zwolnić poszczególne produkty w ich ustawieniach (towary łatwo psujące się, nowe produkty <30 dni)",
+      "info2": "Historia cen jest automatycznie śledzona przy każdej zmianie ceny produktu",
+      "info3": "Ceny są wyświetlane tylko gdy obecna cena jest niższa od historycznej najniższej"
+    },
     "stripe": {
       "title": "Konfiguracja Stripe",
       "subtitle": "Zarządzaj kluczami API Stripe i ustawieniami integracji płatności",

@@ -16,6 +16,9 @@ export interface ShopConfig {
   accent_color?: string | null
   font_family?: 'system' | 'inter' | 'roboto' | 'montserrat' | 'poppins' | 'playfair' | null
 
+  // EU Omnibus Directive (2019/2161)
+  omnibus_enabled: boolean
+
   custom_settings: Record<string, any>
   created_at: string
   updated_at: string

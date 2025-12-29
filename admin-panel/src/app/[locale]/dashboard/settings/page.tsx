@@ -2,6 +2,7 @@ import { verifyAdminAccess } from '@/lib/auth-server';
 import ShopSettings from '@/components/settings/ShopSettings';
 import BrandingSettings from '@/components/settings/BrandingSettings';
 import StripeSettings from '@/components/settings/StripeSettings';
+import OmnibusSettings from '@/components/settings/OmnibusSettings';
 import { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 
@@ -23,6 +24,8 @@ export default async function SettingsPage() {
       <ShopSettings />
 
       <BrandingSettings />
+
+      <OmnibusSettings />
 
       <StripeSettings />
     </div>
