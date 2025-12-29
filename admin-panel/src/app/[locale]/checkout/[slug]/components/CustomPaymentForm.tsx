@@ -41,8 +41,7 @@ export default function CustomPaymentForm({
   // Terms & Conditions - only for guests (!email)
   const [termsAccepted, setTermsAccepted] = useState(false);
 
-  // Invoice data - optional
-  const [needsInvoice, setNeedsInvoice] = useState(false);
+  // Invoice data - optional (triggered by NIP input)
   const [nip, setNip] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [address, setAddress] = useState('');
@@ -60,6 +59,7 @@ export default function CustomPaymentForm({
   const [gusError, setGusError] = useState<string | null>(null);
   const [nipError, setNipError] = useState<string | null>(null);
   const [gusSuccess, setGusSuccess] = useState(false);
+  const [gusData, setGusData] = useState<any>(null);
 
   // Calculate prices
   const vatRate = product.vat_rate || 23;
@@ -158,6 +158,9 @@ export default function CustomPaymentForm({
       const result = await response.json();
 
       if (result.success && result.data) {
+        // Store GUS data
+        setGusData(result.data);
+
         // Autofill company data
         setCompanyName(result.data.nazwa);
 
@@ -219,8 +222,9 @@ export default function CustomPaymentForm({
       return;
     }
 
-    if (needsInvoice && (!nip || !companyName)) {
-      setErrorMessage('NIP and Company Name are required for invoice');
+    // Validate NIP if provided
+    if (nip && nip.length > 0 && nip.length !== 10) {
+      setErrorMessage('NIP musi mieć 10 cyfr');
       return;
     }
 
@@ -228,8 +232,8 @@ export default function CustomPaymentForm({
     setErrorMessage('');
 
     try {
-      // Update Payment Intent metadata with invoice data before confirming
-      if (needsInvoice) {
+      // Update Payment Intent metadata with invoice data if NIP provided
+      if (nip && nip.length === 10) {
         // Get the client secret from the PaymentElement
         const { error: submitError } = await elements.submit();
         if (submitError) {
@@ -279,6 +283,7 @@ export default function CustomPaymentForm({
           payment_method_data: {
             billing_details: {
               email: finalEmail,
+              name: `${firstName} ${lastName}`,
             },
           },
         },
@@ -382,22 +387,22 @@ export default function CustomPaymentForm({
 
       {/* Terms & Conditions - only for guests */}
       {!email && (
-        <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+        <div className="py-1">
           <label className="flex items-start cursor-pointer group">
             <input
               type="checkbox"
               checked={termsAccepted}
               onChange={(e) => setTermsAccepted(e.target.checked)}
-              className="mt-1 w-4 h-4 text-blue-500 bg-transparent border-2 border-blue-500/50 rounded focus:ring-blue-500 focus:ring-2"
+              className="mt-0.5 w-4 h-4 text-blue-500 bg-white/5 border border-white/20 rounded focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-colors"
               required
             />
-            <span className="ml-3 text-sm text-gray-300">
+            <span className="ml-3 text-sm text-gray-400">
               {t('iAgree', { defaultValue: 'I agree to the' })}{' '}
-              <a href="/terms" target="_blank" className="text-blue-400 hover:text-blue-300 underline">
+              <a href="/terms" target="_blank" className="text-blue-400 hover:text-blue-300 underline transition-colors">
                 {t('termsOfService', { defaultValue: 'Terms of Service' })}
               </a>
               {' '}{t('and', { defaultValue: 'and' })}{' '}
-              <a href="/privacy" target="_blank" className="text-blue-400 hover:text-blue-300 underline">
+              <a href="/privacy" target="_blank" className="text-blue-400 hover:text-blue-300 underline transition-colors">
                 {t('privacyPolicy', { defaultValue: 'Privacy Policy' })}
               </a>
               <span className="text-red-400 ml-1">*</span>
@@ -407,42 +412,28 @@ export default function CustomPaymentForm({
       )}
 
 
-      {/* Invoice Fields */}
+      {/* NIP Field - Optional, triggers company fields */}
       <div className="space-y-3">
-        <label className="flex items-center space-x-2 cursor-pointer group">
-          <input
-            type="checkbox"
-            checked={needsInvoice}
-            onChange={(e) => setNeedsInvoice(e.target.checked)}
-            className="w-4 h-4 text-blue-600 bg-white/5 border-white/20 rounded focus:ring-2 focus:ring-blue-500"
-          />
-          <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-            {t('needInvoice', { defaultValue: 'I need an invoice' })}
-          </span>
-        </label>
-
-        {needsInvoice && (
-          <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
-            <div>
-              <label htmlFor="nip" className="block text-sm font-medium text-gray-300 mb-2">
-                {t('nipLabel', { defaultValue: 'NIP (Tax ID)' })}
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  id="nip"
-                  value={nip}
-                  onChange={(e) => {
-                    setNip(e.target.value);
-                    setNipError(null);
-                    setGusError(null);
-                    setGusSuccess(false);
-                  }}
-                  onBlur={handleNIPBlur}
-                  placeholder="0000000000"
-                  maxLength={10}
-                  required={needsInvoice}
-                  className={`w-full px-3 py-2.5 bg-white/5 border ${
+        <div>
+          <label htmlFor="nip" className="block text-sm font-medium text-gray-300 mb-2">
+            {t('nipLabel', { defaultValue: 'Numer NIP' })} <span className="text-gray-500 text-xs">(opcjonalne)</span>
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              id="nip"
+              value={nip}
+              onChange={(e) => {
+                setNip(e.target.value);
+                setNipError(null);
+                setGusError(null);
+                setGusSuccess(false);
+                setGusData(null);
+              }}
+              onBlur={handleNIPBlur}
+              placeholder="0000000000"
+              maxLength={10}
+              className={`w-full px-3 py-2.5 bg-white/5 border ${
                     nipError ? 'border-red-500/50' : gusSuccess ? 'border-green-500/50' : 'border-white/10'
                   } rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                     isLoadingGUS ? 'pr-10' : ''
@@ -466,7 +457,11 @@ export default function CustomPaymentForm({
               {gusSuccess && !isLoadingGUS && (
                 <p className="mt-1 text-xs text-green-400">✓ Dane pobrane z bazy GUS</p>
               )}
-            </div>
+        </div>
+
+        {/* Company fields - show when NIP is provided or GUS data fetched */}
+        {(nip.length === 10 || gusData || companyName) && (
+          <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
             <div>
               <label htmlFor="companyName" className="block text-sm font-medium text-gray-300 mb-2">
                 {t('companyNameLabel', { defaultValue: 'Company Name' })}
@@ -477,7 +472,6 @@ export default function CustomPaymentForm({
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 placeholder="Company Ltd."
-                required={needsInvoice}
                 className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -552,15 +546,17 @@ export default function CustomPaymentForm({
               : product.currency === 'USD'
               ? ['card', 'cashapp', 'affirm']
               : undefined, // Let Stripe determine optimal order for other currencies
-            // Explicitly disable wallets including Link to prevent LinkAuthenticationElement
+            // Enable wallets and Link for supported currencies (USD, EUR, GBP, etc.)
+            // Link provides 1-click autofill, Apple/Google Pay provide express checkout
             wallets: {
-              applePay: 'never',
-              googlePay: 'never',
+              applePay: 'auto',
+              googlePay: 'auto',
             },
-            // Hide email field in PaymentElement since we collect it above
+            // Hide email and name fields since we collect them above
             fields: {
               billingDetails: {
                 email: 'never',
+                name: 'never',
               },
             },
           }}
