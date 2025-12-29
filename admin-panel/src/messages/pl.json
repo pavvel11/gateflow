@@ -1433,5 +1433,8 @@
         "finePrint": "Możesz zawsze zaktualizować lub zrotować swoje klucze API ze strony Ustawień."
       }
     }
+  },
+  "omnibus": {
+    "lowestPriceLast30Days": "Najniższa cena z ostatnich 30 dni: {price}"
   }
 }

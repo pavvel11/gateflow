@@ -1398,5 +1398,8 @@
         "finePrint": "You can always update or rotate your API keys from the Settings page."
       }
     }
+  },
+  "omnibus": {
+    "lowestPriceLast30Days": "Lowest price in the last 30 days: {price}"
   }
 }
