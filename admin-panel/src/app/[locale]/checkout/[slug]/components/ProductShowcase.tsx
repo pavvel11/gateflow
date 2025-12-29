@@ -6,6 +6,7 @@ import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useTranslations } from 'next-intl';
+import OmnibusPrice from '@/components/OmnibusPrice';
 
 interface ProductShowcaseProps {
   product: Product;
@@ -75,6 +76,13 @@ export default function ProductShowcase({ product }: ProductShowcaseProps) {
             </div>
           </div>
         )}
+
+        {/* EU Omnibus Directive - Lowest price from last 30 days */}
+        <OmnibusPrice
+          productId={product.id}
+          currentPrice={grossPrice}
+          currency={product.currency}
+        />
       </div>
 
       {/* Long Description with Markdown Support */}

@@ -850,6 +850,8 @@
         "advancedSettings": "Ustawienia zaawansowane",
         "productActive": "Produkt jest aktywny i widoczny dla użytkowników",
         "featuredProduct": "Produkt wyróżniony (podświetlany w listach)",
+        "omnibusExempt": "Zwolniony z dyrektywy Omnibus",
+        "omnibusExemptHelp": "(towary łatwo psujące się, nowe produkty <30 dni)",
         "cancel": "Anuluj",
         "updateProduct": "Aktualizuj produkt",
         "createProduct": "Utwórz produkt",

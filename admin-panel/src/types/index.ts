@@ -18,6 +18,8 @@ export interface Product {
   layout_template: string
   is_active: boolean
   is_featured: boolean
+  // EU Omnibus Directive (2019/2161)
+  omnibus_exempt: boolean
   // Temporal availability fields
   available_from?: string | null
   available_until?: string | null

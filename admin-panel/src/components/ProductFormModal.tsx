@@ -48,6 +48,8 @@ export interface ProductFormData {
   pass_params_to_redirect: boolean;
   // Categories
   categories: string[];
+  // EU Omnibus Directive
+  omnibus_exempt: boolean;
 }
 
 const ProductFormModal: React.FC<ProductFormModalProps> = ({
@@ -78,7 +80,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
     },
     success_redirect_url: '',
     pass_params_to_redirect: false,
-    categories: []
+    categories: [],
+    omnibus_exempt: false
   });
   
   // Separate state for the displayed price input value
@@ -149,7 +152,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         content_config: product.content_config || { content_items: [] },
         success_redirect_url: product.success_redirect_url || '',
         pass_params_to_redirect: product.pass_params_to_redirect || false,
-        categories: [] // Will be populated below
+        categories: [], // Will be populated below
+        omnibus_exempt: product.omnibus_exempt || false
       });
       
       // Fetch assigned categories
@@ -179,7 +183,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         content_config: { content_items: [] },
         success_redirect_url: '',
         pass_params_to_redirect: false,
-        categories: []
+        categories: [],
+        omnibus_exempt: false
       });
       setPriceDisplayValue('');
       setSlugModified(false);
@@ -1297,6 +1302,23 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 <label htmlFor="is_featured" className="ml-3 block text-sm font-medium text-gray-900 dark:text-gray-100">
                   {t('featuredProduct')}
                 </label>
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="omnibus_exempt"
+                  name="omnibus_exempt"
+                  checked={formData.omnibus_exempt}
+                  onChange={handleCheckboxChange}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="omnibus_exempt" className="ml-3 block text-sm font-medium text-gray-900 dark:text-gray-100">
+                  {t('omnibusExempt')}
+                </label>
+                <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                  {t('omnibusExemptHelp')}
+                </span>
               </div>
             </div>
           </ModalSection>

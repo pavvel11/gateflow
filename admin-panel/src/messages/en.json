@@ -852,6 +852,8 @@
         "advancedSettings": "Advanced Settings",
         "productActive": "Product is active and visible to users",
         "featuredProduct": "Featured product (highlighted in listings)",
+        "omnibusExempt": "Exempt from Omnibus Directive",
+        "omnibusExemptHelp": "(perishable goods, new products <30 days)",
         "cancel": "Cancel",
         "updateProduct": "Update Product",
         "createProduct": "Create Product",
