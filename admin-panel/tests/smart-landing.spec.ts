@@ -164,16 +164,16 @@ test.describe('Smart Landing Page', () => {
     const bodyText = await page.locator('body').textContent();
     console.log('Page contains:', bodyText?.substring(0, 500));
 
-    // Check if we see onboarding or something else
-    const hasOnboarding = await page.locator('text=/Welcome to|Witaj w/i').count();
-    console.log('Has welcome heading:', hasOnboarding);
+    // Check if we see admin onboarding
+    const hasOnboarding = await page.locator('[data-testid="admin-onboarding"]').count();
+    console.log('Has admin onboarding:', hasOnboarding);
 
     // Take screenshot for debugging
     await page.screenshot({ path: 'test-results/scenario1-debug.png' });
 
-    // Should see onboarding welcome message
-    const welcomeHeading = page.locator('h1, h2').filter({ hasText: /Welcome to|Witaj w/i });
-    await expect(welcomeHeading.first()).toBeVisible({ timeout: 15000 });
+    // Should see admin onboarding
+    const onboarding = page.locator('[data-testid="admin-onboarding"]');
+    await expect(onboarding).toBeVisible({ timeout: 15000 });
 
     // Should see "Add Your First Product" button (EN or PL) - should link to products with ?open=new
     const addProductButton = page.locator('a[href="/dashboard/products?open=new"], a:has-text("Add Your First Product"), a:has-text("Dodaj pierwszy produkt")');
@@ -201,13 +201,13 @@ test.describe('Smart Landing Page', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
+    // Should see coming soon state
+    const comingSoon = page.locator('[data-testid="coming-soon"]');
+    await expect(comingSoon).toBeVisible({ timeout: 10000 });
+
     // Should see rocket emoji
     const rocket = page.locator('text=🚀');
-    await expect(rocket).toBeVisible({ timeout: 10000 });
-
-    // Should see "We're Setting Up Shop!" or similar message
-    const comingSoonTitle = page.locator('h1', { hasText: /Setting Up Shop|Przygotowujemy/i });
-    await expect(comingSoonTitle).toBeVisible();
+    await expect(rocket).toBeVisible();
 
     // Should see subtitle about checking back soon
     const subtitle = page.locator('text=/Check back soon|Wróć wkrótce/i');
@@ -232,13 +232,13 @@ test.describe('Smart Landing Page', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    // Should see welcome message with shop name
-    const welcomeText = page.locator('text=/Welcome to|Witaj w/i');
-    await expect(welcomeText.first()).toBeVisible({ timeout: 10000 });
+    // Should see storefront
+    const storefront = page.locator('[data-testid="storefront"]');
+    await expect(storefront).toBeVisible({ timeout: 10000 });
 
-    // Should see "View All Products" button or link
-    const viewAllButton = page.locator('a', { hasText: /View All Products|Zobacz wszystkie produkty/i });
-    await expect(viewAllButton.first()).toBeVisible();
+    // Should see product cards (links to /p/)
+    const productLinks = page.locator('a[href^="/p/"]');
+    await expect(productLinks.first()).toBeVisible({ timeout: 5000 });
 
     // Should see product showcase section
     const productSection = page.locator('text=/Premium Products|Free Resources|Featured Products|Polecane/i');
@@ -265,12 +265,12 @@ test.describe('Smart Landing Page', () => {
     await page.waitForTimeout(2000);
 
     // Even as admin, should see storefront when products exist
-    const welcomeText = page.locator('text=/Welcome to|Witaj w/i');
-    await expect(welcomeText.first()).toBeVisible({ timeout: 10000 });
+    const storefront = page.locator('[data-testid="storefront"]');
+    await expect(storefront).toBeVisible({ timeout: 10000 });
 
-    // Should see "View All Products" button
-    const viewAllButton = page.locator('a', { hasText: /View All Products|Zobacz wszystkie produkty/i });
-    await expect(viewAllButton.first()).toBeVisible();
+    // Should see product cards (links to /p/)
+    const productLinks = page.locator('a[href^="/p/"]');
+    await expect(productLinks.first()).toBeVisible({ timeout: 5000 });
 
     // Should NOT see onboarding
     const setupProgress = page.locator('text=/Setup Progress/i');
@@ -387,19 +387,12 @@ test.describe('Smart Landing Page', () => {
     await page.waitForTimeout(2000);
 
     // Verify storefront is shown
-    const storefrontContent = page.locator('text=/Welcome to|View All/i');
-    await expect(storefrontContent.first()).toBeVisible({ timeout: 10000 });
+    const storefront = page.locator('[data-testid="storefront"]');
+    await expect(storefront).toBeVisible({ timeout: 10000 });
 
-    // Find "View All Products" link and verify href
-    const viewAllButton = page.locator('a', { hasText: /View All Products|Zobacz wszystkie produkty/i }).first();
-
-    if (await viewAllButton.isVisible()) {
-      const href = await viewAllButton.getAttribute('href');
-      expect(href).toContain('/products');
-    } else {
-      // If button not visible, just verify storefront is showing
-      console.log('View All button not found, but storefront is visible');
-    }
+    // Verify product links exist (which effectively shows products catalog)
+    const productLinks = page.locator('a[href^="/p/"]');
+    await expect(productLinks.first()).toBeVisible();
   });
 
   test('Language switching should work on all landing page variants', async ({ page }) => {

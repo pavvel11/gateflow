@@ -11,7 +11,7 @@ export default function ComingSoonEmptyState({ shopName, contactEmail }: ComingS
   const t = useTranslations('storefront.comingSoon');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 flex items-center justify-center px-4 py-12">
+    <div data-testid="coming-soon" className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 flex items-center justify-center px-4 py-12">
       <div className="max-w-2xl w-full text-center">
         {/* Animated Rocket */}
         <div className="mb-8 flex justify-center">
