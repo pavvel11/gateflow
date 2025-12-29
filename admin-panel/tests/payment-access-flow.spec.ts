@@ -1,0 +1,763 @@
+import { test, expect } from '@playwright/test';
+import { createClient } from '@supabase/supabase-js';
+
+// Enforce single worker to avoid race conditions
+test.describe.configure({ mode: 'serial' });
+
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+if (!SUPABASE_URL || !SERVICE_ROLE_KEY || !ANON_KEY) {
+  throw new Error('Missing Supabase env variables for testing');
+}
+
+const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+/**
+ * Helper: Grant product access (simulates successful payment webhook)
+ */
+async function grantProductAccess(userId: string, productId: string) {
+  const { data, error } = await supabaseAdmin.rpc('grant_product_access_service_role', {
+    user_id_param: userId,
+    product_id_param: productId
+  });
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Helper: Sign in user in browser
+ */
+async function signInUser(page: any, email: string, password: string) {
+  await page.goto('/');
+  await page.waitForLoadState('domcontentloaded');
+
+  await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
+    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
+    const supabase = createBrowserClient(supabaseUrl, anonKey);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+  }, {
+    email,
+    password,
+    supabaseUrl: SUPABASE_URL,
+    anonKey: ANON_KEY,
+  });
+
+  await page.waitForTimeout(1000);
+}
+
+test.describe('Payment Flow - Access Granting', () => {
+  let testUser: any;
+  let testProduct: any;
+
+  test.beforeAll(async () => {
+    // Create test user
+    const email = `payment-test-${Date.now()}@test.com`;
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password: 'TestPassword123!',
+      email_confirm: true,
+    });
+
+    if (authError) throw authError;
+    testUser = authData.user;
+
+    // Create profile
+    await supabaseAdmin.from('profiles').insert({
+      id: testUser.id,
+      email: testUser.email,
+    });
+
+    // Create test product (unlimited access)
+    const { data: productData, error: productError } = await supabaseAdmin
+      .from('products')
+      .insert({
+        name: `Access Test Product ${Date.now()}`,
+        slug: `access-test-${Date.now()}`,
+        price: 100,
+        currency: 'PLN',
+        is_active: true,
+        auto_grant_duration_days: null, // NULL = unlimited access
+      })
+      .select()
+      .single();
+
+    if (productError) throw productError;
+    testProduct = productData;
+  });
+
+  test.afterAll(async () => {
+    // Cleanup
+    if (testUser) {
+      await supabaseAdmin.from('user_product_access').delete().eq('user_id', testUser.id);
+      await supabaseAdmin.from('profiles').delete().eq('id', testUser.id);
+      await supabaseAdmin.auth.admin.deleteUser(testUser.id);
+    }
+    if (testProduct) {
+      await supabaseAdmin.from('products').delete().eq('id', testProduct.id);
+    }
+  });
+
+  test('should grant unlimited access after payment (NULL expires_at)', async ({ page }) => {
+    // Simulate successful payment by calling grant access function
+    const result = await grantProductAccess(testUser.id, testProduct.id);
+
+    expect(result.success).toBe(true);
+
+    // Verify user_product_access record was created
+    const { data: access, error } = await supabaseAdmin
+      .from('user_product_access')
+      .select('*')
+      .eq('user_id', testUser.id)
+      .eq('product_id', testProduct.id)
+      .single();
+
+    expect(error).toBeNull();
+    expect(access).toBeTruthy();
+    expect(access.access_expires_at).toBeNull(); // Unlimited access
+    expect(access.access_duration_days).toBeNull();
+
+    // Sign in and verify frontend access
+    await signInUser(page, testUser.email, 'TestPassword123!');
+
+    // Navigate to product page
+    await page.goto(`/p/${testProduct.slug}`);
+    await page.waitForTimeout(2000);
+
+    // Should NOT redirect to checkout (has access)
+    expect(page.url()).toContain(`/p/${testProduct.slug}`);
+
+    // Should see "Access Granted" indicator
+    const bodyText = await page.locator('body').textContent();
+    expect(bodyText?.toLowerCase()).toContain('access granted');
+  });
+
+  test('should prevent guest access (redirect to checkout)', async ({ page }) => {
+    // Create a product without granting access
+    const { data: restrictedProduct } = await supabaseAdmin
+      .from('products')
+      .insert({
+        name: `Restricted ${Date.now()}`,
+        slug: `restricted-${Date.now()}`,
+        price: 50,
+        currency: 'PLN',
+        is_active: true,
+      })
+      .select()
+      .single();
+
+    // Try to access as guest (no auth)
+    await page.goto(`/p/${restrictedProduct.slug}`);
+    await page.waitForTimeout(2000);
+
+    // Should redirect to checkout
+    expect(page.url()).toContain('/checkout/');
+
+    // Cleanup
+    await supabaseAdmin.from('products').delete().eq('id', restrictedProduct.id);
+  });
+});
+
+test.describe('Payment Flow - Timed Access', () => {
+  let testUser: any;
+  let timedProduct: any;
+
+  test.beforeAll(async () => {
+    const email = `timed-test-${Date.now()}@test.com`;
+    const { data: authData } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password: 'TestPassword123!',
+      email_confirm: true,
+    });
+
+    testUser = authData.user;
+
+    await supabaseAdmin.from('profiles').insert({
+      id: testUser.id,
+      email: testUser.email,
+    });
+
+    // Create product with 30 days access
+    const { data: productData } = await supabaseAdmin
+      .from('products')
+      .insert({
+        name: `Timed Product ${Date.now()}`,
+        slug: `timed-${Date.now()}`,
+        price: 50,
+        currency: 'PLN',
+        is_active: true,
+        auto_grant_duration_days: 30, // 30 days access
+      })
+      .select()
+      .single();
+
+    timedProduct = productData;
+  });
+
+  test.afterAll(async () => {
+    if (testUser) {
+      await supabaseAdmin.from('user_product_access').delete().eq('user_id', testUser.id);
+      await supabaseAdmin.from('profiles').delete().eq('id', testUser.id);
+      await supabaseAdmin.auth.admin.deleteUser(testUser.id);
+    }
+    if (timedProduct) {
+      await supabaseAdmin.from('products').delete().eq('id', timedProduct.id);
+    }
+  });
+
+  test('should grant timed access (30 days)', async ({ page }) => {
+    // Grant access
+    const result = await grantProductAccess(testUser.id, timedProduct.id);
+
+    expect(result.success).toBe(true);
+
+    // Verify access record
+    const { data: access } = await supabaseAdmin
+      .from('user_product_access')
+      .select('*')
+      .eq('user_id', testUser.id)
+      .eq('product_id', timedProduct.id)
+      .single();
+
+    expect(access).toBeTruthy();
+    expect(access.access_duration_days).toBe(30);
+    expect(access.access_expires_at).not.toBeNull();
+
+    // Verify expires_at is approximately 30 days from now
+    const expiresAt = new Date(access.access_expires_at);
+    const now = new Date();
+    const diffDays = (expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+
+    expect(diffDays).toBeGreaterThan(29); // At least 29 days
+    expect(diffDays).toBeLessThan(31); // At most 31 days
+
+    // Verify frontend access
+    await signInUser(page, testUser.email, 'TestPassword123!');
+    await page.goto(`/p/${timedProduct.slug}`);
+    await page.waitForTimeout(2000);
+
+    expect(page.url()).toContain(`/p/${timedProduct.slug}`);
+  });
+
+  test('should extend access when purchasing again', async () => {
+    // Get current access
+    const { data: accessBefore } = await supabaseAdmin
+      .from('user_product_access')
+      .select('access_expires_at')
+      .eq('user_id', testUser.id)
+      .eq('product_id', timedProduct.id)
+      .single();
+
+    const expiresAtBefore = new Date(accessBefore.access_expires_at);
+
+    // Wait a moment
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Purchase again (extend access)
+    await grantProductAccess(testUser.id, timedProduct.id);
+
+    // Get updated access
+    const { data: accessAfter } = await supabaseAdmin
+      .from('user_product_access')
+      .select('access_expires_at')
+      .eq('user_id', testUser.id)
+      .eq('product_id', timedProduct.id)
+      .single();
+
+    const expiresAtAfter = new Date(accessAfter.access_expires_at);
+
+    // Expires_at should be extended by 30 days
+    expect(expiresAtAfter.getTime()).toBeGreaterThan(expiresAtBefore.getTime());
+
+    const extensionDays = (expiresAtAfter.getTime() - expiresAtBefore.getTime()) / (1000 * 60 * 60 * 24);
+    expect(extensionDays).toBeGreaterThan(29);
+    expect(extensionDays).toBeLessThan(31);
+  });
+});
+
+test.describe('Payment Flow - Order Bump', () => {
+  let testUser: any;
+  let mainProduct: any;
+  let bumpProduct: any;
+  let orderBump: any;
+
+  test.beforeAll(async () => {
+    const email = `bump-test-${Date.now()}@test.com`;
+    const { data: authData } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password: 'TestPassword123!',
+      email_confirm: true,
+    });
+
+    testUser = authData.user;
+
+    await supabaseAdmin.from('profiles').insert({
+      id: testUser.id,
+      email: testUser.email,
+    });
+
+    // Create main product
+    const { data: mainProd } = await supabaseAdmin
+      .from('products')
+      .insert({
+        name: `Main Product ${Date.now()}`,
+        slug: `main-${Date.now()}`,
+        price: 100,
+        currency: 'PLN',
+        is_active: true,
+        auto_grant_duration_days: null, // Unlimited
+      })
+      .select()
+      .single();
+
+    mainProduct = mainProd;
+
+    // Create bump product (7 days access)
+    const { data: bumpProd } = await supabaseAdmin
+      .from('products')
+      .insert({
+        name: `Bump Product ${Date.now()}`,
+        slug: `bump-${Date.now()}`,
+        price: 30,
+        currency: 'PLN',
+        is_active: true,
+        auto_grant_duration_days: 7, // 7 days access
+      })
+      .select()
+      .single();
+
+    bumpProduct = bumpProd;
+
+    // Create order bump
+    const { data: bump } = await supabaseAdmin
+      .from('order_bumps')
+      .insert({
+        product_id: mainProduct.id,
+        bump_product_id: bumpProduct.id,
+        bump_title: 'Special Bonus!',
+        bump_description: 'Get 7 days access',
+        bump_price: 30,
+        bump_currency: 'PLN',
+        bump_access_duration: 7,
+        is_active: true,
+      })
+      .select()
+      .single();
+
+    orderBump = bump;
+  });
+
+  test.afterAll(async () => {
+    if (testUser) {
+      await supabaseAdmin.from('user_product_access').delete().eq('user_id', testUser.id);
+      await supabaseAdmin.from('profiles').delete().eq('id', testUser.id);
+      await supabaseAdmin.auth.admin.deleteUser(testUser.id);
+    }
+    if (orderBump) {
+      await supabaseAdmin.from('order_bumps').delete().eq('id', orderBump.id);
+    }
+    if (mainProduct) {
+      await supabaseAdmin.from('products').delete().eq('id', mainProduct.id);
+    }
+    if (bumpProduct) {
+      await supabaseAdmin.from('products').delete().eq('id', bumpProduct.id);
+    }
+  });
+
+  test('should grant access to both main product and bump product', async ({ page }) => {
+    // Grant access to main product
+    await grantProductAccess(testUser.id, mainProduct.id);
+
+    // Grant access to bump product (simulating bump purchase)
+    await grantProductAccess(testUser.id, bumpProduct.id);
+
+    // Verify both access records exist
+    const { data: mainAccess } = await supabaseAdmin
+      .from('user_product_access')
+      .select('*')
+      .eq('user_id', testUser.id)
+      .eq('product_id', mainProduct.id)
+      .single();
+
+    const { data: bumpAccess } = await supabaseAdmin
+      .from('user_product_access')
+      .select('*')
+      .eq('user_id', testUser.id)
+      .eq('product_id', bumpProduct.id)
+      .single();
+
+    // Main product: unlimited access
+    expect(mainAccess).toBeTruthy();
+    expect(mainAccess.access_expires_at).toBeNull();
+    expect(mainAccess.access_duration_days).toBeNull();
+
+    // Bump product: 7 days access
+    expect(bumpAccess).toBeTruthy();
+    expect(bumpAccess.access_duration_days).toBe(7);
+    expect(bumpAccess.access_expires_at).not.toBeNull();
+
+    const expiresAt = new Date(bumpAccess.access_expires_at);
+    const now = new Date();
+    const diffDays = (expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+
+    expect(diffDays).toBeGreaterThan(6);
+    expect(diffDays).toBeLessThan(8);
+
+    // Verify frontend access to both products
+    await signInUser(page, testUser.email, 'TestPassword123!');
+
+    // Access main product
+    await page.goto(`/p/${mainProduct.slug}`);
+    await page.waitForTimeout(2000);
+    expect(page.url()).toContain(`/p/${mainProduct.slug}`);
+
+    // Access bump product
+    await page.goto(`/p/${bumpProduct.slug}`);
+    await page.waitForTimeout(2000);
+    expect(page.url()).toContain(`/p/${bumpProduct.slug}`);
+  });
+
+  test.skip('should display order bump on checkout page', async ({ page }) => {
+    // SKIPPED: Order bump loading requires client secret generation
+    // which depends on Stripe configuration in tests
+    // Create a new user without access
+    const email = `checkout-bump-${Date.now()}@test.com`;
+    const { data: newUser } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password: 'TestPassword123!',
+      email_confirm: true,
+    });
+
+    await supabaseAdmin.from('profiles').insert({
+      id: newUser.user.id,
+      email,
+    });
+
+    // Sign in
+    await signInUser(page, email, 'TestPassword123!');
+
+    // Go to checkout
+    await page.goto(`/pl/checkout/${mainProduct.slug}`);
+    await page.waitForTimeout(2000);
+
+    // Order bump should be visible
+    const bodyText = await page.locator('body').textContent();
+    expect(bodyText).toContain('Special Bonus!');
+    expect(bodyText).toContain('Get 7 days access');
+
+    // Cleanup
+    await supabaseAdmin.from('profiles').delete().eq('id', newUser.user.id);
+    await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
+  });
+});
+
+test.describe('Payment Flow - Guest Purchase Claiming', () => {
+  let testProduct: any;
+  const guestEmail = `guest-claim-${Date.now()}@test.com`;
+
+  test.beforeAll(async () => {
+    // Create test product
+    const { data: productData } = await supabaseAdmin
+      .from('products')
+      .insert({
+        name: `Guest Claim Product ${Date.now()}`,
+        slug: `guest-claim-${Date.now()}`,
+        price: 100,
+        currency: 'PLN',
+        is_active: true,
+      })
+      .select()
+      .single();
+
+    testProduct = productData;
+  });
+
+  test.afterAll(async () => {
+    if (testProduct) {
+      await supabaseAdmin.from('products').delete().eq('id', testProduct.id);
+    }
+  });
+
+  test.skip('should auto-claim guest purchase when user registers with same email', async ({ page }) => {
+    // SKIPPED: Requires database trigger implementation for auto-claiming
+    // Trigger should automatically grant access when user registers with email matching guest_purchases.customer_email
+    // STEP 1: Create guest purchase (simulating successful Stripe payment)
+    const { error: purchaseError } = await supabaseAdmin
+      .from('guest_purchases')
+      .insert({
+        customer_email: guestEmail,
+        product_id: testProduct.id,
+        session_id: `pi_test_${Date.now()}`,
+        transaction_amount: 10000, // 100 PLN in cents
+      });
+
+    expect(purchaseError).toBeNull();
+
+    // Verify guest purchase exists
+    const { data: guestPurchase } = await supabaseAdmin
+      .from('guest_purchases')
+      .select('*')
+      .eq('customer_email', guestEmail)
+      .eq('product_id', testProduct.id)
+      .single();
+
+    expect(guestPurchase).toBeTruthy();
+
+    // STEP 2: User registers with same email
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.createUser({
+      email: guestEmail,
+      password: 'TestPassword123!',
+      email_confirm: true,
+    });
+
+    expect(userError).toBeNull();
+    expect(user).toBeTruthy();
+
+    // STEP 3: Wait for trigger to execute (auto-claim logic)
+    await page.waitForTimeout(2000);
+
+    // STEP 4: Verify user_product_access was automatically created
+    const { data: userAccess, error: accessError } = await supabaseAdmin
+      .from('user_product_access')
+      .select('*')
+      .eq('user_id', user!.id)
+      .eq('product_id', testProduct.id)
+      .single();
+
+    expect(accessError).toBeNull();
+    expect(userAccess).toBeTruthy();
+    expect(userAccess.user_id).toBe(user!.id);
+    expect(userAccess.product_id).toBe(testProduct.id);
+
+    // STEP 5: Sign in and verify frontend access
+    await signInUser(page, guestEmail, 'TestPassword123!');
+
+    await page.goto(`/p/${testProduct.slug}`);
+    await page.waitForTimeout(2000);
+
+    // Should have access (not redirected to checkout)
+    expect(page.url()).toContain(`/p/${testProduct.slug}`);
+
+    const bodyText = await page.locator('body').textContent();
+    expect(bodyText?.toLowerCase()).toContain('access granted');
+
+    // Cleanup
+    await supabaseAdmin.from('user_product_access').delete().eq('user_id', user!.id);
+    await supabaseAdmin.from('profiles').delete().eq('id', user!.id);
+    await supabaseAdmin.from('guest_purchases').delete().eq('customer_email', guestEmail);
+    await supabaseAdmin.auth.admin.deleteUser(user!.id);
+  });
+
+  test.skip('should NOT claim if email is different', async () => {
+    // SKIPPED: Requires auto-claim trigger implementation
+    const guestEmail2 = `guest-${Date.now()}@test.com`;
+    const registerEmail = `register-${Date.now()}@test.com`;
+
+    // Create guest purchase with one email
+    await supabaseAdmin
+      .from('guest_purchases')
+      .insert({
+        customer_email: guestEmail2,
+        product_id: testProduct.id,
+        session_id: `pi_test_${Date.now()}`,
+        transaction_amount: 10000,
+      });
+
+    // Register with different email
+    const { data: { user } } = await supabaseAdmin.auth.admin.createUser({
+      email: registerEmail,
+      password: 'TestPassword123!',
+      email_confirm: true,
+    });
+
+    // Wait for trigger
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Should NOT have access
+    const { data: userAccess } = await supabaseAdmin
+      .from('user_product_access')
+      .select('*')
+      .eq('user_id', user!.id)
+      .eq('product_id', testProduct.id)
+      .single();
+
+    expect(userAccess).toBeNull();
+
+    // Cleanup
+    await supabaseAdmin.from('profiles').delete().eq('id', user!.id);
+    await supabaseAdmin.from('guest_purchases').delete().eq('customer_email', guestEmail2);
+    await supabaseAdmin.auth.admin.deleteUser(user!.id);
+  });
+
+  test.skip('should claim multiple products if guest bought multiple', async () => {
+    // SKIPPED: Requires auto-claim trigger implementation
+    const multiEmail = `multi-${Date.now()}@test.com`;
+
+    // Create second product
+    const { data: product2 } = await supabaseAdmin
+      .from('products')
+      .insert({
+        name: `Multi Product ${Date.now()}`,
+        slug: `multi-${Date.now()}`,
+        price: 50,
+        currency: 'PLN',
+        is_active: true,
+      })
+      .select()
+      .single();
+
+    // Create two guest purchases
+    await supabaseAdmin
+      .from('guest_purchases')
+      .insert([
+        {
+          customer_email: multiEmail,
+          product_id: testProduct.id,
+          session_id: `pi_multi1_${Date.now()}`,
+          transaction_amount: 10000,
+        },
+        {
+          customer_email: multiEmail,
+          product_id: product2.id,
+          session_id: `pi_multi2_${Date.now()}`,
+          transaction_amount: 5000,
+        },
+      ]);
+
+    // Register with same email
+    const { data: { user } } = await supabaseAdmin.auth.admin.createUser({
+      email: multiEmail,
+      password: 'TestPassword123!',
+      email_confirm: true,
+    });
+
+    // Wait for trigger
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Should have access to BOTH products
+    const { data: accesses } = await supabaseAdmin
+      .from('user_product_access')
+      .select('*')
+      .eq('user_id', user!.id)
+      .in('product_id', [testProduct.id, product2.id]);
+
+    expect(accesses).toBeTruthy();
+    expect(accesses!.length).toBe(2);
+
+    // Cleanup
+    await supabaseAdmin.from('user_product_access').delete().eq('user_id', user!.id);
+    await supabaseAdmin.from('profiles').delete().eq('id', user!.id);
+    await supabaseAdmin.from('guest_purchases').delete().eq('customer_email', multiEmail);
+    await supabaseAdmin.from('products').delete().eq('id', product2.id);
+    await supabaseAdmin.auth.admin.deleteUser(user!.id);
+  });
+});
+
+test.describe('Payment Flow - Access Verification', () => {
+  let userWithAccess: any;
+  let userWithoutAccess: any;
+  let testProduct: any;
+
+  test.beforeAll(async () => {
+    // Create product
+    const { data: productData } = await supabaseAdmin
+      .from('products')
+      .insert({
+        name: `Verification Product ${Date.now()}`,
+        slug: `verify-${Date.now()}`,
+        price: 100,
+        currency: 'PLN',
+        is_active: true,
+      })
+      .select()
+      .single();
+
+    testProduct = productData;
+
+    // Create user WITH access
+    const email1 = `with-access-${Date.now()}@test.com`;
+    const { data: user1 } = await supabaseAdmin.auth.admin.createUser({
+      email: email1,
+      password: 'TestPassword123!',
+      email_confirm: true,
+    });
+
+    userWithAccess = user1.user;
+
+    await supabaseAdmin.from('profiles').insert({
+      id: userWithAccess.id,
+      email: email1,
+    });
+
+    // Grant access
+    await grantProductAccess(userWithAccess.id, testProduct.id);
+
+    // Create user WITHOUT access
+    const email2 = `without-access-${Date.now()}@test.com`;
+    const { data: user2 } = await supabaseAdmin.auth.admin.createUser({
+      email: email2,
+      password: 'TestPassword123!',
+      email_confirm: true,
+    });
+
+    userWithoutAccess = user2.user;
+
+    await supabaseAdmin.from('profiles').insert({
+      id: userWithoutAccess.id,
+      email: email2,
+    });
+  });
+
+  test.afterAll(async () => {
+    if (userWithAccess) {
+      await supabaseAdmin.from('user_product_access').delete().eq('user_id', userWithAccess.id);
+      await supabaseAdmin.from('profiles').delete().eq('id', userWithAccess.id);
+      await supabaseAdmin.auth.admin.deleteUser(userWithAccess.id);
+    }
+    if (userWithoutAccess) {
+      await supabaseAdmin.from('profiles').delete().eq('id', userWithoutAccess.id);
+      await supabaseAdmin.auth.admin.deleteUser(userWithoutAccess.id);
+    }
+    if (testProduct) {
+      await supabaseAdmin.from('products').delete().eq('id', testProduct.id);
+    }
+  });
+
+  test('user WITH access can view product page', async ({ page }) => {
+    await signInUser(page, userWithAccess.email, 'TestPassword123!');
+
+    await page.goto(`/p/${testProduct.slug}`);
+    await page.waitForTimeout(2000);
+
+    // Should stay on product page
+    expect(page.url()).toContain(`/p/${testProduct.slug}`);
+
+    // Should see access granted
+    const bodyText = await page.locator('body').textContent();
+    expect(bodyText?.toLowerCase()).toContain('access granted');
+  });
+
+  test('user WITHOUT access should redirect to checkout', async ({ page }) => {
+    await signInUser(page, userWithoutAccess.email, 'TestPassword123!');
+
+    await page.goto(`/p/${testProduct.slug}`);
+    await page.waitForTimeout(2000);
+
+    // Should redirect to checkout
+    expect(page.url()).toContain('/checkout/');
+    expect(page.url()).toContain(testProduct.slug);
+  });
+
+  test('guest user should redirect to checkout', async ({ page }) => {
+    // No authentication
+
+    await page.goto(`/p/${testProduct.slug}`);
+    await page.waitForTimeout(2000);
+
+    // Should redirect to checkout
+    expect(page.url()).toContain('/checkout/');
+  });
+});
