@@ -24,6 +24,7 @@
     "createSessionError": "Nie udało się utworzyć sesji płatności",
     "netPrice": "Cena netto",
     "vat": "VAT",
+    "includingVat": "w tym VAT",
     "payButton": "Zapłać {amount}",
     "processing": "Przetwarzanie płatności...",
     "paymentSuccessful": "Płatność Zakończona Sukcesem!",

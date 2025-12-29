@@ -59,30 +59,25 @@ export default function ProductShowcase({ product }: ProductShowcaseProps) {
         </div>
       </div>
 
-      {/* Price Display */}
-      <div className="mb-8 p-6 rounded-xl bg-white/5 border border-white/10">
-        <div className="text-4xl font-bold text-white mb-2">
+      {/* Price Display - Clean & Minimal (EasyCart-inspired) */}
+      <div className="mb-8">
+        <div className="text-5xl font-bold text-white mb-2 tracking-tight">
           {formatPrice(grossPrice, product.currency)} {product.currency}
         </div>
         {product.vat_rate && product.vat_rate > 0 && (
-          <div className="text-sm text-gray-400 space-y-1">
-            <div className="flex justify-between">
-              <span>{t('netPrice')}:</span>
-              <span>{formatPrice(netPrice, product.currency)} {product.currency}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>{t('vat')} {vatRate}%:</span>
-              <span>{formatPrice(vatAmount, product.currency)} {product.currency}</span>
-            </div>
+          <div className="text-sm text-gray-400">
+            {t('includingVat', { defaultValue: 'including VAT' })} {vatRate}%
           </div>
         )}
 
         {/* EU Omnibus Directive - Lowest price from last 30 days */}
-        <OmnibusPrice
-          productId={product.id}
-          currentPrice={grossPrice}
-          currency={product.currency}
-        />
+        <div className="mt-3">
+          <OmnibusPrice
+            productId={product.id}
+            currentPrice={grossPrice}
+            currency={product.currency}
+          />
+        </div>
       </div>
 
       {/* Long Description with Markdown Support */}

@@ -406,54 +406,6 @@ export default function CustomPaymentForm({
         </div>
       )}
 
-      {/* Price Summary */}
-      <div className="p-4 bg-white/5 border border-white/10 rounded-lg space-y-2 text-sm">
-        <h3 className="font-semibold text-white mb-3">{t('priceSummary', { defaultValue: 'Price Summary' })}</h3>
-
-        {/* Product Price */}
-        <div className="flex justify-between text-gray-300">
-          <span>{product.name}</span>
-          <span>{formatPrice(product.price, product.currency)} {product.currency}</span>
-        </div>
-
-        {/* Bump Product */}
-        {bumpSelected && bumpProduct && (
-          <div className="flex justify-between text-gray-300">
-            <span>{bumpProduct.bump_product_name || 'Additional Product'}</span>
-            <span>{formatPrice(bumpProduct.bump_price, product.currency)} {product.currency}</span>
-          </div>
-        )}
-
-        {/* Coupon Discount */}
-        {appliedCoupon && discountAmount > 0 && (
-          <div className="flex justify-between text-green-400">
-            <span>{t('couponDiscount', { defaultValue: 'Discount' })} ({appliedCoupon.code})</span>
-            <span>-{formatPrice(discountAmount, product.currency)} {product.currency}</span>
-          </div>
-        )}
-
-        {/* VAT Breakdown */}
-        {product.vat_rate && product.vat_rate > 0 && (
-          <>
-            <div className="border-t border-white/10 my-2 pt-2" />
-            <div className="flex justify-between text-gray-400 text-xs">
-              <span>{t('netPrice')}:</span>
-              <span>{formatPrice(totalNet, product.currency)} {product.currency}</span>
-            </div>
-            <div className="flex justify-between text-gray-400 text-xs">
-              <span>{t('vat')} {vatRate}%:</span>
-              <span>{formatPrice(vatAmount, product.currency)} {product.currency}</span>
-            </div>
-          </>
-        )}
-
-        {/* Total */}
-        <div className="border-t border-white/10 my-2 pt-2" />
-        <div className="flex justify-between text-white font-bold text-lg">
-          <span>{t('total', { defaultValue: 'Total' })}:</span>
-          <span>{formatPrice(totalGross, product.currency)} {product.currency}</span>
-        </div>
-      </div>
 
       {/* Invoice Fields */}
       <div className="space-y-3">
@@ -621,6 +573,55 @@ export default function CustomPaymentForm({
           <p className="text-red-300 text-sm">{errorMessage}</p>
         </div>
       )}
+
+      {/* Order Summary - Compact (Zanfia/EasyCart-inspired) */}
+      <div className="space-y-2 py-4 border-t border-white/10">
+        {/* Show bump or coupon if present */}
+        {(bumpSelected && bumpProduct) || (appliedCoupon && discountAmount > 0) ? (
+          <>
+            {/* Product Price */}
+            <div className="flex justify-between text-sm text-gray-400">
+              <span>{product.name}</span>
+              <span>{formatPrice(product.price, product.currency)} {product.currency}</span>
+            </div>
+
+            {/* Bump Product */}
+            {bumpSelected && bumpProduct && (
+              <div className="flex justify-between text-sm text-gray-400">
+                <span>{bumpProduct.bump_product_name || 'Additional Product'}</span>
+                <span>{formatPrice(bumpProduct.bump_price, product.currency)} {product.currency}</span>
+              </div>
+            )}
+
+            {/* Coupon Discount */}
+            {appliedCoupon && discountAmount > 0 && (
+              <div className="flex justify-between text-sm text-green-400">
+                <span>{t('couponDiscount', { defaultValue: 'Discount' })} ({appliedCoupon.code})</span>
+                <span>-{formatPrice(discountAmount, product.currency)} {product.currency}</span>
+              </div>
+            )}
+
+            <div className="border-t border-white/10 my-2" />
+          </>
+        ) : null}
+
+        {/* Total - Prominent */}
+        <div className="flex justify-between items-baseline">
+          <div>
+            <div className="text-white font-semibold">
+              {t('total', { defaultValue: 'Total' })}
+            </div>
+            {product.vat_rate && product.vat_rate > 0 && (
+              <div className="text-xs text-gray-500">
+                {t('netPrice')}: {formatPrice(totalNet, product.currency)} {product.currency} + {t('vat')} {vatRate}%
+              </div>
+            )}
+          </div>
+          <div className="text-2xl font-bold text-white">
+            {formatPrice(totalGross, product.currency)} {product.currency}
+          </div>
+        </div>
+      </div>
 
       {/* Submit Button */}
       <button

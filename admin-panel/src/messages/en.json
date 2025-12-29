@@ -24,6 +24,7 @@
     "createSessionError": "Failed to create checkout session",
     "netPrice": "Net price",
     "vat": "VAT",
+    "includingVat": "including VAT",
     "payButton": "Pay {amount}",
     "processing": "Processing payment...",
     "paymentSuccessful": "Payment Successful!",
