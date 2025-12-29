@@ -126,36 +126,14 @@ test.describe('Authenticated Admin Dashboard', () => {
     await modal.locator('input[name="slug"]').fill(productSlug);
     await modal.locator('textarea[name="description"]').fill('Description');
     await modal.locator('input[name="price"]').fill('50');
-    
-    // Use programmatic submission to avoid UI blocking issues
-    await page.evaluate(() => {
-        const form = document.querySelector('form');
-        if (form) form.requestSubmit();
-    });
+    // Select currency explicitly (defaults to shop's default currency, but we want to be explicit in tests)
+    await modal.locator('select[name="currency"]').selectOption('USD');
 
-    // Monitor network for creation request
-    const createResponsePromise = page.waitForResponse(response => 
-      response.url().includes('/dashboard/products') && 
-      response.request().method() === 'POST',
-      { timeout: 10000 }
-    ).catch(() => null);
-    
-    const createResponse = await createResponsePromise;
-    if (createResponse) {
-        console.log(`Create Product Response: ${createResponse.status()}`);
-        if (createResponse.status() >= 400) {
-             console.log('Create Product Failed Body:', await createResponse.text().catch(() => 'No body'));
-        }
-    } else {
-        console.log('No Create Product response detected');
-    }
+    // Click submit button
+    await modal.locator('button[type="submit"]').click();
 
     // Verify modal closes
-    await expect(modal).not.toBeVisible({ timeout: 5000 }).catch(async () => {
-       console.log('Modal did not close. Validation errors?');
-       const errors = await modal.locator('.text-red-500').allTextContents();
-       console.log('Errors found:', errors);
-    });
+    await expect(modal).not.toBeVisible({ timeout: 10000 });
     
     // Verify creation
     const productCell = page.locator('table').getByText(productName).first();

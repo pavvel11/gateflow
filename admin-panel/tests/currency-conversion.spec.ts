@@ -153,8 +153,8 @@ test.describe('Currency Conversion Feature', () => {
 
     // Should NOT contain + sign (single currency, converted mode)
     expect(revenueText).not.toContain('+');
-    // Should contain a currency symbol (any)
-    expect(revenueText).toMatch(/[€$£zł¥]/);
+    // Should contain a currency (symbol or code like PLN, USD, EUR)
+    expect(revenueText).toMatch(/[€$£zł¥]|[A-Z]{3}/);
   });
 
   test('should switch to converted mode and show single currency', async ({ page }) => {
