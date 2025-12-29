@@ -45,7 +45,33 @@ import { rateLimit, getClientIdentifier, createRateLimitHeaders } from '@/lib/ra
  */
 export async function POST(request: NextRequest) {
   try {
-    // 1. CORS Protection - Only allow same-origin requests
+    // 1. Rate Limiting - First line of defense (in-memory, fastest check)
+    const clientId = getClientIdentifier(request);
+    const rateLimitResult = rateLimit(`gus:${clientId}`, {
+      maxRequests: 5,
+      windowMs: 60 * 1000, // 1 minute
+    });
+
+    const rateLimitHeaders = createRateLimitHeaders(rateLimitResult);
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Too many requests. Please try again later.',
+          code: 'RATE_LIMIT_EXCEEDED'
+        },
+        {
+          status: 429,
+          headers: {
+            ...rateLimitHeaders,
+            'Retry-After': Math.ceil((rateLimitResult.reset - Date.now()) / 1000).toString(),
+          }
+        }
+      );
+    }
+
+    // 2. CORS Protection - Only allow same-origin requests
     const origin = request.headers.get('origin');
     const referer = request.headers.get('referer');
     const host = request.headers.get('host');
@@ -75,33 +101,8 @@ export async function POST(request: NextRequest) {
         {
           status: 403,
           headers: {
-            'Access-Control-Allow-Origin': 'null', // Explicitly deny
-          }
-        }
-      );
-    }
-
-    // 2. Rate Limiting - 5 requests per minute per IP
-    const clientId = getClientIdentifier(request);
-    const rateLimitResult = rateLimit(`gus:${clientId}`, {
-      maxRequests: 5,
-      windowMs: 60 * 1000, // 1 minute
-    });
-
-    const rateLimitHeaders = createRateLimitHeaders(rateLimitResult);
-
-    if (!rateLimitResult.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Too many requests. Please try again later.',
-          code: 'RATE_LIMIT_EXCEEDED'
-        },
-        {
-          status: 429,
-          headers: {
             ...rateLimitHeaders,
-            'Retry-After': Math.ceil((rateLimitResult.reset - Date.now()) / 1000).toString(),
+            'Access-Control-Allow-Origin': 'null', // Explicitly deny
           }
         }
       );

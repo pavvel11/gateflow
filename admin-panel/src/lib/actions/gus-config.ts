@@ -73,42 +73,20 @@ export async function saveGUSAPIKey(input: SaveGUSKeyInput): Promise<ActionRespo
     // Encrypt the API key
     const encrypted = await encryptGUSKey(trimmedKey);
 
-    // Get existing shop_config
-    const { data: config } = await supabase
-      .from('shop_config')
-      .select('id, custom_settings')
-      .single();
-
-    if (!config) {
-      return {
-        success: false,
-        error: 'Shop configuration not found',
-        errorCode: 'CONFIG_NOT_FOUND'
-      };
-    }
-
-    const customSettings = (config.custom_settings as Record<string, any>) || {};
-
-    // Update custom_settings with encrypted GUS key
-    const updatedSettings = {
-      ...customSettings,
-      gus_api_key_encrypted: encrypted.encryptedKey,
-      gus_api_key_iv: encrypted.iv,
-      gus_api_key_tag: encrypted.tag,
-      gus_api_enabled: input.enabled,
-      gus_api_updated_at: new Date().toISOString(),
-    };
-
+    // Update integrations_config with encrypted GUS key
     const { error } = await supabase
-      .from('shop_config')
+      .from('integrations_config')
       .update({
-        custom_settings: updatedSettings,
+        gus_api_key_encrypted: encrypted.encryptedKey,
+        gus_api_key_iv: encrypted.iv,
+        gus_api_key_tag: encrypted.tag,
+        gus_api_enabled: input.enabled,
         updated_at: new Date().toISOString()
       })
-      .eq('id', config.id);
+      .eq('id', 1); // integrations_config is a singleton table
 
     if (error) {
-      console.error('Failed to save GUS API key:', error);
+      console.error('[saveGUSAPIKey] Database update error:', error);
       return {
         success: false,
         error: 'Failed to save configuration',
@@ -116,7 +94,7 @@ export async function saveGUSAPIKey(input: SaveGUSKeyInput): Promise<ActionRespo
       };
     }
 
-    revalidatePath('/dashboard/settings');
+    revalidatePath('/dashboard/integrations');
 
     return { success: true };
   } catch (error) {
@@ -143,14 +121,13 @@ export async function getGUSConfig(): Promise<ActionResponse<GUSConfig>> {
     const supabase = await createClient();
 
     const { data: config } = await supabase
-      .from('shop_config')
-      .select('custom_settings')
+      .from('integrations_config')
+      .select('gus_api_key_encrypted, gus_api_enabled')
+      .eq('id', 1)
       .single();
 
-    const customSettings = (config?.custom_settings as Record<string, any>) || {};
-
-    const hasDatabaseKey = !!customSettings.gus_api_key_encrypted;
-    const enabled = customSettings.gus_api_enabled === true;
+    const hasDatabaseKey = !!(config?.gus_api_key_encrypted);
+    const enabled = config?.gus_api_enabled === true;
 
     // Key exists if either method has a key
     const hasKey = hasEnvKey || hasDatabaseKey;
@@ -193,27 +170,26 @@ export async function getDecryptedGUSAPIKey(): Promise<string | null> {
     const supabase = await createClient();
 
     const { data: config } = await supabase
-      .from('shop_config')
-      .select('custom_settings')
+      .from('integrations_config')
+      .select('gus_api_key_encrypted, gus_api_key_iv, gus_api_key_tag, gus_api_enabled')
+      .eq('id', 1)
       .single();
 
-    const customSettings = (config?.custom_settings as Record<string, any>) || {};
-
     // Check if GUS is enabled
-    if (customSettings.gus_api_enabled !== true) {
+    if (config?.gus_api_enabled !== true) {
       return null;
     }
 
     // Check if key exists
-    if (!customSettings.gus_api_key_encrypted) {
+    if (!config?.gus_api_key_encrypted) {
       return null;
     }
 
     // Decrypt and return
     const decrypted = await decryptGUSKey({
-      encrypted_key: customSettings.gus_api_key_encrypted,
-      encryption_iv: customSettings.gus_api_key_iv,
-      encryption_tag: customSettings.gus_api_key_tag,
+      encrypted_key: config.gus_api_key_encrypted,
+      encryption_iv: config.gus_api_key_iv,
+      encryption_tag: config.gus_api_key_tag,
     });
 
     return decrypted;
@@ -224,7 +200,7 @@ export async function getDecryptedGUSAPIKey(): Promise<string | null> {
 }
 
 /**
- * Deletes GUS API key from shop_config
+ * Deletes GUS API key from integrations_config
  */
 export async function deleteGUSAPIKey(): Promise<ActionResponse<void>> {
   try {
@@ -254,39 +230,17 @@ export async function deleteGUSAPIKey(): Promise<ActionResponse<void>> {
       };
     }
 
-    // Get existing shop_config
-    const { data: config } = await supabase
-      .from('shop_config')
-      .select('id, custom_settings')
-      .single();
-
-    if (!config) {
-      return {
-        success: false,
-        error: 'Shop configuration not found',
-        errorCode: 'CONFIG_NOT_FOUND'
-      };
-    }
-
-    const customSettings = (config.custom_settings as Record<string, any>) || {};
-
-    // Remove GUS keys from custom_settings
-    const {
-      gus_api_key_encrypted,
-      gus_api_key_iv,
-      gus_api_key_tag,
-      gus_api_enabled,
-      gus_api_updated_at,
-      ...remainingSettings
-    } = customSettings;
-
+    // Clear GUS keys from integrations_config
     const { error } = await supabase
-      .from('shop_config')
+      .from('integrations_config')
       .update({
-        custom_settings: remainingSettings,
+        gus_api_key_encrypted: null,
+        gus_api_key_iv: null,
+        gus_api_key_tag: null,
+        gus_api_enabled: false,
         updated_at: new Date().toISOString()
       })
-      .eq('id', config.id);
+      .eq('id', 1);
 
     if (error) {
       console.error('Failed to delete GUS API key:', error);
@@ -297,7 +251,7 @@ export async function deleteGUSAPIKey(): Promise<ActionResponse<void>> {
       };
     }
 
-    revalidatePath('/dashboard/settings');
+    revalidatePath('/dashboard/integrations');
 
     return { success: true };
   } catch (error) {

@@ -470,12 +470,22 @@ test.describe('GUS Checkout Flow - Security', () => {
   });
 
   test('should enforce rate limiting', async ({ page }) => {
+    // Navigate to a page first to establish origin/referer context
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+
+    const origin = page.url().split('/').slice(0, 3).join('/'); // Get origin from current page
+
     // Make 6 consecutive requests (limit is 5/minute)
     const requests = [];
 
     for (let i = 0; i < 6; i++) {
       const promise = page.request.post('/api/gus/fetch-company-data', {
         data: { nip: TEST_NIP_VALID },
+        headers: {
+          'origin': origin,
+          'referer': origin + '/',
+        }
       });
       requests.push(promise);
     }

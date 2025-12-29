@@ -1,7 +1,8 @@
 -- GUS API Integration Migration
--- Adds metadata column to guest_purchases table for storing company data from GUS
+-- 1. Adds metadata column to guest_purchases for storing company data from GUS
+-- 2. Adds GUS API key columns to integrations_config table
 
--- Add metadata column to guest_purchases if it doesn't exist
+-- Step 1: Add metadata column to guest_purchases if it doesn't exist
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -21,3 +22,21 @@ BEGIN
       ON public.guest_purchases USING GIN (metadata);
   END IF;
 END $$;
+
+-- Step 2: Add GUS API key columns to integrations_config
+ALTER TABLE public.integrations_config
+  ADD COLUMN IF NOT EXISTS gus_api_key_encrypted TEXT,
+  ADD COLUMN IF NOT EXISTS gus_api_key_iv TEXT,
+  ADD COLUMN IF NOT EXISTS gus_api_key_tag TEXT,
+  ADD COLUMN IF NOT EXISTS gus_api_enabled BOOLEAN DEFAULT false NOT NULL;
+
+-- Step 3: Add comments for documentation
+COMMENT ON COLUMN public.integrations_config.gus_api_key_encrypted IS 'AES-256-GCM encrypted GUS REGON API key (base64 encoded)';
+COMMENT ON COLUMN public.integrations_config.gus_api_key_iv IS 'Initialization vector for GUS API key decryption (base64 encoded)';
+COMMENT ON COLUMN public.integrations_config.gus_api_key_tag IS 'Authentication tag for GUS API key decryption (base64 encoded)';
+COMMENT ON COLUMN public.integrations_config.gus_api_enabled IS 'Whether GUS API integration is enabled for automatic company data fetching';
+
+-- Step 4: Create index for faster queries on gus_api_enabled
+CREATE INDEX IF NOT EXISTS idx_integrations_config_gus_enabled
+  ON public.integrations_config (gus_api_enabled)
+  WHERE gus_api_enabled = true;
