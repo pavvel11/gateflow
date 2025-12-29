@@ -415,3 +415,120 @@ test.describe('Checkout E2E - Price Display', () => {
     await expect(page.locator('text=/Order Summary|Total|Podsumowanie|Razem/i')).toBeVisible();
   });
 });
+
+// TODO: Authenticated user tests require proper auth setup
+// These tests verify that user profile data pre-fills in checkout
+// Skipped for now - requires Supabase auth session management in tests
+test.describe.skip('Checkout E2E - Authenticated User Profile Data', () => {
+  let testProduct: any;
+  let testUser: any;
+
+  test.beforeAll(async () => {
+    // Create test product
+    const { data: productData } = await supabaseAdmin
+      .from('products')
+      .insert({
+        name: `Auth Test Product ${Date.now()}`,
+        slug: `auth-test-${Date.now()}`,
+        price: 100,
+        currency: 'PLN',
+        is_active: true,
+      })
+      .select()
+      .single();
+    testProduct = productData;
+
+    // Create test user
+    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
+      email: `test-${Date.now()}@example.com`,
+      email_confirm: true,
+    });
+
+    if (userError) throw userError;
+    testUser = userData.user;
+
+    // Create profile with pre-filled data
+    await supabaseAdmin
+      .from('profiles')
+      .insert({
+        id: testUser.id,
+        email: testUser.email,
+        full_name: 'Jan Kowalski',
+        company_name: 'Test Company Sp. z o.o.',
+        tax_id: '5261040828',
+        address_line1: 'ul. Testowa 123/4',
+        city: 'Warszawa',
+        zip_code: '00-001',
+        country: 'PL',
+      });
+  });
+
+  test.afterAll(async () => {
+    // Cleanup: delete test product and user
+    if (testProduct) {
+      await supabaseAdmin.from('products').delete().eq('id', testProduct.id);
+    }
+    if (testUser) {
+      await supabaseAdmin.auth.admin.deleteUser(testUser.id);
+    }
+  });
+
+  test('should pre-fill email and full name from profile', async ({ page }) => {
+    // TODO: Implement auth session setup
+    // For now this test is skipped - needs Supabase auth integration
+
+    await page.goto(`/pl/checkout/${testProduct.slug}`);
+    await page.waitForSelector('input[type="email"]', { timeout: 10000 });
+
+    // Email should be pre-filled and disabled
+    const emailInput = page.locator('input[type="email"]');
+    await expect(emailInput).toHaveValue(testUser.email);
+    await expect(emailInput).toBeDisabled();
+
+    // Full name should be pre-filled
+    const fullNameInput = page.locator('input#fullName');
+    await expect(fullNameInput).toHaveValue('Jan Kowalski');
+    await expect(fullNameInput).toBeEnabled(); // Should be editable
+  });
+
+  test('should pre-fill company data from profile when NIP entered', async ({ page }) => {
+    // TODO: Implement auth session setup
+
+    await page.goto(`/pl/checkout/${testProduct.slug}`);
+    await page.waitForSelector('input[type="email"]', { timeout: 10000 });
+
+    // NIP field should be visible
+    const nipInput = page.locator('input#nip');
+    await expect(nipInput).toBeVisible();
+
+    // When user has saved NIP, it should be pre-filled
+    await expect(nipInput).toHaveValue('5261040828');
+
+    // Company fields should be visible (because NIP has 10 digits)
+    await page.waitForTimeout(500);
+    await expect(page.locator('input#companyName')).toBeVisible();
+    await expect(page.locator('input#companyName')).toHaveValue('Test Company Sp. z o.o.');
+    await expect(page.locator('input#address')).toHaveValue('ul. Testowa 123/4');
+    await expect(page.locator('input#city')).toHaveValue('Warszawa');
+    await expect(page.locator('input#postalCode')).toHaveValue('00-001');
+  });
+
+  test('should allow editing pre-filled profile data', async ({ page }) => {
+    // TODO: Implement auth session setup
+
+    await page.goto(`/pl/checkout/${testProduct.slug}`);
+    await page.waitForSelector('input[type="email"]', { timeout: 10000 });
+
+    // User should be able to edit full name
+    const fullNameInput = page.locator('input#fullName');
+    await fullNameInput.clear();
+    await fullNameInput.fill('Anna Nowak');
+    await expect(fullNameInput).toHaveValue('Anna Nowak');
+
+    // User should be able to edit company data
+    const companyInput = page.locator('input#companyName');
+    await companyInput.clear();
+    await companyInput.fill('New Company Ltd');
+    await expect(companyInput).toHaveValue('New Company Ltd');
+  });
+});
