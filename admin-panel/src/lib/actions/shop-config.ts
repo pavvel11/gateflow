@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
 
 export interface ShopConfig {
   id: string
@@ -76,6 +77,9 @@ export async function updateShopConfig(updates: Partial<Omit<ShopConfig, 'id' | 
     console.error('Error updating shop config:', error)
     return false
   }
+
+  // Revalidate all dashboard pages that might use shop config
+  revalidatePath('/dashboard', 'layout')
 
   return true
 }

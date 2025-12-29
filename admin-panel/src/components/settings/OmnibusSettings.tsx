@@ -50,9 +50,12 @@ export default function OmnibusSettings() {
 
       if (success) {
         setMessage({ type: 'success', text: t('saveSuccess') });
-        // Reload config
+        // Reload config and sync state
         const newConfig = await getShopConfig();
-        if (newConfig) setConfig(newConfig);
+        if (newConfig) {
+          setConfig(newConfig);
+          setOmnibusEnabled(newConfig.omnibus_enabled ?? true);
+        }
       } else {
         setMessage({ type: 'error', text: t('saveError') });
         // Revert on error

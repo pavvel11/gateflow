@@ -66,12 +66,14 @@ export async function getLowestPriceInLast30Days(
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  // Query price history
+  // Query price history - EXCLUDE current price (where effective_until IS NULL)
+  // We want the lowest price from BEFORE the current price
   const { data, error } = await supabase
     .from('product_price_history')
     .select('price, currency, effective_from')
     .eq('product_id', productId)
     .gte('effective_from', thirtyDaysAgo.toISOString())
+    .not('effective_until', 'is', null) // Only closed price periods (not current)
     .order('price', { ascending: true })
     .limit(1)
     .single();
