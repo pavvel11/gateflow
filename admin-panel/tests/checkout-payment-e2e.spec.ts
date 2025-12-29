@@ -416,12 +416,29 @@ test.describe('Checkout E2E - Price Display', () => {
   });
 });
 
-// TODO: Authenticated user tests require proper auth setup
-// These tests verify that user profile data pre-fills in checkout
-// Skipped for now - requires Supabase auth session management in tests
-test.describe.skip('Checkout E2E - Authenticated User Profile Data', () => {
+test.describe('Checkout E2E - Authenticated User Profile Data', () => {
   let testProduct: any;
   let testUser: any;
+  const testPassword = 'TestPassword123!';
+
+  // Helper to login as test user
+  const loginAsUser = async (page: any) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+
+    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
+      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
+      const supabase = createBrowserClient(supabaseUrl, anonKey);
+      await supabase.auth.signInWithPassword({ email, password });
+    }, {
+      email: testUser.email,
+      password: testPassword,
+      supabaseUrl: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    });
+
+    await page.waitForTimeout(1000);
+  };
 
   test.beforeAll(async () => {
     // Create test product
@@ -431,28 +448,28 @@ test.describe.skip('Checkout E2E - Authenticated User Profile Data', () => {
         name: `Auth Test Product ${Date.now()}`,
         slug: `auth-test-${Date.now()}`,
         price: 100,
-        currency: 'PLN',
+        currency: 'USD',
         is_active: true,
       })
       .select()
       .single();
     testProduct = productData;
 
-    // Create test user
+    // Create test user with password
     const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
       email: `test-${Date.now()}@example.com`,
+      password: testPassword,
       email_confirm: true,
     });
 
     if (userError) throw userError;
     testUser = userData.user;
 
-    // Create profile with pre-filled data
-    await supabaseAdmin
+    // Create/update profile with pre-filled data (use upsert in case trigger already created empty profile)
+    const { error: profileError } = await supabaseAdmin
       .from('profiles')
-      .insert({
+      .upsert({
         id: testUser.id,
-        email: testUser.email,
         full_name: 'Jan Kowalski',
         company_name: 'Test Company Sp. z o.o.',
         tax_id: '5261040828',
@@ -461,6 +478,20 @@ test.describe.skip('Checkout E2E - Authenticated User Profile Data', () => {
         zip_code: '00-001',
         country: 'PL',
       });
+
+    if (profileError) {
+      console.error('Profile creation error:', profileError);
+      throw profileError;
+    }
+
+    // Verify profile was created correctly
+    const { data: verifyProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('*')
+      .eq('id', testUser.id)
+      .single();
+
+    console.log('Created profile:', verifyProfile);
   });
 
   test.afterAll(async () => {
@@ -474,28 +505,42 @@ test.describe.skip('Checkout E2E - Authenticated User Profile Data', () => {
   });
 
   test('should pre-fill email and full name from profile', async ({ page }) => {
-    // TODO: Implement auth session setup
-    // For now this test is skipped - needs Supabase auth integration
+    // Login as test user
+    await loginAsUser(page);
 
-    await page.goto(`/pl/checkout/${testProduct.slug}`);
+    // Go to checkout (using /en for USD product)
+    await page.goto(`/en/checkout/${testProduct.slug}`);
     await page.waitForSelector('input[type="email"]', { timeout: 10000 });
+
+    // Wait for profile to load (fullName field becomes enabled when loading is done)
+    await page.waitForTimeout(2000);
 
     // Email should be pre-filled and disabled
     const emailInput = page.locator('input[type="email"]');
     await expect(emailInput).toHaveValue(testUser.email);
     await expect(emailInput).toBeDisabled();
 
-    // Full name should be pre-filled
+    // Debug: Check what value fullName has
     const fullNameInput = page.locator('input#fullName');
+    const actualValue = await fullNameInput.inputValue();
+    console.log('fullName actual value:', actualValue);
+    console.log('fullName placeholder:', await fullNameInput.getAttribute('placeholder'));
+
+    // Full name should be pre-filled
     await expect(fullNameInput).toHaveValue('Jan Kowalski');
     await expect(fullNameInput).toBeEnabled(); // Should be editable
   });
 
   test('should pre-fill company data from profile when NIP entered', async ({ page }) => {
-    // TODO: Implement auth session setup
+    // Login as test user
+    await loginAsUser(page);
 
-    await page.goto(`/pl/checkout/${testProduct.slug}`);
+    // Go to checkout (using /en for USD product)
+    await page.goto(`/en/checkout/${testProduct.slug}`);
     await page.waitForSelector('input[type="email"]', { timeout: 10000 });
+
+    // Wait for profile to load
+    await page.waitForTimeout(2000);
 
     // NIP field should be visible
     const nipInput = page.locator('input#nip');
@@ -514,10 +559,15 @@ test.describe.skip('Checkout E2E - Authenticated User Profile Data', () => {
   });
 
   test('should allow editing pre-filled profile data', async ({ page }) => {
-    // TODO: Implement auth session setup
+    // Login as test user
+    await loginAsUser(page);
 
-    await page.goto(`/pl/checkout/${testProduct.slug}`);
+    // Go to checkout (using /en for USD product)
+    await page.goto(`/en/checkout/${testProduct.slug}`);
     await page.waitForSelector('input[type="email"]', { timeout: 10000 });
+
+    // Wait for profile to load
+    await page.waitForTimeout(2000);
 
     // User should be able to edit full name
     const fullNameInput = page.locator('input#fullName');
@@ -525,7 +575,8 @@ test.describe.skip('Checkout E2E - Authenticated User Profile Data', () => {
     await fullNameInput.fill('Anna Nowak');
     await expect(fullNameInput).toHaveValue('Anna Nowak');
 
-    // User should be able to edit company data
+    // User should be able to edit company data (need to wait for NIP field to trigger company fields)
+    await page.waitForTimeout(500);
     const companyInput = page.locator('input#companyName');
     await companyInput.clear();
     await companyInput.fill('New Company Ltd');
