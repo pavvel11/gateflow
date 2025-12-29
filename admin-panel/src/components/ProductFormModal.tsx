@@ -11,6 +11,7 @@ import { BaseModal, ModalHeader, ModalBody, ModalFooter, ModalSection, Button, M
 import { useTranslations } from 'next-intl';
 import { parseVideoUrl, isTrustedVideoPlatform } from '@/lib/videoUtils';
 import { getCategories, getProductCategories, Category } from '@/lib/actions/categories';
+import { getDefaultCurrency } from '@/lib/actions/shop-config';
 
 interface ProductFormModalProps {
   product?: Product | null;
@@ -95,6 +96,9 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const [allCategories, setAllCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
 
+  // Default currency from shop config
+  const [defaultCurrency, setDefaultCurrency] = useState<string>('USD');
+
   // URL validation state - maps content item index to validation status
   const [urlValidation, setUrlValidation] = useState<Record<number, { isValid: boolean; message: string }>>({});
 
@@ -113,8 +117,17 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             }
         };
         fetchCats();
+
+        // Fetch default currency for new products
+        if (!product) {
+            getDefaultCurrency().then(currency => {
+                setDefaultCurrency(currency);
+            }).catch(err => {
+                console.error('Failed to fetch default currency', err);
+            });
+        }
     }
-  }, [isOpen]);
+  }, [isOpen, product]);
 
   useEffect(() => {
     if (product) {
@@ -148,14 +161,14 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
       setPriceDisplayValue(product.price.toString().replace('.', ','));
       setSlugModified(true); // Don't auto-generate slug when editing
     } else {
-      // For new products, use the emoji from the start
+      // For new products, use the emoji from the start and default currency from shop config
       setFormData({
         name: '',
         slug: '',
         description: '',
         long_description: '',
         price: 0,
-        currency: 'USD',
+        currency: defaultCurrency, // Use default currency from shop config
         is_active: true,
         is_featured: false,
         icon: getIconEmoji('rocket'), // Use emoji directly for new products
@@ -178,7 +191,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         nameInputRef.current?.focus();
       }, 100);
     }
-  }, [product, isOpen]);
+  }, [product, isOpen, defaultCurrency]);
 
   
   // Fetch products for OTO dropdown
