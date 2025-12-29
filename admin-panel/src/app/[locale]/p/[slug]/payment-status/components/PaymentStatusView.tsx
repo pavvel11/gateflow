@@ -21,11 +21,10 @@ export default function PaymentStatusView({
   customerEmail,
   sessionId,
   paymentIntentId,
-  termsAlreadyHandled,
   redirectUrl,
 }: PaymentStatusViewProps) {
   const t = useTranslations('paymentStatus');
-  
+
   const {
     auth,
     countdown,
@@ -40,7 +39,6 @@ export default function PaymentStatusView({
     paymentIntentId,
     product,
     accessGranted,
-    termsAlreadyHandled,
     redirectUrl,
   });
 
@@ -124,7 +122,6 @@ export default function PaymentStatusView({
             customerEmail={customerEmail}
             magicLinkSent={magicLink.sent}
             termsAccepted={terms.accepted}
-            termsAlreadyHandled={terms.alreadyHandled}
             captchaToken={turnstile.token}
             captchaError={turnstile.error}
             captchaTimeout={turnstile.timeout}

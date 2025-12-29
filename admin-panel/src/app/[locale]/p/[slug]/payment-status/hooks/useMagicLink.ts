@@ -10,7 +10,6 @@ interface UseMagicLinkParams {
   sessionId?: string;
   paymentIntentId?: string;
   product: Product;
-  termsAlreadyHandled: boolean;
   termsAccepted: boolean;
   captchaToken: string | null;
   showInteractiveWarning: boolean;
@@ -22,7 +21,6 @@ export function useMagicLink({
   sessionId,
   paymentIntentId,
   product,
-  termsAlreadyHandled,
   termsAccepted,
   captchaToken,
   showInteractiveWarning,
@@ -87,7 +85,8 @@ export function useMagicLink({
 
   // Auto-send magic link when conditions are met
   useEffect(() => {
-    const termsOk = termsAlreadyHandled || termsAccepted;
+    // Terms are always accepted in checkout before reaching this page
+    const termsOk = true;
     const turnstileOk = captchaToken;
     const paymentId = sessionId || paymentIntentId;
 
@@ -101,11 +100,12 @@ export function useMagicLink({
         !error) { // Don't auto-send if there's an error
       sendMagicLinkInternal();
     }
-  }, [paymentStatus, customerEmail, sessionId, paymentIntentId, magicLinkSent, sendingMagicLink, termsAccepted, captchaToken, termsAlreadyHandled, sendMagicLinkInternal, error]);
+  }, [paymentStatus, customerEmail, sessionId, paymentIntentId, magicLinkSent, sendingMagicLink, captchaToken, sendMagicLinkInternal, error]);
 
   // Show spinner for minimum time - different logic for invisible vs interactive
   useEffect(() => {
-    const termsOk = termsAlreadyHandled || termsAccepted;
+    // Terms are always accepted in checkout before reaching this page
+    const termsOk = true;
     const paymentId = sessionId || paymentIntentId;
 
     // For invisible captcha: show spinner early (when terms OK)
@@ -115,17 +115,17 @@ export function useMagicLink({
                                 paymentId &&
                                 termsOk &&
                                 (captchaToken || !showInteractiveWarning); // Show early for invisible, late for interactive
-    
+
     if (shouldTriggerSpinner && !showSpinnerForMinTime && !magicLinkSent) {
       setShowSpinnerForMinTime(true);
-      
+
       const timer = setTimeout(() => {
         setShowSpinnerForMinTime(false);
       }, SPINNER_MIN_TIME);
-      
+
       return () => clearTimeout(timer);
     }
-  }, [paymentStatus, customerEmail, sessionId, paymentIntentId, magicLinkSent, showSpinnerForMinTime, termsAlreadyHandled, termsAccepted, captchaToken, showInteractiveWarning]); // Added showInteractiveWarning
+  }, [paymentStatus, customerEmail, sessionId, paymentIntentId, magicLinkSent, showSpinnerForMinTime, captchaToken, showInteractiveWarning]);
 
   return {
     sent: magicLinkSent,

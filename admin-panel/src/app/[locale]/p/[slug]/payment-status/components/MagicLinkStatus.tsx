@@ -9,7 +9,6 @@ interface MagicLinkStatusProps {
   customerEmail?: string;
   magicLinkSent: boolean;
   termsAccepted: boolean;
-  termsAlreadyHandled: boolean;
   captchaToken: string | null;
   captchaError: string | null;
   captchaTimeout: boolean;
@@ -28,7 +27,6 @@ export default function MagicLinkStatus({
   customerEmail,
   magicLinkSent,
   termsAccepted,
-  termsAlreadyHandled,
   captchaToken,
   captchaError,
   captchaTimeout,
@@ -45,9 +43,11 @@ export default function MagicLinkStatus({
   const tCompliance = useTranslations('compliance');
   const tSecurity = useTranslations('security');
 
-  const termsOk = termsAlreadyHandled || termsAccepted;
+  // Terms are always accepted in checkout before reaching this page
+  const termsOk = true;
 
-  const needsCustomTerms = !termsAlreadyHandled && !termsAccepted;
+  // Terms are always accepted in checkout, so never need custom terms checkbox here
+  const needsCustomTerms = false;
   const needsTurnstile = !captchaToken;
   
   // Show validation block if:

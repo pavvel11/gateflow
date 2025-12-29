@@ -13,7 +13,6 @@ interface UsePaymentStatusParams {
   paymentIntentId?: string;
   product: Product;
   accessGranted: boolean;
-  termsAlreadyHandled: boolean;
   redirectUrl?: string;
 }
 
@@ -24,34 +23,32 @@ export function usePaymentStatus({
   paymentIntentId,
   product,
   accessGranted,
-  termsAlreadyHandled,
   redirectUrl,
 }: UsePaymentStatusParams) {
-  const terms = useTerms(termsAlreadyHandled);
+  const terms = useTerms();
   const turnstile = useTurnstile();
-  
-  const auth = useAuthCheck({ 
-    paymentStatus, 
-    accessGranted 
+
+  const auth = useAuthCheck({
+    paymentStatus,
+    accessGranted
   });
-  
-  const countdown = useCountdown({ 
-    paymentStatus, 
-    accessGranted, 
+
+  const countdown = useCountdown({
+    paymentStatus,
+    accessGranted,
     isUserAuthenticated: auth.isAuthenticated,
     productSlug: product.slug,
     redirectUrl,
   });
-  
+
   const windowDimensions = useWindowDimensions();
-  
+
   const magicLink = useMagicLink({
     paymentStatus,
     customerEmail,
     sessionId,
     paymentIntentId,
     product,
-    termsAlreadyHandled: terms.alreadyHandled,
     termsAccepted: terms.accepted,
     captchaToken: turnstile.token,
     showInteractiveWarning: turnstile.showInteractiveWarning,

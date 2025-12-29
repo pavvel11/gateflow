@@ -243,17 +243,6 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
     }
   }
 
-  // Check if terms are already handled:
-  // NEW LOGIC: T&C are now accepted in checkout, not on payment-status page
-  // - Logged in users: already accepted during registration
-  // - Guests: accept T&C in checkout form (stored in metadata.terms_accepted)
-  const userIsAuthenticated = !!user;
-
-  // Always true now because:
-  // - Authenticated users already accepted terms during registration
-  // - Guests accept terms in checkout (verified in payment processing)
-  const termsAlreadyHandled = true;
-
   return (
     <PaymentStatusView
       product={product}
@@ -263,7 +252,6 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
       customerEmail={customerEmail}
       sessionId={session_id}
       paymentIntentId={payment_intent}
-      termsAlreadyHandled={termsAlreadyHandled}
       redirectUrl={finalRedirectUrl}
     />
   );

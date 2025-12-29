@@ -30,7 +30,6 @@ export interface PaymentStatusViewProps {
   customerEmail?: string;
   sessionId?: string;
   paymentIntentId?: string;
-  termsAlreadyHandled: boolean;
   redirectUrl?: string;
 }
 
@@ -54,7 +53,6 @@ export interface CaptchaState {
 
 export interface ValidationState {
   termsAccepted: boolean;
-  needsCustomTerms: boolean;
   needsTurnstile: boolean;
   showValidationBlock: boolean;
 }
