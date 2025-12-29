@@ -189,6 +189,13 @@ test.describe('Rate Limiting', () => {
       const windowStart = new Date();
       windowStart.setMinutes(0, 0, 0); // Round to hour
 
+      // Delete any existing entry first to avoid duplicate key error
+      await supabaseAdmin
+        .from('rate_limits')
+        .delete()
+        .eq('user_id', testUserId)
+        .eq('function_name', 'test_function');
+
       const { error } = await supabaseAdmin
         .from('rate_limits')
         .insert({

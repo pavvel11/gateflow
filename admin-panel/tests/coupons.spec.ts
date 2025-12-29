@@ -19,10 +19,11 @@ test.describe('Smart Coupons System', () => {
 
   // Clear rate limit before each test to prevent "Too many requests" errors
   test.beforeEach(async () => {
+    // Clear application-level rate limits (used by coupon verify API)
     await supabaseAdmin
-      .from('rate_limit_log')
+      .from('application_rate_limits')
       .delete()
-      .eq('action', 'coupon_verify');
+      .neq('id', '00000000-0000-0000-0000-000000000000');
   });
 
   test('should apply coupon via URL and calculate price correctly', async ({ page }) => {

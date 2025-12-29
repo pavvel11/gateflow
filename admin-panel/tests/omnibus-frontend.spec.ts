@@ -35,16 +35,27 @@ const loginAsAdmin = async (page: Page, adminEmail: string, adminPassword: strin
   await page.goto('/');
   await page.waitForLoadState('domcontentloaded');
 
-  await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-    const supabase = createBrowserClient(supabaseUrl, anonKey);
-    await supabase.auth.signInWithPassword({ email, password });
-  }, {
-    email: adminEmail,
-    password: adminPassword,
-    supabaseUrl: SUPABASE_URL,
-    anonKey: ANON_KEY,
-  });
+  // Retry logic for ESM import (can fail due to network)
+  let retries = 3;
+  while (retries > 0) {
+    try {
+      await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
+        const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
+        const supabase = createBrowserClient(supabaseUrl, anonKey);
+        await supabase.auth.signInWithPassword({ email, password });
+      }, {
+        email: adminEmail,
+        password: adminPassword,
+        supabaseUrl: SUPABASE_URL,
+        anonKey: ANON_KEY,
+      });
+      break; // Success, exit loop
+    } catch (error) {
+      retries--;
+      if (retries === 0) throw error; // Re-throw if all retries exhausted
+      await page.waitForTimeout(1000); // Wait before retry
+    }
+  }
 
   await page.waitForTimeout(1000);
 };
