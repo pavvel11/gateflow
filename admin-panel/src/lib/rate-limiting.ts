@@ -40,20 +40,22 @@ export async function checkRateLimit(
   const identifier = await getRateLimitIdentifier(userId);
   
   try {
-    const { data: rateLimitOk, error } = await supabase.rpc('check_rate_limit', {
+    const { data: rateLimitOk, error } = await supabase.rpc('check_application_rate_limit', {
       identifier_param: identifier,
       action_type_param: actionType,
       max_requests: maxRequests,
       window_minutes: windowMinutes,
     });
-    
+
     if (error) {
+      console.error('Rate limit check error:', error);
       // In case of error, allow the action (fail open)
       return true;
     }
-    
+
     return !!rateLimitOk;
-  } catch {
+  } catch (error) {
+    console.error('Rate limit check exception:', error);
     // In case of error, allow the action (fail open)
     return true;
   }

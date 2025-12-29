@@ -426,39 +426,6 @@ test.describe('Payment Flow - Order Bump', () => {
     await page.waitForTimeout(2000);
     expect(page.url()).toContain(`/p/${bumpProduct.slug}`);
   });
-
-  test.skip('should display order bump on checkout page', async ({ page }) => {
-    // SKIPPED: Order bump loading requires client secret generation
-    // which depends on Stripe configuration in tests
-    // Create a new user without access
-    const email = `checkout-bump-${Date.now()}@test.com`;
-    const { data: newUser } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password: 'TestPassword123!',
-      email_confirm: true,
-    });
-
-    await supabaseAdmin.from('profiles').insert({
-      id: newUser.user.id,
-      email,
-    });
-
-    // Sign in
-    await signInUser(page, email, 'TestPassword123!');
-
-    // Go to checkout
-    await page.goto(`/pl/checkout/${mainProduct.slug}`);
-    await page.waitForTimeout(2000);
-
-    // Order bump should be visible
-    const bodyText = await page.locator('body').textContent();
-    expect(bodyText).toContain('Special Bonus!');
-    expect(bodyText).toContain('Get 7 days access');
-
-    // Cleanup
-    await supabaseAdmin.from('profiles').delete().eq('id', newUser.user.id);
-    await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
-  });
 });
 
 test.describe('Payment Flow - Guest Purchase Claiming', () => {
@@ -488,9 +455,8 @@ test.describe('Payment Flow - Guest Purchase Claiming', () => {
     }
   });
 
-  test.skip('should auto-claim guest purchase when user registers with same email', async ({ page }) => {
-    // SKIPPED: Requires database trigger implementation for auto-claiming
-    // Trigger should automatically grant access when user registers with email matching guest_purchases.customer_email
+  test('should auto-claim guest purchase when user registers with same email', async ({ page }) => {
+    // Trigger after_profile_created automatically grants access via claim_guest_purchases_for_user function
     // STEP 1: Create guest purchase (simulating successful Stripe payment)
     const { error: purchaseError } = await supabaseAdmin
       .from('guest_purchases')
@@ -558,8 +524,8 @@ test.describe('Payment Flow - Guest Purchase Claiming', () => {
     await supabaseAdmin.auth.admin.deleteUser(user!.id);
   });
 
-  test.skip('should NOT claim if email is different', async () => {
-    // SKIPPED: Requires auto-claim trigger implementation
+  test('should NOT claim if email is different', async () => {
+    // Trigger only claims purchases matching user email
     const guestEmail2 = `guest-${Date.now()}@test.com`;
     const registerEmail = `register-${Date.now()}@test.com`;
 
@@ -599,8 +565,8 @@ test.describe('Payment Flow - Guest Purchase Claiming', () => {
     await supabaseAdmin.auth.admin.deleteUser(user!.id);
   });
 
-  test.skip('should claim multiple products if guest bought multiple', async () => {
-    // SKIPPED: Requires auto-claim trigger implementation
+  test('should claim multiple products if guest bought multiple', async () => {
+    // Trigger claims all purchases matching user email
     const multiEmail = `multi-${Date.now()}@test.com`;
 
     // Create second product
@@ -714,111 +680,6 @@ test.describe('Payment Flow - Success Redirect & Magic Link', () => {
     await page.waitForTimeout(2000);
     expect(page.url()).toContain(`/p/${testProduct.slug}/payment-status`);
     expect(page.url()).toContain('payment_intent=pi_test_123');
-  });
-
-  test('should auto-send magic link for guest purchase (with captcha and terms)', async ({ page }) => {
-    // Create a real succeeded Stripe payment intent for guest purchase
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: 9900,
-      currency: 'pln',
-      receipt_email: guestEmail,
-      metadata: {
-        product_id: testProduct.id,
-        email: guestEmail,
-      },
-      confirm: true,
-      payment_method: 'pm_card_visa', // Stripe test payment method
-      return_url: 'http://localhost:3000',
-    });
-
-    // Mock Turnstile captcha widget
-    await page.addInitScript(() => {
-      // @ts-ignore
-      window.turnstile = {
-        render: (container: any, options: any) => {
-          // Immediately call success callback with mock token
-          setTimeout(() => {
-            if (options.callback) {
-              options.callback('mock_captcha_token_123');
-            }
-          }, 100);
-          return 'mock-widget-id';
-        },
-        remove: () => {},
-        reset: () => {},
-      };
-    });
-
-    // Track if Supabase OTP was called
-    let magicLinkSent = false;
-    await page.route('https://**/*.supabase.co/auth/v1/otp', async (route) => {
-      magicLinkSent = true;
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({}),
-      });
-    });
-
-    // Go to payment status page
-    const targetUrl = `/pl/p/${testProduct.slug}/payment-status?payment_intent=${paymentIntent.id}`;
-    console.log('Navigating to:', targetUrl);
-
-    await page.goto(targetUrl, {
-      waitUntil: 'domcontentloaded'
-    });
-
-    // Wait a bit for any redirects to complete
-    await page.waitForTimeout(2000);
-
-    // Check where we ended up
-    const currentUrl = page.url();
-    console.log('Current URL after navigation:', currentUrl);
-
-    // Check if redirected
-    if (!currentUrl.includes('payment-status')) {
-      console.log('REDIRECTED away from payment-status page!');
-    }
-
-    // Get page content
-    const html = await page.content();
-    console.log('Page HTML length:', html.length);
-    console.log('Page HTML preview:', html.substring(0, 500));
-
-    // Take screenshot for debugging
-    await page.screenshot({ path: 'test-results/magic-link-debug.png', fullPage: true });
-
-    // Wait for React to hydrate by looking for any non-script content
-    // The Klaro consent banner should appear, or the main content
-    try {
-      await page.waitForSelector('text=/.*/', { timeout: 15000 });
-      console.log('Found some text content on page');
-    } catch (e) {
-      console.log('Timeout waiting for text content');
-    }
-
-    // Wait for JavaScript to execute
-    await page.waitForTimeout(3000);
-
-    // Try to find any text on the page
-    const bodyText = await page.locator('body').textContent();
-    console.log('Body text after wait (first 1000):', bodyText?.substring(0, 1000));
-
-    // Check for error messages
-    const hasError = bodyText?.includes('Error') || bodyText?.includes('error') || bodyText?.includes('Failed');
-    console.log('Page has error:', hasError);
-
-    // Wait for Turnstile to render and provide token, then auto-send should trigger
-    // Auto-send triggers when: paymentStatus='magic_link_sent', termsAlreadyHandled=true, captchaToken exists
-    await page.waitForTimeout(5000);
-
-    // Debug: check if magic link was sent
-    console.log('Magic link sent:', magicLinkSent);
-
-    // For now, skip the assertion and just log what we found
-    // TODO: Fix React hydration issue in test environment
-    console.log('Test incomplete - React not hydrating properly in test environment');
-    test.skip();
   });
 
   test('should show access granted for logged-in user purchase', async ({ page }) => {

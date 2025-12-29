@@ -109,11 +109,6 @@ test.describe('Currency Conversion Feature', () => {
     await new Promise(resolve => setTimeout(resolve, 2000));
   });
 
-  test.skip('should NOT show currency selector with single currency', async ({ page }) => {
-    // SKIPPED: This test modifies data and affects other tests in serial mode
-    // TODO: Move to separate test file or implement proper test isolation
-  });
-
   test('should show currency selector with multiple currencies', async ({ page }) => {
     await loginAsAdmin(page);
     await page.goto('/dashboard');

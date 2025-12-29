@@ -1,9 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 
-// Enforce single worker
-test.describe.configure({ mode: 'serial' });
-
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -15,6 +12,8 @@ if (!SUPABASE_URL || !SERVICE_ROLE_KEY || !ANON_KEY) {
 const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
 test.describe('Access Control (Security)', () => {
+  // Enforce single worker
+  test.describe.configure({ mode: 'serial' });
   let testProduct: any;
   let userWithAccess: any;
   let userWithoutAccess: any;
@@ -155,8 +154,8 @@ test.describe('Access Control (Security)', () => {
     expect(isRedirectedToCheckout || isRedirectedToLogin || showsPrompt).toBeTruthy();
   });
 
-  test.skip('API /api/access should enforce access control', async ({ page }) => {
-    // SKIPPED: Database function check_rate_limit has signature issues
+  test('API /api/access should enforce access control', async ({ page }) => {
+    // check_rate_limit function signature has been fixed
     // Test as authenticated user WITH access
     await loginAsUser(page, userWithAccess.email);
 

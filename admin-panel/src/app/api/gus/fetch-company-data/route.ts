@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateNIPChecksum, normalizeNIP } from '@/lib/validation/nip';
 import { GUSAPIClient } from '@/lib/services/gus-api-client';
 import { getDecryptedGUSAPIKey } from '@/lib/actions/gus-config';
-import { rateLimit, getClientIdentifier, createRateLimitHeaders } from '@/lib/rate-limit';
+import { checkRateLimit } from '@/lib/rate-limiting';
 
 /**
  * POST /api/gus/fetch-company-data
@@ -45,16 +45,10 @@ import { rateLimit, getClientIdentifier, createRateLimitHeaders } from '@/lib/ra
  */
 export async function POST(request: NextRequest) {
   try {
-    // 1. Rate Limiting - First line of defense (in-memory, fastest check)
-    const clientId = getClientIdentifier(request);
-    const rateLimitResult = rateLimit(`gus:${clientId}`, {
-      maxRequests: 5,
-      windowMs: 60 * 1000, // 1 minute
-    });
+    // 1. Rate Limiting - Database-backed rate limiting for production reliability
+    const rateLimitOk = await checkRateLimit('gus_fetch_company_data', 5, 1); // 5 requests per 1 minute
 
-    const rateLimitHeaders = createRateLimitHeaders(rateLimitResult);
-
-    if (!rateLimitResult.success) {
+    if (!rateLimitOk) {
       return NextResponse.json(
         {
           success: false,
@@ -64,8 +58,7 @@ export async function POST(request: NextRequest) {
         {
           status: 429,
           headers: {
-            ...rateLimitHeaders,
-            'Retry-After': Math.ceil((rateLimitResult.reset - Date.now()) / 1000).toString(),
+            'Retry-After': '60', // 1 minute
           }
         }
       );

@@ -357,21 +357,52 @@ export function OmnibusPrice({
 
 ---
 
-### Redis Rate Limiting (Upstash)
-Replace in-memory rate limiting with Redis-based distributed rate limiting for production deployments.
+### Redis Rate Limiting (Upstash) - OPTIONAL OPTIMIZATION
 
-**Problem:** Current implementation uses `Map<string, RateLimitEntry>` which doesn't work across serverless instances.
+**Current Implementation (Jan 2025):**
+✅ **All rate limiting is now database-backed** (PostgreSQL) for consistency and production reliability.
 
-**Solution:** Use Upstash Redis for distributed rate limiting.
+**Rate Limiting Architecture:**
+1. **Internal RPC Functions** - Use `check_rate_limit()` function with `rate_limits` table
+   - Used by: `check_user_product_access`, `batch_check_user_product_access`, `claim_guest_purchases_for_user`, etc.
+   - Prevents abuse of internal database functions
 
-**Files to modify:**
-- `src/lib/rate-limit.ts` - Replace Map with Redis client
+2. **Application-Level API Routes** - Use `check_application_rate_limit()` function with `application_rate_limits` table
+   - Used by: `/lib/rate-limiting.ts`
+   - API routes using this:
+     - `/api/gus/fetch-company-data` - GUS REGON API calls
+     - `/api/update-payment-metadata` - Payment metadata updates
+     - `/api/coupons/verify` - Coupon validation
+     - `/api/coupons/auto-apply` - Auto-apply coupons
+     - `/api/public/products/claim-free` - Free product claims
+     - `/api/public/products/[slug]/grant-access` - Product access grants
+     - `/api/verify-payment` - Payment verification
+
+**Migration History:**
+- ❌ Previously had in-memory `Map<string, RateLimitEntry>` in `src/lib/rate-limit.ts` (deleted)
+- ✅ Unified on database-backed rate limiting (Jan 2025)
+- ✅ All API routes now use `checkRateLimit()` from `/lib/rate-limiting.ts`
+
+**Future Optimization (Optional):**
+If horizontal scaling becomes necessary, consider **Upstash Redis** for faster distributed rate limiting:
+- Replace `check_application_rate_limit()` RPC function with Redis calls
 - Add `@upstash/redis` dependency
 - Environment variables: `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`
 
-**References:**
-- Current implementation: `src/lib/rate-limit.ts:11` (in-memory Map)
-- Used in: `src/app/api/gus/fetch-company-data/route.ts`
+**Benefits of Redis upgrade:**
+- ⚡ Faster than PostgreSQL queries (~10-50ms vs ~100-200ms)
+- 🌍 Global edge caching with Upstash
+- 💰 Lower database load (fewer writes to PostgreSQL)
+
+**When to upgrade:**
+- When deploying to multiple serverless regions
+- When rate limit checks become a performance bottleneck (>100ms p95)
+- When database write load from rate limiting becomes significant
+
+**Current Performance:**
+- PostgreSQL rate limiting: ~100-200ms per check (acceptable for current scale)
+- Database-backed approach works well for single-region deployments
+- No immediate need for Redis unless scaling globally
 
 ---
 

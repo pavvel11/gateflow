@@ -263,6 +263,90 @@ SET statement_timeout = '2s';
 
 COMMENT ON FUNCTION check_rate_limit IS 'SECURE rate limiting function with anti-spoofing protection. CRITICAL: Never trust client headers like x-forwarded-for as they can be easily spoofed by attackers to bypass rate limits. Uses only server-side reliable sources.';
 
+-- Create application_rate_limits table for Next.js API routes
+-- Separate from internal rate_limits table used by RPC functions
+CREATE TABLE IF NOT EXISTS application_rate_limits (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  identifier TEXT NOT NULL, -- format: "user:UUID" or "ip:xxx.xxx.xxx.xxx"
+  action_type TEXT NOT NULL,
+  window_start TIMESTAMPTZ NOT NULL,
+  call_count INTEGER NOT NULL DEFAULT 1,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  UNIQUE (identifier, action_type, window_start)
+);
+
+CREATE INDEX IF NOT EXISTS idx_application_rate_limits_lookup
+  ON application_rate_limits(identifier, action_type, window_start DESC);
+
+CREATE INDEX IF NOT EXISTS idx_application_rate_limits_window_start
+  ON application_rate_limits(window_start);
+
+COMMENT ON TABLE application_rate_limits IS
+  'Rate limiting for application-level API routes (Next.js) - separate from internal RPC rate limiting';
+
+-- Create application-level check_rate_limit function
+-- This function has a DIFFERENT signature than the internal check_rate_limit(function_name_param, max_calls, time_window_seconds)
+-- Used by Next.js API routes via /lib/rate-limiting.ts
+CREATE OR REPLACE FUNCTION check_application_rate_limit(
+  identifier_param TEXT,
+  action_type_param TEXT,
+  max_requests INTEGER,
+  window_minutes INTEGER
+) RETURNS BOOLEAN AS $$
+DECLARE
+  window_start_param TIMESTAMPTZ;
+  current_count INTEGER;
+BEGIN
+  -- Input validation
+  IF identifier_param IS NULL OR length(identifier_param) = 0 OR length(identifier_param) > 200 THEN
+    RETURN FALSE;
+  END IF;
+
+  IF action_type_param IS NULL OR length(action_type_param) = 0 OR length(action_type_param) > 100 THEN
+    RETURN FALSE;
+  END IF;
+
+  -- Calculate window start (round down to window boundary)
+  window_start_param := date_trunc('hour', NOW()) +
+                       INTERVAL '1 minute' * (FLOOR(EXTRACT(EPOCH FROM (NOW() - date_trunc('hour', NOW()))) / 60 / window_minutes) * window_minutes);
+
+  -- Try to increment existing record or insert new one
+  INSERT INTO public.application_rate_limits (identifier, action_type, window_start, call_count)
+  VALUES (identifier_param, action_type_param, window_start_param, 1)
+  ON CONFLICT (identifier, action_type, window_start)
+  DO UPDATE SET
+    call_count = application_rate_limits.call_count + 1,
+    updated_at = NOW()
+  RETURNING application_rate_limits.call_count INTO current_count;
+
+  -- Check if we're over the limit
+  RETURN current_count <= max_requests;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public;
+
+COMMENT ON FUNCTION check_application_rate_limit IS
+  'Application-level rate limiting for Next.js API routes. Use this from /lib/rate-limiting.ts';
+
+-- Create cleanup function for application rate limits
+CREATE OR REPLACE FUNCTION cleanup_application_rate_limits()
+RETURNS INTEGER AS $$
+DECLARE
+  deleted_count INTEGER;
+BEGIN
+  -- Delete entries older than 24 hours
+  DELETE FROM public.application_rate_limits
+  WHERE window_start < NOW() - INTERVAL '24 hours';
+
+  GET DIAGNOSTICS deleted_count = ROW_COUNT;
+  RETURN deleted_count;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+COMMENT ON FUNCTION cleanup_application_rate_limits IS
+  'Cleanup old application rate limit entries (run via cron job)';
+
 -- Create cleanup function for rate limits
 CREATE OR REPLACE FUNCTION cleanup_rate_limits()
 RETURNS INTEGER AS $$
@@ -362,7 +446,7 @@ DECLARE
     clean_slug TEXT;
 BEGIN
     -- Rate limiting: 1000 calls per hour per user (increased for checkout)
-    IF NOT check_rate_limit('check_user_product_access'::TEXT, 1000, 3600) THEN
+    IF NOT public.check_rate_limit('check_user_product_access'::TEXT, 1000, 3600) THEN
         RAISE EXCEPTION 'Rate limit exceeded for check_user_product_access';
     END IF;
 
@@ -418,7 +502,7 @@ DECLARE
     safe_key TEXT;
 BEGIN
     -- Rate limiting: 200 calls per hour per user (increased for checkout)
-    IF NOT check_rate_limit('batch_check_user_product_access'::TEXT, 200, 3600) THEN
+    IF NOT public.check_rate_limit('batch_check_user_product_access'::TEXT, 200, 3600) THEN
         RAISE EXCEPTION 'Rate limit exceeded for batch_check_user_product_access';
     END IF;
 

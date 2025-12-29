@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStripeServer } from '@/lib/stripe/server';
-import { rateLimit, getClientIdentifier, createRateLimitHeaders } from '@/lib/rate-limit';
+import { checkRateLimit } from '@/lib/rate-limiting';
 
 /**
  * POST /api/update-payment-metadata
@@ -46,16 +46,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Rate Limiting - 10 requests per minute per IP
-    const clientId = getClientIdentifier(request);
-    const rateLimitResult = rateLimit(`update-payment:${clientId}`, {
-      maxRequests: 10,
-      windowMs: 60 * 1000,
-    });
+    // 2. Rate Limiting - Database-backed for production reliability
+    const rateLimitOk = await checkRateLimit('update_payment_metadata', 10, 1); // 10 requests per 1 minute
 
-    const rateLimitHeaders = createRateLimitHeaders(rateLimitResult);
-
-    if (!rateLimitResult.success) {
+    if (!rateLimitOk) {
       return NextResponse.json(
         {
           success: false,
@@ -64,8 +58,7 @@ export async function POST(request: NextRequest) {
         {
           status: 429,
           headers: {
-            ...rateLimitHeaders,
-            'Retry-After': Math.ceil((rateLimitResult.reset - Date.now()) / 1000).toString(),
+            'Retry-After': '60', // 1 minute
           }
         }
       );
@@ -89,10 +82,7 @@ export async function POST(request: NextRequest) {
     if (!clientSecret) {
       return NextResponse.json(
         { success: false, error: 'Client secret is required' },
-        {
-          status: 400,
-          headers: rateLimitHeaders
-        }
+        { status: 400 }
       );
     }
 
@@ -117,10 +107,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(
-      { success: true },
-      { headers: rateLimitHeaders }
-    );
+    return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Error updating payment metadata:', error);
     return NextResponse.json(
