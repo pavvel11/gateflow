@@ -11,7 +11,7 @@ import { BaseModal, ModalHeader, ModalBody, ModalFooter, ModalSection, Button, M
 import { useTranslations } from 'next-intl';
 import { parseVideoUrl, isTrustedVideoPlatform } from '@/lib/videoUtils';
 import { getCategories, getProductCategories, Category } from '@/lib/actions/categories';
-import { getDefaultCurrency } from '@/lib/actions/shop-config';
+import { getDefaultCurrency, getShopConfig } from '@/lib/actions/shop-config';
 
 interface ProductFormModalProps {
   product?: Product | null;
@@ -108,6 +108,9 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
   // Default currency from shop config
   const [defaultCurrency, setDefaultCurrency] = useState<string>('USD');
 
+  // Omnibus Directive global setting
+  const [omnibusEnabled, setOmnibusEnabled] = useState<boolean>(true);
+
   // URL validation state - maps content item index to validation status
   const [urlValidation, setUrlValidation] = useState<Record<number, { isValid: boolean; message: string }>>({});
 
@@ -135,6 +138,15 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 console.error('Failed to fetch default currency', err);
             });
         }
+
+        // Fetch Omnibus Directive global setting
+        getShopConfig().then(config => {
+            if (config) {
+                setOmnibusEnabled(config.omnibus_enabled);
+            }
+        }).catch(err => {
+            console.error('Failed to fetch shop config', err);
+        });
     }
   }, [isOpen, product]);
 
@@ -1400,22 +1412,24 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 </label>
               </div>
 
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="omnibus_exempt"
-                  name="omnibus_exempt"
-                  checked={formData.omnibus_exempt}
-                  onChange={handleCheckboxChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="omnibus_exempt" className="ml-3 block text-sm font-medium text-gray-900 dark:text-gray-100">
-                  {t('omnibusExempt')}
-                </label>
-                <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
-                  {t('omnibusExemptHelp')}
-                </span>
-              </div>
+              {omnibusEnabled && (
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="omnibus_exempt"
+                    name="omnibus_exempt"
+                    checked={formData.omnibus_exempt}
+                    onChange={handleCheckboxChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="omnibus_exempt" className="ml-3 block text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {t('omnibusExempt')}
+                  </label>
+                  <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                    {t('omnibusExemptHelp')}
+                  </span>
+                </div>
+              )}
             </div>
           </ModalSection>
         </form>
