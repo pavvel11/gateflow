@@ -111,8 +111,10 @@ test.describe('GUS API Admin Configuration', () => {
     await page.goto('/pl/dashboard/integrations');
     await page.waitForLoadState('networkidle');
 
-    // Wait a bit for React to hydrate/render
-    await page.waitForTimeout(2000);
+    // Click on GUS tab
+    const gusTab = page.locator('button', { hasText: /^GUS$/i });
+    await gusTab.click();
+    await page.waitForTimeout(500);
 
     // Check for GUS API key input field (unique identifier for GUS settings)
     const gusInput = page.locator('input#gus-api-key');
@@ -131,8 +133,10 @@ test.describe('GUS API Admin Configuration', () => {
     await page.goto('/pl/dashboard/integrations');
     await page.waitForLoadState('networkidle');
 
-    // Wait for the form to be fully loaded
-    await page.waitForSelector('input#gus-api-key', { state: 'visible' });
+    // Click on GUS tab
+    const gusTab = page.locator('button', { hasText: /^GUS$/i });
+    await gusTab.click();
+    await page.waitForTimeout(500);
 
     // Fill in API key (use official GUS test key for development)
     // Test key from GUS documentation: https://api.stat.gov.pl/Home/RegonApi
@@ -195,7 +199,11 @@ test.describe('GUS API Admin Configuration', () => {
     await loginAsAdmin(page);
     await page.goto('/pl/dashboard/integrations');
     await page.waitForLoadState('networkidle');
-    await page.waitForSelector('input#gus-api-key', { state: 'visible' });
+
+    // Click on GUS tab
+    const gusTab = page.locator('button', { hasText: /^GUS$/i });
+    await gusTab.click();
+    await page.waitForTimeout(500);
 
     const gusContainer = page.locator('div').filter({ has: page.locator('input#gus-api-key') });
 
@@ -219,10 +227,14 @@ test.describe('GUS API Admin Configuration', () => {
     // Reload page to get fresh component state
     await page.reload();
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+
+    // Click on GUS tab again after reload
+    const gusTabAfterReload = page.locator('button', { hasText: /^GUS$/i });
+    await gusTabAfterReload.click();
+    await page.waitForTimeout(500);
 
     // Now check for active status banner (support both EN and PL)
-    const activeBanner = page.locator('text=/GUS API (jest aktywny|is active)/i');
+    const activeBanner = page.locator('text=/GUS API jest aktywny|GUS API is active/i');
     await expect(activeBanner).toBeVisible({ timeout: 10000 });
 
     // Verify the green success banner container is visible
@@ -238,13 +250,22 @@ test.describe('GUS API Admin Configuration', () => {
     await page.goto('/pl/dashboard/integrations');
     await page.waitForLoadState('networkidle');
 
+    // Click on GUS tab
+    const gusTab = page.locator('button', { hasText: /^GUS$/i });
+    await gusTab.click();
+    await page.waitForTimeout(500);
+
     // Click delete button (support both EN and PL)
-    page.on('dialog', dialog => dialog.accept()); // Accept confirmation dialog
     const deleteButton = page.locator('button').filter({ hasText: /Usuń klucz API|Delete API Key/i });
     await deleteButton.click();
 
-    // Wait for success message (support both EN and PL)
-    await expect(page.locator('text=/został pomyślnie usunięty|deleted successfully/i')).toBeVisible({ timeout: 5000 });
+    // Wait for modal and confirm deletion
+    const confirmDeleteButton = page.locator('button', { hasText: /^Usuń$|^Delete$/i }).last();
+    await confirmDeleteButton.click();
+
+    // Wait for success toast (support both EN and PL)
+    const successToast = page.locator('[role="alert"]', { hasText: /został pomyślnie usunięty|deleted successfully/i });
+    await expect(successToast).toBeVisible({ timeout: 5000 });
 
     // Verify in database
     const { data: config } = await supabaseAdmin
@@ -264,6 +285,11 @@ test.describe('GUS API Admin Configuration', () => {
     // Navigate to integrations
     await page.goto('/pl/dashboard/integrations');
     await page.waitForLoadState('networkidle');
+
+    // Click on GUS tab
+    const gusTab = page.locator('button', { hasText: /^GUS$/i });
+    await gusTab.click();
+    await page.waitForTimeout(500);
 
     // Fill in too short API key using pressSequentially for React controlled input
     const apiKeyInput = page.locator('input#gus-api-key');

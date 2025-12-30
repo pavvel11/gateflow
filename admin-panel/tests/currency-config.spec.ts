@@ -87,6 +87,11 @@ test.describe('Currency API Configuration', () => {
     await page.goto('/dashboard/integrations');
     await page.waitForLoadState('networkidle');
 
+    // Click on Currency tab
+    const currencyTab = page.locator('button', { hasText: /Currency|Waluta/i });
+    await currencyTab.click();
+    await page.waitForTimeout(500);
+
     // Look for Currency Settings heading
     const currencyHeading = page.locator('h2', { hasText: /Currency Exchange|Ustawienia Wymiany Walut/i });
     await expect(currencyHeading).toBeVisible({ timeout: 10000 });
@@ -97,11 +102,13 @@ test.describe('Currency API Configuration', () => {
     await page.goto('/dashboard/integrations');
     await page.waitForLoadState('networkidle');
 
-    // Wait for component to load
-    await page.waitForTimeout(2000);
+    // Click on Currency tab
+    const currencyTab = page.locator('button', { hasText: /Currency|Waluta/i });
+    await currencyTab.click();
+    await page.waitForTimeout(500);
 
-    // Find provider dropdown - use last one (currency settings is last)
-    const providerSelect = page.locator('select#provider').last();
+    // Find provider dropdown
+    const providerSelect = page.locator('select#provider');
     await expect(providerSelect).toBeVisible({ timeout: 10000 });
 
     // Should be set to ECB by default
@@ -114,22 +121,18 @@ test.describe('Currency API Configuration', () => {
     await page.goto('/dashboard/integrations');
     await page.waitForLoadState('networkidle');
 
-    // Wait for component to load
-    await page.waitForTimeout(2000);
-
-    // Scroll to currency settings to make sure it's in view
-    const currencyHeading = page.locator('h2', { hasText: /Currency Exchange Rate API|Ustawienia Wymiany Walut/i });
-    await currencyHeading.scrollIntoViewIfNeeded();
+    // Click on Currency tab
+    const currencyTab = page.locator('button', { hasText: /Currency|Waluta/i });
+    await currencyTab.click();
     await page.waitForTimeout(500);
 
-    // Select ECB provider (doesn't need API key) - use last to get currency settings
-    const providerSelect = page.locator('select#provider').or(page.locator('select[name="provider"]'));
-    await providerSelect.last().selectOption('ecb');
+    // Select ECB provider (doesn't need API key)
+    const providerSelect = page.locator('select#provider');
+    await providerSelect.selectOption('ecb');
     await page.waitForTimeout(500);
 
-    // Click save button - last save button on page (currency settings is last)
-    const saveButtons = page.locator('button', { hasText: /^Save|^Zapisz/i });
-    const saveButton = saveButtons.last();
+    // Click save button
+    const saveButton = page.locator('button', { hasText: /^Save|^Zapisz/i });
     await saveButton.click();
 
     // Wait for success message
@@ -156,22 +159,22 @@ test.describe('Currency API Configuration', () => {
     await page.goto('/dashboard/integrations');
     await page.waitForLoadState('networkidle');
 
+    // Click on Currency tab
+    const currencyTab = page.locator('button', { hasText: /Currency|Waluta/i });
+    await currencyTab.click();
+    await page.waitForTimeout(500);
+
     // Select exchangerate-api provider
-    const providerSelect = page.locator('select#provider').or(page.locator('select[name="provider"]'));
-    const lastProviderSelect = providerSelect.last(); // Get last one (currency settings)
-    await lastProviderSelect.selectOption('exchangerate-api');
+    const providerSelect = page.locator('select#provider');
+    await providerSelect.selectOption('exchangerate-api');
 
     // Try to save without API key
-    const saveButtons = page.locator('button', { hasText: /^Save|^Zapisz/i });
-    const saveButton = saveButtons.last(); // Get last save button (currency settings)
+    const saveButton = page.locator('button', { hasText: /^Save|^Zapisz/i });
     await saveButton.click();
 
-    // Wait for response
-    await page.waitForTimeout(2000);
-
-    // Should show error about required API key (from server or client validation)
-    const errorMessage = page.locator('[role="alert"], .text-red-600, .text-red-500, div').filter({ hasText: /requires an API key|API key is required|Klucz API/i });
-    await expect(errorMessage.first()).toBeVisible({ timeout: 5000 });
+    // Should show error toast about required API key
+    const errorToast = page.locator('[role="alert"]', { hasText: /API key is required|Klucz API jest wymagany/i });
+    await expect(errorToast).toBeVisible({ timeout: 5000 });
   });
 
   test('should save and encrypt API key for exchangerate-api', async ({ page }) => {
@@ -179,17 +182,22 @@ test.describe('Currency API Configuration', () => {
     await page.goto('/dashboard/integrations');
     await page.waitForLoadState('networkidle');
 
-    // Select exchangerate-api provider (use last to get currency settings)
-    const providerSelect = page.locator('select#provider').or(page.locator('select[name="provider"]'));
-    await providerSelect.last().selectOption('exchangerate-api');
+    // Click on Currency tab
+    const currencyTab = page.locator('button', { hasText: /Currency|Waluta/i });
+    await currencyTab.click();
+    await page.waitForTimeout(500);
+
+    // Select exchangerate-api provider
+    const providerSelect = page.locator('select#provider');
+    await providerSelect.selectOption('exchangerate-api');
 
     // Enter test API key
-    const apiKeyInput = page.locator('input[type="password"]#currency-api-key').or(page.locator('input[id*="currency"]').and(page.locator('input[type="password"]')));
+    const apiKeyInput = page.locator('input[type="password"]#currency-api-key');
     await apiKeyInput.fill('test_api_key_12345');
 
-    // Save (use last to get currency settings save button)
-    const saveButtons = page.locator('button', { hasText: /^Save|^Zapisz/i });
-    await saveButtons.last().click();
+    // Save
+    const saveButton = page.locator('button', { hasText: /^Save|^Zapisz/i });
+    await saveButton.click();
 
     // Wait for success
     await expect(page.locator('text=/saved|zapisano/i')).toBeVisible({ timeout: 10000 });
@@ -228,8 +236,13 @@ test.describe('Currency API Configuration', () => {
     await page.goto('/dashboard/integrations');
     await page.waitForLoadState('networkidle');
 
-    // Should show "Configured via Database" status
-    const statusInfo = page.locator('text=/Configured via Database|skonfigurowane.*baz/i');
+    // Click on Currency tab
+    const currencyTab = page.locator('button', { hasText: /Currency|Waluta/i });
+    await currencyTab.click();
+    await page.waitForTimeout(500);
+
+    // Should show "Currency API is configured in the database" status description
+    const statusInfo = page.locator('text=/Currency API is configured in the database|bezpiecznie zaszyfrowany/i');
     await expect(statusInfo).toBeVisible({ timeout: 10000 });
   });
 
@@ -250,19 +263,22 @@ test.describe('Currency API Configuration', () => {
     await page.goto('/dashboard/integrations');
     await page.waitForLoadState('networkidle');
 
-    // Wait for component to load
-    await page.waitForTimeout(2000);
+    // Click on Currency tab
+    const currencyTab = page.locator('button', { hasText: /Currency|Waluta/i });
+    await currencyTab.click();
+    await page.waitForTimeout(500);
 
-    // Click delete configuration button (look for "Delete Configuration" text)
-    const deleteButtons = page.locator('button', { hasText: /Delete Configuration|Usuń/i });
-    const deleteButton = deleteButtons.last(); // Currency settings is last
-
-    // Accept confirmation dialog
-    page.on('dialog', dialog => dialog.accept());
+    // Click delete configuration button
+    const deleteButton = page.locator('button', { hasText: /Delete Configuration|Usuń/i });
     await deleteButton.click();
 
-    // Wait for success
-    await expect(page.locator('text=/deleted|usunięto/i')).toBeVisible({ timeout: 10000 });
+    // Wait for modal and confirm deletion
+    const confirmDeleteButton = page.locator('button', { hasText: /^Delete|^Usuń$/i }).last();
+    await confirmDeleteButton.click();
+
+    // Wait for success toast
+    const successToast = page.locator('[role="alert"]', { hasText: /deleted successfully|pomyślnie usunięty/i });
+    await expect(successToast).toBeVisible({ timeout: 10000 });
 
     // Verify in database - should be reset
     const { data: config } = await supabaseAdmin
@@ -276,54 +292,14 @@ test.describe('Currency API Configuration', () => {
     expect(config?.currency_api_key_tag).toBeNull();
   });
 
-  test('should show configuration status on dashboard', async ({ page }) => {
-    // Save currency config with non-default provider
-    await supabaseAdmin
-      .from('integrations_config')
-      .update({
-        currency_api_provider: 'exchangerate-api',
-        currency_api_key_encrypted: 'test_encrypted',
-        currency_api_key_iv: 'test_iv',
-        currency_api_key_tag: 'test_tag',
-        currency_api_enabled: true,
-      })
-      .eq('id', 1);
-
-    await loginAsAdmin(page);
-    await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
-
-    // Wait for ConfigurationStatus component to load
-    await page.waitForTimeout(2000);
-
-    // Should show currency configuration info
-    const configStatus = page.locator('text=/Currency Exchange Configuration|Provider/i').first();
-    await expect(configStatus).toBeVisible({ timeout: 10000 });
-
-    // Should show provider name
-    await expect(page.locator('text=/ExchangeRate-API/i')).toBeVisible();
+  test.skip('should show configuration status on dashboard', async ({ page }) => {
+    // NOTE: ConfigurationStatus component was removed - this test is no longer relevant
+    // Configuration is now shown only in integrations page Currency tab
   });
 
-  test('should not show configuration status on dashboard when using default ECB', async ({ page }) => {
-    // Set to default ECB (no custom config)
-    await supabaseAdmin
-      .from('integrations_config')
-      .update({
-        currency_api_provider: 'ecb',
-        currency_api_key_encrypted: null,
-        currency_api_enabled: true,
-      })
-      .eq('id', 1);
-
-    await loginAsAdmin(page);
-    await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
-
-    await page.waitForTimeout(2000);
-
-    // Configuration status should NOT be visible for default ECB
-    const configStatus = page.locator('text=/Currency Exchange Configuration/i');
-    await expect(configStatus).not.toBeVisible();
+  test.skip('should not show configuration status on dashboard when using default ECB', async ({ page }) => {
+    // NOTE: ConfigurationStatus component was removed - this test is no longer relevant
+    // Configuration is now shown only in integrations page Currency tab
   });
 
   test('should change provider and update config', async ({ page }) => {
@@ -343,13 +319,18 @@ test.describe('Currency API Configuration', () => {
     await page.goto('/dashboard/integrations');
     await page.waitForLoadState('networkidle');
 
-    // Change to ECB (use last to get currency settings)
-    const providerSelect = page.locator('select#provider').or(page.locator('select[name="provider"]'));
-    await providerSelect.last().selectOption('ecb');
+    // Click on Currency tab
+    const currencyTab = page.locator('button', { hasText: /Currency|Waluta/i });
+    await currencyTab.click();
+    await page.waitForTimeout(500);
 
-    // Save (use last to get currency settings save button)
-    const saveButtons = page.locator('button', { hasText: /^Save|^Zapisz/i });
-    await saveButtons.last().click();
+    // Change to ECB
+    const providerSelect = page.locator('select#provider');
+    await providerSelect.selectOption('ecb');
+
+    // Save
+    const saveButton = page.locator('button', { hasText: /^Save|^Zapisz/i });
+    await saveButton.click();
 
     await expect(page.locator('text=/saved|zapisano/i')).toBeVisible({ timeout: 10000 });
 
@@ -368,20 +349,24 @@ test.describe('Currency API Configuration', () => {
     await page.goto('/dashboard/integrations');
     await page.waitForLoadState('networkidle');
 
-    // Select ECB provider and save (use last to get currency settings)
-    const providerSelect = page.locator('select#provider').or(page.locator('select[name="provider"]'));
-    await providerSelect.last().selectOption('ecb');
+    // Click on Currency tab
+    const currencyTab = page.locator('button', { hasText: /Currency|Waluta/i });
+    await currencyTab.click();
+    await page.waitForTimeout(500);
 
-    const saveButtons = page.locator('button', { hasText: /^Save|^Zapisz/i });
-    const saveButton = saveButtons.last();
+    // Select ECB provider and save
+    const providerSelect = page.locator('select#provider');
+    await providerSelect.selectOption('ecb');
+
+    const saveButton = page.locator('button', { hasText: /^Save|^Zapisz/i });
     await saveButton.click();
     await page.waitForTimeout(1000);
 
     // Change provider to exchangerate-api with API key
-    await providerSelect.last().selectOption('exchangerate-api');
+    await providerSelect.selectOption('exchangerate-api');
 
     // Enter API key
-    const apiKeyInput = page.locator('input[type="password"]#currency-api-key').or(page.locator('input[id*="currency"]').and(page.locator('input[type="password"]')));
+    const apiKeyInput = page.locator('input[type="password"]#currency-api-key');
     await apiKeyInput.fill('test_key_12345');
 
     await saveButton.click();
