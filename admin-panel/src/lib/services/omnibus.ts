@@ -66,43 +66,101 @@ export async function getLowestPriceInLast30Days(
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  // Query price history - EXCLUDE current price (where effective_until IS NULL)
-  // We want the lowest price from BEFORE the current price
-  const { data, error } = await supabase
+  // Query price history - get ALL entries from last 30 days (including current)
+  // We need to calculate the effective price for each entry (min of price and sale_price if set)
+  const { data: history, error } = await supabase
     .from('product_price_history')
-    .select('price, currency, effective_from')
+    .select('price, sale_price, currency, effective_from')
     .eq('product_id', productId)
     .gte('effective_from', thirtyDaysAgo.toISOString())
-    .not('effective_until', 'is', null) // Only closed price periods (not current)
-    .order('price', { ascending: true })
-    .limit(1)
-    .single();
+    .order('effective_from', { ascending: false });
 
-  if (error || !data) {
+  if (error || !history || history.length === 0) {
     return null;
   }
 
+  // Calculate effective price for each history entry (min of price and active sale_price)
+  // For historical entries, we don't know if sale_price was expired, so we take min if set
+  const lowestEntry = history.reduce((lowest, entry) => {
+    const effectivePrice = entry.sale_price
+      ? Math.min(parseFloat(entry.price), parseFloat(entry.sale_price))
+      : parseFloat(entry.price);
+
+    const lowestEffectivePrice = lowest.sale_price
+      ? Math.min(parseFloat(lowest.price), parseFloat(lowest.sale_price))
+      : parseFloat(lowest.price);
+
+    return effectivePrice < lowestEffectivePrice ? entry : lowest;
+  });
+
+  const lowestPrice = lowestEntry.sale_price
+    ? Math.min(parseFloat(lowestEntry.price), parseFloat(lowestEntry.sale_price))
+    : parseFloat(lowestEntry.price);
+
   return {
-    lowestPrice: parseFloat(data.price),
-    currency: data.currency,
-    effectiveFrom: new Date(data.effective_from),
+    lowestPrice,
+    currency: lowestEntry.currency,
+    effectiveFrom: new Date(lowestEntry.effective_from),
   };
 }
 
 /**
- * Determine if Omnibus price should be displayed
- * Only show if current price is lower than historical lowest
+ * Determine if sale price is currently active
+ * Sale price is active if set and either no expiration date or expiration is in the future
  */
-export function shouldDisplayOmnibusPrice(
-  currentPrice: number,
-  lowestPrice: number | null
+export function isSalePriceActive(
+  salePrice: number | null,
+  salePriceUntil: string | null
 ): boolean {
-  if (!lowestPrice) {
+  if (!salePrice || salePrice <= 0) {
     return false;
   }
 
-  // Only show if there's an actual discount (current price < lowest price)
-  return currentPrice < lowestPrice;
+  if (!salePriceUntil) {
+    return true; // No expiration = active indefinitely
+  }
+
+  return new Date(salePriceUntil) > new Date();
+}
+
+/**
+ * Calculate effective price considering regular price, sale price, and coupon
+ * Promotions do NOT stack - we choose the most beneficial for the customer
+ */
+export function calculateEffectivePrice(
+  price: number,
+  salePrice: number | null,
+  salePriceUntil: string | null,
+  couponDiscount: number = 0
+): {
+  effectivePrice: number;
+  originalPrice: number;
+  showStrikethrough: boolean;
+  isUsingSalePrice: boolean;
+  isUsingCoupon: boolean;
+} {
+  const activeSalePrice = isSalePriceActive(salePrice, salePriceUntil)
+    ? salePrice
+    : null;
+
+  const priceWithCoupon = couponDiscount > 0 ? price - couponDiscount : null;
+
+  // Choose the most beneficial price (lowest)
+  const prices = [
+    { value: price, type: 'regular' },
+    activeSalePrice ? { value: activeSalePrice, type: 'sale' } : null,
+    priceWithCoupon ? { value: priceWithCoupon, type: 'coupon' } : null,
+  ].filter((p): p is { value: number; type: string } => p !== null);
+
+  const best = prices.reduce((min, p) => (p.value < min.value ? p : min));
+
+  return {
+    effectivePrice: best.value,
+    originalPrice: price,
+    showStrikethrough: best.value < price,
+    isUsingSalePrice: best.type === 'sale',
+    isUsingCoupon: best.type === 'coupon',
+  };
 }
 
 /**

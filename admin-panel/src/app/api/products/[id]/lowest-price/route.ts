@@ -1,10 +1,12 @@
 /**
  * API endpoint to get the lowest price for a product in the last 30 days
  * Implements EU Omnibus Directive (2019/2161) requirement
+ * Only returns data if sale_price is active (public discount announcement)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getLowestPriceInLast30Days } from '@/lib/services/omnibus';
+import { getLowestPriceInLast30Days, isSalePriceActive } from '@/lib/services/omnibus';
+import { createClient } from '@/lib/supabase/server';
 
 export async function GET(
   request: NextRequest,
@@ -21,12 +23,46 @@ export async function GET(
       );
     }
 
+    // Get product to check if sale_price is active
+    const supabase = await createClient();
+    const { data: product, error: productError } = await supabase
+      .from('products')
+      .select('sale_price, sale_price_until')
+      .eq('id', productId)
+      .single();
+
+    if (productError || !product) {
+      return NextResponse.json({
+        lowestPrice: null,
+        currency: null,
+        effectiveFrom: null,
+        showOmnibus: false,
+      });
+    }
+
+    // Check if sale price is active
+    const showOmnibus = isSalePriceActive(
+      product.sale_price,
+      product.sale_price_until
+    );
+
+    // Only fetch and return lowest price if sale is active
+    if (!showOmnibus) {
+      return NextResponse.json({
+        lowestPrice: null,
+        currency: null,
+        effectiveFrom: null,
+        showOmnibus: false,
+      });
+    }
+
     const result = await getLowestPriceInLast30Days(productId);
 
     return NextResponse.json({
       lowestPrice: result?.lowestPrice ?? null,
       currency: result?.currency ?? null,
       effectiveFrom: result?.effectiveFrom ?? null,
+      showOmnibus: true,
     });
   } catch (error) {
     console.error('Error fetching lowest price:', error);

@@ -43,7 +43,12 @@
     "couponDiscount": "Discount",
     "total": "Total",
     "emailRequired": "Email is required",
-    "fullName": "Full Name"
+    "fullName": "Full Name",
+    "saleEndsAt": "Sale ends {date}",
+    "lowestPriceLabel": "Lowest price in the 30 days prior to the discount",
+    "lowestPriceTooltipTitle": "What is the lowest price?",
+    "lowestPriceTooltipDescription": "This price reflects the lowest price in the last 30 days before the discount was applied, including previous discounts.",
+    "lowestPriceTooltipDisclaimer": "Please note that this price may have been offered only to selected users."
   },
   "common": {
     "loading": "Loading...",
@@ -877,8 +882,17 @@
           "selectProductPlaceholder": "Select a product...",
           "hideBump": "Hide Order Bump in redirect",
           "hideBumpHelp": "Appends ?hide_bump=true to the URL. Useful if you want to skip the bump offer in the next step."
-        }
-      }
+        },
+        "salePrice": "Sale Price",
+        "salePriceLabel": "Sale Price",
+        "salePriceDescription": "Set a promotional price lower than the regular price",
+        "salePriceUntil": "Sale Ends",
+        "salePriceUntilDescription": "Sale end date (optional)",
+        "salePriceMustBeLower": "Sale price must be lower than regular price",
+        "salePriceActiveInfo": "Sale is active and will be displayed to customers along with the lowest price from the last 30 days",
+        "duplicateLabel": "Duplicate {name}"
+      },
+      "duplicateLabel": "Duplicate {name}"
     },
     "categories": {
       "title": "Categories",

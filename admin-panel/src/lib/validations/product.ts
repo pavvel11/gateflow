@@ -514,11 +514,20 @@ export function sanitizeProductData(data: Record<string, unknown>): Record<strin
   if (sanitizedData.available_from === '') {
     sanitizedData.available_from = null;
   }
-  
+
   if (sanitizedData.available_until === '') {
     sanitizedData.available_until = null;
   }
-  
+
+  if (sanitizedData.sale_price_until === '') {
+    sanitizedData.sale_price_until = null;
+  }
+
+  // Convert sale_price empty/zero to null
+  if (sanitizedData.sale_price === '' || sanitizedData.sale_price === 0 || sanitizedData.sale_price === null) {
+    sanitizedData.sale_price = null;
+  }
+
   // Set defaults
   if (sanitizedData.currency === undefined) {
     sanitizedData.currency = 'USD';

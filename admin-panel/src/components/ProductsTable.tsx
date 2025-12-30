@@ -13,6 +13,7 @@ interface ProductsTableProps {
   loading: boolean;
   error: string | null;
   onEditProduct: (product: Product) => void;
+  onDuplicateProduct: (product: Product) => void;
   onDeleteProduct: (product: Product) => void;
   onPreviewProduct: (product: Product) => void;
   onPreviewRedirect: (product: Product) => void;
@@ -33,6 +34,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
   loading,
   error,
   onEditProduct,
+  onDuplicateProduct,
   onDeleteProduct,
   onPreviewProduct,
   onPreviewRedirect,
@@ -222,7 +224,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                           </svg>
                         </button>
-                        <button 
+                        <button
                           onClick={() => onEditProduct(product)}
                           className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors p-1"
                           aria-label={t('editLabel', { name: product.name })}
@@ -231,7 +233,16 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path>
                           </svg>
                         </button>
-                        <button 
+                        <button
+                          onClick={() => onDuplicateProduct(product)}
+                          className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 transition-colors p-1"
+                          aria-label={t('duplicateLabel', { name: product.name })}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                        </button>
+                        <button
                           onClick={() => onDeleteProduct(product)}
                           className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors p-1"
                           aria-label={t('deleteLabel', { name: product.name })}

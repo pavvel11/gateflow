@@ -50,6 +50,9 @@ export interface ProductFormData {
   categories: string[];
   // EU Omnibus Directive
   omnibus_exempt: boolean;
+  // Sale price (promotional pricing)
+  sale_price?: number | null;
+  sale_price_until?: string | null;
 }
 
 const ProductFormModal: React.FC<ProductFormModalProps> = ({
@@ -81,11 +84,14 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
     success_redirect_url: '',
     pass_params_to_redirect: false,
     categories: [],
-    omnibus_exempt: false
+    omnibus_exempt: false,
+    sale_price: null,
+    sale_price_until: null
   });
-  
+
   // Separate state for the displayed price input value
   const [priceDisplayValue, setPriceDisplayValue] = useState<string>('');
+  const [salePriceDisplayValue, setSalePriceDisplayValue] = useState<string>('');
 
   const [slugModified, setSlugModified] = useState(false);
   const [currentDomain, setCurrentDomain] = useState<string>('');
@@ -153,9 +159,11 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         success_redirect_url: product.success_redirect_url || '',
         pass_params_to_redirect: product.pass_params_to_redirect || false,
         categories: [], // Will be populated below
-        omnibus_exempt: product.omnibus_exempt || false
+        omnibus_exempt: product.omnibus_exempt || false,
+        sale_price: product.sale_price || null,
+        sale_price_until: product.sale_price_until || null
       });
-      
+
       // Fetch assigned categories
       getProductCategories(product.id).then(catIds => {
           setFormData(prev => ({ ...prev, categories: catIds }));
@@ -163,6 +171,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
       // Set display value for price - always show the value, even for zero
       setPriceDisplayValue(product.price.toString().replace('.', ','));
+      setSalePriceDisplayValue(product.sale_price ? product.sale_price.toString().replace('.', ',') : '');
       setSlugModified(true); // Don't auto-generate slug when editing
     } else {
       // For new products, use the emoji from the start and default currency from shop config
@@ -184,9 +193,12 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         success_redirect_url: '',
         pass_params_to_redirect: false,
         categories: [],
-        omnibus_exempt: false
+        omnibus_exempt: false,
+        sale_price: null,
+        sale_price_until: null
       });
       setPriceDisplayValue('');
+      setSalePriceDisplayValue('');
       setSlugModified(false);
     }
     
@@ -463,8 +475,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} size="xl" closeOnBackdropClick={false}>
       <ModalHeader
-        title={product ? t('editProduct') : t('createNewProduct')}
-        subtitle={product ? t('editing', { name: product.name }) : t('addToYourCatalog')}
+        title={product && product.id ? t('editProduct') : t('createNewProduct')}
+        subtitle={product && product.id ? t('editing', { name: product.name }) : t('addToYourCatalog')}
         icon={
           <span className="text-2xl">{formData.icon}</span>
         }
@@ -692,6 +704,90 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   onSelectIcon={handleIconSelect} 
                 />
               </div>
+            </div>
+          </ModalSection>
+
+          {/* Sale Price (Promotional Pricing) */}
+          <ModalSection title={t('salePrice')}>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="sale_price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t('salePriceLabel')}
+                  </label>
+                  <div className="relative rounded-lg shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500 dark:text-gray-400 text-sm min-w-[24px]">
+                        {formData.currency === 'PLN' || formData.currency === 'CHF' ? '' : getCurrencySymbol(formData.currency)}
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      id="sale_price"
+                      name="sale_price"
+                      value={salePriceDisplayValue}
+                      onChange={(e) => {
+                        const inputValue = e.target.value;
+
+                        if (inputValue === '') {
+                          setSalePriceDisplayValue('');
+                          setFormData(prev => ({ ...prev, sale_price: null }));
+                          return;
+                        }
+
+                        if (!/^[\d,.]*$/.test(inputValue)) return;
+
+                        const processedValue = inputValue.replace(',', '.');
+                        const dotCount = (processedValue.match(/\./g) || []).length;
+                        if (dotCount > 1) return;
+
+                        if (/^\d*\.?\d{0,2}$/.test(processedValue)) {
+                          const numericValue = parseFloat(processedValue);
+                          setSalePriceDisplayValue(inputValue);
+                          setFormData(prev => ({
+                            ...prev,
+                            sale_price: isNaN(numericValue) ? null : numericValue
+                          }));
+                        }
+                      }}
+                      placeholder={formData.currency === 'PLN' || formData.currency === 'CHF' ? `0,00 ${getCurrencySymbol(formData.currency)}` : "0.00"}
+                      className={`${(formData.currency === 'PLN' || formData.currency === 'CHF') ? 'pl-3' : 'pl-12'} pr-12 w-full py-2.5 border ${formData.sale_price && formData.sale_price >= formData.price ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white`}
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500 dark:text-gray-400 text-sm">
+                        {formData.currency}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    {t('salePriceDescription')}
+                  </p>
+                  {formData.sale_price && formData.sale_price >= formData.price && (
+                    <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                      {t('salePriceMustBeLower')}
+                    </p>
+                  )}
+                </div>
+
+                <DateTimePicker
+                  label={t('salePriceUntil')}
+                  value={formData.sale_price_until || ''}
+                  onChange={(value) => setFormData(prev => ({ ...prev, sale_price_until: value }))}
+                  placeholder={t('selectEndDate')}
+                  description={t('salePriceUntilDescription')}
+                  showTimeSelect={true}
+                  minDate={new Date()}
+                />
+              </div>
+
+              {formData.sale_price && formData.sale_price < formData.price && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    ℹ️ {t('salePriceActiveInfo')}
+                  </p>
+                </div>
+              )}
             </div>
           </ModalSection>
 
@@ -1336,7 +1432,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
           loading={isSubmitting}
           variant="primary"
         >
-          {product ? t('updateProduct') : t('createProduct')}
+          {product && product.id ? t('updateProduct') : t('createProduct')}
         </Button>
       </ModalFooter>
     </BaseModal>

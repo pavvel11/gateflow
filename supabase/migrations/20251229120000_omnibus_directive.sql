@@ -2,13 +2,21 @@
 -- Implements requirement to display lowest price from last 30 days when showing discounts
 
 -- ============================================================================
--- 1. Add omnibus_exempt flag to products table
+-- 1. Add omnibus_exempt flag and sale price fields to products table
 -- ============================================================================
 ALTER TABLE products
-ADD COLUMN IF NOT EXISTS omnibus_exempt BOOLEAN DEFAULT false NOT NULL;
+ADD COLUMN IF NOT EXISTS omnibus_exempt BOOLEAN DEFAULT false NOT NULL,
+ADD COLUMN IF NOT EXISTS sale_price NUMERIC CHECK (sale_price >= 0),
+ADD COLUMN IF NOT EXISTS sale_price_until TIMESTAMPTZ;
 
 COMMENT ON COLUMN products.omnibus_exempt IS
   'Exempt this product from Omnibus price history display (e.g., perishable goods, new arrivals <30 days)';
+
+COMMENT ON COLUMN products.sale_price IS
+  'Promotional price for the product. When set and active (not expired), this is the public discounted price that triggers Omnibus display.';
+
+COMMENT ON COLUMN products.sale_price_until IS
+  'Optional expiration date for sale_price. NULL means sale price is active indefinitely. When date passes, sale_price is no longer used.';
 
 -- ============================================================================
 -- 2. Create product_price_history table
@@ -17,6 +25,7 @@ CREATE TABLE IF NOT EXISTS product_price_history (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
   price NUMERIC NOT NULL CHECK (price >= 0),
+  sale_price NUMERIC CHECK (sale_price >= 0),
   currency TEXT NOT NULL CHECK (length(currency) = 3),
   vat_rate DECIMAL(5,2),
   price_includes_vat BOOLEAN DEFAULT true,
@@ -53,9 +62,10 @@ COMMENT ON COLUMN shop_config.omnibus_enabled IS
 CREATE OR REPLACE FUNCTION log_product_price_change()
 RETURNS TRIGGER AS $$
 BEGIN
-  -- Only log if price actually changed
+  -- Only log if price or sale_price actually changed
   IF (TG_OP = 'UPDATE' AND
       (OLD.price != NEW.price OR
+       OLD.sale_price IS DISTINCT FROM NEW.sale_price OR
        OLD.currency != NEW.currency OR
        OLD.vat_rate != NEW.vat_rate)) OR
      TG_OP = 'INSERT' THEN
@@ -70,10 +80,10 @@ BEGIN
 
     -- Insert new price record
     INSERT INTO product_price_history (
-      product_id, price, currency, vat_rate,
+      product_id, price, sale_price, currency, vat_rate,
       price_includes_vat, effective_from
     ) VALUES (
-      NEW.id, NEW.price, NEW.currency, NEW.vat_rate,
+      NEW.id, NEW.price, NEW.sale_price, NEW.currency, NEW.vat_rate,
       NEW.price_includes_vat, NOW()
     );
   END IF;
@@ -91,7 +101,7 @@ COMMENT ON FUNCTION log_product_price_change() IS
 DROP TRIGGER IF EXISTS product_price_change_trigger ON products;
 
 CREATE TRIGGER product_price_change_trigger
-  AFTER INSERT OR UPDATE OF price, currency, vat_rate
+  AFTER INSERT OR UPDATE OF price, sale_price, currency, vat_rate
   ON products
   FOR EACH ROW
   EXECUTE FUNCTION log_product_price_change();
@@ -103,6 +113,7 @@ CREATE TRIGGER product_price_change_trigger
 INSERT INTO product_price_history (
   product_id,
   price,
+  sale_price,
   currency,
   vat_rate,
   price_includes_vat,
@@ -111,6 +122,7 @@ INSERT INTO product_price_history (
 SELECT
   id,
   price,
+  sale_price,
   currency,
   vat_rate,
   price_includes_vat,
@@ -172,3 +184,29 @@ CREATE POLICY "Only admins can delete price history"
   );
 
 -- shop_config already has RLS policies defined in core schema migration
+
+-- ============================================================================
+-- 8. Auto-cleanup old price history (keep only last 30 days)
+-- ============================================================================
+CREATE OR REPLACE FUNCTION cleanup_old_price_history()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Delete price history entries older than 30 days
+  DELETE FROM product_price_history
+  WHERE effective_from < NOW() - INTERVAL '30 days'
+    AND effective_until IS NOT NULL; -- Only delete closed periods, keep current price
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+COMMENT ON FUNCTION cleanup_old_price_history() IS
+  'Automatically removes price history entries older than 30 days to comply with Omnibus Directive requirements';
+
+-- Create trigger to run cleanup on every insert
+DROP TRIGGER IF EXISTS cleanup_price_history_trigger ON product_price_history;
+
+CREATE TRIGGER cleanup_price_history_trigger
+  AFTER INSERT ON product_price_history
+  FOR EACH STATEMENT
+  EXECUTE FUNCTION cleanup_old_price_history();

@@ -20,6 +20,9 @@ export interface Product {
   is_featured: boolean
   // EU Omnibus Directive (2019/2161)
   omnibus_exempt: boolean
+  // Sale price (promotional pricing)
+  sale_price?: number | null
+  sale_price_until?: string | null
   // Temporal availability fields
   available_from?: string | null
   available_until?: string | null

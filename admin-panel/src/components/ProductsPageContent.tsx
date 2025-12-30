@@ -170,7 +170,7 @@ const ProductsPageContent: React.FC = () => {
   };
 
   const handleProductSubmit = async (formData: ProductFormData) => {
-    if (editingProduct) {
+    if (editingProduct && editingProduct.id) {
       return handleUpdateProduct(formData);
     } else {
       return handleCreateProduct(formData);
@@ -204,6 +204,21 @@ const ProductsPageContent: React.FC = () => {
   // UI Handlers
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product);
+    setShowProductForm(true);
+  };
+
+  const handleDuplicateProduct = (product: Product) => {
+    // Create a copy of the product with modified name and cleared fields
+    const duplicatedProduct: Product = {
+      ...product,
+      name: `[COPY] ${product.name}`,
+      // These will be auto-generated/set by the backend
+      id: '' as any, // Will be generated on save
+      slug: '', // Will be auto-generated from new name
+      created_at: '' as any,
+      updated_at: '' as any,
+    };
+    setEditingProduct(duplicatedProduct);
     setShowProductForm(true);
   };
 
@@ -311,6 +326,7 @@ const ProductsPageContent: React.FC = () => {
         loading={loading}
         error={error}
         onEditProduct={handleEditProduct}
+        onDuplicateProduct={handleDuplicateProduct}
         onDeleteProduct={handleDeleteProductClick}
         onPreviewProduct={handlePreviewProduct}
         onPreviewRedirect={handlePreviewRedirect}

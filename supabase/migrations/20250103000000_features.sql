@@ -122,6 +122,9 @@ CREATE TABLE IF NOT EXISTS public.coupons (
   expires_at TIMESTAMPTZ,
   is_active BOOLEAN DEFAULT true NOT NULL,
 
+  -- Omnibus tracking (future use)
+  is_public BOOLEAN DEFAULT false NOT NULL,
+
   -- Timestamps
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,

@@ -43,7 +43,12 @@
     "couponDiscount": "Rabat",
     "total": "Razem",
     "emailRequired": "Email jest wymagany",
-    "fullName": "Imię i nazwisko"
+    "fullName": "Imię i nazwisko",
+    "saleEndsAt": "Promocja kończy się {date}",
+    "lowestPriceLabel": "Najniższa cena z okresu 30 dni przed obniżką",
+    "lowestPriceTooltipTitle": "Co to jest najniższa cena?",
+    "lowestPriceTooltipDescription": "Ta cena odzwierciedla najniższą cenę w ciągu ostatnich 30 dni przed zastosowaniem obniżki, w tym wcześniejsze obniżki.",
+    "lowestPriceTooltipDisclaimer": "Miej na uwadze, że ta cena mogła być oferowana tylko wybranym użytkownikom."
   },
   "common": {
     "loading": "Ładowanie...",
@@ -877,8 +882,17 @@
           "selectProductPlaceholder": "Wybierz produkt...",
           "hideBump": "Ukryj Order Bump w przekierowaniu",
           "hideBumpHelp": "Dodaje ?hide_bump=true do URL. Przydatne, jeśli chcesz pominąć ofertę bump w następnym kroku."
-        }
-      }
+        },
+        "salePrice": "Cena promocyjna",
+        "salePriceLabel": "Cena promocyjna",
+        "salePriceDescription": "Ustaw cenę promocyjną niższą niż regularna cena",
+        "salePriceUntil": "Koniec promocji",
+        "salePriceUntilDescription": "Data zakończenia promocji (opcjonalnie)",
+        "salePriceMustBeLower": "Cena promocyjna musi być niższa niż regularna cena",
+        "salePriceActiveInfo": "Promocja jest aktywna i będzie wyświetlana klientom wraz z informacją o najniższej cenie z ostatnich 30 dni",
+        "duplicateLabel": "Duplikuj {name}"
+      },
+      "duplicateLabel": "Duplikuj {name}"
     },
     "categories": {
       "title": "Kategorie",

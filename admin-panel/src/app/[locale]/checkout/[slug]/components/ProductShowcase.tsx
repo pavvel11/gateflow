@@ -14,9 +14,19 @@ interface ProductShowcaseProps {
 
 export default function ProductShowcase({ product }: ProductShowcaseProps) {
   const t = useTranslations('checkout');
+
+  // Check if sale price is active
+  const isSaleActive =
+    product.sale_price &&
+    product.sale_price > 0 &&
+    (!product.sale_price_until || new Date(product.sale_price_until) > new Date());
+
+  // Determine effective price (sale price if active, otherwise regular price)
+  const effectivePrice = isSaleActive ? product.sale_price! : product.price;
+
   // Calculate net price if VAT is included
   const vatRate = product.vat_rate || 23;
-  const grossPrice = product.price;
+  const grossPrice = effectivePrice;
   const netPrice = product.price_includes_vat
     ? grossPrice / (1 + vatRate / 100)
     : grossPrice;
@@ -61,12 +71,38 @@ export default function ProductShowcase({ product }: ProductShowcaseProps) {
 
       {/* Price Display - Clean & Minimal (EasyCart-inspired) */}
       <div className="mb-8">
+        {/* Strikethrough regular price if on sale */}
+        {isSaleActive && (
+          <div className="text-2xl font-medium text-gray-500 line-through mb-1">
+            {formatPrice(product.price, product.currency)} {product.currency}
+          </div>
+        )}
+
         <div className="text-5xl font-bold text-white mb-2 tracking-tight">
           {formatPrice(grossPrice, product.currency)} {product.currency}
         </div>
+
         {product.vat_rate && product.vat_rate > 0 && (
           <div className="text-sm text-gray-400">
             {t('includingVat', { defaultValue: 'including VAT' })} {vatRate}%
+          </div>
+        )}
+
+        {/* Sale end date */}
+        {isSaleActive && product.sale_price_until && (
+          <div className="text-sm text-yellow-400 mt-2 flex items-center gap-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {t('saleEndsAt', {
+              date: new Date(product.sale_price_until).toLocaleString('pl-PL', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })
+            })}
           </div>
         )}
 
