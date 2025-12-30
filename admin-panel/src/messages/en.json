@@ -1510,6 +1510,10 @@
         "stripeButton": "Open Stripe Dashboard",
         "finePrint": "You can always update or rotate your API keys from the Settings page."
       }
+    },
+    "branding": {
+      "title": "Branding & Whitelabel",
+      "livePreview": "Live Preview"
     }
   },
   "omnibus": {

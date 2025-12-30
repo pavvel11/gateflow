@@ -110,7 +110,7 @@ export default function BrandingSettings() {
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Branding & Whitelabel
+            {t('title')}
           </h2>
           <button
             type="button"
@@ -249,7 +249,7 @@ export default function BrandingSettings() {
       {/* Live Preview */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Live Preview
+          {t('livePreview')}
         </h3>
 
         <div className="space-y-6">

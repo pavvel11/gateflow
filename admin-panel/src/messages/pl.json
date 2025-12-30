@@ -1510,6 +1510,10 @@
         "stripeButton": "Otwórz panel Stripe",
         "finePrint": "Możesz zawsze zaktualizować lub zrotować swoje klucze API ze strony Ustawień."
       }
+    },
+    "branding": {
+      "title": "Branding i Whitelabel",
+      "livePreview": "Podgląd na żywo"
     }
   },
   "omnibus": {
