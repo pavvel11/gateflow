@@ -27,6 +27,7 @@ export interface WebhookLog {
     id: string;
     url: string;
     description?: string;
+    is_active: boolean;
   };
 }
 

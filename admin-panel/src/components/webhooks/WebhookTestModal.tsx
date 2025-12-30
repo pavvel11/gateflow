@@ -13,6 +13,56 @@ interface WebhookTestModalProps {
   isSending: boolean;
 }
 
+// Mock payloads for preview (client-side version)
+const MOCK_PAYLOADS: Record<string, any> = {
+  'purchase.completed': {
+    email: 'customer@example.com',
+    productId: 'prod_12345678',
+    productName: 'Premium Course',
+    amount: 4999,
+    currency: 'usd',
+    sessionId: 'cs_test_a1b2c3d4e5f6g7h8i9j0',
+    isGuest: false,
+    firstName: 'Jan',
+    lastName: 'Kowalski',
+    invoice: {
+      needsInvoice: true,
+      nip: '1234567890',
+      companyName: 'Przykładowa Firma Sp. z o.o.',
+      address: 'ul. Testowa 123/45',
+      city: 'Warszawa',
+      postalCode: '00-001',
+      country: 'PL'
+    },
+    timestamp: new Date().toISOString()
+  },
+  'lead.captured': {
+    email: 'lead@example.com',
+    productId: 'prod_free_123',
+    productName: 'Free Tutorial',
+    userId: 'user_123abc',
+    timestamp: new Date().toISOString()
+  },
+  'subscription.started': {
+    email: 'subscriber@example.com',
+    planId: 'price_monthly_123',
+    amount: 2900,
+    currency: 'usd',
+    status: 'active'
+  },
+  'refund.issued': {
+    email: 'customer@example.com',
+    amount: 4999,
+    currency: 'usd',
+    reason: 'requested_by_customer'
+  },
+  'test.event': {
+    message: 'This is a test event from GateFlow',
+    timestamp: new Date().toISOString(),
+    system: { version: '1.0.0', environment: 'production' }
+  }
+};
+
 export default function WebhookTestModal({
   isOpen,
   onClose,
@@ -42,8 +92,10 @@ export default function WebhookTestModal({
 
   if (!endpoint) return null;
 
+  const currentPayload = MOCK_PAYLOADS[selectedEvent] || MOCK_PAYLOADS['test.event'];
+
   return (
-    <BaseModal isOpen={isOpen} onClose={onClose} size="md">
+    <BaseModal isOpen={isOpen} onClose={onClose} size="lg">
       <ModalHeader title={t('test')} />
       <ModalBody>
         <div className="space-y-4">
@@ -71,6 +123,21 @@ export default function WebhookTestModal({
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Example Payload
+            </label>
+            <div className="bg-gray-900 dark:bg-gray-950 rounded-lg p-4 border border-gray-700 max-h-96 overflow-y-auto">
+              <pre className="text-xs font-mono text-gray-100">
+                <code>{JSON.stringify({
+                  event: selectedEvent,
+                  timestamp: new Date().toISOString(),
+                  data: currentPayload
+                }, null, 2)}</code>
+              </pre>
+            </div>
           </div>
         </div>
       </ModalBody>

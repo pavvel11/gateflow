@@ -101,16 +101,16 @@ class FixerIoProvider implements ExchangeRateProvider {
 }
 
 /**
- * European Central Bank Provider (FREE, official EU rates)
- * No API key needed, but limited to EUR base only
+ * European Central Bank Provider (FREE, official EU rates via Frankfurter API)
+ * No API key needed. Uses frankfurter.app (open-source, maintained by ECB data)
+ * Source: https://www.frankfurter.app/
  */
 class ECBProvider implements ExchangeRateProvider {
   name = 'ecb';
-  private baseUrl = 'https://api.exchangerate.host/latest';
+  private baseUrl = 'https://api.frankfurter.app';
 
   async fetchRates(baseCurrency: string): Promise<ExchangeRates> {
-    // ECB only provides EUR as base, so we need to use exchangerate.host (free wrapper)
-    const url = `${this.baseUrl}?base=${baseCurrency}`;
+    const url = `${this.baseUrl}/latest?from=${baseCurrency}`;
 
     // Next.js will automatically cache this for CACHE_DURATION
     const response = await fetch(url, {
@@ -118,13 +118,14 @@ class ECBProvider implements ExchangeRateProvider {
     });
 
     if (!response.ok) {
-      throw new Error(`ECB error: ${response.statusText}`);
+      throw new Error(`ECB (Frankfurter) error: ${response.statusText}`);
     }
 
     const data = await response.json();
 
-    if (!data.success) {
-      throw new Error(`ECB error: ${data.error}`);
+    // Frankfurter returns { amount, base, date, rates }
+    if (!data.rates) {
+      throw new Error(`ECB (Frankfurter) error: no rates in response`);
     }
 
     return {
@@ -238,7 +239,7 @@ class ManualProvider implements ExchangeRateProvider {
 export class CurrencyService {
   private provider: ExchangeRateProvider;
 
-  constructor(providerType: 'exchangerate-api' | 'fixer' | 'ecb' | 'manual' = 'manual', apiKey?: string) {
+  constructor(providerType: 'exchangerate-api' | 'fixer' | 'ecb' = 'ecb', apiKey?: string) {
     switch (providerType) {
       case 'exchangerate-api':
         if (!apiKey) throw new Error('ExchangeRate-API requires API key');
@@ -249,11 +250,8 @@ export class CurrencyService {
         this.provider = new FixerIoProvider(apiKey);
         break;
       case 'ecb':
-        this.provider = new ECBProvider();
-        break;
-      case 'manual':
       default:
-        this.provider = new ManualProvider();
+        this.provider = new ECBProvider();
     }
   }
 
@@ -300,11 +298,21 @@ export class CurrencyService {
 }
 
 /**
- * Create currency service instance based on environment variables
+ * Create currency service instance based on configuration
+ * Priority: Database > .env > manual fallback
+ *
+ * Note: This function should be called from server actions that use getDecryptedCurrencyConfig
+ * For direct instantiation, use new CurrencyService(provider, apiKey)
  */
-export function createCurrencyService(): CurrencyService {
-  const provider = (process.env.NEXT_PUBLIC_CURRENCY_PROVIDER as any) || 'manual';
-  const apiKey = process.env.CURRENCY_API_KEY;
+export function createCurrencyService(provider?: string, apiKey?: string): CurrencyService {
+  // If provider and apiKey are provided directly, use them
+  if (provider) {
+    return new CurrencyService(provider as any, apiKey);
+  }
 
-  return new CurrencyService(provider, apiKey);
+  // Fallback to .env for backward compatibility (when called without getDecryptedCurrencyConfig)
+  const envProvider = (process.env.NEXT_PUBLIC_CURRENCY_PROVIDER as any) || 'ecb';
+  const envApiKey = process.env.CURRENCY_API_KEY;
+
+  return new CurrencyService(envProvider, envApiKey);
 }

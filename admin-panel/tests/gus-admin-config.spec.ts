@@ -157,7 +157,7 @@ test.describe('GUS API Admin Configuration', () => {
     }
 
     // Click save button WITHIN GUS container (not the IntegrationsForm save button!)
-    const saveButton = gusContainer.locator('button').filter({ hasText: /Zapisz konfigurację|Save Configuration/i });
+    const saveButton = gusContainer.locator('button').filter({ hasText: /Zapisz konfigurację|Save Configuration/i }).first();
     await expect(saveButton).toBeVisible({ timeout: 5000 });
 
     // Monitor network requests
@@ -209,7 +209,7 @@ test.describe('GUS API Admin Configuration', () => {
     await enableCheckbox.check();
 
     // Save
-    const saveButton = gusContainer.locator('button').filter({ hasText: /Zapisz konfigurację|Save Configuration/i });
+    const saveButton = gusContainer.locator('button').filter({ hasText: /Zapisz konfigurację|Save Configuration/i }).first();
     await saveButton.click();
     await page.waitForLoadState('networkidle');
 
@@ -272,7 +272,7 @@ test.describe('GUS API Admin Configuration', () => {
 
     // Locate GUS container and save button
     const gusContainer = page.locator('div').filter({ has: page.locator('input#gus-api-key') });
-    const saveButton = gusContainer.locator('button').filter({ hasText: /Zapisz konfigurację|Save Configuration/i });
+    const saveButton = gusContainer.locator('button').filter({ hasText: /Zapisz konfigurację|Save Configuration/i }).first();
     await saveButton.click();
 
     // Should show error (support both EN and PL)

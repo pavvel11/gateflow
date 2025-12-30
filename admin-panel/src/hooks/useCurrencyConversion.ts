@@ -1,16 +1,46 @@
-import { useState, useCallback } from 'react';
-import { convertCurrencyAmount } from '@/lib/actions/currency';
+import { useState, useCallback, useRef } from 'react';
+import { getExchangeRates } from '@/lib/actions/currency';
+import { convertCurrencyAmount, convertCurrencyArray, type ExchangeRates } from '@/lib/utils/currency-conversion';
 import { CurrencyAmount } from '@/lib/actions/analytics';
 
 /**
  * Hook to convert CurrencyAmount objects to a single target currency
+ * SUPER OPTIMIZED: Fetches rates ONCE and caches them, converts locally
  */
 export function useCurrencyConversion() {
   const [converting, setConverting] = useState(false);
 
+  // Cache rates in a ref to avoid re-fetching for same currency
+  // Key: targetCurrency, Value: { rates, timestamp }
+  const ratesCache = useRef<Map<string, { rates: ExchangeRates; timestamp: number }>>(new Map());
+  const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
+  /**
+   * Get cached rates or fetch new ones
+   * OPTIMIZED: Client-side cache + server-side cache
+   */
+  const getRates = useCallback(async (targetCurrency: string): Promise<ExchangeRates | null> => {
+    // Check client-side cache first
+    const cached = ratesCache.current.get(targetCurrency);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      console.log(`[useCurrencyConversion] Client cache HIT for ${targetCurrency}`);
+      return cached.rates;
+    }
+
+    console.log(`[useCurrencyConversion] Client cache MISS for ${targetCurrency} - fetching from server`);
+
+    // Fetch from server (which has its own cache)
+    const rates = await getExchangeRates(targetCurrency);
+    if (rates) {
+      ratesCache.current.set(targetCurrency, { rates, timestamp: Date.now() });
+    }
+
+    return rates;
+  }, []);
+
   /**
    * Convert a CurrencyAmount object to a single currency
-   * Returns the total amount in the target currency
+   * SUPER EFFICIENT: Fetches rates once (with cache), converts locally
    */
   const convertToSingleCurrency = useCallback(async (
     amounts: CurrencyAmount,
@@ -28,56 +58,54 @@ export function useCurrencyConversion() {
 
     setConverting(true);
     try {
-      let total = 0;
+      // Get rates (cached if available)
+      const rates = await getRates(targetCurrency);
 
-      // Convert each currency amount to target currency
-      for (const [currency, amount] of Object.entries(amounts)) {
-        if (currency === targetCurrency) {
-          // Same currency, no conversion needed
-          total += amount;
-        } else {
-          // Convert to target currency
-          const converted = await convertCurrencyAmount(amount, currency, targetCurrency);
-          if (converted !== null) {
-            total += converted;
-          } else {
-            console.error(`Failed to convert ${amount} from ${currency} to ${targetCurrency} - skipping this amount`);
-            // CRITICAL: Do NOT add raw amount as it's in different currency!
-            // This would cause incorrect totals (e.g., adding GBP cents to USD total)
-            // Instead, skip this amount and log error
-            // TODO: Consider implementing fallback conversion logic or showing error to user
-          }
-        }
+      if (!rates) {
+        console.error(`Failed to get rates for ${targetCurrency}`);
+        return amounts[targetCurrency] || 0;
       }
 
+      // Convert locally using cached rates - NO SERVER CALL!
+      const total = convertCurrencyAmount(amounts, targetCurrency, rates);
       return total;
     } finally {
       setConverting(false);
     }
-  }, []);
+  }, [getRates]);
 
   /**
    * Convert array of CurrencyAmount objects
-   * Useful for chart data
+   * SUPER EFFICIENT: Fetches rates ONCE, converts ALL locally
    */
   const convertMultipleCurrencies = useCallback(async (
     amountsArray: CurrencyAmount[],
     targetCurrency: string
   ): Promise<number[]> => {
+    if (amountsArray.length === 0) return [];
+
     setConverting(true);
     try {
-      const results = await Promise.all(
-        amountsArray.map(amounts => convertToSingleCurrency(amounts, targetCurrency))
-      );
+      // Get rates ONCE for all conversions
+      const rates = await getRates(targetCurrency);
+
+      if (!rates) {
+        console.error(`Failed to get rates for ${targetCurrency}`);
+        return amountsArray.map(() => 0);
+      }
+
+      // Convert ALL amounts locally - NO ADDITIONAL SERVER CALLS!
+      const results = convertCurrencyArray(amountsArray, targetCurrency, rates);
       return results;
     } finally {
       setConverting(false);
     }
-  }, [convertToSingleCurrency]);
+  }, [getRates]);
 
   return {
     convertToSingleCurrency,
     convertMultipleCurrencies,
-    converting
+    converting,
+    getRates, // Export getRates in case components want to fetch rates once themselves
   };
 }

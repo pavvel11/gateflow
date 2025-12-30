@@ -107,7 +107,9 @@
       "analytics": "Analityka",
       "marketing": "Marketing",
       "consents": "Zgody",
-      "code": "Menedżer Skryptów"
+      "code": "Menedżer Skryptów",
+      "currency": "Waluty",
+      "gus": "GUS"
     },
     "gtm": {
       "title": "Google Tag Manager",
@@ -261,6 +263,9 @@
     "title": "Pulpit",
     "welcome": "Witamy w panelu admina GateFlow",
     "overview": "Przegląd",
+    "currency": {
+      "dashboardInfo": "Kursy wymiany walut są używane wyłącznie do przybliżonych obliczeń na pulpicie."
+    },
     "stats": {
       "totalRevenue": "Przychody ogółem",
       "todayRevenue": "Dzisiejszy przychód",
@@ -751,6 +756,9 @@
       "updateError": "Nie udało się zaktualizować produktu",
       "deleteSuccess": "Produkt \"{name}\" został pomyślnie usunięty",
       "deleteError": "Nie udało się usunąć produktu",
+      "statusActivated": "Produkt aktywowany pomyślnie",
+      "statusDeactivated": "Produkt dezaktywowany pomyślnie",
+      "statusToggleError": "Nie udało się zmienić statusu produktu",
       "noRedirectUrl": "Ten produkt nie ma adresu URL przekierowania.",
       "noProductsToExport": "Brak produktów do eksportu",
       "exportSuccess": "{count} produktów wyeksportowano pomyślnie",
@@ -990,6 +998,9 @@
       "noEndpoints": "Brak skonfigurowanych webhooków.",
       "createSuccess": "Webhook utworzony pomyślnie",
       "updateSuccess": "Webhook zaktualizowany pomyślnie",
+      "statusActivated": "Webhook aktywowany pomyślnie",
+      "statusDeactivated": "Webhook dezaktywowany pomyślnie",
+      "statusToggleError": "Nie udało się zmienić statusu webhooka",
       "testSuccess": "Test wysłany pomyślnie",
       "testFailed": "Test nie powiódł się",
       "deleteTitle": "Usuń Webhook",
@@ -1016,6 +1027,9 @@
         "filterArchived": "Zarchiwizowane",
         "noLogs": "Brak logów dla tego filtra.",
         "retrySuccess": "Ponowienie uruchomione pomyślnie",
+        "inactiveEndpointWarningTitle": "Endpoint jest nieaktywny",
+        "inactiveEndpointWarningMessage": "Ten webhook endpoint jest obecnie nieaktywny. Czy na pewno chcesz ponownie wysłać to żądanie?",
+        "retryAnyway": "Wyślij mimo to",
         "failuresTitle": "Ostatnie błędy dostarczenia",
         "errorDetails": "Szczegóły błędu",
         "endpoint": "Endpoint"
@@ -1162,7 +1176,10 @@
       "enableHelp": "Gdy włączone, dane firmy będą automatycznie pobierane po wprowadzeniu NIP podczas procesu zakupu.",
       "saveButton": "Zapisz konfigurację",
       "deleteButton": "Usuń klucz API",
-      "confirmDelete": "Czy na pewno chcesz usunąć klucz API GUS? Ta operacja jest nieodwracalna.",
+      "deleteModal": {
+        "title": "Usuń klucz API GUS",
+        "description": "Czy na pewno chcesz usunąć klucz API GUS? Ta operacja jest nieodwracalna i automatyczne pobieranie danych firm zostanie wyłączone."
+      },
       "messages": {
         "saved": "Konfiguracja GUS została pomyślnie zapisana",
         "deleted": "Klucz API GUS został pomyślnie usunięty"
@@ -1171,6 +1188,70 @@
         "apiKeyRequired": "Klucz API jest wymagany",
         "saveFailed": "Nie udało się zapisać konfiguracji",
         "deleteFailed": "Nie udało się usunąć klucza API"
+      }
+    },
+    "currency": {
+      "title": "Ustawienia Wymiany Walut",
+      "subtitle": "Skonfiguruj dostawcę kursów wymiany walut dla przeliczeń walutowych na pulpicie",
+      "info": {
+        "title": "Kursy wymiany są przybliżone",
+        "description": "Obliczenia na pulpicie używają kursów wymiany z wybranego dostawcy. Te kursy są używane wyłącznie do przybliżonych przeliczeń na potrzeby wyświetlania danych i mogą się różnić od rzeczywistych kursów wymiany."
+      },
+      "status": {
+        "currentProvider": "Aktywny dostawca",
+        "configuredBoth": "Skonfigurowane zarówno w .env, jak i w bazie danych",
+        "configuredBothDescription": "Używany jest klucz z bazy danych (priorytet). Jeśli usuniesz konfigurację z bazy, system przełączy się na użycie .env.",
+        "configuredDatabase": "Skonfigurowane w bazie danych",
+        "configuredDatabaseDescription": "Twój klucz API jest bezpiecznie zaszyfrowany przy użyciu AES-256-GCM i przechowywany w bazie danych.",
+        "configuredEnv": "Skonfigurowane w .env",
+        "configuredEnvDescription": "Twój klucz API jest skonfigurowany poprzez zmienną środowiskową. Możesz opcjonalnie użyć formularza poniżej, aby zarządzać kluczami poprzez bazę danych z szyfrowaniem.",
+        "defaultDescription": "Dostawca używa domyślnej konfiguracji."
+      },
+      "providerLabel": "Dostawca kursów wymiany",
+      "providers": {
+        "ecb": "Europejski Bank Centralny (darmowe)",
+        "exchangerateApi": "ExchangeRate-API (darmowe/płatne)",
+        "fixer": "Fixer.io (płatne)"
+      },
+      "providerHelp": {
+        "ecb": "Oficjalne kursy Europejskiego Banku Centralnego. Nie jest wymagany klucz API.",
+        "exchangerateApi": "Wymaga klucza API z ExchangeRate-API.com. Darmowy plan: 1500 żądań/miesiąc.",
+        "fixer": "Wymaga płatnego klucza API z Fixer.io. Bardzo niezawodne."
+      },
+      "apiKeyLabel": "Klucz API",
+      "apiKeyPlaceholder": "Wprowadź klucz API",
+      "apiKeyHelp": {
+        "exchangerateApi": "Uzyskaj bezpłatny klucz API (1500 żądań/miesiąc) z",
+        "fixer": "Uzyskaj klucz API (płatne plany) z"
+      },
+      "getApiKey": "Uzyskaj klucz API",
+      "enableLabel": "Włącz przybliżone przeliczanie walut",
+      "enableHelp": "Gdy włączone, kursy wymiany będą używane do przybliżonych przeliczeń walutowych na pulpicie.",
+      "saveButton": "Zapisz konfigurację",
+      "deleteButton": "Usuń klucz API",
+      "deleteModal": {
+        "title": "Usuń konfigurację waluty",
+        "description": "Czy na pewno chcesz usunąć konfigurację kursów wymiany z bazy danych? System przełączy się na użycie konfiguracji z .env (jeśli istnieje) lub domyślnego dostawcy ECB."
+      },
+      "messages": {
+        "saved": "Konfiguracja kursów wymiany została pomyślnie zapisana",
+        "deleted": "Klucz API kursów wymiany został pomyślnie usunięty"
+      },
+      "errors": {
+        "apiKeyRequired": "Klucz API jest wymagany dla wybranego dostawcy",
+        "saveFailed": "Nie udało się zapisać konfiguracji",
+        "deleteFailed": "Nie udało się usunąć klucza API"
+      },
+      "exchangeRates": {
+        "title": "Aktualne Kursy Wymiany",
+        "showRates": "Pokaż Kursy Wymiany",
+        "hideRates": "Ukryj Kursy Wymiany",
+        "loading": "Ładowanie kursów...",
+        "error": "Nie udało się załadować kursów wymiany",
+        "baseCurrency": "Waluta bazowa",
+        "apiDate": "Data z API",
+        "cacheExpires": "Cache wygasa",
+        "provider": "Dostawca: {provider}"
       }
     },
     "shop": {

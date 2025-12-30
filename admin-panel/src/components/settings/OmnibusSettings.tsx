@@ -5,17 +5,17 @@
  * Global toggle for EU Omnibus Directive (2019/2161) compliance
  */
 
+import { useToast } from '@/contexts/ToastContext';
 import { useState, useEffect } from 'react';
 import { getShopConfig, updateShopConfig, type ShopConfig } from '@/lib/actions/shop-config';
 import { useTranslations } from 'next-intl';
 
 export default function OmnibusSettings() {
+  const { addToast } = useToast();
   const t = useTranslations('settings.omnibus');
   const [config, setConfig] = useState<ShopConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-
   const [omnibusEnabled, setOmnibusEnabled] = useState(true);
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export default function OmnibusSettings() {
     const newValue = !omnibusEnabled;
     setOmnibusEnabled(newValue);
     setSaving(true);
-    setMessage(null);
+    
 
     try {
       const updates: Partial<ShopConfig> = {
@@ -49,7 +49,7 @@ export default function OmnibusSettings() {
       const success = await updateShopConfig(updates);
 
       if (success) {
-        setMessage({ type: 'success', text: t('saveSuccess') });
+        addToast(t('saveSuccess'), 'success');
         // Reload config and sync state
         const newConfig = await getShopConfig();
         if (newConfig) {
@@ -57,13 +57,13 @@ export default function OmnibusSettings() {
           setOmnibusEnabled(newConfig.omnibus_enabled ?? true);
         }
       } else {
-        setMessage({ type: 'error', text: t('saveError') });
+        addToast(t('saveError'), 'error');
         // Revert on error
         setOmnibusEnabled(!newValue);
       }
     } catch (error) {
       console.error('Error saving omnibus settings:', error);
-      setMessage({ type: 'error', text: t('saveError') });
+      addToast(t('saveError'), 'error');
       // Revert on error
       setOmnibusEnabled(!newValue);
     } finally {
@@ -135,17 +135,6 @@ export default function OmnibusSettings() {
               />
             </button>
           </div>
-
-          {/* Message Display */}
-          {message && (
-            <div className={`mt-4 p-3 rounded-lg ${
-              message.type === 'success'
-                ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800'
-                : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800'
-            }`}>
-              <p className="text-sm">{message.text}</p>
-            </div>
-          )}
 
           {/* Help Text */}
           <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg">

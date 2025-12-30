@@ -17,6 +17,7 @@ interface ProductsTableProps {
   onPreviewProduct: (product: Product) => void;
   onPreviewRedirect: (product: Product) => void;
   onGenerateCode: (product: Product) => void;
+  onToggleStatus: (productId: string, currentStatus: boolean) => void;
   currentPage: number;
   totalPages: number;
   totalItems: number;
@@ -36,6 +37,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
   onPreviewProduct,
   onPreviewRedirect,
   onGenerateCode,
+  onToggleStatus,
   currentPage,
   totalPages,
   totalItems,
@@ -148,13 +150,16 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                       )}
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap text-center">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        product.is_active 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100' 
-                          : 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100'
-                      }`}>
+                      <button
+                        onClick={() => onToggleStatus(product.id, product.is_active)}
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer transition-colors hover:opacity-80 ${
+                          product.is_active
+                            ? 'bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100'
+                            : 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100'
+                        }`}
+                      >
                         {product.is_active ? t('active') : t('inactive')}
-                      </span>
+                      </button>
                     </td>
                     <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 hidden 2xl:table-cell whitespace-nowrap">
                       {product.available_from ? formatUTCForDisplay(product.available_from, {

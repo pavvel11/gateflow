@@ -228,6 +228,38 @@ const ProductsPageContent: React.FC = () => {
     setProductToDelete(product);
   };
 
+  const handleToggleStatus = async (productId: string, currentStatus: boolean) => {
+    const newStatus = !currentStatus;
+
+    try {
+      const response = await fetch(`/api/admin/products/${productId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: newStatus }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to toggle status');
+      }
+
+      // Update local state optimistically
+      setProducts(prevProducts =>
+        prevProducts.map(p =>
+          p.id === productId ? { ...p, is_active: newStatus } : p
+        )
+      );
+
+      addToast(
+        newStatus ? t('statusActivated') : t('statusDeactivated'),
+        'success'
+      );
+    } catch (err) {
+      addToast(t('statusToggleError'), 'error');
+      // Revert on error by refetching
+      await fetchProducts();
+    }
+  };
+
   const handleAddNewProduct = () => {
     setEditingProduct(null);
     setShowProductForm(true);
@@ -283,6 +315,7 @@ const ProductsPageContent: React.FC = () => {
         onPreviewProduct={handlePreviewProduct}
         onPreviewRedirect={handlePreviewRedirect}
         onGenerateCode={handleGenerateCode}
+        onToggleStatus={handleToggleStatus}
         currentPage={currentPage}
         totalPages={totalPages}
         totalItems={totalItems}

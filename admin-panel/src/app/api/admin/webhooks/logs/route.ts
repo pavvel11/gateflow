@@ -32,7 +32,8 @@ export async function GET(request: NextRequest) {
             endpoint:webhook_endpoints (
               id,
               url,
-              description
+              description,
+              is_active
             )
           `, 
         { count: countOnly ? 'exact' : undefined, head: countOnly }

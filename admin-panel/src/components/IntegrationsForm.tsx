@@ -4,6 +4,9 @@ import React, { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { updateIntegrationsConfig, addScript, deleteScript, toggleScript } from '@/lib/actions/integrations'
 import { IntegrationsInput, CustomScriptInput } from '@/lib/validations/integrations'
+import CurrencySettings from '@/components/settings/CurrencySettings'
+import GUSSettings from '@/components/settings/GUSSettings'
+import { useToast } from '@/contexts/ToastContext'
 
 interface Script {
   id: string
@@ -23,12 +26,12 @@ interface IntegrationsFormProps {
 export default function IntegrationsForm({ initialData, initialScripts }: IntegrationsFormProps) {
   const t = useTranslations('integrations')
   const tCommon = useTranslations('common')
+  const { addToast } = useToast()
   const [formData, setFormData] = useState<IntegrationsInput>(initialData)
   const [scripts, setScripts] = useState<Script[]>(initialScripts)
-  
+
   const [loading, setLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'analytics' | 'marketing' | 'consents' | 'scripts'>('analytics')
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const [activeTab, setActiveTab] = useState<'analytics' | 'marketing' | 'consents' | 'scripts' | 'currency' | 'gus'>('analytics')
 
   // Script Modal State
   const [isScriptModalOpen, setIsScriptModalOpen] = useState(false)
@@ -44,13 +47,18 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
   const handleConfigSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setMessage(null)
     try {
       const result = await updateIntegrationsConfig(formData)
-      if (result.error) setMessage({ type: 'error', text: result.error })
-      else setMessage({ type: 'success', text: t('messages.saveSuccess') })
-    } catch (err) { setMessage({ type: 'error', text: t('messages.saveError', { error: 'Unknown' }) }) }
-    finally { setLoading(false) }
+      if (result.error) {
+        addToast(result.error, 'error')
+      } else {
+        addToast(t('messages.saveSuccess'), 'success')
+      }
+    } catch (err) {
+      addToast(t('messages.saveError', { error: 'Unknown' }), 'error')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleChange = (field: keyof IntegrationsInput, value: any) => {
@@ -62,10 +70,11 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
     setLoading(true)
     const result = await addScript(newScript)
     if (result.success) {
+      addToast(t('messages.saveSuccess'), 'success')
       setIsScriptModalOpen(false)
-      window.location.reload() 
+      window.location.reload()
     } else {
-      setMessage({ type: 'error', text: result.error || 'Failed' })
+      addToast(result.error || 'Failed', 'error')
     }
     setLoading(false)
   }
@@ -105,6 +114,8 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
           <TabButton id="marketing" label={t('tabs.marketing')} />
           <TabButton id="consents" label={t('tabs.consents')} />
           <TabButton id="scripts" label={t('tabs.code')} />
+          <TabButton id="currency" label={t('tabs.currency')} />
+          <TabButton id="gus" label={t('tabs.gus')} />
         </div>
 
         {/* Content */}
@@ -174,7 +185,7 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
               </div>
             )}
 
-            {activeTab !== 'scripts' && (
+            {!['scripts', 'currency', 'gus'].includes(activeTab) && (
                 <div className="mt-6 border-t pt-4 flex justify-end">
                     <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">{loading ? t('messages.saving') : t('saveConfig')}</button>
                 </div>
@@ -233,6 +244,20 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
                 </div>
             </div>
           )}
+
+          {/* Currency Tab */}
+          {activeTab === 'currency' && (
+            <div className="animate-in fade-in slide-in-from-top-2">
+              <CurrencySettings />
+            </div>
+          )}
+
+          {/* GUS Tab */}
+          {activeTab === 'gus' && (
+            <div className="animate-in fade-in slide-in-from-top-2">
+              <GUSSettings />
+            </div>
+          )}
         </div>
       </div>
 
@@ -277,8 +302,6 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
             </div>
         </div>
       )}
-
-      {message && <div className={`fixed bottom-4 right-4 p-4 rounded shadow-lg ${message.type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white`}>{message.text}</div>}
     </div>
   )
 }

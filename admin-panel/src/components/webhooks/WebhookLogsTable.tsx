@@ -7,7 +7,7 @@ import { useToast } from '@/contexts/ToastContext';
 
 interface WebhookLogsTableProps {
   logs: WebhookLog[];
-  onRetry: (logId: string) => Promise<void>;
+  onRetry: (logId: string) => void;
   retryingId: string | null;
   showEndpointColumn?: boolean;
   onRefresh?: () => void;
@@ -56,10 +56,9 @@ export default function WebhookLogsTable({
     return <span className="px-2 py-1 bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded text-xs font-medium border border-red-200 dark:border-red-800">HTTP {log.http_status}</span>;
   };
 
-  const handleRetryClick = async (e: React.MouseEvent, logId: string) => {
+  const handleRetryClick = (e: React.MouseEvent, logId: string) => {
     e.stopPropagation();
-    await onRetry(logId);
-    onRefresh?.();
+    onRetry(logId);
   };
 
   const handleArchive = async (e: React.MouseEvent, logId: string) => {

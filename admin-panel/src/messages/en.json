@@ -107,7 +107,9 @@
       "analytics": "Analytics",
       "marketing": "Marketing",
       "consents": "Consents",
-      "code": "Script Manager"
+      "code": "Script Manager",
+      "currency": "Currency",
+      "gus": "GUS"
     },
     "gtm": {
       "title": "Google Tag Manager",
@@ -261,6 +263,9 @@
     "title": "Dashboard",
     "welcome": "Welcome to GateFlow Admin",
     "overview": "Overview",
+    "currency": {
+      "dashboardInfo": "Exchange rates are used for approximate dashboard calculations only."
+    },
     "stats": {
       "totalRevenue": "Total Revenue",
       "todayRevenue": "Today's Revenue",
@@ -751,6 +756,9 @@
       "updateError": "Failed to update product",
       "deleteSuccess": "Product \"{name}\" was successfully deleted",
       "deleteError": "Failed to delete product",
+      "statusActivated": "Product activated successfully",
+      "statusDeactivated": "Product deactivated successfully",
+      "statusToggleError": "Failed to toggle product status",
       "noRedirectUrl": "This product does not have a redirect URL.",
       "noProductsToExport": "No products to export",
       "exportSuccess": "{count} products exported successfully",
@@ -990,6 +998,9 @@
       "noEndpoints": "No webhook endpoints configured.",
       "createSuccess": "Webhook created successfully",
       "updateSuccess": "Webhook updated successfully",
+      "statusActivated": "Webhook activated successfully",
+      "statusDeactivated": "Webhook deactivated successfully",
+      "statusToggleError": "Failed to toggle webhook status",
       "testSuccess": "Test event sent successfully",
       "testFailed": "Test event failed",
       "deleteTitle": "Delete Webhook",
@@ -1016,6 +1027,9 @@
         "filterArchived": "Archived",
         "noLogs": "No logs found for this filter.",
         "retrySuccess": "Retry triggered successfully",
+        "inactiveEndpointWarningTitle": "Endpoint is Inactive",
+        "inactiveEndpointWarningMessage": "This webhook endpoint is currently inactive. Are you sure you want to retry this request?",
+        "retryAnyway": "Send Anyway",
         "failuresTitle": "Recent Delivery Failures",
         "errorDetails": "Error Details",
         "endpoint": "Endpoint"
@@ -1162,7 +1176,10 @@
       "enableHelp": "When enabled, company data will be automatically fetched when NIP is entered during checkout.",
       "saveButton": "Save Configuration",
       "deleteButton": "Delete API Key",
-      "confirmDelete": "Are you sure you want to delete the GUS API key? This action cannot be undone.",
+      "deleteModal": {
+        "title": "Delete GUS API Key",
+        "description": "Are you sure you want to delete the GUS API key? This action cannot be undone and automatic company data fetching will be disabled."
+      },
       "messages": {
         "saved": "GUS configuration saved successfully",
         "deleted": "GUS API key deleted successfully"
@@ -1171,6 +1188,70 @@
         "apiKeyRequired": "API key is required",
         "saveFailed": "Failed to save configuration",
         "deleteFailed": "Failed to delete API key"
+      }
+    },
+    "currency": {
+      "title": "Currency Exchange Rate API",
+      "subtitle": "Configure exchange rate provider for currency conversion in dashboard statistics",
+      "info": {
+        "title": "Exchange rates are approximate",
+        "description": "Currency conversions use rates from the selected provider. These rates are for approximate dashboard calculations only and may not reflect actual transaction rates."
+      },
+      "status": {
+        "currentProvider": "Current Provider",
+        "configuredDatabase": "Configured via Database",
+        "configuredDatabaseDescription": "Currency API is configured in the database. If you delete this configuration, it will fall back to .env settings (if present) or default ECB provider.",
+        "configuredEnv": "Configured via .env",
+        "configuredEnvDescription": "Currency API is configured via environment variables (.env file). To use database configuration instead, save your settings above.",
+        "configuredBoth": "Configured in Both Database & .env",
+        "configuredBothDescription": "Database configuration takes priority. .env configuration will be used as fallback if database config is deleted.",
+        "defaultDescription": "Provider is using default configuration."
+      },
+      "providerLabel": "Exchange Rate Provider",
+      "providers": {
+        "ecb": "ECB (European Central Bank)",
+        "exchangerateApi": "ExchangeRate-API (Free)",
+        "fixer": "Fixer.io (Paid)"
+      },
+      "providerHelp": {
+        "ecb": "Official EU rates via Frankfurter API. Free, no API key required.",
+        "exchangerateApi": "Free tier: 1500 requests/month. Register at exchangerate-api.com to get your API key.",
+        "fixer": "Paid service with highly reliable rates. Get your API key at fixer.io."
+      },
+      "apiKeyLabel": "API Key",
+      "apiKeyPlaceholder": "Enter API key",
+      "apiKeyHelp": {
+        "exchangerateApi": "API key from ExchangeRate-API. Get a free key (1500 req/month) at",
+        "fixer": "API key from Fixer.io. Subscribe at"
+      },
+      "getApiKey": "Get API Key",
+      "enableLabel": "Enable exchange rate integration",
+      "enableHelp": "When enabled, exchange rates will be fetched from the selected provider for dashboard currency conversions.",
+      "saveButton": "Save Configuration",
+      "deleteButton": "Delete Configuration",
+      "deleteModal": {
+        "title": "Delete Currency Configuration",
+        "description": "Are you sure you want to delete the currency configuration from the database? The system will revert to .env settings (if present) or default ECB provider."
+      },
+      "messages": {
+        "saved": "Currency configuration saved successfully",
+        "deleted": "Currency configuration deleted successfully"
+      },
+      "errors": {
+        "apiKeyRequired": "API key is required for this provider",
+        "saveFailed": "Failed to save configuration",
+        "deleteFailed": "Failed to delete configuration"
+      },
+      "exchangeRates": {
+        "title": "Current Exchange Rates",
+        "showRates": "Show Exchange Rates",
+        "hideRates": "Hide Exchange Rates",
+        "loading": "Loading rates...",
+        "error": "Failed to load exchange rates",
+        "baseCurrency": "Base",
+        "apiDate": "Data from API",
+        "cacheExpires": "Cache expires",
+        "provider": "Provider: {provider}"
       }
     },
     "shop": {

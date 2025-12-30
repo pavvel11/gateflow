@@ -3,17 +3,21 @@
 import { useState, useEffect } from 'react';
 import { Building2, ExternalLink, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { saveGUSAPIKey, getGUSConfig, deleteGUSAPIKey } from '@/lib/actions/gus-config';
+import { BaseModal, ModalHeader, ModalBody, ModalFooter, Button } from '@/components/ui/Modal';
+import { useToast } from '@/contexts/ToastContext';
 import { useTranslations } from 'next-intl';
 
 export default function GUSSettings() {
   const t = useTranslations('settings.gus');
+  const tCommon = useTranslations('common');
+  const { addToast } = useToast();
   const [apiKey, setApiKey] = useState('');
   const [enabled, setEnabled] = useState(false);
   const [hasKey, setHasKey] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const loadConfig = async () => {
     setLoading(true);
@@ -36,12 +40,11 @@ export default function GUSSettings() {
 
   const handleSave = async () => {
     if (!apiKey.trim() && !hasKey) {
-      setMessage({ type: 'error', text: t('errors.apiKeyRequired') });
+      addToast(t('errors.apiKeyRequired'), 'error');
       return;
     }
 
     setSaving(true);
-    setMessage(null);
 
     try {
       const result = await saveGUSAPIKey({
@@ -50,40 +53,36 @@ export default function GUSSettings() {
       });
 
       if (result.success) {
-        setMessage({ type: 'success', text: t('messages.saved') });
+        addToast(t('messages.saved'), 'success');
         setApiKey('');
         await loadConfig();
       } else {
-        setMessage({ type: 'error', text: result.error || t('errors.saveFailed') });
+        addToast(result.error || t('errors.saveFailed'), 'error');
       }
     } catch (error) {
-      setMessage({ type: 'error', text: t('errors.saveFailed') });
+      addToast(t('errors.saveFailed'), 'error');
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm(t('confirmDelete'))) {
-      return;
-    }
-
     setDeleting(true);
-    setMessage(null);
+    setShowDeleteModal(false);
 
     try {
       const result = await deleteGUSAPIKey();
 
       if (result.success) {
-        setMessage({ type: 'success', text: t('messages.deleted') });
+        addToast(t('messages.deleted'), 'success');
         setApiKey('');
         setEnabled(false);
         await loadConfig();
       } else {
-        setMessage({ type: 'error', text: result.error || t('errors.deleteFailed') });
+        addToast(result.error || t('errors.deleteFailed'), 'error');
       }
     } catch (error) {
-      setMessage({ type: 'error', text: t('errors.deleteFailed') });
+      addToast(t('errors.deleteFailed'), 'error');
     } finally {
       setDeleting(false);
     }
@@ -101,18 +100,37 @@ export default function GUSSettings() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            {t('title')}
-          </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {t('subtitle')}
+    <>
+      {/* Delete Confirmation Modal */}
+      <BaseModal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} size="md">
+        <ModalHeader title={t('deleteModal.title')} />
+        <ModalBody>
+          <p className="text-gray-600 dark:text-gray-400">
+            {t('deleteModal.description')}
           </p>
+        </ModalBody>
+        <ModalFooter>
+          <Button onClick={() => setShowDeleteModal(false)} variant="secondary">
+            {tCommon('cancel')}
+          </Button>
+          <Button onClick={handleDelete} variant="danger" loading={deleting}>
+            {tCommon('delete')}
+          </Button>
+        </ModalFooter>
+      </BaseModal>
+
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              {t('title')}
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {t('subtitle')}
+            </p>
+          </div>
+          <Building2 className="w-8 h-8 text-blue-600 dark:text-blue-400" />
         </div>
-        <Building2 className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-      </div>
 
       {/* Status Banner */}
       {hasKey && enabled && (
@@ -192,19 +210,6 @@ export default function GUSSettings() {
           </p>
         </div>
 
-        {/* Message */}
-        {message && (
-          <div
-            className={`p-4 rounded-lg border ${
-              message.type === 'success'
-                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'
-                : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'
-            }`}
-          >
-            <p className="text-sm">{message.text}</p>
-          </div>
-        )}
-
         {/* Actions */}
         <div className="flex items-center gap-3 pt-2">
           <button
@@ -218,7 +223,7 @@ export default function GUSSettings() {
 
           {hasKey && (
             <button
-              onClick={handleDelete}
+              onClick={() => setShowDeleteModal(true)}
               disabled={saving || deleting}
               className="px-6 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors disabled:cursor-not-allowed flex items-center gap-2"
             >
@@ -229,5 +234,6 @@ export default function GUSSettings() {
         </div>
       </div>
     </div>
+    </>
   );
 }

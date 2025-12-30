@@ -244,31 +244,38 @@ export async function rateLimit(
 **Status**: 🏗️ Partially Done
 **Goal**: Robust tracking infrastructure compatible with modern privacy standards (Server-Side) and ease of use.
 
-#### 0. Multi-Currency Conversion (Unified View)
-**Status**: ✅ Done (MVP) - 2025-12-26
-**Description**: Convert all revenue to a single base currency for unified analytics and easier comparison across markets.
+#### 0. Multi-Currency Conversion & Exchange Rate Configuration
+**Status**: ✅ Done - 2025-12-30
+**Description**: Convert all revenue to a single base currency for unified analytics, with configurable exchange rate providers via admin panel.
 
 **Implemented Features**:
-- ✅ **Currency Conversion System**: Manual exchange rate provider with support for USD, EUR, GBP, PLN, JPY, CAD, AUD
+- ✅ **Currency Conversion System**: Support for USD, EUR, GBP, PLN, JPY, CAD, AUD
+- ✅ **Multiple Exchange Rate Providers**:
+  - **ECB (European Central Bank)**: Free, no API key required (default)
+  - **ExchangeRate-API**: Free tier with API key
+  - **Fixer.io**: Paid service with API key
+- ✅ **Admin Configuration UI**: Full settings panel in `/dashboard/integrations` for exchange rate provider selection
+- ✅ **Encrypted API Key Storage**: AES-256-GCM encryption reusing existing infrastructure (same as Stripe/GUS)
+- ✅ **Database Integration**: `integrations_config` table with currency API provider and encrypted key fields
+- ✅ **Configuration Priority**: Database config > .env config > ECB fallback
+- ✅ **Status Display**: Shows configuration source (Database/env/both) with colored badges
+- ✅ **Dashboard Status Widget**: `ConfigurationStatus` component showing active currency provider
+- ✅ **Delete Configuration**: Ability to reset to default ECB provider
 - ✅ **Conversion Layer**: `useCurrencyConversion` hook with `convertToSingleCurrency()` helper
 - ✅ **UI Toggle**: `CurrencySelector` component with "Grouped by Currency" and "Convert to [CURRENCY]" modes
-- ✅ **User Preferences**: Currency view mode and display currency stored in `user_metadata` via `UserPreferencesContext`
-- ✅ **Admin Settings**: Shop configuration system (`shop_config` table) with default currency setting
+- ✅ **User Preferences**: Currency view mode and display currency stored in `user_metadata`
 - ✅ **Dashboard Integration**:
   - Revenue chart with stacked areas visualization for multi-currency grouped view
   - Chart Y-axis adapts (no currency symbol in grouped mode)
-  - Legend showing all currencies in grouped mode
   - Revenue goal converts to display currency automatically
 - ✅ **Stats Overview**: All stat cards support both grouped and converted display modes
-- ✅ **E2E Tests**: 11 comprehensive Playwright tests covering currency conversion, persistence, and chart rendering
-- ✅ **Test Infrastructure**: Fixed `test-new-payment.sh` with dynamic product lookup and multi-currency test data
+- ✅ **E2E Tests**: 22 comprehensive Playwright tests (11 conversion + 11 configuration) covering all features
+- ✅ **Server Actions**: `saveCurrencyConfig`, `getCurrencyConfig`, `deleteCurrencyConfig`, `getDecryptedCurrencyConfig`
+- ✅ **Currency Service**: Pluggable architecture with provider abstraction
 
 **Next Steps (Future Enhancement)**:
-- 📋 **Live Exchange Rate API Integration**: Replace manual rates with real-time data from exchangerate-api.com, fixer.io, or ECB API
-  - Cache rates in database/Redis with hourly refresh
-  - Historical rates storage for accurate past data conversion
-  - Admin UI to view current rates and last update timestamp
-- 📋 **Hover Enhancement**: Show original currency amount on hover when in converted mode (e.g., "$100 USD (€92 EUR original)")
+- 📋 **Historical Rates Storage**: Store historical exchange rates for accurate past data conversion
+- 📋 **Hover Enhancement**: Show original currency amount on hover when in converted mode
 - 📋 **SQL Server-Side Conversion**: Add `p_convert_to` parameter to analytics functions for better performance
 
 #### 1. Google Tag Manager (GTM) Integration - Phase 2
@@ -815,6 +822,61 @@ export async function rateLimit(
 
 ## ✅ Completed Features
 
+### 🛒 Checkout & Compliance (2025-12-28 - 2025-12-30)
+
+#### EU Omnibus Directive Compliance (2019/2161)
+**Completed**: 2025-12-28
+- ✅ **Price History Tracking**: Automatic logging of all price changes in `price_history` table
+- ✅ **Lowest Price Display**: Shows lowest price from last 30 days on product pages
+- ✅ **Omnibus Badge**: Visual indicator when displaying Omnibus-required lowest price
+- ✅ **Admin Configuration**: Global toggle to enable/disable Omnibus price display
+- ✅ **Per-Product Exemption**: Ability to exempt specific products from Omnibus requirements
+- ✅ **Backend Functions**: PostgreSQL functions for price comparison and history queries
+- ✅ **Frontend Components**: `OmnibusPrice` component with proper formatting
+- ✅ **Migration**: Database schema with RLS policies for price history
+- ✅ **E2E Tests**: Comprehensive tests covering price display and history tracking
+
+#### GUS REGON API Integration (Polish Company Data)
+**Completed**: 2025-12-28
+- ✅ **NIP Validation**: Polish VAT ID checksum validation algorithm
+- ✅ **SOAP Client**: Integration with GUS REGON API for company data lookup
+- ✅ **Auto-fill**: Automatic population of company name, address, city, postal code from NIP
+- ✅ **Admin Configuration**: Encrypted API key storage in `/dashboard/integrations`
+- ✅ **Checkout Integration**: Seamless autofill on NIP blur (after entering 10 digits)
+- ✅ **Profile Sync**: Company data saved to user profile after successful payment
+- ✅ **Guest Support**: Company data stored in `guest_purchases.metadata` for non-logged users
+- ✅ **Error Handling**: Graceful fallback to manual entry when API fails
+- ✅ **Rate Limiting**: Protection against API abuse (in-memory, upgrade path to Upstash)
+- ✅ **E2E Tests**: 15 comprehensive Playwright tests covering all scenarios
+- ✅ **Encryption**: AES-256-GCM for API key storage (reusing Stripe infrastructure)
+
+#### Enhanced Checkout UX (2025-12-27 - 2025-12-30)
+**Completed**: 2025-12-27 - 2025-12-30
+- ✅ **Custom Payment Form**: Stripe Elements integration for embedded payments
+- ✅ **Streamlined Form**: Simplified checkout with only essential fields
+- ✅ **Profile Auto-load**: Automatic pre-fill of user data for logged-in customers
+- ✅ **First/Last Name Fields**: Required fields for invoice generation
+- ✅ **Email Handling**: Smart email field (hidden for logged-in, required for guests)
+- ✅ **Terms at Checkout**: Moved T&C acceptance to checkout form (from Stripe)
+- ✅ **NIP Optional Logic**: Invoice checkbox reveals company fields
+- ✅ **Address Fields**: Full address support (street, city, postal code, country)
+- ✅ **Payment Intent Flow**: Complete guest checkout support with metadata
+- ✅ **EasyCart-style Showcase**: Product preview on left, form on right
+- ✅ **Responsive Design**: Mobile-optimized checkout experience
+- ✅ **E2E Tests**: Updated test suite for new checkout flow
+
+#### Comprehensive E2E Testing Infrastructure (2025-12-30)
+**Completed**: 2025-12-30
+- ✅ **176 Total Tests**: 100% pass rate across all test suites
+- ✅ **Currency Tests**: 22 tests for conversion and configuration
+- ✅ **GUS Tests**: 15 tests for Polish company data integration
+- ✅ **Omnibus Tests**: Tests for price history and compliance
+- ✅ **Checkout Tests**: End-to-end payment and form validation tests
+- ✅ **Stable Selectors**: `data-testid` attributes for reliable test targeting
+- ✅ **Serial Execution**: Admin tests run in serial mode to prevent conflicts
+- ✅ **Test Helpers**: Reusable authentication and setup utilities
+- ✅ **Cleanup**: Proper test data cleanup in afterAll hooks
+
 ### 📊 Analytics & Integrations (2025-12-24)
 
 #### Real-time Sales Dashboard
@@ -899,5 +961,5 @@ export async function rateLimit(
 
 ---
 
-**Last Updated**: 2025-12-27
-**Version**: 1.8
+**Last Updated**: 2025-12-30
+**Version**: 1.9

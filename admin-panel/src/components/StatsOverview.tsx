@@ -30,7 +30,7 @@ export default function StatsOverview() {
   const productId = searchParams.get('productId') || undefined;
   const { addRefreshListener, removeRefreshListener } = useRealtime();
   const { hideValues, currencyViewMode, displayCurrency } = useUserPreferences();
-  const { convertToSingleCurrency } = useCurrencyConversion();
+  const { convertToSingleCurrency, convertMultipleCurrencies } = useCurrencyConversion();
 
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [revenueStats, setRevenueStats] = useState<RevenueStats | null>(null);
@@ -116,14 +116,16 @@ export default function StatsOverview() {
   }, [addRefreshListener, removeRefreshListener, fetchAllStats]); // fetchAllStats depends on productId
 
   // Convert revenue when currency view mode changes
+  // OPTIMIZED: Uses convertMultipleCurrencies to fetch rates ONCE
   useEffect(() => {
     async function convertRevenue() {
       if (currencyViewMode === 'converted' && displayCurrency && revenueStats) {
         try {
-          const [totalConverted, todayConverted] = await Promise.all([
-            convertToSingleCurrency(revenueStats.totalRevenue, displayCurrency),
-            convertToSingleCurrency(revenueStats.todayRevenue, displayCurrency)
-          ]);
+          // Convert both totals with ONE rates fetch
+          const [totalConverted, todayConverted] = await convertMultipleCurrencies(
+            [revenueStats.totalRevenue, revenueStats.todayRevenue],
+            displayCurrency
+          );
           setConvertedRevenue({ total: totalConverted, today: todayConverted });
         } catch (error) {
           console.error('Error converting revenue:', error);
@@ -135,7 +137,7 @@ export default function StatsOverview() {
     }
 
     convertRevenue();
-  }, [revenueStats, currencyViewMode, displayCurrency, convertToSingleCurrency]);
+  }, [revenueStats, currencyViewMode, displayCurrency, convertMultipleCurrencies]);
 
   const formatCurrency = (amount: number, currency: string = 'USD') => {
     if (hideValues) return '****';

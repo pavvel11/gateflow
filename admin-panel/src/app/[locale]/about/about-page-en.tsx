@@ -348,19 +348,32 @@ export function AboutPageEN() {
             </div>
 
             {/* Feature 7 */}
-            <div className="group p-8 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-500 hover:scale-105 transition-transform duration-300">
+            <div className="group p-8 rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 hover:scale-105 transition-transform duration-300">
               <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-6">
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-3">Quick Setup</h3>
-              <p className="text-emerald-100">
-                Deploy in minutes with Docker and auto SSL. Simple configuration, instant deployment.
+              <h3 className="text-2xl font-bold text-white mb-3">EU Omnibus Compliance</h3>
+              <p className="text-blue-100">
+                Automatic price history tracking & lowest price display (Directive 2019/2161). EU-ready out of the box.
               </p>
             </div>
 
             {/* Feature 8 */}
+            <div className="group p-8 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-500 hover:scale-105 transition-transform duration-300">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-6">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-3">GUS API Integration</h3>
+              <p className="text-emerald-100">
+                Auto-fill Polish company data (REGON). Enter NIP, get company details instantly. Perfect for B2B.
+              </p>
+            </div>
+
+            {/* Feature 9 */}
             <div className="group p-8 rounded-3xl bg-gradient-to-br from-pink-500 to-rose-500 hover:scale-105 transition-transform duration-300">
               <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-6">
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

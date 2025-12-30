@@ -253,7 +253,7 @@ export async function verifyPaymentSession(
 
           // Trigger webhook for new successful purchases
           if (!paymentResult.already_had_access) {
-            WebhookService.trigger('purchase.completed', {
+            const webhookData: any = {
               email: customerEmail,
               productId: productId,
               amount: session.amount_total,
@@ -261,8 +261,27 @@ export async function verifyPaymentSession(
               sessionId: session.id,
               isGuest: paymentResult.is_guest_purchase,
               bumpProductId: hasBump && bumpProductId ? bumpProductId : null,
-              couponId: hasCoupon && couponId ? couponId : null
-            }).catch(err => console.error('Webhook trigger error:', err));
+              couponId: hasCoupon && couponId ? couponId : null,
+              // Customer details
+              firstName: session.metadata?.first_name || null,
+              lastName: session.metadata?.last_name || null,
+            };
+
+            // Add invoice data if requested
+            if (session.metadata?.needs_invoice === 'true') {
+              webhookData.invoice = {
+                needsInvoice: true,
+                nip: session.metadata.nip || null,
+                companyName: session.metadata.company_name || null,
+                address: session.metadata.address || null,
+                city: session.metadata.city || null,
+                postalCode: session.metadata.postal_code || null,
+                country: session.metadata.country || null,
+              };
+            }
+
+            WebhookService.trigger('purchase.completed', webhookData)
+              .catch(err => console.error('Webhook trigger error:', err));
           }
 
           // Convert database response to our interface
@@ -456,7 +475,7 @@ export async function verifyPaymentIntent(
 
           // Trigger webhook for new successful purchases
           if (!paymentResult.already_had_access) {
-            WebhookService.trigger('purchase.completed', {
+            const webhookData: any = {
               email: customerEmail,
               productId: productId,
               amount: paymentIntent.amount,
@@ -464,8 +483,27 @@ export async function verifyPaymentIntent(
               paymentIntentId: paymentIntent.id,
               isGuest: paymentResult.is_guest_purchase,
               bumpProductId: bumpProductId,
-              couponId: couponId
-            }).catch(err => console.error('Webhook trigger error:', err));
+              couponId: couponId,
+              // Customer details
+              firstName: paymentIntent.metadata?.first_name || null,
+              lastName: paymentIntent.metadata?.last_name || null,
+            };
+
+            // Add invoice data if requested
+            if (paymentIntent.metadata?.needs_invoice === 'true') {
+              webhookData.invoice = {
+                needsInvoice: true,
+                nip: paymentIntent.metadata.nip || null,
+                companyName: paymentIntent.metadata.company_name || null,
+                address: paymentIntent.metadata.address || null,
+                city: paymentIntent.metadata.city || null,
+                postalCode: paymentIntent.metadata.postal_code || null,
+                country: paymentIntent.metadata.country || null,
+              };
+            }
+
+            WebhookService.trigger('purchase.completed', webhookData)
+              .catch(err => console.error('Webhook trigger error:', err));
           }
 
           // Update user profile with company data if invoice was requested

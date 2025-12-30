@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { WebhookEndpoint } from '@/types/webhooks';
 import { useTranslations } from 'next-intl';
 import { useWebhooks } from '@/hooks/useWebhooks';
+import { useToast } from '@/contexts/ToastContext';
 
 // Sub-components
 import WebhookListTable from './webhooks/WebhookListTable';
@@ -15,6 +16,7 @@ import WebhookFailuresPanel from './WebhookFailuresPanel';
 
 export default function WebhooksPageContent() {
   const t = useTranslations('admin.webhooks');
+  const { addToast } = useToast();
   const {
     endpoints,
     loading,
@@ -97,6 +99,28 @@ export default function WebhooksPageContent() {
     }
   };
 
+  const handleToggleStatus = async (endpointId: string, currentStatus: boolean) => {
+    const newStatus = !currentStatus;
+
+    try {
+      const res = await fetch(`/api/admin/webhooks/${endpointId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: newStatus })
+      });
+
+      if (!res.ok) throw new Error('Failed');
+
+      addToast(
+        newStatus ? t('statusActivated') : t('statusDeactivated'),
+        'success'
+      );
+      triggerGlobalRefresh();
+    } catch {
+      addToast(t('statusToggleError'), 'error');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -112,7 +136,7 @@ export default function WebhooksPageContent() {
         </button>
       </div>
 
-      <WebhookFailuresPanel refreshTrigger={refreshCounter} />
+      <WebhookFailuresPanel refreshTrigger={refreshCounter} onRefresh={triggerGlobalRefresh} />
 
       {loading && endpoints.length === 0 ? (
         <div className="flex justify-center items-center py-20">
@@ -137,6 +161,7 @@ export default function WebhooksPageContent() {
           onDelete={handleOpenDelete}
           onTest={handleOpenTest}
           onLogs={setLogsEndpoint}
+          onToggleStatus={handleToggleStatus}
         />
       )}
 
@@ -169,6 +194,7 @@ export default function WebhooksPageContent() {
           isOpen={!!logsEndpoint}
           onClose={() => setLogsEndpoint(null)}
           endpoint={logsEndpoint}
+          onRefresh={triggerGlobalRefresh}
         />
       )}
     </div>

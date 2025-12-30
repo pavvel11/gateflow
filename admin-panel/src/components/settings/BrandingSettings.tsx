@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getShopConfig, updateShopConfig, type ShopConfig } from '@/lib/actions/shop-config';
+import { useToast } from '@/contexts/ToastContext';
 import { useTranslations } from 'next-intl';
 
 const FONTS = [
@@ -15,10 +16,10 @@ const FONTS = [
 
 export default function BrandingSettings() {
   const t = useTranslations('settings.branding');
+  const { addToast } = useToast();
   const [config, setConfig] = useState<ShopConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   const [formData, setFormData] = useState({
     logo_url: '',
@@ -54,7 +55,6 @@ export default function BrandingSettings() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setMessage(null);
 
     try {
       const updates: Partial<ShopConfig> = {
@@ -68,15 +68,15 @@ export default function BrandingSettings() {
       const success = await updateShopConfig(updates);
 
       if (success) {
-        setMessage({ type: 'success', text: 'Branding updated successfully! Refresh to see changes.' });
+        addToast('Branding updated successfully! Refresh to see changes.', 'success');
         const newConfig = await getShopConfig();
         if (newConfig) setConfig(newConfig);
       } else {
-        setMessage({ type: 'error', text: 'Failed to save branding settings.' });
+        addToast('Failed to save branding settings.', 'error');
       }
     } catch (error) {
       console.error('Error saving branding:', error);
-      setMessage({ type: 'error', text: 'An error occurred while saving.' });
+      addToast('An error occurred while saving.', 'error');
     } finally {
       setSaving(false);
     }
@@ -120,16 +120,6 @@ export default function BrandingSettings() {
             Reset to defaults
           </button>
         </div>
-
-        {message && (
-          <div className={`mb-6 p-4 rounded-lg ${
-            message.type === 'success'
-              ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
-              : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800'
-          }`}>
-            {message.text}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Logo URL */}

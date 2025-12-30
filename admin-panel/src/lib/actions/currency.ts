@@ -2,15 +2,87 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createCurrencyService, type ExchangeRates } from '@/lib/services/currencyService'
+import { getDecryptedCurrencyConfig } from './currency-config'
+
+// ============================================
+// SERVER-SIDE CACHE FOR EXCHANGE RATES
+// ============================================
+// Cache rates for 1 hour to avoid hammering external APIs
+// Key format: `${provider}-${baseCurrency}-${hourTimestamp}`
+
+interface CachedRates {
+  rates: ExchangeRates
+  expiresAt: number
+}
+
+const ratesCache = new Map<string, CachedRates>()
+const CACHE_TTL = 60 * 60 * 1000 // 1 hour
+
+function getCacheKey(provider: string, baseCurrency: string): string {
+  // Round to nearest hour to maximize cache hits
+  const hourTimestamp = Math.floor(Date.now() / CACHE_TTL)
+  return `${provider}-${baseCurrency}-${hourTimestamp}`
+}
+
+function getCachedRates(provider: string, baseCurrency: string): ExchangeRates | null {
+  const key = getCacheKey(provider, baseCurrency)
+  const cached = ratesCache.get(key)
+
+  if (!cached) return null
+
+  // Check expiry
+  if (Date.now() > cached.expiresAt) {
+    ratesCache.delete(key)
+    return null
+  }
+
+  return cached.rates
+}
+
+function setCachedRates(provider: string, baseCurrency: string, rates: ExchangeRates): void {
+  const key = getCacheKey(provider, baseCurrency)
+  ratesCache.set(key, {
+    rates,
+    expiresAt: Date.now() + CACHE_TTL
+  })
+
+  // Clean up old cache entries (keep only last 20)
+  if (ratesCache.size > 20) {
+    const firstKey = ratesCache.keys().next().value
+    if (firstKey) ratesCache.delete(firstKey)
+  }
+}
 
 /**
- * Fetch exchange rates (cached by Next.js for 1 hour)
- * This is a server action that uses Next.js fetch cache
+ * Fetch exchange rates (cached for 1 hour)
+ * OPTIMIZED: Uses server-side cache to avoid redundant API calls
+ * Priority: Database config > .env config > manual fallback
  */
 export async function getExchangeRates(baseCurrency: string = 'USD'): Promise<ExchangeRates | null> {
   try {
-    const currencyService = createCurrencyService()
+    // Get decrypted config from database (priority) or .env (fallback)
+    const config = await getDecryptedCurrencyConfig()
+
+    if (!config) {
+      console.error('[getExchangeRates] No currency config found')
+      return null
+    }
+
+    // Check cache first
+    const cached = getCachedRates(config.provider, baseCurrency)
+    if (cached) {
+      console.log(`[getExchangeRates] Cache HIT for ${baseCurrency} (${config.provider})`)
+      return cached
+    }
+
+    console.log(`[getExchangeRates] Cache MISS for ${baseCurrency} (${config.provider}) - fetching from API`)
+    const currencyService = createCurrencyService(config.provider, config.apiKey || undefined)
     const rates = await currencyService.fetchRates(baseCurrency)
+
+    if (rates) {
+      setCachedRates(config.provider, baseCurrency, rates)
+    }
+
     return rates
   } catch (error: any) {
     console.error('Error fetching exchange rates:', error)
@@ -20,6 +92,8 @@ export async function getExchangeRates(baseCurrency: string = 'USD'): Promise<Ex
 
 /**
  * Convert amount from one currency to another using cached rates
+ * OPTIMIZED: Uses getExchangeRates() which has server-side cache
+ * Priority: Database config > .env config > manual fallback
  */
 export async function convertCurrencyAmount(
   amount: number,
@@ -29,12 +103,18 @@ export async function convertCurrencyAmount(
   try {
     if (fromCurrency === toCurrency) return amount
 
-    const currencyService = createCurrencyService()
+    // Get decrypted config
+    const config = await getDecryptedCurrencyConfig()
 
-    console.log(`[convertCurrencyAmount] Converting ${amount} from ${fromCurrency} to ${toCurrency}`)
+    if (!config) {
+      console.error('[convertCurrencyAmount] No currency config found')
+      return null
+    }
 
-    // Fetch rates with 'from' as base currency
-    const rates = await currencyService.fetchRates(fromCurrency)
+    console.log(`[convertCurrencyAmount] Converting ${amount} from ${fromCurrency} to ${toCurrency} using ${config.provider}`)
+
+    // Use cached getExchangeRates instead of direct fetch
+    const rates = await getExchangeRates(fromCurrency)
 
     if (!rates) {
       console.error(`[convertCurrencyAmount] No rates returned for base ${fromCurrency}`)
@@ -46,6 +126,7 @@ export async function convertCurrencyAmount(
       return null
     }
 
+    const currencyService = createCurrencyService(config.provider, config.apiKey || undefined)
     const convertedAmount = currencyService.convert(amount, fromCurrency, toCurrency, rates)
     console.log(`[convertCurrencyAmount] Converted ${amount} ${fromCurrency} → ${Math.round(convertedAmount)} ${toCurrency} (rate: ${rates.rates[toCurrency]})`)
     return Math.round(convertedAmount) // Round to nearest cent
@@ -74,4 +155,114 @@ export async function getUsedCurrencies(): Promise<string[]> {
   // Get unique currencies
   const currencies = [...new Set(data?.map((row) => row.currency) || [])]
   return currencies.sort()
+}
+
+/**
+ * Bulk convert multiple amounts from different currencies to target currency
+ * OPTIMIZED: Uses cached getExchangeRates + local conversion (no N API calls)
+ */
+export async function bulkConvertCurrency(
+  amounts: { [currency: string]: number },
+  targetCurrency: string
+): Promise<number | null> {
+  try {
+    // If only target currency, no conversion needed
+    const currencies = Object.keys(amounts);
+    if (currencies.length === 1 && currencies[0] === targetCurrency) {
+      return amounts[targetCurrency];
+    }
+
+    // Get config
+    const config = await getDecryptedCurrencyConfig();
+    if (!config) {
+      console.error('[bulkConvertCurrency] No currency config found');
+      return null;
+    }
+
+    // Use cached getExchangeRates instead of direct fetch
+    const rates = await getExchangeRates(targetCurrency);
+    if (!rates) {
+      console.error('[bulkConvertCurrency] No rates returned');
+      return null;
+    }
+
+    const currencyService = createCurrencyService(config.provider, config.apiKey || undefined);
+    let total = 0;
+
+    // Convert each amount locally (no API calls)
+    for (const [currency, amount] of Object.entries(amounts)) {
+      if (currency === targetCurrency) {
+        total += amount;
+      } else {
+        try {
+          const converted = currencyService.convert(amount, currency, targetCurrency, rates);
+          total += converted;
+        } catch (error: any) {
+          console.error(`[bulkConvertCurrency] Failed to convert ${amount} ${currency} to ${targetCurrency}:`, error.message);
+          // Skip this amount - don't add wrong currency
+        }
+      }
+    }
+
+    return Math.round(total);
+  } catch (error: any) {
+    console.error('[bulkConvertCurrency] Error:', error.message);
+    return null;
+  }
+}
+
+/**
+ * Convert array of CurrencyAmount objects to target currency
+ * SUPER OPTIMIZED: Fetches rates ONCE for ALL conversions
+ * Perfect for charts with many data points (e.g. 30 days)
+ */
+export async function bulkConvertArray(
+  amountsArray: Array<{ [currency: string]: number }>,
+  targetCurrency: string
+): Promise<number[]> {
+  try {
+    // Get config once
+    const config = await getDecryptedCurrencyConfig();
+    if (!config) {
+      console.error('[bulkConvertArray] No currency config found');
+      return amountsArray.map(() => 0);
+    }
+
+    // Fetch rates ONCE for all conversions
+    const rates = await getExchangeRates(targetCurrency);
+    if (!rates) {
+      console.error('[bulkConvertArray] No rates returned');
+      return amountsArray.map(() => 0);
+    }
+
+    const currencyService = createCurrencyService(config.provider, config.apiKey || undefined);
+
+    // Convert all amounts using the same rates
+    return amountsArray.map(amounts => {
+      const currencies = Object.keys(amounts);
+
+      // If only target currency, return directly
+      if (currencies.length === 1 && currencies[0] === targetCurrency) {
+        return amounts[targetCurrency];
+      }
+
+      let total = 0;
+      for (const [currency, amount] of Object.entries(amounts)) {
+        if (currency === targetCurrency) {
+          total += amount;
+        } else {
+          try {
+            const converted = currencyService.convert(amount, currency, targetCurrency, rates);
+            total += converted;
+          } catch (error: any) {
+            console.error(`[bulkConvertArray] Failed to convert ${amount} ${currency} to ${targetCurrency}:`, error.message);
+          }
+        }
+      }
+      return Math.round(total);
+    });
+  } catch (error: any) {
+    console.error('[bulkConvertArray] Error:', error.message);
+    return amountsArray.map(() => 0);
+  }
 }

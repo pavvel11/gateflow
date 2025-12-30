@@ -6,6 +6,7 @@ import RevenueChart from '@/components/dashboard/RevenueChart';
 import RevenueGoal from '@/components/dashboard/RevenueGoal';
 import ProductFilter from '@/components/dashboard/ProductFilter';
 import CurrencySelector from '@/components/dashboard/CurrencySelector';
+import ConfigurationStatus from '@/components/dashboard/ConfigurationStatus';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
@@ -59,8 +60,8 @@ export default function DashboardContent({ failedWebhooksCount }: DashboardConte
                 </p>
               </div>
             </div>
-            <Link 
-              href="/dashboard/webhooks" 
+            <Link
+              href="/dashboard/webhooks"
               className="text-sm font-bold text-red-700 dark:text-red-300 hover:text-red-600 dark:hover:text-red-200 whitespace-nowrap ml-4 flex items-center bg-white/50 dark:bg-black/20 px-3 py-1.5 rounded-md hover:bg-white/80 transition-colors"
             >
               {t('fixNow')} <span aria-hidden="true" className="ml-1">&rarr;</span>
@@ -68,7 +69,10 @@ export default function DashboardContent({ failedWebhooksCount }: DashboardConte
           </div>
         </div>
       )}
-      
+
+      {/* Configuration Status */}
+      <ConfigurationStatus />
+
       <StatsOverview />
       
       <RevenueChart />

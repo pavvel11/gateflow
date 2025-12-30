@@ -16,6 +16,17 @@ const MOCK_PAYLOADS: Record<string, any> = {
     currency: 'usd',
     sessionId: 'cs_test_a1b2c3d4e5f6g7h8i9j0',
     isGuest: false,
+    firstName: 'Jan',
+    lastName: 'Kowalski',
+    invoice: {
+      needsInvoice: true,
+      nip: '1234567890',
+      companyName: 'Przykładowa Firma Sp. z o.o.',
+      address: 'ul. Testowa 123/45',
+      city: 'Warszawa',
+      postalCode: '00-001',
+      country: 'PL'
+    },
     timestamp: new Date().toISOString()
   },
   'lead.captured': {

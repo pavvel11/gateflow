@@ -8,16 +8,19 @@ import WebhookLogsTable from './webhooks/WebhookLogsTable';
 
 interface WebhookFailuresPanelProps {
   refreshTrigger: number; // To reload when main list updates
+  onRefresh?: () => void; // Callback to refresh parent component
 }
 
-export default function WebhookFailuresPanel({ refreshTrigger }: WebhookFailuresPanelProps) {
+export default function WebhookFailuresPanel({ refreshTrigger, onRefresh }: WebhookFailuresPanelProps) {
   const t = useTranslations('admin.webhooks.logs');
   const tCommon = useTranslations('common');
   const { addToast } = useToast();
-  
+
   const [failures, setFailures] = useState<WebhookLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [retrying, setRetrying] = useState<string | null>(null);
+  const [showInactiveWarning, setShowInactiveWarning] = useState(false);
+  const [pendingRetryLog, setPendingRetryLog] = useState<WebhookLog | null>(null);
 
   const fetchFailures = async () => {
     try {
@@ -37,25 +40,59 @@ export default function WebhookFailuresPanel({ refreshTrigger }: WebhookFailures
     fetchFailures();
   }, [refreshTrigger]);
 
-  const handleRetry = async (logId: string) => {
+  const handleRetryClick = (logId: string) => {
+    const log = failures.find(f => f.id === logId);
+    if (!log) return;
+
+    // Check if endpoint is inactive
+    if (log.endpoint && !log.endpoint.is_active) {
+      setPendingRetryLog(log);
+      setShowInactiveWarning(true);
+      return;
+    }
+
+    // If active, proceed directly
+    executeRetry(logId);
+  };
+
+  const executeRetry = async (logId: string) => {
     setRetrying(logId);
     try {
       const res = await fetch(`/api/admin/webhooks/logs/${logId}/retry`, {
         method: 'POST'
       });
       const data = await res.json();
-      
+
+      // Show appropriate toast based on result
       if (data.success) {
         addToast(t('retrySuccess'), 'success');
-        fetchFailures(); // Refresh list to remove fixed item (or show new status)
       } else {
         addToast(data.error || 'Retry failed', 'error');
       }
+
+      // Always refresh, even if retry failed, because database was updated
+      setTimeout(() => {
+        fetchFailures();
+        onRefresh?.();
+      }, 500);
     } catch {
       addToast(tCommon('error'), 'error');
     } finally {
       setRetrying(null);
     }
+  };
+
+  const confirmInactiveRetry = () => {
+    if (pendingRetryLog) {
+      executeRetry(pendingRetryLog.id);
+    }
+    setShowInactiveWarning(false);
+    setPendingRetryLog(null);
+  };
+
+  const cancelInactiveRetry = () => {
+    setShowInactiveWarning(false);
+    setPendingRetryLog(null);
   };
 
   if (loading && failures.length === 0) return null;
@@ -86,13 +123,50 @@ export default function WebhookFailuresPanel({ refreshTrigger }: WebhookFailures
       </div>
       
       {/* Use the shared table component */}
-      <WebhookLogsTable 
-        logs={failures} 
-        onRetry={handleRetry} 
+      <WebhookLogsTable
+        logs={failures}
+        onRetry={handleRetryClick}
         retryingId={retrying}
         showEndpointColumn={true}
         onRefresh={fetchFailures}
       />
+
+      {/* Inactive Endpoint Warning Modal */}
+      {showInactiveWarning && pendingRetryLog && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 w-full max-w-md">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <svg className="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  {t('inactiveEndpointWarningTitle')}
+                </h3>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                  {t('inactiveEndpointWarningMessage')}
+                </p>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={cancelInactiveRetry}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:bg-gray-600"
+              >
+                {tCommon('cancel')}
+              </button>
+              <button
+                onClick={confirmInactiveRetry}
+                className="px-4 py-2 text-sm font-medium text-white bg-yellow-600 border border-transparent rounded-md shadow-sm hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+              >
+                {t('retryAnyway')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

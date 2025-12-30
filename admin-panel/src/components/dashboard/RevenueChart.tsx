@@ -29,7 +29,7 @@ export default function RevenueChart() {
   const productId = searchParams.get('productId') || undefined;
   const { addRefreshListener, removeRefreshListener } = useRealtime();
   const { hideValues, currencyViewMode, displayCurrency } = useUserPreferences();
-  const { convertToSingleCurrency, converting } = useCurrencyConversion();
+  const { convertMultipleCurrencies } = useCurrencyConversion();
 
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -101,25 +101,28 @@ export default function RevenueChart() {
   }, [fetchData, addRefreshListener, removeRefreshListener]);
 
   // Convert data when currency view mode changes or data updates
+  // SUPER OPTIMIZED: Fetches rates ONCE, converts ALL locally on client
   useEffect(() => {
     async function convertData() {
       if (currencyViewMode === 'converted' && displayCurrency && data.length > 0) {
         try {
-          // Convert each data point to target currency
-          const converted = await Promise.all(
-            data.map(async (item) => {
-              const amount = await convertToSingleCurrency(item.amount || {}, displayCurrency);
-              return {
-                [viewMode === 'daily' ? 'date' : 'hour']: viewMode === 'daily' ? item.date : item.hour,
-                amount,
-                orders: item.orders
-              };
-            })
-          );
+          // Extract amounts array
+          const amountsArray = data.map(item => item.amount || {});
+
+          // Convert ALL amounts: 1 server call for rates, rest is local JS
+          const convertedAmounts = await convertMultipleCurrencies(amountsArray, displayCurrency);
+
+          // Reconstruct data with converted amounts
+          const converted = data.map((item, index) => ({
+            [viewMode === 'daily' ? 'date' : 'hour']: viewMode === 'daily' ? item.date : item.hour,
+            amount: convertedAmounts[index],
+            orders: item.orders
+          }));
+
           setConvertedData(converted);
 
           // Calculate converted total
-          const total = converted.reduce((sum, item) => sum + item.amount, 0);
+          const total = convertedAmounts.reduce((sum, amount) => sum + amount, 0);
           setConvertedTotal(total);
         } catch (error) {
           console.error('Error converting currency data:', error);
@@ -133,7 +136,7 @@ export default function RevenueChart() {
     }
 
     convertData();
-  }, [data, currencyViewMode, displayCurrency, viewMode, convertToSingleCurrency]);
+  }, [data, currencyViewMode, displayCurrency, viewMode, convertMultipleCurrencies]);
 
   const formatCurrency = (value: number, currency: string = 'USD') => {
     if (hideValues) return '****';

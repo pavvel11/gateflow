@@ -11,14 +11,16 @@ interface WebhookListTableProps {
   onDelete: (endpoint: WebhookEndpoint) => void;
   onTest: (endpoint: WebhookEndpoint) => void;
   onLogs: (endpoint: WebhookEndpoint) => void;
+  onToggleStatus: (endpointId: string, currentStatus: boolean) => void;
 }
 
-const WebhookRow = ({ 
-  endpoint, 
-  onEdit, 
-  onDelete, 
-  onTest, 
+const WebhookRow = ({
+  endpoint,
+  onEdit,
+  onDelete,
+  onTest,
   onLogs,
+  onToggleStatus,
   getEventLabel
 }: {
   endpoint: WebhookEndpoint;
@@ -26,6 +28,7 @@ const WebhookRow = ({
   onDelete: (e: WebhookEndpoint) => void;
   onTest: (e: WebhookEndpoint) => void;
   onLogs: (e: WebhookEndpoint) => void;
+  onToggleStatus: (endpointId: string, currentStatus: boolean) => void;
   getEventLabel: (key: string) => string;
 }) => {
   const [showSecret, setShowSecret] = useState(false);
@@ -95,11 +98,14 @@ const WebhookRow = ({
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-center">
-        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-          endpoint.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
-        }`}>
+        <button
+          onClick={() => onToggleStatus(endpoint.id, endpoint.is_active)}
+          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer transition-colors hover:opacity-80 ${
+            endpoint.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
+          }`}
+        >
           {endpoint.is_active ? t('active') : tCommon('inactive')}
-        </span>
+        </button>
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
         <button
@@ -136,7 +142,8 @@ export default function WebhookListTable({
   onEdit,
   onDelete,
   onTest,
-  onLogs
+  onLogs,
+  onToggleStatus
 }: WebhookListTableProps) {
   const t = useTranslations('admin.webhooks');
   const tCommon = useTranslations('common');
@@ -181,6 +188,7 @@ export default function WebhookListTable({
               onDelete={onDelete}
               onTest={onTest}
               onLogs={onLogs}
+              onToggleStatus={onToggleStatus}
               getEventLabel={getEventLabel}
             />
           ))}

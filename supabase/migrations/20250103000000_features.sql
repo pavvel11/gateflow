@@ -188,6 +188,13 @@ CREATE TABLE IF NOT EXISTS public.integrations_config (
   umami_website_id TEXT,
   umami_script_url TEXT DEFAULT 'https://cloud.umami.is/script.js',
 
+  -- Currency Exchange API integration
+  currency_api_provider TEXT CHECK (currency_api_provider IN ('exchangerate-api', 'fixer', 'ecb')) DEFAULT 'ecb',
+  currency_api_key_encrypted TEXT,
+  currency_api_key_iv TEXT,
+  currency_api_key_tag TEXT,
+  currency_api_enabled BOOLEAN DEFAULT true NOT NULL,
+
   -- Settings
   cookie_consent_enabled BOOLEAN DEFAULT true,
   consent_logging_enabled BOOLEAN DEFAULT false,
@@ -217,6 +224,18 @@ CREATE TABLE IF NOT EXISTS public.consent_logs (
   consents JSONB,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
+
+-- Comments for integrations_config
+COMMENT ON COLUMN public.integrations_config.currency_api_provider IS 'Currency exchange rate provider: ecb (free EU, default), exchangerate-api (free 1500/mo), or fixer (paid)';
+COMMENT ON COLUMN public.integrations_config.currency_api_key_encrypted IS 'AES-256-GCM encrypted Currency API key (base64 encoded) - for ExchangeRate-API or Fixer.io';
+COMMENT ON COLUMN public.integrations_config.currency_api_key_iv IS 'Initialization vector for Currency API key decryption (base64 encoded)';
+COMMENT ON COLUMN public.integrations_config.currency_api_key_tag IS 'Authentication tag for Currency API key decryption (base64 encoded)';
+COMMENT ON COLUMN public.integrations_config.currency_api_enabled IS 'Whether Currency API integration is enabled for exchange rate fetching';
+
+-- Index for currency API queries
+CREATE INDEX IF NOT EXISTS idx_integrations_config_currency_api_enabled
+  ON public.integrations_config (currency_api_enabled)
+  WHERE currency_api_enabled = true;
 
 -- -----------------------------------------------------------------------------
 -- USER PROFILES DOMAIN
