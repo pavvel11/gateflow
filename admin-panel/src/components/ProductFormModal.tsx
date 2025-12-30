@@ -737,7 +737,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 placeholder="https://i.ibb.co/..."
               />
               <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                {t('imageUrlHelp')}
+                Wgraj zdjęcie produktu na <a href="https://imgbb.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 underline">ImgBB</a> lub inny serwis hostingowy i wklej tutaj URL.
               </p>
             </div>
           </ModalSection>

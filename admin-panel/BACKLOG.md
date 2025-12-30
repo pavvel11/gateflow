@@ -412,4 +412,41 @@ If horizontal scaling becomes necessary, consider **Upstash Redis** for faster d
 
 ## Low Priority
 
+### Better Date/DateTime Picker Component
+**Current State:** Using native HTML5 `<input type="date">` and `<input type="datetime-local">` inputs.
+
+**Issues:**
+- Native date pickers have inconsistent styling across browsers
+- Dark mode support varies by browser (Chrome/Safari respect `color-scheme: dark`, Firefox may not)
+- Limited customization options for branding
+- Calendar popup appearance depends on OS/browser (white background on some systems)
+
+**What Works:**
+- ✅ Zero dependencies, no library conflicts
+- ✅ Built-in accessibility
+- ✅ Mobile-friendly native pickers
+- ✅ Timezone conversion working correctly (UTC ↔ local)
+- ✅ Simple implementation, easy to maintain
+
+**Future Improvement Options:**
+1. **Build custom lightweight date picker** - Tailwind CSS only, no libraries
+   - Full control over styling and dark mode
+   - Consistent appearance across all browsers
+   - Estimated effort: 1-2 days
+
+2. **Find Tailwind v4 compatible library** - Research alternatives:
+   - Check if react-day-picker v10+ supports Tailwind v4
+   - Look for headless UI libraries (e.g., @headlessui/react, Ark UI)
+   - Consider Radix UI primitives with custom styling
+   - Estimated effort: 1 day research + 1 day integration
+
+3. **Wait for shadcn/ui Tailwind v4 support**
+   - Monitor https://github.com/shadcn-ui/ui for v4 compatibility
+   - May become available in future versions
+   - Zero effort, just waiting
+
+**Priority:** Low - current solution is functional, just not aesthetically ideal.
+
+**Estimated Effort:** 1-3 days depending on chosen approach.
+
 ---

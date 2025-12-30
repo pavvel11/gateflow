@@ -77,6 +77,7 @@
     "retry": "Spróbuj ponownie",
     "language": "Język",
     "allProducts": "Wszystkie produkty",
+    "confirmDelete": "Potwierdź usunięcie",
     "currency": {
       "grouped": "Pogrupowane według Waluty",
       "convertTo": "Przelicz na"
@@ -807,7 +808,11 @@
       "previewLabel": "Podgląd {name}",
       "previewRedirectLabel": "Podgląd przekierowania dla {name}",
       "editLabel": "Edytuj {name}",
+      "duplicateLabel": "Duplikuj {name}",
       "deleteLabel": "Usuń {name}",
+      "preview": "Podgląd",
+      "duplicate": "Duplikuj",
+      "previewRedirect": "Podgląd przekierowania",
       "showing": "Wyświetlanie",
       "to": "do",
       "of": "z",
@@ -901,6 +906,7 @@
       "createCategory": "Utwórz kategorię",
       "editCategory": "Edytuj kategorię",
       "deleteCategory": "Usuń kategorię",
+      "deleteMessage": "Czy na pewno chcesz usunąć kategorię \"{name}\"? Tej operacji nie można cofnąć.",
       "noCategories": "Brak kategorii. Utwórz pierwszą!",
       "name": "Nazwa",
       "slug": "Slug",
@@ -1334,6 +1340,34 @@
         "method2": "Metoda 2 (Kreator bazy danych): Użyj kreatora powyżej - zalecane dla użytkowników nietechnicznych, zawiera wizualne przewodniki i walidację",
         "footer": "Obie metody są w pełni wspierane. Wybierz tę, która najlepiej Ci odpowiada."
       }
+    },
+    "branding": {
+      "title": "Branding i Whitelabel",
+      "livePreview": "Podgląd na żywo",
+      "resetToDefaults": "Resetuj do domyślnych",
+      "logoUrl": "URL Logo",
+      "logoUrlHelpPrefix": "Wgraj logo na",
+      "logoUrlHelpSuffix": "lub inny serwis hostingowy i wklej tutaj URL.",
+      "imgbb": "ImgBB",
+      "brandColors": "Kolory marki",
+      "primary": "Podstawowy",
+      "secondary": "Drugorzędny",
+      "accent": "Akcentowy",
+      "fontFamily": "Rodzina czcionek",
+      "fontHelp": "Czcionki systemowe ładują się natychmiast i działają najlepiej na wszystkich urządzeniach.",
+      "saving": "Zapisywanie...",
+      "saveBranding": "Zapisz branding",
+      "saveSuccess": "Branding zaktualizowany pomyślnie! Odśwież aby zobaczyć zmiany.",
+      "saveError": "Nie udało się zapisać ustawień brandingu.",
+      "errorOccurred": "Wystąpił błąd podczas zapisywania.",
+      "logo": "Logo",
+      "colorPalette": "Paleta kolorów",
+      "buttons": "Przyciski",
+      "primaryButton": "Przycisk podstawowy",
+      "accentButton": "Przycisk akcentowy",
+      "typography": "Typografia",
+      "headingText": "Tekst nagłówka",
+      "bodyTextPreview": "Tak będzie wyglądał twój tekst z czcionką {font}."
     }
   },
   "stripe": {
@@ -1510,10 +1544,6 @@
         "stripeButton": "Otwórz panel Stripe",
         "finePrint": "Możesz zawsze zaktualizować lub zrotować swoje klucze API ze strony Ustawień."
       }
-    },
-    "branding": {
-      "title": "Branding i Whitelabel",
-      "livePreview": "Podgląd na żywo"
     }
   },
   "omnibus": {

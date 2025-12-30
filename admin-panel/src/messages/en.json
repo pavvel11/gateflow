@@ -77,6 +77,7 @@
     "language": "Language",
     "retry": "Retry",
     "allProducts": "All Products",
+    "confirmDelete": "Confirm Delete",
     "currency": {
       "grouped": "Grouped by Currency",
       "convertTo": "Convert to"
@@ -807,7 +808,11 @@
       "previewLabel": "Preview {name}",
       "previewRedirectLabel": "Preview redirect for {name}",
       "editLabel": "Edit {name}",
+      "duplicateLabel": "Duplicate {name}",
       "deleteLabel": "Delete {name}",
+      "preview": "Preview",
+      "duplicate": "Duplicate",
+      "previewRedirect": "Preview redirect",
       "showing": "Showing",
       "to": "to",
       "of": "of",
@@ -901,6 +906,7 @@
       "createCategory": "Create Category",
       "editCategory": "Edit Category",
       "deleteCategory": "Delete Category",
+      "deleteMessage": "Are you sure you want to delete the category \"{name}\"? This action cannot be undone.",
       "noCategories": "No categories found. Create your first one!",
       "name": "Name",
       "slug": "Slug",
@@ -1334,6 +1340,34 @@
         "method2": "Method 2 (Database wizard): Use the wizard above - recommended for non-technical users, includes visual guides and validation",
         "footer": "Both methods are equally supported. Choose what works best for you."
       }
+    },
+    "branding": {
+      "title": "Branding & Whitelabel",
+      "livePreview": "Live Preview",
+      "resetToDefaults": "Reset to defaults",
+      "logoUrl": "Logo URL",
+      "logoUrlHelpPrefix": "Upload your logo to",
+      "logoUrlHelpSuffix": "or any image hosting service and paste the URL here.",
+      "imgbb": "ImgBB",
+      "brandColors": "Brand Colors",
+      "primary": "Primary",
+      "secondary": "Secondary",
+      "accent": "Accent",
+      "fontFamily": "Font Family",
+      "fontHelp": "System fonts load instantly and perform best across all devices.",
+      "saving": "Saving...",
+      "saveBranding": "Save Branding",
+      "saveSuccess": "Branding updated successfully! Refresh to see changes.",
+      "saveError": "Failed to save branding settings.",
+      "errorOccurred": "An error occurred while saving.",
+      "logo": "Logo",
+      "colorPalette": "Color Palette",
+      "buttons": "Buttons",
+      "primaryButton": "Primary Button",
+      "accentButton": "Accent Button",
+      "typography": "Typography",
+      "headingText": "Heading Text",
+      "bodyTextPreview": "This is how your body text will look with the {font} font."
     }
   },
   "stripe": {
@@ -1510,10 +1544,6 @@
         "stripeButton": "Open Stripe Dashboard",
         "finePrint": "You can always update or rotate your API keys from the Settings page."
       }
-    },
-    "branding": {
-      "title": "Branding & Whitelabel",
-      "livePreview": "Live Preview"
     }
   },
   "omnibus": {

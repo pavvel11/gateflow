@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import DatePicker from 'react-datepicker';
-import "react-datepicker/dist/react-datepicker.css";
+import React from 'react';
 import { useTranslations } from 'next-intl';
+import { CalendarIcon } from 'lucide-react';
 
 interface DateRangeFilterProps {
   startDate: Date | null;
@@ -13,98 +12,59 @@ interface DateRangeFilterProps {
 
 export default function DateRangeFilter({ startDate, endDate, onChange }: DateRangeFilterProps) {
   const t = useTranslations('common');
-  const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Local state for partial selection (before both dates are selected)
-  const [localStart, setLocalStart] = useState<Date | null>(startDate);
-  const [localEnd, setLocalEnd] = useState<Date | null>(endDate);
-
-  // Sync local state with props when they change externally (e.g., preset buttons)
-  useEffect(() => {
-    setLocalStart(startDate);
-    setLocalEnd(endDate);
-  }, [startDate, endDate]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      
-      // Ignore clicks on elements that are no longer in the DOM (e.g. after React re-render)
-      if (!target.isConnected) {
-        return;
-      }
-      
-      // Check if click is inside the container
-      const isInsideContainer = containerRef.current && containerRef.current.contains(target as Node);
-      
-      // Check if click is inside the datepicker portal (just in case, though we use inline)
-      const isInsideDatepicker = target.closest('.react-datepicker-popper') || target.closest('.react-datepicker');
-
-      if (!isInsideContainer && !isInsideDatepicker) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
-
-  const handleChange = (dates: [Date | null, Date | null]) => {
-    const [start, end] = dates;
-
-    // Update local state immediately for visual feedback
-    setLocalStart(start);
-    setLocalEnd(end);
-
-    // Only propagate to parent and close when both dates are selected
-    if (start && end) {
-      onChange(start, end);
-      setIsOpen(false);
-    }
+  const formatDateForInput = (date: Date | null) => {
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
-  const formatDate = (date: Date | null) => {
-    if (!date) return '';
-    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const date = value ? new Date(value + 'T00:00:00') : null;
+    onChange(date, endDate);
+  };
+
+  const handleEndChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const date = value ? new Date(value + 'T23:59:59') : null;
+    onChange(startDate, date);
+  };
+
+  const handleClear = () => {
+    onChange(null, null);
   };
 
   return (
-    <div className="relative" ref={containerRef}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-      >
-        <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        <span>
-          {startDate && endDate 
-            ? `${formatDate(startDate)} - ${formatDate(endDate)}`
-            : t('filter')}
-        </span>
-      </button>
-
-      {isOpen && (
-        <div className="absolute right-0 z-50 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl p-4">
-          <DatePicker
-            selected={localStart}
-            onChange={handleChange}
-            startDate={localStart}
-            endDate={localEnd}
-            selectsRange
-            inline
-            monthsShown={2}
-            maxDate={new Date()}
-            shouldCloseOnSelect={false} // Explicitly prevent auto-closing
-          />
-        </div>
+    <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm">
+        <CalendarIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+        <input
+          type="date"
+          value={formatDateForInput(startDate)}
+          onChange={handleStartChange}
+          max={formatDateForInput(endDate || new Date())}
+          className="bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-300 w-[130px]"
+        />
+        <span className="text-gray-500 dark:text-gray-400 text-sm">-</span>
+        <input
+          type="date"
+          value={formatDateForInput(endDate)}
+          onChange={handleEndChange}
+          min={formatDateForInput(startDate)}
+          max={formatDateForInput(new Date())}
+          className="bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-300 w-[130px]"
+        />
+      </div>
+      {(startDate || endDate) && (
+        <button
+          onClick={handleClear}
+          className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+        >
+          Clear
+        </button>
       )}
     </div>
   );
