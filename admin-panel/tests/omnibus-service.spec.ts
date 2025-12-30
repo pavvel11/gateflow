@@ -100,10 +100,13 @@ test.describe('Omnibus Service - Backend Functions', () => {
   });
 
   test('should retrieve lowest price from last 30 days via API', async ({ request }) => {
-    // Add another price change to create more history
+    // Add another price change to create more history and set sale_price to trigger Omnibus
     await supabaseAdmin
       .from('products')
-      .update({ price: 120 }) // Higher than previous
+      .update({
+        price: 120, // Higher than previous
+        sale_price: 90 // Active sale price to trigger Omnibus display
+      })
       .eq('id', testProductId);
 
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -155,6 +158,66 @@ test.describe('Omnibus Service - Backend Functions', () => {
       .eq('id', shopConfig!.id);
 
     await new Promise(resolve => setTimeout(resolve, 500));
+  });
+
+  test('should STILL collect price history data when Omnibus is globally disabled', async () => {
+    // This ensures data is collected even when display is disabled
+    // so admin can enable it later and have historical data
+
+    // Disable Omnibus globally
+    const { data: shopConfig } = await supabaseAdmin
+      .from('shop_config')
+      .select('id')
+      .single();
+
+    await supabaseAdmin
+      .from('shop_config')
+      .update({ omnibus_enabled: false })
+      .eq('id', shopConfig!.id);
+
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Count price history entries before
+    const { data: beforeHistory } = await supabaseAdmin
+      .from('product_price_history')
+      .select('*')
+      .eq('product_id', testProductId);
+
+    const countBefore = beforeHistory?.length || 0;
+
+    // Change price (this should STILL trigger price_history insert despite Omnibus disabled)
+    const newPrice = 99.99;
+    await supabaseAdmin
+      .from('products')
+      .update({ price: newPrice })
+      .eq('id', testProductId);
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Verify price history was created despite Omnibus being disabled
+    const { data: afterHistory } = await supabaseAdmin
+      .from('product_price_history')
+      .select('*')
+      .eq('product_id', testProductId)
+      .order('effective_from', { ascending: false });
+
+    expect(afterHistory).toBeTruthy();
+    expect(afterHistory!.length).toBe(countBefore + 1);
+    expect(parseFloat(afterHistory![0].price)).toBe(newPrice);
+
+    // Re-enable Omnibus for other tests
+    await supabaseAdmin
+      .from('shop_config')
+      .update({ omnibus_enabled: true })
+      .eq('id', shopConfig!.id);
+
+    // Restore original price to not affect other tests
+    await supabaseAdmin
+      .from('products')
+      .update({ price: 100 })
+      .eq('id', testProductId);
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
   });
 
   test('should return null when product is exempt from Omnibus', async ({ request }) => {
