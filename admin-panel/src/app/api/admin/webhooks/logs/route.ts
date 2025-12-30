@@ -47,16 +47,15 @@ export async function GET(request: NextRequest) {
 
     // 2. Filter by Status
     if (status === 'failed') {
-      // Show failed logs (excluding retried and archived)
       query = query.eq('status', 'failed');
     } else if (status === 'success') {
       query = query.eq('status', 'success');
     } else if (status === 'archived') {
       query = query.eq('status', 'archived');
-    } else {
-      // For 'all', we hide archived logs to keep history clean.
-      query = query.neq('status', 'archived');
+    } else if (status === 'retried') {
+      query = query.eq('status', 'retried');
     }
+    // else: 'all' - no status filter, show everything
 
     // 3. Sorting & Pagination
     if (!countOnly) {

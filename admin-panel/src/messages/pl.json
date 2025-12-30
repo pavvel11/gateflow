@@ -1024,6 +1024,7 @@
         "filterAll": "Wszystkie statusy",
         "filterSuccess": "Tylko udane",
         "filterFailed": "Tylko nieudane",
+        "filterRetried": "Ponowione",
         "filterArchived": "Zarchiwizowane",
         "noLogs": "Brak logów dla tego filtra.",
         "retrySuccess": "Ponowienie uruchomione pomyślnie",

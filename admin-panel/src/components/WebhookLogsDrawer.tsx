@@ -21,7 +21,7 @@ export default function WebhookLogsDrawer({ endpoint, onClose, isOpen, onRefresh
 
   const [logs, setLogs] = useState<WebhookLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'success' | 'failed' | 'archived'>('failed');
+  const [filter, setFilter] = useState<'all' | 'success' | 'failed' | 'archived' | 'retried'>('failed');
   const [retrying, setRetrying] = useState<string | null>(null);
   const [showInactiveWarning, setShowInactiveWarning] = useState(false);
   const [pendingRetryLogId, setPendingRetryLogId] = useState<string | null>(null);
@@ -114,6 +114,7 @@ export default function WebhookLogsDrawer({ endpoint, onClose, isOpen, onRefresh
                 <option value="all">{t('filterAll')}</option>
                 <option value="success">{t('filterSuccess')}</option>
                 <option value="failed">{t('filterFailed')}</option>
+                <option value="retried">{t('filterRetried')}</option>
                 <option value="archived">{t('filterArchived')}</option>
               </select>
             </div>

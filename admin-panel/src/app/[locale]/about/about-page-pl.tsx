@@ -121,7 +121,7 @@ export function AboutPagePL() {
                 href="/login"
                 className="group relative inline-flex items-center px-8 py-4 rounded-xl text-lg font-bold text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 transform hover:scale-105"
               >
-                <span className="relative z-10">Rozpocznij</span>
+                <span className="relative z-10">Wdróż za 0 zł</span>
                 <svg className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
@@ -219,6 +219,19 @@ export function AboutPagePL() {
               <div className="text-sm text-gray-900 dark:text-white">Zbieraj leady ZA DARMO, płać tylko przy sprzedaży premium</div>
             </div>
           </div>
+
+          {/* CTA after Problem Statement */}
+          <div className="text-center mt-12">
+            <Link
+              href="/login"
+              className="inline-flex items-center px-8 py-4 rounded-xl text-lg font-bold text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 transform hover:scale-105"
+            >
+              Przestań przepłacać - Wdróż teraz
+              <svg className="ml-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -234,157 +247,114 @@ export function AboutPagePL() {
             </p>
           </div>
 
-          {/* Bento Grid Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Funkcja 1 - Large */}
-            <div className="lg:col-span-2 lg:row-span-2 group relative p-8 rounded-3xl bg-gradient-to-br from-purple-500 to-pink-500 overflow-hidden">
-              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors"></div>
-              <div className="relative z-10">
-                <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-6">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                  </svg>
-                </div>
-                <h3 className="text-3xl font-bold text-white mb-4">Płatności Stripe</h3>
-                <p className="text-lg text-purple-100 mb-6">
-                  Pełny proces płatności z wbudowanym Stripe, obsługa wielu walut (ponad 20 walut),
-                  płatności dla gości i zaszyfrowane przechowywanie kluczy. Przyjmuj płatności w minuty.
-                </p>
-                <ul className="space-y-3 text-white/90">
-                  <li className="flex items-center">
-                    <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    Szyfrowanie kluczy płatności na poziomie bankowym
-                  </li>
-                  <li className="flex items-center">
-                    <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    Konwersja walut w czasie rzeczywistym
-                  </li>
-                  <li className="flex items-center">
-                    <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    Uwierzytelnianie magic link (bez haseł)
-                  </li>
-                </ul>
-              </div>
-            </div>
+          {/* Masonry Grid Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[180px]">
 
-            {/* Funkcja 2 */}
-            <div className="group p-8 rounded-3xl bg-gradient-to-br from-blue-500 to-cyan-500 hover:scale-105 transition-transform duration-300">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-6">
+            {/* Analityka - tall */}
+            <div className="md:col-span-1 lg:row-span-2 group p-6 rounded-3xl bg-gradient-to-br from-blue-500 to-cyan-500 hover:scale-[1.02] transition-all duration-300 shadow-xl">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4">
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-3">Analityka w czasie rzeczywistym</h3>
-              <p className="text-blue-100">
-                Dashboard przychodów na żywo z konwersją wielu walut, śledzeniem celów i natychmiastowymi powiadomieniami
+              <h3 className="text-xl font-bold text-white mb-2">Dashboard na żywo</h3>
+              <p className="text-sm text-blue-50 leading-relaxed">
+                Przychody w czasie rzeczywistym. 20+ walut. Konwersja automatyczna. Cele sprzedażowe.
               </p>
             </div>
 
-            {/* Funkcja 3 */}
-            <div className="group p-8 rounded-3xl bg-gradient-to-br from-green-500 to-emerald-500 hover:scale-105 transition-transform duration-300">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-6">
+            {/* Stripe - wide */}
+            <div className="md:col-span-2 lg:col-span-2 group p-6 rounded-3xl bg-gradient-to-br from-purple-500 to-pink-500 overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4">
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Płatności Stripe</h3>
+              <p className="text-sm text-purple-50 leading-relaxed">
+                Bez przekierowań. 20+ walut. Płatności dla gości. Bezpieczne API keys (AES-256).
+              </p>
+            </div>
+
+            {/* Upsell */}
+            <div className="group p-6 rounded-3xl bg-gradient-to-br from-green-500 to-emerald-500 hover:scale-[1.02] transition-all duration-300 shadow-xl">
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-3">Dodatkowe oferty i Upsell</h3>
-              <p className="text-green-100">
-                Upsell jednym kliknięciem przy kasie. Zwiększ średnią wartość zamówienia o 30-50% dzięki inteligentnemu pakietowaniu produktów
-              </p>
+              <h3 className="text-lg font-bold text-white mb-2">Order Bumps</h3>
+              <p className="text-sm text-green-50">Zwiększ AOV o 30-50%</p>
             </div>
 
-            {/* Funkcja 4 */}
-            <div className="group p-8 rounded-3xl bg-gradient-to-br from-orange-500 to-red-500 hover:scale-105 transition-transform duration-300">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-6">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {/* Kupony */}
+            <div className="group p-6 rounded-3xl bg-gradient-to-br from-orange-500 to-red-500 hover:scale-[1.02] transition-all duration-300 shadow-xl">
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-3">Inteligentne Kupony</h3>
-              <p className="text-orange-100">
-                Automatyczne zastosowanie kodów, targetowanie e-mailowe, ograniczenia produktów i limity użycia
-              </p>
+              <h3 className="text-lg font-bold text-white mb-2">Smart Kupony</h3>
+              <p className="text-sm text-orange-50">Auto-apply. Limity. Targetowanie</p>
             </div>
 
-            {/* Funkcja 5 */}
-            <div className="lg:col-span-2 group p-8 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-500 hover:scale-105 transition-transform duration-300">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-6">
-                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-3">Webhooks i Automatyzacja</h3>
-                  <p className="text-indigo-100 mb-4">
-                    Połącz z Zapier, Make lub niestandardowymi endpointami. Dostarczanie zabezpieczone HMAC z logami i ponownymi próbami
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-3 py-1 rounded-full bg-white/20 text-white text-sm font-medium">Zapier</span>
-                    <span className="px-3 py-1 rounded-full bg-white/20 text-white text-sm font-medium">Make</span>
-                    <span className="px-3 py-1 rounded-full bg-white/20 text-white text-sm font-medium">Niestandardowe</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Funkcja 6 */}
-            <div className="group p-8 rounded-3xl bg-gradient-to-br from-yellow-500 to-orange-500 hover:scale-105 transition-transform duration-300">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-6">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            {/* Webhooks - wide */}
+            <div className="md:col-span-2 group p-6 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 hover:scale-[1.02] transition-all duration-300 shadow-xl">
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-3">Osadzanie Wideo</h3>
-              <p className="text-yellow-100">
-                YouTube, Vimeo, Bunny.net, Loom - wsparcie embed. Śledzenie postępu i upload (Wkrótce)
-              </p>
+              <h3 className="text-lg font-bold text-white mb-2">Webhooks & Automatyzacja</h3>
+              <p className="text-sm text-indigo-50">Zapier, Make, custom endpoints. HMAC security. Retry logic.</p>
             </div>
 
-            {/* Funkcja 7 */}
-            <div className="group p-8 rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 hover:scale-105 transition-transform duration-300">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-6">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-3">Zgodność z Omnibus UE</h3>
-              <p className="text-blue-100">
-                Automatyczne śledzenie historii cen i wyświetlanie najniższej ceny (Dyrektywa 2019/2161). Gotowe dla UE.
-              </p>
-            </div>
-
-            {/* Funkcja 8 */}
-            <div className="group p-8 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-500 hover:scale-105 transition-transform duration-300">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-6">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-3">Integracja z GUS API</h3>
-              <p className="text-emerald-100">
-                Automatyczne wypełnianie danych firmy (REGON). Wpisz NIP, pobierz dane natychmiast. Idealne dla B2B.
-              </p>
-            </div>
-
-            {/* Funkcja 9 */}
-            <div className="group p-8 rounded-3xl bg-gradient-to-br from-pink-500 to-rose-500 hover:scale-105 transition-transform duration-300">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-6">
+            {/* Leady - tall */}
+            <div className="lg:row-span-2 group p-6 rounded-3xl bg-gradient-to-br from-pink-500 to-rose-500 hover:scale-[1.02] transition-all duration-300 shadow-xl">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4">
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-3">Zbieranie Leadów Bez Wysiłku</h3>
-              <p className="text-pink-100">
-                Darmowe produkty z magic linkami. Zbieraj emaile bez formularzy. Zbuduj listę, sprzedaj premium.
+              <h3 className="text-xl font-bold text-white mb-2">Zbieranie Leadów</h3>
+              <p className="text-sm text-pink-50 leading-relaxed">
+                Darmowe produkty. Magic links bez haseł. Zbieraj emaile. Buduj listę. Sprzedawaj premium.
               </p>
             </div>
+
+            {/* Wideo */}
+            <div className="group p-6 rounded-3xl bg-gradient-to-br from-yellow-500 to-orange-500 hover:scale-[1.02] transition-all duration-300 shadow-xl">
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Osadzanie Wideo</h3>
+              <p className="text-sm text-yellow-50">YouTube, Vimeo, Bunny, Loom</p>
+            </div>
+
+            {/* Omnibus */}
+            <div className="group p-6 rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 hover:scale-[1.02] transition-all duration-300 shadow-xl">
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Omnibus UE</h3>
+              <p className="text-sm text-blue-50">Historia cen. Dyrektywa 2019/2161</p>
+            </div>
+
+            {/* GUS */}
+            <div className="group p-6 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-500 hover:scale-[1.02] transition-all duration-300 shadow-xl">
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">GUS API (PL)</h3>
+              <p className="text-sm text-emerald-50">NIP → automatycznie. REGON. B2B</p>
+            </div>
+
           </div>
         </div>
       </section>
@@ -636,9 +606,24 @@ export function AboutPagePL() {
           </div>
 
           <div className="mt-12 text-center">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
               * Łącznie z opłatami Stripe. EasyCart pobiera abonament + prowizję platformy + opłaty Stripe. GateFlow pobiera tylko opłaty Stripe.
             </p>
+
+            {/* CTA after Pricing - Most Important */}
+            <div className="mt-8">
+              <Link
+                href="/login"
+                className="inline-flex items-center px-10 py-5 rounded-xl text-xl font-bold text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-2xl hover:shadow-green-500/50 transition-all duration-300 transform hover:scale-105"
+              >
+                <span className="mr-3">💰</span>
+                Oszczędź 10,000 zł/rok - Wdróż GateFlow
+                <svg className="ml-3 w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </Link>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-4">Bez opłat miesięcznych. Bez prowizji. Bez zobowiązań.</p>
+            </div>
           </div>
         </div>
       </section>
@@ -789,65 +774,59 @@ export function AboutPagePL() {
         </div>
       </section>
 
-      {/* Final CTA */}
+      {/* Final CTA Section */}
       <section className="py-24 bg-gradient-to-br from-purple-600 via-pink-600 to-blue-600 relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10"></div>
-        <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-white/10 rounded-full filter blur-3xl animate-blob"></div>
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-white/10 rounded-full filter blur-3xl animate-blob animation-delay-2000"></div>
-        </div>
-
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <h2 className="text-4xl md:text-6xl font-black text-white mb-6">
-            Przestań płacić opłaty SaaS.
-            <br />
-            Zacznij dziś. Za darmo.
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-6">
+            Gotowy na start?
           </h2>
-          <p className="text-xl md:text-2xl text-purple-100 mb-12 max-w-3xl mx-auto">
-            Dołącz do twórców, którzy zatrzymują 100% swoich przychodów. Wdróż GateFlow w minuty i bądź właścicielem swojego biznesu na zawsze.
+          <p className="text-xl text-purple-100 mb-8 max-w-2xl mx-auto">
+            Wdróż GateFlow w 10 minut. Zacznij sprzedawać bez miesięcznych opłat.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+            <Link
+              href="/login"
+              className="group inline-flex items-center px-10 py-5 rounded-xl text-xl font-bold text-purple-600 bg-white hover:bg-gray-100 shadow-2xl transition-all duration-300 transform hover:scale-105"
+            >
+              Wdróż za 0 zł
+              <svg className="ml-3 w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
+
             <a
               href="https://github.com/pavvel11/gateflow"
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center px-10 py-5 rounded-xl text-xl font-bold text-purple-600 bg-white hover:bg-gray-50 shadow-2xl hover:shadow-white/20 transition-all duration-300 transform hover:scale-105"
+              className="inline-flex items-center px-8 py-5 rounded-xl text-lg font-bold text-white border-2 border-white hover:bg-white/10 transition-all duration-300"
             >
               <svg className="mr-3 w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
               </svg>
-              Rozpocznij na GitHub
-              <svg className="ml-3 w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
+              Zobacz na GitHub
             </a>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-6 text-sm text-white/80">
+          <div className="flex flex-wrap justify-center items-center gap-6 text-sm text-purple-100">
             <div className="flex items-center">
-              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              Licencja MIT
-            </div>
-            <div className="flex items-center">
-              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              Bez karty kredytowej
-            </div>
-            <div className="flex items-center">
-              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-5 h-5 text-white mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
               Wdrożenie w 10 min
             </div>
             <div className="flex items-center">
-              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-5 h-5 text-white mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
               Pełny kod źródłowy
+            </div>
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-white mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              Licencja MIT
             </div>
           </div>
         </div>

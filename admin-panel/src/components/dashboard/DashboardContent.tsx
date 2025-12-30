@@ -6,7 +6,6 @@ import RevenueChart from '@/components/dashboard/RevenueChart';
 import RevenueGoal from '@/components/dashboard/RevenueGoal';
 import ProductFilter from '@/components/dashboard/ProductFilter';
 import CurrencySelector from '@/components/dashboard/CurrencySelector';
-import ConfigurationStatus from '@/components/dashboard/ConfigurationStatus';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
@@ -69,9 +68,6 @@ export default function DashboardContent({ failedWebhooksCount }: DashboardConte
           </div>
         </div>
       )}
-
-      {/* Configuration Status */}
-      <ConfigurationStatus />
 
       <StatsOverview />
       

@@ -39,12 +39,11 @@ export default function ProductFilter() {
 
   return (
     <div className="w-[250px]"> {/* Adjust width as needed */}
-      <Combobox 
+      <Combobox
         options={[{ value: '', label: t('allProducts', { defaultValue: 'All Products' }) }, ...options]}
         selectedValue={selectedProduct}
         onSelect={handleSelect}
         placeholder={t('search', { defaultValue: 'Search...' })}
-        label={t('filter', { defaultValue: 'Filter by Product' })}
       />
     </div>
   );

@@ -24,6 +24,7 @@ export const Combobox = ({ options, placeholder = 'Select an option...', selecte
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -31,11 +32,18 @@ export const Combobox = ({ options, placeholder = 'Select an option...', selecte
     option.label.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Reset searchTerm when selectedValue changes externally
+  useEffect(() => {
+    setSearchTerm('');
+  }, [selectedValue]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
         setHighlightedIndex(-1);
+        setIsFocused(false);
+        setSearchTerm('');
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -52,13 +60,16 @@ export const Combobox = ({ options, placeholder = 'Select an option...', selecte
     } else if (e.key === 'Enter') {
       if (highlightedIndex !== -1) {
         onSelect(filteredOptions[highlightedIndex].value);
-        setSearchTerm(filteredOptions[highlightedIndex].label);
+        setSearchTerm('');
         setIsOpen(false);
         setHighlightedIndex(-1);
+        setIsFocused(false);
       }
     } else if (e.key === 'Escape') {
       setIsOpen(false);
       setHighlightedIndex(-1);
+      setIsFocused(false);
+      setSearchTerm('');
     }
   };
 
@@ -70,13 +81,30 @@ export const Combobox = ({ options, placeholder = 'Select an option...', selecte
 
   const handleOptionClick = (value: string, label: string) => {
     onSelect(value);
-    setSearchTerm(label);
+    setSearchTerm('');
     setIsOpen(false);
     setHighlightedIndex(-1);
+    setIsFocused(false);
+  };
+
+  const handleFocus = () => {
+    setIsFocused(true);
+    setIsOpen(true);
+  };
+
+  const handleBlur = () => {
+    // Delay to allow click on option
+    setTimeout(() => {
+      setIsFocused(false);
+      setSearchTerm('');
+    }, 200);
   };
 
   // Find the label for the currently selected value
   const selectedLabel = options.find(opt => opt.value === selectedValue)?.label || '';
+
+  // Determine what to show in input
+  const displayValue = isFocused ? searchTerm : selectedLabel;
 
   return (
     <div className={clsx('relative', className)} ref={dropdownRef}>
@@ -85,9 +113,11 @@ export const Combobox = ({ options, placeholder = 'Select an option...', selecte
         <input
           ref={inputRef}
           type="text"
-          value={searchTerm || selectedLabel}
+          value={displayValue}
           onChange={handleInputChange}
-          onClick={() => setIsOpen(!isOpen)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
           placeholder={placeholder}
           className="w-full py-2 pl-3 pr-10 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm dark:bg-gray-800 dark:text-white"
         />

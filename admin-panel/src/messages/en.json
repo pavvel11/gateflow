@@ -1024,6 +1024,7 @@
         "filterAll": "All Statuses",
         "filterSuccess": "Success Only",
         "filterFailed": "Failed Only",
+        "filterRetried": "Retried",
         "filterArchived": "Archived",
         "noLogs": "No logs found for this filter.",
         "retrySuccess": "Retry triggered successfully",

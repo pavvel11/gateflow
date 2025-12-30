@@ -4,11 +4,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { getUsedCurrencies } from '@/lib/actions/currency';
+import { Info } from 'lucide-react';
 
 export default function CurrencySelector() {
   const t = useTranslations('common');
+  const tCurrency = useTranslations('dashboard.currency');
   const { displayCurrency, setDisplayCurrency, currencyViewMode, setCurrencyViewMode } = useUserPreferences();
   const [isOpen, setIsOpen] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
   const [currencies, setCurrencies] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -94,7 +97,7 @@ export default function CurrencySelector() {
   };
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div className="relative flex items-center gap-1" ref={containerRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-2 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -108,8 +111,26 @@ export default function CurrencySelector() {
         </svg>
       </button>
 
+      {/* Info tooltip */}
+      <div className="relative">
+        <button
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
+          className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          type="button"
+        >
+          <Info className="w-4 h-4" />
+        </button>
+        {showTooltip && (
+          <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-64 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg shadow-lg z-50 pointer-events-none">
+            {tCurrency('dashboardInfo')}
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-full w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45 -mb-1"></div>
+          </div>
+        )}
+      </div>
+
       {isOpen && (
-        <div className="absolute right-0 z-50 mt-2 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl overflow-hidden">
+        <div className="absolute right-0 top-full mt-2 z-[9999] w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl overflow-hidden">
           {/* Grouped option */}
           <button
             onClick={() => handleSelect('grouped', null)}
