@@ -71,7 +71,7 @@ function WizardContent({ onClose, onComplete }: StripeConfigWizardProps) {
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/50 z-50" onClick={handleClose} />
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" onClick={handleClose} />
 
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
@@ -141,7 +141,7 @@ function WizardContent({ onClose, onComplete }: StripeConfigWizardProps) {
       {/* Exit Confirmation Modal */}
       {showExitConfirm && (
         <>
-          <div className="fixed inset-0 bg-black/60 z-[60]" onClick={() => setShowExitConfirm(false)} />
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]" onClick={() => setShowExitConfirm(false)} />
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pointer-events-none">
             <div
               className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 pointer-events-auto"

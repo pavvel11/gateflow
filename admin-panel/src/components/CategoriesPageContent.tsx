@@ -15,15 +15,15 @@ export default function CategoriesPageContent({ initialCategories }: { initialCa
   const [categories, setCategories] = useState(initialCategories) // In real app, revalidatePath handles refresh, but optimistic update is nice
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null)
 
-  const handleDelete = async (id: string) => {
-    if (confirm(commonT('confirmDelete', { defaultValue: 'Are you sure?' }))) {
-      try {
-        await deleteCategory(id)
-        addToast(commonT('success', { defaultValue: 'Success' }), 'success')
-      } catch (error) {
-        addToast(commonT('error', { defaultValue: 'Error' }), 'error')
-      }
+  const handleDelete = async (category: Category) => {
+    try {
+      await deleteCategory(category.id)
+      addToast(commonT('success', { defaultValue: 'Success' }), 'success')
+      setCategoryToDelete(null)
+    } catch (error) {
+      addToast(commonT('error', { defaultValue: 'Error' }), 'error')
     }
   }
 
@@ -82,8 +82,8 @@ export default function CategoriesPageContent({ initialCategories }: { initialCa
                       >
                         <Edit size={18} />
                       </button>
-                      <button 
-                        onClick={() => handleDelete(category.id)}
+                      <button
+                        onClick={() => setCategoryToDelete(category)}
                         className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                         title={commonT('delete')}
                       >
@@ -98,11 +98,42 @@ export default function CategoriesPageContent({ initialCategories }: { initialCa
         </table>
       </div>
 
-      <CategoryFormModal 
+      <CategoryFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         category={editingCategory}
       />
+
+      {/* Delete Confirmation Modal */}
+      {categoryToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full shadow-2xl">
+            <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
+              {commonT('confirmDelete', { defaultValue: 'Confirm Delete' })}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              {t('deleteMessage', {
+                defaultValue: 'Are you sure you want to delete the category "{name}"? This action cannot be undone.',
+                name: categoryToDelete.name
+              })}
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setCategoryToDelete(null)}
+                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                {commonT('cancel', { defaultValue: 'Cancel' })}
+              </button>
+              <button
+                onClick={() => handleDelete(categoryToDelete)}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                {commonT('delete', { defaultValue: 'Delete' })}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

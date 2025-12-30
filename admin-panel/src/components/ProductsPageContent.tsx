@@ -361,9 +361,9 @@ const ProductsPageContent: React.FC = () => {
       )}
 
       {productToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div 
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md"
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+          <div
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('confirmDelete')}</h3>
@@ -389,9 +389,9 @@ const ProductsPageContent: React.FC = () => {
       )}
 
       {showExportConfirmation && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div 
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md"
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+          <div
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('confirmExport')}</h3>
