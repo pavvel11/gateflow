@@ -322,15 +322,15 @@ export function AboutPageEN() {
               </p>
             </div>
 
-            {/* Video */}
-            <div className="group p-6 rounded-3xl bg-gradient-to-br from-yellow-500 to-orange-500 hover:scale-[1.02] transition-all duration-300 shadow-xl">
+            {/* Content Delivery */}
+            <div className="group p-6 rounded-3xl bg-gradient-to-br from-amber-500 to-orange-500 hover:scale-[1.02] transition-all duration-300 shadow-xl">
               <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center mb-3">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Video Embeds</h3>
-              <p className="text-sm text-yellow-50">YouTube, Vimeo, Bunny, Loom</p>
+              <h3 className="text-lg font-bold text-white mb-2">Content Delivery</h3>
+              <p className="text-sm text-amber-50">Videos, files, redirects. Host OR link to your platform.</p>
             </div>
 
             {/* Omnibus */}
@@ -342,6 +342,17 @@ export function AboutPageEN() {
               </div>
               <h3 className="text-lg font-bold text-white mb-2">EU Omnibus</h3>
               <p className="text-sm text-blue-50">Price history. Directive 2019/2161</p>
+            </div>
+
+            {/* Timed Access */}
+            <div className="group p-6 rounded-3xl bg-gradient-to-br from-cyan-500 to-teal-500 hover:scale-[1.02] transition-all duration-300 shadow-xl">
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Timed Access</h3>
+              <p className="text-sm text-cyan-50">30/90-day trials. Scheduled launches. Auto-expiry.</p>
             </div>
 
             {/* Sales Funnels - wide */}
