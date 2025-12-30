@@ -355,6 +355,17 @@ export function AboutPagePL() {
               <p className="text-sm text-emerald-50">NIP → automatycznie. REGON. B2B</p>
             </div>
 
+            {/* Lejki Sprzedażowe - wide */}
+            <div className="md:col-span-2 group p-6 rounded-3xl bg-gradient-to-br from-violet-500 to-fuchsia-600 hover:scale-[1.02] transition-all duration-300 shadow-xl">
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Lejki Sprzedażowe & OTO</h3>
+              <p className="text-sm text-violet-50">Auto-przekierowania po zakupie. Lead magnet → Upsell → Premium. Ukrywanie bumps w kolejnych krokach.</p>
+            </div>
+
           </div>
         </div>
       </section>

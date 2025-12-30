@@ -397,6 +397,112 @@ export async function rateLimit(
     2. Product's `success_redirect_url`
     3. Standard `/payment-status` page (default)
 
+#### UTM & Affiliate Parameter Tracking
+**Status**: 📋 Planned
+**Priority**: 🟡 Medium
+**Effort**: ~4-6 hours
+**Description**: Dedicated tracking system for UTM parameters and affiliate links throughout the entire purchase funnel. Preserve marketing attribution from initial landing to final conversion.
+
+**Why This Matters**:
+- **Attribution Accuracy**: Track which marketing campaigns (UTM) or affiliates drive actual sales
+- **ROI Measurement**: Connect ad spend to revenue with clear attribution chain
+- **Affiliate Management**: Build affiliate program with accurate conversion tracking
+- **Multi-Touch Attribution**: Preserve parameters across multiple funnel steps (e.g., Lead Magnet → Upsell → Premium)
+
+**Features**:
+1.  **UTM Parameter Capture**:
+    - Automatically detect and store: `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`
+    - Capture on first page visit (landing page or direct checkout link)
+    - Store in session/cookie for persistence across funnel steps
+
+2.  **Affiliate ID Tracking**:
+    - Support custom affiliate parameter (e.g., `?ref=john123`, `?aff=partner-id`)
+    - Configurable parameter name in admin settings
+    - Track affiliate throughout purchase journey
+
+3.  **Database Schema** (`purchase_attribution` table):
+    ```sql
+    - purchase_id (FK to purchases)
+    - utm_source, utm_medium, utm_campaign, utm_term, utm_content
+    - affiliate_id
+    - referrer_url (HTTP Referer header)
+    - landing_page (first page visited)
+    - captured_at (timestamp)
+    ```
+
+4.  **Funnel Persistence**:
+    - Preserve UTM/affiliate data when `pass_params_to_redirect = true`
+    - Automatically append to OTO redirect URLs
+    - Maintain attribution across: Landing → Checkout → OTO → Final Purchase
+
+5.  **Admin Analytics**:
+    - Dashboard report: "Revenue by UTM Source/Campaign"
+    - Affiliate performance table: Revenue, Conversions, AOV per affiliate ID
+    - Filter purchases by UTM parameters
+    - Export attribution data for external analysis
+
+6.  **Webhook Integration**:
+    - Include UTM/affiliate data in `purchase.completed` webhook payload
+    - Enable external CRM/analytics tools to receive full attribution context
+
+7.  **Privacy Compliance**:
+    - Cookie consent required for UTM tracking (respect GDPR)
+    - Option to disable tracking in admin settings
+    - Clear data retention policy (e.g., 90 days)
+
+**Implementation Steps**:
+1.  **Capture Layer** (`/lib/tracking/utm-capture.ts`):
+    - Middleware or hook to extract UTM params from URL on page load
+    - Store in localStorage + HTTP-only cookie for persistence
+    - Fallback to session storage for cookieless environments
+
+2.  **Database Migration**:
+    - Create `purchase_attribution` table with indexes on utm_source, affiliate_id
+    - Add RLS policies for admin-only access
+
+3.  **Payment Flow Integration**:
+    - Update `/app/api/create-payment-intent/route.ts` to accept attribution data
+    - Store attribution in metadata during checkout
+    - Write to `purchase_attribution` table after successful payment
+
+4.  **OTO Redirect Enhancement** (`/payment-status/page.tsx`):
+    - When `pass_params_to_redirect = true`, automatically append UTM params to redirect URL
+    - Preserve affiliate ID across funnel steps
+
+5.  **Admin Dashboard** (`/dashboard/analytics`):
+    - New "Attribution" tab with UTM and Affiliate reports
+    - Charts: Revenue by source, conversions by campaign, affiliate leaderboard
+    - Filter purchases by attribution parameters
+
+6.  **Webhook Payload**:
+    - Extend `purchase.completed` event with `attribution` object containing UTM/affiliate data
+
+**Example Flow**:
+```
+1. User clicks ad: https://shop.com/?utm_source=facebook&utm_campaign=spring-sale&ref=partner123
+2. Lands on /p/free-ebook → Downloads free product
+3. Redirected to /checkout/premium-course (UTM params preserved)
+4. Completes purchase → Attribution stored:
+   {
+     utm_source: "facebook",
+     utm_campaign: "spring-sale",
+     affiliate_id: "partner123",
+     landing_page: "/p/free-ebook"
+   }
+5. Webhook fires with full attribution data for CRM sync
+```
+
+**Benefits**:
+- ✅ Clear ROI measurement for marketing campaigns
+- ✅ Foundation for affiliate/referral program
+- ✅ Multi-touch attribution across funnel steps
+- ✅ Data-driven marketing decisions
+- ✅ Competitive advantage (most self-hosted platforms lack this)
+
+**References**:
+- [Google Analytics UTM Best Practices](https://support.google.com/analytics/answer/1033863)
+- [Affiliate Tracking Systems Architecture](https://www.rewardful.com/blog/how-affiliate-tracking-works)
+
 ---
 
 ## 🟡 Medium Priority
