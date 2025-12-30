@@ -942,6 +942,127 @@ export async function rateLimit(
 - ✅ **Migration**: Database schema with RLS policies for price history
 - ✅ **E2E Tests**: Comprehensive tests covering price display and history tracking
 
+**Limitations (Current Implementation)**:
+- ⚠️ **No Compare-At-Price**: Omnibus only shows when current price is at historical minimum
+- ⚠️ **Missing "Was/Now" Display**: Cannot show crossed-out "original price" like EasyCart/Shopify
+- 📋 **Enhancement Needed**: Add `compare_at_price` field (see below)
+
+#### Compare-At-Price / Original Price Display
+**Status**: 📋 Planned
+**Priority**: 🟡 Medium
+**Effort**: ~3-4 hours
+**Description**: Add support for showing "Was/Now" pricing with crossed-out original price, enabling proper Omnibus compliance for promotional pricing.
+
+**Why This Matters**:
+Current Omnibus implementation shows lowest price from last 30 days, but ONLY when current price is at historical minimum. This doesn't match real-world e-commerce where you show:
+- **Was**: ~~100 USD~~ (crossed out)
+- **Now**: 60 USD (current price)
+- **Omnibus**: "Lowest price in last 30 days: 50 USD"
+
+**Missing Functionality**:
+We have ONLY `price` field. We need `compare_at_price` (original/regular price) to:
+1. Show crossed-out "was" price
+2. Calculate discount percentage (-40%)
+3. Display Omnibus warning even when current price is NOT at minimum
+
+**Real-World Example**:
+```
+EasyCart/Shopify Style:
+┌─────────────────────────┐
+│ ~~100 USD~~  (-40% OFF) │  ← compare_at_price
+│   60 USD                │  ← price (actual)
+│ Lowest 30d: 50 USD      │  ← Omnibus (shows always when compare_at_price set)
+└─────────────────────────┘
+
+GateFlow Current:
+┌─────────────────────────┐
+│   60 USD                │  ← price only
+│ (Omnibus hidden)        │  ← hidden because 60 >= 50 (lowest)
+└─────────────────────────┘
+```
+
+**Database Schema Changes**:
+```sql
+ALTER TABLE products ADD COLUMN compare_at_price DECIMAL(10,2);
+ALTER TABLE products ADD COLUMN discount_percentage DECIMAL(5,2) GENERATED ALWAYS AS (
+  CASE
+    WHEN compare_at_price > 0 AND compare_at_price > price
+    THEN ROUND(((compare_at_price - price) / compare_at_price) * 100, 2)
+    ELSE NULL
+  END
+) STORED;
+```
+
+**Product Type Extension**:
+```typescript
+interface Product {
+  // ... existing fields
+  price: number;
+  compare_at_price?: number | null;  // "Was" price (crossed out)
+  discount_percentage?: number | null; // Auto-calculated
+}
+```
+
+**UI Changes**:
+1. **ProductFormModal**: Add "Compare At Price" input field (optional)
+2. **ProductShowcase** (`/checkout/[slug]`):
+   ```tsx
+   {compareAtPrice && compareAtPrice > price && (
+     <div className="flex items-center gap-3">
+       <span className="text-2xl text-gray-400 line-through">
+         ${compareAtPrice}
+       </span>
+       <span className="text-4xl font-bold text-green-600">
+         ${price}
+       </span>
+       <span className="bg-red-500 text-white px-2 py-1 rounded">
+         -{discountPercentage}%
+       </span>
+     </div>
+   )}
+   <OmnibusPrice ... /> {/* Now shows even when price not at minimum */}
+   ```
+
+3. **OmnibusPrice Logic Update**:
+   ```typescript
+   // OLD (line 61):
+   if (currentPrice >= lowestPriceData.lowestPrice) return null;
+
+   // NEW:
+   // Show if either:
+   // 1. Compare-at-price is set (promotional pricing active), OR
+   // 2. Current price < lowest price (historical discount)
+   const hasPromotion = compareAtPrice && compareAtPrice > currentPrice;
+   const hasHistoricalDiscount = currentPrice < lowestPriceData.lowestPrice;
+
+   if (!hasPromotion && !hasHistoricalDiscount) {
+     return null;
+   }
+   ```
+
+**Admin Workflow**:
+1. Create product: price = 100, compare_at_price = null (no promotion)
+2. Run Black Friday sale: price = 60, compare_at_price = 100
+   - Shows: ~~100 USD~~ → 60 USD (-40%)
+   - Omnibus: "Lowest 30d: 50 USD" (if historical min was 50)
+3. End sale: price = 100, compare_at_price = null (back to regular)
+
+**Benefits**:
+- ✅ Proper Omnibus compliance for promotional pricing
+- ✅ Visual "sale" badges and crossed-out prices
+- ✅ Automatic discount percentage calculation
+- ✅ Matches EasyCart/Shopify UX expectations
+- ✅ More flexibility in pricing strategies
+
+**Migration Strategy**:
+- Add column with `DEFAULT NULL` (backward compatible)
+- Existing products: `compare_at_price = NULL` (no change in display)
+- New products: Optional field in admin panel
+
+**References**:
+- [Shopify Compare At Price](https://help.shopify.com/en/manual/products/details/product-pricing#compare-at-price)
+- [WooCommerce Sale Price](https://woocommerce.com/document/managing-products/#sale-price)
+
 #### GUS REGON API Integration (Polish Company Data)
 **Completed**: 2025-12-28
 - ✅ **NIP Validation**: Polish VAT ID checksum validation algorithm
