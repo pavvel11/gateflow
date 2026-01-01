@@ -19,6 +19,36 @@ import CouponFormModal from './CouponFormModal';
 import { Product } from '@/types';
 import { useTranslations } from 'next-intl';
 
+// Helper to identify OTO coupons by their code prefix
+const isOtoCoupon = (coupon: Coupon): boolean => {
+  return coupon.code.startsWith('OTO-');
+};
+
+// Helper to get expiry status for OTO coupons
+const getOtoExpiryStatus = (coupon: Coupon): {
+  isExpired: boolean;
+  expiresAt: Date | null;
+  minutesRemaining: number;
+} => {
+  if (!coupon.expires_at) {
+    return { isExpired: false, expiresAt: null, minutesRemaining: 0 };
+  }
+  const expiresAt = new Date(coupon.expires_at);
+  const now = new Date();
+  const isExpired = expiresAt < now;
+  const minutesRemaining = isExpired ? 0 : Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60));
+  return { isExpired, expiresAt, minutesRemaining };
+};
+
+// Helper to get restricted product names
+const getRestrictedProducts = (coupon: Coupon, products: Product[]): string[] => {
+  const allowedIds = coupon.allowed_product_ids as string[] | null;
+  if (!allowedIds || allowedIds.length === 0) return [];
+  return allowedIds
+    .map(id => products.find(p => p.id === id)?.name)
+    .filter((name): name is string => !!name);
+};
+
 const CouponsPageContent: React.FC = () => {
   const t = useTranslations('admin.coupons');
   const { addToast } = useToast();
@@ -28,12 +58,18 @@ const CouponsPageContent: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+  const [typeFilter, setTypeFilter] = useState<'all' | 'oto' | 'regular'>('all');
+
+  // Selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   // Modals
   const [showForm, setShowForm] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [couponToDelete, setCouponToDelete] = useState<Coupon | null>(null);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [showDeleteExpiredConfirm, setShowDeleteExpiredConfirm] = useState(false);
 
   // Fetch data
   const fetchData = useCallback(async () => {
@@ -64,6 +100,19 @@ const CouponsPageContent: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Filter coupons based on type
+  const filteredCoupons = coupons.filter((coupon) => {
+    if (typeFilter === 'all') return true;
+    const isOto = isOtoCoupon(coupon);
+    return typeFilter === 'oto' ? isOto : !isOto;
+  });
+
+  // Get expired coupons (OTO coupons with expires_at in the past)
+  const expiredCoupons = coupons.filter((coupon) => {
+    if (!coupon.expires_at) return false;
+    return new Date(coupon.expires_at) < new Date();
+  });
 
   // CRUD Handlers
   const handleCreate = async (formData: any) => {
@@ -149,6 +198,71 @@ const CouponsPageContent: React.FC = () => {
     }
   };
 
+  // Selection handlers
+  const handleSelectAll = () => {
+    if (selectedIds.size === filteredCoupons.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredCoupons.map(c => c.id)));
+    }
+  };
+
+  const handleSelectOne = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      const deletePromises = Array.from(selectedIds).map(id =>
+        fetch(`/api/admin/coupons/${id}`, { method: 'DELETE' })
+      );
+
+      const results = await Promise.all(deletePromises);
+      const failed = results.filter(r => !r.ok).length;
+
+      await fetchData();
+      setSelectedIds(new Set());
+      setShowBulkDeleteConfirm(false);
+
+      if (failed > 0) {
+        addToast(t('bulkDeletePartial', { deleted: selectedIds.size - failed, failed }), 'warning');
+      } else {
+        addToast(t('bulkDeleteSuccess', { count: selectedIds.size }), 'success');
+      }
+    } catch (err) {
+      addToast('Failed to delete coupons', 'error');
+    }
+  };
+
+  const handleDeleteExpired = async () => {
+    try {
+      const deletePromises = expiredCoupons.map(coupon =>
+        fetch(`/api/admin/coupons/${coupon.id}`, { method: 'DELETE' })
+      );
+
+      const results = await Promise.all(deletePromises);
+      const failed = results.filter(r => !r.ok).length;
+
+      await fetchData();
+      setSelectedIds(new Set());
+      setShowDeleteExpiredConfirm(false);
+
+      if (failed > 0) {
+        addToast(t('deleteExpiredPartial', { deleted: expiredCoupons.length - failed, failed }), 'warning');
+      } else {
+        addToast(t('deleteExpiredSuccess', { count: expiredCoupons.length }), 'success');
+      }
+    } catch (err) {
+      addToast('Failed to delete expired coupons', 'error');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -168,6 +282,51 @@ const CouponsPageContent: React.FC = () => {
         </button>
       </div>
 
+      {/* Type Filter & Bulk Actions */}
+      <div className="flex items-center justify-between">
+        <div className="flex gap-2">
+          {(['all', 'regular', 'oto'] as const).map((filter) => (
+            <button
+              key={filter}
+              onClick={() => { setTypeFilter(filter); setSelectedIds(new Set()); }}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                typeFilter === filter
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+              }`}
+            >
+              {t(`filter.${filter}`)}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-2">
+          {expiredCoupons.length > 0 && (
+            <button
+              onClick={() => setShowDeleteExpiredConfirm(true)}
+              className="px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-600 text-white hover:bg-amber-700 transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {t('deleteExpired', { count: expiredCoupons.length })}
+            </button>
+          )}
+
+          {selectedIds.size > 0 && (
+            <button
+              onClick={() => setShowBulkDeleteConfirm(true)}
+              className="px-3 py-1.5 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              {t('bulkDelete', { count: selectedIds.size })}
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Table */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         {loading ? (
@@ -176,13 +335,21 @@ const CouponsPageContent: React.FC = () => {
           </div>
         ) : error ? (
           <div className="text-center p-12 text-red-500">{error}</div>
-        ) : coupons.length === 0 ? (
+        ) : filteredCoupons.length === 0 ? (
           <div className="text-center p-12 text-gray-500">{t('noCoupons')}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
+                  <th className="px-4 py-3 w-10">
+                    <input
+                      type="checkbox"
+                      checked={filteredCoupons.length > 0 && selectedIds.size === filteredCoupons.length}
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{t('code')}</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{t('discount')}</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{t('usage')}</th>
@@ -191,41 +358,95 @@ const CouponsPageContent: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {coupons.map((coupon) => (
-                  <tr key={coupon.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="px-6 py-4">
-                      <div className="font-mono font-bold text-blue-600 dark:text-blue-400">{coupon.code}</div>
-                      {coupon.name && <div className="text-xs text-gray-500">{coupon.name}</div>}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                      {coupon.discount_type === 'percentage' 
-                        ? `${coupon.discount_value}%` 
-                        : `${coupon.discount_value} ${coupon.currency || t('allCurrencies')}`}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                      {t(coupon.usage_limit_global ? 'usageCount' : 'usageUnlimited', { 
-                        current: coupon.current_usage_count, 
-                        limit: coupon.usage_limit_global || 0
-                      })}
-                    </td>
-                    <td className="px-6 py-4">
-                      <button
-                        onClick={() => handleToggleActive(coupon)}
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          coupon.is_active 
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
-                            : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
-                        }`}
-                      >
-                        {t(coupon.is_active ? 'active' : 'inactive')}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <button onClick={() => { setEditingCoupon(coupon); setShowForm(true); }} className="text-blue-600 hover:text-blue-900 dark:text-blue-400">{t('edit')}</button>
-                      <button onClick={() => setCouponToDelete(coupon)} className="text-red-600 hover:text-red-900 dark:text-red-400">{t('delete')}</button>
-                    </td>
-                  </tr>
-                ))}
+                {filteredCoupons.map((coupon) => {
+                  const isOto = isOtoCoupon(coupon);
+                  const otoStatus = isOto ? getOtoExpiryStatus(coupon) : null;
+                  const restrictedProducts = getRestrictedProducts(coupon, products);
+
+                  return (
+                    <tr key={coupon.id} className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${selectedIds.has(coupon.id) ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
+                      <td className="px-4 py-4 w-10">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(coupon.id)}
+                          onChange={() => handleSelectOne(coupon.id)}
+                          className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{coupon.code}</span>
+                          {isOto && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                              OTO
+                            </span>
+                          )}
+                        </div>
+                        {coupon.name && <div className="text-xs text-gray-500">{coupon.name}</div>}
+                        {restrictedProducts.length > 0 && (
+                          <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                            </svg>
+                            {restrictedProducts.join(', ')}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                        {coupon.discount_type === 'percentage'
+                          ? `${coupon.discount_value}%`
+                          : `${coupon.discount_value} ${coupon.currency || t('allCurrencies')}`}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                        {t(coupon.usage_limit_global ? 'usageCount' : 'usageUnlimited', {
+                          current: coupon.current_usage_count,
+                          limit: coupon.usage_limit_global || 0
+                        })}
+                      </td>
+                      <td className="px-6 py-4">
+                        {isOto ? (
+                          // OTO coupons show expiry status instead of toggle
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              otoStatus?.isExpired
+                                ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                                : 'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400'
+                            }`}
+                            title={otoStatus?.expiresAt ? otoStatus.expiresAt.toLocaleString() : ''}
+                          >
+                            {otoStatus?.isExpired
+                              ? t('otoExpired')
+                              : t('otoExpiresIn', { minutes: otoStatus?.minutesRemaining || 0 })
+                            }
+                          </span>
+                        ) : (
+                          // Regular coupons have active/inactive toggle
+                          <button
+                            onClick={() => handleToggleActive(coupon)}
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              coupon.is_active
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
+                            }`}
+                          >
+                            {t(coupon.is_active ? 'active' : 'inactive')}
+                          </button>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right space-x-2">
+                        {isOto ? (
+                          // OTO coupons can only be deleted, not edited
+                          <button onClick={() => setCouponToDelete(coupon)} className="text-red-600 hover:text-red-900 dark:text-red-400">{t('delete')}</button>
+                        ) : (
+                          <>
+                            <button onClick={() => { setEditingCoupon(coupon); setShowForm(true); }} className="text-blue-600 hover:text-blue-900 dark:text-blue-400">{t('edit')}</button>
+                            <button onClick={() => setCouponToDelete(coupon)} className="text-red-600 hover:text-red-900 dark:text-red-400">{t('delete')}</button>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -254,6 +475,38 @@ const CouponsPageContent: React.FC = () => {
             <div className="flex justify-end space-x-3">
               <button onClick={() => setCouponToDelete(null)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">{t('form.cancel')}</button>
               <button onClick={() => handleDelete(couponToDelete)} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">{t('delete')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirmation */}
+      {showBulkDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">{t('confirmBulkDelete')}</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              {t('bulkDeleteMessage', { count: selectedIds.size })}
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button onClick={() => setShowBulkDeleteConfirm(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">{t('form.cancel')}</button>
+              <button onClick={handleBulkDelete} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">{t('bulkDelete', { count: selectedIds.size })}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Expired Confirmation */}
+      {showDeleteExpiredConfirm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">{t('confirmDeleteExpired')}</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              {t('deleteExpiredMessage', { count: expiredCoupons.length })}
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button onClick={() => setShowDeleteExpiredConfirm(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">{t('form.cancel')}</button>
+              <button onClick={handleDeleteExpired} className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700">{t('deleteExpired', { count: expiredCoupons.length })}</button>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import BaseModal from './BaseModal';
 
 interface ModalHeaderProps {
@@ -28,6 +28,8 @@ interface ModalSectionProps {
   title?: string;
   children: React.ReactNode;
   className?: string;
+  collapsible?: boolean;
+  defaultExpanded?: boolean;
 }
 
 // Modal Header Component
@@ -103,19 +105,45 @@ export const ModalBody: React.FC<ModalBodyProps> = ({
 };
 
 // Modal Section Component (for organizing content within body)
-export const ModalSection: React.FC<ModalSectionProps> = ({ 
-  title, 
-  children, 
-  className = '' 
+export const ModalSection: React.FC<ModalSectionProps> = ({
+  title,
+  children,
+  className = '',
+  collapsible = false,
+  defaultExpanded = true
 }) => {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={`${className}`}>
       {title && (
-        <h4 className="text-sm font-medium text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
-          {title}
-        </h4>
+        <button
+          type="button"
+          onClick={() => collapsible && setIsExpanded(!isExpanded)}
+          className={`w-full flex items-center justify-between text-sm font-medium text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 mb-4 ${
+            collapsible ? 'cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors' : 'cursor-default'
+          }`}
+        >
+          <span>{title}</span>
+          {collapsible && (
+            <svg
+              className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          )}
+        </button>
       )}
-      {children}
+      <div
+        className={`space-y-4 transition-all duration-200 ${
+          collapsible && !isExpanded ? 'hidden' : ''
+        }`}
+      >
+        {children}
+      </div>
     </div>
   );
 };

@@ -1,0 +1,58 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { checkRateLimit } from '@/lib/rate-limiting';
+
+/**
+ * GET /api/oto/info
+ * Returns OTO coupon information for frontend timer display
+ *
+ * Query params:
+ * - code: OTO coupon code
+ * - email: Customer email
+ */
+export async function GET(request: NextRequest) {
+  try {
+    // 1. Rate Limiting - 10 requests per minute
+    const allowed = await checkRateLimit('oto_info', 10, 1);
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
+    // 2. Get query parameters
+    const { searchParams } = new URL(request.url);
+    const code = searchParams.get('code');
+    const email = searchParams.get('email');
+
+    // 3. Validate inputs
+    if (!code || !email) {
+      return NextResponse.json(
+        { valid: false, error: 'Code and email are required' },
+        { status: 400 }
+      );
+    }
+
+    // 4. Call database function
+    const supabase = await createClient();
+
+    const { data, error } = await supabase.rpc('get_oto_coupon_info', {
+      coupon_code_param: code,
+      email_param: email.toLowerCase()
+    });
+
+    if (error) {
+      console.error('OTO info lookup error:', error);
+      return NextResponse.json(
+        { valid: false, error: 'Failed to fetch OTO info' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error('OTO info API error:', error);
+    return NextResponse.json(
+      { valid: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}

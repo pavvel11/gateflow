@@ -157,15 +157,24 @@ function validateCurrency(currency: string): ValidationResult {
 
 function validateIcon(icon: string): ValidationResult {
   const errors: string[] = [];
-  
+
   if (!icon || typeof icon !== 'string') {
     errors.push('Icon is required');
-  } else if (icon.length > 10) {
-    errors.push('Icon must be less than 10 characters');
-  } else if (!/^[\p{Emoji}\p{Symbol}]$/u.test(icon) && !/^[a-zA-Z0-9-_]+$/.test(icon)) {
-    errors.push('Invalid icon format');
+  } else if (icon.length > 20) {
+    // Allow longer length for multi-codepoint emojis (e.g., 🛠️ = 3 chars)
+    errors.push('Icon must be less than 20 characters');
+  } else {
+    // Check if it's a valid icon: either emoji(s) or alphanumeric icon name
+    const isAlphanumericIcon = /^[a-zA-Z0-9-_]+$/.test(icon);
+    // Match emojis including multi-codepoint ones (flags, skin tones, ZWJ sequences)
+    const emojiRegex = /^[\p{Emoji}\p{Emoji_Modifier}\p{Emoji_Component}\p{Emoji_Modifier_Base}\p{Emoji_Presentation}\u200d\ufe0f]+$/u;
+    const isEmojiIcon = emojiRegex.test(icon);
+
+    if (!isAlphanumericIcon && !isEmojiIcon) {
+      errors.push('Invalid icon format');
+    }
   }
-  
+
   return { isValid: errors.length === 0, errors };
 }
 
@@ -487,11 +496,18 @@ export function validateProductId(id: string): ValidationResult {
 export function sanitizeProductData(data: Record<string, unknown>): Record<string, unknown> {
   // Create a copy to avoid mutating original data
   const sanitizedData = { ...data };
-  
+
   // Remove dangerous fields that should not be set by user
   delete sanitizedData.id;
   delete sanitizedData.created_at;
   delete sanitizedData.updated_at;
+
+  // Remove OTO fields - these are handled by separate oto_offers table
+  delete sanitizedData.oto_enabled;
+  delete sanitizedData.oto_product_id;
+  delete sanitizedData.oto_discount_type;
+  delete sanitizedData.oto_discount_value;
+  delete sanitizedData.oto_duration_minutes;
 
   // Sanitize and trim string fields
   if (sanitizedData.name && typeof sanitizedData.name === 'string') {

@@ -15,6 +15,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { useTranslations } from 'next-intl';
 import ProductShowcase from './ProductShowcase';
 import CustomPaymentForm from './CustomPaymentForm';
+import OtoCountdownBanner from '@/components/storefront/OtoCountdownBanner';
 
 interface PaidProductFormProps {
   product: Product;
@@ -37,8 +38,16 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
   const [hasAccess, setHasAccess] = useState(false);
   const [countdown, setCountdown] = useState(5);
 
-  // Email state (only from logged in user now, guests enter email in Stripe)
-  const email = user?.email;
+  // Email state - from logged in user, or from URL param (for OTO redirects)
+  const urlEmail = searchParams.get('email');
+  const [email, setEmail] = useState<string | undefined>(user?.email || urlEmail || undefined);
+
+  // Sync email with user when they log in
+  useEffect(() => {
+    if (user?.email && !email) {
+      setEmail(user.email);
+    }
+  }, [user?.email, email]);
 
   // Coupon state
   const [couponCode, setCouponCode] = useState('');
@@ -48,6 +57,17 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
   const [couponError, setCouponError] = useState<string | null>(null);
   const [couponManuallyRemoved, setCouponManuallyRemoved] = useState(false);
   const [lastCheckedUrlCoupon, setLastCheckedUrlCoupon] = useState<string | null>(null);
+
+  // OTO (One-Time Offer) state
+  const [isOtoMode, setIsOtoMode] = useState(false);
+  const [otoInfo, setOtoInfo] = useState<{
+    valid: boolean;
+    expires_at?: string;
+    discount_type?: 'percentage' | 'fixed';
+    discount_value?: number;
+    seconds_remaining?: number;
+  } | null>(null);
+  const [otoExpired, setOtoExpired] = useState(false);
 
   // Reset manual removal flag when email changes to allow auto-apply for new email
   useEffect(() => {
@@ -118,22 +138,67 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
     return () => clearTimeout(timer);
   }, [email, product.id, appliedCoupon, couponManuallyRemoved, addToast, t]);
 
-  // Handle URL coupon param
+  // Handle URL coupon param and OTO mode
   useEffect(() => {
     const urlCoupon = searchParams.get('coupon');
     const showPromo = searchParams.get('show_promo');
-    
+    const otoParam = searchParams.get('oto');
+
     if (showPromo === 'true') {
       setShowCouponInput(true);
     }
-    
-    if (urlCoupon && urlCoupon !== lastCheckedUrlCoupon) {
+
+    // Check if this is an OTO redirect (urlEmail is already extracted at component level)
+    if (otoParam === '1' && urlCoupon && urlEmail) {
+      setIsOtoMode(true);
+
+      // Fetch OTO coupon info for timer
+      const fetchOtoInfo = async () => {
+        try {
+          const res = await fetch(`/api/oto/info?code=${encodeURIComponent(urlCoupon)}&email=${encodeURIComponent(urlEmail)}`);
+          const data = await res.json();
+
+          if (data.valid) {
+            setOtoInfo(data);
+            // Also apply the coupon
+            setAppliedCoupon({
+              code: urlCoupon,
+              discount_type: data.discount_type,
+              discount_value: data.discount_value,
+            });
+            setCouponCode(urlCoupon);
+            setShowCouponInput(true);
+            setLastCheckedUrlCoupon(urlCoupon);
+          } else {
+            // OTO expired or invalid
+            setOtoExpired(true);
+            setIsOtoMode(false);
+          }
+        } catch (err) {
+          console.error('Failed to fetch OTO info:', err);
+          setOtoExpired(true);
+          setIsOtoMode(false);
+        }
+      };
+
+      fetchOtoInfo();
+    } else if (urlCoupon && urlCoupon !== lastCheckedUrlCoupon) {
+      // Regular coupon handling (non-OTO)
       setLastCheckedUrlCoupon(urlCoupon);
       setCouponCode(urlCoupon); // Populate input immediately
       setShowCouponInput(true); // Always show input if coupon is in URL
       handleVerifyCoupon(urlCoupon);
     }
-  }, [searchParams, handleVerifyCoupon, lastCheckedUrlCoupon]);
+  }, [searchParams, handleVerifyCoupon, lastCheckedUrlCoupon, urlEmail]);
+
+  // Handle OTO expiry
+  const handleOtoExpire = useCallback(() => {
+    setOtoExpired(true);
+    setAppliedCoupon(null);
+    setCouponCode('');
+    setIsOtoMode(false);
+    addToast?.(t('otoExpired'), 'warning');
+  }, [addToast, t]);
 
   const handleSignOutAndCheckout = async () => {
     try {
@@ -206,6 +271,17 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
 
   const renderCheckoutForm = () => (
     <div className="w-full lg:w-1/2 lg:pl-8">
+      {/* OTO Countdown Banner */}
+      {isOtoMode && otoInfo?.valid && otoInfo.expires_at && !otoExpired && (
+        <OtoCountdownBanner
+          expiresAt={otoInfo.expires_at}
+          discountType={otoInfo.discount_type || 'percentage'}
+          discountValue={otoInfo.discount_value || 0}
+          currency={product.currency}
+          onExpire={handleOtoExpire}
+        />
+      )}
+
       {/* Order Bump - special offer */}
       {orderBump && isCurrencyMatching && !hasAccess && !error && searchParams.get('hide_bump') !== 'true' && (
         <div 

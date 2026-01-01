@@ -21,6 +21,10 @@ interface MagicLinkStatusProps {
   onBeforeInteractive: () => void;
   onAfterInteractive: () => void;
   sendMagicLink: () => Promise<void>;
+  /** Optional redirect URL - if set, show countdown after magic link is sent */
+  redirectUrl?: string;
+  /** Countdown value for redirect */
+  countdown?: number;
 }
 
 export default function MagicLinkStatus({
@@ -38,6 +42,8 @@ export default function MagicLinkStatus({
   onCaptchaTimeout,
   onBeforeInteractive,
   onAfterInteractive,
+  redirectUrl,
+  countdown,
 }: MagicLinkStatusProps) {
   const t = useTranslations('paymentStatus');
   const tCompliance = useTranslations('compliance');
@@ -135,6 +141,15 @@ export default function MagicLinkStatus({
             <p className="text-green-200 text-sm">
               {t('checkEmailForLoginLink', { email: customerEmail || '' })}
             </p>
+            {/* Show countdown if redirect is configured */}
+            {redirectUrl && countdown !== undefined && (
+              <div className="mt-4 pt-4 border-t border-green-500/20">
+                <div className="flex items-center justify-center space-x-3">
+                  <div className="text-4xl font-bold text-white tabular-nums">{countdown}</div>
+                </div>
+                <p className="text-gray-400 text-sm mt-2 text-center">{t('redirectingToProduct')}</p>
+              </div>
+            )}
           </div>
         ) : null}
         

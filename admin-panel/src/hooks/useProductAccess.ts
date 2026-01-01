@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Product } from '@/types';
 import { checkProductAccess } from '@/lib/api/product-access';
@@ -17,8 +17,24 @@ interface AccessResponse {
 export function useProductAccess(product: Product) {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [accessData, setAccessData] = useState<AccessResponse | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Build checkout URL preserving OTO params
+  const buildCheckoutUrl = (slug: string) => {
+    const params = new URLSearchParams();
+    const email = searchParams.get('email');
+    const coupon = searchParams.get('coupon');
+    const oto = searchParams.get('oto');
+
+    if (email) params.set('email', email);
+    if (coupon) params.set('coupon', coupon);
+    if (oto) params.set('oto', oto);
+
+    const queryString = params.toString();
+    return `/checkout/${slug}${queryString ? `?${queryString}` : ''}`;
+  };
 
   useEffect(() => {
     const checkUserAccess = async () => {
@@ -54,9 +70,9 @@ export function useProductAccess(product: Product) {
           return;
         }
         
-        // Product is available - redirect to checkout
+        // Product is available - redirect to checkout (preserving OTO params)
         setLoading(false);
-        router.push(`/checkout/${product.slug}`);
+        router.push(buildCheckoutUrl(product.slug));
         return;
       }
 
@@ -71,7 +87,7 @@ export function useProductAccess(product: Product) {
         if (!data.hasAccess) {
           // Only redirect to checkout if the product is available for new purchases
           if (data.reason === 'no_access') {
-            router.push(`/checkout/${product.slug}`);
+            router.push(buildCheckoutUrl(product.slug));
             return;
           }
           // For other reasons (inactive, temporal, expired), show appropriate message

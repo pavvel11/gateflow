@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import PaymentStatusView from './components/PaymentStatusView';
-import { verifyPaymentSession, verifyPaymentIntent } from '@/lib/payment/verify-payment';
-import { PaymentStatus } from './types';
+import { verifyPaymentSession, verifyPaymentIntent, OtoInfo } from '@/lib/payment/verify-payment';
+import { buildOtoRedirectUrl, buildSuccessRedirectUrl, hasHideBumpParam } from '@/lib/payment/oto-redirect';
+import { PaymentStatus, OtoOfferInfo } from './types';
 
 interface PageProps {
   params: Promise<{ locale: string; slug: string }>;
@@ -48,6 +49,7 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
   let paymentStatus: PaymentStatus = 'processing'; // processing, completed, failed, expired, guest_purchase, magic_link_sent
   let customerEmail = '';
   let userExistsInDatabase = false; // Track if user exists in database
+  let otoInfo: OtoInfo | undefined = undefined;
 
   try {
     if (isStripePayment && session_id) {
@@ -61,8 +63,14 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
         send_magic_link: result.send_magic_link,
         requires_login: result.requires_login,
         is_guest_purchase: result.is_guest_purchase,
-        user_id: user?.id || 'null'
+        user_id: user?.id || 'null',
+        oto_info: result.oto_info
       });
+
+      // Capture OTO info (both active and skipped)
+      if (result.oto_info?.has_oto || result.oto_info?.reason) {
+        otoInfo = result.oto_info;
+      }
 
       // Check if user exists in database based on scenario
       userExistsInDatabase = result.scenario === 'existing_user_email';
@@ -107,8 +115,14 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
         send_magic_link: result.send_magic_link,
         requires_login: result.requires_login,
         is_guest_purchase: result.is_guest_purchase,
-        user_id: user?.id || 'null'
+        user_id: user?.id || 'null',
+        oto_info: result.oto_info
       });
+
+      // Capture OTO info (both active and skipped)
+      if (result.oto_info?.has_oto || result.oto_info?.reason) {
+        otoInfo = result.oto_info;
+      }
 
       // Check if user exists in database based on scenario
       userExistsInDatabase = result.scenario === 'existing_user_email';
@@ -193,53 +207,123 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
     errorMessage = 'An error occurred while verifying payment status';
   }
 
-  // Calculate Funnel/OTO Redirect URL
+  // Calculate Funnel/OTO Redirect URL and OTO Offer Info
   let finalRedirectUrl: string | undefined = undefined;
+  let otoOfferInfo: OtoOfferInfo | undefined = undefined;
 
-  if (accessGranted && paymentStatus === 'completed') {
-    const params = resolvedSearchParams;
-    const overrideRedirectUrl = params.success_url;
-    const targetUrl = overrideRedirectUrl || product.success_redirect_url;
+  // Check for OTO offer (takes priority over regular success_redirect_url)
+  if ((accessGranted || paymentStatus === 'magic_link_sent') && otoInfo?.has_oto && otoInfo.oto_product_slug) {
+    // Check if customer already has access to OTO product - skip OTO if they do
+    let customerHasOtoAccess = false;
 
-    if (targetUrl) {
-      if (product.pass_params_to_redirect) {
-        try {
-          let urlObj: URL;
-          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    if (otoInfo.oto_product_id && customerEmail) {
+      // First check if user exists with this email
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', customerEmail)
+        .maybeSingle();
 
-          if (targetUrl.startsWith('/')) {
-            // Relative URL - use base URL
-            urlObj = new URL(targetUrl, baseUrl);
-          } else if (targetUrl.startsWith('http')) {
-            // Absolute URL
-            urlObj = new URL(targetUrl);
-          } else {
-            // Domain only - assume https
-            urlObj = new URL(`https://${targetUrl}`);
-          }
-          
-          if (customerEmail) urlObj.searchParams.set('email', customerEmail);
-          urlObj.searchParams.set('productId', product.id);
-          if (session_id) urlObj.searchParams.set('sessionId', session_id);
-          
-          // Pass all other incoming search params except internal ones
-          Object.keys(params).forEach(key => {
-            if (!['session_id', 'success_url'].includes(key)) {
-              const val = params[key as keyof typeof params];
-              if (val) urlObj.searchParams.set(key, val);
-            }
-          });
+      if (existingUser) {
+        // Check if user has access to OTO product
+        const { data: existingOtoAccess } = await supabase
+          .from('user_product_access')
+          .select('id, access_expires_at')
+          .eq('user_id', existingUser.id)
+          .eq('product_id', otoInfo.oto_product_id)
+          .maybeSingle();
 
-          finalRedirectUrl = urlObj.toString();
-        } catch (e) {
-          console.error('Error parsing redirect URL:', targetUrl);
-          // Fallback to raw URL if parsing fails, but respect relative paths
-          finalRedirectUrl = targetUrl;
+        if (existingOtoAccess) {
+          // Check if access is still valid (not expired)
+          const expiresAt = existingOtoAccess.access_expires_at
+            ? new Date(existingOtoAccess.access_expires_at)
+            : null;
+          customerHasOtoAccess = !expiresAt || expiresAt > new Date();
         }
-      } else {
-        finalRedirectUrl = targetUrl;
       }
-      console.log('OTO Redirect configured:', finalRedirectUrl);
+    }
+
+    if (customerHasOtoAccess) {
+      console.log('Customer already has access to OTO product, skipping OTO offer');
+    } else {
+      // Build OTO checkout URL
+      const otoRedirect = buildOtoRedirectUrl({
+        locale: resolvedParams.locale,
+        otoProductSlug: otoInfo.oto_product_slug!,
+        customerEmail: customerEmail || undefined,
+        couponCode: otoInfo.coupon_code,
+        baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
+        hideBump: hasHideBumpParam(product.success_redirect_url),
+        passParams: product.pass_params_to_redirect || false,
+        sourceProductId: product.id,
+        sessionId: session_id
+      });
+
+      // Build OTO offer info for display on payment-status page
+      otoOfferInfo = {
+        hasOto: true,
+        otoProductSlug: otoInfo.oto_product_slug,
+        otoProductName: otoInfo.oto_product_name,
+        discountType: otoInfo.discount_type,
+        discountValue: otoInfo.discount_value,
+        expiresAt: otoInfo.expires_at,
+        checkoutUrl: otoRedirect.url,
+        currency: otoInfo.oto_product_currency
+      };
+
+      // Log warning if required params are missing
+      if (!otoRedirect.hasAllRequiredParams) {
+        console.warn('OTO Redirect missing params:', otoRedirect.missingParams, '- OTO countdown may not work');
+      }
+      console.log('OTO Offer configured:', otoOfferInfo.checkoutUrl, 'Expires:', otoInfo.expires_at);
+    }
+  }
+
+  // Redirect logic:
+  // 1. OTO active → handled above (otoOfferInfo is set)
+  // 2. OTO skipped (user owns product) → NO redirect
+  // 3. No OTO → use success_redirect_url
+  console.log('Redirect logic check:', {
+    accessGranted,
+    paymentStatus,
+    hasOtoOfferInfo: !!otoOfferInfo,
+    otoInfoHasOto: otoInfo?.has_oto,
+    otoInfoReason: otoInfo?.reason,
+    productSuccessRedirectUrl: product.success_redirect_url
+  });
+
+  // Include magic_link_sent as a success scenario (guest purchase)
+  const isSuccessfulPayment = (accessGranted && paymentStatus === 'completed') || paymentStatus === 'magic_link_sent';
+
+  if (isSuccessfulPayment && !otoOfferInfo) {
+    // Check if OTO was configured but skipped (user already owns the product)
+    const otoWasSkipped = otoInfo?.reason === 'already_owns_oto_product';
+
+    if (otoWasSkipped) {
+      console.log('OTO was skipped (user owns product) - no redirect');
+    } else {
+      // No OTO configured - use regular success_redirect_url
+      const overrideRedirectUrl = resolvedSearchParams.success_url;
+      const targetUrl = overrideRedirectUrl || product.success_redirect_url;
+
+      console.log('No OTO - checking success_redirect_url:', { overrideRedirectUrl, targetUrl });
+
+      if (targetUrl) {
+        const redirectResult = buildSuccessRedirectUrl({
+          targetUrl,
+          baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
+          passParams: product.pass_params_to_redirect || false,
+          customerEmail: customerEmail || undefined,
+          productId: product.id,
+          sessionId: session_id,
+          additionalParams: resolvedSearchParams as Record<string, string | undefined>
+        });
+
+        finalRedirectUrl = redirectResult.url;
+        console.log('Success Redirect configured:', finalRedirectUrl);
+      } else {
+        console.log('No targetUrl - redirect will not happen');
+      }
     }
   }
 
@@ -253,6 +337,7 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
       sessionId={session_id}
       paymentIntentId={payment_intent}
       redirectUrl={finalRedirectUrl}
+      otoOffer={otoOfferInfo}
     />
   );
 }

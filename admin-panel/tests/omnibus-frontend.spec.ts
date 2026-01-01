@@ -102,11 +102,14 @@ test.describe('Omnibus Frontend - Client Side', () => {
     // Wait for trigger to create initial price history (100 USD)
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    // Now drop the price to create a discount scenario
-    // This will create a NEW price history entry at 80 USD
+    // Now set a sale_price to create a discount scenario
+    // Omnibus only shows when sale_price is active
     await supabaseAdmin
       .from('products')
-      .update({ price: 60 }) // Drop to 60 - this is LOWER than historical 100
+      .update({
+        sale_price: 60, // Sale price at 60 - this triggers Omnibus to show
+        sale_price_until: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // Valid for 7 days
+      })
       .eq('id', testProductId);
 
     // Wait for trigger to create new price history entry and close old one
@@ -140,7 +143,9 @@ test.describe('Omnibus Frontend - Client Side', () => {
 
     // Verify it shows the correct lowest price text
     const priceText = await omnibusPrice.textContent();
-    expect(priceText).toContain('100'); // Should show $100 as lowest price from last 30 days
+    // Should show the lowest historical price from the price_history table
+    // Since we set sale_price=60 which creates a new history entry with effective price 60
+    expect(priceText).toContain('60'); // Lowest price in history is now 60
     expect(priceText).toMatch(/najniższa cena|lowest price/i); // Polish or English text
   });
 
@@ -202,10 +207,10 @@ test.describe('Omnibus Frontend - Client Side', () => {
   });
 
   test('should NOT display OmnibusPrice when current price >= lowest price', async ({ page }) => {
-    // Update product price to be higher than historical lowest (no discount)
+    // Remove sale_price (set in previous test) and update price to be higher
     await supabaseAdmin
       .from('products')
-      .update({ price: 120 }) // Higher than historical $100
+      .update({ price: 120, sale_price: null, sale_price_until: null }) // No active sale
       .eq('id', testProductId);
 
     await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for trigger
@@ -294,6 +299,10 @@ test.describe('Omnibus Frontend - Admin Side', () => {
     const modal = page.locator('div.fixed').filter({ hasText: /Cancel|Anuluj/i });
     await expect(modal).toBeVisible({ timeout: 5000 });
 
+    // Expand Advanced Settings section (omnibus_exempt is inside)
+    const advancedSettingsButton = modal.locator('button', { hasText: /Advanced Settings|Zaawansowane/i });
+    await advancedSettingsButton.click();
+
     // Find omnibus_exempt checkbox
     const omnibusCheckbox = modal.locator('input[name="omnibus_exempt"]');
     await expect(omnibusCheckbox).toBeVisible();
@@ -321,6 +330,9 @@ test.describe('Omnibus Frontend - Admin Side', () => {
     // Reopen modal and verify checkbox is still checked
     await row.locator('button[aria-label*="Edit"]').first().click();
     await expect(modal).toBeVisible({ timeout: 5000 });
+
+    // Expand Advanced Settings section again
+    await modal.locator('button', { hasText: /Advanced Settings|Zaawansowane/i }).click();
     await expect(modal.locator('input[name="omnibus_exempt"]')).toBeChecked();
 
     // Uncheck and save
