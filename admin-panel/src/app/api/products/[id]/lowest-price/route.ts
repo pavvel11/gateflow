@@ -27,7 +27,7 @@ export async function GET(
     const supabase = await createClient();
     const { data: product, error: productError } = await supabase
       .from('products')
-      .select('sale_price, sale_price_until')
+      .select('sale_price, sale_price_until, sale_quantity_limit, sale_quantity_sold')
       .eq('id', productId)
       .single();
 
@@ -40,10 +40,12 @@ export async function GET(
       });
     }
 
-    // Check if sale price is active
+    // Check if sale price is active (considers both time and quantity limits)
     const showOmnibus = isSalePriceActive(
       product.sale_price,
-      product.sale_price_until
+      product.sale_price_until,
+      product.sale_quantity_limit,
+      product.sale_quantity_sold
     );
 
     // Only fetch and return lowest price if sale is active

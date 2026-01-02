@@ -7,7 +7,10 @@
 ALTER TABLE products
 ADD COLUMN IF NOT EXISTS omnibus_exempt BOOLEAN DEFAULT false NOT NULL,
 ADD COLUMN IF NOT EXISTS sale_price NUMERIC CHECK (sale_price >= 0),
-ADD COLUMN IF NOT EXISTS sale_price_until TIMESTAMPTZ;
+ADD COLUMN IF NOT EXISTS sale_price_until TIMESTAMPTZ,
+-- Quantity-based sale limits (added 2026-01-02)
+ADD COLUMN IF NOT EXISTS sale_quantity_limit INTEGER CHECK (sale_quantity_limit IS NULL OR sale_quantity_limit > 0),
+ADD COLUMN IF NOT EXISTS sale_quantity_sold INTEGER DEFAULT 0 NOT NULL CHECK (sale_quantity_sold >= 0);
 
 COMMENT ON COLUMN products.omnibus_exempt IS
   'Exempt this product from Omnibus price history display (e.g., perishable goods, new arrivals <30 days)';
@@ -17,6 +20,12 @@ COMMENT ON COLUMN products.sale_price IS
 
 COMMENT ON COLUMN products.sale_price_until IS
   'Optional expiration date for sale_price. NULL means sale price is active indefinitely. When date passes, sale_price is no longer used.';
+
+COMMENT ON COLUMN products.sale_quantity_limit IS
+  'Maximum number of units that can be sold at sale price (NULL = unlimited). When limit is reached, sale_price is no longer used.';
+
+COMMENT ON COLUMN products.sale_quantity_sold IS
+  'Number of units already sold at sale price. Automatically incremented on successful payment when sale is active.';
 
 -- ============================================================================
 -- 2. Create product_price_history table
@@ -210,3 +219,85 @@ CREATE TRIGGER cleanup_price_history_trigger
   AFTER INSERT ON product_price_history
   FOR EACH STATEMENT
   EXECUTE FUNCTION cleanup_old_price_history();
+
+-- ============================================================================
+-- 9. Sale Quantity Limit Helper Functions
+-- ============================================================================
+
+-- Helper function to check if sale price is currently active
+CREATE OR REPLACE FUNCTION public.is_sale_price_active(
+  p_sale_price NUMERIC,
+  p_sale_price_until TIMESTAMPTZ,
+  p_sale_quantity_limit INTEGER,
+  p_sale_quantity_sold INTEGER
+) RETURNS BOOLEAN AS $$
+BEGIN
+  -- No sale price set
+  IF p_sale_price IS NULL OR p_sale_price <= 0 THEN
+    RETURN FALSE;
+  END IF;
+
+  -- Check time limit (if set)
+  IF p_sale_price_until IS NOT NULL AND p_sale_price_until <= NOW() THEN
+    RETURN FALSE;
+  END IF;
+
+  -- Check quantity limit (if set)
+  IF p_sale_quantity_limit IS NOT NULL AND COALESCE(p_sale_quantity_sold, 0) >= p_sale_quantity_limit THEN
+    RETURN FALSE;
+  END IF;
+
+  RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+COMMENT ON FUNCTION public.is_sale_price_active IS
+  'Check if sale price is currently active (considers both time and quantity limits)';
+
+-- Function to atomically increment sale_quantity_sold after successful payment
+CREATE OR REPLACE FUNCTION public.increment_sale_quantity_sold(
+  p_product_id UUID
+) RETURNS BOOLEAN AS $$
+DECLARE
+  v_product RECORD;
+  v_was_incremented BOOLEAN := FALSE;
+BEGIN
+  -- Get current product state with FOR UPDATE to prevent race conditions
+  SELECT
+    sale_price,
+    sale_price_until,
+    sale_quantity_limit,
+    sale_quantity_sold
+  INTO v_product
+  FROM public.products
+  WHERE id = p_product_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RETURN FALSE;
+  END IF;
+
+  -- Only increment if sale was active at time of purchase
+  IF public.is_sale_price_active(
+    v_product.sale_price,
+    v_product.sale_price_until,
+    v_product.sale_quantity_limit,
+    v_product.sale_quantity_sold
+  ) THEN
+    UPDATE public.products
+    SET sale_quantity_sold = COALESCE(sale_quantity_sold, 0) + 1
+    WHERE id = p_product_id;
+
+    v_was_incremented := TRUE;
+  END IF;
+
+  RETURN v_was_incremented;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+COMMENT ON FUNCTION public.increment_sale_quantity_sold IS
+  'Atomically increment sale_quantity_sold for a product (uses row locking to prevent race conditions)';
+
+-- Grant execute permissions
+GRANT EXECUTE ON FUNCTION public.increment_sale_quantity_sold(UUID) TO service_role;
+GRANT EXECUTE ON FUNCTION public.is_sale_price_active(NUMERIC, TIMESTAMPTZ, INTEGER, INTEGER) TO anon, authenticated, service_role;

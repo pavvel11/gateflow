@@ -106,21 +106,41 @@ export async function getLowestPriceInLast30Days(
 
 /**
  * Determine if sale price is currently active
- * Sale price is active if set and either no expiration date or expiration is in the future
+ * Sale price is active if:
+ * - sale_price is set and > 0
+ * - AND time limit not reached (if set)
+ * - AND quantity limit not reached (if set)
+ *
+ * Supports three scenarios:
+ * 1. Only time limit (sale_price_until set)
+ * 2. Only quantity limit (sale_quantity_limit set)
+ * 3. Both limits (ends when either is reached first)
  */
 export function isSalePriceActive(
   salePrice: number | null,
-  salePriceUntil: string | null
+  salePriceUntil: string | null,
+  saleQuantityLimit?: number | null,
+  saleQuantitySold?: number | null
 ): boolean {
+  // No sale price set
   if (!salePrice || salePrice <= 0) {
     return false;
   }
 
-  if (!salePriceUntil) {
-    return true; // No expiration = active indefinitely
+  // Check time limit (if set)
+  if (salePriceUntil && new Date(salePriceUntil) <= new Date()) {
+    return false;
   }
 
-  return new Date(salePriceUntil) > new Date();
+  // Check quantity limit (if set)
+  if (saleQuantityLimit !== null && saleQuantityLimit !== undefined) {
+    const sold = saleQuantitySold ?? 0;
+    if (sold >= saleQuantityLimit) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 /**
@@ -131,7 +151,9 @@ export function calculateEffectivePrice(
   price: number,
   salePrice: number | null,
   salePriceUntil: string | null,
-  couponDiscount: number = 0
+  couponDiscount: number = 0,
+  saleQuantityLimit?: number | null,
+  saleQuantitySold?: number | null
 ): {
   effectivePrice: number;
   originalPrice: number;
@@ -139,7 +161,7 @@ export function calculateEffectivePrice(
   isUsingSalePrice: boolean;
   isUsingCoupon: boolean;
 } {
-  const activeSalePrice = isSalePriceActive(salePrice, salePriceUntil)
+  const activeSalePrice = isSalePriceActive(salePrice, salePriceUntil, saleQuantityLimit, saleQuantitySold)
     ? salePrice
     : null;
 

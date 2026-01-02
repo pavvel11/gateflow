@@ -54,6 +54,8 @@ export interface ProductFormData {
   // Sale price (promotional pricing)
   sale_price?: number | null;
   sale_price_until?: string | null;
+  sale_quantity_limit?: number | null;
+  sale_quantity_sold?: number;
   // Refund settings
   is_refundable: boolean;
   refund_period_days?: number | null;
@@ -98,6 +100,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
     omnibus_exempt: false,
     sale_price: null,
     sale_price_until: null,
+    sale_quantity_limit: null,
+    sale_quantity_sold: 0,
     is_refundable: false,
     refund_period_days: null
   });
@@ -195,6 +199,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         omnibus_exempt: product.omnibus_exempt || false,
         sale_price: product.sale_price || null,
         sale_price_until: product.sale_price_until || null,
+        sale_quantity_limit: product.sale_quantity_limit || null,
+        sale_quantity_sold: product.sale_quantity_sold || 0,
         is_refundable: (product as Product & { is_refundable?: boolean }).is_refundable || false,
         refund_period_days: (product as Product & { refund_period_days?: number | null }).refund_period_days || null
       });
@@ -254,6 +260,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         omnibus_exempt: false,
         sale_price: null,
         sale_price_until: null,
+        sale_quantity_limit: null,
+        sale_quantity_sold: 0,
         is_refundable: false,
         refund_period_days: null
       });
@@ -907,10 +915,76 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 />
               </div>
 
+              {/* Quantity Limit */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="sale_quantity_limit" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t('saleQuantityLimit', { defaultValue: 'Quantity Limit' })}
+                    <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">({t('optional')})</span>
+                  </label>
+                  <input
+                    type="number"
+                    id="sale_quantity_limit"
+                    min="1"
+                    value={formData.sale_quantity_limit || ''}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      sale_quantity_limit: e.target.value ? parseInt(e.target.value, 10) : null
+                    }))}
+                    className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    placeholder={t('saleQuantityLimitPlaceholder', { defaultValue: 'No limit' })}
+                  />
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    {t('saleQuantityLimitDescription', { defaultValue: 'Max units at sale price. Leave empty for unlimited.' })}
+                  </p>
+                </div>
+
+                {/* Quantity Sold Display & Reset */}
+                {formData.sale_quantity_sold !== undefined && formData.sale_quantity_sold > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {t('saleQuantitySoldLabel', { defaultValue: 'Sold at Sale Price' })}
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 px-3 py-2.5 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                          {formData.sale_quantity_sold}
+                        </span>
+                        {formData.sale_quantity_limit && (
+                          <span className="text-gray-500 dark:text-gray-400">
+                            {' / '}{formData.sale_quantity_limit}
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, sale_quantity_sold: 0 }))}
+                        className="px-3 py-2.5 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg border border-red-200 dark:border-red-800 transition-colors"
+                        title={t('resetSaleCounter', { defaultValue: 'Reset counter' })}
+                      >
+                        {t('reset', { defaultValue: 'Reset' })}
+                      </button>
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      {t('saleQuantitySoldDescription', { defaultValue: 'Number of units sold at the promotional price.' })}
+                    </p>
+                  </div>
+                )}
+              </div>
+
               {formData.sale_price && formData.sale_price < formData.price && (
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
                   <p className="text-sm text-blue-800 dark:text-blue-200">
                     ℹ️ {t('salePriceActiveInfo')}
+                  </p>
+                </div>
+              )}
+
+              {/* Warning when quantity limit is reached */}
+              {formData.sale_quantity_limit && formData.sale_quantity_sold !== undefined && formData.sale_quantity_sold >= formData.sale_quantity_limit && (
+                <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-200 dark:border-amber-700">
+                  <p className="text-sm text-amber-800 dark:text-amber-200">
+                    ⚠️ {t('saleQuantityLimitReached', { defaultValue: 'Sale quantity limit reached. Customers will see the regular price.' })}
                   </p>
                 </div>
               )}

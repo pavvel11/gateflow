@@ -45,6 +45,7 @@
     "emailRequired": "Email jest wymagany",
     "fullName": "Imię i nazwisko",
     "saleEndsAt": "Promocja kończy się {date}",
+    "saleQuantityRemaining": "Tylko {count} sztuk w tej cenie!",
     "lowestPriceLabel": "Najniższa cena z okresu 30 dni przed obniżką",
     "lowestPriceTooltipTitle": "Co to jest najniższa cena?",
     "lowestPriceTooltipDescription": "Ta cena odzwierciedla najniższą cenę w ciągu ostatnich 30 dni przed zastosowaniem obniżki, w tym wcześniejsze obniżki.",

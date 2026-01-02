@@ -45,6 +45,7 @@
     "emailRequired": "Email is required",
     "fullName": "Full Name",
     "saleEndsAt": "Sale ends {date}",
+    "saleQuantityRemaining": "Only {count} left at this price!",
     "lowestPriceLabel": "Lowest price in the 30 days prior to the discount",
     "lowestPriceTooltipTitle": "What is the lowest price?",
     "lowestPriceTooltipDescription": "This price reflects the lowest price in the last 30 days before the discount was applied, including previous discounts.",

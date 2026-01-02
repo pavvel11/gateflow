@@ -15,11 +15,16 @@ interface ProductShowcaseProps {
 export default function ProductShowcase({ product }: ProductShowcaseProps) {
   const t = useTranslations('checkout');
 
-  // Check if sale price is active
+  // Check if sale price is active (considers both time and quantity limits)
+  const saleQuantitySold = product.sale_quantity_sold ?? 0;
+  const saleQuantityLimit = product.sale_quantity_limit ?? null;
+  const saleQuantityRemaining = saleQuantityLimit !== null ? saleQuantityLimit - saleQuantitySold : null;
+
   const isSaleActive =
     product.sale_price &&
     product.sale_price > 0 &&
-    (!product.sale_price_until || new Date(product.sale_price_until) > new Date());
+    (!product.sale_price_until || new Date(product.sale_price_until) > new Date()) &&
+    (saleQuantityLimit === null || saleQuantitySold < saleQuantityLimit);
 
   // Determine effective price (sale price if active, otherwise regular price)
   const effectivePrice = isSaleActive ? product.sale_price! : product.price;
@@ -102,6 +107,19 @@ export default function ProductShowcase({ product }: ProductShowcaseProps) {
                 hour: '2-digit',
                 minute: '2-digit'
               })
+            })}
+          </div>
+        )}
+
+        {/* Remaining quantity at sale price */}
+        {isSaleActive && saleQuantityRemaining !== null && saleQuantityRemaining > 0 && (
+          <div className="text-sm text-orange-400 mt-2 flex items-center gap-1" data-testid="sale-quantity-remaining">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            {t('saleQuantityRemaining', {
+              defaultValue: 'Only {count} left at this price!',
+              count: saleQuantityRemaining
             })}
           </div>
         )}

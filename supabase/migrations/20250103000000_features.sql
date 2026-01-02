@@ -664,6 +664,10 @@ BEGIN
       )
     ) RETURNING id INTO transaction_id_var;
 
+    -- Increment sale quantity sold if sale price is active
+    -- This is done atomically to prevent race conditions
+    PERFORM public.increment_sale_quantity_sold(product_id_param);
+
     -- Handle coupon redemption
     IF coupon_id_param IS NOT NULL THEN
       INSERT INTO public.coupon_redemptions (

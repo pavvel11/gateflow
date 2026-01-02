@@ -544,6 +544,20 @@ export function sanitizeProductData(data: Record<string, unknown>): Record<strin
     sanitizedData.sale_price = null;
   }
 
+  // Convert sale_quantity_limit empty/zero to null
+  if (sanitizedData.sale_quantity_limit === '' || sanitizedData.sale_quantity_limit === 0 || sanitizedData.sale_quantity_limit === null) {
+    sanitizedData.sale_quantity_limit = null;
+  } else if (typeof sanitizedData.sale_quantity_limit === 'string') {
+    sanitizedData.sale_quantity_limit = parseInt(sanitizedData.sale_quantity_limit, 10) || null;
+  }
+
+  // Ensure sale_quantity_sold is always a valid number
+  if (sanitizedData.sale_quantity_sold === '' || sanitizedData.sale_quantity_sold === null || sanitizedData.sale_quantity_sold === undefined) {
+    sanitizedData.sale_quantity_sold = 0;
+  } else if (typeof sanitizedData.sale_quantity_sold === 'string') {
+    sanitizedData.sale_quantity_sold = parseInt(sanitizedData.sale_quantity_sold, 10) || 0;
+  }
+
   // Set defaults
   if (sanitizedData.currency === undefined) {
     sanitizedData.currency = 'USD';

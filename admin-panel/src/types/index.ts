@@ -23,6 +23,9 @@ export interface Product {
   // Sale price (promotional pricing)
   sale_price?: number | null
   sale_price_until?: string | null
+  // Sale quantity limits (quantity-based promotional limits)
+  sale_quantity_limit?: number | null
+  sale_quantity_sold?: number
   // Temporal availability fields
   available_from?: string | null
   available_until?: string | null
