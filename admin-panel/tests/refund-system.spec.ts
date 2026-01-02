@@ -720,6 +720,60 @@ test.describe('Refund System - Admin Product Form UI', () => {
     await expect(page.locator('text=/Allow customers to request refunds/i')).toBeVisible();
   });
 
+  test('admin should be able to toggle refund settings in form', async ({ page }) => {
+    await signInUser(page, adminUser.email, adminPassword);
+
+    await page.goto('/en/dashboard/products');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
+
+    // Close cookie banner if present
+    await closeCookieBanner(page);
+
+    // Find the row with test product and click its edit button
+    const productRow = page.locator('tr').filter({ hasText: testProduct.name });
+    await productRow.locator('button[aria-label*="Edit"], button[title="Edit"]').click();
+    await page.waitForTimeout(1500);
+
+    // Scroll down to make sure refund settings are visible
+    await page.locator('text=/Refund Policy/i').scrollIntoViewIfNeeded();
+    await page.waitForTimeout(500);
+
+    // Find the refund toggle checkbox by its ID
+    const refundToggle = page.locator('#is_refundable');
+    await expect(refundToggle).toBeVisible();
+
+    // First uncheck if already checked
+    if (await refundToggle.isChecked()) {
+      await refundToggle.click({ force: true });
+      await page.waitForTimeout(500);
+    }
+
+    // Now enable refunds
+    await refundToggle.click({ force: true });
+    await page.waitForTimeout(500);
+
+    // Verify checkbox is now checked
+    await expect(refundToggle).toBeChecked();
+
+    // Now the refund period input should be visible
+    const periodInput = page.locator('#refund_period_days');
+    await expect(periodInput).toBeVisible({ timeout: 5000 });
+
+    // Set refund period to 30 days
+    await periodInput.clear();
+    await periodInput.fill('30');
+
+    // Verify the value is set
+    await expect(periodInput).toHaveValue('30');
+
+    // Test that disabling refunds hides the period input
+    await refundToggle.click({ force: true });
+    await page.waitForTimeout(500);
+    await expect(refundToggle).not.toBeChecked();
+    await expect(periodInput).not.toBeVisible();
+  });
+
 });
 
 test.describe('Refund System - Admin Approve/Reject UI', () => {
