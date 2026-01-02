@@ -164,22 +164,22 @@ export default function PaymentTransactionsTable({
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Process Refund
+              {tRefund('title')}
             </h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Refund Reason
+                  {tRefund('reason')}
                 </label>
                 <select
                   value={refundReason}
                   onChange={(e) => setRefundReason(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 >
-                  <option value="">Select reason</option>
-                  <option value="requested_by_customer">Customer Request</option>
-                  <option value="duplicate">Duplicate Payment</option>
-                  <option value="fraudulent">Fraudulent</option>
+                  <option value="">{tRefund('selectReason')}</option>
+                  <option value="requested_by_customer">{tRefund('reasons.requested_by_customer')}</option>
+                  <option value="duplicate">{tRefund('reasons.duplicate')}</option>
+                  <option value="fraudulent">{tRefund('reasons.fraudulent')}</option>
                 </select>
               </div>
               <div className="flex space-x-3">
@@ -188,7 +188,7 @@ export default function PaymentTransactionsTable({
                   disabled={!refundReason || refundingId === showRefundModal}
                   className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                 >
-                  {refundingId === showRefundModal ? 'Processing...' : 'Full Refund'}
+                  {refundingId === showRefundModal ? tRefund('processing') : tRefund('fullRefund')}
                 </button>
                 <button
                   onClick={() => {
@@ -197,7 +197,7 @@ export default function PaymentTransactionsTable({
                   }}
                   className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                 >
-                  Cancel
+                  {tRefund('cancel')}
                 </button>
               </div>
             </div>

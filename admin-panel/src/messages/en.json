@@ -98,6 +98,8 @@
     "login": "Login",
     "profile": "Profile",
     "myProducts": "My Products",
+    "myPurchases": "My Purchases",
+    "refundRequests": "Refund Requests",
     "store": "Store",
     "about": "About GateFlow"
   },
@@ -897,7 +899,16 @@
         "salePriceUntilDescription": "Sale end date (optional)",
         "salePriceMustBeLower": "Sale price must be lower than regular price",
         "salePriceActiveInfo": "Sale is active and will be displayed to customers along with the lowest price from the last 30 days",
-        "duplicateLabel": "Duplicate {name}"
+        "duplicateLabel": "Duplicate {name}",
+        "refundSettings": {
+          "title": "Refund Policy",
+          "allowRefunds": "Allow customers to request refunds",
+          "refundPeriod": "Refund period (days)",
+          "refundPeriodPlaceholder": "e.g., 14, 30",
+          "refundPeriodHelp": "Number of days from purchase within which customer can request a refund. Leave empty for no time limit.",
+          "infoTitle": "How refunds work",
+          "infoDescription": "Customers can submit refund requests from their purchase history. You will review and approve/reject each request. Admins can always issue refunds regardless of the time limit."
+        }
       },
       "duplicateLabel": "Duplicate {name}"
     },
@@ -1171,6 +1182,39 @@
         "save": "Save Order Bump",
         "creating": "Creating...",
         "saving": "Saving..."
+      }
+    },
+    "payments": {
+      "transactions": {
+        "title": "Payment Transactions",
+        "transactionId": "Transaction ID",
+        "user": "User",
+        "amount": "Amount",
+        "status": "Status",
+        "date": "Date",
+        "actions": "Actions",
+        "refund": "Refund",
+        "statuses": {
+          "completed": "Completed",
+          "pending": "Pending",
+          "failed": "Failed",
+          "refunded": "Refunded"
+        }
+      },
+      "refund": {
+        "title": "Process Refund",
+        "reason": "Refund Reason",
+        "selectReason": "Select reason",
+        "reasons": {
+          "requested_by_customer": "Customer Request",
+          "duplicate": "Duplicate Payment",
+          "fraudulent": "Fraudulent"
+        },
+        "fullRefund": "Full Refund",
+        "cancel": "Cancel",
+        "processing": "Processing...",
+        "success": "Refund processed successfully",
+        "error": "Failed to process refund"
       }
     }
   },
@@ -1548,5 +1592,64 @@
   },
   "omnibus": {
     "lowestPriceLast30Days": "Lowest price in the last 30 days: {price}"
+  },
+  "myPurchases": {
+    "title": "My Purchases",
+    "subtitle": "View your purchase history and manage refunds",
+    "loading": "Loading purchases...",
+    "accessRequired": "Access Required",
+    "pleaseLogin": "Please log in to view your purchases.",
+    "noPurchases": "No purchases yet",
+    "noPurchasesMessage": "When you purchase products, they will appear here.",
+    "purchasedOn": "Purchased on",
+    "statusRefunded": "Refunded",
+    "statusPendingRefund": "Refund Pending",
+    "statusRefundRejected": "Refund Rejected",
+    "statusCompleted": "Completed",
+    "notRefundable": "Not refundable",
+    "refundPeriodExpired": "Refund period expired",
+    "requestRefund": "Request Refund",
+    "daysRemaining": "{days} days left",
+    "refundRequestTitle": "Request Refund",
+    "refundReason": "Reason for refund (optional)",
+    "refundReasonPlaceholder": "Tell us why you want a refund...",
+    "refundWarning": "Your refund request will be reviewed by our team. You will receive a response via email.",
+    "cancel": "Cancel",
+    "submitting": "Submitting...",
+    "submitRequest": "Submit Request",
+    "refundedAmount": "Refunded"
+  },
+  "refundRequests": {
+    "title": "Refund Requests",
+    "subtitle": "Review and process customer refund requests",
+    "allStatuses": "All Statuses",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "cancelled": "Cancelled",
+    "refresh": "Refresh",
+    "noRequests": "No refund requests found",
+    "product": "Product",
+    "customer": "Customer",
+    "amount": "Amount",
+    "status": "Status",
+    "requestedOn": "Requested",
+    "actions": "Actions",
+    "purchasedOn": "Purchased",
+    "reason": "Reason",
+    "approve": "Approve",
+    "reject": "Reject",
+    "approveTitle": "Approve Refund Request",
+    "rejectTitle": "Reject Refund Request",
+    "customerReason": "Customer reason",
+    "approveNote": "Note (optional)",
+    "rejectReason": "Reason for rejection",
+    "approveNotePlaceholder": "Add any notes for the customer...",
+    "rejectReasonPlaceholder": "Explain why the refund was rejected...",
+    "approveWarning": "This will process the refund through Stripe and revoke product access.",
+    "cancel": "Cancel",
+    "processing": "Processing...",
+    "confirmApprove": "Approve & Refund",
+    "confirmReject": "Reject Request"
   }
 }

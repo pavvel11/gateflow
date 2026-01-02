@@ -54,6 +54,10 @@ CREATE TABLE IF NOT EXISTS products (
   success_redirect_url TEXT, -- URL to redirect after successful purchase/signup
   pass_params_to_redirect BOOLEAN DEFAULT false NOT NULL, -- Whether to pass email and other params to the redirect URL
 
+  -- Refund settings
+  is_refundable BOOLEAN DEFAULT false NOT NULL, -- Whether customers can request refunds for this product
+  refund_period_days INTEGER CHECK (refund_period_days IS NULL OR (refund_period_days > 0 AND refund_period_days <= 365)), -- Number of days from purchase within which refund can be requested
+
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
 

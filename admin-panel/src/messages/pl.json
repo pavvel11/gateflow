@@ -98,6 +98,8 @@
     "login": "Zaloguj",
     "profile": "Profil",
     "myProducts": "Moje Produkty",
+    "myPurchases": "Moje Zakupy",
+    "refundRequests": "Prośby o Zwrot",
     "store": "Sklep",
     "about": "O GateFlow"
   },
@@ -897,7 +899,16 @@
         "salePriceUntilDescription": "Data zakończenia promocji (opcjonalnie)",
         "salePriceMustBeLower": "Cena promocyjna musi być niższa niż regularna cena",
         "salePriceActiveInfo": "Promocja jest aktywna i będzie wyświetlana klientom wraz z informacją o najniższej cenie z ostatnich 30 dni",
-        "duplicateLabel": "Duplikuj {name}"
+        "duplicateLabel": "Duplikuj {name}",
+        "refundSettings": {
+          "title": "Polityka zwrotów",
+          "allowRefunds": "Pozwól klientom wnioskować o zwrot",
+          "refundPeriod": "Okres na zwrot (dni)",
+          "refundPeriodPlaceholder": "np. 14, 30",
+          "refundPeriodHelp": "Liczba dni od zakupu, w których klient może poprosić o zwrot. Pozostaw puste dla braku limitu czasowego.",
+          "infoTitle": "Jak działają zwroty",
+          "infoDescription": "Klienci mogą składać wnioski o zwrot z historii zakupów. Przejrzysz i zaakceptujesz/odrzucisz każdy wniosek. Administratorzy zawsze mogą dokonać zwrotu niezależnie od limitu czasowego."
+        }
       },
       "duplicateLabel": "Duplikuj {name}"
     },
@@ -1171,6 +1182,39 @@
         "save": "Zapisz Order Bump",
         "creating": "Tworzenie...",
         "saving": "Zapisywanie..."
+      }
+    },
+    "payments": {
+      "transactions": {
+        "title": "Transakcje Płatnicze",
+        "transactionId": "ID Transakcji",
+        "user": "Użytkownik",
+        "amount": "Kwota",
+        "status": "Status",
+        "date": "Data",
+        "actions": "Akcje",
+        "refund": "Zwrot",
+        "statuses": {
+          "completed": "Zakończona",
+          "pending": "Oczekująca",
+          "failed": "Nieudana",
+          "refunded": "Zwrócona"
+        }
+      },
+      "refund": {
+        "title": "Przetwórz Zwrot",
+        "reason": "Powód Zwrotu",
+        "selectReason": "Wybierz powód",
+        "reasons": {
+          "requested_by_customer": "Prośba Klienta",
+          "duplicate": "Duplikat Płatności",
+          "fraudulent": "Oszustwo"
+        },
+        "fullRefund": "Pełny Zwrot",
+        "cancel": "Anuluj",
+        "processing": "Przetwarzanie...",
+        "success": "Zwrot przetworzony pomyślnie",
+        "error": "Nie udało się przetworzyć zwrotu"
       }
     }
   },
@@ -1548,5 +1592,64 @@
   },
   "omnibus": {
     "lowestPriceLast30Days": "Najniższa cena z ostatnich 30 dni: {price}"
+  },
+  "myPurchases": {
+    "title": "Moje Zakupy",
+    "subtitle": "Przeglądaj historię zakupów i zarządzaj zwrotami",
+    "loading": "Ładowanie zakupów...",
+    "accessRequired": "Wymagane Logowanie",
+    "pleaseLogin": "Zaloguj się, aby zobaczyć swoje zakupy.",
+    "noPurchases": "Brak zakupów",
+    "noPurchasesMessage": "Gdy kupisz produkty, pojawią się tutaj.",
+    "purchasedOn": "Zakupiono",
+    "statusRefunded": "Zwrócono",
+    "statusPendingRefund": "Oczekuje na zwrot",
+    "statusRefundRejected": "Zwrot odrzucony",
+    "statusCompleted": "Zakończono",
+    "notRefundable": "Bez możliwości zwrotu",
+    "refundPeriodExpired": "Okres zwrotu minął",
+    "requestRefund": "Poproś o zwrot",
+    "daysRemaining": "Zostało {days} dni",
+    "refundRequestTitle": "Prośba o zwrot",
+    "refundReason": "Powód zwrotu (opcjonalnie)",
+    "refundReasonPlaceholder": "Powiedz nam, dlaczego chcesz zwrotu...",
+    "refundWarning": "Twoja prośba o zwrot zostanie rozpatrzona przez nasz zespół. Otrzymasz odpowiedź na email.",
+    "cancel": "Anuluj",
+    "submitting": "Wysyłanie...",
+    "submitRequest": "Wyślij prośbę",
+    "refundedAmount": "Zwrócono"
+  },
+  "refundRequests": {
+    "title": "Prośby o Zwrot",
+    "subtitle": "Przeglądaj i rozpatruj prośby klientów o zwrot",
+    "allStatuses": "Wszystkie statusy",
+    "pending": "Oczekujące",
+    "approved": "Zatwierdzone",
+    "rejected": "Odrzucone",
+    "cancelled": "Anulowane",
+    "refresh": "Odśwież",
+    "noRequests": "Brak próśb o zwrot",
+    "product": "Produkt",
+    "customer": "Klient",
+    "amount": "Kwota",
+    "status": "Status",
+    "requestedOn": "Data prośby",
+    "actions": "Akcje",
+    "purchasedOn": "Zakupiono",
+    "reason": "Powód",
+    "approve": "Zatwierdź",
+    "reject": "Odrzuć",
+    "approveTitle": "Zatwierdź prośbę o zwrot",
+    "rejectTitle": "Odrzuć prośbę o zwrot",
+    "customerReason": "Powód klienta",
+    "approveNote": "Notatka (opcjonalnie)",
+    "rejectReason": "Powód odrzucenia",
+    "approveNotePlaceholder": "Dodaj notatkę dla klienta...",
+    "rejectReasonPlaceholder": "Wyjaśnij, dlaczego zwrot został odrzucony...",
+    "approveWarning": "To przetworzy zwrot przez Stripe i cofnie dostęp do produktu.",
+    "cancel": "Anuluj",
+    "processing": "Przetwarzanie...",
+    "confirmApprove": "Zatwierdź i zwróć",
+    "confirmReject": "Odrzuć prośbę"
   }
 }

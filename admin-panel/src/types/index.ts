@@ -34,6 +34,9 @@ export interface Product {
   // Funnel / OTO settings
   success_redirect_url?: string | null
   pass_params_to_redirect: boolean
+  // Refund settings
+  is_refundable: boolean
+  refund_period_days?: number | null
   created_at: string
   updated_at: string
   tenant_id?: string
@@ -281,4 +284,59 @@ export interface AdminAction {
   target_id: string;
   details?: Record<string, unknown>;
   created_at: string;
+}
+
+// Refund Request types
+export interface RefundRequest {
+  id: string;
+  transaction_id: string;
+  user_id: string | null;
+  customer_email: string;
+  product_id: string;
+  reason: string | null;
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+  requested_amount: number;
+  currency: string;
+  admin_id: string | null;
+  admin_response: string | null;
+  processed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined fields
+  product_name?: string;
+  purchase_date?: string;
+  stripe_payment_intent_id?: string;
+}
+
+export interface RefundEligibility {
+  eligible: boolean;
+  reason?: string;
+  transaction_id?: string;
+  product_name?: string;
+  amount?: number;
+  currency?: string;
+  refund_period_days?: number | null;
+  days_since_purchase?: number;
+  days_remaining?: number | null;
+  existing_request_id?: string;
+  existing_request_status?: string;
+}
+
+export interface UserPurchase {
+  transaction_id: string;
+  product_id: string;
+  product_name: string;
+  product_slug: string;
+  product_icon: string;
+  amount: number;
+  currency: string;
+  purchase_date: string;
+  status: string;
+  refunded_amount: number;
+  is_refundable: boolean;
+  refund_period_days: number | null;
+  days_since_purchase: number;
+  refund_eligible: boolean;
+  refund_request_status: string | null;
+  refund_request_id: string | null;
 }

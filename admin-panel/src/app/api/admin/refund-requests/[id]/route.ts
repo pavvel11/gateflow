@@ -1,0 +1,137 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { getStripeServer } from '@/lib/stripe/server';
+
+interface RouteParams {
+  params: Promise<{ id: string }>;
+}
+
+// PATCH /api/admin/refund-requests/[id] - Approve or reject a refund request
+export async function PATCH(request: NextRequest, { params }: RouteParams) {
+  try {
+    const { id: requestId } = await params;
+    const supabase = await createClient();
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    // Check admin permission
+    const { data: adminUser, error: adminError } = await supabase
+      .from('admin_users')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (adminError || !adminUser) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const { action, admin_response } = body;
+
+    if (!action || !['approve', 'reject'].includes(action)) {
+      return NextResponse.json(
+        { error: 'Invalid action. Must be "approve" or "reject"' },
+        { status: 400 }
+      );
+    }
+
+    // Process the refund request using database function
+    const { data: processResult, error: processError } = await supabase
+      .rpc('process_refund_request', {
+        request_id_param: requestId,
+        action_param: action,
+        admin_response_param: admin_response || null,
+      });
+
+    if (processError) throw processError;
+
+    if (!processResult.success) {
+      return NextResponse.json(
+        { error: processResult.error || processResult.message },
+        { status: 400 }
+      );
+    }
+
+    // If approved, process the actual Stripe refund
+    if (action === 'approve' && processResult.stripe_payment_intent_id) {
+      try {
+        const stripe = await getStripeServer();
+
+        await stripe.refunds.create({
+          payment_intent: processResult.stripe_payment_intent_id,
+          amount: Math.round(processResult.amount), // Amount is already in cents from DB
+          reason: 'requested_by_customer',
+          metadata: {
+            refund_request_id: requestId,
+            refunded_by: user.id,
+          },
+        });
+
+        // Update the transaction status to refunded
+        const newRefundedAmount = processResult.amount;
+        await supabase
+          .from('payment_transactions')
+          .update({
+            refunded_amount: newRefundedAmount,
+            status: 'refunded',
+            refunded_at: new Date().toISOString(),
+            refunded_by: user.id,
+            refund_reason: admin_response || 'Customer request approved',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', processResult.transaction_id);
+
+        // Revoke product access
+        const { data: transaction } = await supabase
+          .from('payment_transactions')
+          .select('user_id, product_id')
+          .eq('id', processResult.transaction_id)
+          .single();
+
+        if (transaction?.user_id) {
+          await supabase
+            .from('user_product_access')
+            .delete()
+            .eq('user_id', transaction.user_id)
+            .eq('product_id', transaction.product_id);
+        }
+
+        return NextResponse.json({
+          success: true,
+          status: 'approved',
+          message: 'Refund processed successfully',
+          stripe_refund_created: true,
+        });
+      } catch (stripeError) {
+        console.error('Stripe refund error:', stripeError);
+        // Revert the request status since Stripe failed
+        await supabase
+          .from('refund_requests')
+          .update({
+            status: 'pending',
+            admin_id: null,
+            admin_response: null,
+            processed_at: null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', requestId);
+
+        return NextResponse.json(
+          { error: 'Failed to process refund with Stripe. Request has been reverted to pending.' },
+          { status: 500 }
+        );
+      }
+    }
+
+    return NextResponse.json(processResult);
+  } catch (error) {
+    console.error('Error processing refund request:', error);
+    return NextResponse.json(
+      { error: 'Failed to process refund request' },
+      { status: 500 }
+    );
+  }
+}

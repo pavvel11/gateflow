@@ -2064,6 +2064,448 @@ SELECT
 FROM public.admin_actions;
 
 
+-- =============================================================================
+-- REFUND REQUESTS SYSTEM
+-- =============================================================================
+
+-- Create refund_requests table for customer-initiated refund requests
+CREATE TABLE IF NOT EXISTS refund_requests (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    transaction_id UUID REFERENCES payment_transactions(id) ON DELETE CASCADE NOT NULL,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE, -- NULL for guest purchases
+    customer_email TEXT NOT NULL CHECK (public.validate_email_format(customer_email)),
+    product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
+
+    -- Request details
+    reason TEXT CHECK (reason IS NULL OR length(reason) <= 2000),
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled')),
+
+    -- Request amounts
+    requested_amount NUMERIC NOT NULL CHECK (requested_amount > 0),
+    currency TEXT NOT NULL CHECK (length(currency) = 3),
+
+    -- Admin response
+    admin_id UUID REFERENCES auth.users(id), -- Admin who processed the request
+    admin_response TEXT CHECK (admin_response IS NULL OR length(admin_response) <= 2000),
+    processed_at TIMESTAMPTZ,
+
+    -- Timestamps
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+
+    -- Prevent duplicate pending requests for same transaction
+    CONSTRAINT unique_pending_request UNIQUE (transaction_id) DEFERRABLE INITIALLY DEFERRED
+);
+
+COMMENT ON TABLE refund_requests IS 'Customer-initiated refund requests that require admin approval';
+
+-- Indexes for refund_requests
+CREATE INDEX IF NOT EXISTS idx_refund_requests_user_id ON refund_requests(user_id);
+CREATE INDEX IF NOT EXISTS idx_refund_requests_status ON refund_requests(status);
+CREATE INDEX IF NOT EXISTS idx_refund_requests_created_at ON refund_requests USING BRIN (created_at);
+CREATE INDEX IF NOT EXISTS idx_refund_requests_transaction_id ON refund_requests(transaction_id);
+CREATE INDEX IF NOT EXISTS idx_products_is_refundable ON products(is_refundable) WHERE is_refundable = true;
+
+-- RLS for refund_requests
+ALTER TABLE refund_requests ENABLE ROW LEVEL SECURITY;
+
+-- Users can view their own refund requests
+CREATE POLICY "Users can view own refund requests" ON refund_requests
+    FOR SELECT
+    USING (
+        user_id = (SELECT auth.uid()) OR
+        customer_email = (SELECT email FROM auth.users WHERE id = (SELECT auth.uid())) OR
+        EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = (SELECT auth.uid())) OR
+        (SELECT auth.role()) = 'service_role'
+    );
+
+-- Users can create refund requests for their own transactions
+CREATE POLICY "Users can create refund requests" ON refund_requests
+    FOR INSERT
+    WITH CHECK (
+        (user_id = (SELECT auth.uid())) OR
+        (SELECT auth.role()) = 'service_role'
+    );
+
+-- Admins can update refund requests (approve/reject)
+CREATE POLICY "Admins can update refund requests" ON refund_requests
+    FOR UPDATE
+    USING (
+        EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = (SELECT auth.uid())) OR
+        (SELECT auth.role()) = 'service_role'
+    );
+
+-- Check if a transaction is eligible for customer-initiated refund
+CREATE OR REPLACE FUNCTION check_refund_eligibility(
+    transaction_id_param UUID
+) RETURNS JSONB AS $$
+DECLARE
+    transaction_record RECORD;
+    days_since_purchase INTEGER;
+    existing_request RECORD;
+BEGIN
+    -- Get transaction details with product info
+    SELECT pt.*, p.is_refundable, p.refund_period_days, p.name as product_name
+    INTO transaction_record
+    FROM public.payment_transactions pt
+    JOIN public.products p ON pt.product_id = p.id
+    WHERE pt.id = transaction_id_param;
+
+    IF NOT FOUND THEN
+        RETURN jsonb_build_object('eligible', false, 'reason', 'transaction_not_found');
+    END IF;
+
+    IF transaction_record.status = 'refunded' THEN
+        RETURN jsonb_build_object('eligible', false, 'reason', 'already_refunded');
+    END IF;
+
+    IF NOT transaction_record.is_refundable THEN
+        RETURN jsonb_build_object('eligible', false, 'reason', 'product_not_refundable');
+    END IF;
+
+    -- Check for existing pending request
+    SELECT * INTO existing_request
+    FROM public.refund_requests
+    WHERE refund_requests.transaction_id = transaction_id_param
+      AND status IN ('pending', 'approved');
+
+    IF FOUND THEN
+        RETURN jsonb_build_object(
+            'eligible', false,
+            'reason', 'request_already_exists',
+            'existing_request_id', existing_request.id,
+            'existing_request_status', existing_request.status
+        );
+    END IF;
+
+    -- Calculate days since purchase
+    days_since_purchase := EXTRACT(DAY FROM NOW() - transaction_record.created_at);
+
+    -- Check refund period
+    IF transaction_record.refund_period_days IS NOT NULL AND
+       days_since_purchase > transaction_record.refund_period_days THEN
+        RETURN jsonb_build_object(
+            'eligible', false,
+            'reason', 'refund_period_expired',
+            'refund_period_days', transaction_record.refund_period_days,
+            'days_since_purchase', days_since_purchase
+        );
+    END IF;
+
+    -- Transaction is eligible
+    RETURN jsonb_build_object(
+        'eligible', true,
+        'transaction_id', transaction_record.id,
+        'product_name', transaction_record.product_name,
+        'amount', transaction_record.amount,
+        'currency', transaction_record.currency,
+        'refund_period_days', transaction_record.refund_period_days,
+        'days_since_purchase', days_since_purchase,
+        'days_remaining', CASE
+            WHEN transaction_record.refund_period_days IS NOT NULL
+            THEN transaction_record.refund_period_days - days_since_purchase
+            ELSE NULL
+        END
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
+SET statement_timeout = '5s';
+
+GRANT EXECUTE ON FUNCTION check_refund_eligibility TO authenticated, service_role;
+
+-- Create a refund request (customer-initiated)
+CREATE OR REPLACE FUNCTION create_refund_request(
+    transaction_id_param UUID,
+    reason_param TEXT DEFAULT NULL
+) RETURNS JSONB AS $$
+DECLARE
+    current_user_id UUID;
+    transaction_record RECORD;
+    eligibility JSONB;
+    new_request_id UUID;
+BEGIN
+    -- Rate limiting
+    IF NOT public.check_rate_limit('create_refund_request', 10, 3600) THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Rate limit exceeded. Please try again later.');
+    END IF;
+
+    current_user_id := auth.uid();
+
+    IF current_user_id IS NULL THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Authentication required');
+    END IF;
+
+    -- Check eligibility first
+    eligibility := public.check_refund_eligibility(transaction_id_param);
+
+    IF NOT (eligibility->>'eligible')::boolean THEN
+        RETURN jsonb_build_object('success', false, 'error', eligibility->>'reason', 'details', eligibility);
+    END IF;
+
+    -- Get transaction for ownership check
+    SELECT pt.*, p.name as product_name
+    INTO transaction_record
+    FROM public.payment_transactions pt
+    JOIN public.products p ON pt.product_id = p.id
+    WHERE pt.id = transaction_id_param;
+
+    -- Verify ownership
+    IF transaction_record.user_id != current_user_id THEN
+        RETURN jsonb_build_object('success', false, 'error', 'You can only request refunds for your own purchases');
+    END IF;
+
+    -- Create the refund request
+    INSERT INTO public.refund_requests (
+        transaction_id, user_id, customer_email, product_id, reason,
+        requested_amount, currency, status
+    ) VALUES (
+        transaction_id_param, current_user_id, transaction_record.customer_email,
+        transaction_record.product_id, reason_param,
+        transaction_record.amount - COALESCE(transaction_record.refunded_amount, 0),
+        transaction_record.currency, 'pending'
+    )
+    RETURNING id INTO new_request_id;
+
+    RETURN jsonb_build_object(
+        'success', true,
+        'request_id', new_request_id,
+        'status', 'pending',
+        'message', 'Refund request submitted successfully'
+    );
+
+EXCEPTION WHEN unique_violation THEN
+    RETURN jsonb_build_object('success', false, 'error', 'A refund request already exists for this transaction');
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
+SET statement_timeout = '10s';
+
+GRANT EXECUTE ON FUNCTION create_refund_request TO authenticated;
+
+-- Process refund request (admin only) - approve or reject
+CREATE OR REPLACE FUNCTION process_refund_request(
+    request_id_param UUID,
+    action_param TEXT,
+    admin_response_param TEXT DEFAULT NULL
+) RETURNS JSONB AS $$
+DECLARE
+    current_admin_id UUID;
+    request_record RECORD;
+BEGIN
+    current_admin_id := auth.uid();
+
+    -- Check admin permission
+    IF NOT EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = current_admin_id) THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Admin privileges required');
+    END IF;
+
+    IF action_param NOT IN ('approve', 'reject') THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Invalid action. Must be "approve" or "reject"');
+    END IF;
+
+    -- Get request details
+    SELECT rr.*, pt.stripe_payment_intent_id, p.name as product_name
+    INTO request_record
+    FROM public.refund_requests rr
+    JOIN public.payment_transactions pt ON rr.transaction_id = pt.id
+    JOIN public.products p ON rr.product_id = p.id
+    WHERE rr.id = request_id_param;
+
+    IF NOT FOUND THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Refund request not found');
+    END IF;
+
+    IF request_record.status != 'pending' THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Request already processed', 'current_status', request_record.status);
+    END IF;
+
+    -- Update request status
+    UPDATE public.refund_requests
+    SET
+        status = CASE WHEN action_param = 'approve' THEN 'approved' ELSE 'rejected' END,
+        admin_id = current_admin_id,
+        admin_response = admin_response_param,
+        processed_at = NOW(),
+        updated_at = NOW()
+    WHERE id = request_id_param;
+
+    IF action_param = 'approve' THEN
+        RETURN jsonb_build_object(
+            'success', true,
+            'status', 'approved',
+            'message', 'Refund request approved. Process refund via Stripe.',
+            'transaction_id', request_record.transaction_id,
+            'stripe_payment_intent_id', request_record.stripe_payment_intent_id,
+            'amount', request_record.requested_amount,
+            'currency', request_record.currency
+        );
+    ELSE
+        RETURN jsonb_build_object(
+            'success', true,
+            'status', 'rejected',
+            'message', 'Refund request rejected',
+            'admin_response', admin_response_param
+        );
+    END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
+SET statement_timeout = '10s';
+
+GRANT EXECUTE ON FUNCTION process_refund_request TO authenticated;
+
+-- Get user's purchase history with refund eligibility
+CREATE OR REPLACE FUNCTION get_user_purchases_with_refund_status(
+    user_id_param UUID DEFAULT NULL
+) RETURNS TABLE (
+    transaction_id UUID,
+    product_id UUID,
+    product_name TEXT,
+    product_slug TEXT,
+    product_icon TEXT,
+    amount NUMERIC,
+    currency TEXT,
+    purchase_date TIMESTAMPTZ,
+    status TEXT,
+    refunded_amount NUMERIC,
+    is_refundable BOOLEAN,
+    refund_period_days INTEGER,
+    days_since_purchase INTEGER,
+    refund_eligible BOOLEAN,
+    refund_request_status TEXT,
+    refund_request_id UUID
+) AS $$
+DECLARE
+    target_user_id UUID;
+BEGIN
+    target_user_id := COALESCE(user_id_param, auth.uid());
+
+    IF target_user_id IS NULL THEN
+        RETURN;
+    END IF;
+
+    -- Only allow users to view their own purchases (or admins to view any)
+    IF target_user_id != auth.uid() THEN
+        IF NOT EXISTS (SELECT 1 FROM public.admin_users WHERE admin_users.user_id = auth.uid()) THEN
+            RETURN;
+        END IF;
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        pt.id as transaction_id,
+        p.id as product_id,
+        p.name as product_name,
+        p.slug as product_slug,
+        p.icon as product_icon,
+        pt.amount,
+        pt.currency,
+        pt.created_at as purchase_date,
+        pt.status,
+        pt.refunded_amount,
+        p.is_refundable,
+        p.refund_period_days,
+        EXTRACT(DAY FROM NOW() - pt.created_at)::INTEGER as days_since_purchase,
+        CASE
+            WHEN pt.status = 'refunded' THEN false
+            WHEN NOT p.is_refundable THEN false
+            WHEN p.refund_period_days IS NOT NULL AND
+                 EXTRACT(DAY FROM NOW() - pt.created_at) > p.refund_period_days THEN false
+            ELSE true
+        END as refund_eligible,
+        rr.status as refund_request_status,
+        rr.id as refund_request_id
+    FROM public.payment_transactions pt
+    JOIN public.products p ON pt.product_id = p.id
+    LEFT JOIN public.refund_requests rr ON pt.id = rr.transaction_id AND rr.status IN ('pending', 'approved', 'rejected')
+    WHERE pt.user_id = target_user_id
+    ORDER BY pt.created_at DESC;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
+SET statement_timeout = '10s';
+
+GRANT EXECUTE ON FUNCTION get_user_purchases_with_refund_status TO authenticated;
+
+-- Admin function to get all refund requests with filtering
+CREATE OR REPLACE FUNCTION get_admin_refund_requests(
+    status_filter TEXT DEFAULT NULL,
+    limit_param INTEGER DEFAULT 50,
+    offset_param INTEGER DEFAULT 0
+) RETURNS TABLE (
+    request_id UUID,
+    transaction_id UUID,
+    user_id UUID,
+    customer_email TEXT,
+    product_id UUID,
+    product_name TEXT,
+    reason TEXT,
+    status TEXT,
+    requested_amount NUMERIC,
+    currency TEXT,
+    admin_id UUID,
+    admin_response TEXT,
+    processed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ,
+    purchase_date TIMESTAMPTZ,
+    stripe_payment_intent_id TEXT
+) AS $$
+BEGIN
+    -- Check admin permission
+    IF NOT EXISTS (SELECT 1 FROM public.admin_users WHERE admin_users.user_id = auth.uid()) THEN
+        RETURN;
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        rr.id as request_id,
+        rr.transaction_id,
+        rr.user_id,
+        rr.customer_email,
+        rr.product_id,
+        p.name as product_name,
+        rr.reason,
+        rr.status,
+        rr.requested_amount,
+        rr.currency,
+        rr.admin_id,
+        rr.admin_response,
+        rr.processed_at,
+        rr.created_at,
+        pt.created_at as purchase_date,
+        pt.stripe_payment_intent_id
+    FROM public.refund_requests rr
+    JOIN public.products p ON rr.product_id = p.id
+    JOIN public.payment_transactions pt ON rr.transaction_id = pt.id
+    WHERE (status_filter IS NULL OR rr.status = status_filter)
+    ORDER BY
+        CASE WHEN rr.status = 'pending' THEN 0 ELSE 1 END,
+        rr.created_at DESC
+    LIMIT limit_param
+    OFFSET offset_param;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
+SET statement_timeout = '10s';
+
+GRANT EXECUTE ON FUNCTION get_admin_refund_requests TO authenticated;
+
+-- Update updated_at on refund_requests changes
+CREATE OR REPLACE FUNCTION update_refund_request_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql
+SET search_path = '';
+
+CREATE TRIGGER trigger_update_refund_request_timestamp
+    BEFORE UPDATE ON refund_requests
+    FOR EACH ROW
+    EXECUTE FUNCTION update_refund_request_timestamp();
+
 COMMIT;
 
 

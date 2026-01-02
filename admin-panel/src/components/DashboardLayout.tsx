@@ -95,6 +95,16 @@ const Icons = {
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
+  ),
+  refunds: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+    </svg>
+  ),
+  purchases: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+    </svg>
   )
 };
 
@@ -124,6 +134,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
     { href: '/dashboard/categories', label: t('categories'), icon: Icons.categories },
     { href: '/dashboard/order-bumps', label: t('orderBumps'), icon: Icons.orderBumps },
     { href: '/dashboard/coupons', label: t('coupons'), icon: Icons.coupons },
+    { href: '/dashboard/refund-requests', label: t('refundRequests', { defaultValue: 'Refund Requests' }), icon: Icons.refunds },
     { href: '/dashboard/webhooks', label: t('webhooks'), icon: Icons.webhooks },
     { href: '/dashboard/integrations', label: t('integrations'), icon: Icons.integrations },
     { href: '/dashboard/users', label: t('users'), icon: Icons.users },
@@ -132,6 +143,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
 
   const userLinks = [
     { href: '/my-products', label: t('myProducts'), icon: Icons.myProducts },
+    { href: '/my-purchases', label: t('myPurchases', { defaultValue: 'My Purchases' }), icon: Icons.purchases },
     { href: '/', label: t('store'), icon: Icons.store },
     { href: '/profile', label: t('profile'), icon: Icons.profile },
     { href: '/about', label: t('about'), icon: Icons.about },
