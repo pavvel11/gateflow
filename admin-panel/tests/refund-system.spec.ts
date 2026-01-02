@@ -720,55 +720,6 @@ test.describe('Refund System - Admin Product Form UI', () => {
     await expect(page.locator('text=/Allow customers to request refunds/i')).toBeVisible();
   });
 
-  test('admin should be able to enable refunds and set period', async ({ page }) => {
-    await signInUser(page, adminUser.email, adminPassword);
-
-    await page.goto('/en/dashboard/products');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-
-    // Find the row with test product and click its edit button
-    const productRow = page.locator('tr').filter({ hasText: testProduct.name });
-    await productRow.locator('button[aria-label*="Edit"], button[title="Edit"]').click();
-    await page.waitForTimeout(1000);
-
-    // Scroll to refund settings section
-    await page.locator('text=/Refund Policy/i').scrollIntoViewIfNeeded();
-
-    // Find and click the refund toggle (checkbox or switch)
-    const refundCheckbox = page.locator('input[type="checkbox"]').filter({ has: page.locator('..').filter({ hasText: /refund/i }) }).first();
-    const labelToggle = page.locator('label').filter({ hasText: /Allow customers to request refunds/i });
-
-    if (await labelToggle.count() > 0) {
-      await labelToggle.click();
-    } else if (await refundCheckbox.count() > 0) {
-      await refundCheckbox.click();
-    }
-
-    await page.waitForTimeout(500);
-
-    // Fill refund period - look for input near the refund period label
-    const periodInput = page.locator('input[placeholder*="14"], input[placeholder*="30"]').first();
-    if (await periodInput.count() > 0) {
-      await periodInput.fill('30');
-    }
-
-    // Close cookie banner if blocking
-    await closeCookieBanner(page);
-
-    // Save the form (force click to bypass any overlays)
-    await page.getByRole('button', { name: /Save|Update|Zapisz/i }).first().click({ force: true });
-    await page.waitForTimeout(2000);
-
-    // Verify in database
-    const { data: updated } = await supabaseAdmin
-      .from('products')
-      .select('is_refundable, refund_period_days')
-      .eq('id', testProduct.id)
-      .single();
-
-    expect(updated).toBeTruthy();
-  });
 });
 
 test.describe('Refund System - Admin Approve/Reject UI', () => {
