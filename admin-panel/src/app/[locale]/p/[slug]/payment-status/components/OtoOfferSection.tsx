@@ -1,0 +1,203 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { OtoOfferInfo } from '../types';
+
+interface OtoOfferSectionProps {
+  otoOffer: OtoOfferInfo;
+  productSlug: string;
+  onSkip: () => void;
+  skipLabel?: string;
+}
+
+function formatDiscount(type: 'percentage' | 'fixed' | undefined, value: number | undefined, currency?: string): string {
+  if (!type || !value) return '';
+
+  if (type === 'percentage') {
+    return `${value}%`;
+  }
+
+  const formatter = new Intl.NumberFormat('pl-PL', {
+    style: 'currency',
+    currency: currency || 'PLN',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
+  return formatter.format(value);
+}
+
+function formatTime(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+export default function OtoOfferSection({
+  otoOffer,
+  productSlug,
+  onSkip,
+  skipLabel
+}: OtoOfferSectionProps) {
+  const t = useTranslations('oto');
+  const router = useRouter();
+
+  const [secondsRemaining, setSecondsRemaining] = useState<number>(() => {
+    if (!otoOffer.expiresAt) return 0;
+    const expiryTime = new Date(otoOffer.expiresAt).getTime();
+    const now = Date.now();
+    return Math.max(0, Math.floor((expiryTime - now) / 1000));
+  });
+  const [isExpired, setIsExpired] = useState(false);
+
+  const handleExpire = useCallback(() => {
+    setIsExpired(true);
+  }, []);
+
+  useEffect(() => {
+    if (secondsRemaining <= 0) {
+      const timeoutId = setTimeout(() => handleExpire(), 0);
+      return () => clearTimeout(timeoutId);
+    }
+
+    const timer = setInterval(() => {
+      setSecondsRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setTimeout(() => handleExpire(), 0);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [secondsRemaining, handleExpire]);
+
+  const handleAccept = () => {
+    if (otoOffer.checkoutUrl) {
+      router.push(otoOffer.checkoutUrl);
+    }
+  };
+
+  // Calculate urgency level
+  const isUrgent = secondsRemaining < 60;
+  const isWarning = secondsRemaining < 300;
+
+  // If expired, show expired message and skip button
+  if (isExpired) {
+    return (
+      <div className="mt-6 p-6 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+        <div className="text-center">
+          <div className="text-4xl mb-3">⏰</div>
+          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            {t('offerExpired')}
+          </h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-4">
+            {t('offerExpiredDesc')}
+          </p>
+          <button
+            onClick={onSkip}
+            className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+          >
+            {skipLabel || t('continue')}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-6">
+      {/* OTO Banner */}
+      <div
+        className={`
+          relative overflow-hidden rounded-xl p-6 border-2 transition-all duration-300
+          ${isUrgent
+            ? 'bg-red-50 dark:bg-red-900/20 border-red-500 animate-pulse'
+            : isWarning
+              ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-500'
+              : 'bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-500'
+          }
+        `}
+      >
+        {/* Shimmer effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
+
+        <div className="relative">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className={`
+                flex items-center justify-center w-12 h-12 rounded-full
+                ${isUrgent ? 'bg-red-500' : isWarning ? 'bg-orange-500' : 'bg-purple-500'}
+                text-white
+              `}>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{t('exclusiveOffer')}</p>
+                <p className={`text-lg font-bold ${isUrgent ? 'text-red-600' : isWarning ? 'text-orange-600' : 'text-purple-600'}`}>
+                  {t('saveAmount', { amount: formatDiscount(otoOffer.discountType, otoOffer.discountValue, otoOffer.currency) })}
+                </p>
+              </div>
+            </div>
+
+            {/* Timer */}
+            <div className="text-center">
+              <span className="text-xs text-gray-500 dark:text-gray-400 block mb-1">{t('expiresIn')}</span>
+              <div className={`
+                px-4 py-2 rounded-lg font-mono text-2xl font-bold
+                ${isUrgent
+                  ? 'bg-red-500 text-white'
+                  : isWarning
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-purple-600 text-white'
+                }
+              `}>
+                {formatTime(secondsRemaining)}
+              </div>
+            </div>
+          </div>
+
+          {/* Product info */}
+          {otoOffer.otoProductName && (
+            <div className="mb-4 p-3 bg-white/50 dark:bg-black/20 rounded-lg">
+              <p className="text-gray-700 dark:text-gray-300">
+                <span className="font-medium">{t('product')}:</span> {otoOffer.otoProductName}
+              </p>
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={handleAccept}
+              className={`
+                flex-1 px-6 py-3 rounded-lg font-semibold text-white transition-all
+                ${isUrgent
+                  ? 'bg-red-500 hover:bg-red-600'
+                  : isWarning
+                    ? 'bg-orange-500 hover:bg-orange-600'
+                    : 'bg-purple-600 hover:bg-purple-700'
+                }
+                transform hover:scale-[1.02] active:scale-[0.98]
+              `}
+            >
+              🎁 {t('acceptOffer')}
+            </button>
+            <button
+              onClick={onSkip}
+              className="flex-1 sm:flex-none px-6 py-3 rounded-lg font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            >
+              {skipLabel || t('noThanks')}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

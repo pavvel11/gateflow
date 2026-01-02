@@ -10,6 +10,8 @@ dotenv.config({ path: path.resolve(__dirname, '.env.local') });
  */
 export default defineConfig({
   testDir: './tests',
+  /* Only run .spec.ts files (exclude .test.ts which are for Vitest) */
+  testMatch: '**/*.spec.ts',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */

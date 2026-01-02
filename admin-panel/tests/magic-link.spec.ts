@@ -23,14 +23,28 @@ test.describe('Magic Link Authentication (Mailpit)', () => {
     const termsCheckbox = page.locator('input#terms-checkbox');
     await termsCheckbox.check({ force: true });
 
-    // 4. Wait for Turnstile to complete (dummy key auto-verifies)
-    await page.waitForTimeout(2000);
+    // 4. Wait for Turnstile widget to load and auto-verify (dummy key)
+    // Look for "Test Mode" indicator which shows the widget has loaded
+    await page.waitForSelector('text=🧪 Test Mode', { timeout: 10000 });
+    // Give extra time for the dummy key to auto-verify and set the token
+    await page.waitForTimeout(4000);
 
     // 5. Request magic link
     const submitButton = page.getByRole('button', { name: /send|magic|login|sign in/i }).first();
     await submitButton.click();
 
-    // 6. Wait for form submission and email to be sent
+    // 6. Wait for form submission and check for success or retry
+    // If "Please complete the security verification" appears, wait and retry
+    await page.waitForTimeout(1500);
+    const errorMessage = page.locator('text=Please complete the security verification');
+    if (await errorMessage.isVisible()) {
+      console.log('Turnstile not ready, waiting and retrying...');
+      // Turnstile wasn't ready, wait more and retry
+      await page.waitForTimeout(4000);
+      await submitButton.click();
+      await page.waitForTimeout(1500);
+    }
+
     console.log(`Waiting for email to ${testEmail}...`);
     await page.waitForTimeout(3000); // Give time for Supabase to send email
 

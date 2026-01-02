@@ -418,16 +418,7 @@ BEGIN
     NOW()
   );
 
-  -- Insert payment transactions in USD
-  INSERT INTO payment_transactions (
-    session_id, user_id, product_id, customer_email, amount, currency,
-    status, stripe_payment_intent_id, created_at
-  ) VALUES
-  ('cs_test_usd_001', user1_id, premium_product_id, 'john.doe@example.com', 49.99, 'USD', 'completed', 'pi_usd_001', NOW() - INTERVAL '7 days'),
-  ('cs_test_usd_002', user1_id, pro_toolkit_id, 'john.doe@example.com', 99.99, 'USD', 'completed', 'pi_usd_002', NOW() - INTERVAL '5 days'),
-  ('cs_test_usd_003', user1_id, vip_masterclass_id, 'john.doe@example.com', 199.99, 'USD', 'completed', 'pi_usd_003', NOW() - INTERVAL '2 days');
-
-  -- Insert payment transactions in EUR
+  -- Insert payment transactions in EUR (john.doe has no transactions for OTO testing)
   INSERT INTO payment_transactions (
     session_id, user_id, product_id, customer_email, amount, currency,
     status, stripe_payment_intent_id, created_at
@@ -445,12 +436,9 @@ BEGIN
   ('cs_test_pln_002', user3_id, pro_toolkit_id, 'anna.kowalska@example.com', 399.99, 'PLN', 'completed', 'pi_pln_002', NOW() - INTERVAL '3 days'),
   ('cs_test_pln_003', user3_id, vip_masterclass_id, 'anna.kowalska@example.com', 799.99, 'PLN', 'completed', 'pi_pln_003', NOW());
 
-  -- Grant product access to these users
+  -- Grant product access to users (excluding john.doe for OTO testing)
   INSERT INTO user_product_access (user_id, product_id, access_granted_at)
   VALUES
-  (user1_id, premium_product_id, NOW() - INTERVAL '7 days'),
-  (user1_id, pro_toolkit_id, NOW() - INTERVAL '5 days'),
-  (user1_id, vip_masterclass_id, NOW() - INTERVAL '2 days'),
   (user2_id, premium_product_id, NOW() - INTERVAL '6 days'),
   (user2_id, pro_toolkit_id, NOW() - INTERVAL '4 days'),
   (user2_id, vip_masterclass_id, NOW() - INTERVAL '1 day'),
@@ -462,3 +450,237 @@ BEGIN
   -- since it's the first user created in the system
 
 END $$;
+
+-- =====================================================
+-- OTO (One-Time Offer) SAMPLE DATA
+-- =====================================================
+-- Purpose: Seed data for testing OTO functionality
+-- These offers demonstrate the OTO system in action
+
+-- OTO 1: After buying "Premium Course" → offer "Pro Toolkit" at 30% off for 15 minutes
+INSERT INTO oto_offers (
+  source_product_id,
+  oto_product_id,
+  discount_type,
+  discount_value,
+  duration_minutes,
+  is_active,
+  display_order
+) VALUES (
+  (SELECT id FROM products WHERE slug = 'premium-course'),
+  (SELECT id FROM products WHERE slug = 'pro-toolkit'),
+  'percentage',
+  30,
+  15,
+  true,
+  1
+);
+
+-- OTO 2: After buying "Pro Toolkit" → offer "VIP Masterclass" at $50 off for 30 minutes
+INSERT INTO oto_offers (
+  source_product_id,
+  oto_product_id,
+  discount_type,
+  discount_value,
+  duration_minutes,
+  is_active,
+  display_order
+) VALUES (
+  (SELECT id FROM products WHERE slug = 'pro-toolkit'),
+  (SELECT id FROM products WHERE slug = 'vip-masterclass'),
+  'fixed',
+  50,
+  30,
+  true,
+  1
+);
+
+-- OTO 3: After buying "VIP Masterclass" → offer "Enterprise Package" at 40% off for 10 minutes (urgency!)
+INSERT INTO oto_offers (
+  source_product_id,
+  oto_product_id,
+  discount_type,
+  discount_value,
+  duration_minutes,
+  is_active,
+  display_order
+) VALUES (
+  (SELECT id FROM products WHERE slug = 'vip-masterclass'),
+  (SELECT id FROM products WHERE slug = 'enterprise-package'),
+  'percentage',
+  40,
+  10,
+  true,
+  1
+);
+
+-- =====================================================
+-- TEST PRODUCTS FOR REDIRECT SCENARIOS
+-- =====================================================
+-- Purpose: 5 products for testing different redirect configurations
+--
+-- 1. test-oto-active      → OTO enabled, redirects to OTO product
+-- 2. test-product-redirect → Redirect to internal product page
+-- 3. test-custom-redirect  → Redirect to external URL
+-- 4. test-oto-owned        → OTO enabled but john.doe owns OTO product (skip scenario)
+-- 5. test-no-redirect      → No OTO, no redirect (plain product)
+
+-- Test Product 1: OTO Active (no redirect, has OTO offer)
+INSERT INTO products (
+  name, slug, description, icon, price, currency, vat_rate, price_includes_vat,
+  features, is_active, success_redirect_url, pass_params_to_redirect
+) VALUES (
+  'Test OTO Active',
+  'test-oto-active',
+  'Product with active OTO offer. After purchase, shows OTO for Test OTO Target product.',
+  '🎯',
+  19.99,
+  'USD',
+  23.00,
+  true,
+  '[{"title": "Test scenario", "items": ["OTO enabled", "No redirect URL", "Shows OTO offer after purchase"]}]'::jsonb,
+  true,
+  NULL,
+  false
+);
+
+-- Test Product 2: Product Redirect (internal redirect to another product)
+INSERT INTO products (
+  name, slug, description, icon, price, currency, vat_rate, price_includes_vat,
+  features, is_active, success_redirect_url, pass_params_to_redirect
+) VALUES (
+  'Test Product Redirect',
+  'test-product-redirect',
+  'Product that redirects to another product page after purchase.',
+  '🔄',
+  29.99,
+  'USD',
+  23.00,
+  true,
+  '[{"title": "Test scenario", "items": ["No OTO", "Redirects to /p/premium-course", "Internal redirect"]}]'::jsonb,
+  true,
+  '/p/premium-course',
+  true
+);
+
+-- Test Product 3: Custom Redirect (external URL)
+INSERT INTO products (
+  name, slug, description, icon, price, currency, vat_rate, price_includes_vat,
+  features, is_active, success_redirect_url, pass_params_to_redirect
+) VALUES (
+  'Test Custom Redirect',
+  'test-custom-redirect',
+  'Product that redirects to external URL after purchase.',
+  '🌐',
+  39.99,
+  'USD',
+  23.00,
+  true,
+  '[{"title": "Test scenario", "items": ["No OTO", "Redirects to https://google.com", "External redirect with params"]}]'::jsonb,
+  true,
+  'https://google.com',
+  true
+);
+
+-- Test Product 4: OTO Owned (john.doe already has the OTO product)
+INSERT INTO products (
+  name, slug, description, icon, price, currency, vat_rate, price_includes_vat,
+  features, is_active, success_redirect_url, pass_params_to_redirect
+) VALUES (
+  'Test OTO Owned',
+  'test-oto-owned',
+  'Product with OTO, but john.doe already owns the OTO target. OTO should be skipped.',
+  '✅',
+  24.99,
+  'USD',
+  23.00,
+  true,
+  '[{"title": "Test scenario", "items": ["OTO configured", "john.doe owns OTO product", "OTO should be SKIPPED", "No redirect"]}]'::jsonb,
+  true,
+  NULL,
+  false
+);
+
+-- Test Product 5: No Redirect (plain product, no OTO, no redirect)
+INSERT INTO products (
+  name, slug, description, icon, price, currency, vat_rate, price_includes_vat,
+  features, is_active, success_redirect_url, pass_params_to_redirect
+) VALUES (
+  'Test No Redirect',
+  'test-no-redirect',
+  'Plain product without any OTO or redirect. Shows success page and redirects to product page.',
+  '📦',
+  14.99,
+  'USD',
+  23.00,
+  true,
+  '[{"title": "Test scenario", "items": ["No OTO", "No redirect URL", "Stays on success page", "Countdown to product page"]}]'::jsonb,
+  true,
+  NULL,
+  false
+);
+
+-- Target product for OTO offers (cheap product that john.doe will own)
+INSERT INTO products (
+  name, slug, description, icon, price, currency, vat_rate, price_includes_vat,
+  features, is_active, success_redirect_url, pass_params_to_redirect
+) VALUES (
+  'Test OTO Target',
+  'test-oto-target',
+  'This product is offered as OTO for other test products.',
+  '🎁',
+  9.99,
+  'USD',
+  23.00,
+  true,
+  '[{"title": "OTO Target", "items": ["Used as OTO offer", "Discounted in OTO flow"]}]'::jsonb,
+  true,
+  NULL,
+  false
+);
+
+-- OTO Offer: test-oto-active → test-oto-target (20% off, 15 min)
+INSERT INTO oto_offers (
+  source_product_id,
+  oto_product_id,
+  discount_type,
+  discount_value,
+  duration_minutes,
+  is_active,
+  display_order
+) VALUES (
+  (SELECT id FROM products WHERE slug = 'test-oto-active'),
+  (SELECT id FROM products WHERE slug = 'test-oto-target'),
+  'percentage',
+  20,
+  15,
+  true,
+  1
+);
+
+-- OTO Offer: test-oto-owned → test-oto-target (same OTO target that john.doe owns)
+INSERT INTO oto_offers (
+  source_product_id,
+  oto_product_id,
+  discount_type,
+  discount_value,
+  duration_minutes,
+  is_active,
+  display_order
+) VALUES (
+  (SELECT id FROM products WHERE slug = 'test-oto-owned'),
+  (SELECT id FROM products WHERE slug = 'test-oto-target'),
+  'percentage',
+  25,
+  20,
+  true,
+  1
+);
+
+-- Give john.doe access to test-oto-target (so OTO will be skipped for test-oto-owned)
+INSERT INTO user_product_access (user_id, product_id, access_granted_at)
+VALUES (
+  'aaaaaaaa-1111-4111-a111-111111111111', -- john.doe's UUID
+  (SELECT id FROM products WHERE slug = 'test-oto-target'),
+  NOW() - INTERVAL '7 days'
+);

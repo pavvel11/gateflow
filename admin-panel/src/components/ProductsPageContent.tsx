@@ -126,6 +126,26 @@ const ProductsPageContent: React.FC = () => {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to create product');
       }
+
+      // Get the created product ID from response
+      const createdProduct = await response.json();
+      const productId = createdProduct.id;
+
+      // Save OTO configuration if enabled
+      if (productId && formData.oto_enabled && formData.oto_product_id) {
+        await fetch(`/api/admin/products/${productId}/oto`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            oto_enabled: formData.oto_enabled,
+            oto_product_id: formData.oto_product_id,
+            oto_discount_type: formData.oto_discount_type,
+            oto_discount_value: formData.oto_discount_value,
+            oto_duration_minutes: formData.oto_duration_minutes,
+          }),
+        });
+      }
+
       setShowProductForm(false);
       // Remove query param if present
       if (searchParams.get('open')) {
@@ -155,8 +175,23 @@ const ProductsPageContent: React.FC = () => {
       });
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update product');
+        console.error('Product update validation error:', errorData);
+        throw new Error(errorData.details?.join(', ') || errorData.error || 'Failed to update product');
       }
+
+      // Save OTO configuration (create/update/delete)
+      await fetch(`/api/admin/products/${editingProduct.id}/oto`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          oto_enabled: formData.oto_enabled,
+          oto_product_id: formData.oto_product_id,
+          oto_discount_type: formData.oto_discount_type,
+          oto_discount_value: formData.oto_discount_value,
+          oto_duration_minutes: formData.oto_duration_minutes,
+        }),
+      });
+
       setShowProductForm(false);
       setEditingProduct(null);
       await fetchProducts();

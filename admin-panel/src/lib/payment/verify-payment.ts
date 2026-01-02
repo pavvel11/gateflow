@@ -59,6 +59,25 @@ async function updateProfileWithCompanyData(
   }
 }
 
+export interface OtoInfo {
+  has_oto: boolean;
+  coupon_code?: string;
+  coupon_id?: string;
+  oto_product_id?: string;
+  oto_product_slug?: string;
+  oto_product_name?: string;
+  oto_product_price?: number;
+  oto_product_currency?: string;
+  discount_type?: 'percentage' | 'fixed';
+  discount_value?: number;
+  expires_at?: string;
+  duration_minutes?: number;
+  // Fields for skipped OTO (e.g., user already owns the product)
+  reason?: string;
+  skipped_oto_product_id?: string;
+  skipped_oto_product_slug?: string;
+}
+
 export interface PaymentIntentVerificationResult {
   payment_intent_id: string;
   status: string;
@@ -72,6 +91,7 @@ export interface PaymentIntentVerificationResult {
   is_guest_purchase?: boolean;
   scenario?: string;
   send_magic_link?: boolean;
+  oto_info?: OtoInfo;
   error?: string;
 }
 
@@ -92,7 +112,106 @@ export interface PaymentVerificationResult {
   scenario?: string;
   access_expires_at?: string | null;
   send_magic_link?: boolean;
+  oto_info?: OtoInfo;
   error?: string;
+}
+
+/**
+ * Check if payment was already processed and return cached result from database.
+ * This avoids unnecessary Stripe API calls for already-processed payments.
+ * Returns null if payment not found in database (needs Stripe verification).
+ */
+async function getProcessedPaymentFromDatabase(
+  sessionId: string,
+  serviceClient: any,
+  user?: User | null
+): Promise<PaymentVerificationResult | null> {
+  // Look up existing completed transaction
+  const { data: transaction, error } = await serviceClient
+    .from('payment_transactions')
+    .select(`
+      id,
+      session_id,
+      product_id,
+      customer_email,
+      user_id,
+      amount,
+      currency,
+      status,
+      created_at,
+      products:product_id (
+        id,
+        slug,
+        name,
+        success_redirect_url
+      )
+    `)
+    .eq('session_id', sessionId)
+    .eq('status', 'completed')
+    .maybeSingle();
+
+  if (error || !transaction) {
+    return null; // Not in database, need to verify with Stripe
+  }
+
+  // Verify user ownership if user is logged in
+  if (user && transaction.user_id && transaction.user_id !== user.id) {
+    return {
+      session_id: sessionId,
+      status: 'complete',
+      payment_status: 'paid',
+      error: 'Session does not belong to current user'
+    };
+  }
+
+  // Check if user has access to the product
+  const { data: accessRecord } = await serviceClient
+    .from('user_product_access')
+    .select('id, access_expires_at')
+    .eq('product_id', transaction.product_id)
+    .eq('user_id', transaction.user_id || user?.id)
+    .maybeSingle();
+
+  const hasAccess = !!accessRecord;
+  const isGuestPurchase = !transaction.user_id;
+
+  // Generate OTO info if applicable
+  let otoInfo: OtoInfo = { has_oto: false };
+  try {
+    const { data: otoResult } = await serviceClient
+      .rpc('generate_oto_coupon', {
+        source_product_id_param: transaction.product_id,
+        customer_email_param: transaction.customer_email,
+        transaction_id_param: transaction.id
+      });
+
+    if (otoResult?.has_oto || otoResult?.reason) {
+      otoInfo = otoResult as OtoInfo;
+    }
+  } catch (otoErr) {
+    console.error('OTO generation exception (cached):', otoErr);
+  }
+
+  return {
+    session_id: sessionId,
+    status: 'complete',
+    payment_status: 'paid',
+    customer_email: transaction.customer_email,
+    amount_total: Math.round(transaction.amount * 100), // Convert to cents for consistency
+    currency: transaction.currency,
+    metadata: {
+      product_id: transaction.product_id
+    },
+    created: Math.floor(new Date(transaction.created_at).getTime() / 1000),
+    access_granted: hasAccess,
+    already_had_access: false, // Can't determine from cache
+    requires_login: isGuestPurchase && !user,
+    is_guest_purchase: isGuestPurchase,
+    scenario: isGuestPurchase ? 'guest_purchase_cached' : 'logged_in_purchase_cached',
+    access_expires_at: accessRecord?.access_expires_at || null,
+    send_magic_link: isGuestPurchase,
+    oto_info: otoInfo
+  };
 }
 
 export async function verifyPaymentSession(
@@ -137,7 +256,14 @@ export async function verifyPaymentSession(
   );
 
   try {
-    // Get Stripe instance
+    // First, check if payment was already processed (database cache)
+    // This avoids unnecessary Stripe API calls and enables E2E testing
+    const cachedResult = await getProcessedPaymentFromDatabase(sessionId, serviceClient, user);
+    if (cachedResult) {
+      return cachedResult;
+    }
+
+    // Payment not in database - verify with Stripe
     const stripe = await getStripeServer();
 
     // Retrieve session from Stripe
@@ -284,6 +410,41 @@ export async function verifyPaymentSession(
               .catch(err => console.error('Webhook trigger error:', err));
           }
 
+          // Generate OTO coupon if configured for this product
+          let otoInfo: OtoInfo = { has_oto: false };
+          if (paymentResult.access_granted || paymentResult.is_guest_purchase) {
+            try {
+              // Get transaction ID from payment_transactions table
+              const { data: transaction } = await serviceClient
+                .from('payment_transactions')
+                .select('id')
+                .eq('session_id', session.id)
+                .single();
+
+              if (transaction?.id) {
+                const { data: otoResult, error: otoError } = await serviceClient
+                  .rpc('generate_oto_coupon', {
+                    source_product_id_param: productId,
+                    customer_email_param: customerEmail,
+                    transaction_id_param: transaction.id
+                  });
+
+                if (otoError) {
+                  console.error('OTO generation error:', otoError);
+                } else if (otoResult?.has_oto) {
+                  otoInfo = otoResult as OtoInfo;
+                  console.log('Generated OTO coupon:', otoInfo.coupon_code);
+                } else if (otoResult?.reason) {
+                  // Pass through skipped OTO info (e.g., user already owns the product)
+                  otoInfo = otoResult as OtoInfo;
+                  console.log('OTO skipped:', otoResult.reason, 'slug:', otoResult.skipped_oto_product_slug);
+                }
+              }
+            } catch (otoErr) {
+              console.error('OTO generation exception:', otoErr);
+            }
+          }
+
           // Convert database response to our interface
           return {
             ...baseResponse,
@@ -294,7 +455,9 @@ export async function verifyPaymentSession(
             scenario: paymentResult.scenario,
             access_expires_at: paymentResult.access_expires_at,
             send_magic_link: paymentResult.send_magic_link || false,
-            customer_email: paymentResult.customer_email
+            // Use customer email from DB result, fallback to Stripe session, fallback to what we passed in
+            customer_email: paymentResult.customer_email || baseResponse.customer_email || customerEmail,
+            oto_info: otoInfo
           };
 
         } catch (error) {
@@ -515,6 +678,41 @@ export async function verifyPaymentIntent(
             );
           }
 
+          // Generate OTO coupon if configured for this product
+          let otoInfo: OtoInfo = { has_oto: false };
+          if (paymentResult.access_granted || paymentResult.is_guest_purchase) {
+            try {
+              // Get transaction ID from payment_transactions table
+              const { data: transaction } = await serviceClient
+                .from('payment_transactions')
+                .select('id')
+                .eq('session_id', paymentIntent.id)
+                .single();
+
+              if (transaction?.id) {
+                const { data: otoResult, error: otoError } = await serviceClient
+                  .rpc('generate_oto_coupon', {
+                    source_product_id_param: productId,
+                    customer_email_param: customerEmail,
+                    transaction_id_param: transaction.id
+                  });
+
+                if (otoError) {
+                  console.error('OTO generation error:', otoError);
+                } else if (otoResult?.has_oto) {
+                  otoInfo = otoResult as OtoInfo;
+                  console.log('Generated OTO coupon:', otoInfo.coupon_code);
+                } else if (otoResult?.reason) {
+                  // Pass through skipped OTO info (e.g., user already owns the product)
+                  otoInfo = otoResult as OtoInfo;
+                  console.log('OTO skipped:', otoResult.reason, 'slug:', otoResult.skipped_oto_product_slug);
+                }
+              }
+            } catch (otoErr) {
+              console.error('OTO generation exception:', otoErr);
+            }
+          }
+
           // Convert database response to our interface
           return {
             ...baseResponse,
@@ -523,7 +721,9 @@ export async function verifyPaymentIntent(
             is_guest_purchase: paymentResult.is_guest_purchase || false,
             scenario: paymentResult.scenario,
             send_magic_link: paymentResult.send_magic_link || false,
-            customer_email: paymentResult.customer_email
+            // Use customer email from DB result, fallback to Stripe, fallback to what we passed in
+            customer_email: paymentResult.customer_email || baseResponse.customer_email || customerEmail,
+            oto_info: otoInfo
           };
 
         } catch (error) {

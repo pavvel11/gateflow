@@ -14,6 +14,8 @@ interface UsePaymentStatusParams {
   product: Product;
   accessGranted: boolean;
   redirectUrl?: string;
+  /** Disable auto-redirect countdown (when OTO is shown) */
+  disableAutoRedirect?: boolean;
 }
 
 export function usePaymentStatus({
@@ -24,6 +26,7 @@ export function usePaymentStatus({
   product,
   accessGranted,
   redirectUrl,
+  disableAutoRedirect = false,
 }: UsePaymentStatusParams) {
   const terms = useTerms();
   const turnstile = useTurnstile();
@@ -32,16 +35,6 @@ export function usePaymentStatus({
     paymentStatus,
     accessGranted
   });
-
-  const countdown = useCountdown({
-    paymentStatus,
-    accessGranted,
-    isUserAuthenticated: auth.isAuthenticated,
-    productSlug: product.slug,
-    redirectUrl,
-  });
-
-  const windowDimensions = useWindowDimensions();
 
   const magicLink = useMagicLink({
     paymentStatus,
@@ -53,6 +46,18 @@ export function usePaymentStatus({
     captchaToken: turnstile.token,
     showInteractiveWarning: turnstile.showInteractiveWarning,
   });
+
+  const countdown = useCountdown({
+    paymentStatus,
+    accessGranted,
+    isUserAuthenticated: auth.isAuthenticated,
+    productSlug: product.slug,
+    redirectUrl,
+    disableAutoRedirect,
+    magicLinkSent: magicLink.sent,
+  });
+
+  const windowDimensions = useWindowDimensions();
 
   return {
     auth,

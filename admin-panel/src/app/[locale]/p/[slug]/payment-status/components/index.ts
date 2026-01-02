@@ -4,3 +4,4 @@ export { default as SuccessStatus } from './SuccessStatus';
 export { default as MagicLinkStatus } from './MagicLinkStatus';
 export { default as PaymentStatusLayout } from './PaymentStatusLayout';
 export { default as PaymentStatusView } from './PaymentStatusView';
+export { default as OtoOfferSection } from './OtoOfferSection';
