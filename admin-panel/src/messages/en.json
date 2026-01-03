@@ -152,6 +152,7 @@
       "title": "Meta (Facebook)",
       "pixelId": "Pixel ID",
       "capiToken": "CAPI Token",
+      "capiTokenHelp": "Access token for Facebook Conversions API. Generate in Events Manager → Settings.",
       "testEventCode": "Test Event Code",
       "testEventCodeHelp": "For testing events in Events Manager. Remove in production.",
       "enableCAPI": "Enable Conversions API (Server-Side)",
