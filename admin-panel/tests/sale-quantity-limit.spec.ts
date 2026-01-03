@@ -129,6 +129,50 @@ test.describe('Sale Quantity Limit', () => {
     expect(data.showOmnibus).toBe(true);
   });
 
+  test('only time limit set - expired', async ({ request }) => {
+    // Set past expiration, no quantity limit
+    const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    await supabaseAdmin
+      .from('products')
+      .update({
+        sale_quantity_sold: 0,
+        sale_quantity_limit: null, // no quantity limit
+        sale_price: 60,
+        sale_price_until: pastDate
+      })
+      .eq('id', testProductId);
+
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Check via API - sale should NOT be active (time expired)
+    const response = await request.get(`/api/products/${testProductId}/lowest-price`);
+    expect(response.ok()).toBeTruthy();
+    const data = await response.json();
+    expect(data.showOmnibus).toBe(false);
+  });
+
+  test('only time limit set - still active', async ({ request }) => {
+    // Set future expiration, no quantity limit
+    const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    await supabaseAdmin
+      .from('products')
+      .update({
+        sale_quantity_sold: 1000, // high count but no limit
+        sale_quantity_limit: null, // no quantity limit
+        sale_price: 60,
+        sale_price_until: futureDate
+      })
+      .eq('id', testProductId);
+
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Check via API - sale should be active (time not expired, no qty limit)
+    const response = await request.get(`/api/products/${testProductId}/lowest-price`);
+    expect(response.ok()).toBeTruthy();
+    const data = await response.json();
+    expect(data.showOmnibus).toBe(true);
+  });
+
   test('time limit takes precedence when reached first', async ({ request }) => {
     // Set past expiration but quantity still available
     const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
