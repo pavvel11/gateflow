@@ -32,12 +32,18 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
 
   const {
     gtm_container_id,
+    gtm_server_container_url,
     facebook_pixel_id,
     umami_website_id,
     umami_script_url = 'https://cloud.umami.is/script.js',
     cookie_consent_enabled,
     scripts = []
   } = config
+
+  // GTM base URL - use server container if configured, otherwise default Google URL
+  const gtmBaseUrl = gtm_server_container_url
+    ? gtm_server_container_url.replace(/\/$/, '') // Remove trailing slash
+    : 'https://www.googletagmanager.com'
 
   // --- GOOGLE CONSENT MODE V2 DEFAULTS ---
   // This script MUST run before GTM to set default consent state
@@ -213,11 +219,11 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
           data-type={cookie_consent_enabled ? "application/javascript" : undefined}
           data-name={cookie_consent_enabled ? "google-tag-manager" : undefined}
           dangerouslySetInnerHTML={{
-            __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            __html: `(function(w,d,s,l,i,u){w[l]=w[l]||[];w[l].push({'gtm.start':
             new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
             j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-            })(window,document,'script','dataLayer','${gtm_container_id}');`
+            u+'/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+            })(window,document,'script','dataLayer','${gtm_container_id}','${gtmBaseUrl}');`
           }}
         />
       )}
