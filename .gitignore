@@ -58,6 +58,9 @@ build/
 ecosystem.config.js
 Caddyfile
 
+# Gemini temporary files
+.gemini-clipboard/
+
 # Claude AI configuration
 .claude/
 CLAUDE.md
