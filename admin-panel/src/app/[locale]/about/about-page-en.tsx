@@ -344,15 +344,15 @@ export function AboutPageEN() {
               <p className="text-sm text-blue-50">Price history. Directive 2019/2161</p>
             </div>
 
-            {/* Timed Access */}
+            {/* Timed & Quantity Limits */}
             <div className="group p-6 rounded-3xl bg-gradient-to-br from-cyan-500 to-teal-500 hover:scale-[1.02] transition-all duration-300 shadow-xl">
               <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center mb-3">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Timed Access</h3>
-              <p className="text-sm text-cyan-50">30/90-day trials. Scheduled launches. Auto-expiry.</p>
+              <h3 className="text-lg font-bold text-white mb-2">Sale Limits</h3>
+              <p className="text-sm text-cyan-50">Time OR quantity limits. "Only 5 left!" counter.</p>
             </div>
 
             {/* Sales Funnels - wide */}
@@ -362,8 +362,19 @@ export function AboutPageEN() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Sales Funnels & OTO</h3>
-              <p className="text-sm text-violet-50">Auto-redirect after purchase. Lead magnet → Upsell → Premium. Hide bumps in subsequent steps.</p>
+              <h3 className="text-lg font-bold text-white mb-2">True OTO & Funnels</h3>
+              <p className="text-sm text-violet-50">Post-purchase coupons (time-limited, email-bound). Lead magnet → Upsell → Premium. Server-side validation.</p>
+            </div>
+
+            {/* Refund System */}
+            <div className="group p-6 rounded-3xl bg-gradient-to-br from-rose-500 to-red-500 hover:scale-[1.02] transition-all duration-300 shadow-xl">
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Refund System</h3>
+              <p className="text-sm text-rose-50">Per-product config. Customer form. Admin panel. Auto Stripe refunds.</p>
             </div>
 
             {/* NOTE: GUS API card intentionally excluded from English version - it's Poland-specific feature */}
