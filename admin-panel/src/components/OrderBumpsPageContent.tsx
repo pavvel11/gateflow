@@ -16,6 +16,7 @@ import { Product } from '@/types';
 import { useToast } from '@/contexts/ToastContext';
 import OrderBumpFormModal from './OrderBumpFormModal';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 
 interface OrderBumpWithDetails {
   id: string;
@@ -335,20 +336,28 @@ const OrderBumpsPageContent: React.FC = () => {
                 {orderBumps.map((bump) => (
                   <tr key={bump.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {bump.main_product.name}
-                      </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">
-                        /{bump.main_product.slug}
-                      </div>
+                      <Link
+                        href={`/p/${bump.main_product.slug}`}
+                        className="group block"
+                      >
+                        <div className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                          {bump.main_product.name}
+                        </div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400 font-mono group-hover:text-blue-500 dark:group-hover:text-blue-300 transition-colors">
+                          /{bump.main_product.slug}
+                        </div>
+                      </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-semibold text-blue-600 dark:text-blue-400">
                         {bump.bump_title}
                       </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                      <Link
+                        href={`/p/${bump.bump_product.slug}`}
+                        className="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                      >
                         {bump.bump_product.name}
-                      </div>
+                      </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-bold text-gray-900 dark:text-white">
