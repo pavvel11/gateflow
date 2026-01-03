@@ -1,11 +1,13 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import Confetti from 'react-confetti';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { usePaymentStatus } from '../hooks';
 import { PaymentStatusViewProps } from '../types';
 import { getStatusInfo } from '../utils/helpers';
+import { useTracking } from '@/hooks/useTracking';
 import {
   ErrorStatus,
   ProcessingStatus,
@@ -29,6 +31,8 @@ export default function PaymentStatusView({
   const t = useTranslations('paymentStatus');
   const tOto = useTranslations('oto');
   const router = useRouter();
+  const { track } = useTracking();
+  const purchaseTracked = useRef(false);
 
   // When OTO is shown, disable auto-redirect countdown
   const hasOtoOffer = otoOffer?.hasOto ?? false;
@@ -52,6 +56,36 @@ export default function PaymentStatusView({
   });
 
   const statusInfo = getStatusInfo(paymentStatus, t);
+
+  // Track purchase event when payment is successful
+  useEffect(() => {
+    if (purchaseTracked.current) return;
+
+    // Fire purchase event for completed or magic_link_sent (guest purchase) status
+    const isSuccessfulPurchase =
+      (paymentStatus === 'completed' && accessGranted) ||
+      paymentStatus === 'magic_link_sent';
+
+    if (!isSuccessfulPurchase) return;
+
+    purchaseTracked.current = true;
+
+    // Generate transaction ID from session or payment intent
+    const transactionId = sessionId || paymentIntentId || `txn_${Date.now()}`;
+
+    track('purchase', {
+      transactionId,
+      value: product.price,
+      currency: product.currency,
+      items: [{
+        item_id: product.id,
+        item_name: product.name,
+        price: product.price,
+        quantity: 1,
+      }],
+      userEmail: customerEmail || undefined,
+    });
+  }, [paymentStatus, accessGranted, product, sessionId, paymentIntentId, customerEmail, track]);
 
   // Handle OTO skip action
   const handleOtoSkip = () => {

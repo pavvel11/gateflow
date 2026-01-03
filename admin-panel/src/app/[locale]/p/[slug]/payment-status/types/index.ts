@@ -13,6 +13,8 @@ export interface Product {
   slug: string;
   description: string;
   icon: string;
+  price: number;
+  currency: string;
 }
 
 export interface StatusInfo {

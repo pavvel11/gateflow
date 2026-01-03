@@ -3,6 +3,9 @@
 -- Updated: Consolidated all admin functionality into single migration
 -- Based on existing gateflow_setup.sql and user_product_access_setup.sql
 
+-- Suppress NOTICE messages during migration (e.g., "relation already exists, skipping")
+SET client_min_messages = warning;
+
 BEGIN;
 
 -- Enable required extensions

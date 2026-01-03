@@ -13,7 +13,9 @@ interface CustomScript {
 
 interface PublicIntegrationsConfig {
   gtm_container_id?: string | null
+  gtm_server_container_url?: string | null
   facebook_pixel_id?: string | null
+  fb_capi_enabled?: boolean
   umami_website_id?: string | null
   umami_script_url?: string | null
   cookie_consent_enabled?: boolean
@@ -36,6 +38,20 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
     cookie_consent_enabled,
     scripts = []
   } = config
+
+  // --- GOOGLE CONSENT MODE V2 DEFAULTS ---
+  // This script MUST run before GTM to set default consent state
+  const consentModeDefaults = `
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('consent', 'default', {
+      'ad_storage': 'denied',
+      'ad_user_data': 'denied',
+      'ad_personalization': 'denied',
+      'analytics_storage': 'denied',
+      'wait_for_update': 500
+    });
+  `
 
   // --- KLARO CONFIG ---
   const klaroConfig = {
@@ -67,6 +83,21 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
       },
     },
     apps: [] as any[],
+    // Callback for Google Consent Mode V2 integration
+    callback: function(consent: Record<string, boolean>) {
+      // Update Google Consent Mode when user makes consent choices
+      if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
+        const analyticsGranted = consent['google-tag-manager'] === true;
+        const marketingGranted = consent['facebook-pixel'] === true;
+
+        (window as any).gtag('consent', 'update', {
+          'analytics_storage': analyticsGranted ? 'granted' : 'denied',
+          'ad_storage': marketingGranted ? 'granted' : 'denied',
+          'ad_user_data': marketingGranted ? 'granted' : 'denied',
+          'ad_personalization': marketingGranted ? 'granted' : 'denied',
+        });
+      }
+    },
   }
 
   // 1. Add Managed Apps
@@ -147,6 +178,15 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
 
   return (
     <>
+      {/* GOOGLE CONSENT MODE V2 DEFAULTS - Must be FIRST, before GTM */}
+      {gtm_container_id && (
+        <Script
+          id="consent-mode-defaults"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: consentModeDefaults }}
+        />
+      )}
+
       {/* KLARO INIT */}
       {cookie_consent_enabled && (
         <>

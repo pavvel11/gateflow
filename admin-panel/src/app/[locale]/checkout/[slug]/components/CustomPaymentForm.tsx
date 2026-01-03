@@ -7,6 +7,7 @@ import { formatPrice } from '@/lib/constants';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { validateNIPChecksum, normalizeNIP } from '@/lib/validation/nip';
+import { useTracking } from '@/hooks/useTracking';
 
 interface CustomPaymentFormProps {
   product: Product;
@@ -31,6 +32,7 @@ export default function CustomPaymentForm({
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
+  const { track } = useTracking();
 
   const [guestEmail, setGuestEmail] = useState('');
 
@@ -272,6 +274,28 @@ export default function CustomPaymentForm({
           }
         }
       }
+
+      // Track add_payment_info event before confirming payment
+      const items = [{
+        item_id: product.id,
+        item_name: product.name,
+        price: product.price,
+        quantity: 1,
+      }];
+      if (bumpSelected && bumpProduct) {
+        items.push({
+          item_id: bumpProduct.bump_product_id,
+          item_name: bumpProduct.bump_product_name || 'Additional Product',
+          price: bumpProduct.bump_price,
+          quantity: 1,
+        });
+      }
+      await track('add_payment_info', {
+        value: totalGross,
+        currency: product.currency,
+        items,
+        userEmail: finalEmail,
+      });
 
       const { error } = await stripe.confirmPayment({
         elements,

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
 import { Product } from '@/types';
@@ -13,6 +13,7 @@ import { useOrderBumps } from '@/hooks/useOrderBumps';
 import { useSearchParams } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { useTranslations } from 'next-intl';
+import { useTracking } from '@/hooks/useTracking';
 import ProductShowcase from './ProductShowcase';
 import CustomPaymentForm from './CustomPaymentForm';
 import OtoCountdownBanner from '@/components/storefront/OtoCountdownBanner';
@@ -28,6 +29,8 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const config = useConfig();
+  const { track } = useTracking();
+  const trackingFired = useRef(false);
   
   // Safe loading of Stripe to prevent crashes if key is missing
   const stripePromise = config.stripePublishableKey 
@@ -80,6 +83,27 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
 
   // Check if currency matches (Stripe requires same currency for all line items)
   const isCurrencyMatching = orderBump && product.currency.toLowerCase() === orderBump.bump_currency.toLowerCase();
+
+  // Track view_item and begin_checkout events on mount
+  useEffect(() => {
+    if (trackingFired.current) return;
+    trackingFired.current = true;
+
+    const trackingData = {
+      value: product.price,
+      currency: product.currency,
+      items: [{
+        item_id: product.id,
+        item_name: product.name,
+        price: product.price,
+        quantity: 1,
+      }],
+    };
+
+    // Fire view_item first, then begin_checkout
+    track('view_item', trackingData);
+    track('begin_checkout', trackingData);
+  }, [product, track]);
 
   // Handle coupon verification
   const handleVerifyCoupon = useCallback(async (code: string, currentEmail?: string) => {

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ConfigProvider } from "@/components/providers/config-provider";
+import { TrackingConfigProvider } from "@/components/providers/tracking-config-provider";
 import { getPublicIntegrationsConfig } from "@/lib/actions/integrations";
 import TrackingProvider from "@/components/TrackingProvider";
 import { Suspense } from "react";
@@ -38,9 +39,11 @@ export default async function RootLayout({
           <TrackingProvider config={config} />
         </Suspense>
         
-        <ConfigProvider>
-          {children}
-        </ConfigProvider>
+        <TrackingConfigProvider config={config}>
+          <ConfigProvider>
+            {children}
+          </ConfigProvider>
+        </TrackingConfigProvider>
       </body>
     </html>
   );

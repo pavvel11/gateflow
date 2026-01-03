@@ -19,6 +19,9 @@
 --   - 20251227100000_shop_config.sql
 -- =====================================================
 
+-- Suppress NOTICE messages during migration (e.g., "relation already exists, skipping")
+SET client_min_messages = warning;
+
 -- =============================================================================
 -- TABLES
 -- =============================================================================
@@ -183,9 +186,11 @@ CREATE TABLE IF NOT EXISTS public.integrations_config (
 
   -- Analytics integrations
   gtm_container_id TEXT,
+  gtm_server_container_url TEXT, -- GTM Server-Side URL (e.g. https://gtm.yourdomain.com)
   facebook_pixel_id TEXT,
   facebook_capi_token TEXT,
   facebook_test_event_code TEXT,
+  fb_capi_enabled BOOLEAN DEFAULT false, -- Enable Facebook Conversions API server-side tracking
   google_ads_conversion_id TEXT,
   google_ads_conversion_label TEXT,
   umami_website_id TEXT,
@@ -885,7 +890,9 @@ BEGIN
 
   RETURN jsonb_build_object(
     'gtm_container_id', config_record.gtm_container_id,
+    'gtm_server_container_url', config_record.gtm_server_container_url,
     'facebook_pixel_id', config_record.facebook_pixel_id,
+    'fb_capi_enabled', COALESCE(config_record.fb_capi_enabled, false),
     'umami_website_id', config_record.umami_website_id,
     'umami_script_url', config_record.umami_script_url,
     'cookie_consent_enabled', config_record.cookie_consent_enabled,

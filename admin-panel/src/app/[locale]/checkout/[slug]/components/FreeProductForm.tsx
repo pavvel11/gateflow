@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Product } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,6 +10,7 @@ import { validateEmailAction } from '@/lib/actions/validate-email';
 import TurnstileWidget from '@/components/TurnstileWidget';
 import TermsCheckbox from '@/components/TermsCheckbox';
 import { createClient } from '@/lib/supabase/client';
+import { useTracking } from '@/hooks/useTracking';
 
 interface FreeProductFormProps {
   product: Product;
@@ -24,6 +25,8 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const successUrl = searchParams.get('success_url');
+  const { track } = useTracking();
+  const trackingFired = useRef(false);
   
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -46,6 +49,23 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
     });
   }, []);
 
+  // Track view_item event on mount
+  useEffect(() => {
+    if (trackingFired.current) return;
+    trackingFired.current = true;
+
+    track('view_item', {
+      value: 0,
+      currency: product.currency,
+      items: [{
+        item_id: product.id,
+        item_name: product.name,
+        price: 0,
+        quantity: 1,
+      }],
+    });
+  }, [product, track]);
+
   const handleFreeAccess = async () => {
     if (user) {
       // Logged in user - grant access directly
@@ -65,7 +85,20 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
 
         const data = await response.json();
         addToast(data.message || 'Access granted successfully!', 'success');
-        
+
+        // Track generate_lead event for free product
+        await track('generate_lead', {
+          value: 0,
+          currency: product.currency,
+          items: [{
+            item_id: product.id,
+            item_name: product.name,
+            price: 0,
+            quantity: 1,
+          }],
+          userEmail: user.email || undefined,
+        });
+
         // Redirect to success page (no session_id needed for free products)
         const redirectPath = `/p/${product.slug}/payment-status${successUrl ? `?success_url=${encodeURIComponent(successUrl)}` : ''}`;
         router.push(redirectPath);
@@ -134,15 +167,28 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
 
       if (error) {
         setMessage({ type: 'error', text: error.message });
-        
+
         // Reset captcha after ANY error (it was consumed in the failed request)
         resetCaptcha();
         return;
       }
 
-      setMessage({ 
-        type: 'success', 
-        text: t('checkEmailForMagicLink') 
+      // Track generate_lead event for magic link flow
+      await track('generate_lead', {
+        value: 0,
+        currency: product.currency,
+        items: [{
+          item_id: product.id,
+          item_name: product.name,
+          price: 0,
+          quantity: 1,
+        }],
+        userEmail: email,
+      });
+
+      setMessage({
+        type: 'success',
+        text: t('checkEmailForMagicLink')
       });
       
     } catch {

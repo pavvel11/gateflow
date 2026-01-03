@@ -386,9 +386,11 @@ export type Database = {
           facebook_capi_token: string | null
           facebook_pixel_id: string | null
           facebook_test_event_code: string | null
+          fb_capi_enabled: boolean | null
           google_ads_conversion_id: string | null
           google_ads_conversion_label: string | null
           gtm_container_id: string | null
+          gtm_server_container_url: string | null
           id: number
           umami_website_id: string | null
           umami_script_url: string | null
@@ -401,9 +403,11 @@ export type Database = {
           facebook_capi_token?: string | null
           facebook_pixel_id?: string | null
           facebook_test_event_code?: string | null
+          fb_capi_enabled?: boolean | null
           google_ads_conversion_id?: string | null
           google_ads_conversion_label?: string | null
           gtm_container_id?: string | null
+          gtm_server_container_url?: string | null
           id?: number
           umami_website_id?: string | null
           umami_script_url?: string | null
@@ -416,9 +420,11 @@ export type Database = {
           facebook_capi_token?: string | null
           facebook_pixel_id?: string | null
           facebook_test_event_code?: string | null
+          fb_capi_enabled?: boolean | null
           google_ads_conversion_id?: string | null
           google_ads_conversion_label?: string | null
           gtm_container_id?: string | null
+          gtm_server_container_url?: string | null
           id?: number
           umami_website_id?: string | null
           umami_script_url?: string | null

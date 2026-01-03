@@ -10,11 +10,13 @@ export interface ValidationResult {
 
 export interface IntegrationsInput {
   gtm_container_id?: string | null;
+  gtm_server_container_url?: string | null;
   google_ads_conversion_id?: string | null;
   google_ads_conversion_label?: string | null;
   facebook_pixel_id?: string | null;
   facebook_capi_token?: string | null;
   facebook_test_event_code?: string | null;
+  fb_capi_enabled?: boolean;
   umami_website_id?: string | null;
   umami_script_url?: string | null;
   cookie_consent_enabled?: boolean;
@@ -40,6 +42,11 @@ export function validateIntegrations(data: IntegrationsInput): ValidationResult 
   // GTM ID validation
   if (data.gtm_container_id && !/^GTM-[A-Z0-9]+$/.test(data.gtm_container_id)) {
     addError('gtm_container_id', 'Invalid GTM Container ID format');
+  }
+
+  // GTM Server Container URL validation
+  if (data.gtm_server_container_url && !/^https:\/\/.+/.test(data.gtm_server_container_url)) {
+    addError('gtm_server_container_url', 'GTM Server URL must be a valid HTTPS URL');
   }
 
   // Umami validation

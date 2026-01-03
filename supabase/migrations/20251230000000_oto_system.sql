@@ -10,6 +10,9 @@
 --   → Coupon auto-applies → Timer countdown → Expires = normal price
 -- =====================================================
 
+-- Suppress NOTICE messages during migration (e.g., "relation already exists, skipping")
+SET client_min_messages = warning;
+
 -- =============================================================================
 -- TABLES
 -- =============================================================================

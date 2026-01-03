@@ -131,6 +131,14 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('gtm.containerId')}</label>
                       <input type="text" placeholder="GTM-XXXXXX" value={formData.gtm_container_id || ''} onChange={(e) => handleChange('gtm_container_id', e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none" />
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        {t('gtm.serverContainerUrl')}
+                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">(Advanced)</span>
+                      </label>
+                      <input type="text" placeholder="https://gtm.yourdomain.com" value={formData.gtm_server_container_url || ''} onChange={(e) => handleChange('gtm_server_container_url', e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none" />
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('gtm.serverContainerHelp')}</p>
+                    </div>
                   </div>
                 </div>
 
@@ -169,6 +177,25 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
                     <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('facebook.capiToken')}</label>
                         <input type="password" value={formData.facebook_capi_token || ''} onChange={(e) => handleChange('facebook_capi_token', e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none" />
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('facebook.capiTokenHelp')}</p>
+                    </div>
+                    <div className="md:col-span-2">
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          id="fb_capi_enabled"
+                          checked={formData.fb_capi_enabled ?? false}
+                          onChange={(e) => handleChange('fb_capi_enabled', e.target.checked)}
+                          disabled={!formData.facebook_capi_token}
+                          className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 disabled:opacity-50"
+                        />
+                        <label htmlFor="fb_capi_enabled" className={`text-sm font-medium ${!formData.facebook_capi_token ? 'text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                          {t('facebook.enableCAPI')}
+                        </label>
+                      </div>
+                      {formData.fb_capi_enabled && !formData.facebook_capi_token && (
+                        <p className="mt-1 text-xs text-amber-600">{t('facebook.capiTokenRequired')}</p>
+                      )}
                     </div>
                   </div>
                 </div>

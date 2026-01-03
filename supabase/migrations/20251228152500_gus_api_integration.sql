@@ -2,6 +2,9 @@
 -- 1. Adds metadata column to guest_purchases for storing company data from GUS
 -- 2. Adds GUS API key columns to integrations_config table
 
+-- Suppress NOTICE messages during migration (e.g., "column already exists, skipping")
+SET client_min_messages = warning;
+
 -- Step 1: Add metadata column to guest_purchases if it doesn't exist
 DO $$
 BEGIN

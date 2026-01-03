@@ -35,7 +35,7 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
   // Get product details
   const { data: product, error: productError } = await supabase
     .from('products')
-    .select('id, name, slug, description, icon, success_redirect_url, pass_params_to_redirect')
+    .select('id, name, slug, description, icon, price, currency, success_redirect_url, pass_params_to_redirect')
     .eq('slug', resolvedParams.slug)
     .single();
 

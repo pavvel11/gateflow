@@ -137,7 +137,9 @@
     },
     "gtm": {
       "title": "Google Tag Manager",
-      "containerId": "Container ID"
+      "containerId": "Container ID",
+      "serverContainerUrl": "GTM Server Container URL",
+      "serverContainerHelp": "For server-side tracking. Leave empty for client-side only."
     },
     "umami": {
       "title": "Umami Analytics (Open Source)",
@@ -149,7 +151,11 @@
     "facebook": {
       "title": "Meta (Facebook)",
       "pixelId": "Pixel ID",
-      "capiToken": "CAPI Token"
+      "capiToken": "CAPI Token",
+      "testEventCode": "Test Event Code",
+      "testEventCodeHelp": "For testing events in Events Manager. Remove in production.",
+      "enableCAPI": "Enable Conversions API (Server-Side)",
+      "capiTokenRequired": "CAPI Token is required to enable this feature"
     },
     "cookieConsent": {
       "requireConsent": "Require Consent (Recommended)"

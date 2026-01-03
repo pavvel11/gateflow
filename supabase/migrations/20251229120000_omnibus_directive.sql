@@ -1,6 +1,9 @@
 -- Omnibus Directive (EU 2019/2161) - 30-Day Price History Tracking
 -- Implements requirement to display lowest price from last 30 days when showing discounts
 
+-- Suppress NOTICE messages during migration (e.g., "relation already exists, skipping")
+SET client_min_messages = warning;
+
 -- ============================================================================
 -- 1. Add omnibus_exempt flag and sale price fields to products table
 -- ============================================================================

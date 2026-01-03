@@ -1,6 +1,9 @@
 -- Complete payment system with guest checkout and security
 -- Migration: 20250717_complete_payment_system
 
+-- Suppress NOTICE messages during migration (e.g., "relation already exists, skipping")
+SET client_min_messages = warning;
+
 BEGIN;
 
 -- =============================================================================
