@@ -283,6 +283,16 @@ CREATE TABLE IF NOT EXISTS application_rate_limits (
   UNIQUE (identifier, action_type, window_start)
 );
 
+-- Enable RLS - only service_role should access this table (via API routes)
+ALTER TABLE application_rate_limits ENABLE ROW LEVEL SECURITY;
+
+-- Service role has full access (used by Next.js API routes)
+CREATE POLICY "Service role has full access to rate limits"
+  ON application_rate_limits
+  FOR ALL
+  USING (auth.role() = 'service_role')
+  WITH CHECK (auth.role() = 'service_role');
+
 CREATE INDEX IF NOT EXISTS idx_application_rate_limits_lookup
   ON application_rate_limits(identifier, action_type, window_start DESC);
 
