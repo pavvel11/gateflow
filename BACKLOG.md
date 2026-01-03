@@ -283,11 +283,32 @@ export async function rateLimit(
 *   **Phase 2 (Automated)**: Google OAuth App integration. One-click setup where GateFlow creates the Container and Tags automatically via GTM API.
 
 #### 2. Server-Side Tracking (Conversions API)
-**Status**: 🏗️ Partially Done (DB & UI Ready)
-*   **Meta (Facebook) CAPI**: Send `Purchase` and `Lead` events directly from backend (Stripe Webhook / Access Grant) to bypass AdBlockers.
-    *   ✅ Database Schema & Admin UI (Token storage)
-    *   📋 Backend Logic (Sending events to FB Graph API)
-*   **Google Enhanced Conversions**: Backend integration to send hashed user data (email) with conversion events to Google Ads.
+**Status**: ✅ Done - 2026-01-03
+**Description**: Complete marketing tracking infrastructure with client-side and server-side event firing.
+
+**Implemented Features**:
+- ✅ **GTM DataLayer Events**: `view_item`, `begin_checkout`, `add_payment_info`, `purchase`, `generate_lead`
+- ✅ **Facebook Pixel (Client-Side)**: `ViewContent`, `InitiateCheckout`, `AddPaymentInfo`, `Purchase`, `Lead`
+- ✅ **Facebook CAPI (Server-Side)**: `/api/tracking/fb-capi` endpoint with SHA256 hashing
+- ✅ **Event Deduplication**: Shared `event_id` between Pixel and CAPI
+- ✅ **Google Consent Mode V2**: Integration with Klaro consent manager
+- ✅ **useTracking Hook**: Unified event firing across all checkout flows
+- ✅ **TrackingConfigProvider**: Config propagation to client components
+- ✅ **Admin UI**: FB CAPI toggle in Integrations settings
+- ✅ **E2E Tests**: 8 comprehensive Playwright tests for tracking events
+
+**Tracking Locations**:
+| Event | GA4 | FB | Location |
+|-------|-----|----|---------|
+| Product View | `view_item` | `ViewContent` | ProductView.tsx |
+| Checkout Start | `begin_checkout` | `InitiateCheckout` | PaidProductForm.tsx |
+| Payment Info | `add_payment_info` | `AddPaymentInfo` | CustomPaymentForm.tsx |
+| Purchase | `purchase` | `Purchase` | PaymentStatusView.tsx |
+| Free Download | `generate_lead` | `Lead` | FreeProductForm.tsx |
+
+**Next Steps (Future Enhancement)**:
+- 📋 **Google Enhanced Conversions**: Backend integration with hashed user data for Google Ads
+- 📋 **GTM Server-Side Container**: Support for `gtm_server_container_url` routing
 
 #### 4. Real-time Social Proof Notifications (Client-side)
 **Status**: 📋 Planned
@@ -1188,5 +1209,5 @@ interface Product {
 
 ---
 
-**Last Updated**: 2025-12-30
-**Version**: 1.9
+**Last Updated**: 2026-01-03
+**Version**: 2.0
