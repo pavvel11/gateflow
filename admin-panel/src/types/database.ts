@@ -387,6 +387,7 @@ export type Database = {
           facebook_pixel_id: string | null
           facebook_test_event_code: string | null
           fb_capi_enabled: boolean | null
+          send_conversions_without_consent: boolean | null
           google_ads_conversion_id: string | null
           google_ads_conversion_label: string | null
           gtm_container_id: string | null
@@ -404,6 +405,7 @@ export type Database = {
           facebook_pixel_id?: string | null
           facebook_test_event_code?: string | null
           fb_capi_enabled?: boolean | null
+          send_conversions_without_consent?: boolean | null
           google_ads_conversion_id?: string | null
           google_ads_conversion_label?: string | null
           gtm_container_id?: string | null
@@ -421,6 +423,7 @@ export type Database = {
           facebook_pixel_id?: string | null
           facebook_test_event_code?: string | null
           fb_capi_enabled?: boolean | null
+          send_conversions_without_consent?: boolean | null
           google_ads_conversion_id?: string | null
           google_ads_conversion_label?: string | null
           gtm_container_id?: string | null
