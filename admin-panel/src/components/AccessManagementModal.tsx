@@ -63,17 +63,31 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
     }
   }, [user.id, t]);
 
-  const fetchAvailableProducts = useCallback(async () => {
+  const fetchAvailableProducts = useCallback(async (retryCount = 0) => {
     try {
-      const response = await fetch('/api/admin/products');
+      // Fetch only active products with high limit to get all
+      const response = await fetch('/api/admin/products?status=active&limit=100');
       if (!response.ok) {
-        throw new Error('Failed to fetch products');
+        const errorData = await response.json().catch(() => ({}));
+
+        // Retry on auth errors (session might not be ready yet)
+        if (response.status === 401 && retryCount < 2) {
+          console.log('[AccessManagementModal] Auth not ready, retrying in 500ms...');
+          setTimeout(() => fetchAvailableProducts(retryCount + 1), 500);
+          return;
+        }
+
+        console.error('[AccessManagementModal] Failed to fetch products:', response.status, errorData);
+        throw new Error(errorData.error || 'Failed to fetch products');
       }
-      
+
       const data = await response.json();
+      console.log('[AccessManagementModal] Fetched products:', data.products?.length || 0);
       setAvailableProducts(data.products || []);
-    } catch {
-      // Silent error handling
+    } catch (err) {
+      console.error('[AccessManagementModal] Error fetching products:', err);
+      // Still set empty array but at least we logged the error
+      setAvailableProducts([]);
     }
   }, []);
 
