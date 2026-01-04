@@ -191,6 +191,7 @@ CREATE TABLE IF NOT EXISTS public.integrations_config (
   facebook_capi_token TEXT,
   facebook_test_event_code TEXT,
   fb_capi_enabled BOOLEAN DEFAULT false, -- Enable Facebook Conversions API server-side tracking
+  send_conversions_without_consent BOOLEAN DEFAULT false, -- Send Purchase/Lead events server-side even without cookie consent (uses legitimate interest basis)
   google_ads_conversion_id TEXT,
   google_ads_conversion_label TEXT,
   umami_website_id TEXT,
@@ -332,6 +333,10 @@ CREATE TABLE IF NOT EXISTS public.shop_config (
   secondary_color TEXT DEFAULT '#ec4899', -- pink-600
   accent_color TEXT DEFAULT '#8b5cf6', -- violet-500
   font_family TEXT DEFAULT 'system' CHECK (font_family IN ('system', 'inter', 'roboto', 'montserrat', 'poppins', 'playfair')),
+
+  -- Legal Documents
+  terms_of_service_url TEXT,
+  privacy_policy_url TEXT,
 
   custom_settings JSONB DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
@@ -893,6 +898,7 @@ BEGIN
     'gtm_server_container_url', config_record.gtm_server_container_url,
     'facebook_pixel_id', config_record.facebook_pixel_id,
     'fb_capi_enabled', COALESCE(config_record.fb_capi_enabled, false),
+    'send_conversions_without_consent', COALESCE(config_record.send_conversions_without_consent, false),
     'umami_website_id', config_record.umami_website_id,
     'umami_script_url', config_record.umami_script_url,
     'cookie_consent_enabled', config_record.cookie_consent_enabled,
@@ -1582,3 +1588,5 @@ COMMENT ON TABLE public.shop_config IS 'Global shop configuration settings (sing
 COMMENT ON COLUMN public.order_bumps.bump_price IS 'Special discounted price for bump (NULL = use product default price)';
 COMMENT ON COLUMN public.stripe_configurations.encrypted_key IS 'AES-256-GCM encrypted Stripe API key (base64 encoded)';
 COMMENT ON COLUMN public.shop_config.custom_settings IS 'Flexible JSONB field for additional custom settings';
+COMMENT ON COLUMN public.shop_config.terms_of_service_url IS 'URL to Terms of Service document (PDF, webpage, etc.)';
+COMMENT ON COLUMN public.shop_config.privacy_policy_url IS 'URL to Privacy Policy document (PDF, webpage, etc.)';
