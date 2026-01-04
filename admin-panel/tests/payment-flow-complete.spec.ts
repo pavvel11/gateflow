@@ -585,3 +585,159 @@ test.describe('Timed Access', () => {
     }
   });
 });
+
+// ============================================================================
+// PURCHASE HISTORY TESTS - Verify purchase appears in /my-purchases
+// ============================================================================
+
+test.describe('Purchase History - /my-purchases', () => {
+  test.describe.configure({ mode: 'serial' });
+
+  test.beforeEach(async ({ page }) => {
+    await loginAsJohnDoe(page);
+    await removeUserAccess(JOHN_DOE.id, PRODUCTS.noRedirect);
+  });
+
+  test.afterEach(async () => {
+    await removeUserAccess(JOHN_DOE.id, PRODUCTS.noRedirect);
+  });
+
+  test('should display purchase in /my-purchases after successful payment', async ({ page }) => {
+    const sessionId = generateSessionId('purchase_history');
+    const product = await getProductBySlug(PRODUCTS.noRedirect);
+
+    try {
+      // Create a mock payment (simulates completed Stripe payment)
+      await createMockPayment({
+        sessionId,
+        productSlug: PRODUCTS.noRedirect,
+        email: JOHN_DOE.email,
+        userId: JOHN_DOE.id,
+        amount: 9900,
+      });
+
+      // Verify payment transaction was created in database
+      const { data: transaction } = await supabaseAdmin
+        .from('payment_transactions')
+        .select('*')
+        .eq('session_id', sessionId)
+        .single();
+
+      expect(transaction).toBeTruthy();
+      expect(transaction.status).toBe('completed');
+      expect(transaction.user_id).toBe(JOHN_DOE.id);
+
+      // Navigate to my-purchases page
+      await page.goto('/en/my-purchases');
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(2000);
+
+      // Should see the page title (inside gradient span)
+      await expect(page.getByRole('heading', { level: 1 }).getByText('My Purchases')).toBeVisible({ timeout: 10000 });
+
+      // Should see the purchased product in the list (use first() as there may be multiple entries)
+      await expect(page.getByText(product!.name).first()).toBeVisible({ timeout: 10000 });
+
+      // Should see "Completed" status badge (at least one)
+      await expect(page.getByText('Completed').first()).toBeVisible();
+
+    } finally {
+      await cleanupMockPayment(sessionId);
+    }
+  });
+
+  test('should show multiple purchases in /my-purchases', async ({ page }) => {
+    const sessionId1 = generateSessionId('multi_purchase_1');
+    const sessionId2 = generateSessionId('multi_purchase_2');
+    const product1 = await getProductBySlug(PRODUCTS.noRedirect);
+    const product2 = await getProductBySlug(PRODUCTS.premiumCourse);
+
+    try {
+      // Clean up any existing access for second product
+      await removeUserAccess(JOHN_DOE.id, PRODUCTS.premiumCourse);
+
+      // Create first purchase
+      await createMockPayment({
+        sessionId: sessionId1,
+        productSlug: PRODUCTS.noRedirect,
+        email: JOHN_DOE.email,
+        userId: JOHN_DOE.id,
+        amount: 9900,
+      });
+
+      // Create second purchase
+      await createMockPayment({
+        sessionId: sessionId2,
+        productSlug: PRODUCTS.premiumCourse,
+        email: JOHN_DOE.email,
+        userId: JOHN_DOE.id,
+        amount: 19900,
+      });
+
+      // Navigate to my-purchases page
+      await page.goto('/en/my-purchases');
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(2000);
+
+      // Should see both products in the list (use first() as there may be multiple entries)
+      await expect(page.getByText(product1!.name).first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText(product2!.name).first()).toBeVisible({ timeout: 10000 });
+
+    } finally {
+      await cleanupMockPayment(sessionId1);
+      await cleanupMockPayment(sessionId2);
+      await removeUserAccess(JOHN_DOE.id, PRODUCTS.premiumCourse);
+    }
+  });
+
+  test('should not show purchases from other users', async ({ page }) => {
+    const sessionId = generateSessionId('other_user_purchase');
+    const otherUserId = 'bbbbbbbb-2222-4222-b222-222222222222'; // Jane Doe from seed
+    const uniqueProductSlug = `jane-only-product-${Date.now()}`;
+
+    // Create a unique product that only Jane will have
+    const { data: uniqueProduct } = await supabaseAdmin
+      .from('products')
+      .insert({
+        name: `Jane Only Product ${Date.now()}`,
+        slug: uniqueProductSlug,
+        price: 5000,
+        currency: 'PLN',
+        is_active: true,
+      })
+      .select()
+      .single();
+
+    try {
+      // Create a purchase for Jane Doe only
+      await supabaseAdmin
+        .from('payment_transactions')
+        .insert({
+          session_id: sessionId,
+          product_id: uniqueProduct!.id,
+          customer_email: 'jane.doe@example.com',
+          user_id: otherUserId,
+          amount: 5000,
+          currency: 'pln',
+          status: 'completed',
+          stripe_payment_intent_id: `pi_test_${sessionId}`,
+        });
+
+      // Log in as John Doe and check my-purchases
+      await page.goto('/en/my-purchases');
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(2000);
+
+      // Should see the page title
+      await expect(page.getByRole('heading', { level: 1 }).getByText('My Purchases')).toBeVisible({ timeout: 10000 });
+
+      // Should NOT see Jane's unique product (John doesn't have this purchase)
+      const productVisible = await page.getByText(uniqueProduct!.name).isVisible().catch(() => false);
+      expect(productVisible).toBe(false);
+
+    } finally {
+      await supabaseAdmin.from('payment_transactions').delete().eq('session_id', sessionId);
+      await supabaseAdmin.from('products').delete().eq('id', uniqueProduct!.id);
+    }
+  });
+});
