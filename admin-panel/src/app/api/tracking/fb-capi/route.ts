@@ -14,10 +14,39 @@ function sha256(value: string): string {
 }
 
 /**
+ * Events that can be sent without explicit cookie consent
+ * Based on legitimate interest legal basis (GDPR Art. 6(1)(f))
+ * Only conversion events - no browsing/tracking events
+ */
+const CONSENT_EXEMPT_EVENTS = ['Purchase', 'Lead'];
+
+/**
+ * Check if an event can be sent without consent
+ */
+function canSendWithoutConsent(
+  eventName: string,
+  hasConsent: boolean,
+  sendConversionsWithoutConsent: boolean
+): boolean {
+  // If user has consent, always send
+  if (hasConsent) return true;
+
+  // If setting is disabled, don't send without consent
+  if (!sendConversionsWithoutConsent) return false;
+
+  // Only allow specific conversion events without consent
+  return CONSENT_EXEMPT_EVENTS.includes(eventName);
+}
+
+/**
  * Facebook Conversions API endpoint
  *
  * Receives events from the frontend and forwards them to Facebook Graph API
  * with proper hashing and deduplication support.
+ *
+ * Supports two modes:
+ * 1. With consent: Full tracking with cookies (_fbc, _fbp)
+ * 2. Without consent: Only conversion events (Purchase, Lead) with hashed data only
  *
  * @see https://developers.facebook.com/docs/marketing-api/conversions-api
  */
@@ -38,7 +67,7 @@ export async function POST(request: NextRequest) {
     const { data: config, error: configError } = await supabase
       .from('integrations_config')
       .select(
-        'facebook_pixel_id, facebook_capi_token, facebook_test_event_code, fb_capi_enabled'
+        'facebook_pixel_id, facebook_capi_token, facebook_test_event_code, fb_capi_enabled, send_conversions_without_consent'
       )
       .single();
 
@@ -62,16 +91,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Determine if user has consent (passed from frontend or server-side call)
+    const hasConsent = body.has_consent ?? true; // Default to true for backwards compatibility
+    const sendConversionsWithoutConsent = config.send_conversions_without_consent ?? false;
+
+    // Check if we can send this event
+    if (!canSendWithoutConsent(body.event_name, hasConsent, sendConversionsWithoutConsent)) {
+      // User doesn't have consent and this event type cannot be sent without consent
+      return NextResponse.json({
+        success: false,
+        skipped: true,
+        reason: 'no_consent',
+        message: 'Event skipped: user has not given consent and event type requires consent',
+      });
+    }
+
     // Extract client info from headers
     const clientIp =
       request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
       request.headers.get('x-real-ip') ||
       '';
     const userAgent = request.headers.get('user-agent') || '';
-
-    // Extract Facebook cookies for better matching
-    const fbc = request.cookies.get('_fbc')?.value;
-    const fbp = request.cookies.get('_fbp')?.value;
 
     // Build user_data object with hashing
     const userData: Record<string, unknown> = {
@@ -84,9 +124,14 @@ export async function POST(request: NextRequest) {
       userData.em = [sha256(body.user_email)];
     }
 
-    // Add Facebook browser/click IDs if present
-    if (fbc) userData.fbc = fbc;
-    if (fbp) userData.fbp = fbp;
+    // Only add Facebook cookies if user has consent
+    // Without consent, we rely on hashed email + IP for matching (legitimate interest)
+    if (hasConsent) {
+      const fbc = request.cookies.get('_fbc')?.value;
+      const fbp = request.cookies.get('_fbp')?.value;
+      if (fbc) userData.fbc = fbc;
+      if (fbp) userData.fbp = fbp;
+    }
 
     // Build the event payload
     const eventPayload = {

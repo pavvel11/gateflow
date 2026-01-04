@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from '@/lib/rate-limiting';
 import { WebhookService } from '@/lib/services/webhook-service';
+import { trackServerSideConversion } from '@/lib/tracking';
 
 export async function POST(
   request: NextRequest,
@@ -100,6 +101,24 @@ export async function POST(
       userId: user.id,
       timestamp: new Date().toISOString()
     }).catch(err => console.error('Webhook trigger error:', err));
+
+    // Track server-side Lead conversion to Facebook CAPI
+    // This runs independently of client-side tracking
+    trackServerSideConversion({
+      eventName: 'Lead',
+      eventSourceUrl: request.headers.get('referer') || '',
+      value: 0,
+      currency: 'USD',
+      items: [
+        {
+          item_id: product.id,
+          item_name: product.name,
+          price: 0,
+          quantity: 1,
+        },
+      ],
+      userEmail: user.email || undefined,
+    }).catch(err => console.error('[FB CAPI] Server-side Lead tracking error:', err));
 
     return NextResponse.json({ 
       success: true, 

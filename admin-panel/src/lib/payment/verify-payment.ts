@@ -408,6 +408,16 @@ export async function verifyPaymentSession(
 
             WebhookService.trigger('purchase.completed', webhookData)
               .catch(err => console.error('Webhook trigger error:', err));
+
+            // NOTE: Server-side CAPI tracking for Purchase is NOT called here
+            // because client-side tracking (PaymentStatusView.tsx) already handles it.
+            // Client sends to /api/tracking/fb-capi with event_id for deduplication.
+            // Calling trackServerSideConversion here would create duplicate events
+            // with different event_ids, causing Facebook to count purchases twice.
+            //
+            // Server-side tracking IS used for:
+            // 1. Lead events from grant-access (no client-side page to track from)
+            // 2. Webhook-triggered events (e.g., Stripe webhooks without browser)
           }
 
           // Generate OTO coupon if configured for this product
@@ -667,6 +677,10 @@ export async function verifyPaymentIntent(
 
             WebhookService.trigger('purchase.completed', webhookData)
               .catch(err => console.error('Webhook trigger error:', err));
+
+            // NOTE: Server-side CAPI tracking for Purchase is NOT called here
+            // because client-side tracking (PaymentStatusView.tsx) already handles it.
+            // See comment in verifyPaymentSession for details.
           }
 
           // Update user profile with company data if invoice was requested

@@ -50,6 +50,7 @@ export interface TrackingConfigFromDB {
   gtm_server_container_url?: string | null;
   facebook_pixel_id?: string | null;
   fb_capi_enabled?: boolean | null;
+  send_conversions_without_consent?: boolean | null;
 }
 
 // FB CAPI Request payload (sent to /api/tracking/fb-capi)
@@ -63,6 +64,7 @@ export interface FBCAPIRequestPayload {
   content_name?: string;
   order_id?: string;
   user_email?: string;
+  has_consent?: boolean;
 }
 
 // Extend Window for TypeScript
