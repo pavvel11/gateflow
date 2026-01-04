@@ -528,6 +528,178 @@ export async function rateLimit(
 
 ## 🟡 Medium Priority
 
+### 🤝 Affiliate & Partner Program
+
+#### Two-Sided Affiliate Program (Partner Rewards)
+**Status**: 💭 Idea
+**Priority**: 🟡 Medium
+**Effort**: ~2-4 weeks (significant UI and logic changes)
+**Description**: Implement a full affiliate/referral program where both parties benefit - the referrer earns commission and the buyer gets a discount.
+
+**Why This Matters**:
+- **Viral Growth**: Incentivize existing customers to promote products
+- **Lower CAC**: Word-of-mouth marketing is cheaper than paid ads
+- **Win-Win**: Both affiliate and buyer benefit, increasing conversion rates
+- **Industry Standard**: Most successful digital product platforms (Gumroad, Teachable, Kajabi) have affiliate programs
+
+**Core Features**:
+
+1. **Affiliate Registration & Dashboard**:
+   - Self-service signup for existing customers (or invite-only mode)
+   - Personal affiliate dashboard with stats (clicks, conversions, earnings)
+   - Unique referral link per affiliate: `?ref=AFFILIATE_CODE`
+   - QR code generation for offline promotion
+
+2. **Commission Structure**:
+   - **Percentage-based**: e.g., 20% of sale price
+   - **Fixed amount**: e.g., $10 per sale
+   - **Tiered commissions**: Higher rates for top performers
+   - **Per-product configuration**: Different rates for different products
+   - **Recurring commissions**: For subscription products (% of each renewal)
+
+3. **Buyer Discount (Two-Sided Benefit)**:
+   - Automatic discount when using affiliate link
+   - Configurable: e.g., "10% off when you use a referral link"
+   - Stacks with or replaces regular coupons (configurable)
+   - Visual indicator: "You're getting 10% off via [Affiliate Name]'s referral!"
+
+4. **Tracking & Attribution**:
+   - Cookie-based tracking (configurable duration: 30/60/90 days)
+   - First-click or last-click attribution (configurable)
+   - Integration with existing UTM tracking system
+   - Handle edge cases: same user, multiple affiliates
+
+5. **Payout Management**:
+   - Minimum payout threshold (e.g., $50)
+   - Payout methods: PayPal, Bank Transfer, Store Credit
+   - Payout schedule: Monthly, bi-weekly, on-demand
+   - Automatic invoice generation for affiliates
+   - Pending/Approved/Paid status tracking
+
+6. **Admin Controls**:
+   - Approve/reject affiliate applications
+   - Set global and per-product commission rates
+   - View affiliate performance leaderboard
+   - Fraud detection: flag suspicious patterns
+   - Export affiliate data for tax purposes
+
+7. **Anti-Fraud Measures**:
+   - Self-referral prevention (affiliate can't buy own link)
+   - IP-based duplicate detection
+   - Minimum time between click and conversion
+   - Manual review queue for high-value conversions
+   - Refund clawback (deduct commission if buyer refunds)
+
+**Database Schema** (conceptual):
+```sql
+-- Affiliates table
+CREATE TABLE affiliates (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES auth.users,
+  code VARCHAR(20) UNIQUE NOT NULL,  -- e.g., "JOHN123"
+  status VARCHAR(20) DEFAULT 'pending',  -- pending, approved, rejected, suspended
+  commission_rate DECIMAL(5,2),  -- Override global rate
+  total_earnings DECIMAL(10,2) DEFAULT 0,
+  total_paid DECIMAL(10,2) DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Referrals/conversions
+CREATE TABLE affiliate_referrals (
+  id UUID PRIMARY KEY,
+  affiliate_id UUID REFERENCES affiliates,
+  purchase_id UUID REFERENCES purchases,
+  product_id UUID REFERENCES products,
+  order_amount DECIMAL(10,2),
+  commission_amount DECIMAL(10,2),
+  buyer_discount DECIMAL(10,2),
+  status VARCHAR(20) DEFAULT 'pending',  -- pending, approved, paid, refunded
+  cookie_set_at TIMESTAMPTZ,
+  converted_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Payouts
+CREATE TABLE affiliate_payouts (
+  id UUID PRIMARY KEY,
+  affiliate_id UUID REFERENCES affiliates,
+  amount DECIMAL(10,2),
+  method VARCHAR(20),  -- paypal, bank, credit
+  status VARCHAR(20) DEFAULT 'pending',
+  paid_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Product-specific commission rates
+CREATE TABLE product_affiliate_rates (
+  product_id UUID REFERENCES products,
+  commission_rate DECIMAL(5,2),
+  buyer_discount DECIMAL(5,2),
+  is_enabled BOOLEAN DEFAULT true,
+  PRIMARY KEY (product_id)
+);
+```
+
+**UI Components Needed**:
+1. **Affiliate Dashboard** (`/dashboard/affiliate`):
+   - Stats cards: Total Earnings, Pending, This Month
+   - Referral link with copy button
+   - Conversion history table
+   - Payout request button
+
+2. **Admin Affiliate Management** (`/dashboard/affiliates`):
+   - List of all affiliates with status
+   - Approve/reject actions
+   - Performance metrics
+   - Payout processing
+
+3. **Product Form Extension**:
+   - "Enable affiliate program" toggle
+   - Commission rate input
+   - Buyer discount input
+
+4. **Checkout Integration**:
+   - Detect `?ref=CODE` parameter
+   - Show "Referred by [Name]" badge
+   - Apply automatic discount
+   - Store affiliate attribution in purchase metadata
+
+**Implementation Phases**:
+
+**Phase 1 (MVP)**: ~1 week
+- Affiliate registration with admin approval
+- Unique referral links
+- Basic tracking (cookie-based)
+- Commission calculation (no payouts yet)
+- Admin list view
+
+**Phase 2 (Core)**: ~1 week
+- Buyer discount on affiliate links
+- Affiliate dashboard with stats
+- Payout requests and processing
+- Per-product commission rates
+
+**Phase 3 (Advanced)**: ~1 week
+- Tiered commissions
+- Recurring commissions for subscriptions
+- Fraud detection
+- API for external integrations
+
+**Inspiration**:
+- [Gumroad Affiliates](https://help.gumroad.com/article/254-affiliates)
+- [Teachable Affiliates](https://support.teachable.com/hc/en-us/articles/360051949932)
+- [Rewardful](https://www.rewardful.com/) (Stripe-native affiliate tracking)
+
+**Technical Considerations**:
+- **Stripe Integration**: Store affiliate ID in payment metadata for reconciliation
+- **Cookie Consent**: Affiliate tracking cookies need consent under GDPR
+- **Tax Implications**: Affiliates may need to provide tax info for payouts
+- **Currency Handling**: Commission in product currency or affiliate's preferred currency?
+
+**Note**: This is a significant feature requiring careful planning. Consider starting with a simpler "referral discount" system (Phase 1) before full affiliate payouts.
+
+---
+
 ### 🤖 AI & Growth
 
 #### AI Landing Page Generator ("Wow" Factor)
@@ -1209,5 +1381,5 @@ interface Product {
 
 ---
 
-**Last Updated**: 2026-01-03
-**Version**: 2.0
+**Last Updated**: 2026-01-04
+**Version**: 2.1

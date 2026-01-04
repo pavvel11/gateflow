@@ -20,6 +20,10 @@ export interface ShopConfig {
   // EU Omnibus Directive (2019/2161)
   omnibus_enabled: boolean
 
+  // Legal Documents
+  terms_of_service_url?: string | null
+  privacy_policy_url?: string | null
+
   custom_settings: Record<string, any>
   created_at: string
   updated_at: string
