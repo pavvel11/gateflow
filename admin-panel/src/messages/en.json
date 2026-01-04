@@ -152,7 +152,7 @@
       "title": "Meta (Facebook)",
       "pixelId": "Pixel ID",
       "capiToken": "CAPI Token",
-      "capiTokenHelp": "Access token for Facebook Conversions API. Generate in Events Manager → Settings.",
+      "capiTokenHelp": "Access token for Meta Conversions API. Generate in Events Manager → Settings.",
       "testEventCode": "Test Event Code",
       "testEventCodeHelp": "For testing events in Events Manager. Remove in production.",
       "enableCAPI": "Enable Conversions API (Server-Side)",
@@ -160,6 +160,172 @@
     },
     "cookieConsent": {
       "requireConsent": "Require Consent (Recommended)"
+    },
+    "consent": {
+      "sendConversionsWithoutConsent": "Send conversions without cookie consent",
+      "sendConversionsWithoutConsentHelp": "Send Purchase and Lead events server-side even when user hasn't given cookie consent. Uses legitimate interest legal basis (GDPR Art. 6(1)(f)). Only conversion events are sent - no page views or browsing data.",
+      "requiresCAPI": "Requires Meta CAPI to be enabled first",
+      "legalWarning": "Legal notice: This feature relies on legitimate interest basis. Consult your legal advisor for GDPR/ePrivacy compliance in your jurisdiction.",
+      "documentsWarning": "This feature requires proper Terms & Conditions and Privacy Policy that mention server-side conversion tracking.",
+      "documentsLink": "Configure legal documents in Settings"
+    },
+    "guide": {
+      "quickStart": {
+        "title": "Quick Start - Recommended Setup",
+        "subtitle": "Don't know where to start? Follow these 3 steps for optimal tracking.",
+        "analytics": {
+          "title": "Analytics",
+          "desc": "Choose how to track page views:",
+          "option1": "Umami (Recommended) - simple, privacy-focused",
+          "option2": "or GTM + GA4 - more features, needs Google account"
+        },
+        "marketing": {
+          "title": "Meta Conversions",
+          "desc": "Track purchases and leads to Meta Ads:",
+          "step1": "Paste Pixel ID",
+          "step2": "Paste CAPI Token",
+          "step3": "Enable Conversions API"
+        },
+        "consents": {
+          "title": "Cookie Consent",
+          "desc": "GDPR compliance:",
+          "step1": "Enable 'Require Consent'",
+          "step2": "Enable 'Send conversions without consent'"
+        },
+        "result": "After completing these steps you'll have: analytics, conversion tracking, and GDPR compliance. Conversions will work even with adblockers."
+      },
+      "gtm": {
+        "title": "Do I need Google Tag Manager?",
+        "whenNeeded": "When is GTM needed?",
+        "whenNeededDesc": "GTM is the entry point for the Google ecosystem (GA4, Google Ads). If adblockers block GTM, all Google tracking stops working.",
+        "scenarios": "Choose your scenario",
+        "scenario1": {
+          "title": "Meta conversions only (no analytics)",
+          "gtm": "GTM: Not needed",
+          "gtmServer": "GTM Server: Not needed",
+          "capi": "Our CAPI: ✅ Enable",
+          "desc": "Simplest setup. Only tracks purchases/leads to Meta. No page view analytics."
+        },
+        "scenario2": {
+          "title": "Meta conversions + Umami analytics",
+          "gtm": "GTM: Not needed",
+          "gtmServer": "GTM Server: Not needed",
+          "capi": "Our CAPI: ✅ Enable",
+          "desc": "Privacy-focused analytics. Umami requires hosting (Umami Cloud ~$9/mo or self-hosted). No Google dependency."
+        },
+        "scenario3": {
+          "title": "GA4 + Meta (accept ~15-30% loss from adblockers)",
+          "gtm": "GTM: ✅ Enter Container ID",
+          "gtmServer": "GTM Server: Not needed",
+          "capi": "Our CAPI: ✅ Enable",
+          "desc": "Standard setup. Adblockers block GA4 for some users, but Meta conversions still work via CAPI."
+        },
+        "scenario4": {
+          "title": "GA4 + Meta + bypass adblockers",
+          "gtm": "GTM: ✅ Enter Container ID",
+          "gtmServer": "GTM Server: ✅ Enter URL",
+          "capi": "Our CAPI: Optional (GTM Server can send to Meta)",
+          "desc": "Full tracking. All tags load from your domain. Best data quality. Requires GTM Server hosting."
+        },
+        "scenario5": {
+          "title": "Google Ads remarketing",
+          "gtm": "GTM: ✅ Required",
+          "gtmServer": "GTM Server: ✅ Highly recommended",
+          "capi": "Our CAPI: ✅ Enable",
+          "desc": "GTM Server strongly recommended for Google Ads (better cookies, bypass adblockers, improved conversion tracking)."
+        },
+        "serverSetup": "How to set up GTM Server?",
+        "serverSetupDesc": "GTM Server requires hosting. Options:",
+        "serverOptions": {
+          "stape": "Stape.io - easiest, ~$20/month, managed hosting",
+          "gcloud": "Google Cloud Run - official, pay-per-use, ~$50+/month",
+          "aws": "AWS/Azure - for enterprises, requires DevOps knowledge",
+          "vps": "VPS (e.g., Mikrus, Hetzner) - cheapest (~$5/month), requires manual setup"
+        },
+        "serverNote": "After setup, you'll get a URL like https://gtm.yourdomain.com - enter it in 'GTM Server URL' field.",
+        "empty": "empty",
+        "feature": "Feature",
+        "clientSide": "Client-Side",
+        "serverSide": "Server-Side"
+      },
+      "facebook": {
+        "title": "How to configure Meta (Facebook) tracking?",
+        "quickStart": "Quick Start (Recommended)",
+        "quickStartDesc": "Don't know what to configure? Just follow these 4 steps:",
+        "quickStartSteps": {
+          "step1": "Go to Meta Events Manager → Your Pixel → Settings",
+          "step2": "Copy Pixel ID → paste in 'Pixel ID' field below",
+          "step3": "Generate Access Token → paste in 'CAPI Token' field",
+          "step4": "Check 'Enable Conversions API' checkbox"
+        },
+        "quickStartResult": "Done! Your purchases and leads will be tracked to Meta. Works even with adblockers.",
+        "quickStartOptional": "Optional: Go to Consents tab and enable 'Send conversions without cookie consent' to track conversions even when users decline cookies.",
+        "whatIs": "What is Meta Conversions API?",
+        "whatIsDesc": "Meta Conversions API (CAPI) sends events directly from your server to Meta, bypassing browser limitations. It works alongside the Pixel for better tracking accuracy and ad optimization.",
+        "howToSetup": "Setup Steps",
+        "step1": "Go to Meta Events Manager → Data Sources → Your Pixel",
+        "step2": "Click Settings → Generate access token",
+        "step3": "Copy the Pixel ID and paste it above",
+        "step4": "Copy the access token and paste it as CAPI Token",
+        "step5": "Enable Conversions API checkbox",
+        "deduplication": "Event Deduplication",
+        "deduplicationDesc": "Both Pixel and CAPI send the same event with matching event_id. Meta automatically deduplicates so you don't get double counting.",
+        "recommendation": "Which solution to choose?",
+        "recommendationDesc": "For sending conversions without cookie consent, we recommend using our built-in CAPI:",
+        "recommendationTable": {
+          "feature": "Feature",
+          "ourCapi": "Our CAPI (Recommended)",
+          "gtmServer": "GTM Server CAPI",
+          "consentIntegration": "Consent integration",
+          "consentOur": "✅ Built-in",
+          "consentGtm": "⚠️ Manual config required",
+          "setup": "Setup",
+          "setupOur": "✅ Just enable checkbox",
+          "setupGtm": "🔧 Stape.io/GCloud + config",
+          "cost": "Cost",
+          "costOur": "✅ Included",
+          "costGtm": "💰 ~$50+/month",
+          "adBlockBypass": "Bypasses adblockers",
+          "adBlockOur": "✅ CAPI events only",
+          "adBlockGtm": "✅ All tags (Pixel, GA4, etc.)"
+        },
+        "recommendationNote": "Use GTM Server only if you need to bypass adblockers for ALL tracking (including Pixel, GA4) or already have GTM Server infrastructure.",
+        "gtmWarning": "Have Meta CAPI tag in GTM Server?",
+        "gtmWarningDesc": "If your GTM Server container has a Meta Conversions API tag, make sure it uses the event_id field from dataLayer. This way both GTM Server and our CAPI will send the same event_id, and Meta will deduplicate correctly.",
+        "trackedEvents": "Tracked Events",
+        "action": "User Action",
+        "event": "Meta Event",
+        "location": "Triggered On",
+        "viewProduct": "Views product",
+        "startCheckout": "Starts checkout",
+        "addPayment": "Enters payment",
+        "purchase": "Completes purchase",
+        "freeProduct": "Gets free product",
+        "checkoutPage": "Checkout page",
+        "paymentForm": "Payment form",
+        "successPage": "Success page",
+        "grantAccess": "Access granted"
+      },
+      "consent": {
+        "title": "How does consent management work?",
+        "howItWorks": "How It Works",
+        "howItWorksDesc": "When consent is enabled, users see a cookie banner. Tracking scripts only run after consent is given. This ensures GDPR/ePrivacy compliance.",
+        "consentModes": "Tracking Behavior",
+        "scenario": "Scenario",
+        "clientSide": "Client-Side (Pixel, GTM)",
+        "serverSide": "Server-Side (CAPI)",
+        "userAccepts": "User accepts cookies",
+        "userDeclines": "User declines cookies",
+        "userDeclinesWithServer": "User declines + Server conversions ON",
+        "allEvents": "All events",
+        "blocked": "Blocked",
+        "legitimateInterest": "Legitimate Interest (GDPR Art. 6(1)(f))",
+        "legitimateInterestDesc": "You can track conversions without consent under legitimate interest if tracking is essential for your business and doesn't override user rights. This is a legal gray area - consult your lawyer.",
+        "allowedWithoutConsent": "Events allowed without consent:",
+        "purchaseDesc": "Payment completed - essential for order tracking",
+        "leadDesc": "Free product signup - essential for lead generation",
+        "notAllowed": "ViewContent, InitiateCheckout, AddPaymentInfo - NOT allowed without consent"
+      }
     },
     "scripts": {
       "title": "Custom Scripts",
@@ -1482,6 +1648,20 @@
       "typography": "Typography",
       "headingText": "Heading Text",
       "bodyTextPreview": "This is how your body text will look with the {font} font."
+    },
+    "legal": {
+      "title": "Legal Documents",
+      "description": "Configure URLs for your legal documents. Visitors will be redirected to these URLs when accessing /terms and /privacy pages.",
+      "termsOfServiceUrl": "Terms of Service URL",
+      "termsHelp": "Link to your Terms of Service document (PDF, webpage, etc.)",
+      "privacyPolicyUrl": "Privacy Policy URL",
+      "privacyHelp": "Link to your Privacy Policy document (PDF, webpage, etc.)",
+      "infoTitle": "How it works",
+      "infoDescription": "When visitors access these pages, they will be automatically redirected to the configured URLs. Leave empty to show a configuration message instead.",
+      "saving": "Saving...",
+      "saveButton": "Save Documents",
+      "saveSuccess": "Legal documents configuration saved successfully",
+      "saveError": "Failed to save legal documents configuration"
     }
   },
   "stripe": {

@@ -152,7 +152,7 @@
       "title": "Meta (Facebook)",
       "pixelId": "Pixel ID",
       "capiToken": "Token CAPI",
-      "capiTokenHelp": "Token dostępu do Facebook Conversions API. Wygeneruj w Events Manager → Ustawienia.",
+      "capiTokenHelp": "Token dostępu do Meta Conversions API. Wygeneruj w Events Manager → Ustawienia.",
       "testEventCode": "Kod Testowy",
       "testEventCodeHelp": "Do testowania zdarzeń w Events Manager. Usuń na produkcji.",
       "enableCAPI": "Włącz Conversions API (Server-Side)",
@@ -160,6 +160,181 @@
     },
     "cookieConsent": {
       "requireConsent": "Wymagaj Zgody (Zalecane)"
+    },
+    "consent": {
+      "sendConversionsWithoutConsent": "Wysyłaj konwersje bez zgody na cookies",
+      "sendConversionsWithoutConsentHelp": "Wysyłaj zdarzenia Purchase i Lead server-side nawet gdy użytkownik nie wyraził zgody na cookies. Opiera się na podstawie prawnej uzasadnionego interesu (RODO Art. 6(1)(f)). Wysyłane są tylko konwersje - bez danych o przeglądaniu.",
+      "requiresCAPI": "Wymaga wcześniejszego włączenia Meta CAPI",
+      "legalWarning": "Uwaga prawna: Ta funkcja opiera się na uzasadnionym interesie. Skonsultuj się z prawnikiem w sprawie zgodności z RODO/ePrivacy w Twojej jurysdykcji.",
+      "documentsWarning": "Ta funkcja wymaga odpowiednich Regulaminu i Polityki Prywatności, które wspominają o server-side śledzeniu konwersji.",
+      "documentsLink": "Skonfiguruj dokumenty prawne w Ustawieniach"
+    },
+    "guide": {
+      "quickStart": {
+        "title": "Szybki start - Zalecana konfiguracja",
+        "subtitle": "Nie wiesz od czego zacząć? Wykonaj te 3 kroki dla optymalnego śledzenia.",
+        "analytics": {
+          "title": "Analityka",
+          "desc": "Wybierz jak śledzić odwiedziny:",
+          "option1": "Umami (Zalecane) - proste, przyjazne prywatności",
+          "option2": "lub GTM + GA4 - więcej funkcji, wymaga konta Google"
+        },
+        "marketing": {
+          "title": "Konwersje Meta",
+          "desc": "Śledź zakupy i leady do Meta Ads:",
+          "step1": "Wklej Pixel ID",
+          "step2": "Wklej Token CAPI",
+          "step3": "Włącz Conversions API"
+        },
+        "consents": {
+          "title": "Zgody cookies",
+          "desc": "Zgodność z RODO:",
+          "step1": "Włącz 'Wymagaj zgody'",
+          "step2": "Włącz 'Konwersje bez zgody'"
+        },
+        "result": "Po wykonaniu tych kroków będziesz mieć: analitykę, śledzenie konwersji i zgodność z RODO. Konwersje będą działać nawet z adblockerami."
+      },
+      "gtm": {
+        "title": "Czy potrzebuję Google Tag Manager?",
+        "whenNeeded": "Kiedy GTM jest potrzebny?",
+        "whenNeededDesc": "GTM to brama do ekosystemu Google (GA4, Google Ads). Jeśli adblocker zablokuje GTM, całe śledzenie Google przestaje działać.",
+        "scenarios": "Wybierz swój scenariusz",
+        "scenario1": {
+          "title": "Tylko konwersje Meta (bez analityki)",
+          "gtm": "GTM: Nie potrzebny",
+          "gtmServer": "GTM Server: Nie potrzebny",
+          "capi": "Nasze CAPI: ✅ Włącz",
+          "desc": "Najprostsza konfiguracja. Tylko śledzenie zakupów/leadów do Meta. Bez analityki stron."
+        },
+        "scenario2": {
+          "title": "Konwersje Meta + analityka Umami",
+          "gtm": "GTM: Nie potrzebny",
+          "gtmServer": "GTM Server: Nie potrzebny",
+          "capi": "Nasze CAPI: ✅ Włącz",
+          "desc": "Analityka przyjazna prywatności. Umami wymaga hostingu (Umami Cloud ~$9/mies. lub self-hosted). Bez zależności od Google."
+        },
+        "scenario3": {
+          "title": "GA4 + Meta (akceptuję ~15-30% strat z adblockerów)",
+          "gtm": "GTM: ✅ Wpisz ID kontenera",
+          "gtmServer": "GTM Server: Nie potrzebny",
+          "capi": "Nasze CAPI: ✅ Włącz",
+          "desc": "Standardowa konfiguracja. Adblockery blokują GA4 u części użytkowników, ale konwersje Meta nadal działają przez CAPI."
+        },
+        "scenario4": {
+          "title": "GA4 + Meta + omijanie adblockerów",
+          "gtm": "GTM: ✅ Wpisz ID kontenera",
+          "gtmServer": "GTM Server: ✅ Wpisz URL",
+          "capi": "Nasze CAPI: Opcjonalne (GTM Server może wysyłać do Meta)",
+          "desc": "Pełne śledzenie. Wszystkie tagi ładują się z Twojej domeny. Najlepsza jakość danych. Wymaga hostingu GTM Server."
+        },
+        "scenario5": {
+          "title": "Remarketing Google Ads",
+          "gtm": "GTM: ✅ Wymagany",
+          "gtmServer": "GTM Server: ✅ Bardzo zalecany",
+          "capi": "Nasze CAPI: ✅ Włącz",
+          "desc": "GTM Server mocno zalecany dla Google Ads (lepsze cookies, omijanie adblockerów, ulepszone śledzenie konwersji)."
+        },
+        "serverSetup": "Jak postawić GTM Server?",
+        "serverSetupDesc": "GTM Server wymaga hostingu. Opcje:",
+        "serverOptions": {
+          "stape": "Stape.io - najłatwiejszy, ~$20/mies., zarządzany hosting",
+          "gcloud": "Google Cloud Run - oficjalny, pay-per-use, ~$50+/mies.",
+          "aws": "AWS/Azure - dla enterprise, wymaga wiedzy DevOps",
+          "vps": "VPS (np. Mikrus, Hetzner) - najtańszy (~$5/mies.), wymaga ręcznej konfiguracji"
+        },
+        "serverNote": "Po konfiguracji otrzymasz URL typu https://gtm.twoja-domena.pl - wpisz go w pole 'URL kontenera GTM Server-Side'.",
+        "empty": "puste",
+        "feature": "Funkcja",
+        "clientSide": "Client-Side",
+        "serverSide": "Server-Side"
+      },
+      "facebook": {
+        "title": "Jak skonfigurować śledzenie Meta (Facebook)?",
+        "quickStart": "Szybki start (Zalecane)",
+        "quickStartDesc": "Nie wiesz co skonfigurować? Wykonaj te 4 kroki:",
+        "quickStartSteps": {
+          "step1": "Wejdź do Meta Events Manager → Twój Pixel → Ustawienia",
+          "step2": "Skopiuj Pixel ID → wklej w pole 'Pixel ID' poniżej",
+          "step3": "Wygeneruj Access Token → wklej w pole 'Token CAPI'",
+          "step4": "Zaznacz checkbox 'Włącz Conversions API'"
+        },
+        "quickStartResult": "Gotowe! Twoje zakupy i leady będą śledzone w Meta. Działa nawet z adblockerami.",
+        "quickStartOptional": "Opcjonalnie: Wejdź w zakładkę Zgody i włącz 'Wysyłaj konwersje bez zgody na cookies' żeby śledzić konwersje nawet gdy użytkownicy odrzucą cookies.",
+        "whatIs": "Czym jest Meta Conversions API?",
+        "whatIsDesc": "Meta Conversions API (CAPI) wysyła zdarzenia bezpośrednio z serwera do Meta, omijając ograniczenia przeglądarki. Działa razem z Pixelem dla lepszej dokładności śledzenia i optymalizacji reklam.",
+        "howToSetup": "Kroki Konfiguracji",
+        "step1": "Wejdź do Meta Events Manager → Data Sources → Twój Pixel",
+        "step2": "Skopiuj Pixel ID (format: 123456789012345)",
+        "step3": "Dla CAPI: Ustawienia → Generuj Access Token",
+        "step4": "Skopiuj token dostępu i wklej jako Token CAPI",
+        "step5": "Włącz 'Conversions API' aby aktywować śledzenie server-side",
+        "pixelVsCapi": "Pixel vs CAPI",
+        "pixel": {
+          "title": "Meta Pixel (Client-Side)",
+          "desc": "Skrypt ładowany w przeglądarce użytkownika. Może być blokowany przez adblockers lub prywatność przeglądarki. Wymaga zgody na cookies."
+        },
+        "capi": {
+          "title": "Conversions API (Server-Side)",
+          "desc": "Zdarzenia wysyłane z serwera bezpośrednio do Meta. Nie może być blokowane przez przeglądarkę. Może działać bez zgody na cookies (dla konwersji - uzasadniony interes)."
+        },
+        "deduplication": "Deduplikacja Zdarzeń",
+        "deduplicationDesc": "Gdy włączone są oba (Pixel + CAPI), używamy tego samego event_id dla deduplikacji. Meta automatycznie liczy zdarzenie tylko raz.",
+        "trackedEvents": "Śledzone Zdarzenia",
+        "action": "Akcja Użytkownika",
+        "event": "Zdarzenie Meta",
+        "location": "Wyzwalane na",
+        "viewProduct": "Widok produktu",
+        "startCheckout": "Rozpoczęcie checkout",
+        "addPayment": "Dodanie danych płatności",
+        "purchase": "Zakup",
+        "freeProduct": "Pobranie darmowego",
+        "checkoutPage": "Strona checkout",
+        "paymentForm": "Formularz płatności",
+        "successPage": "Strona sukcesu",
+        "grantAccess": "Przyznanie dostępu",
+        "recommendation": "Które rozwiązanie wybrać?",
+        "recommendationDesc": "Do wysyłania konwersji bez zgody na cookies zalecamy nasze wbudowane CAPI:",
+        "recommendationTable": {
+          "feature": "Funkcja",
+          "ourCapi": "Nasze CAPI (Zalecane)",
+          "gtmServer": "GTM Server CAPI",
+          "consentIntegration": "Integracja ze zgodami",
+          "consentOur": "✅ Wbudowana",
+          "consentGtm": "⚠️ Wymaga ręcznej konfiguracji",
+          "setup": "Konfiguracja",
+          "setupOur": "✅ Tylko włącz checkbox",
+          "setupGtm": "🔧 Stape.io/GCloud + konfiguracja",
+          "cost": "Koszt",
+          "costOur": "✅ W cenie",
+          "costGtm": "💰 ~$50+/miesiąc",
+          "adBlockBypass": "Omija adblockerów",
+          "adBlockOur": "✅ Tylko zdarzenia CAPI",
+          "adBlockGtm": "✅ Wszystkie tagi (Pixel, GA4, etc.)"
+        },
+        "recommendationNote": "Używaj GTM Server tylko jeśli potrzebujesz omijać adblockerów dla CAŁEGO śledzenia (włącznie z Pixel, GA4) lub już masz infrastrukturę GTM Server.",
+        "gtmWarning": "Masz tag Meta CAPI w GTM Server?",
+        "gtmWarningDesc": "Jeśli Twój kontener GTM Server ma tag Meta Conversions API, upewnij się że używa pola event_id z dataLayer. Dzięki temu zarówno GTM Server jak i nasze CAPI wyślą ten sam event_id, a Meta poprawnie zdeduplikuje."
+      },
+      "consent": {
+        "title": "Jak działa zarządzanie zgodami?",
+        "howItWorks": "Jak to działa",
+        "howItWorksDesc": "Gdy zgoda jest włączona, użytkownicy widzą baner cookies. Skrypty śledzące uruchamiają się dopiero po wyrażeniu zgody. Zapewnia to zgodność z RODO/ePrivacy.",
+        "consentModes": "Zachowanie śledzenia",
+        "scenario": "Scenariusz",
+        "clientSide": "Client-Side (Pixel, GTM)",
+        "serverSide": "Server-Side (CAPI)",
+        "userAccepts": "Użytkownik akceptuje cookies",
+        "userDeclines": "Użytkownik odrzuca cookies",
+        "userDeclinesWithServer": "Użytkownik odrzuca + Konwersje server ON",
+        "allEvents": "Wszystkie zdarzenia",
+        "blocked": "Zablokowane",
+        "legitimateInterest": "Uzasadniony Interes (RODO Art. 6(1)(f))",
+        "legitimateInterestDesc": "Gdy 'Wysyłaj konwersje bez zgody' jest włączone, tylko zdarzenia Purchase i Lead są wysyłane przez CAPI. Ta podstawa prawna jest dozwolona gdy śledzisz tylko finalne konwersje.",
+        "allowedWithoutConsent": "Dozwolone bez zgody:",
+        "purchaseDesc": "zakończone transakcje",
+        "leadDesc": "rejestracje/pobrania darmowych produktów",
+        "notAllowed": "Niedozwolone: ViewContent, InitiateCheckout, AddPaymentInfo (zdarzenia przeglądania)"
+      }
     },
     "scripts": {
       "title": "Własne Skrypty",
@@ -1482,6 +1657,20 @@
       "typography": "Typografia",
       "headingText": "Tekst nagłówka",
       "bodyTextPreview": "Tak będzie wyglądał twój tekst z czcionką {font}."
+    },
+    "legal": {
+      "title": "Dokumenty prawne",
+      "description": "Skonfiguruj adresy URL dokumentów prawnych. Odwiedzający zostaną przekierowani na te adresy po wejściu na strony /terms i /privacy.",
+      "termsOfServiceUrl": "URL Regulaminu",
+      "termsHelp": "Link do dokumentu Regulaminu (PDF, strona www, itp.)",
+      "privacyPolicyUrl": "URL Polityki Prywatności",
+      "privacyHelp": "Link do dokumentu Polityki Prywatności (PDF, strona www, itp.)",
+      "infoTitle": "Jak to działa",
+      "infoDescription": "Gdy odwiedzający wejdą na te strony, zostaną automatycznie przekierowani pod skonfigurowane adresy URL. Pozostaw puste, aby wyświetlić komunikat o konfiguracji.",
+      "saving": "Zapisywanie...",
+      "saveButton": "Zapisz dokumenty",
+      "saveSuccess": "Konfiguracja dokumentów prawnych zapisana pomyślnie",
+      "saveError": "Nie udało się zapisać konfiguracji dokumentów prawnych"
     }
   },
   "stripe": {
