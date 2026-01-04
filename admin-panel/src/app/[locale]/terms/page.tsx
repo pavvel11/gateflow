@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { Metadata } from 'next'
+import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
   title: 'Terms of Service - GateFlow',
@@ -7,10 +8,17 @@ export const metadata: Metadata = {
   robots: 'index, follow'
 }
 
-export default function TermsPage() {
-  // Redirect to external Terms of Service URL if configured
-  const termsUrl = process.env.TERMS_OF_SERVICE_URL
-  
+export default async function TermsPage() {
+  // First check database for configured URL
+  const supabase = await createClient()
+  const { data: config } = await supabase
+    .from('shop_config')
+    .select('terms_of_service_url')
+    .single()
+
+  // Priority: Database > Environment variable
+  const termsUrl = config?.terms_of_service_url || process.env.TERMS_OF_SERVICE_URL
+
   if (termsUrl) {
     redirect(termsUrl)
   }
@@ -29,17 +37,26 @@ export default function TermsPage() {
             <section>
               <h2 className="text-xl font-semibold text-white mb-3">Configuration Required</h2>
               <p>
-                To display Terms of Service, please configure <code className="text-purple-300 bg-purple-900/30 px-2 py-1 rounded">TERMS_OF_SERVICE_URL</code> in your environment variables.
+                To display Terms of Service, configure the URL in one of these ways:
               </p>
-              <p>
-                This URL should point to your complete Terms of Service document (PDF, webpage, etc.).
-              </p>
+
+              <div className="mt-4 p-4 bg-purple-900/30 border border-purple-500/30 rounded-lg">
+                <p className="text-purple-200 font-medium">Option 1: Admin Panel (Recommended)</p>
+                <p className="text-purple-300 text-sm mt-2">
+                  Go to <strong>Settings → Legal Documents</strong> and enter your Terms of Service URL.
+                </p>
+              </div>
+
               <div className="mt-4 p-4 bg-blue-900/30 border border-blue-500/30 rounded-lg">
-                <p className="text-blue-200 font-medium">Example configuration:</p>
+                <p className="text-blue-200 font-medium">Option 2: Environment Variable</p>
                 <p className="text-blue-300 text-sm font-mono mt-2">
                   TERMS_OF_SERVICE_URL=https://example.com/terms.pdf
                 </p>
               </div>
+
+              <p className="mt-4 text-sm text-gray-400">
+                The URL should point to your complete Terms of Service document (PDF, webpage, etc.).
+              </p>
             </section>
           </div>
         </div>
