@@ -1,8 +1,8 @@
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
+import { getMessages, setRequestLocale } from 'next-intl/server';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/contexts/ToastContext';
-import { locales } from '@/lib/locales';
+import { locales, Locale } from '@/lib/locales';
 import { notFound } from 'next/navigation';
 
 type Props = {
@@ -15,17 +15,20 @@ export default async function LocaleLayout({
   params
 }: Props) {
   const { locale } = await params;
-  
+
   // Validate locale
-  if (!locales.includes(locale as typeof locales[number])) {
+  if (!locales.includes(locale as Locale)) {
     notFound();
   }
+
+  // Enable static rendering by setting the locale
+  setRequestLocale(locale);
 
   // Get messages for the locale
   const messages = await getMessages();
 
   return (
-    <NextIntlClientProvider messages={messages}>
+    <NextIntlClientProvider locale={locale} messages={messages}>
       <AuthProvider>
         <ToastProvider>
           <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

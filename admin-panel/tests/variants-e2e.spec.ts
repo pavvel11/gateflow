@@ -191,7 +191,7 @@ test.describe('Product Variants E2E Flow', () => {
     expect(page.url()).toContain(testProducts[1].slug);
 
     // Step 14: Verify checkout page shows correct product
-    await expect(page.getByText('E2E Pro License')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: 'E2E Pro License' })).toBeVisible({ timeout: 10000 });
   });
 
   test('E2E: Variant selector respects product active status', async ({ page }) => {
@@ -280,7 +280,7 @@ test.describe('Product Variants E2E Flow', () => {
     await page.waitForLoadState('networkidle');
 
     // Should show variant selector
-    await expect(page.getByText(/Wybierz opcję|Choose Your Option/i)).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Wybierz opcję|Choose Your Option/i })).toBeVisible();
   });
 
   test('E2E: Unlink product from variant group via admin', async ({ page }) => {
@@ -517,7 +517,7 @@ test.describe('Variant Selector - Locale Handling', () => {
       console.log('testProducts:', testProducts.map(p => p.id));
     }
 
-    await expect(page.getByText('Wybierz opcję')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: 'Wybierz opcję' })).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Najpopularniejsze')).toBeVisible();
   });
 
@@ -533,7 +533,7 @@ test.describe('Variant Selector - Locale Handling', () => {
   test('should redirect to correct locale checkout', async ({ page }) => {
     await acceptAllCookies(page);
 
-    // Start in English
+    // Start in English (default locale - uses 'as-needed' prefix strategy)
     await page.goto(`/en/v/${variantGroupId}`);
     await page.waitForLoadState('networkidle');
 
@@ -541,9 +541,9 @@ test.describe('Variant Selector - Locale Handling', () => {
     const variant = page.locator('[class*="cursor-pointer"]').first();
     await variant.click();
 
-    // Should redirect to English checkout
-    await page.waitForURL(/\/en\/checkout\//);
-    expect(page.url()).toContain('/en/checkout/');
+    // Should redirect to checkout (default locale doesn't include prefix with 'as-needed')
+    await page.waitForURL(/\/checkout\//);
+    expect(page.url()).toContain('/checkout/');
   });
 
   test('should preserve locale when selecting variant from Polish', async ({ page }) => {

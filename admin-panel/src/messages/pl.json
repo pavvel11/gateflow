@@ -1932,35 +1932,6 @@
     "submitRequest": "Wyślij prośbę",
     "refundedAmount": "Zwrócono"
   },
-  "variants": {
-    "linkVariants": "Połącz jako warianty",
-    "linkVariantsDescription": "Wybierz produkty do zgrupowania jako warianty. Klienci zobaczą stronę wyboru wariantów.",
-    "searchProducts": "Szukaj produktów...",
-    "selectedProducts": "Wybrane produkty",
-    "selectAtLeastTwo": "Wybierz co najmniej 2 produkty, aby utworzyć grupę wariantów",
-    "variantNamePlaceholder": "Nazwa wyświetlana...",
-    "minProductsRequired": "Wymagane są co najmniej 2 produkty",
-    "cancel": "Anuluj",
-    "linking": "Łączenie...",
-    "linkProducts": "Połącz jako warianty",
-    "linkSuccess": "Produkty połączone jako warianty",
-    "unlinkSuccess": "Produkt odłączony od grupy wariantów",
-    "inGroup": "W grupie wariantów",
-    "variantGroup": "Grupa wariantów",
-    "copyVariantLink": "Kopiuj link do wariantów",
-    "variantLinkCopied": "Link do wariantów skopiowany!",
-    "unlinkFromGroup": "Odłącz od grupy",
-    "manageVariants": "Zarządzaj wariantami",
-    "notFound": {
-      "title": "Nie znaleziono wariantów",
-      "description": "Żądane warianty produktu nie zostały znalezione."
-    },
-    "title": "Wybierz opcję",
-    "subtitle": "Wybierz opcję najlepiej dopasowaną do Twoich potrzeb",
-    "popular": "Najpopularniejsze",
-    "select": "Wybierz",
-    "securePayment": "Bezpieczna płatność • Natychmiastowy dostęp"
-  },
   "refundRequests": {
     "title": "Prośby o Zwrot",
     "subtitle": "Przeglądaj i rozpatruj prośby klientów o zwrot",

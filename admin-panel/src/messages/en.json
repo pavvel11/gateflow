@@ -1923,35 +1923,6 @@
     "submitRequest": "Submit Request",
     "refundedAmount": "Refunded"
   },
-  "variants": {
-    "linkVariants": "Link as Variants",
-    "linkVariantsDescription": "Select products to group as variants. Customers will see a variant selector page.",
-    "searchProducts": "Search products...",
-    "selectedProducts": "Selected Products",
-    "selectAtLeastTwo": "Select at least 2 products to create a variant group",
-    "variantNamePlaceholder": "Display name...",
-    "minProductsRequired": "At least 2 products are required",
-    "cancel": "Cancel",
-    "linking": "Linking...",
-    "linkProducts": "Link as Variants",
-    "linkSuccess": "Products linked as variants successfully",
-    "unlinkSuccess": "Product unlinked from variant group",
-    "inGroup": "In variant group",
-    "variantGroup": "Variant Group",
-    "copyVariantLink": "Copy Variant Link",
-    "variantLinkCopied": "Variant link copied to clipboard!",
-    "unlinkFromGroup": "Unlink from group",
-    "manageVariants": "Manage Variants",
-    "notFound": {
-      "title": "Variants Not Found",
-      "description": "The requested product variants could not be found."
-    },
-    "title": "Choose Your Option",
-    "subtitle": "Select the option that best fits your needs",
-    "popular": "Most Popular",
-    "select": "Select",
-    "securePayment": "Secure payment • Instant access"
-  },
   "refundRequests": {
     "title": "Refund Requests",
     "subtitle": "Review and process customer refund requests",
