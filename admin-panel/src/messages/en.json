@@ -1009,6 +1009,8 @@
       "of": "of",
       "results": "results",
       "featuredProduct": "Featured product",
+      "copyId": "Copy ID",
+      "idCopied": "Product ID copied to clipboard",
       "form": {
         "editProduct": "Edit Product",
         "createNewProduct": "Create New Product",
@@ -1452,6 +1454,26 @@
         "success": "Refund processed successfully",
         "error": "Failed to process refund"
       }
+    },
+    "variants": {
+      "linkVariants": "Link Products as Variants",
+      "linkVariantsDescription": "Select products to group as variants. Customers will see a variant selector page.",
+      "searchProducts": "Search products...",
+      "selectedProducts": "Selected Products",
+      "selectAtLeastTwo": "Select at least 2 products to create a variant group",
+      "variantNamePlaceholder": "Display name...",
+      "minProductsRequired": "At least 2 products are required",
+      "cancel": "Cancel",
+      "linking": "Linking...",
+      "linkProducts": "Link as Variants",
+      "linkSuccess": "Products linked as variants successfully",
+      "unlinkSuccess": "Product unlinked from variant group",
+      "inGroup": "In variant group",
+      "variantGroup": "Variant Group",
+      "copyVariantLink": "Copy Variant Link",
+      "variantLinkCopied": "Variant link copied to clipboard!",
+      "unlinkFromGroup": "Unlink from group",
+      "manageVariants": "Manage Variants"
     }
   },
   "config": {
@@ -1864,6 +1886,17 @@
   "omnibus": {
     "lowestPriceLast30Days": "Lowest price in the last 30 days: {price}"
   },
+  "variants": {
+    "notFound": {
+      "title": "Variants Not Found",
+      "description": "The requested product variants could not be found."
+    },
+    "title": "Choose Your Option",
+    "subtitle": "Select the option that best fits your needs",
+    "popular": "Most Popular",
+    "select": "Select",
+    "securePayment": "Secure payment • Instant access"
+  },
   "myPurchases": {
     "title": "My Purchases",
     "subtitle": "View your purchase history and manage refunds",
@@ -1889,6 +1922,35 @@
     "submitting": "Submitting...",
     "submitRequest": "Submit Request",
     "refundedAmount": "Refunded"
+  },
+  "variants": {
+    "linkVariants": "Link Products as Variants",
+    "linkVariantsDescription": "Select products to group as variants. Customers will see a variant selector page.",
+    "searchProducts": "Search products...",
+    "selectedProducts": "Selected Products",
+    "selectAtLeastTwo": "Select at least 2 products to create a variant group",
+    "variantNamePlaceholder": "Display name...",
+    "minProductsRequired": "At least 2 products are required",
+    "cancel": "Cancel",
+    "linking": "Linking...",
+    "linkProducts": "Link as Variants",
+    "linkSuccess": "Products linked as variants successfully",
+    "unlinkSuccess": "Product unlinked from variant group",
+    "inGroup": "In variant group",
+    "variantGroup": "Variant Group",
+    "copyVariantLink": "Copy Variant Link",
+    "variantLinkCopied": "Variant link copied to clipboard!",
+    "unlinkFromGroup": "Unlink from group",
+    "manageVariants": "Manage Variants",
+    "notFound": {
+      "title": "Variants Not Found",
+      "description": "The requested product variants could not be found."
+    },
+    "title": "Choose Your Option",
+    "subtitle": "Select the option that best fits your needs",
+    "popular": "Most Popular",
+    "select": "Select",
+    "securePayment": "Secure payment • Instant access"
   },
   "refundRequests": {
     "title": "Refund Requests",

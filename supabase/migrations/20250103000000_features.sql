@@ -1588,6 +1588,49 @@ COMMENT ON TABLE public.integrations_config IS 'Global integrations configuratio
 COMMENT ON TABLE public.stripe_configurations IS 'Encrypted Stripe API keys with rotation support';
 COMMENT ON TABLE public.shop_config IS 'Global shop configuration settings (singleton)';
 
+-- =============================================================================
+-- PRODUCT VARIANTS FUNCTIONS
+-- =============================================================================
+
+-- Get all active variants in a group (for variant selector page)
+CREATE OR REPLACE FUNCTION public.get_variant_group(p_group_id UUID)
+RETURNS TABLE (
+  id UUID,
+  name TEXT,
+  slug TEXT,
+  variant_name VARCHAR(100),
+  variant_order INTEGER,
+  price NUMERIC,
+  currency TEXT,
+  description TEXT,
+  image_url TEXT,
+  is_active BOOLEAN
+)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT
+    p.id,
+    p.name,
+    p.slug,
+    p.variant_name,
+    p.variant_order,
+    p.price,
+    p.currency,
+    p.description,
+    p.image_url,
+    p.is_active
+  FROM products p
+  WHERE p.variant_group_id = p_group_id
+    AND p.is_active = true
+  ORDER BY p.variant_order ASC, p.price ASC;
+$$;
+
+COMMENT ON FUNCTION public.get_variant_group IS 'Get all active variants in a group for variant selector page';
+GRANT EXECUTE ON FUNCTION public.get_variant_group(UUID) TO anon, authenticated, service_role;
+
 COMMENT ON COLUMN public.order_bumps.bump_price IS 'Special discounted price for bump (NULL = use product default price)';
 COMMENT ON COLUMN public.stripe_configurations.encrypted_key IS 'AES-256-GCM encrypted Stripe API key (base64 encoded)';
 COMMENT ON COLUMN public.shop_config.custom_settings IS 'Flexible JSONB field for additional custom settings';

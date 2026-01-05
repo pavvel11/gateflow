@@ -40,6 +40,10 @@ export interface Product {
   // Refund settings
   is_refundable: boolean
   refund_period_days?: number | null
+  // Product Variants (presentation layer)
+  variant_group_id?: string | null
+  variant_name?: string | null
+  variant_order?: number
   created_at: string
   updated_at: string
   tenant_id?: string

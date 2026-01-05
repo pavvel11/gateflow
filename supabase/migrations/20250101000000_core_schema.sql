@@ -61,6 +61,11 @@ CREATE TABLE IF NOT EXISTS products (
   is_refundable BOOLEAN DEFAULT false NOT NULL, -- Whether customers can request refunds for this product
   refund_period_days INTEGER CHECK (refund_period_days IS NULL OR (refund_period_days > 0 AND refund_period_days <= 365)), -- Number of days from purchase within which refund can be requested
 
+  -- Product Variants (presentation layer - products remain independent)
+  variant_group_id UUID, -- Links products as variants (same group_id = same offering variants)
+  variant_name VARCHAR(100), -- Display name in selector (e.g., "1 Year", "Lifetime")
+  variant_order INTEGER DEFAULT 0, -- Order in variant selector (lower = first)
+
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
 
@@ -72,6 +77,9 @@ COMMENT ON TABLE products IS 'Products catalog with gatekeeper integration suppo
 COMMENT ON COLUMN products.slug IS 'URL-safe unique identifier for gatekeeper system';
 COMMENT ON COLUMN products.content_config IS 'JSON configuration for content delivery and gatekeeper integration';
 COMMENT ON COLUMN products.tenant_id IS 'Multi-tenant support - allows product isolation by tenant';
+COMMENT ON COLUMN products.variant_group_id IS 'UUID linking products as variants - products with same group_id shown together in selector';
+COMMENT ON COLUMN products.variant_name IS 'Display name for variant (e.g., "Basic", "Pro", "1 Year", "Lifetime")';
+COMMENT ON COLUMN products.variant_order IS 'Order in variant selector page (lower numbers first)';
 
 -- Create categories table for product organization
 CREATE TABLE IF NOT EXISTS categories (
@@ -786,6 +794,7 @@ CREATE INDEX IF NOT EXISTS idx_user_product_access_unique ON user_product_access
 CREATE INDEX IF NOT EXISTS idx_admin_users_user_id ON admin_users(user_id);
 
 CREATE INDEX IF NOT EXISTS idx_products_tenant_id ON products(tenant_id) WHERE tenant_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_products_variant_group_id ON products(variant_group_id) WHERE variant_group_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_user_product_access_tenant_id ON user_product_access(tenant_id) WHERE tenant_id IS NOT NULL;
 
 -- Optimization indexes for user access
