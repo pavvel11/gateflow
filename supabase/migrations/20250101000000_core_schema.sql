@@ -485,17 +485,16 @@ BEGIN
         RETURN FALSE;
     END IF;
     
+    -- NOTE: is_active controls product visibility for NEW purchases only
+    -- Users who already have access keep it regardless of is_active status
+    -- Access is revoked only when: product is deleted OR access_expires_at passes
     RETURN EXISTS (
-        SELECT 1 
+        SELECT 1
         FROM public.user_product_access upa
         JOIN public.products p ON upa.product_id = p.id
         WHERE upa.user_id = auth.uid()  -- Use authenticated user ID
           AND p.slug = clean_slug       -- Use sanitized slug
-          AND p.is_active = true
-          -- Check temporal availability for products
-          AND (p.available_from IS NULL OR p.available_from <= NOW())
-          AND (p.available_until IS NULL OR p.available_until >= NOW())
-          -- Check temporal access for user
+          -- Check temporal access for user (only condition that revokes access)
           AND (upa.access_expires_at IS NULL OR upa.access_expires_at >= NOW())
     );
 END;
@@ -559,17 +558,15 @@ BEGIN
         safe_key := clean_slug;
         
         -- Use parameterized query to prevent SQL injection
+        -- NOTE: is_active controls product visibility for NEW purchases only
+        -- Users who already have access keep it regardless of is_active status
         SELECT EXISTS (
-            SELECT 1 
+            SELECT 1
             FROM public.user_product_access upa
             JOIN public.products p ON upa.product_id = p.id
             WHERE upa.user_id = current_user_id
               AND p.slug = clean_slug
-              AND p.is_active = true
-              -- Check temporal availability for products
-              AND (p.available_from IS NULL OR p.available_from <= NOW())
-              AND (p.available_until IS NULL OR p.available_until >= NOW())
-              -- Check temporal access for user
+              -- Check temporal access for user (only condition that revokes access)
               AND (upa.access_expires_at IS NULL OR upa.access_expires_at >= NOW())
         ) INTO has_access;
         

@@ -528,6 +528,197 @@ export async function rateLimit(
 
 ## 🟡 Medium Priority
 
+### 🛒 Product Variants (Pricing Tiers)
+
+#### Product Variants System
+**Status**: 📋 Planned
+**Priority**: 🟡 Medium
+**Effort**: ~1-2 weeks
+**Description**: Allow a single product to have multiple purchasing options (variants) with different prices, durations, or features. Essential for selling licenses, subscriptions, or tiered access.
+
+**Use Cases**:
+- **Licenses**: 1-year license (99 PLN), 3-year license (199 PLN), Unlimited license (299 PLN)
+- **Access Duration**: 30-day access, 1-year access, Lifetime access
+- **Tiers**: Basic, Pro, Enterprise versions of the same product
+- **Formats**: eBook only (29 PLN), eBook + Video (49 PLN), eBook + Video + Coaching (199 PLN)
+
+**Core Features**:
+
+1. **Database Schema**:
+   ```sql
+   CREATE TABLE product_variants (
+     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+     product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+     name VARCHAR(100) NOT NULL,           -- e.g., "1-Year License"
+     description TEXT,                      -- e.g., "Full access for 12 months"
+     price DECIMAL(10,2) NOT NULL,
+     compare_at_price DECIMAL(10,2),        -- For showing discounts
+     currency VARCHAR(3) DEFAULT 'PLN',
+
+     -- Access configuration
+     access_duration_days INTEGER,          -- NULL = unlimited
+     metadata JSONB DEFAULT '{}',           -- Custom data (license type, features, etc.)
+
+     -- Sorting & display
+     display_order INTEGER DEFAULT 0,
+     is_default BOOLEAN DEFAULT false,      -- Pre-selected variant
+     is_active BOOLEAN DEFAULT true,
+
+     -- Stripe
+     stripe_price_id VARCHAR(255),          -- For Stripe Checkout integration
+
+     created_at TIMESTAMPTZ DEFAULT NOW(),
+     updated_at TIMESTAMPTZ DEFAULT NOW()
+   );
+
+   -- Ensure only one default per product
+   CREATE UNIQUE INDEX idx_product_variants_default
+     ON product_variants(product_id) WHERE is_default = true;
+   ```
+
+2. **Product Form Extension**:
+   - "Enable Variants" toggle in Product Form
+   - When enabled: hide main price field, show variants manager
+   - Variant editor: Add/Edit/Delete/Reorder variants
+   - Each variant: Name, Price, Compare-at-price, Duration, Description
+   - "Set as Default" radio button
+   - Drag-and-drop reordering
+
+3. **Checkout Integration**:
+   - Variant selector UI (radio buttons or dropdown)
+   - Price updates dynamically on variant change
+   - Selected variant stored in payment metadata
+   - Variant name shown in order confirmation
+
+4. **Access Management**:
+   - `user_access.variant_id` foreign key
+   - `user_access.expires_at` calculated from variant's `access_duration_days`
+   - Different variants = different access durations
+   - Upgrade path: Allow purchasing higher tier (credit existing payment?)
+
+5. **Stripe Integration**:
+   - Create Stripe Price for each variant (or use dynamic pricing)
+   - Pass variant info in `payment_intent.metadata`
+   - Support for both one-time and recurring variants (future)
+
+6. **Analytics**:
+   - Revenue breakdown by variant
+   - Conversion rate per variant
+   - Most popular variant indicator
+
+7. **API & Webhooks**:
+   - Include `variant_id` and `variant_name` in webhook payloads
+   - API endpoint: `GET /api/products/[slug]/variants`
+
+**UI Mockup** (Checkout):
+```
+┌─────────────────────────────────────────┐
+│  Choose your plan:                      │
+│                                         │
+│  ○ 1-Year License                       │
+│    Full access for 12 months            │
+│    99 PLN                               │
+│                                         │
+│  ● 3-Year License          ⭐ POPULAR   │
+│    Full access for 36 months            │
+│    ~~297 PLN~~ 199 PLN  (-33%)          │
+│                                         │
+│  ○ Lifetime License                     │
+│    Unlimited access forever             │
+│    299 PLN                              │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+**Implementation Phases**:
+
+**Phase 1 (MVP)**: ~3-4 days
+- Database schema & migrations
+- Basic variant CRUD in Product Form
+- Checkout variant selector (radio buttons)
+- Payment with variant metadata
+- Access grant with duration
+
+**Phase 2 (Polish)**: ~2-3 days
+- Compare-at-price & discount badges
+- "Popular" / "Best Value" badges
+- Variant-specific descriptions
+- Analytics integration
+
+**Phase 3 (Advanced)**: ~3-4 days
+- Stripe Price sync (optional)
+- Upgrade/downgrade paths
+- Variant-specific order bumps
+- Recurring variants (subscriptions)
+
+**Backward Compatibility**:
+- Products without variants work exactly as before
+- `products.price` remains the source of truth for non-variant products
+- Existing purchases unaffected
+
+**Edge Cases**:
+- Single variant = effectively no choice (auto-select)
+- All variants disabled = product unavailable
+- Variant deleted after purchase = show "Legacy" in order history
+- Currency mismatch = all variants must use same currency
+
+**⚠️ CRITICAL: Architecture Decision**:
+
+Przed implementacją trzeba dokładnie przemyśleć jak warianty współgrają z istniejącymi mechanizmami:
+- **Kupony**: Czy kupon działa na produkt czy na wariant? Jak obsłużyć "10% na wszystkie warianty" vs "20 PLN zniżki tylko na Unlimited"?
+- **Order Bumps**: Czy bump może być wariantem? Czy bump może mieć własne warianty?
+- **Omnibus**: Czy każdy wariant ma osobną historię cen?
+- **Webhooks**: Payload musi zawierać info o wariancie
+- **Analytics**: Revenue per variant vs per product
+
+**Dwa podejścia do rozważenia**:
+
+| Aspekt | Nowa tabela `product_variants` | Warianty jako powiązane produkty |
+|--------|-------------------------------|----------------------------------|
+| Kompleksność | Wysoka (nowy system) | Niska (reuse existing) |
+| Kupony | Wymaga nowej logiki | Działa out-of-box |
+| Order Bumps | Wymaga integracji | Działa out-of-box |
+| Omnibus | Nowa implementacja | Działa out-of-box |
+| UI Checkout | Dedykowany selector | Może być mniej elegancki |
+| Grupowanie | Naturalne (parent_id) | Wymaga `variant_group_id` |
+| Stripe | Nowe Price per variant | Istniejące Price per product |
+
+**Rekomendacja**: Rozważyć **podejście hybrydowe**:
+1. Warianty = normalne produkty z `variant_group_id` (lub `parent_product_id`)
+2. Dodatkowe pole `variant_name` (np. "1-Year", "Lifetime")
+3. UI na checkout grupuje produkty z tym samym `variant_group_id`
+4. Wszystkie istniejące mechanizmy (kupony, bumps, omnibus) działają bez zmian
+
+```sql
+-- Minimalne zmiany w tabeli products:
+ALTER TABLE products ADD COLUMN variant_group_id UUID;
+ALTER TABLE products ADD COLUMN variant_name VARCHAR(100);
+ALTER TABLE products ADD COLUMN variant_order INTEGER DEFAULT 0;
+
+-- Warianty to po prostu produkty z tym samym variant_group_id
+-- Pierwszy produkt w grupie (variant_order=0) = domyślny
+```
+
+**Korzyści podejścia "warianty jako produkty"**:
+- ✅ Zero zmian w kuponach, order bumps, omnibus, webhooks
+- ✅ Każdy wariant ma własny slug, własną stronę checkout
+- ✅ Łatwe A/B testing (różne landing pages per wariant)
+- ✅ Stripe Price już istnieje per produkt
+- ✅ Analytics działa out-of-box
+
+**Wady**:
+- ⚠️ Więcej produktów w panelu (można filtrować po grupie)
+- ⚠️ Edycja wspólnych pól (opis, grafika) wymaga sync lub "master product"
+
+**Decyzja**: Do podjęcia przed implementacją. Prawdopodobnie podejście "warianty jako produkty" jest bezpieczniejsze i szybsze.
+
+**Inspiration**:
+- [Gumroad Variants](https://help.gumroad.com/article/149-product-variants)
+- [Paddle Pricing](https://developer.paddle.com/concepts/products/manage-products-prices)
+- [Stripe Products & Prices](https://stripe.com/docs/products-prices/overview)
+
+---
+
 ### 🤝 Affiliate & Partner Program
 
 #### Two-Sided Affiliate Program (Partner Rewards)
@@ -1135,126 +1326,13 @@ CREATE TABLE product_affiliate_rates (
 - ✅ **Migration**: Database schema with RLS policies for price history
 - ✅ **E2E Tests**: Comprehensive tests covering price display and history tracking
 
-**Limitations (Current Implementation)**:
-- ⚠️ **No Compare-At-Price**: Omnibus only shows when current price is at historical minimum
-- ⚠️ **Missing "Was/Now" Display**: Cannot show crossed-out "original price" like EasyCart/Shopify
-- 📋 **Enhancement Needed**: Add `compare_at_price` field (see below)
-
 #### Compare-At-Price / Original Price Display
-**Status**: 📋 Planned
-**Priority**: 🟡 Medium
-**Effort**: ~3-4 hours
-**Description**: Add support for showing "Was/Now" pricing with crossed-out original price, enabling proper Omnibus compliance for promotional pricing.
-
-**Why This Matters**:
-Current Omnibus implementation shows lowest price from last 30 days, but ONLY when current price is at historical minimum. This doesn't match real-world e-commerce where you show:
-- **Was**: ~~100 USD~~ (crossed out)
-- **Now**: 60 USD (current price)
-- **Omnibus**: "Lowest price in last 30 days: 50 USD"
-
-**Missing Functionality**:
-We have ONLY `price` field. We need `compare_at_price` (original/regular price) to:
-1. Show crossed-out "was" price
-2. Calculate discount percentage (-40%)
-3. Display Omnibus warning even when current price is NOT at minimum
-
-**Real-World Example**:
-```
-EasyCart/Shopify Style:
-┌─────────────────────────┐
-│ ~~100 USD~~  (-40% OFF) │  ← compare_at_price
-│   60 USD                │  ← price (actual)
-│ Lowest 30d: 50 USD      │  ← Omnibus (shows always when compare_at_price set)
-└─────────────────────────┘
-
-GateFlow Current:
-┌─────────────────────────┐
-│   60 USD                │  ← price only
-│ (Omnibus hidden)        │  ← hidden because 60 >= 50 (lowest)
-└─────────────────────────┘
-```
-
-**Database Schema Changes**:
-```sql
-ALTER TABLE products ADD COLUMN compare_at_price DECIMAL(10,2);
-ALTER TABLE products ADD COLUMN discount_percentage DECIMAL(5,2) GENERATED ALWAYS AS (
-  CASE
-    WHEN compare_at_price > 0 AND compare_at_price > price
-    THEN ROUND(((compare_at_price - price) / compare_at_price) * 100, 2)
-    ELSE NULL
-  END
-) STORED;
-```
-
-**Product Type Extension**:
-```typescript
-interface Product {
-  // ... existing fields
-  price: number;
-  compare_at_price?: number | null;  // "Was" price (crossed out)
-  discount_percentage?: number | null; // Auto-calculated
-}
-```
-
-**UI Changes**:
-1. **ProductFormModal**: Add "Compare At Price" input field (optional)
-2. **ProductShowcase** (`/checkout/[slug]`):
-   ```tsx
-   {compareAtPrice && compareAtPrice > price && (
-     <div className="flex items-center gap-3">
-       <span className="text-2xl text-gray-400 line-through">
-         ${compareAtPrice}
-       </span>
-       <span className="text-4xl font-bold text-green-600">
-         ${price}
-       </span>
-       <span className="bg-red-500 text-white px-2 py-1 rounded">
-         -{discountPercentage}%
-       </span>
-     </div>
-   )}
-   <OmnibusPrice ... /> {/* Now shows even when price not at minimum */}
-   ```
-
-3. **OmnibusPrice Logic Update**:
-   ```typescript
-   // OLD (line 61):
-   if (currentPrice >= lowestPriceData.lowestPrice) return null;
-
-   // NEW:
-   // Show if either:
-   // 1. Compare-at-price is set (promotional pricing active), OR
-   // 2. Current price < lowest price (historical discount)
-   const hasPromotion = compareAtPrice && compareAtPrice > currentPrice;
-   const hasHistoricalDiscount = currentPrice < lowestPriceData.lowestPrice;
-
-   if (!hasPromotion && !hasHistoricalDiscount) {
-     return null;
-   }
-   ```
-
-**Admin Workflow**:
-1. Create product: price = 100, compare_at_price = null (no promotion)
-2. Run Black Friday sale: price = 60, compare_at_price = 100
-   - Shows: ~~100 USD~~ → 60 USD (-40%)
-   - Omnibus: "Lowest 30d: 50 USD" (if historical min was 50)
-3. End sale: price = 100, compare_at_price = null (back to regular)
-
-**Benefits**:
-- ✅ Proper Omnibus compliance for promotional pricing
-- ✅ Visual "sale" badges and crossed-out prices
-- ✅ Automatic discount percentage calculation
-- ✅ Matches EasyCart/Shopify UX expectations
-- ✅ More flexibility in pricing strategies
-
-**Migration Strategy**:
-- Add column with `DEFAULT NULL` (backward compatible)
-- Existing products: `compare_at_price = NULL` (no change in display)
-- New products: Optional field in admin panel
-
-**References**:
-- [Shopify Compare At Price](https://help.shopify.com/en/manual/products/details/product-pricing#compare-at-price)
-- [WooCommerce Sale Price](https://woocommerce.com/document/managing-products/#sale-price)
+**Completed**: 2026-01-05
+- ✅ **Database Column**: `compare_at_price` field in products table
+- ✅ **Product Form**: "Compare At Price" input field in admin panel
+- ✅ **Checkout Display**: Crossed-out original price with discount percentage badge
+- ✅ **Omnibus Integration**: Shows lowest 30-day price alongside promotional pricing
+- ✅ **Backward Compatible**: Existing products unaffected (NULL = no promotion)
 
 #### GUS REGON API Integration (Polish Company Data)
 **Completed**: 2025-12-28
@@ -1381,5 +1459,5 @@ interface Product {
 
 ---
 
-**Last Updated**: 2026-01-04
+**Last Updated**: 2026-01-05
 **Version**: 2.1

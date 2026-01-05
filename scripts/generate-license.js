@@ -1,0 +1,266 @@
+#!/usr/bin/env node
+/**
+ * GateFlow License Generator
+ *
+ * Generates ECDSA-signed license keys for GateFlow installations.
+ *
+ * Usage:
+ *   node generate-license.js <domain> [expiry]
+ *
+ * Examples:
+ *   node generate-license.js example.com 20271231      # Valid until Dec 31, 2027
+ *   node generate-license.js example.com UNLIMITED     # Never expires
+ *   node generate-license.js "*.example.com" UNLIMITED # Wildcard domain
+ *
+ * Environment:
+ *   GATEFLOW_PRIVATE_KEY - ECDSA private key (PEM format)
+ *   or
+ *   GATEFLOW_PRIVATE_KEY_FILE - Path to private key file
+ *
+ * First-time setup (generate key pair):
+ *   node generate-license.js --generate-keys
+ */
+
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+
+// =============================================================================
+// KEY MANAGEMENT
+// =============================================================================
+
+function generateKeyPair() {
+    const { publicKey, privateKey } = crypto.generateKeyPairSync('ec', {
+        namedCurve: 'P-256',
+        publicKeyEncoding: { type: 'spki', format: 'pem' },
+        privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
+    });
+
+    return { publicKey, privateKey };
+}
+
+function getPrivateKey() {
+    // Try environment variable first
+    if (process.env.GATEFLOW_PRIVATE_KEY) {
+        return process.env.GATEFLOW_PRIVATE_KEY;
+    }
+
+    // Try file path from env
+    if (process.env.GATEFLOW_PRIVATE_KEY_FILE) {
+        return fs.readFileSync(process.env.GATEFLOW_PRIVATE_KEY_FILE, 'utf8');
+    }
+
+    // Try default location
+    const defaultPath = path.join(__dirname, '.gateflow-private-key.pem');
+    if (fs.existsSync(defaultPath)) {
+        return fs.readFileSync(defaultPath, 'utf8');
+    }
+
+    return null;
+}
+
+// =============================================================================
+// LICENSE GENERATION
+// =============================================================================
+
+function generateLicense(domain, expiry, privateKeyPem) {
+    // Validate domain
+    if (!domain || typeof domain !== 'string') {
+        throw new Error('Invalid domain');
+    }
+
+    // Validate expiry
+    if (expiry !== 'UNLIMITED' && !/^\d{8}$/.test(expiry)) {
+        throw new Error('Expiry must be YYYYMMDD format or "UNLIMITED"');
+    }
+
+    // Data to sign
+    const dataToSign = `${domain}-${expiry}`;
+
+    // Create signature
+    const sign = crypto.createSign('SHA256');
+    sign.update(dataToSign);
+    sign.end();
+
+    const signature = sign.sign(privateKeyPem);
+
+    // Convert to base64url (URL-safe base64)
+    const signatureBase64url = signature
+        .toString('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '');
+
+    // Build license key
+    return `GF-${domain}-${expiry}-${signatureBase64url}`;
+}
+
+function verifyLicense(licenseKey, publicKeyPem) {
+    const parts = licenseKey.split('-');
+    if (parts.length < 4 || parts[0] !== 'GF') {
+        return { valid: false, reason: 'invalid_format' };
+    }
+
+    const domain = parts[1];
+    const expiry = parts[2];
+    const signatureBase64url = parts.slice(3).join('-');
+
+    // Convert base64url back to base64
+    let signatureBase64 = signatureBase64url.replace(/-/g, '+').replace(/_/g, '/');
+    while (signatureBase64.length % 4) signatureBase64 += '=';
+    const signature = Buffer.from(signatureBase64, 'base64');
+
+    // Verify signature
+    const dataToVerify = `${domain}-${expiry}`;
+    const verify = crypto.createVerify('SHA256');
+    verify.update(dataToVerify);
+    verify.end();
+
+    const isValid = verify.verify(publicKeyPem, signature);
+
+    return {
+        valid: isValid,
+        domain,
+        expiry,
+        expiryDate: expiry === 'UNLIMITED' ? null : parseExpiryDate(expiry)
+    };
+}
+
+function parseExpiryDate(expiry) {
+    const year = parseInt(expiry.slice(0, 4));
+    const month = parseInt(expiry.slice(4, 6)) - 1;
+    const day = parseInt(expiry.slice(6, 8));
+    return new Date(year, month, day);
+}
+
+// =============================================================================
+// CLI
+// =============================================================================
+
+function printUsage() {
+    console.log(`
+GateFlow License Generator
+
+Usage:
+  node generate-license.js <domain> [expiry]
+  node generate-license.js --generate-keys
+  node generate-license.js --verify <license-key>
+
+Arguments:
+  domain    Domain the license is valid for (e.g., example.com, *.example.com)
+  expiry    Expiry date in YYYYMMDD format, or "UNLIMITED" (default: UNLIMITED)
+
+Options:
+  --generate-keys    Generate a new ECDSA key pair
+  --verify <key>     Verify an existing license key
+
+Environment Variables:
+  GATEFLOW_PRIVATE_KEY       Private key (PEM format)
+  GATEFLOW_PRIVATE_KEY_FILE  Path to private key file
+
+Examples:
+  node generate-license.js example.com 20271231
+  node generate-license.js example.com UNLIMITED
+  node generate-license.js "*.example.com" UNLIMITED
+`);
+}
+
+function main() {
+    const args = process.argv.slice(2);
+
+    // Generate keys
+    if (args[0] === '--generate-keys') {
+        console.log('Generating ECDSA P-256 key pair...\n');
+        const { publicKey, privateKey } = generateKeyPair();
+
+        const privateKeyPath = path.join(__dirname, '.gateflow-private-key.pem');
+        const publicKeyPath = path.join(__dirname, 'gateflow-public-key.pem');
+
+        fs.writeFileSync(privateKeyPath, privateKey);
+        fs.writeFileSync(publicKeyPath, publicKey);
+
+        console.log('=== PRIVATE KEY (keep secret!) ===');
+        console.log(`Saved to: ${privateKeyPath}`);
+        console.log('');
+        console.log('=== PUBLIC KEY (embed in gatekeeper.js) ===');
+        console.log(publicKey);
+        console.log(`Saved to: ${publicKeyPath}`);
+        console.log('');
+        console.log('IMPORTANT: Add .gateflow-private-key.pem to .gitignore!');
+        return;
+    }
+
+    // Verify license
+    if (args[0] === '--verify') {
+        const licenseKey = args[1];
+        if (!licenseKey) {
+            console.error('Error: License key required for verification');
+            process.exit(1);
+        }
+
+        // Try to find public key
+        const publicKeyPath = path.join(__dirname, 'gateflow-public-key.pem');
+        if (!fs.existsSync(publicKeyPath)) {
+            console.error('Error: Public key not found. Run --generate-keys first.');
+            process.exit(1);
+        }
+
+        const publicKey = fs.readFileSync(publicKeyPath, 'utf8');
+        const result = verifyLicense(licenseKey, publicKey);
+
+        console.log('\nLicense Verification Result:');
+        console.log('============================');
+        console.log(`Valid: ${result.valid ? 'YES' : 'NO'}`);
+        if (result.valid) {
+            console.log(`Domain: ${result.domain}`);
+            console.log(`Expiry: ${result.expiry}${result.expiryDate ? ` (${result.expiryDate.toDateString()})` : ''}`);
+        } else {
+            console.log(`Reason: ${result.reason || 'Invalid signature'}`);
+        }
+        return;
+    }
+
+    // Generate license
+    if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
+        printUsage();
+        return;
+    }
+
+    const domain = args[0];
+    const expiry = args[1] || 'UNLIMITED';
+
+    // Get private key
+    const privateKey = getPrivateKey();
+    if (!privateKey) {
+        console.error('Error: Private key not found.');
+        console.error('');
+        console.error('Either:');
+        console.error('  1. Run: node generate-license.js --generate-keys');
+        console.error('  2. Set GATEFLOW_PRIVATE_KEY environment variable');
+        console.error('  3. Set GATEFLOW_PRIVATE_KEY_FILE environment variable');
+        process.exit(1);
+    }
+
+    try {
+        const license = generateLicense(domain, expiry, privateKey);
+
+        console.log('\n=== Generated License ===\n');
+        console.log(license);
+        console.log('\n=== License Details ===');
+        console.log(`Domain: ${domain}`);
+        console.log(`Expiry: ${expiry}${expiry !== 'UNLIMITED' ? ` (${parseExpiryDate(expiry).toDateString()})` : ''}`);
+        console.log('\n=== Usage ===');
+        console.log('Add to your gatekeeper configuration:');
+        console.log(`
+window.gatekeeperConfig = {
+    gateflowLicense: '${license}',
+    // ... other config
+};
+`);
+    } catch (error) {
+        console.error(`Error: ${error.message}`);
+        process.exit(1);
+    }
+}
+
+main();

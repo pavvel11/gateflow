@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { checkRateLimit } from '@/lib/rate-limiting';
 import crypto from 'crypto';
 
 /**
@@ -52,6 +53,15 @@ function canSendWithoutConsent(
  */
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: 30 requests per minute per IP (generous for tracking)
+    const rateLimitOk = await checkRateLimit('fb_capi', 30, 1);
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        { error: 'Too many tracking requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
 
     // Validate required fields

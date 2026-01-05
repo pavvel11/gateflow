@@ -31,15 +31,17 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
       // Embed widget mode - only for free products
       return `<!-- GateFlow Free Product Embed -->
 <div data-gateflow-product="${product.slug}"></div>
-<script src="${domain}/gateflow-embed.js"></script>
+<script src="${domain}/api/gateflow-embed"></script>
 
-<!-- Optional: Customize API URL and Turnstile key -->
+<!-- Optional: Listen for success events -->
 <!--
-<script
-  src="${domain}/gateflow-embed.js"
-  data-api-url="${domain}"
-  data-turnstile-key="your-turnstile-site-key"
-></script>
+<script>
+  document.addEventListener('gateflow:success', function(e) {
+    console.log('Claimed:', e.detail.productSlug, 'Email:', e.detail.email);
+    // Reload page to show protected content
+    location.reload();
+  });
+</script>
 -->`;
     } else {
       return `<!-- Add this to your page head -->

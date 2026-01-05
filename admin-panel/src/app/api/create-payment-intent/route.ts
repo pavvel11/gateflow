@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@/lib/supabase/server';
+import { checkRateLimit } from '@/lib/rate-limiting';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-12-15.clover',
@@ -8,6 +9,18 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Rate limiting: 20 requests per 5 minutes (generous for form validation retries)
+    const rateLimitOk = await checkRateLimit('create_payment_intent', 20, 5, user?.id);
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        { error: 'Too many payment attempts. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
     const {
       productId,
       email,
@@ -32,11 +45,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    const supabase = await createClient();
-
-    // Get authenticated user (if any)
-    const { data: { user } } = await supabase.auth.getUser();
 
     console.log('[CreatePaymentIntent] User from session:', user ? { id: user.id, email: user.email } : 'null');
 

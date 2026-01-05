@@ -7,7 +7,8 @@ export async function createClient() {
   // Use server-side environment variables
   const supabaseUrl = process.env.SUPABASE_URL!
   const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!
-  
+  const isProduction = process.env.NODE_ENV === 'production'
+
   return createServerClient(
     supabaseUrl,
     supabaseAnonKey,
@@ -19,7 +20,13 @@ export async function createClient() {
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options)
+              // For cross-origin support in production, use SameSite=None; Secure
+              const cookieOptions = {
+                ...options,
+                sameSite: isProduction ? 'none' as const : (options?.sameSite || 'lax' as const),
+                secure: isProduction ? true : (options?.secure || false),
+              }
+              cookieStore.set(name, value, cookieOptions)
             })
           } catch {
             // The `setAll` method was called from a Server Component.

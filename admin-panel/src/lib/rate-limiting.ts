@@ -1,29 +1,109 @@
 import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+
+/**
+ * Rate Limiting with automatic backend selection
+ *
+ * Backend priority:
+ * 1. Upstash Redis (if UPSTASH_REDIS_REST_URL is set) - fastest, ~1-5ms
+ * 2. Supabase Database RPC (fallback) - slower, ~10-50ms
+ *
+ * To enable Upstash, add env vars:
+ * - UPSTASH_REDIS_REST_URL
+ * - UPSTASH_REDIS_REST_TOKEN
+ */
+
+// Lazy-loaded Upstash client
+let upstashRatelimit: { ratelimiters: Map<string, Ratelimit>; redis: Redis } | null = null;
+
+function getUpstashClient() {
+  if (upstashRatelimit) return upstashRatelimit;
+
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return null;
+  }
+
+  upstashRatelimit = {
+    redis: Redis.fromEnv(),
+    ratelimiters: new Map(),
+  };
+
+  return upstashRatelimit;
+}
 
 /**
  * Get a unique identifier for rate limiting
- * Uses user ID if authenticated, otherwise uses IP address
  */
 export async function getRateLimitIdentifier(userId?: string): Promise<string> {
   if (userId) {
     return `user:${userId}`;
   }
-  
-  // Get real IP address from headers
+
   const headersList = await headers();
   const forwarded = headersList.get('x-forwarded-for');
   const realIp = headersList.get('x-real-ip');
-  const remoteAddress = headersList.get('x-remote-address');
-  
-  // Try to get IP from various headers (for different proxy setups)
-  const ip = forwarded?.split(',')[0] || realIp || remoteAddress || 'unknown';
-  
+  const ip = forwarded?.split(',')[0] || realIp || 'unknown';
+
   return `ip:${ip}`;
 }
 
 /**
+ * Check rate limit using Upstash Redis
+ */
+async function checkRateLimitUpstash(
+  actionType: string,
+  maxRequests: number,
+  windowMinutes: number,
+  identifier: string
+): Promise<boolean> {
+  const upstash = getUpstashClient();
+  if (!upstash) return true;
+
+  const key = `${actionType}:${maxRequests}:${windowMinutes}`;
+
+  if (!upstash.ratelimiters.has(key)) {
+    upstash.ratelimiters.set(key, new Ratelimit({
+      redis: upstash.redis,
+      limiter: Ratelimit.slidingWindow(maxRequests, `${windowMinutes} m`),
+      prefix: `ratelimit:${actionType}`,
+    }));
+  }
+
+  const { success } = await upstash.ratelimiters.get(key)!.limit(identifier);
+  return success;
+}
+
+/**
+ * Check rate limit using Supabase Database
+ */
+async function checkRateLimitDatabase(
+  actionType: string,
+  maxRequests: number,
+  windowMinutes: number,
+  identifier: string
+): Promise<boolean> {
+  const supabase = await createClient();
+
+  const { data: rateLimitOk, error } = await supabase.rpc('check_application_rate_limit', {
+    identifier_param: identifier,
+    action_type_param: actionType,
+    max_requests: maxRequests,
+    window_minutes: windowMinutes,
+  });
+
+  if (error) {
+    console.error('Rate limit check error:', error);
+    return true; // Fail open
+  }
+
+  return !!rateLimitOk;
+}
+
+/**
  * Check if action is rate limited
+ *
  * @param actionType - Type of action being performed
  * @param maxRequests - Maximum requests allowed
  * @param windowMinutes - Time window in minutes
@@ -36,28 +116,19 @@ export async function checkRateLimit(
   windowMinutes: number,
   userId?: string
 ): Promise<boolean> {
-  const supabase = await createClient();
   const identifier = await getRateLimitIdentifier(userId);
-  
-  try {
-    const { data: rateLimitOk, error } = await supabase.rpc('check_application_rate_limit', {
-      identifier_param: identifier,
-      action_type_param: actionType,
-      max_requests: maxRequests,
-      window_minutes: windowMinutes,
-    });
 
-    if (error) {
-      console.error('Rate limit check error:', error);
-      // In case of error, allow the action (fail open)
-      return true;
+  try {
+    // Use Upstash if configured
+    if (getUpstashClient()) {
+      return await checkRateLimitUpstash(actionType, maxRequests, windowMinutes, identifier);
     }
 
-    return !!rateLimitOk;
+    // Fallback to database
+    return await checkRateLimitDatabase(actionType, maxRequests, windowMinutes, identifier);
   } catch (error) {
     console.error('Rate limit check exception:', error);
-    // In case of error, allow the action (fail open)
-    return true;
+    return true; // Fail open
   }
 }
 
@@ -71,7 +142,7 @@ export const RATE_LIMITS = {
     actionType: 'checkout_creation',
   },
   CHECKOUT_CREATION_ANONYMOUS: {
-    maxRequests: 10, // Higher limit for anonymous users per IP
+    maxRequests: 10,
     windowMinutes: 15,
     actionType: 'checkout_creation',
   },

@@ -64,3 +64,6 @@ Caddyfile
 # Claude AI configuration
 .claude/
 CLAUDE.md
+
+# GateFlow license private key (NEVER commit!)
+scripts/.gateflow-private-key.pem

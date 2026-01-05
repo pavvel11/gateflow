@@ -339,7 +339,7 @@ export default ${name};
                 <div class="tool-card">
                     <h3>💡 Get Access to Pro Toolkit</h3>
                     <p>Unlock advanced code generation and developer tools.</p>
-                    <a href="http://localhost:3000/p/pro-toolkit" style="color: white; text-decoration: none;">
+                    <a href="/p/pro-toolkit" style="color: white; text-decoration: none;">
                         🚀 GET ACCESS NOW
                     </a>
                 </div>
@@ -372,44 +372,10 @@ export default ${name};
                 <div class="tool-card">
                     <h3>💡 Get Access to VIP Masterclass</h3>
                     <p>Unlock AI-powered code assistant and premium features.</p>
-                    <a href="http://localhost:3000/p/vip-masterclass" style="color: white; text-decoration: none;">
+                    <a href="/p/vip-masterclass" style="color: white; text-decoration: none;">
                         👑 GET VIP ACCESS
                     </a>
                 </div>
-            </div>
-        </div>
-
-        <!-- This section is protected for free-tutorial users (free product example) -->
-        <div class="pro-only" style="border-left-color: #48bb78;" data-gatekeeper-product="free-tutorial" data-testid="free-tutorial-section">
-            <!-- Content shown when user HAS access -->
-            <div data-has-access data-testid="free-tutorial-has-access">
-                <h2>🎓 YOU SEE THIS SECTION BECAUSE YOU HAVE ACCESS TO FREE-TUTORIAL</h2>
-                <p>You have claimed the <strong>free-tutorial</strong> product. Here's your exclusive content:</p>
-
-                <div class="tool-card" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);">
-                    <h3>📚 Free Tutorial Content</h3>
-                    <p>Welcome to your free tutorial! Here's what you'll learn:</p>
-                    <ul style="text-align: left; margin-top: 15px;">
-                        <li>Getting started with GateFlow</li>
-                        <li>Basic content protection</li>
-                        <li>Element-level access control</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Fallback shown when user does NOT have access - with embedded claim -->
-            <div data-no-access data-testid="free-tutorial-no-access">
-                <h2>🎁 Free Tutorial - Claim Your Access</h2>
-                <p>This is a <strong>free product</strong>. Claim it to unlock the tutorial content!</p>
-
-                <!-- GateFlow Embed Widget for free product -->
-                <div style="margin: 1.5rem 0;">
-                    <div data-gateflow-product="free-tutorial"></div>
-                </div>
-
-                <p style="color: #718096; font-size: 0.875rem; text-align: center;">
-                    💡 The embed above lets users claim free products without leaving your page
-                </p>
             </div>
         </div>
 
@@ -417,7 +383,6 @@ export default ${name};
             <h2>🌟 Getting Started</h2>
             <p>To see the protected content above, you need appropriate access:</p>
             <ul>
-                <li>🎁 <strong>Free Tutorial</strong> - claim for free (embedded example above)</li>
                 <li>🔧 <strong>Pro Toolkit</strong> access for advanced developer tools</li>
                 <li>👑 <strong>VIP Masterclass</strong> access for AI-powered features</li>
             </ul>
@@ -444,18 +409,7 @@ export default ${name};
 
 
     <!-- GateFlow Script - no productSlug needed for element protection -->
-    <script src="http://localhost:3000/api/gatekeeper?id=3"></script>
-
-    <!-- GateFlow Embed Widget (auto-configured via endpoint) -->
-    <script src="http://localhost:3000/api/gateflow-embed"></script>
-
-    <!-- Optional: Listen for success events -->
-    <script>
-      document.addEventListener('gateflow:success', function(e) {
-        console.log('Product claimed:', e.detail.productSlug, 'by:', e.detail.email);
-        // Optionally refresh the page or update UI
-        // location.reload();
-      });
-    </script>
+    <!-- Using relative path since served from same origin (localhost:3000) -->
+    <script src="/api/gatekeeper"></script>
 </body>
 </html>

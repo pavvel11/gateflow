@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { checkRateLimit } from '@/lib/rate-limiting';
 
 // GET /api/refund-requests - Get user's refund requests
 export async function GET() {
@@ -41,6 +42,15 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    // Rate limiting: 3 requests per 60 minutes per user
+    const rateLimitOk = await checkRateLimit('refund_request', 3, 60, user.id);
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        { error: 'Too many refund requests. Please try again later.' },
+        { status: 429 }
+      );
     }
 
     const body = await request.json();
