@@ -1456,7 +1456,7 @@
       }
     },
     "variants": {
-      "linkVariants": "Link Products as Variants",
+      "linkVariants": "Link as Variants",
       "linkVariantsDescription": "Select products to group as variants. Customers will see a variant selector page.",
       "searchProducts": "Search products...",
       "selectedProducts": "Selected Products",
@@ -1924,7 +1924,7 @@
     "refundedAmount": "Refunded"
   },
   "variants": {
-    "linkVariants": "Link Products as Variants",
+    "linkVariants": "Link as Variants",
     "linkVariantsDescription": "Select products to group as variants. Customers will see a variant selector page.",
     "searchProducts": "Search products...",
     "selectedProducts": "Selected Products",

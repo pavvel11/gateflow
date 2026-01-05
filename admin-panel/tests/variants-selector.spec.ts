@@ -98,10 +98,10 @@ test.describe('Variant Selector Page', () => {
     await page.goto(`/pl/v/${variantGroupId}`);
     await page.waitForLoadState('networkidle');
 
-    // Check that prices are displayed
-    await expect(page.getByText(/49[,.]00/)).toBeVisible();
-    await expect(page.getByText(/99[,.]00/)).toBeVisible();
-    await expect(page.getByText(/299[,.]00/)).toBeVisible();
+    // Check that prices are displayed with currency code (format: zł49.00 PLN)
+    await expect(page.getByText('zł49.00 PLN')).toBeVisible();
+    await expect(page.getByText('zł99.00 PLN')).toBeVisible();
+    await expect(page.getByText('zł299.00 PLN')).toBeVisible();
   });
 
   test('should display descriptions', async ({ page }) => {

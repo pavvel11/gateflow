@@ -99,7 +99,7 @@ test.describe('Variant Linking Admin UI', () => {
       await page.goto('/pl/dashboard/products');
       await page.waitForLoadState('networkidle');
 
-      const linkButton = page.getByRole('button', { name: /Połącz produkty jako warianty|Link Products as Variants/i });
+      const linkButton = page.getByRole('button', { name: /Połącz jako warianty|Link as Variants/i });
       await expect(linkButton).toBeVisible();
     });
 
@@ -119,7 +119,7 @@ test.describe('Variant Linking Admin UI', () => {
       await page.goto('/pl/dashboard/products');
       await page.waitForLoadState('networkidle');
 
-      const linkButton = page.getByRole('button', { name: /Połącz produkty jako warianty|Link Products as Variants/i });
+      const linkButton = page.getByRole('button', { name: /Połącz jako warianty|Link as Variants/i });
       await linkButton.click();
 
       // Modal should appear
@@ -132,7 +132,7 @@ test.describe('Variant Linking Admin UI', () => {
       await page.goto('/pl/dashboard/products');
       await page.waitForLoadState('networkidle');
 
-      const linkButton = page.getByRole('button', { name: /Połącz produkty jako warianty|Link Products as Variants/i });
+      const linkButton = page.getByRole('button', { name: /Połącz jako warianty|Link as Variants/i });
       await linkButton.click();
 
       const modal = page.locator('div.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
@@ -149,7 +149,7 @@ test.describe('Variant Linking Admin UI', () => {
       await page.goto('/pl/dashboard/products');
       await page.waitForLoadState('networkidle');
 
-      const linkButton = page.getByRole('button', { name: /Połącz produkty jako warianty|Link Products as Variants/i });
+      const linkButton = page.getByRole('button', { name: /Połącz jako warianty|Link as Variants/i });
       await linkButton.click();
 
       const modal = page.locator('div.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
@@ -170,7 +170,7 @@ test.describe('Variant Linking Admin UI', () => {
       await page.goto('/pl/dashboard/products');
       await page.waitForLoadState('networkidle');
 
-      const linkButton = page.getByRole('button', { name: /Połącz produkty jako warianty|Link Products as Variants/i });
+      const linkButton = page.getByRole('button', { name: /Połącz jako warianty|Link as Variants/i });
       await linkButton.click();
 
       const modal = page.locator('div.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
@@ -191,7 +191,7 @@ test.describe('Variant Linking Admin UI', () => {
       await page.goto('/pl/dashboard/products');
       await page.waitForLoadState('networkidle');
 
-      const linkButton = page.getByRole('button', { name: /Połącz produkty jako warianty|Link Products as Variants/i });
+      const linkButton = page.getByRole('button', { name: /Połącz jako warianty|Link as Variants/i });
       await linkButton.click();
 
       const modal = page.locator('div.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
@@ -211,7 +211,7 @@ test.describe('Variant Linking Admin UI', () => {
       await page.goto('/pl/dashboard/products');
       await page.waitForLoadState('networkidle');
 
-      const linkButton = page.getByRole('button', { name: /Połącz produkty jako warianty|Link Products as Variants/i });
+      const linkButton = page.getByRole('button', { name: /Połącz jako warianty|Link as Variants/i });
       await linkButton.click();
 
       const modal = page.locator('div.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
@@ -232,7 +232,7 @@ test.describe('Variant Linking Admin UI', () => {
       await page.goto('/pl/dashboard/products');
       await page.waitForLoadState('networkidle');
 
-      const linkButton = page.getByRole('button', { name: /Połącz produkty jako warianty|Link Products as Variants/i });
+      const linkButton = page.getByRole('button', { name: /Połącz jako warianty|Link as Variants/i });
       await linkButton.click();
 
       const modal = page.locator('div.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
@@ -250,7 +250,7 @@ test.describe('Variant Linking Admin UI', () => {
       await page.goto('/pl/dashboard/products');
       await page.waitForLoadState('networkidle');
 
-      const linkButton = page.getByRole('button', { name: /Połącz produkty jako warianty|Link Products as Variants/i });
+      const linkButton = page.getByRole('button', { name: /Połącz jako warianty|Link as Variants/i });
       await linkButton.click();
 
       const modal = page.locator('div.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
@@ -267,7 +267,7 @@ test.describe('Variant Linking Admin UI', () => {
       await page.goto('/pl/dashboard/products');
       await page.waitForLoadState('networkidle');
 
-      const linkButton = page.getByRole('button', { name: /Połącz produkty jako warianty|Link Products as Variants/i });
+      const linkButton = page.getByRole('button', { name: /Połącz jako warianty|Link as Variants/i });
       await linkButton.click();
 
       const modal = page.locator('div.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
@@ -292,7 +292,7 @@ test.describe('Variant Linking Admin UI', () => {
       await page.goto('/pl/dashboard/products');
       await page.waitForLoadState('networkidle');
 
-      const linkButton = page.getByRole('button', { name: /Połącz produkty jako warianty|Link Products as Variants/i });
+      const linkButton = page.getByRole('button', { name: /Połącz jako warianty|Link as Variants/i });
       await linkButton.click();
 
       const modal = page.locator('div.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
@@ -491,7 +491,7 @@ test.describe('Variant Modal - Product Already in Group', () => {
     await page.goto('/pl/dashboard/products');
     await page.waitForLoadState('networkidle');
 
-    const linkButton = page.getByRole('button', { name: /Połącz produkty jako warianty|Link Products as Variants/i });
+    const linkButton = page.getByRole('button', { name: /Połącz jako warianty|Link as Variants/i });
     await linkButton.click();
 
     const modal = page.locator('div.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
@@ -507,7 +507,7 @@ test.describe('Variant Modal - Product Already in Group', () => {
     await page.goto('/pl/dashboard/products');
     await page.waitForLoadState('networkidle');
 
-    const linkButton = page.getByRole('button', { name: /Połącz produkty jako warianty|Link Products as Variants/i });
+    const linkButton = page.getByRole('button', { name: /Połącz jako warianty|Link as Variants/i });
     await linkButton.click();
 
     const modal = page.locator('div.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });

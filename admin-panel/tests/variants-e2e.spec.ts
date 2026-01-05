@@ -101,20 +101,30 @@ test.describe('Product Variants E2E Flow', () => {
     await page.waitForLoadState('networkidle');
 
     // Step 2: Open variant linking modal
-    const linkButton = page.getByRole('button', { name: /Połącz produkty jako warianty|Link Products as Variants/i });
+    const linkButton = page.getByRole('button', { name: /Połącz jako warianty|Link as Variants/i });
     await linkButton.click();
 
     const modal = page.locator('div.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
     await expect(modal).toBeVisible({ timeout: 5000 });
 
-    // Step 3: Select all 3 test products
+    // Wait for products to load
+    await page.waitForTimeout(1000);
+
+    // Use search to filter E2E products
+    const searchInput = modal.locator('input[type="text"]').first();
+    await searchInput.fill('E2E');
+    await page.waitForTimeout(500);
+
+    // Step 3: Select all 3 test products (use slug to ensure unique match)
     for (const product of testProducts) {
-      const productCard = modal.locator('[class*="cursor-pointer"]').filter({ hasText: product.name });
+      const productCard = modal.locator('.cursor-pointer').filter({ hasText: product.slug });
+      await expect(productCard).toBeVisible({ timeout: 5000 });
       await productCard.click();
+      await page.waitForTimeout(200);
     }
 
     // Step 4: Verify 3 products selected
-    await expect(modal.getByText(/Wybrane produkty \(3\)|Selected Products \(3\)/i)).toBeVisible();
+    await expect(modal.getByText(/Wybrane produkty \(3\)|Selected Products \(3\)/i)).toBeVisible({ timeout: 5000 });
 
     // Step 5: Set variant names
     const rightPanel = modal.locator('[class*="bg-gray-50"]').or(modal.locator('[class*="bg-gray-900"]'));
@@ -138,7 +148,16 @@ test.describe('Product Variants E2E Flow', () => {
     await page.reload();
     await page.waitForLoadState('networkidle');
 
-    const row = page.locator('tr').filter({ hasText: 'E2E Basic License' });
+    // Search for the test product to ensure it's visible
+    const productSearch = page.locator('input[placeholder*="Szukaj"]').or(page.locator('input[placeholder*="Search"]'));
+    if (await productSearch.isVisible()) {
+      await productSearch.fill('E2E Basic');
+      await page.waitForTimeout(500);
+    }
+
+    // Use slug to find exact product row (more unique than name)
+    const row = page.locator('tr').filter({ hasText: testProducts[0].slug });
+    await expect(row).toBeVisible({ timeout: 10000 });
     const variantBadge = row.locator('a').filter({ hasText: '🔗' });
     await expect(variantBadge).toBeVisible({ timeout: 10000 });
 
@@ -152,15 +171,15 @@ test.describe('Product Variants E2E Flow', () => {
     await page.goto(`/pl/v/${variantGroupId}`);
     await page.waitForLoadState('networkidle');
 
-    // Step 10: Verify variant selector displays all variants
-    await expect(page.getByText('Basic')).toBeVisible();
-    await expect(page.getByText('Pro')).toBeVisible();
-    await expect(page.getByText('Enterprise')).toBeVisible();
+    // Step 10: Verify variant selector displays all variants (use heading role for specificity)
+    await expect(page.getByRole('heading', { name: 'Basic' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Pro' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Enterprise' })).toBeVisible();
 
-    // Step 11: Verify prices
-    await expect(page.getByText(/49[,.]00/)).toBeVisible();
-    await expect(page.getByText(/99[,.]00/)).toBeVisible();
-    await expect(page.getByText(/199[,.]00/)).toBeVisible();
+    // Step 11: Verify prices (format: zł49.00 PLN)
+    await expect(page.getByText('zł49.00 PLN')).toBeVisible();
+    await expect(page.getByText('zł99.00 PLN')).toBeVisible();
+    await expect(page.getByText('zł199.00 PLN')).toBeVisible();
 
     // Step 12: Click on Pro variant
     const proVariant = page.locator('[class*="cursor-pointer"]').filter({ hasText: 'Pro' });
@@ -176,38 +195,77 @@ test.describe('Product Variants E2E Flow', () => {
   });
 
   test('E2E: Variant selector respects product active status', async ({ page }) => {
-    // Deactivate one product
+    // Create a fresh variant group for this test to avoid interference
+    const testGroupId = crypto.randomUUID();
+
+    // Link test products to this new group
+    for (let i = 0; i < testProducts.length; i++) {
+      await supabaseAdmin
+        .from('products')
+        .update({
+          variant_group_id: testGroupId,
+          variant_name: ['Basic', 'Pro', 'Enterprise'][i],
+          variant_order: i,
+          is_active: true // Ensure all start as active
+        })
+        .eq('id', testProducts[i].id);
+    }
+
+    // Now deactivate the Enterprise product
     await supabaseAdmin
       .from('products')
       .update({ is_active: false })
       .eq('id', testProducts[2].id);
 
     await acceptAllCookies(page);
-    await page.goto(`/pl/v/${variantGroupId}`);
+    await page.goto(`/pl/v/${testGroupId}`);
     await page.waitForLoadState('networkidle');
 
-    // Should show only 2 active variants
-    await expect(page.getByText('Basic')).toBeVisible();
-    await expect(page.getByText('Pro')).toBeVisible();
-    await expect(page.getByText('Enterprise')).not.toBeVisible();
+    // Should show only 2 active variants (use heading role for specificity)
+    await expect(page.getByRole('heading', { name: 'Basic' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Pro' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Enterprise' })).not.toBeVisible();
 
-    // Reactivate for other tests
+    // Reactivate and cleanup
     await supabaseAdmin
       .from('products')
-      .update({ is_active: true })
-      .eq('id', testProducts[2].id);
+      .update({ is_active: true, variant_group_id: null, variant_name: null, variant_order: 0 })
+      .in('id', testProducts.map(p => p.id));
   });
 
   test('E2E: Copy variant link from admin and access selector', async ({ page, context }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
 
+    // Ensure products are linked to a variant group
+    const testGroupId = crypto.randomUUID();
+    for (let i = 0; i < testProducts.length; i++) {
+      await supabaseAdmin
+        .from('products')
+        .update({
+          variant_group_id: testGroupId,
+          variant_name: ['Basic', 'Pro', 'Enterprise'][i],
+          variant_order: i,
+          is_active: true
+        })
+        .eq('id', testProducts[i].id);
+    }
+
     await loginAsAdmin(page);
     await page.goto('/pl/dashboard/products');
     await page.waitForLoadState('networkidle');
 
+    // Search for test product
+    const productSearch = page.locator('input[placeholder*="Szukaj"]').or(page.locator('input[placeholder*="Search"]'));
+    if (await productSearch.isVisible()) {
+      await productSearch.fill('E2E Basic');
+      await page.waitForTimeout(500);
+    }
+
     // Find product row and copy button
-    const row = page.locator('tr').filter({ hasText: 'E2E Basic License' });
+    const row = page.locator('tr').filter({ hasText: testProducts[0].slug });
+    await expect(row).toBeVisible({ timeout: 10000 });
     const copyButton = row.locator('button[title*="Kopiuj link"]').or(row.locator('button[title*="Copy Variant"]'));
+    await expect(copyButton).toBeVisible({ timeout: 5000 });
     await copyButton.click();
 
     // Get URL from clipboard
@@ -215,7 +273,7 @@ test.describe('Product Variants E2E Flow', () => {
       return await navigator.clipboard.readText();
     });
 
-    expect(copiedUrl).toContain(`/v/${variantGroupId}`);
+    expect(copiedUrl).toContain(`/v/${testGroupId}`);
 
     // Navigate to copied URL
     await page.goto(copiedUrl);
@@ -226,6 +284,20 @@ test.describe('Product Variants E2E Flow', () => {
   });
 
   test('E2E: Unlink product from variant group via admin', async ({ page }) => {
+    // Create a fresh variant group for this test
+    const testGroupId = crypto.randomUUID();
+    for (let i = 0; i < testProducts.length; i++) {
+      await supabaseAdmin
+        .from('products')
+        .update({
+          variant_group_id: testGroupId,
+          variant_name: ['Basic', 'Pro', 'Enterprise'][i],
+          variant_order: i,
+          is_active: true
+        })
+        .eq('id', testProducts[i].id);
+    }
+
     await loginAsAdmin(page);
 
     // Unlink the third product via API
@@ -242,18 +314,18 @@ test.describe('Product Variants E2E Flow', () => {
     expect(data!.variant_group_id).toBeNull();
 
     // Variant selector should now show only 2 products
-    await page.goto(`/pl/v/${variantGroupId}`);
+    await page.goto(`/pl/v/${testGroupId}`);
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText('Basic')).toBeVisible();
-    await expect(page.getByText('Pro')).toBeVisible();
-    await expect(page.getByText('Enterprise')).not.toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Basic' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Pro' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Enterprise' })).not.toBeVisible();
 
-    // Re-link for cleanup consistency
+    // Cleanup
     await supabaseAdmin
       .from('products')
-      .update({ variant_group_id: variantGroupId, variant_name: 'Enterprise', variant_order: 2 })
-      .eq('id', testProducts[2].id);
+      .update({ variant_group_id: null, variant_name: null, variant_order: 0 })
+      .in('id', testProducts.map(p => p.id));
   });
 });
 
@@ -426,11 +498,26 @@ test.describe('Variant Selector - Locale Handling', () => {
   });
 
   test('should work in Polish locale', async ({ page }) => {
+    // Verify we have test products
+    expect(testProducts.length).toBe(2);
+    expect(variantGroupId).toBeTruthy();
+
     await acceptAllCookies(page);
     await page.goto(`/pl/v/${variantGroupId}`);
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText('Wybierz opcję')).toBeVisible();
+    // Wait for content to load
+    await page.waitForTimeout(1000);
+
+    // Check for either the expected content or error state
+    const pageContent = await page.content();
+    if (pageContent.includes('😕') || pageContent.includes('not found')) {
+      console.log('Page shows error - products may not exist');
+      console.log('variantGroupId:', variantGroupId);
+      console.log('testProducts:', testProducts.map(p => p.id));
+    }
+
+    await expect(page.getByText('Wybierz opcję')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Najpopularniejsze')).toBeVisible();
   });
 

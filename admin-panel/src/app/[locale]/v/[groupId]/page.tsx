@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import { useTranslations, useLocale } from 'next-intl';
-import { getCurrencySymbol } from '@/lib/constants';
+import { formatPrice } from '@/lib/constants';
 
 interface Variant {
   id: string;
@@ -72,11 +72,6 @@ export default function VariantSelectorPage() {
 
   const handleSelectVariant = (slug: string) => {
     router.push(`/${locale}/checkout/${slug}`);
-  };
-
-  const formatPrice = (price: number, currency: string) => {
-    const symbol = getCurrencySymbol(currency);
-    return `${symbol}${price.toFixed(2)}`;
   };
 
   if (loading) {
@@ -172,7 +167,7 @@ export default function VariantSelectorPage() {
                 {/* Price and CTA */}
                 <div className="flex-shrink-0 text-center md:text-right">
                   <div className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                    {formatPrice(variant.price, variant.currency)}
+                    {formatPrice(variant.price, variant.currency)} {variant.currency}
                   </div>
                   <button
                     className={`

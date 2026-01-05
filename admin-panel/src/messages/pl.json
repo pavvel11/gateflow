@@ -1465,7 +1465,7 @@
       }
     },
     "variants": {
-      "linkVariants": "Połącz produkty jako warianty",
+      "linkVariants": "Połącz jako warianty",
       "linkVariantsDescription": "Wybierz produkty do zgrupowania jako warianty. Klienci zobaczą stronę wyboru wariantu.",
       "searchProducts": "Szukaj produktów...",
       "selectedProducts": "Wybrane produkty",
@@ -1933,7 +1933,7 @@
     "refundedAmount": "Zwrócono"
   },
   "variants": {
-    "linkVariants": "Połącz produkty jako warianty",
+    "linkVariants": "Połącz jako warianty",
     "linkVariantsDescription": "Wybierz produkty do zgrupowania jako warianty. Klienci zobaczą stronę wyboru wariantów.",
     "searchProducts": "Szukaj produktów...",
     "selectedProducts": "Wybrane produkty",
