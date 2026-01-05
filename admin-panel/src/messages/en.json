@@ -1662,6 +1662,27 @@
       "saveButton": "Save Documents",
       "saveSuccess": "Legal documents configuration saved successfully",
       "saveError": "Failed to save legal documents configuration"
+    },
+    "license": {
+      "title": "GateFlow License",
+      "subtitle": "Remove watermark from GateKeeper script",
+      "licenseKey": "License Key",
+      "formatHint": "Format: GF-domain-expiry-signature (e.g., GF-example.com-20271231-MEUCIQDx... or GF-example.com-UNLIMITED-MEUCIQDx...)",
+      "licenseDetails": "License Details",
+      "domain": "Domain",
+      "expires": "Expires",
+      "signature": "Signature",
+      "never": "Never (Unlimited)",
+      "invalidFormat": "Invalid license format",
+      "saving": "Saving...",
+      "saveLicense": "Save License",
+      "saveSuccess": "License saved successfully",
+      "saveError": "Failed to save license",
+      "howItWorks": "How licensing works",
+      "howItWorks1": "The license key is cryptographically signed and verified offline",
+      "howItWorks2": "Valid license removes the \"Secured by GateFlow\" watermark",
+      "howItWorks3": "License is bound to a specific domain",
+      "howItWorks4": "Purchase licenses at"
     }
   },
   "stripe": {

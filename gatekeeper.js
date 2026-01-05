@@ -25,7 +25,8 @@
 const CONSTANTS = {
     VERSION: '1.0.0',
     CACHE_TTL: 300000, // 5 minutes
-    LICENSE_CHECK_INTERVAL: 86400000, // 24 hours
+    // License expiry value for unlimited licenses
+    LICENSE_UNLIMITED: 'UNLIMITED',
     QUERY_TIMEOUT: 3000,
     MAX_RETRIES: 3,
     PROCESSING_DELAY: 100,
@@ -33,12 +34,12 @@ const CONSTANTS = {
     // Database errors
     DUPLICATE_KEY_ERROR: '23505',
     
-    // License endpoints
-    LICENSE_ENDPOINTS: [
-        'https://api.gateflow.pl/license/verify',
-        'https://license.gateflow.pl/v1/check',
-        'https://gateflow-licensing.vercel.app/api/verify'
-    ],
+    // License public key for offline verification (ECDSA P-256)
+    // Only the private key holder (GateFlow) can generate valid licenses
+    LICENSE_PUBLIC_KEY: `-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIENJbqxv7nmfxKjGCu98LTpekvLW
+bBv/FwWkjy1pnLiuFZDGNITxN6YC1L4628tXv1cPey6WcQqEC3jTWz2ZsQ==
+-----END PUBLIC KEY-----`,
     
     // Event names
     EVENTS: {
@@ -52,8 +53,8 @@ const CONSTANTS = {
         BATCH_CHECK: 'gateflow_batch_check',
         ERROR: 'gateflow_error',
         PERFORMANCE: 'gateflow_performance',
-        LICENSE_CHECK: 'gateflow_license_check',
-        LICENSE_VIOLATION: 'gateflow_license_violation'
+        LICENSE_VALID: 'gateflow_license_valid',
+        LICENSE_INVALID: 'gateflow_license_invalid'
     },
     
     // Fallback modes
@@ -65,38 +66,145 @@ const CONSTANTS = {
 };
 
 // ============================================================================
+// CRITICAL CSS INJECTION (CSS-first content hiding)
+// ============================================================================
+
+/**
+ * Inject critical CSS immediately to hide protected content before JS executes
+ * This prevents content flash and doesn't require data-original-content storage
+ */
+(function injectCriticalCSS() {
+    if (document.getElementById('gateflow-critical-css')) return;
+
+    const style = document.createElement('style');
+    style.id = 'gateflow-critical-css';
+    style.textContent = `
+        /* Hide protected content until processed */
+        [data-gatekeeper-product] {
+            visibility: hidden !important;
+            opacity: 0 !important;
+        }
+        [data-gatekeeper-product].gatekeeper-processed {
+            visibility: visible !important;
+            opacity: 1 !important;
+            transition: opacity 0.3s ease;
+        }
+        /* Hide has-access content by default (show only after check) */
+        [data-gatekeeper-product] [data-has-access] {
+            display: none !important;
+        }
+        /* Show no-access content by default */
+        [data-gatekeeper-product] [data-no-access] {
+            display: block !important;
+        }
+        /* After processing - flip visibility for users WITH access */
+        [data-gatekeeper-product].gatekeeper-has-access [data-has-access] {
+            display: block !important;
+        }
+        [data-gatekeeper-product].gatekeeper-has-access [data-no-access] {
+            display: none !important;
+        }
+        /* After processing - keep no-access visible for users WITHOUT access */
+        [data-gatekeeper-product].gatekeeper-no-access [data-has-access] {
+            display: none !important;
+        }
+        [data-gatekeeper-product].gatekeeper-no-access [data-no-access] {
+            display: block !important;
+        }
+    `;
+
+    // Insert at the very beginning of head for highest priority
+    const head = document.head || document.getElementsByTagName('head')[0];
+    if (head) {
+        head.insertBefore(style, head.firstChild);
+    }
+})();
+
+// ============================================================================
 // CORE CLASSES
 // ============================================================================
 
 /**
- * Advanced caching system with TTL and performance optimization
+ * Logger class for environment-aware error handling
+ * In development: logs to console
+ * In production: silent (graceful degradation)
+ */
+class Logger {
+    static isDev() {
+        const config = typeof GATEKEEPER_CONFIG !== 'undefined' ? GATEKEEPER_CONFIG : {};
+        return config.ENVIRONMENT === 'development' ||
+               window.location.hostname === 'localhost' ||
+               window.location.hostname === '127.0.0.1';
+    }
+
+    static error(context, error) {
+        if (this.isDev()) {
+            console.error(`[GateFlow] ${context}:`, error);
+        }
+        // Always track errors for analytics (even in production)
+        Analytics.track(CONSTANTS.EVENTS.ERROR, {
+            context,
+            error: error?.message || String(error)
+        });
+    }
+
+    static warn(message) {
+        if (this.isDev()) {
+            console.warn(`[GateFlow] ${message}`);
+        }
+    }
+
+    static info(message) {
+        if (this.isDev()) {
+            console.log(`[GateFlow] ${message}`);
+        }
+    }
+
+    static debug(message, data = null) {
+        if (this.isDev()) {
+            if (data) {
+                console.log(`[GateFlow] ${message}`, data);
+            } else {
+                console.log(`[GateFlow] ${message}`);
+            }
+        }
+    }
+}
+
+/**
+ * Advanced caching system with TTL and on-demand cleanup (no setInterval)
  */
 class CacheManager {
     constructor() {
         this.cache = new Map();
-        this.cleanupInterval = setInterval(() => this.cleanup(), 60000); // Cleanup every minute
+        this.lastCleanup = Date.now();
     }
-    
+
     generateKey(type, ...args) {
         return `${type}_${args.join('_')}`;
     }
-    
+
     get(key) {
+        // On-demand cleanup every 60 seconds
+        if (Date.now() - this.lastCleanup > 60000) {
+            this.cleanup();
+        }
+
         const cached = this.cache.get(key);
         if (!cached) return null;
-        
-        if (Date.now() - cached.timestamp > CONSTANTS.CACHE_TTL) {
+
+        if (Date.now() - cached.timestamp > cached.ttl) {
             this.cache.delete(key);
             return null;
         }
-        
-        Analytics.track(CONSTANTS.EVENTS.PERFORMANCE, { 
-            action: 'cache_hit', 
-            key: key.split('_')[0] 
+
+        Analytics.track(CONSTANTS.EVENTS.PERFORMANCE, {
+            action: 'cache_hit',
+            key: key.split('_')[0]
         });
         return cached.data;
     }
-    
+
     set(key, data, ttl = CONSTANTS.CACHE_TTL) {
         this.cache.set(key, {
             data,
@@ -104,15 +212,15 @@ class CacheManager {
             ttl
         });
     }
-    
+
     delete(key) {
         this.cache.delete(key);
     }
-    
+
     clear() {
         this.cache.clear();
     }
-    
+
     cleanup() {
         const now = Date.now();
         for (const [key, entry] of this.cache.entries()) {
@@ -120,10 +228,10 @@ class CacheManager {
                 this.cache.delete(key);
             }
         }
+        this.lastCleanup = now;
     }
-    
+
     destroy() {
-        clearInterval(this.cleanupInterval);
         this.clear();
     }
 }
@@ -208,142 +316,208 @@ class Analytics {
 }
 
 /**
- * Domain fingerprinting and license verification system
+ * License verification using ECDSA digital signatures
+ *
+ * License format: GF-{domain}-{expiry}-{base64_signature}
+ * - domain: hostname the license is valid for
+ * - expiry: YYYYMMDD or "UNLIMITED" for perpetual licenses
+ * - signature: ECDSA-SHA256 signature (base64url encoded)
+ *
+ * Only GateFlow (holder of private key) can generate valid licenses.
+ * Public key verification is completely offline - no server needed.
  */
 class LicenseManager {
     static status = { valid: false, domain: null, expires: null, showWatermark: true };
-    
-    static getDomainFingerprint() {
-        const { hostname, protocol, port } = window.location;
-        const fingerprint = `${protocol}//${hostname}${port ? ':' + port : ''}`;
-        
-        // Enhanced fingerprinting
-        const { userAgent, language } = navigator;
-        const platformInfo = navigator.userAgentData?.platform || this.getPlatformFromUA(userAgent);
-        
-        const combined = `${fingerprint}|${userAgent.slice(0, 50)}|${language}|${platformInfo}`;
-        
-        // Simple but effective hash
-        let hash = 0;
-        for (let i = 0; i < combined.length; i++) {
-            hash = ((hash << 5) - hash) + combined.charCodeAt(i);
-            hash = hash & hash; // Convert to 32-bit integer
-        }
-        
-        return Math.abs(hash).toString(16);
-    }
-    
-    static getPlatformFromUA(ua) {
-        const lower = ua.toLowerCase();
-        if (lower.includes('win')) return 'windows';
-        if (lower.includes('mac')) return 'macos';
-        if (lower.includes('linux')) return 'linux';
-        if (lower.includes('android')) return 'android';
-        if (lower.includes('iphone') || lower.includes('ipad')) return 'ios';
-        return 'unknown';
-    }
-    
-    static obfuscate(str) {
-        return btoa(str).split('').reverse().join('');
-    }
-    
-    static deobfuscate(str) {
-        return atob(str.split('').reverse().join(''));
-    }
-    
+
+    /**
+     * Verify license and update status
+     */
     static async checkLicense() {
         const config = window.gatekeeperConfig || {};
         const licenseKey = config.gateflowLicense;
-        
+
         if (!licenseKey) {
-            this.status = { valid: false, showWatermark: true };
+            this.status = { valid: false, showWatermark: true, reason: 'no_license' };
             return false;
         }
-        
-        // Check cache first
-        const cacheKey = cache.generateKey('license', this.getDomainFingerprint());
-        const cached = cache.get(cacheKey);
-        if (cached) {
-            this.status = cached;
-            return cached.valid;
-        }
-        
+
         try {
-            const result = await this.verifyWithEndpoints(licenseKey);
-            
+            const result = await this.verifyLicenseOffline(licenseKey);
+
             if (result.valid) {
                 this.status = {
                     valid: true,
-                    domain: window.location.hostname,
+                    domain: result.domain,
                     expires: result.expires,
-                    showWatermark: false,
-                    plan: result.plan || 'pro'
+                    showWatermark: false
                 };
-                
-                cache.set(cacheKey, this.status, CONSTANTS.LICENSE_CHECK_INTERVAL);
-                
-                Analytics.track(CONSTANTS.EVENTS.LICENSE_CHECK, {
-                    status: 'valid',
-                    domain: window.location.hostname,
-                    plan: result.plan
+
+                Analytics.track(CONSTANTS.EVENTS.LICENSE_VALID, {
+                    domain: result.domain,
+                    expires: result.expires
                 });
-                
+
                 return true;
             } else {
-                this.status = { valid: false, showWatermark: true, violation: 'invalid_license' };
-                Analytics.track(CONSTANTS.EVENTS.LICENSE_VIOLATION, {
+                this.status = {
+                    valid: false,
+                    showWatermark: true,
+                    reason: result.reason
+                };
+
+                Analytics.track(CONSTANTS.EVENTS.LICENSE_INVALID, {
                     domain: window.location.hostname,
-                    reason: 'invalid_license'
+                    reason: result.reason
                 });
+
                 return false;
             }
         } catch (error) {
-            this.status = { valid: false, showWatermark: true, violation: 'check_failed' };
+            this.status = { valid: false, showWatermark: true, reason: 'verification_error' };
             return false;
         }
     }
-    
-    static async verifyWithEndpoints(licenseKey) {
-        const domain = window.location.hostname;
-        const fingerprint = this.getDomainFingerprint();
-        
-        const payload = {
-            license: this.obfuscate(licenseKey),
-            domain: this.obfuscate(domain),
-            fingerprint,
-            timestamp: Date.now(),
-            version: CONSTANTS.VERSION
-        };
-        
-        for (const endpoint of CONSTANTS.LICENSE_ENDPOINTS) {
-            try {
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-GateFlow-Version': CONSTANTS.VERSION
-                    },
-                    body: JSON.stringify(payload)
-                });
-                
-                if (response.ok) {
-                    return await response.json();
-                }
-            } catch (error) {
-                // Silent error handling
+
+    /**
+     * Verify license offline using ECDSA public key
+     */
+    static async verifyLicenseOffline(licenseKey) {
+        // Parse license: GF-domain.com-20261231-base64signature
+        // or: GF-domain.com-UNLIMITED-base64signature
+        const parts = licenseKey.split('-');
+
+        if (parts.length < 4 || parts[0] !== 'GF') {
+            return { valid: false, reason: 'invalid_format' };
+        }
+
+        const domain = parts[1];
+        const expiry = parts[2];
+        // Signature is everything after third dash (base64 may contain dashes)
+        const signature = parts.slice(3).join('-');
+
+        // Check domain matches current hostname
+        const currentDomain = window.location.hostname;
+        if (domain !== currentDomain && domain !== `*.${currentDomain.split('.').slice(-2).join('.')}`) {
+            return { valid: false, reason: 'domain_mismatch' };
+        }
+
+        // Check expiry date (skip for UNLIMITED)
+        if (expiry !== CONSTANTS.LICENSE_UNLIMITED) {
+            const expiryDate = this.parseExpiryDate(expiry);
+            if (!expiryDate || expiryDate < new Date()) {
+                return { valid: false, reason: 'license_expired' };
             }
         }
-        
-        throw new Error('All license endpoints failed');
+
+        // Verify cryptographic signature
+        const dataToVerify = `${domain}-${expiry}`;
+        const isValidSignature = await this.verifySignature(dataToVerify, signature);
+
+        if (!isValidSignature) {
+            return { valid: false, reason: 'invalid_signature' };
+        }
+
+        return {
+            valid: true,
+            domain: domain,
+            expires: expiry === CONSTANTS.LICENSE_UNLIMITED ? null : this.parseExpiryDate(expiry)
+        };
     }
-    
+
+    /**
+     * Parse expiry date from YYYYMMDD format
+     */
+    static parseExpiryDate(expiry) {
+        if (!/^\d{8}$/.test(expiry)) return null;
+        const year = parseInt(expiry.slice(0, 4));
+        const month = parseInt(expiry.slice(4, 6)) - 1;
+        const day = parseInt(expiry.slice(6, 8));
+        return new Date(year, month, day, 23, 59, 59);
+    }
+
+    /**
+     * Verify ECDSA signature using public key
+     */
+    static async verifySignature(data, signatureBase64) {
+        try {
+            // Import public key
+            const publicKey = await crypto.subtle.importKey(
+                'spki',
+                this.pemToArrayBuffer(CONSTANTS.LICENSE_PUBLIC_KEY),
+                { name: 'ECDSA', namedCurve: 'P-256' },
+                false,
+                ['verify']
+            );
+
+            // Decode signature from base64url
+            const signature = this.base64urlToArrayBuffer(signatureBase64);
+
+            // Encode data to verify
+            const dataBuffer = new TextEncoder().encode(data);
+
+            // Verify signature
+            return await crypto.subtle.verify(
+                { name: 'ECDSA', hash: 'SHA-256' },
+                publicKey,
+                signature,
+                dataBuffer
+            );
+        } catch (error) {
+            console.error('[GateFlow] Signature verification error:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Convert PEM to ArrayBuffer
+     */
+    static pemToArrayBuffer(pem) {
+        const base64 = pem
+            .replace(/-----BEGIN PUBLIC KEY-----/, '')
+            .replace(/-----END PUBLIC KEY-----/, '')
+            .replace(/[\r\n\s]/g, '');
+        return this.base64ToArrayBuffer(base64);
+    }
+
+    /**
+     * Convert base64 to ArrayBuffer
+     */
+    static base64ToArrayBuffer(base64) {
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes.buffer;
+    }
+
+    /**
+     * Convert base64url to ArrayBuffer
+     */
+    static base64urlToArrayBuffer(base64url) {
+        // Convert base64url to base64
+        let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+        // Add padding if needed
+        while (base64.length % 4) base64 += '=';
+        return this.base64ToArrayBuffer(base64);
+    }
+
     static getStatus() {
         return this.status;
     }
-    
+
+    /**
+     * Create watermark badge for unlicensed installations
+     */
     static createWatermark() {
+        // Check server-side license validation first (set by generator)
+        if (typeof GATEKEEPER_CONFIG !== 'undefined' && GATEKEEPER_CONFIG.LICENSE_VALID === true) {
+            return;
+        }
+        // Fallback to client-side status (for backwards compatibility)
         if (this.status.valid) return;
-        
+        if (document.getElementById('gateflow-watermark')) return;
+
         const watermark = document.createElement('div');
         watermark.id = 'gateflow-watermark';
         watermark.innerHTML = `
@@ -363,10 +537,10 @@ class LicenseManager {
                 border: 1px solid rgba(255,255,255,0.2);
                 z-index: 999999;
                 cursor: pointer;
-                transition: all 0.3s ease;
+                transition: transform 0.3s ease;
                 user-select: none;
-            " onmouseover="this.style.transform='scale(1.05)'" 
-               onmouseout="this.style.transform='scale(1)'" 
+            " onmouseover="this.style.transform='scale(1.05)'"
+               onmouseout="this.style.transform='scale(1)'"
                onclick="window.open('https://gateflow.pl/pricing', '_blank')">
                 <span style="margin-right: 8px;">🔐</span>
                 Secured by <strong>GateFlow</strong> v${CONSTANTS.VERSION}
@@ -375,28 +549,7 @@ class LicenseManager {
                 </div>
             </div>
         `;
-        
         document.body.appendChild(watermark);
-        
-        // Anti-tampering protection
-        this.protectWatermark();
-    }
-    
-    static protectWatermark() {
-        const observer = new MutationObserver(() => {
-            if (!document.getElementById('gateflow-watermark') && !this.status.valid) {
-                this.createWatermark();
-            }
-        });
-        
-        observer.observe(document.body, { childList: true, subtree: true });
-        
-        // Periodic check
-        setInterval(() => {
-            if (!document.getElementById('gateflow-watermark') && !this.status.valid) {
-                this.createWatermark();
-            }
-        }, 5000);
     }
 }
 
@@ -453,7 +606,7 @@ class SessionManager {
                 this.accessGrantedTime = Date.now();
             }
         } catch (error) {
-            // Silent error handling
+            Logger.error('initializeCurrentSession', error);
         }
     }
     
@@ -496,55 +649,17 @@ class SessionManager {
                     });
                 }
             } catch (error) {
-                // Silent error handling
+                Logger.error('handleSessionFromUrl', error);
             }
         }
     }
-    
+
     static getCurrentUserId() {
         return this.currentUserId;
     }
     
     static getSessionDuration() {
         return this.sessionStartTime ? Date.now() - this.sessionStartTime : 0;
-    }
-    
-    static async getCurrentSession() {
-        try {
-            // Always use cross-domain session check
-            const mainDomain = window.GATEKEEPER_CONFIG?.MAIN_DOMAIN || 'localhost:3000';
-            return await this.getCrossDomainSession(mainDomain);
-        } catch (error) {
-            return null;
-        }
-    }
-    
-    static async getCrossDomainSession(mainDomain) {
-        try {
-            const protocol = window.location.protocol;
-            const sessionUrl = `${protocol}//${mainDomain}/api/session`;
-            
-            const response = await fetch(sessionUrl, {
-                method: 'GET',
-                credentials: 'include', // Important for cross-domain cookies
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest', // CSRF protection
-                    'X-GateFlow-Origin': window.location.origin, // Origin tracking
-                    'X-GateFlow-Version': CONSTANTS.VERSION // Version tracking
-                }
-            });
-            
-            if (!response.ok) {
-                return null;
-            }
-            
-            const data = await response.json();
-            return data.session || null;
-        } catch (error) {
-            return null;
-        }
     }
 }
 
@@ -554,7 +669,7 @@ class SessionManager {
 class AccessControl {
     static async batchCheckAccess(productSlugs, userId = null) {
         const results = {};
-        
+
         // Check cache first
         for (const slug of productSlugs) {
             const cacheKey = cache.generateKey('access', slug, 'current');
@@ -563,17 +678,18 @@ class AccessControl {
                 results[slug] = cached;
             }
         }
-        
+
         // Get uncached slugs
         const uncachedSlugs = productSlugs.filter(slug => !(slug in results));
-        
-        if (uncachedSlugs.length === 0) return results;
-        
+
+        if (uncachedSlugs.length === 0) {
+            return results;
+        }
+
         try {
             // Check if we're on a different domain than the main domain
             const mainDomain = window.GATEKEEPER_CONFIG?.MAIN_DOMAIN || 'localhost:3000';
-            const currentDomain = window.location.host;
-            
+
             // Always use cross-domain API for access checking
             const batchResults = await this.getCrossDomainBatchAccess(mainDomain, uncachedSlugs);
             
@@ -601,55 +717,62 @@ class AccessControl {
     
     static async getCrossDomainAccess(mainDomain, productSlug) {
         try {
-            const protocol = window.location.protocol;
+            let protocol = window.location.protocol;
+            if (protocol === 'file:') {
+                protocol = 'http:';
+            }
             const accessUrl = `${protocol}//${mainDomain}/api/access`;
-            
+
             const response = await fetch(accessUrl, {
                 method: 'POST',
-                credentials: 'include', // Important for cross-domain cookies
+                credentials: 'include',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-GateFlow-Origin': window.location.origin,
+                    'X-GateFlow-Version': CONSTANTS.VERSION
                 },
                 body: JSON.stringify({ productSlug })
             });
-            
-            if (!response.ok) {
-                return false;
-            }
-            
+
+            if (!response.ok) return false;
+
             const data = await response.json();
             return data.hasAccess || false;
         } catch (error) {
+            Logger.error('getCrossDomainAccess', error);
             return false;
         }
     }
     
     static async getCrossDomainBatchAccess(mainDomain, productSlugs) {
         try {
-            const protocol = window.location.protocol;
+            let protocol = window.location.protocol;
+            if (protocol === 'file:') {
+                protocol = 'http:';
+            }
             const accessUrl = `${protocol}//${mainDomain}/api/access`;
-            
+
             const response = await fetch(accessUrl, {
                 method: 'POST',
-                credentials: 'include', // Important for cross-domain cookies
+                credentials: 'include',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest', // CSRF protection
-                    'X-GateFlow-Origin': window.location.origin, // Origin tracking
-                    'X-GateFlow-Version': CONSTANTS.VERSION // Version tracking
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-GateFlow-Origin': window.location.origin,
+                    'X-GateFlow-Version': CONSTANTS.VERSION
                 },
-                body: JSON.stringify({ productSlugs }) // Send array of slugs
+                body: JSON.stringify({ productSlugs })
             });
-            
-            if (!response.ok) {
-                return {};
-            }
-            
+
+            if (!response.ok) return {};
+
             const data = await response.json();
             return data.accessResults || {};
         } catch (error) {
+            Logger.error('getCrossDomainBatchAccess', error);
             return {};
         }
     }
@@ -923,33 +1046,66 @@ class GateFlow {
     
     async initialize() {
         if (this.initialized) return;
-        
+
         try {
-            // Show loading state
-            document.body.innerHTML = UITemplates.getLoadingTemplate('Initializing GateFlow...');
-            
+            // Determine protection mode FIRST (before any DOM changes)
+            this.protectionMode = this.detectProtectionMode();
+
+            // Show loading overlay only for page protection (not element protection)
+            if (this.protectionMode === 'page') {
+                this.showLoadingOverlay();
+            }
+
             // Initialize components
             await this.initializeComponents();
-            
-            // Determine protection mode
-            this.protectionMode = this.detectProtectionMode();
-            
+
             // Apply protection based on mode
             await this.applyProtection();
-            
+
+            // Hide loading overlay if it was shown
+            this.hideLoadingOverlay();
+
             this.initialized = true;
-            
+
             // Mark as initialized globally
             window.GATEKEEPER_INITIALIZED = true;
-            
+
             Analytics.track(CONSTANTS.EVENTS.PERFORMANCE, {
                 action: 'initialization_complete',
                 mode: this.protectionMode,
                 duration: performance.now()
             });
-            
+
         } catch (error) {
+            this.hideLoadingOverlay();
             ErrorHandler.handleError(error, 'initialization');
+        }
+    }
+
+    showLoadingOverlay() {
+        if (document.getElementById('gateflow-loading-overlay')) return;
+
+        const overlay = document.createElement('div');
+        overlay.id = 'gateflow-loading-overlay';
+        overlay.innerHTML = UITemplates.getLoadingTemplate('Checking access...');
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 999998;
+            background: rgba(255,255,255,0.95);
+        `;
+        document.body.appendChild(overlay);
+    }
+
+    hideLoadingOverlay() {
+        const overlay = document.getElementById('gateflow-loading-overlay');
+        if (overlay) {
+            overlay.style.opacity = '0';
+            overlay.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => overlay.remove(), 300);
         }
     }
     
@@ -1018,20 +1174,13 @@ class GateFlow {
         const windowConfig = window.gatekeeperConfig || {};
         const config = { ...windowConfig, ...injectedConfig };
         
-        // Check for Supabase configuration in multiple possible locations
-        const supabaseUrl = config.SUPABASE_URL || 
-                           config.supabaseUrl || 
-                           process?.env?.NEXT_PUBLIC_SUPABASE_URL ||
-                           'https://your-project.supabase.co';
-        
-        const supabaseAnonKey = config.SUPABASE_ANON_KEY || 
-                               config.supabaseAnonKey || 
-                               process?.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-                               'your-anon-key';
-        
-        if (!supabaseUrl || !supabaseAnonKey || 
-            supabaseUrl === 'https://your-project.supabase.co' || 
-            supabaseAnonKey === 'your-anon-key') {
+        // Check for Supabase configuration (injected by generator)
+        const supabaseUrl = config.SUPABASE_URL || config.supabaseUrl;
+        const supabaseAnonKey = config.SUPABASE_ANON_KEY || config.supabaseAnonKey;
+
+        if (!supabaseUrl || !supabaseAnonKey) {
+            console.warn('[GateFlow] Missing Supabase configuration - using mock client');
+            // Create a mock client when config is missing
             // Create a mock client for development
             SessionManager.supabaseClient = {
                 auth: {
@@ -1049,16 +1198,16 @@ class GateFlow {
     
     detectProtectionMode() {
         const params = new URLSearchParams(window.location.search);
-        
+
         // Check for productSlug parameter in script URL or configuration
         const currentScript = document.currentScript;
         let scriptProductSlug = null;
-        
+
         // First check GATEKEEPER_CONFIG for productSlug
         if (window.GATEKEEPER_CONFIG && window.GATEKEEPER_CONFIG.PRODUCT_SLUG) {
             scriptProductSlug = window.GATEKEEPER_CONFIG.PRODUCT_SLUG;
         }
-        
+
         // Then check script URL parameters
         if (!scriptProductSlug && currentScript) {
             try {
@@ -1068,20 +1217,10 @@ class GateFlow {
                 // If URL parsing fails, continue without script parameter
             }
         }
-        
-        // Check original content if available, otherwise current DOM
-        const originalContent = document.body.getAttribute('data-original-content');
-        let searchContent = document.body;
-        
-        if (originalContent) {
-            // Create temporary container to search in original content
-            const tempContainer = document.createElement('div');
-            tempContainer.innerHTML = originalContent;
-            searchContent = tempContainer;
-        }
-        
-        const protectedElements = searchContent.querySelectorAll('[data-gatekeeper-product]');
-        
+
+        // Check DOM for protected elements (CSS already hides them)
+        const protectedElements = document.querySelectorAll('[data-gatekeeper-product]');
+
         // Always use element protection if protected elements exist
         if (protectedElements.length > 0) {
             // Store product slug for page-level redirect check
@@ -1090,10 +1229,10 @@ class GateFlow {
             } else if (params.has('product')) {
                 this.fullPageProductSlug = params.get('product');
             }
-            
+
             return 'element';
         }
-        
+
         // Only use page protection if no elements but have productSlug
         if (scriptProductSlug) {
             this.fullPageProductSlug = scriptProductSlug;
@@ -1101,23 +1240,11 @@ class GateFlow {
         } else if (params.has('product')) {
             return 'page';
         }
-        
+
         return 'none';
     }
     
     async applyProtection() {
-        // Check for multiple protection modes
-        const originalContent = document.body.getAttribute('data-original-content');
-        let searchContent = document.body;
-        
-        if (originalContent) {
-            const tempContainer = document.createElement('div');
-            tempContainer.innerHTML = originalContent;
-            searchContent = tempContainer;
-        }
-        
-        const protectedElements = searchContent.querySelectorAll('[data-gatekeeper-product]');
-        
         switch (this.protectionMode) {
             case 'page':
                 await this.protectPage();
@@ -1135,8 +1262,7 @@ class GateFlow {
                 await this.protectElements();
                 break;
             default:
-                // No protection needed, restore original content
-                this.restoreOriginalContent();
+                // No protection needed - CSS will handle visibility
                 break;
         }
     }
@@ -1154,105 +1280,78 @@ class GateFlow {
             ErrorHandler.handleError(new Error('No product slug provided'), 'page_protection');
             return;
         }
-        
-        // Check if user has current session
-        const session = await SessionManager.getCurrentSession();
-        
-        if (session?.user) {
-            // Check access using batch method
-            const accessResults = await AccessControl.batchCheckAccess([productSlug], session.user.id);
-            const hasAccess = accessResults[productSlug] || false;
-            
-            if (hasAccess) {
-                this.restoreOriginalContent();
-                // Show page content
-                document.body.style.visibility = 'visible';
-                document.body.classList.add('gatekeeper-ready');
-                
-                Analytics.track(CONSTANTS.EVENTS.ACCESS_GRANTED, {
-                    product_slug: productSlug,
-                    user_id: session.user.id
-                });
-                return;
-            }
+
+        // Check access directly - server determines user from cookies
+        const accessResults = await AccessControl.batchCheckAccess([productSlug]);
+        const hasAccess = accessResults[productSlug] || false;
+
+        if (hasAccess) {
+            // User has access - show page content
+            document.body.style.visibility = 'visible';
+            document.body.classList.add('gatekeeper-ready');
+
+            Analytics.track(CONSTANTS.EVENTS.ACCESS_GRANTED, {
+                product_slug: productSlug
+            });
+            return;
         }
-        
+
         Analytics.track(CONSTANTS.EVENTS.ACCESS_DENIED, {
             product_slug: productSlug,
-            user_id: session?.user?.id || 'anonymous',
             redirect_to: `/p/${productSlug}`
         });
         
         // Build redirect URL with return_url parameter
         const returnUrl = encodeURIComponent(window.location.href);
         const mainDomain = window.GATEKEEPER_CONFIG?.MAIN_DOMAIN || 'localhost:3000';
-        const protocol = window.location.protocol;
-        
+        // Use http/https, never file://
+        let protocol = window.location.protocol;
+        if (protocol === 'file:') {
+            protocol = 'http:';
+        }
+
         // Always redirect to main domain for authentication
         window.location.href = `${protocol}//${mainDomain}/p/${productSlug}?return_url=${returnUrl}`;
     }
-    
+
     async protectElements() {
-        // First restore original content to work with
-        this.restoreOriginalContent();
-        
         const protectedElements = document.querySelectorAll('[data-gatekeeper-product]');
-        
+
         if (protectedElements.length === 0) {
             return;
         }
-        
+
         // Get unique product slugs
         const productSlugs = [...new Set(
             Array.from(protectedElements).map(el => el.dataset.gatekeeperProduct)
         )];
-        
-        // Get current user
-        const session = await SessionManager.getCurrentSession();
-        const userId = session?.user?.id || null;
-        
-        // Batch check access
-        const accessResults = await AccessControl.batchCheckAccess(productSlugs, userId);
-        
-        // Process each element
+
+        // Check access directly - server determines user from cookies
+        const accessResults = await AccessControl.batchCheckAccess(productSlugs);
+
+        // Log summary: "Elements: product-a ✓, product-b ✗"
+        const summary = productSlugs
+            .map(slug => `${slug} ${accessResults[slug] ? '✓' : '✗'}`)
+            .join(', ');
+        Logger.info(`Elements: ${summary}`);
+
+        // Process each element - CSS hides initially, then we remove wrong content from DOM
         protectedElements.forEach(element => {
             const productSlug = element.dataset.gatekeeperProduct;
             const hasAccess = accessResults[productSlug] || false;
-            
+
             if (hasAccess) {
-                // User has access - remove any data-no-access elements inside
-                element.querySelectorAll('[data-no-access]').forEach(noAccessEl => {
-                    noAccessEl.remove();
-                });
-                
-                // Remove the data-gatekeeper-product attribute but keep the element
-                element.removeAttribute('data-gatekeeper-product');
-                
+                // User has access - remove no-access content from DOM entirely
+                element.querySelectorAll('[data-no-access]').forEach(el => el.remove());
+                element.classList.add('gatekeeper-has-access', 'gatekeeper-processed');
                 Analytics.track(CONSTANTS.EVENTS.ELEMENT_ACCESSED, {
                     product_slug: productSlug,
                     element_tag: element.tagName.toLowerCase()
                 });
             } else {
-                // User doesn't have access - keep only data-no-access elements
-                const noAccessElements = element.querySelectorAll('[data-no-access]');
-                const elementContent = element.innerHTML;
-                
-                if (noAccessElements.length > 0) {
-                    // Keep only the no-access elements
-                    element.innerHTML = '';
-                    noAccessElements.forEach(noAccessEl => {
-                        // Remove the data-no-access attribute and add content to main element
-                        noAccessEl.removeAttribute('data-no-access');
-                        element.appendChild(noAccessEl);
-                    });
-                } else {
-                    // No data-no-access elements found - remove the entire element
-                    element.remove();
-                }
-                
-                // Remove the data-gatekeeper-product attribute
-                element.removeAttribute('data-gatekeeper-product');
-                
+                // User doesn't have access - remove has-access content from DOM entirely
+                element.querySelectorAll('[data-has-access]').forEach(el => el.remove());
+                element.classList.add('gatekeeper-no-access', 'gatekeeper-processed');
                 Analytics.track(CONSTANTS.EVENTS.ELEMENT_PROTECTED, {
                     product_slug: productSlug,
                     element_tag: element.tagName.toLowerCase()
@@ -1265,28 +1364,24 @@ class GateFlow {
         if (!this.fullPageProductSlug) {
             return true; // No page-level product specified
         }
-        
-        // Check if user has current session
-        const session = await SessionManager.getCurrentSession();
-        
-        if (session?.user) {
-            // Check access using batch method
-            const accessResults = await AccessControl.batchCheckAccess([this.fullPageProductSlug], session.user.id);
-            const hasAccess = accessResults[this.fullPageProductSlug] || false;
-            
-            if (hasAccess) {
-                Analytics.track(CONSTANTS.EVENTS.ACCESS_GRANTED, {
-                    product_slug: this.fullPageProductSlug,
-                    user_id: session.user.id,
-                    context: 'page_access_check'
-                });
-                return true; // ✅ User has access to page-level product
-            }
+
+        // Check access directly - server determines user from cookies
+        const accessResults = await AccessControl.batchCheckAccess([this.fullPageProductSlug]);
+        const hasAccess = accessResults[this.fullPageProductSlug] || false;
+
+        // Log page access result
+        Logger.info(`Page: ${this.fullPageProductSlug} ${hasAccess ? '✓' : '✗'}`);
+
+        if (hasAccess) {
+            Analytics.track(CONSTANTS.EVENTS.ACCESS_GRANTED, {
+                product_slug: this.fullPageProductSlug,
+                context: 'page_access_check'
+            });
+            return true;
         }
-        
+
         Analytics.track(CONSTANTS.EVENTS.ACCESS_DENIED, {
             product_slug: this.fullPageProductSlug,
-            user_id: session?.user?.id || 'anonymous',
             redirect_to: `/p/${this.fullPageProductSlug}`,
             context: 'page_access_check'
         });
@@ -1294,28 +1389,18 @@ class GateFlow {
         // Build redirect URL with return_url parameter
         const returnUrl = encodeURIComponent(window.location.href);
         const mainDomain = window.GATEKEEPER_CONFIG?.MAIN_DOMAIN || 'localhost:3000';
-        const protocol = window.location.protocol;
-        
+        // Use http/https, never file://
+        let protocol = window.location.protocol;
+        if (protocol === 'file:') {
+            protocol = 'http:';
+        }
+
         // Always redirect to main domain for authentication
         window.location.href = `${protocol}//${mainDomain}/p/${this.fullPageProductSlug}?return_url=${returnUrl}`;
-        
+
         return false;
     }
-    
-    restoreOriginalContent() {
-        // Remove any loading states and show original content
-        const originalContent = document.body.getAttribute('data-original-content');
-        if (originalContent) {
-            document.body.innerHTML = originalContent;
-            document.body.removeAttribute('data-original-content');
-        }
-        
-        // Also remove any loading classes or styles
-        document.body.classList.remove('gateflow-loading');
-        document.body.style.overflow = '';
-        
-    }
-    
+
     // Public API methods
     static async checkProductAccess(productSlug) {
         const results = await AccessControl.batchCheckAccess([productSlug]);
@@ -1357,31 +1442,22 @@ class GateFlow {
 const cache = new CacheManager();
 const gateflow = new GateFlow();
 
-// Store original content before any modifications
-if (document.body && !document.body.getAttribute('data-original-content')) {
-    document.body.setAttribute('data-original-content', document.body.innerHTML);
-}
-
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         gateflow.initialize().catch(error => {
-            // Fallback to showing original content
-            const originalContent = document.body.getAttribute('data-original-content');
-            if (originalContent) {
-                document.body.innerHTML = originalContent;
-                document.body.removeAttribute('data-original-content');
-            }
+            // Fallback: show all protected elements with no-access state
+            document.querySelectorAll('[data-gatekeeper-product]').forEach(el => {
+                el.classList.add('gatekeeper-no-access', 'gatekeeper-processed');
+            });
         });
     });
 } else {
     gateflow.initialize().catch(error => {
-        // Fallback to showing original content
-        const originalContent = document.body.getAttribute('data-original-content');
-        if (originalContent) {
-            document.body.innerHTML = originalContent;
-            document.body.removeAttribute('data-original-content');
-        }
+        // Fallback: show all protected elements with no-access state
+        document.querySelectorAll('[data-gatekeeper-product]').forEach(el => {
+            el.classList.add('gatekeeper-no-access', 'gatekeeper-processed');
+        });
     });
 }
 

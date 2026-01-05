@@ -1671,6 +1671,27 @@
       "saveButton": "Zapisz dokumenty",
       "saveSuccess": "Konfiguracja dokumentów prawnych zapisana pomyślnie",
       "saveError": "Nie udało się zapisać konfiguracji dokumentów prawnych"
+    },
+    "license": {
+      "title": "Licencja GateFlow",
+      "subtitle": "Usuń watermark ze skryptu GateKeeper",
+      "licenseKey": "Klucz licencji",
+      "formatHint": "Format: GF-domena-wygaśnięcie-podpis (np. GF-example.com-20271231-MEUCIQDx... lub GF-example.com-UNLIMITED-MEUCIQDx...)",
+      "licenseDetails": "Szczegóły licencji",
+      "domain": "Domena",
+      "expires": "Wygasa",
+      "signature": "Podpis",
+      "never": "Nigdy (Nieograniczona)",
+      "invalidFormat": "Nieprawidłowy format licencji",
+      "saving": "Zapisywanie...",
+      "saveLicense": "Zapisz licencję",
+      "saveSuccess": "Licencja zapisana pomyślnie",
+      "saveError": "Nie udało się zapisać licencji",
+      "howItWorks": "Jak działa licencjonowanie",
+      "howItWorks1": "Klucz licencji jest kryptograficznie podpisany i weryfikowany offline",
+      "howItWorks2": "Ważna licencja usuwa watermark \"Secured by GateFlow\"",
+      "howItWorks3": "Licencja jest przypisana do konkretnej domeny",
+      "howItWorks4": "Kup licencję na"
     }
   },
   "stripe": {

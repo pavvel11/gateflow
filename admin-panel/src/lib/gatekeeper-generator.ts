@@ -12,6 +12,7 @@ interface GatekeeperConfig {
   environment: string;
   mainDomain: string;
   productSlug?: string;
+  licenseValid?: boolean;
   features?: {
     analytics?: boolean;
     watermark?: boolean;
@@ -76,21 +77,15 @@ export class GatekeeperGenerator {
   private static async buildScript(config: GatekeeperConfig): Promise<string> {
     const configSection = this.generateConfigSection(config);
     const coreScript = await this.getCoreScript();
-    
-    // Use template replacement with proper placeholders
+
+    // Simple template - no wrapper block needed (gatekeeper.js handles its own initialization)
     let template = `${this.generateHeader(config)}
 
 ${configSection}
 
-// Prevent multiple initialization
-if (window.GATEKEEPER_INITIALIZED) {
-  console.warn('GateKeeper already initialized, skipping...');
-} else {
-  window.GATEKEEPER_INITIALIZED = true;
-
 ${coreScript}
 
-${this.generateInitialization()}`;
+${this.generateFooter(config)}`;
 
     // Replace any remaining placeholders with actual values
     template = template.replace(/\{\{GATEKEEPER_CONFIG\}\}/g, 'GATEKEEPER_CONFIG');
@@ -111,6 +106,7 @@ ${this.generateInitialization()}`;
       ENVIRONMENT: this.escapeJSString(config.environment),
       MAIN_DOMAIN: this.escapeJSString(config.mainDomain),
       PRODUCT_SLUG: config.productSlug ? this.escapeJSString(config.productSlug) : null,
+      LICENSE_VALID: config.licenseValid === true,
       FEATURES: config.features || {}
     };
 
@@ -126,6 +122,7 @@ const GATEKEEPER_CONFIG = Object.freeze({
   ENVIRONMENT: '${safeConfig.ENVIRONMENT}',
   MAIN_DOMAIN: '${safeConfig.MAIN_DOMAIN}',
   PRODUCT_SLUG: ${safeConfig.PRODUCT_SLUG ? `'${safeConfig.PRODUCT_SLUG}'` : 'null'},
+  LICENSE_VALID: ${safeConfig.LICENSE_VALID},
   FEATURES: ${JSON.stringify(safeConfig.FEATURES, null, 2)},
   BUILD_TIME: '${new Date().toISOString()}',
   BUILD_HASH: '${this.generateBuildHash(config)}'
@@ -213,18 +210,15 @@ window.gatekeeper = {
   }
 
   /**
-   * Generate initialization code
+   * Generate footer code (no wrapper block needed)
    */
-  private static generateInitialization(): string {
+  private static generateFooter(config: GatekeeperConfig): string {
     return `
-} // End of initialization guard
-
-// Make config available globally for testing and debugging
+// Make config available globally for debugging
 if (typeof GATEKEEPER_CONFIG !== 'undefined') {
   window.GATEKEEPER_CONFIG = GATEKEEPER_CONFIG;
-  // Only show full config in development
   if (GATEKEEPER_CONFIG.ENVIRONMENT === 'development') {
-    console.log('📊 Config:', GATEKEEPER_CONFIG);
+    console.log('[GateFlow] Config loaded:', GATEKEEPER_CONFIG.GATEFLOW_VERSION);
   }
 }
 `;
@@ -247,7 +241,7 @@ if (typeof GATEKEEPER_CONFIG !== 'undefined') {
    * Generate cache key for configuration
    */
   private static getCacheKey(config: GatekeeperConfig): string {
-    const key = `${config.supabaseUrl}_${config.environment}_${config.version}_${config.productSlug || 'default'}_${JSON.stringify(config.features)}`;
+    const key = `${config.supabaseUrl}_${config.environment}_${config.version}_${config.productSlug || 'default'}_${config.licenseValid || false}_${JSON.stringify(config.features)}`;
     return this.generateHash(key);
   }
 

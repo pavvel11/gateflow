@@ -208,6 +208,9 @@ CREATE TABLE IF NOT EXISTS public.integrations_config (
   cookie_consent_enabled BOOLEAN DEFAULT true,
   consent_logging_enabled BOOLEAN DEFAULT false,
 
+  -- GateFlow License (removes watermark from GateKeeper script)
+  gateflow_license TEXT,
+
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
