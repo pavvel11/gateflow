@@ -122,9 +122,16 @@ const VariantLinkModal: React.FC<VariantLinkModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+      {/* Backdrop */}
       <div
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      {/* Modal */}
+      <div
+        className="relative bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
