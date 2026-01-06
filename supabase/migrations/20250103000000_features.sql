@@ -1592,14 +1592,16 @@ COMMENT ON TABLE public.shop_config IS 'Global shop configuration settings (sing
 -- PRODUCT VARIANTS FUNCTIONS
 -- =============================================================================
 
--- Get all active variants in a group (for variant selector page)
+-- Get all active variants in a group by UUID (for variant selector page)
+-- Uses M:N relationship via product_variant_groups junction table
 CREATE OR REPLACE FUNCTION public.get_variant_group(p_group_id UUID)
 RETURNS TABLE (
   id UUID,
   name TEXT,
   slug TEXT,
   variant_name VARCHAR(100),
-  variant_order INTEGER,
+  display_order INTEGER,
+  is_featured BOOLEAN,
   price NUMERIC,
   currency TEXT,
   description TEXT,
@@ -1615,21 +1617,66 @@ AS $$
     p.id,
     p.name,
     p.slug,
-    p.variant_name,
-    p.variant_order,
+    pvg.variant_name,
+    pvg.display_order,
+    pvg.is_featured,
     p.price,
     p.currency,
     p.description,
     p.image_url,
     p.is_active
   FROM products p
-  WHERE p.variant_group_id = p_group_id
+  INNER JOIN product_variant_groups pvg ON pvg.product_id = p.id
+  WHERE pvg.group_id = p_group_id
     AND p.is_active = true
-  ORDER BY p.variant_order ASC, p.price ASC;
+  ORDER BY pvg.display_order ASC, p.price ASC;
 $$;
 
-COMMENT ON FUNCTION public.get_variant_group IS 'Get all active variants in a group for variant selector page';
+COMMENT ON FUNCTION public.get_variant_group(UUID) IS 'Get all active variants in a group by UUID (M:N schema)';
 GRANT EXECUTE ON FUNCTION public.get_variant_group(UUID) TO anon, authenticated, service_role;
+
+-- Get all active variants in a group by slug (for variant selector page)
+CREATE OR REPLACE FUNCTION public.get_variant_group_by_slug(p_slug TEXT)
+RETURNS TABLE (
+  id UUID,
+  name TEXT,
+  slug TEXT,
+  variant_name VARCHAR(100),
+  display_order INTEGER,
+  is_featured BOOLEAN,
+  price NUMERIC,
+  currency TEXT,
+  description TEXT,
+  image_url TEXT,
+  is_active BOOLEAN
+)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT
+    p.id,
+    p.name,
+    p.slug,
+    pvg.variant_name,
+    pvg.display_order,
+    pvg.is_featured,
+    p.price,
+    p.currency,
+    p.description,
+    p.image_url,
+    p.is_active
+  FROM products p
+  INNER JOIN product_variant_groups pvg ON pvg.product_id = p.id
+  INNER JOIN variant_groups vg ON vg.id = pvg.group_id
+  WHERE vg.slug = p_slug
+    AND p.is_active = true
+  ORDER BY pvg.display_order ASC, p.price ASC;
+$$;
+
+COMMENT ON FUNCTION public.get_variant_group_by_slug(TEXT) IS 'Get all active variants in a group by slug (M:N schema)';
+GRANT EXECUTE ON FUNCTION public.get_variant_group_by_slug(TEXT) TO anon, authenticated, service_role;
 
 COMMENT ON COLUMN public.order_bumps.bump_price IS 'Special discounted price for bump (NULL = use product default price)';
 COMMENT ON COLUMN public.stripe_configurations.encrypted_key IS 'AES-256-GCM encrypted Stripe API key (base64 encoded)';

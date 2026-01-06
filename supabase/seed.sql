@@ -1,6 +1,9 @@
 -- Seed data for GateFlow Admin Panel
 -- Sample products for testing different GateFlow protection modes
 
+-- Enable pgcrypto extension for password hashing
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- Insert shop configuration (singleton)
 INSERT INTO shop_config (
   default_currency,

@@ -52,7 +52,6 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
   onSort,
 }) => {
   const t = useTranslations('admin.products');
-  const tVariants = useTranslations('admin.variants');
   const locale = useLocale();
   const { addToast } = useToast();
   const startIndex = (currentPage - 1) * limit + 1;
@@ -143,33 +142,6 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                                 title={t('featuredProduct')}
                               >
                                 ⭐
-                              </span>
-                            )}
-                            {product.variant_group_id && (
-                              <span className="inline-flex items-center gap-0.5 flex-shrink-0">
-                                <a
-                                  href={`/${locale}/v/${product.variant_group_id}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="inline-flex items-center px-1.5 py-0.5 rounded-l text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
-                                  title={tVariants('variantGroup')}
-                                >
-                                  🔗
-                                </a>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const url = `${window.location.origin}/${locale}/v/${product.variant_group_id}`;
-                                    navigator.clipboard.writeText(url);
-                                  }}
-                                  className="inline-flex items-center px-1 py-0.5 rounded-r text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors border-l border-purple-200 dark:border-purple-700"
-                                  title={tVariants('copyVariantLink')}
-                                >
-                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                                  </svg>
-                                </button>
                               </span>
                             )}
                           </div>

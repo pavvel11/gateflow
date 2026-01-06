@@ -16,7 +16,6 @@ interface FilterBarProps {
   onAddProduct: () => void;
   onExport: () => void;
   onRefresh: () => void;
-  onLinkVariants: () => void;
   addButtonRef: React.RefObject<HTMLButtonElement | null>;
 }
 
@@ -28,11 +27,9 @@ const FilterBar: React.FC<FilterBarProps> = ({
   onAddProduct,
   onExport,
   onRefresh,
-  onLinkVariants,
   addButtonRef,
 }) => {
   const t = useTranslations('admin.products');
-  const tVariants = useTranslations('admin.variants');
   
   const statusOptions: FilterOption[] = [
     { label: t('all'), value: 'all' },
@@ -81,18 +78,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
       </div>
 
       <div className="flex items-center space-x-3">
-        {/* Link Variants Button */}
-        <button
-          onClick={onLinkVariants}
-          className="inline-flex items-center px-4 py-2 border border-purple-300 dark:border-purple-600 rounded-lg text-sm font-medium text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200 shadow-sm hover:shadow-md"
-          title={tVariants('linkVariants')}
-        >
-          <svg className="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-          </svg>
-          <span className="hidden sm:inline">{tVariants('linkVariants')}</span>
-        </button>
-
         {/* Refresh Button */}
         <button
           onClick={onRefresh}

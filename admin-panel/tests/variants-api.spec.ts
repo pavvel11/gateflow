@@ -15,11 +15,12 @@ if (!SUPABASE_URL || !SERVICE_ROLE_KEY || !ANON_KEY) {
 
 const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-test.describe('Product Variants API', () => {
+test.describe('Product Variants API (M:N Schema)', () => {
   let adminUserId: string;
   let adminEmail: string;
   const adminPassword = 'TestPassword123!';
   let testProducts: any[] = [];
+  let createdGroupId: string;
 
   // Helper to login as admin
   const loginAsAdmin = async (page: Page) => {
@@ -83,12 +84,20 @@ test.describe('Product Variants API', () => {
   });
 
   test.afterAll(async () => {
-    // Cleanup test products
+    // Cleanup test products (cascade will delete product_variant_groups entries)
     for (const product of testProducts) {
       await supabaseAdmin
         .from('products')
         .delete()
         .eq('id', product.id);
+    }
+
+    // Cleanup created variant groups
+    if (createdGroupId) {
+      await supabaseAdmin
+        .from('variant_groups')
+        .delete()
+        .eq('id', createdGroupId);
     }
 
     // Cleanup admin user
@@ -98,11 +107,14 @@ test.describe('Product Variants API', () => {
     }
   });
 
-  test.describe('POST /api/admin/products/variants - Link Variants', () => {
+  test.describe('POST /api/admin/variant-groups - Create Variant Group', () => {
     test('should fail without authentication', async ({ request }) => {
-      const response = await request.post('/api/admin/products/variants', {
+      const response = await request.post('/api/admin/variant-groups', {
         data: {
-          productIds: [testProducts[0].id, testProducts[1].id]
+          products: [
+            { product_id: testProducts[0].id },
+            { product_id: testProducts[1].id }
+          ]
         }
       });
 
@@ -112,9 +124,9 @@ test.describe('Product Variants API', () => {
     test('should fail with less than 2 products', async ({ page }) => {
       await loginAsAdmin(page);
 
-      const response = await page.request.post('/api/admin/products/variants', {
+      const response = await page.request.post('/api/admin/variant-groups', {
         data: {
-          productIds: [testProducts[0].id]
+          products: [{ product_id: testProducts[0].id }]
         }
       });
 
@@ -123,318 +135,326 @@ test.describe('Product Variants API', () => {
       expect(json.error).toContain('At least 2 products');
     });
 
-    test('should fail with empty productIds array', async ({ page }) => {
+    test('should fail with empty products array', async ({ page }) => {
       await loginAsAdmin(page);
 
-      const response = await page.request.post('/api/admin/products/variants', {
+      const response = await page.request.post('/api/admin/variant-groups', {
         data: {
-          productIds: []
+          products: []
         }
       });
 
       expect(response.status()).toBe(400);
     });
 
-    test('should successfully link 2 products as variants', async ({ page }) => {
+    test('should successfully create variant group with 2 products', async ({ page }) => {
       await loginAsAdmin(page);
 
-      const response = await page.request.post('/api/admin/products/variants', {
+      const response = await page.request.post('/api/admin/variant-groups', {
         data: {
-          productIds: [testProducts[0].id, testProducts[1].id],
-          variantNames: {
-            [testProducts[0].id]: 'Basic Plan',
-            [testProducts[1].id]: 'Pro Plan'
-          }
+          name: 'Test Subscription Plans',
+          products: [
+            { product_id: testProducts[0].id, variant_name: 'Basic Plan', is_featured: true },
+            { product_id: testProducts[1].id, variant_name: 'Pro Plan' }
+          ]
         }
       });
 
       expect(response.status()).toBe(200);
       const json = await response.json();
       expect(json.success).toBe(true);
-      expect(json.variantGroupId).toBeDefined();
-      expect(json.message).toContain('2 products linked');
+      expect(json.groupId).toBeDefined();
+      expect(json.message).toContain('2 products');
 
-      // Verify in database
-      const { data: products } = await supabaseAdmin
-        .from('products')
-        .select('id, variant_group_id, variant_name, variant_order')
-        .in('id', [testProducts[0].id, testProducts[1].id]);
+      createdGroupId = json.groupId;
 
-      expect(products).toHaveLength(2);
-      expect(products![0].variant_group_id).toBe(json.variantGroupId);
-      expect(products![1].variant_group_id).toBe(json.variantGroupId);
+      // Verify in database - check variant_groups table
+      const { data: group } = await supabaseAdmin
+        .from('variant_groups')
+        .select('id, name')
+        .eq('id', json.groupId)
+        .single();
+
+      expect(group).not.toBeNull();
+      expect(group!.name).toBe('Test Subscription Plans');
+
+      // Verify product_variant_groups junction table
+      const { data: pvgs } = await supabaseAdmin
+        .from('product_variant_groups')
+        .select('product_id, variant_name, display_order, is_featured')
+        .eq('group_id', json.groupId)
+        .order('display_order');
+
+      expect(pvgs).toHaveLength(2);
+      expect(pvgs![0].variant_name).toBe('Basic Plan');
+      expect(pvgs![0].is_featured).toBe(true);
+      expect(pvgs![0].display_order).toBe(0);
+      expect(pvgs![1].variant_name).toBe('Pro Plan');
+      expect(pvgs![1].display_order).toBe(1);
     });
 
-    test('should set variant_order correctly', async ({ page }) => {
+    test('should set display_order correctly', async ({ page }) => {
       await loginAsAdmin(page);
 
-      // First unlink products 2 and 3
-      await supabaseAdmin
-        .from('products')
-        .update({ variant_group_id: null, variant_name: null, variant_order: 0 })
-        .in('id', [testProducts[2].id, testProducts[3].id]);
-
-      const response = await page.request.post('/api/admin/products/variants', {
+      const response = await page.request.post('/api/admin/variant-groups', {
         data: {
-          productIds: [testProducts[2].id, testProducts[3].id]
+          products: [
+            { product_id: testProducts[2].id, variant_name: 'First' },
+            { product_id: testProducts[3].id, variant_name: 'Second' }
+          ]
         }
       });
 
       expect(response.status()).toBe(200);
       const json = await response.json();
 
-      // Verify variant_order
-      const { data: products } = await supabaseAdmin
-        .from('products')
-        .select('id, variant_order')
-        .eq('variant_group_id', json.variantGroupId)
-        .order('variant_order');
+      // Verify display_order
+      const { data: pvgs } = await supabaseAdmin
+        .from('product_variant_groups')
+        .select('display_order, variant_name')
+        .eq('group_id', json.groupId)
+        .order('display_order');
 
-      expect(products![0].variant_order).toBe(0);
-      expect(products![1].variant_order).toBe(1);
+      expect(pvgs![0].display_order).toBe(0);
+      expect(pvgs![0].variant_name).toBe('First');
+      expect(pvgs![1].display_order).toBe(1);
+      expect(pvgs![1].variant_name).toBe('Second');
+
+      // Cleanup this group
+      await supabaseAdmin
+        .from('variant_groups')
+        .delete()
+        .eq('id', json.groupId);
     });
 
-    test('should link 3+ products as variants', async ({ page }) => {
+    test('should allow same product in multiple groups (M:N)', async ({ page }) => {
       await loginAsAdmin(page);
 
-      // First unlink existing variants
-      for (const product of testProducts) {
-        await supabaseAdmin
-          .from('products')
-          .update({ variant_group_id: null, variant_name: null, variant_order: 0 })
-          .eq('id', product.id);
-      }
-
-      const response = await page.request.post('/api/admin/products/variants', {
+      // Create first group
+      const response1 = await page.request.post('/api/admin/variant-groups', {
         data: {
-          productIds: [testProducts[0].id, testProducts[1].id, testProducts[2].id],
-          variantNames: {
-            [testProducts[0].id]: 'Starter',
-            [testProducts[1].id]: 'Professional',
-            [testProducts[2].id]: 'Enterprise'
-          }
+          name: 'Group A',
+          products: [
+            { product_id: testProducts[2].id, variant_name: 'In Group A' },
+            { product_id: testProducts[3].id, variant_name: 'Also in A' }
+          ]
         }
       });
 
-      expect(response.status()).toBe(200);
-      const json = await response.json();
-      expect(json.message).toContain('3 products linked');
+      expect(response1.status()).toBe(200);
+      const json1 = await response1.json();
 
-      // Verify all 3 have the same group ID
-      const { data: products } = await supabaseAdmin
-        .from('products')
-        .select('variant_group_id, variant_name')
-        .eq('variant_group_id', json.variantGroupId);
+      // Create second group with overlapping product
+      const response2 = await page.request.post('/api/admin/variant-groups', {
+        data: {
+          name: 'Group B',
+          products: [
+            { product_id: testProducts[2].id, variant_name: 'In Group B' },
+            { product_id: testProducts[0].id, variant_name: 'Also in B' }
+          ]
+        }
+      });
 
-      expect(products).toHaveLength(3);
-      expect(products!.map(p => p.variant_name).sort()).toEqual(['Enterprise', 'Professional', 'Starter']);
+      // With M:N, this should succeed
+      expect(response2.status()).toBe(200);
+      const json2 = await response2.json();
+
+      // Verify product is in both groups
+      const { data: pvgs } = await supabaseAdmin
+        .from('product_variant_groups')
+        .select('group_id, variant_name')
+        .eq('product_id', testProducts[2].id);
+
+      expect(pvgs).toHaveLength(2);
+      expect(pvgs!.map(p => p.variant_name).sort()).toEqual(['In Group A', 'In Group B']);
+
+      // Cleanup
+      await supabaseAdmin.from('variant_groups').delete().eq('id', json1.groupId);
+      await supabaseAdmin.from('variant_groups').delete().eq('id', json2.groupId);
     });
   });
 
-  test.describe('GET /api/admin/products/variants - Get Variants', () => {
-    test('should return variants by productId', async ({ request }) => {
-      const response = await request.get(`/api/admin/products/variants?productId=${testProducts[0].id}`);
-
-      expect(response.status()).toBe(200);
-      const json = await response.json();
-      expect(json.variants).toBeDefined();
-      expect(json.variants.length).toBeGreaterThanOrEqual(2);
-    });
-
-    test('should return variants by groupId', async ({ request }) => {
-      // Get current group ID
-      const { data: product } = await supabaseAdmin
-        .from('products')
-        .select('variant_group_id')
-        .eq('id', testProducts[0].id)
-        .single();
-
-      const response = await request.get(`/api/admin/products/variants?groupId=${product!.variant_group_id}`);
-
-      expect(response.status()).toBe(200);
-      const json = await response.json();
-      expect(json.variantGroupId).toBe(product!.variant_group_id);
-      expect(json.variants.length).toBeGreaterThanOrEqual(2);
-    });
-
-    test('should return empty array for product without variants', async ({ request }) => {
-      // Product 3 (index 3) should not be in a variant group after previous tests
-      await supabaseAdmin
-        .from('products')
-        .update({ variant_group_id: null })
-        .eq('id', testProducts[3].id);
-
-      const response = await request.get(`/api/admin/products/variants?productId=${testProducts[3].id}`);
-
-      expect(response.status()).toBe(200);
-      const json = await response.json();
-      expect(json.variants).toEqual([]);
-    });
-
-    test('should fail without productId or groupId', async ({ request }) => {
-      const response = await request.get('/api/admin/products/variants');
-
-      expect(response.status()).toBe(400);
-      const json = await response.json();
-      expect(json.error).toContain('productId or groupId is required');
-    });
-
-    test('should return variants ordered by variant_order', async ({ request }) => {
-      const { data: product } = await supabaseAdmin
-        .from('products')
-        .select('variant_group_id')
-        .eq('id', testProducts[0].id)
-        .single();
-
-      const response = await request.get(`/api/admin/products/variants?groupId=${product!.variant_group_id}`);
-      const json = await response.json();
-
-      // Check that variants are ordered
-      for (let i = 1; i < json.variants.length; i++) {
-        expect(json.variants[i].variant_order).toBeGreaterThanOrEqual(json.variants[i - 1].variant_order);
-      }
-    });
-  });
-
-  test.describe('DELETE /api/admin/products/variants - Unlink Variant', () => {
+  test.describe('GET /api/admin/variant-groups - List Variant Groups', () => {
     test('should fail without authentication', async ({ request }) => {
-      const response = await request.delete(`/api/admin/products/variants?productId=${testProducts[0].id}`);
-
+      const response = await request.get('/api/admin/variant-groups');
       expect(response.status()).toBe(401);
     });
 
-    test('should fail without productId', async ({ page }) => {
+    test('should return all variant groups with products', async ({ page }) => {
       await loginAsAdmin(page);
 
-      const response = await page.request.delete('/api/admin/products/variants');
+      const response = await page.request.get('/api/admin/variant-groups');
+
+      expect(response.status()).toBe(200);
+      const json = await response.json();
+      expect(json.groups).toBeDefined();
+      expect(Array.isArray(json.groups)).toBe(true);
+
+      // Should include our created group
+      const ourGroup = json.groups.find((g: any) => g.id === createdGroupId);
+      if (createdGroupId) {
+        expect(ourGroup).toBeDefined();
+        expect(ourGroup.name).toBe('Test Subscription Plans');
+        expect(ourGroup.products).toHaveLength(2);
+      }
+    });
+
+    test('should include product details in response', async ({ page }) => {
+      await loginAsAdmin(page);
+
+      const response = await page.request.get('/api/admin/variant-groups');
+      const json = await response.json();
+
+      if (json.groups.length > 0) {
+        const group = json.groups[0];
+        if (group.products && group.products.length > 0) {
+          const product = group.products[0];
+          expect(product).toHaveProperty('product_id');
+          expect(product).toHaveProperty('variant_name');
+          expect(product).toHaveProperty('display_order');
+          expect(product).toHaveProperty('is_featured');
+          expect(product).toHaveProperty('product');
+          expect(product.product).toHaveProperty('name');
+          expect(product.product).toHaveProperty('slug');
+          expect(product.product).toHaveProperty('price');
+        }
+      }
+    });
+  });
+
+  test.describe('PATCH /api/admin/variant-groups - Update Variant Group', () => {
+    test('should fail without authentication', async ({ request }) => {
+      const response = await request.patch(`/api/admin/variant-groups?groupId=${createdGroupId}`, {
+        data: { name: 'Updated Name' }
+      });
+      expect(response.status()).toBe(401);
+    });
+
+    test('should fail without groupId', async ({ page }) => {
+      await loginAsAdmin(page);
+
+      const response = await page.request.patch('/api/admin/variant-groups', {
+        data: { name: 'Test' }
+      });
 
       expect(response.status()).toBe(400);
       const json = await response.json();
-      expect(json.error).toContain('productId is required');
+      expect(json.error).toContain('groupId is required');
     });
 
-    test('should successfully unlink a product from variant group', async ({ page }) => {
+    test('should update group name', async ({ page }) => {
       await loginAsAdmin(page);
 
-      // First verify product is in a group
-      const { data: before } = await supabaseAdmin
-        .from('products')
-        .select('variant_group_id')
-        .eq('id', testProducts[0].id)
-        .single();
-
-      expect(before!.variant_group_id).not.toBeNull();
-
-      // Unlink
-      const response = await page.request.delete(`/api/admin/products/variants?productId=${testProducts[0].id}`);
+      const response = await page.request.patch(`/api/admin/variant-groups?groupId=${createdGroupId}`, {
+        data: { name: 'Updated Subscription Plans' }
+      });
 
       expect(response.status()).toBe(200);
       const json = await response.json();
       expect(json.success).toBe(true);
 
       // Verify in database
-      const { data: after } = await supabaseAdmin
-        .from('products')
-        .select('variant_group_id, variant_name, variant_order')
-        .eq('id', testProducts[0].id)
+      const { data: group } = await supabaseAdmin
+        .from('variant_groups')
+        .select('name')
+        .eq('id', createdGroupId)
         .single();
 
-      expect(after!.variant_group_id).toBeNull();
-      expect(after!.variant_name).toBeNull();
-      expect(after!.variant_order).toBe(0);
+      expect(group!.name).toBe('Updated Subscription Plans');
+    });
+
+    test('should update products and their order', async ({ page }) => {
+      await loginAsAdmin(page);
+
+      // Update with new order and different featured product
+      const response = await page.request.patch(`/api/admin/variant-groups?groupId=${createdGroupId}`, {
+        data: {
+          products: [
+            { product_id: testProducts[1].id, variant_name: 'Now First', display_order: 0, is_featured: true },
+            { product_id: testProducts[0].id, variant_name: 'Now Second', display_order: 1, is_featured: false }
+          ]
+        }
+      });
+
+      expect(response.status()).toBe(200);
+
+      // Verify order changed
+      const { data: pvgs } = await supabaseAdmin
+        .from('product_variant_groups')
+        .select('product_id, variant_name, display_order, is_featured')
+        .eq('group_id', createdGroupId)
+        .order('display_order');
+
+      expect(pvgs![0].product_id).toBe(testProducts[1].id);
+      expect(pvgs![0].variant_name).toBe('Now First');
+      expect(pvgs![0].is_featured).toBe(true);
+      expect(pvgs![1].product_id).toBe(testProducts[0].id);
+      expect(pvgs![1].variant_name).toBe('Now Second');
     });
   });
-});
 
-test.describe('get_variant_group RPC Function', () => {
-  let testProducts: any[] = [];
-  let variantGroupId: string;
+  test.describe('DELETE /api/admin/variant-groups - Delete Variant Group', () => {
+    let groupToDelete: string;
 
-  test.beforeAll(async () => {
-    variantGroupId = crypto.randomUUID();
-
-    // Create test products - first 2 active, third inactive
-    for (let i = 0; i < 3; i++) {
-      const { data: product, error } = await supabaseAdmin
-        .from('products')
-        .insert({
-          name: `RPC Variant Test ${i + 1}`,
-          slug: `rpc-variant-${Date.now()}-${i}`,
-          price: (i + 1) * 100,
-          currency: 'EUR',
-          description: `RPC test product ${i + 1}`,
-          is_active: i < 2, // Only first 2 are active
-          icon: '🎯',
-          image_url: i === 0 ? 'https://example.com/image.jpg' : null,
-          variant_group_id: variantGroupId,
-          variant_name: `Tier ${i + 1}`,
-          variant_order: i
-        })
-        .select()
+    test.beforeAll(async () => {
+      // Create a group specifically for deletion tests
+      const { data: group } = await supabaseAdmin
+        .from('variant_groups')
+        .insert({ name: 'To Be Deleted' })
+        .select('id')
         .single();
 
-      if (error) throw error;
-      testProducts.push(product);
-    }
-  });
+      groupToDelete = group!.id;
 
-  test.afterAll(async () => {
-    for (const product of testProducts) {
-      await supabaseAdmin.from('products').delete().eq('id', product.id);
-    }
-  });
+      // Add products to it
+      await supabaseAdmin
+        .from('product_variant_groups')
+        .insert([
+          { group_id: groupToDelete, product_id: testProducts[2].id, variant_name: 'Delete Test 1', display_order: 0 },
+          { group_id: groupToDelete, product_id: testProducts[3].id, variant_name: 'Delete Test 2', display_order: 1 }
+        ]);
+    });
 
-  test('should return only ACTIVE variants for a group', async () => {
-    const { data, error } = await supabaseAdmin
-      .rpc('get_variant_group', { p_group_id: variantGroupId });
+    test('should fail without authentication', async ({ request }) => {
+      const response = await request.delete(`/api/admin/variant-groups?groupId=${groupToDelete}`);
+      expect(response.status()).toBe(401);
+    });
 
-    expect(error).toBeNull();
-    // Only 2 active variants should be returned (third is inactive)
-    expect(data).toHaveLength(2);
-  });
+    test('should fail without groupId', async ({ page }) => {
+      await loginAsAdmin(page);
 
-  test('should return correct fields', async () => {
-    const { data } = await supabaseAdmin
-      .rpc('get_variant_group', { p_group_id: variantGroupId });
+      const response = await page.request.delete('/api/admin/variant-groups');
 
-    const firstVariant = data![0];
-    expect(firstVariant).toHaveProperty('id');
-    expect(firstVariant).toHaveProperty('name');
-    expect(firstVariant).toHaveProperty('slug');
-    expect(firstVariant).toHaveProperty('variant_name');
-    expect(firstVariant).toHaveProperty('variant_order');
-    expect(firstVariant).toHaveProperty('price');
-    expect(firstVariant).toHaveProperty('currency');
-    expect(firstVariant).toHaveProperty('description');
-    expect(firstVariant).toHaveProperty('image_url');
-    expect(firstVariant).toHaveProperty('is_active');
-  });
+      expect(response.status()).toBe(400);
+      const json = await response.json();
+      expect(json.error).toContain('groupId is required');
+    });
 
-  test('should order variants by variant_order', async () => {
-    const { data } = await supabaseAdmin
-      .rpc('get_variant_group', { p_group_id: variantGroupId });
+    test('should successfully delete variant group', async ({ page }) => {
+      await loginAsAdmin(page);
 
-    expect(data![0].variant_name).toBe('Tier 1');
-    expect(data![1].variant_name).toBe('Tier 2');
-  });
+      const response = await page.request.delete(`/api/admin/variant-groups?groupId=${groupToDelete}`);
 
-  test('should return empty array for non-existent group', async () => {
-    const { data, error } = await supabaseAdmin
-      .rpc('get_variant_group', { p_group_id: crypto.randomUUID() });
+      expect(response.status()).toBe(200);
+      const json = await response.json();
+      expect(json.success).toBe(true);
 
-    expect(error).toBeNull();
-    expect(data).toEqual([]);
-  });
+      // Verify group is deleted
+      const { data: group } = await supabaseAdmin
+        .from('variant_groups')
+        .select('id')
+        .eq('id', groupToDelete)
+        .single();
 
-  test('should NOT include inactive variants (filtered by RPC)', async () => {
-    const { data } = await supabaseAdmin
-      .rpc('get_variant_group', { p_group_id: variantGroupId });
+      expect(group).toBeNull();
 
-    // Third product is inactive - should NOT be in results
-    const inactiveVariant = data!.find(v => v.variant_name === 'Tier 3');
-    expect(inactiveVariant).toBeUndefined();
+      // Verify junction table entries are also deleted (cascade)
+      const { data: pvgs } = await supabaseAdmin
+        .from('product_variant_groups')
+        .select('id')
+        .eq('group_id', groupToDelete);
 
-    // All returned variants should be active
-    expect(data!.every(v => v.is_active === true)).toBe(true);
+      expect(pvgs).toHaveLength(0);
+    });
   });
 });

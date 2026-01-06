@@ -40,10 +40,8 @@ export interface Product {
   // Refund settings
   is_refundable: boolean
   refund_period_days?: number | null
-  // Product Variants (presentation layer)
-  variant_group_id?: string | null
-  variant_name?: string | null
-  variant_order?: number
+  // M:N variant relationship (populated by API when needed)
+  variant_groups?: ProductVariantGroup[]
   created_at: string
   updated_at: string
   tenant_id?: string
@@ -346,4 +344,35 @@ export interface UserPurchase {
   refund_eligible: boolean;
   refund_request_status: string | null;
   refund_request_id: string | null;
+}
+
+// Variant Groups (M:N relationship)
+export interface VariantGroup {
+  id: string;
+  name?: string | null;
+  tenant_id?: string | null;
+  created_at: string;
+  updated_at: string;
+  // Populated when fetching with products
+  products?: ProductVariantGroup[];
+}
+
+export interface ProductVariantGroup {
+  id: string;
+  product_id: string;
+  group_id: string;
+  variant_name?: string | null;
+  display_order: number;
+  is_featured: boolean;
+  created_at: string;
+  // Populated when fetching with product details
+  product?: {
+    id: string;
+    name: string;
+    slug: string;
+    price: number;
+    currency: string;
+    icon?: string | null;
+    is_active: boolean;
+  };
 }

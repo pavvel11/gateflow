@@ -11,7 +11,8 @@ interface Variant {
   name: string;
   slug: string;
   variant_name: string | null;
-  variant_order: number;
+  display_order: number;
+  is_featured: boolean;
   price: number;
   currency: string;
   description: string | null;
@@ -19,13 +20,19 @@ interface Variant {
   is_active: boolean;
 }
 
+// Check if string is a valid UUID
+const isUUID = (str: string): boolean => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+};
+
 export default function VariantSelectorPage() {
   const params = useParams();
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('variants');
 
-  const groupId = params.groupId as string;
+  const groupIdOrSlug = params.groupId as string;
 
   const [variants, setVariants] = useState<Variant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,8 +46,11 @@ export default function VariantSelectorPage() {
           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
         );
 
-        const { data, error: fetchError } = await supabase
-          .rpc('get_variant_group', { p_group_id: groupId });
+        // Use UUID function if it's a UUID, otherwise use slug function
+        const isId = isUUID(groupIdOrSlug);
+        const { data, error: fetchError } = isId
+          ? await supabase.rpc('get_variant_group', { p_group_id: groupIdOrSlug })
+          : await supabase.rpc('get_variant_group_by_slug', { p_slug: groupIdOrSlug });
 
         if (fetchError) {
           console.error('Error fetching variants:', fetchError);
@@ -65,10 +75,10 @@ export default function VariantSelectorPage() {
       }
     };
 
-    if (groupId) {
+    if (groupIdOrSlug) {
       fetchVariants();
     }
-  }, [groupId]);
+  }, [groupIdOrSlug]);
 
   const handleSelectVariant = (slug: string) => {
     router.push(`/${locale}/checkout/${slug}`);
@@ -118,21 +128,21 @@ export default function VariantSelectorPage() {
 
         {/* Variants Grid */}
         <div className="space-y-4">
-          {variants.map((variant, index) => (
+          {variants.map((variant) => (
             <div
               key={variant.id}
               onClick={() => handleSelectVariant(variant.slug)}
               className={`
                 relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl
                 transition-all duration-300 cursor-pointer border-2
-                ${index === 0
+                ${variant.is_featured
                   ? 'border-purple-500 ring-2 ring-purple-500/20'
                   : 'border-transparent hover:border-purple-300 dark:hover:border-purple-700'
                 }
               `}
             >
-              {/* Popular badge for first variant */}
-              {index === 0 && (
+              {/* Featured badge */}
+              {variant.is_featured && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                   <span className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider shadow-lg">
                     {t('popular', { defaultValue: 'Most Popular' })}
@@ -172,7 +182,7 @@ export default function VariantSelectorPage() {
                   <button
                     className={`
                       px-6 py-2.5 rounded-xl font-semibold transition-all duration-200
-                      ${index === 0
+                      ${variant.is_featured
                         ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 shadow-lg hover:shadow-xl'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
                       }

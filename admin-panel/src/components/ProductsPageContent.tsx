@@ -7,7 +7,6 @@ import ProductsTable from './ProductsTable';
 import { useToast } from '@/contexts/ToastContext';
 import ProductFormModal, { ProductFormData } from './ProductFormModal';
 import CodeGeneratorModal from './CodeGeneratorModal';
-import VariantLinkModal from './VariantLinkModal';
 import { exportProductsToCsv } from '@/utils/csvExport';
 import { useTranslations } from 'next-intl';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -16,7 +15,6 @@ const ProductsPageContent: React.FC = () => {
   const { addToast } = useToast();
   const addButtonRef = useRef<HTMLButtonElement>(null);
   const t = useTranslations('admin.products');
-  const tVariants = useTranslations('admin.variants');
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -33,7 +31,6 @@ const ProductsPageContent: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [showCodeGenerator, setShowCodeGenerator] = useState(false);
   const [productForCodeGeneration, setProductForCodeGeneration] = useState<Product | null>(null);
-  const [showVariantLinkModal, setShowVariantLinkModal] = useState(false);
 
   // State for pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -347,15 +344,6 @@ const ProductsPageContent: React.FC = () => {
     addToast(t('exportSuccess', { count: products.length }), 'success');
   };
 
-  const handleLinkVariants = () => {
-    setShowVariantLinkModal(true);
-  };
-
-  const handleVariantLinkSuccess = () => {
-    addToast(tVariants('linkSuccess'), 'success');
-    fetchProducts();
-  };
-
   return (
     <div className="space-y-6">
       <FilterBar
@@ -366,7 +354,6 @@ const ProductsPageContent: React.FC = () => {
         onAddProduct={handleAddNewProduct}
         onExport={handleExportCsv}
         onRefresh={fetchProducts}
-        onLinkVariants={handleLinkVariants}
         addButtonRef={addButtonRef}
       />
       <ProductsTable
@@ -472,14 +459,6 @@ const ProductsPageContent: React.FC = () => {
             setProductForCodeGeneration(null);
           }}
           product={productForCodeGeneration}
-        />
-      )}
-
-      {showVariantLinkModal && (
-        <VariantLinkModal
-          isOpen={showVariantLinkModal}
-          onClose={() => setShowVariantLinkModal(false)}
-          onSuccess={handleVariantLinkSuccess}
         />
       )}
     </div>

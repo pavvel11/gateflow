@@ -61,11 +61,6 @@ CREATE TABLE IF NOT EXISTS products (
   is_refundable BOOLEAN DEFAULT false NOT NULL, -- Whether customers can request refunds for this product
   refund_period_days INTEGER CHECK (refund_period_days IS NULL OR (refund_period_days > 0 AND refund_period_days <= 365)), -- Number of days from purchase within which refund can be requested
 
-  -- Product Variants (presentation layer - products remain independent)
-  variant_group_id UUID, -- Links products as variants (same group_id = same offering variants)
-  variant_name VARCHAR(100), -- Display name in selector (e.g., "1 Year", "Lifetime")
-  variant_order INTEGER DEFAULT 0, -- Order in variant selector (lower = first)
-
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
 
@@ -77,9 +72,38 @@ COMMENT ON TABLE products IS 'Products catalog with gatekeeper integration suppo
 COMMENT ON COLUMN products.slug IS 'URL-safe unique identifier for gatekeeper system';
 COMMENT ON COLUMN products.content_config IS 'JSON configuration for content delivery and gatekeeper integration';
 COMMENT ON COLUMN products.tenant_id IS 'Multi-tenant support - allows product isolation by tenant';
-COMMENT ON COLUMN products.variant_group_id IS 'UUID linking products as variants - products with same group_id shown together in selector';
-COMMENT ON COLUMN products.variant_name IS 'Display name for variant (e.g., "Basic", "Pro", "1 Year", "Lifetime")';
-COMMENT ON COLUMN products.variant_order IS 'Order in variant selector page (lower numbers first)';
+
+-- Create variant_groups table to store variant group metadata
+CREATE TABLE IF NOT EXISTS variant_groups (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT CHECK (length(name) <= 200), -- Optional display name for the group (e.g., "Subscription Plans", "Size Options")
+  slug TEXT UNIQUE CHECK (slug IS NULL OR (slug ~ '^[a-z0-9_-]+$' AND length(slug) BETWEEN 1 AND 100)), -- URL-friendly identifier
+  tenant_id TEXT CHECK (tenant_id IS NULL OR (tenant_id ~ '^[a-zA-Z0-9_-]+$' AND length(tenant_id) BETWEEN 1 AND 50)),
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+COMMENT ON TABLE variant_groups IS 'Variant groups for organizing products as selectable options';
+COMMENT ON COLUMN variant_groups.name IS 'Optional human-readable name for the variant group';
+COMMENT ON COLUMN variant_groups.slug IS 'URL-friendly identifier for the variant group (alternative to UUID)';
+
+-- Create junction table for Product <-> Variant Group (Many-to-Many)
+-- A product can belong to multiple variant groups
+CREATE TABLE IF NOT EXISTS product_variant_groups (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
+  group_id UUID REFERENCES variant_groups(id) ON DELETE CASCADE NOT NULL,
+  variant_name VARCHAR(100), -- Display name in selector (e.g., "1 Year", "Lifetime", "Small", "Large")
+  display_order INTEGER DEFAULT 0 NOT NULL, -- Order in variant selector (lower = first)
+  is_featured BOOLEAN DEFAULT false NOT NULL, -- Featured/highlighted product in this group
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  UNIQUE (product_id, group_id) -- A product can only be in a group once
+);
+
+COMMENT ON TABLE product_variant_groups IS 'Junction table linking products to variant groups with display metadata';
+COMMENT ON COLUMN product_variant_groups.variant_name IS 'Display name for this product in the variant selector';
+COMMENT ON COLUMN product_variant_groups.display_order IS 'Order in variant selector (lower numbers appear first)';
+COMMENT ON COLUMN product_variant_groups.is_featured IS 'Whether this product is the featured/highlighted option in the group';
 
 -- Create categories table for product organization
 CREATE TABLE IF NOT EXISTS categories (
@@ -794,8 +818,14 @@ CREATE INDEX IF NOT EXISTS idx_user_product_access_unique ON user_product_access
 CREATE INDEX IF NOT EXISTS idx_admin_users_user_id ON admin_users(user_id);
 
 CREATE INDEX IF NOT EXISTS idx_products_tenant_id ON products(tenant_id) WHERE tenant_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_products_variant_group_id ON products(variant_group_id) WHERE variant_group_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_user_product_access_tenant_id ON user_product_access(tenant_id) WHERE tenant_id IS NOT NULL;
+
+-- Variant groups indexes (M:N relationship)
+CREATE INDEX IF NOT EXISTS idx_variant_groups_tenant_id ON variant_groups(tenant_id) WHERE tenant_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_product_variant_groups_product_id ON product_variant_groups(product_id);
+CREATE INDEX IF NOT EXISTS idx_product_variant_groups_group_id ON product_variant_groups(group_id);
+CREATE INDEX IF NOT EXISTS idx_product_variant_groups_display_order ON product_variant_groups(group_id, display_order);
+CREATE INDEX IF NOT EXISTS idx_product_variant_groups_featured ON product_variant_groups(group_id, is_featured) WHERE is_featured = true;
 
 -- Optimization indexes for user access
 CREATE INDEX IF NOT EXISTS idx_user_product_access_expires_at ON user_product_access(access_expires_at) WHERE access_expires_at IS NOT NULL;
@@ -814,6 +844,8 @@ ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE product_categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tags ENABLE ROW LEVEL SECURITY;
 ALTER TABLE product_tags ENABLE ROW LEVEL SECURITY;
+ALTER TABLE variant_groups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE product_variant_groups ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_product_access ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
@@ -901,6 +933,24 @@ CREATE POLICY "Public read access for product_tags" ON product_tags
   FOR SELECT USING (true);
 
 CREATE POLICY "Admins full access for product_tags" ON product_tags
+  FOR ALL
+  USING (EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()));
+
+-- RLS Policies for variant_groups
+CREATE POLICY "Public read access for variant_groups" ON variant_groups
+  FOR SELECT USING (true);
+
+CREATE POLICY "Admins full access for variant_groups" ON variant_groups
+  FOR ALL
+  USING (EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()));
+
+-- RLS Policies for product_variant_groups
+CREATE POLICY "Public read access for product_variant_groups" ON product_variant_groups
+  FOR SELECT USING (true);
+
+CREATE POLICY "Admins full access for product_variant_groups" ON product_variant_groups
   FOR ALL
   USING (EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()))
   WITH CHECK (EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()));
@@ -1284,6 +1334,11 @@ CREATE TRIGGER update_products_updated_at
 
 CREATE TRIGGER update_categories_updated_at
   BEFORE UPDATE ON categories
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_variant_groups_updated_at
+  BEFORE UPDATE ON variant_groups
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 

@@ -161,9 +161,9 @@ test.describe('Product Duplication', () => {
     await page.goto('/pl/dashboard/products');
     await page.waitForLoadState('networkidle');
 
-    // Click duplicate button
+    // Click duplicate button (Duplikuj in Polish, Duplicate in English)
     const productRow = page.locator('tr').filter({ hasText: 'Original Product' });
-    const duplicateButton = productRow.getByRole('button', { name: /Duplicate Original Product/i });
+    const duplicateButton = productRow.getByRole('button', { name: /Duplikuj Original Product|Duplicate Original Product/i });
     await duplicateButton.click();
 
     await page.waitForTimeout(500);
