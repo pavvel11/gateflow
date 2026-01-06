@@ -21,6 +21,7 @@ interface ProductsTableProps {
   onPreviewRedirect: (product: Product) => void;
   onGenerateCode: (product: Product) => void;
   onToggleStatus: (productId: string, currentStatus: boolean) => void;
+  onToggleFeatured: (productId: string, currentFeatured: boolean) => void;
   currentPage: number;
   totalPages: number;
   totalItems: number;
@@ -42,6 +43,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
   onPreviewRedirect,
   onGenerateCode,
   onToggleStatus,
+  onToggleFeatured,
   currentPage,
   totalPages,
   totalItems,
@@ -175,16 +177,35 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                       )}
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap text-center">
-                      <button
-                        onClick={() => onToggleStatus(product.id, product.is_active)}
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer transition-colors hover:opacity-80 ${
-                          product.is_active
-                            ? 'bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100'
-                            : 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100'
-                        }`}
-                      >
-                        {product.is_active ? t('active') : t('inactive')}
-                      </button>
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          onClick={() => onToggleStatus(product.id, product.is_active)}
+                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer transition-colors hover:opacity-80 ${
+                            product.is_active
+                              ? 'bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100'
+                              : 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100'
+                          }`}
+                        >
+                          {product.is_active ? t('active') : t('inactive')}
+                        </button>
+                        {!product.is_active && (
+                          product.enable_waitlist ? (
+                            <span
+                              className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"
+                              title={t('waitlistEnabled')}
+                            >
+                              📋
+                            </span>
+                          ) : (
+                            <span
+                              className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
+                              title={t('waitlistDisabled')}
+                            >
+                              🚫
+                            </span>
+                          )
+                        )}
+                      </div>
                     </td>
                     <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 hidden 2xl:table-cell whitespace-nowrap">
                       {product.available_from ? formatUTCForDisplay(product.available_from, {
@@ -218,7 +239,20 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                     </td>
                     <td className="px-3 py-4 text-right text-sm font-medium whitespace-nowrap">
                       <div className="flex items-center justify-end space-x-1">
-                        <button 
+                        <button
+                          onClick={() => onToggleFeatured(product.id, product.is_featured)}
+                          className={`p-1 transition-colors rounded ${
+                            product.is_featured
+                              ? 'text-yellow-500 hover:text-yellow-600'
+                              : 'text-gray-400 hover:text-yellow-500'
+                          }`}
+                          title={product.is_featured ? t('removeFeatured') : t('setFeatured')}
+                        >
+                          <svg className="w-4 h-4" fill={product.is_featured ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                          </svg>
+                        </button>
+                        <button
                           onClick={() => onGenerateCode(product)}
                           className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors p-1"
                           aria-label={t('generateCodeLabel', { name: product.name })}

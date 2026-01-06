@@ -47,6 +47,8 @@ export interface ProductFormData {
   // Refund settings
   is_refundable: boolean;
   refund_period_days?: number | null;
+  // Waitlist settings (for inactive products)
+  enable_waitlist: boolean;
   // Pay What You Want / Custom Pricing
   allow_custom_price: boolean;
   custom_price_min: number;
@@ -177,6 +179,8 @@ export const initialFormData: ProductFormData = {
   sale_quantity_sold: 0,
   is_refundable: false,
   refund_period_days: null,
+  // Waitlist settings
+  enable_waitlist: false,
   // Pay What You Want / Custom Pricing
   allow_custom_price: false,
   custom_price_min: 5.00,

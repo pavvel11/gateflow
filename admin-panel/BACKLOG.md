@@ -142,6 +142,53 @@ If horizontal scaling becomes necessary, consider **Upstash Redis** for faster d
 
 ## Low Priority
 
+### Waitlist Database Table
+**Current State:** Waitlist signups are processed through webhooks only. No database storage.
+
+**Current Implementation (Jan 2025):**
+- ✅ `enable_waitlist` checkbox on product configuration
+- ✅ Waitlist form shown when product is unavailable (inactive, not started, or expired)
+- ✅ `waitlist.signup` webhook event with email + product info
+- ✅ Webhook testing support for waitlist events
+- ✅ Form includes T&C/PP consent checkbox (GDPR compliant)
+
+**What's Missing:**
+- ❌ Database table to store waitlist signups
+- ❌ Admin panel view to see waitlist subscribers
+- ❌ Export functionality for waitlist emails
+- ❌ Automatic notification when product becomes available
+
+**Proposed Implementation:**
+1. **Database Table** (`waitlist_entries`)
+   ```sql
+   CREATE TABLE waitlist_entries (
+     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+     product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+     email TEXT NOT NULL,
+     terms_accepted_at TIMESTAMPTZ NOT NULL,
+     created_at TIMESTAMPTZ DEFAULT NOW(),
+     notified_at TIMESTAMPTZ, -- When availability notification was sent
+     UNIQUE(product_id, email)
+   );
+   ```
+
+2. **Admin Panel Features**
+   - List waitlist entries per product
+   - Export to CSV
+   - Manual "notify all" action when product becomes available
+   - Show waitlist count on product list
+
+3. **Automatic Notifications** (optional)
+   - When product `is_active` changes from false to true
+   - When `available_from` date passes
+   - Email template with product link
+
+**Priority:** Low - webhooks provide immediate integration capability; database storage is for reporting/manual actions.
+
+**Estimated Effort:** 2-3 days (DB migration + admin UI + optional email notifications)
+
+---
+
 ### Better Date/DateTime Picker Component
 **Current State:** Using native HTML5 `<input type="date">` and `<input type="datetime-local">` inputs.
 
@@ -178,5 +225,24 @@ If horizontal scaling becomes necessary, consider **Upstash Redis** for faster d
 **Priority:** Low - current solution is functional, just not aesthetically ideal.
 
 **Estimated Effort:** 1-3 days depending on chosen approach.
+
+---
+
+### Refactor Tests to Use Shared Admin Login Helper
+**Current State:** Each test file has its own copy of admin login logic.
+
+**What Exists:**
+- ✅ Shared helper in `/tests/helpers/admin-auth.ts` with `createTestAdmin()` and `loginAsAdmin()`
+- ✅ Used by `waitlist.spec.ts`
+- ❌ Other tests (branding-settings, admin-dashboard, etc.) have duplicated login code
+
+**What to Do:**
+- Refactor all test files to import from `./helpers/admin-auth`
+- Remove duplicated `loginAsAdmin` functions from individual test files
+- Remove duplicated Supabase client setup from each file
+
+**Priority:** Very Low - everything works, just code duplication.
+
+**Estimated Effort:** 1-2 hours
 
 ---

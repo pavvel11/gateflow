@@ -116,6 +116,8 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
         sale_quantity_sold: product.sale_quantity_sold || 0,
         is_refundable: (product as Product & { is_refundable?: boolean }).is_refundable || false,
         refund_period_days: (product as Product & { refund_period_days?: number | null }).refund_period_days || null,
+        // Waitlist settings
+        enable_waitlist: product.enable_waitlist || false,
         // Pay What You Want / Custom Pricing
         allow_custom_price: product.allow_custom_price || false,
         custom_price_min: product.custom_price_min || 5.00,

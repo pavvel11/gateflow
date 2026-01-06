@@ -108,6 +108,16 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             generateSlug={generateSlug}
           />
 
+          {/* Content Delivery - essential, must be filled */}
+          <ContentDeliverySection
+            formData={formData}
+            setFormData={setFormData}
+            t={t}
+            urlValidation={urlValidation}
+            setUrlValidation={setUrlValidation}
+            validateContentItemUrl={validateContentItemUrl}
+          />
+
           {/* Pricing & Visual */}
           <PricingSection
             formData={formData}
@@ -140,16 +150,6 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             formData={formData}
             setFormData={setFormData}
             t={t}
-          />
-
-          {/* Content Delivery */}
-          <ContentDeliverySection
-            formData={formData}
-            setFormData={setFormData}
-            t={t}
-            urlValidation={urlValidation}
-            setUrlValidation={setUrlValidation}
-            validateContentItemUrl={validateContentItemUrl}
           />
 
           {/* Post-Purchase (Redirect & OTO) */}

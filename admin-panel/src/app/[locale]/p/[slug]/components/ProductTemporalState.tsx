@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl';
 import { Product } from '@/types';
 import FloatingToolbar from '@/components/FloatingToolbar';
+import WaitlistForm from '@/components/WaitlistForm';
 
 interface ProductTemporalStateProps {
   product: Product;
@@ -8,12 +9,23 @@ interface ProductTemporalStateProps {
 
 export default function ProductTemporalState({ product }: ProductTemporalStateProps) {
   const t = useTranslations('productView');
-  
+
   const now = new Date();
   const availableFrom = product.available_from ? new Date(product.available_from) : null;
   const availableUntil = product.available_until ? new Date(product.available_until) : null;
   const isNotYetAvailable = availableFrom && availableFrom > now;
   const isExpired = availableUntil && availableUntil < now;
+
+  // If waitlist is enabled, show the waitlist form
+  if (product.enable_waitlist) {
+    const reason = isNotYetAvailable ? 'not_started' : 'expired';
+    return (
+      <div>
+        <FloatingToolbar position="top-right" />
+        <WaitlistForm product={product} unavailableReason={reason} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">

@@ -130,13 +130,18 @@ export default function WebhookLogsTable({
                   {log.duration_ms !== undefined ? `${log.duration_ms}ms` : '---'}
                 </td>
                 <td className="px-4 py-3 text-right whitespace-nowrap space-x-2">
-                  {log.status === 'failed' && (
+                  {/* Resend button - available for all statuses except 'retried' */}
+                  {log.status !== 'retried' && log.status !== 'archived' && (
                     <button
                       onClick={(e) => handleRetryClick(e, log.id)}
                       disabled={retryingId === log.id}
-                      className="inline-flex items-center px-2.5 py-1.5 border border-blue-300 dark:border-blue-800 text-xs font-medium rounded text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 disabled:opacity-50 transition-all"
+                      className={`inline-flex items-center px-2.5 py-1.5 border text-xs font-medium rounded disabled:opacity-50 transition-all ${
+                        log.status === 'failed'
+                          ? 'border-blue-300 dark:border-blue-800 text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40'
+                          : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/30 hover:bg-gray-100 dark:hover:bg-gray-700/50'
+                      }`}
                     >
-                      {retryingId === log.id ? '...' : t('retry')}
+                      {retryingId === log.id ? '...' : (log.status === 'failed' ? t('retry') : t('resend'))}
                     </button>
                   )}
                   {log.status === 'failed' && (

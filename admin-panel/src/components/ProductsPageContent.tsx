@@ -174,7 +174,14 @@ const ProductsPageContent: React.FC = () => {
         body: JSON.stringify(formData),
       });
       if (!response.ok) {
-        const errorData = await response.json();
+        const responseText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(responseText);
+        } catch {
+          console.error('Product update error - non-JSON response:', response.status, responseText);
+          throw new Error(`Server error: ${response.status}`);
+        }
         console.error('Product update validation error:', errorData);
         throw new Error(errorData.details?.join(', ') || errorData.error || 'Failed to update product');
       }
@@ -310,6 +317,38 @@ const ProductsPageContent: React.FC = () => {
     }
   };
 
+  const handleToggleFeatured = async (productId: string, currentFeatured: boolean) => {
+    const newFeatured = !currentFeatured;
+
+    try {
+      const response = await fetch(`/api/admin/products/${productId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_featured: newFeatured }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to toggle featured status');
+      }
+
+      // Update local state optimistically
+      setProducts(prevProducts =>
+        prevProducts.map(p =>
+          p.id === productId ? { ...p, is_featured: newFeatured } : p
+        )
+      );
+
+      addToast(
+        newFeatured ? t('featuredEnabled') : t('featuredDisabled'),
+        'success'
+      );
+    } catch (err) {
+      addToast(t('featuredToggleError'), 'error');
+      // Revert on error by refetching
+      await fetchProducts();
+    }
+  };
+
   const handleAddNewProduct = () => {
     setEditingProduct(null);
     setShowProductForm(true);
@@ -367,6 +406,7 @@ const ProductsPageContent: React.FC = () => {
         onPreviewRedirect={handlePreviewRedirect}
         onGenerateCode={handleGenerateCode}
         onToggleStatus={handleToggleStatus}
+        onToggleFeatured={handleToggleFeatured}
         currentPage={currentPage}
         totalPages={totalPages}
         totalItems={totalItems}

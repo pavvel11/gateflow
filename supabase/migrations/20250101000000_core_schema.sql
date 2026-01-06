@@ -61,6 +61,9 @@ CREATE TABLE IF NOT EXISTS products (
   is_refundable BOOLEAN DEFAULT false NOT NULL, -- Whether customers can request refunds for this product
   refund_period_days INTEGER CHECK (refund_period_days IS NULL OR (refund_period_days > 0 AND refund_period_days <= 365)), -- Number of days from purchase within which refund can be requested
 
+  -- Waitlist settings (for inactive products)
+  enable_waitlist BOOLEAN DEFAULT false NOT NULL, -- Show waitlist signup form when product is inactive
+
   -- Pay What You Want / Custom Pricing
   allow_custom_price BOOLEAN DEFAULT false NOT NULL, -- Enable customer-chosen pricing
   custom_price_min NUMERIC(10,2) DEFAULT 5.00 CHECK (custom_price_min >= 0.50), -- Minimum price (Stripe requires 0.50)
@@ -863,11 +866,13 @@ CREATE POLICY "SELECT policy for products" ON products
   USING (
     -- Admin users see everything
     EXISTS (
-      SELECT 1 FROM public.admin_users 
+      SELECT 1 FROM public.admin_users
       WHERE user_id = (SELECT auth.uid())
     ) OR
-    -- Public users see only active products (temporal availability handled in application logic)
-    is_active = true
+    -- Public users see active products
+    is_active = true OR
+    -- Public users see inactive products with waitlist enabled (for waitlist form)
+    (is_active = false AND enable_waitlist = true)
   );
 
 -- Polityki dla adminów - osobno dla każdej akcji

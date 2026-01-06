@@ -584,6 +584,7 @@ export type Database = {
           custom_price_min: number
           custom_price_presets: Json
           description: string | null
+          enable_waitlist: boolean
           icon: string | null
           id: string
           is_active: boolean
@@ -610,6 +611,7 @@ export type Database = {
           custom_price_min?: number
           custom_price_presets?: Json
           description?: string | null
+          enable_waitlist?: boolean
           icon?: string | null
           id?: string
           is_active?: boolean
@@ -636,6 +638,7 @@ export type Database = {
           custom_price_min?: number
           custom_price_presets?: Json
           description?: string | null
+          enable_waitlist?: boolean
           icon?: string | null
           id?: string
           is_active?: boolean

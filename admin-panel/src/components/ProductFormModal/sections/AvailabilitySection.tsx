@@ -11,7 +11,7 @@ export function AvailabilitySection({
   t,
 }: AvailabilitySectionProps) {
   return (
-    <ModalSection title={t('temporalAvailability')} collapsible defaultExpanded={!!(formData.available_from || formData.available_until)}>
+    <ModalSection title={t('availabilityAndWaitlist')} collapsible defaultExpanded={true}>
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <DateTimePicker
@@ -32,6 +32,26 @@ export function AvailabilitySection({
             showTimeSelect={true}
             minDate={formData.available_from ? new Date(formData.available_from) : undefined}
           />
+        </div>
+
+        {/* Waitlist signup option */}
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={formData.enable_waitlist}
+              onChange={(e) => setFormData(prev => ({ ...prev, enable_waitlist: e.target.checked }))}
+              className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
+            />
+            <div>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('waitlist.enableWaitlist')}
+              </span>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                {t('waitlist.enableWaitlistDescription')}
+              </p>
+            </div>
+          </label>
         </div>
 
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">

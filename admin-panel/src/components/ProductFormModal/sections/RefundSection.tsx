@@ -18,7 +18,7 @@ export function RefundSection({
   };
 
   return (
-    <ModalSection title={t('refundSettings.title', { defaultValue: 'Refund Policy' })}>
+    <ModalSection title={t('refundSettings.title', { defaultValue: 'Refund Policy' })} collapsible defaultExpanded={true}>
       <div className="space-y-4">
         <div className="flex items-center">
           <input

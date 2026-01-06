@@ -60,6 +60,21 @@
       "aboveMaximum": "Amount must be no more than {maximum}"
     }
   },
+  "waitlist": {
+    "joinWaitlist": "Join the Waitlist",
+    "waitlistDescription": "Be the first to know when this product becomes available.",
+    "productNotYetAvailable": "This product is not yet available",
+    "productNoLongerAvailable": "This product is no longer available",
+    "productCurrentlyUnavailable": "This product is currently unavailable",
+    "emailAddress": "Email Address",
+    "enterEmailPlaceholder": "Enter your email address",
+    "notifyMe": "Notify Me",
+    "signupSuccess": "You're on the list! We'll notify you when this product becomes available.",
+    "signupFailed": "Failed to sign up. Please try again.",
+    "pleaseEnterEmail": "Please enter your email address",
+    "invalidEmail": "Please enter a valid email address",
+    "submitting": "Signing up..."
+  },
   "oto": {
     "exclusiveOffer": "Exclusive one-time offer!",
     "saveAmount": "Save {amount}",
@@ -965,6 +980,13 @@
       "statusActivated": "Product activated successfully",
       "statusDeactivated": "Product deactivated successfully",
       "statusToggleError": "Failed to toggle product status",
+      "featuredEnabled": "Product marked as featured",
+      "featuredDisabled": "Product removed from featured",
+      "featuredToggleError": "Failed to toggle featured status",
+      "setFeatured": "Set as featured",
+      "removeFeatured": "Remove from featured",
+      "waitlistEnabled": "Waitlist enabled for this product",
+      "waitlistDisabled": "No waitlist - product is completely unavailable",
       "noRedirectUrl": "This product does not have a redirect URL.",
       "noProductsToExport": "No products to export",
       "exportSuccess": "{count} products exported successfully",
@@ -1042,6 +1064,7 @@
         "imageUrlHelp": "Upload your product image to ImgBB or any image hosting service and paste the URL here.",
         "setToZeroForFree": "Set to 0 for free products. Use comma or dot for decimal separator.",
         "temporalAvailability": "Temporal Availability",
+        "availabilityAndWaitlist": "Availability & Waitlist",
         "availableFrom": "Available From",
         "availableUntil": "Available Until",
         "selectStartDate": "Select start date and time",
@@ -1050,6 +1073,10 @@
         "productUnavailableAfter": "Product will be unavailable after this date and time",
         "temporalAvailabilityTitle": "Temporal Availability",
         "temporalAvailabilityDescription": "Leave both fields empty for permanent availability. Set only \"Available From\" for products launching in the future. Set only \"Available Until\" for limited-time offers.",
+        "waitlist": {
+          "enableWaitlist": "Enable Waitlist Signup",
+          "enableWaitlistDescription": "Show a waitlist signup form when the product is unavailable (inactive, not yet started, or expired)."
+        },
         "autoGrantAccessSettings": "Auto-Grant Access Settings",
         "defaultAccessDuration": "Default Access Duration (days)",
         "optional": "optional",
@@ -1282,6 +1309,7 @@
       "events_list": {
         "purchase_completed": "Purchase Completed",
         "lead_captured": "Lead Captured (Free Product)",
+        "waitlist_signup": "Waitlist Signup",
         "subscription_started": "Subscription Started",
         "subscription_ended": "Subscription Ended",
         "refund_issued": "Refund Issued"
@@ -1295,6 +1323,7 @@
         "response": "Response",
         "payload": "Payload",
         "retry": "Retry",
+        "resend": "Resend",
         "filterAll": "All Statuses",
         "filterSuccess": "Success Only",
         "filterFailed": "Failed Only",

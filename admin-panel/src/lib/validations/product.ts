@@ -493,7 +493,8 @@ export function validateProductId(id: string): ValidationResult {
 }
 
 // Data sanitization function
-export function sanitizeProductData(data: Record<string, unknown>): Record<string, unknown> {
+// Note: setDefaults should be true for CREATE operations, false for UPDATE (partial updates)
+export function sanitizeProductData(data: Record<string, unknown>, setDefaults: boolean = true): Record<string, unknown> {
   // Create a copy to avoid mutating original data
   const sanitizedData = { ...data };
 
@@ -513,19 +514,19 @@ export function sanitizeProductData(data: Record<string, unknown>): Record<strin
   if (sanitizedData.name && typeof sanitizedData.name === 'string') {
     sanitizedData.name = sanitizedData.name.trim();
   }
-  
+
   if (sanitizedData.description && typeof sanitizedData.description === 'string') {
     sanitizedData.description = sanitizedData.description.trim();
   }
-  
+
   if (sanitizedData.slug && typeof sanitizedData.slug === 'string') {
     sanitizedData.slug = sanitizedData.slug.toLowerCase().trim();
   }
-  
+
   if (sanitizedData.currency && typeof sanitizedData.currency === 'string') {
     sanitizedData.currency = sanitizedData.currency.toUpperCase().trim();
   }
-  
+
   // Convert empty strings to null for date fields
   if (sanitizedData.available_from === '') {
     sanitizedData.available_from = null;
@@ -551,57 +552,61 @@ export function sanitizeProductData(data: Record<string, unknown>): Record<strin
     sanitizedData.sale_quantity_limit = parseInt(sanitizedData.sale_quantity_limit, 10) || null;
   }
 
-  // Ensure sale_quantity_sold is always a valid number
-  if (sanitizedData.sale_quantity_sold === '' || sanitizedData.sale_quantity_sold === null || sanitizedData.sale_quantity_sold === undefined) {
-    sanitizedData.sale_quantity_sold = 0;
-  } else if (typeof sanitizedData.sale_quantity_sold === 'string') {
-    sanitizedData.sale_quantity_sold = parseInt(sanitizedData.sale_quantity_sold, 10) || 0;
+  // Ensure sale_quantity_sold is always a valid number (only when explicitly provided)
+  if (sanitizedData.sale_quantity_sold !== undefined) {
+    if (sanitizedData.sale_quantity_sold === '' || sanitizedData.sale_quantity_sold === null) {
+      sanitizedData.sale_quantity_sold = 0;
+    } else if (typeof sanitizedData.sale_quantity_sold === 'string') {
+      sanitizedData.sale_quantity_sold = parseInt(sanitizedData.sale_quantity_sold, 10) || 0;
+    }
   }
 
-  // Set defaults
-  if (sanitizedData.currency === undefined) {
-    sanitizedData.currency = 'USD';
-  }
-  
-  if (sanitizedData.icon === undefined) {
-    sanitizedData.icon = '📦';
-  }
-  
-  if (sanitizedData.content_delivery_type === undefined) {
-    sanitizedData.content_delivery_type = 'content';
-  }
-  
-  if (sanitizedData.content_config === undefined) {
-    sanitizedData.content_config = { content_items: [] };
-  }
-  
-  if (sanitizedData.is_active === undefined) {
-    sanitizedData.is_active = true;
-  }
-  
-  if (sanitizedData.is_featured === undefined) {
-    sanitizedData.is_featured = false;
-  }
-
-  // Custom pricing / Pay What You Want fields
-  if (sanitizedData.allow_custom_price === undefined) {
-    sanitizedData.allow_custom_price = false;
-  }
-
+  // Validate custom_price_min if provided
   if (sanitizedData.custom_price_min !== undefined) {
     // Ensure minimum is at least 0.50 (Stripe requirement)
     const minPrice = parseFloat(String(sanitizedData.custom_price_min)) || 5.00;
     sanitizedData.custom_price_min = Math.max(0.50, minPrice);
   }
 
-  if (sanitizedData.show_price_presets === undefined) {
-    sanitizedData.show_price_presets = true;
-  }
-
-  // Ensure custom_price_presets is a valid array
+  // Ensure custom_price_presets is a valid array if provided
   if (sanitizedData.custom_price_presets !== undefined) {
     if (!Array.isArray(sanitizedData.custom_price_presets)) {
       sanitizedData.custom_price_presets = [5, 10, 25];
+    }
+  }
+
+  // Set defaults only for CREATE operations (not partial updates)
+  if (setDefaults) {
+    if (sanitizedData.currency === undefined) {
+      sanitizedData.currency = 'USD';
+    }
+
+    if (sanitizedData.icon === undefined) {
+      sanitizedData.icon = '📦';
+    }
+
+    if (sanitizedData.content_delivery_type === undefined) {
+      sanitizedData.content_delivery_type = 'content';
+    }
+
+    if (sanitizedData.content_config === undefined) {
+      sanitizedData.content_config = { content_items: [] };
+    }
+
+    if (sanitizedData.is_active === undefined) {
+      sanitizedData.is_active = true;
+    }
+
+    if (sanitizedData.is_featured === undefined) {
+      sanitizedData.is_featured = false;
+    }
+
+    if (sanitizedData.allow_custom_price === undefined) {
+      sanitizedData.allow_custom_price = false;
+    }
+
+    if (sanitizedData.show_price_presets === undefined) {
+      sanitizedData.show_price_presets = true;
     }
   }
 

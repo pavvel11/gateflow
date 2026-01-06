@@ -60,6 +60,21 @@
       "aboveMaximum": "Kwota nie może przekraczać {maximum}"
     }
   },
+  "waitlist": {
+    "joinWaitlist": "Dołącz do listy oczekujących",
+    "waitlistDescription": "Bądź pierwszą osobą, która dowie się o dostępności tego produktu.",
+    "productNotYetAvailable": "Ten produkt nie jest jeszcze dostępny",
+    "productNoLongerAvailable": "Ten produkt nie jest już dostępny",
+    "productCurrentlyUnavailable": "Ten produkt jest obecnie niedostępny",
+    "emailAddress": "Adres Email",
+    "enterEmailPlaceholder": "Wpisz swój adres email",
+    "notifyMe": "Powiadom mnie",
+    "signupSuccess": "Jesteś na liście! Powiadomimy Cię, gdy ten produkt będzie dostępny.",
+    "signupFailed": "Nie udało się zapisać. Spróbuj ponownie.",
+    "pleaseEnterEmail": "Podaj swój adres email",
+    "invalidEmail": "Podaj poprawny adres email",
+    "submitting": "Zapisywanie..."
+  },
   "oto": {
     "exclusiveOffer": "Ekskluzywna oferta jednorazowa!",
     "saveAmount": "Oszczędzasz {amount}",
@@ -974,6 +989,13 @@
       "statusActivated": "Produkt aktywowany pomyślnie",
       "statusDeactivated": "Produkt dezaktywowany pomyślnie",
       "statusToggleError": "Nie udało się zmienić statusu produktu",
+      "featuredEnabled": "Produkt oznaczony jako wyróżniony",
+      "featuredDisabled": "Produkt usunięty z wyróżnionych",
+      "featuredToggleError": "Nie udało się zmienić statusu wyróżnienia",
+      "setFeatured": "Ustaw jako wyróżniony",
+      "removeFeatured": "Usuń z wyróżnionych",
+      "waitlistEnabled": "Lista oczekujących włączona dla tego produktu",
+      "waitlistDisabled": "Brak listy oczekujących - produkt całkowicie niedostępny",
       "noRedirectUrl": "Ten produkt nie ma adresu URL przekierowania.",
       "noProductsToExport": "Brak produktów do eksportu",
       "exportSuccess": "{count} produktów wyeksportowano pomyślnie",
@@ -1051,6 +1073,7 @@
         "imageUrlHelp": "Wgraj zdjęcie produktu na ImgBB lub inny serwis hostingowy i wklej tutaj URL.",
         "setToZeroForFree": "Ustaw na 0 dla darmowych produktów. Użyj przecinka lub kropki jako separatora dziesiętnego.",
         "temporalAvailability": "Dostępność czasowa",
+        "availabilityAndWaitlist": "Dostępność i Lista oczekujących",
         "availableFrom": "Dostępny od",
         "availableUntil": "Dostępny do",
         "selectStartDate": "Wybierz datę i godzinę rozpoczęcia",
@@ -1059,6 +1082,10 @@
         "productUnavailableAfter": "Produkt będzie niedostępny po tej dacie i godzinie",
         "temporalAvailabilityTitle": "Dostępność czasowa",
         "temporalAvailabilityDescription": "Zostaw oba pola puste dla stałej dostępności. Ustaw tylko \"Dostępny od\" dla produktów uruchamianych w przyszłości. Ustaw tylko \"Dostępny do\" dla ofert czasowych.",
+        "waitlist": {
+          "enableWaitlist": "Włącz zapis na listę oczekujących",
+          "enableWaitlistDescription": "Pokaż formularz zapisu na listę oczekujących, gdy produkt jest niedostępny (nieaktywny, jeszcze nie rozpoczęty lub wygasły)."
+        },
         "autoGrantAccessSettings": "Ustawienia automatycznego przyznawania dostępu",
         "defaultAccessDuration": "Domyślny czas dostępu (dni)",
         "optional": "opcjonalne",
@@ -1291,6 +1318,7 @@
       "events_list": {
         "purchase_completed": "Zakup zakończony",
         "lead_captured": "Lead pozyskany (Darmowy produkt)",
+        "waitlist_signup": "Zapis na listę oczekujących",
         "subscription_started": "Subskrypcja rozpoczęta",
         "subscription_ended": "Subskrypcja zakończona",
         "refund_issued": "Zwrot wykonany"
@@ -1304,6 +1332,7 @@
         "response": "Odpowiedź",
         "payload": "Treść (Payload)",
         "retry": "Ponów",
+        "resend": "Wyślij ponownie",
         "filterAll": "Wszystkie statusy",
         "filterSuccess": "Tylko udane",
         "filterFailed": "Tylko nieudane",

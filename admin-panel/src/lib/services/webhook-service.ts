@@ -36,6 +36,18 @@ const MOCK_PAYLOADS: Record<string, any> = {
     userId: 'user_123abc',
     timestamp: new Date().toISOString()
   },
+  'waitlist.signup': {
+    email: 'interested@example.com',
+    product: {
+      id: 'prod_upcoming_123',
+      name: 'Upcoming Course',
+      slug: 'upcoming-course',
+      price: 9900,
+      currency: 'PLN',
+      icon: '🚀'
+    },
+    signed_up_at: new Date().toISOString()
+  },
   'subscription.started': {
     email: 'subscriber@example.com',
     planId: 'price_monthly_123',

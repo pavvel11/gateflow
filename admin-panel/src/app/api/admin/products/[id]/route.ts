@@ -185,15 +185,16 @@ export async function PUT(
     // Extract categories
     const { categories, ...productDataRaw } = body;
 
-    // Sanitize input data
-    const sanitizedData = sanitizeProductData(productDataRaw);
+    // Sanitize input data (setDefaults=false for partial updates)
+    const sanitizedData = sanitizeProductData(productDataRaw, false);
 
     // Validate update data
     const validation = validateUpdateProduct(sanitizedData);
+
     if (!validation.isValid) {
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: validation.errors 
+      return NextResponse.json({
+        error: 'Validation failed',
+        details: validation.errors
       }, { 
         status: 400,
         headers: {

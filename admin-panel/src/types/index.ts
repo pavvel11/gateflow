@@ -40,6 +40,8 @@ export interface Product {
   // Refund settings
   is_refundable: boolean
   refund_period_days?: number | null
+  // Waitlist settings (for inactive products)
+  enable_waitlist: boolean
   // Pay What You Want / Custom Pricing
   allow_custom_price: boolean
   custom_price_min: number
