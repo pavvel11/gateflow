@@ -531,191 +531,25 @@ export async function rateLimit(
 ### 🛒 Product Variants (Pricing Tiers)
 
 #### Product Variants System
-**Status**: 📋 Planned
-**Priority**: 🟡 Medium
-**Effort**: ~1-2 weeks
-**Description**: Allow a single product to have multiple purchasing options (variants) with different prices, durations, or features. Essential for selling licenses, subscriptions, or tiered access.
+**Status**: ✅ Done (Jan 2025)
+**Description**: Product variants implemented using M:N architecture (variants as linked products).
 
-**Use Cases**:
-- **Licenses**: 1-year license (99 PLN), 3-year license (199 PLN), Unlimited license (299 PLN)
-- **Access Duration**: 30-day access, 1-year access, Lifetime access
-- **Tiers**: Basic, Pro, Enterprise versions of the same product
-- **Formats**: eBook only (29 PLN), eBook + Video (49 PLN), eBook + Video + Coaching (199 PLN)
+**Implemented Features**:
+- ✅ **M:N Architecture**: `variant_groups` and `product_variant_groups` tables
+- ✅ **Admin UI**: Full CRUD in `/dashboard/variants`
+- ✅ **Variant Selector Page**: `/p/[slug]` shows variant picker before checkout
+- ✅ **Display Order**: Configurable order of variants in group
+- ✅ **Featured Variant**: Mark default/recommended variant
+- ✅ **RPC Functions**: `get_variant_group()`, `get_variant_group_by_slug()`
+- ✅ **E2E Tests**: 8+ comprehensive Playwright tests
+- ✅ **Backward Compatible**: Products without variants work as before
+- ✅ **Reuses Existing Systems**: Coupons, order bumps, Omnibus all work out-of-box
 
-**Core Features**:
-
-1. **Database Schema**:
-   ```sql
-   CREATE TABLE product_variants (
-     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-     product_id UUID REFERENCES products(id) ON DELETE CASCADE,
-     name VARCHAR(100) NOT NULL,           -- e.g., "1-Year License"
-     description TEXT,                      -- e.g., "Full access for 12 months"
-     price DECIMAL(10,2) NOT NULL,
-     compare_at_price DECIMAL(10,2),        -- For showing discounts
-     currency VARCHAR(3) DEFAULT 'PLN',
-
-     -- Access configuration
-     access_duration_days INTEGER,          -- NULL = unlimited
-     metadata JSONB DEFAULT '{}',           -- Custom data (license type, features, etc.)
-
-     -- Sorting & display
-     display_order INTEGER DEFAULT 0,
-     is_default BOOLEAN DEFAULT false,      -- Pre-selected variant
-     is_active BOOLEAN DEFAULT true,
-
-     -- Stripe
-     stripe_price_id VARCHAR(255),          -- For Stripe Checkout integration
-
-     created_at TIMESTAMPTZ DEFAULT NOW(),
-     updated_at TIMESTAMPTZ DEFAULT NOW()
-   );
-
-   -- Ensure only one default per product
-   CREATE UNIQUE INDEX idx_product_variants_default
-     ON product_variants(product_id) WHERE is_default = true;
-   ```
-
-2. **Product Form Extension**:
-   - "Enable Variants" toggle in Product Form
-   - When enabled: hide main price field, show variants manager
-   - Variant editor: Add/Edit/Delete/Reorder variants
-   - Each variant: Name, Price, Compare-at-price, Duration, Description
-   - "Set as Default" radio button
-   - Drag-and-drop reordering
-
-3. **Checkout Integration**:
-   - Variant selector UI (radio buttons or dropdown)
-   - Price updates dynamically on variant change
-   - Selected variant stored in payment metadata
-   - Variant name shown in order confirmation
-
-4. **Access Management**:
-   - `user_access.variant_id` foreign key
-   - `user_access.expires_at` calculated from variant's `access_duration_days`
-   - Different variants = different access durations
-   - Upgrade path: Allow purchasing higher tier (credit existing payment?)
-
-5. **Stripe Integration**:
-   - Create Stripe Price for each variant (or use dynamic pricing)
-   - Pass variant info in `payment_intent.metadata`
-   - Support for both one-time and recurring variants (future)
-
-6. **Analytics**:
-   - Revenue breakdown by variant
-   - Conversion rate per variant
-   - Most popular variant indicator
-
-7. **API & Webhooks**:
-   - Include `variant_id` and `variant_name` in webhook payloads
-   - API endpoint: `GET /api/products/[slug]/variants`
-
-**UI Mockup** (Checkout):
-```
-┌─────────────────────────────────────────┐
-│  Choose your plan:                      │
-│                                         │
-│  ○ 1-Year License                       │
-│    Full access for 12 months            │
-│    99 PLN                               │
-│                                         │
-│  ● 3-Year License          ⭐ POPULAR   │
-│    Full access for 36 months            │
-│    ~~297 PLN~~ 199 PLN  (-33%)          │
-│                                         │
-│  ○ Lifetime License                     │
-│    Unlimited access forever             │
-│    299 PLN                              │
-│                                         │
-└─────────────────────────────────────────┘
-```
-
-**Implementation Phases**:
-
-**Phase 1 (MVP)**: ~3-4 days
-- Database schema & migrations
-- Basic variant CRUD in Product Form
-- Checkout variant selector (radio buttons)
-- Payment with variant metadata
-- Access grant with duration
-
-**Phase 2 (Polish)**: ~2-3 days
-- Compare-at-price & discount badges
-- "Popular" / "Best Value" badges
-- Variant-specific descriptions
-- Analytics integration
-
-**Phase 3 (Advanced)**: ~3-4 days
-- Stripe Price sync (optional)
-- Upgrade/downgrade paths
-- Variant-specific order bumps
-- Recurring variants (subscriptions)
-
-**Backward Compatibility**:
-- Products without variants work exactly as before
-- `products.price` remains the source of truth for non-variant products
-- Existing purchases unaffected
-
-**Edge Cases**:
-- Single variant = effectively no choice (auto-select)
-- All variants disabled = product unavailable
-- Variant deleted after purchase = show "Legacy" in order history
-- Currency mismatch = all variants must use same currency
-
-**⚠️ CRITICAL: Architecture Decision**:
-
-Przed implementacją trzeba dokładnie przemyśleć jak warianty współgrają z istniejącymi mechanizmami:
-- **Kupony**: Czy kupon działa na produkt czy na wariant? Jak obsłużyć "10% na wszystkie warianty" vs "20 PLN zniżki tylko na Unlimited"?
-- **Order Bumps**: Czy bump może być wariantem? Czy bump może mieć własne warianty?
-- **Omnibus**: Czy każdy wariant ma osobną historię cen?
-- **Webhooks**: Payload musi zawierać info o wariancie
-- **Analytics**: Revenue per variant vs per product
-
-**Dwa podejścia do rozważenia**:
-
-| Aspekt | Nowa tabela `product_variants` | Warianty jako powiązane produkty |
-|--------|-------------------------------|----------------------------------|
-| Kompleksność | Wysoka (nowy system) | Niska (reuse existing) |
-| Kupony | Wymaga nowej logiki | Działa out-of-box |
-| Order Bumps | Wymaga integracji | Działa out-of-box |
-| Omnibus | Nowa implementacja | Działa out-of-box |
-| UI Checkout | Dedykowany selector | Może być mniej elegancki |
-| Grupowanie | Naturalne (parent_id) | Wymaga `variant_group_id` |
-| Stripe | Nowe Price per variant | Istniejące Price per product |
-
-**Rekomendacja**: Rozważyć **podejście hybrydowe**:
-1. Warianty = normalne produkty z `variant_group_id` (lub `parent_product_id`)
-2. Dodatkowe pole `variant_name` (np. "1-Year", "Lifetime")
-3. UI na checkout grupuje produkty z tym samym `variant_group_id`
-4. Wszystkie istniejące mechanizmy (kupony, bumps, omnibus) działają bez zmian
-
-```sql
--- Minimalne zmiany w tabeli products:
-ALTER TABLE products ADD COLUMN variant_group_id UUID;
-ALTER TABLE products ADD COLUMN variant_name VARCHAR(100);
-ALTER TABLE products ADD COLUMN variant_order INTEGER DEFAULT 0;
-
--- Warianty to po prostu produkty z tym samym variant_group_id
--- Pierwszy produkt w grupie (variant_order=0) = domyślny
-```
-
-**Korzyści podejścia "warianty jako produkty"**:
-- ✅ Zero zmian w kuponach, order bumps, omnibus, webhooks
-- ✅ Każdy wariant ma własny slug, własną stronę checkout
-- ✅ Łatwe A/B testing (różne landing pages per wariant)
-- ✅ Stripe Price już istnieje per produkt
-- ✅ Analytics działa out-of-box
-
-**Wady**:
-- ⚠️ Więcej produktów w panelu (można filtrować po grupie)
-- ⚠️ Edycja wspólnych pól (opis, grafika) wymaga sync lub "master product"
-
-**Decyzja**: Do podjęcia przed implementacją. Prawdopodobnie podejście "warianty jako produkty" jest bezpieczniejsze i szybsze.
-
-**Inspiration**:
-- [Gumroad Variants](https://help.gumroad.com/article/149-product-variants)
-- [Paddle Pricing](https://developer.paddle.com/concepts/products/manage-products-prices)
-- [Stripe Products & Prices](https://stripe.com/docs/products-prices/overview)
+**Architecture Decision**: Implemented "variants as linked products" approach:
+- Each variant is a normal product with `variant_group_id`
+- Zero changes needed in coupons, order bumps, webhooks
+- Each variant has own slug, own checkout page
+- Analytics works out-of-box
 
 ---
 
@@ -937,21 +771,28 @@ CREATE TABLE product_affiliate_rates (
 - Dunning management (failed payment retries).
 
 #### Advanced Refund Management
-**Status**: 📋 Planned
-**Description**: Comprehensive refund handling directly from the Admin Panel.
-**Features**:
-- **Refund Action**: Button to trigger Stripe refund API.
-- **Refund Window**: Configure "Days to Refund" per product (e.g., 30-day money-back guarantee).
-- **Auto-Revoke**: Automatically revoke access when a refund is processed.
-- **Partial Refunds**: Allow refunding specific amounts.
+**Status**: ✅ Done (Jan 2025)
+**Description**: Full refund request system with customer-facing form and admin management.
+**Implemented Features**:
+- ✅ **Per-Product Config**: `is_refundable`, `refund_period_days` fields
+- ✅ **Customer Request Form**: In `/my-purchases` with reason input
+- ✅ **Admin Dashboard**: `/dashboard/refund-requests` with approve/reject
+- ✅ **Status Workflow**: pending → approved/rejected → refunded
+- ✅ **Stripe Integration**: Automatic refund processing on approval
+- ✅ **Admin Notes**: Response/notes field for admin communication
+- ✅ **Period Validation**: Blocks requests after refund period expires
+- ✅ **E2E Tests**: 24 comprehensive Playwright tests
 
 #### Payment Transactions History UI
-**Status**: 📋 Planned
-**Description**: A dedicated view to monitor all purchase attempts and successful payments.
-**Features**:
-- **Transaction List**: Comprehensive table showing Customer Email, Product, Amount, Currency, and Status.
-- **Stripe Integration**: Link each transaction to the Stripe Dashboard.
-- **Search & Filters**: Filter by date range, product, or transaction status.
+**Status**: ✅ Done (Dec 2024)
+**Description**: Full payments dashboard with statistics and transaction history.
+**Implemented Features**:
+- ✅ **Payments Dashboard**: `/dashboard/payments` page
+- ✅ **Stats Cards**: Total revenue, today's revenue, order counts
+- ✅ **Sessions Table**: `PaymentSessionsTable` with all checkout sessions
+- ✅ **Transactions Table**: `PaymentTransactionsTable` with completed payments
+- ✅ **Filters**: Date range, status, product filtering
+- ✅ **Multi-Currency**: Revenue grouped by currency or converted
 
 #### Polish Payment Gateways (PayU, Przelewy24, Tpay)
 **Status**: 📋 Planned
@@ -974,12 +815,15 @@ CREATE TABLE product_affiliate_rates (
 - **Seamless Experience**: Frontend adapts the payment form automatically based on the active backend provider so the user experience remains consistent.
 
 #### Audit Logging for Admin Operations
-**Status**: 📋 Planned
-**Description**: Log every administrative action (Create/Update/Delete) to a dedicated `admin_audit_logs` table for security compliance.
-**Features**:
-- **Automatic Logging**: Middleware or helper to log who did what and when.
-- **Webhook Operations**: Track changes to webhook configurations and manual retries.
-- **Product & Coupon changes**: Track price changes or discount updates.
+**Status**: ✅ Done (Dec 2024)
+**Description**: Comprehensive audit logging system with automatic triggers.
+**Implemented Features**:
+- ✅ **audit_log Table**: Tracks all table changes (old_values, new_values, user_id, IP, user_agent)
+- ✅ **admin_actions Table**: Dedicated table for admin operations with severity levels
+- ✅ **Automatic Triggers**: Database triggers on admin_users, user_product_access, payment_transactions, guest_purchases
+- ✅ **RPC Function**: `log_audit_entry()` for manual logging
+- ✅ **Monitoring System**: CRITICAL/WARNING alerts via pg_notify
+- ✅ **Cleanup Jobs**: `cleanup_audit_logs()` with configurable retention
 
 ### 🏗️ Architecture & Security Improvements
 - 📋 **Dashboard Data Fetching Consolidation**: Optimize admin dashboard by reducing parallel client-side requests (currently ~15 POST calls) by moving fetching to Server Components.
@@ -1015,16 +859,14 @@ CREATE TABLE product_affiliate_rates (
 ### 🔐 Security & Access Control
 
 #### Terms Acceptance for Free/Guest Users
-**Status**: 📋 Planned
-**Description**: Ensure explicit acceptance of Terms of Service and Privacy Policy for non-payment flows.
-**Context**:
-- Stripe Checkout handles terms acceptance for paid products (`consent_collection`).
-- Free product access and direct registration currently lack a mandatory checkbox.
-**Requirements**:
-- Add "I agree to Terms & Privacy" checkbox to:
-  - Guest email capture forms (free products)
-  - Magic Link login/registration forms
-- Store acceptance timestamp and IP in `users` or `audit_log`.
+**Status**: ✅ Done (Jan 2025)
+**Description**: Terms acceptance implemented for all non-payment flows.
+**Implemented Features**:
+- ✅ **WaitlistForm**: Required T&C checkbox before signup
+- ✅ **FreeProductForm**: Required T&C checkbox before claiming
+- ✅ **TermsCheckbox Component**: Reusable component with link to ToS
+- ✅ **Consent Logging**: `consent_logs` table with timestamp, IP, user_agent
+- ✅ **GDPR Compliant**: Explicit consent before data collection
 
 #### Configurable URL Validation
 **Status**: 📋 Planned
@@ -1260,20 +1102,47 @@ CREATE TABLE product_affiliate_rates (
 **Description**: Allow administrators to group multiple products into a single "bundle" that can be purchased as one item, often at a discounted price.
 
 #### Product Categories
-**Status**: 📋 Planned
-**Description**: Organize products into a hierarchical or flat category structure for better navigation and management.
-**Features**:
-- **Category Management**: CRUD for categories (Name, Slug, Description).
-- **Product Assignment**: UI to assign one or multiple categories to a product.
-- **Frontend filtering**: Filter products by category on the storefront/dashboard.
+**Status**: 🏗️ Partially Done (Dec 2024)
+**Description**: Hierarchical category system for product organization.
+**Implemented Features**:
+- ✅ **Database Schema**: `categories` table with parent_id for hierarchy
+- ✅ **M:N Relationship**: `product_categories` junction table
+- ✅ **Admin UI**: Full CRUD in `/dashboard/categories`
+- ✅ **Product Form**: Category assignment in product editor
+- ✅ **Auto-Slug**: Automatic slug generation from name
+
+**Missing Features** (categories currently not utilized):
+- ❌ **Storefront Filtering**: Filter products by category on landing page
+- ❌ **Category Pages**: `/category/[slug]` pages with products
+- ❌ **Navigation Menu**: Category-based navigation
+- ❌ **Breadcrumbs**: Category hierarchy in product pages
+- ❌ **SEO**: Category meta tags, structured data
+
+**Decision Needed**: Define use cases for categories before implementing. Options:
+1. **Storefront Navigation**: Categories as menu items with product filtering
+2. **Internal Organization**: Admin-only grouping for easier management
+3. **Marketing Segments**: Use for targeted promotions/coupons
+4. **Remove Feature**: If not needed, simplify by removing
 
 #### Product Tags
-**Status**: 📋 Planned
-**Description**: Flexible tagging system for products to enable advanced filtering, marketing segmentation, and automation.
-**Features**:
-- **Tag Management**: Create/Edit tags on the fly or in a dedicated view.
-- **Usage**: Assign tags like "Promo", "Bestseller", "New" to products.
-- **Automation**: Use tags as triggers for discounts or webhooks (e.g. "Apply coupon to all products with tag 'BlackFriday'").
+**Status**: 🏗️ Partially Done (Dec 2024)
+**Description**: Flexible tagging system for products.
+**Implemented Features**:
+- ✅ **Database Schema**: `tags` table with slug
+- ✅ **M:N Relationship**: `product_tags` junction table
+
+**Missing Features**:
+- ❌ **Admin UI**: No `/dashboard/tags` management page
+- ❌ **Product Form Integration**: Cannot assign tags to products in UI
+- ❌ **Tag Filtering**: No filtering by tags anywhere
+- ❌ **Automation**: No triggers based on tags (e.g., auto-apply coupon)
+
+**Decision Needed**: Define purpose of tags before implementing UI. Options:
+1. **Marketing Labels**: "Bestseller", "New", "Sale" badges on storefront
+2. **Coupon Targeting**: Apply discounts to products with specific tags
+3. **Webhook Triggers**: Send webhooks when tagged products are purchased
+4. **Internal Notes**: Admin-only labels for organization
+5. **Remove Feature**: If redundant with categories, simplify by removing
 
 #### Content Delivery Type Refactoring
 **Status**: 💭 Idea
@@ -1459,5 +1328,5 @@ CREATE TABLE product_affiliate_rates (
 
 ---
 
-**Last Updated**: 2026-01-05
-**Version**: 2.1
+**Last Updated**: 2026-01-06
+**Version**: 2.2
