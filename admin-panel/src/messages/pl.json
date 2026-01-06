@@ -1325,7 +1325,10 @@
       "deleteConfirm": "Czy na pewno chcesz usunąć ten webhook?",
       "waitlistWarning": {
         "title": "Produkty z listą oczekujących zagrożone",
-        "description": "To ostatni webhook obsługujący zapisy na listę oczekujących. Usunięcie go spowoduje, że {count, plural, one {# produkt} few {# produkty} many {# produktów} other {# produktów}} z włączoną listą oczekujących przestanie wysyłać powiadomienia o zapisach."
+        "description": "To ostatni webhook obsługujący zapisy na listę oczekujących. Usunięcie go spowoduje, że {count, plural, one {# produkt} few {# produkty} many {# produktów} other {# produktów}} z włączoną listą oczekujących przestanie wysyłać powiadomienia o zapisach.",
+        "editTitle": "Usunąć zdarzenie listy oczekujących?",
+        "editDescription": "Usuwasz zdarzenie waitlist.signup z ostatniego webhooka, który je obsługuje. {count, plural, one {# produkt} few {# produkty} many {# produktów} other {# produktów}} z włączoną listą oczekujących przestanie otrzymywać powiadomienia o zapisach.",
+        "confirmEdit": "Usuń mimo to"
       },
       "events_list": {
         "purchase_completed": "Zakup zakończony",

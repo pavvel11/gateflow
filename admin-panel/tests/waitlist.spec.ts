@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createTestAdmin, loginAsAdmin } from './helpers/admin-auth';
+import { createTestAdmin, loginAsAdmin, supabaseAdmin } from './helpers/admin-auth';
 
 /**
  * Waitlist Feature Tests
@@ -7,12 +7,132 @@ import { createTestAdmin, loginAsAdmin } from './helpers/admin-auth';
  */
 
 test.describe('Waitlist Feature', () => {
-  // Use existing test products from the database
-  const TEST_PRODUCT_WITH_WAITLIST = 'test-oto-target'; // inactive + enable_waitlist=true
-  const TEST_PRODUCT_WITHOUT_WAITLIST = 'test-no-redirect'; // inactive + enable_waitlist=false
-  const TEST_PRODUCT_ID_WITH_WAITLIST = '900dc88a-8999-4a29-ab69-9d4a2352b69b';
-  const TEST_PRODUCT_ID_WITHOUT_WAITLIST = '153ebaed-8358-406e-a859-6b8ed7828a81';
   const TEST_EMAIL = 'waitlist-test@example.com';
+
+  // Test product IDs - created at runtime
+  let testProductWithWaitlistId: string;
+  let testProductWithWaitlistSlug: string;
+  let testProductWithoutWaitlistId: string;
+  let testProductWithoutWaitlistSlug: string;
+
+  /**
+   * Helper to create a test product
+   */
+  async function createTestProduct(options: {
+    name: string;
+    slug: string;
+    isActive: boolean;
+    enableWaitlist: boolean;
+  }): Promise<{ id: string; slug: string }> {
+    const { data, error } = await supabaseAdmin
+      .from('products')
+      .insert({
+        name: options.name,
+        slug: options.slug,
+        description: `Test product for waitlist tests - ${options.slug}`,
+        icon: '🧪',
+        price: 19.99,
+        currency: 'USD',
+        vat_rate: 23.00,
+        price_includes_vat: true,
+        features: [{ title: 'Test', items: ['Waitlist test product'] }],
+        is_active: options.isActive,
+        enable_waitlist: options.enableWaitlist,
+      })
+      .select('id, slug')
+      .single();
+
+    if (error) throw error;
+    return { id: data.id, slug: data.slug };
+  }
+
+  /**
+   * Helper to delete a test product
+   */
+  async function deleteTestProduct(id: string): Promise<void> {
+    await supabaseAdmin.from('products').delete().eq('id', id);
+  }
+
+  /**
+   * Helper to create a test webhook with waitlist.signup event
+   */
+  async function createWaitlistWebhook(): Promise<string> {
+    const { data, error } = await supabaseAdmin
+      .from('webhook_endpoints')
+      .insert({
+        url: 'https://example.com/test-waitlist-webhook',
+        events: ['waitlist.signup'],
+        description: 'Test webhook for waitlist',
+        is_active: true
+      })
+      .select('id')
+      .single();
+
+    if (error) throw error;
+    return data.id;
+  }
+
+  /**
+   * Helper to delete a webhook by ID
+   */
+  async function deleteWebhook(id: string): Promise<void> {
+    await supabaseAdmin.from('webhook_endpoints').delete().eq('id', id);
+  }
+
+  /**
+   * Helper to delete all waitlist webhooks
+   */
+  async function deleteAllWaitlistWebhooks(): Promise<void> {
+    await supabaseAdmin
+      .from('webhook_endpoints')
+      .delete()
+      .contains('events', ['waitlist.signup']);
+  }
+
+  /**
+   * Helper to set enable_waitlist on a product by slug
+   */
+  async function setProductWaitlistBySlug(slug: string, enabled: boolean): Promise<void> {
+    await supabaseAdmin
+      .from('products')
+      .update({ enable_waitlist: enabled })
+      .eq('slug', slug);
+  }
+
+  // Create test products before all tests
+  test.beforeAll(async () => {
+    const timestamp = Date.now();
+
+    // Create product with waitlist enabled (inactive)
+    const withWaitlist = await createTestProduct({
+      name: 'Test Waitlist Product',
+      slug: `test-waitlist-${timestamp}`,
+      isActive: false,
+      enableWaitlist: true,
+    });
+    testProductWithWaitlistId = withWaitlist.id;
+    testProductWithWaitlistSlug = withWaitlist.slug;
+
+    // Create product without waitlist (inactive)
+    const withoutWaitlist = await createTestProduct({
+      name: 'Test No Waitlist Product',
+      slug: `test-no-waitlist-${timestamp}`,
+      isActive: false,
+      enableWaitlist: false,
+    });
+    testProductWithoutWaitlistId = withoutWaitlist.id;
+    testProductWithoutWaitlistSlug = withoutWaitlist.slug;
+  });
+
+  // Clean up test products after all tests
+  test.afterAll(async () => {
+    if (testProductWithWaitlistId) {
+      await deleteTestProduct(testProductWithWaitlistId);
+    }
+    if (testProductWithoutWaitlistId) {
+      await deleteTestProduct(testProductWithoutWaitlistId);
+    }
+  });
 
   test.describe('Admin Panel', () => {
     let adminEmail: string;
@@ -68,7 +188,7 @@ test.describe('Waitlist Feature', () => {
   test.describe('Checkout Page - Waitlist Form', () => {
     test('should show 404 for inactive product WITHOUT waitlist enabled', async ({ page }) => {
       // test-no-redirect is an inactive product without waitlist enabled
-      await page.goto(`/pl/checkout/${TEST_PRODUCT_WITHOUT_WAITLIST}`);
+      await page.goto(`/pl/checkout/${testProductWithoutWaitlistSlug}`);
 
       // Page loads but shows "Product Not Found" content (Next.js notFound() returns 200 in dev)
       const title = await page.title();
@@ -77,7 +197,7 @@ test.describe('Waitlist Feature', () => {
 
     test('should show waitlist form for inactive product WITH waitlist enabled', async ({ page }) => {
       // Navigate to checkout page for inactive product with waitlist
-      await page.goto(`/pl/checkout/${TEST_PRODUCT_WITH_WAITLIST}`);
+      await page.goto(`/pl/checkout/${testProductWithWaitlistSlug}`);
 
       // Should NOT be 404
       await expect(page).not.toHaveURL(/404/);
@@ -100,7 +220,7 @@ test.describe('Waitlist Feature', () => {
     });
 
     test('should have required email field', async ({ page }) => {
-      await page.goto(`/pl/checkout/${TEST_PRODUCT_WITH_WAITLIST}`);
+      await page.goto(`/pl/checkout/${testProductWithWaitlistSlug}`);
 
       // Wait for form to load
       const waitlistTitle = page.locator('h2').filter({ hasText: /Join the Waitlist|Dołącz do listy oczekujących/i });
@@ -112,7 +232,7 @@ test.describe('Waitlist Feature', () => {
     });
 
     test('should require terms acceptance', async ({ page }) => {
-      await page.goto(`/pl/checkout/${TEST_PRODUCT_WITH_WAITLIST}`);
+      await page.goto(`/pl/checkout/${testProductWithWaitlistSlug}`);
 
       // Wait for form to load
       const waitlistTitle = page.locator('h2').filter({ hasText: /Join the Waitlist|Dołącz do listy oczekujących/i });
@@ -130,7 +250,7 @@ test.describe('Waitlist Feature', () => {
     });
 
     test('should allow filling waitlist form', async ({ page }) => {
-      await page.goto(`/pl/checkout/${TEST_PRODUCT_WITH_WAITLIST}`);
+      await page.goto(`/pl/checkout/${testProductWithWaitlistSlug}`);
 
       // Wait for form to load
       const waitlistTitle = page.locator('h2').filter({ hasText: /Join the Waitlist|Dołącz do listy oczekujących/i });
@@ -195,7 +315,7 @@ test.describe('Waitlist Feature', () => {
       const response = await request.post('/api/waitlist/signup', {
         data: {
           email: TEST_EMAIL,
-          productId: TEST_PRODUCT_ID_WITHOUT_WAITLIST
+          productId: testProductWithoutWaitlistId
         }
       });
 
@@ -210,7 +330,7 @@ test.describe('Waitlist Feature', () => {
       const response = await request.post('/api/waitlist/signup', {
         data: {
           email: TEST_EMAIL,
-          productId: TEST_PRODUCT_ID_WITH_WAITLIST
+          productId: testProductWithWaitlistId
         }
       });
 
@@ -287,6 +407,245 @@ test.describe('Waitlist Feature', () => {
 
       console.log('Has 404:', has404);
       console.log('Has waitlist form:', hasWaitlistForm);
+    });
+  });
+
+  /**
+   * Waitlist Webhook Warning Tests
+   * Tests admin warnings when no webhook is configured for waitlist.signup
+   * Each test is INDEPENDENT and sets up its own database state
+   */
+  test.describe('Waitlist Webhook Warnings', () => {
+    // Serial mode - tests run one at a time to avoid database conflicts
+    test.describe.configure({ mode: 'serial' });
+
+    let adminEmail: string;
+    let adminPassword: string;
+    let cleanup: () => Promise<void>;
+
+    test.beforeAll(async () => {
+      const admin = await createTestAdmin('waitlist-warnings');
+      adminEmail = admin.email;
+      adminPassword = admin.password;
+      cleanup = admin.cleanup;
+    });
+
+    test.afterAll(async () => {
+      if (cleanup) await cleanup();
+    });
+
+    /**
+     * Helper to ensure Availability & Waitlist section is expanded
+     * Checks if section content is visible, clicks to expand if needed
+     */
+    async function ensureAvailabilitySectionExpanded(page: import('@playwright/test').Page): Promise<void> {
+      const modal = page.locator('[role="dialog"]');
+      const sectionHeader = modal.locator('button').filter({ hasText: /Dostępność.*Lista|Availability.*Waitlist/i }).first();
+      const waitlistLabel = modal.locator('label').filter({ hasText: /Włącz zapis na listę|Enable Waitlist/i });
+
+      // Check if section content is visible (expanded)
+      const isExpanded = await waitlistLabel.isVisible().catch(() => false);
+
+      if (!isExpanded) {
+        // Section is collapsed, click to expand
+        await sectionHeader.click();
+        await page.waitForTimeout(300); // Wait for animation
+      }
+
+      // Wait for RPC check to complete
+      await page.waitForTimeout(1000);
+    }
+
+    test('should disable waitlist checkbox when no webhook configured', async ({ page }) => {
+      // SETUP: Ensure NO waitlist webhooks exist
+      await deleteAllWaitlistWebhooks();
+
+      await loginAsAdmin(page, adminEmail, adminPassword);
+      await page.goto('/pl/dashboard/products');
+
+      // Click add product button
+      await page.getByRole('button', { name: /Dodaj produkt|Add Product/i }).click();
+      await page.waitForSelector('[role="dialog"]');
+
+      // Ensure section is expanded (checks and clicks if needed)
+      await ensureAvailabilitySectionExpanded(page);
+
+      // Find the waitlist checkbox by looking for the label text
+      const waitlistLabel = page.locator('label').filter({ hasText: /Włącz zapis na listę|Enable Waitlist/i });
+      await expect(waitlistLabel).toBeVisible({ timeout: 5000 });
+
+      // The checkbox inside the label should be disabled
+      const checkbox = waitlistLabel.locator('input[type="checkbox"]');
+      await expect(checkbox).toBeDisabled();
+    });
+
+    test('should show warning message when no webhook configured', async ({ page }) => {
+      // SETUP: Ensure NO waitlist webhooks exist
+      await deleteAllWaitlistWebhooks();
+
+      await loginAsAdmin(page, adminEmail, adminPassword);
+      await page.goto('/pl/dashboard/products');
+
+      // Click add product button
+      await page.getByRole('button', { name: /Dodaj produkt|Add Product/i }).click();
+      await page.waitForSelector('[role="dialog"]');
+
+      // Ensure section is expanded (checks and clicks if needed)
+      await ensureAvailabilitySectionExpanded(page);
+
+      // Should show warning about configuring webhook
+      const warningBox = page.locator('.bg-amber-50, .dark\\:bg-amber-900\\/20').filter({ hasText: /webhook/i });
+      await expect(warningBox).toBeVisible({ timeout: 5000 });
+    });
+
+    test('should enable waitlist checkbox when webhook IS configured', async ({ page }) => {
+      // SETUP: Create a waitlist webhook
+      await deleteAllWaitlistWebhooks();
+      const webhookId = await createWaitlistWebhook();
+
+      try {
+        await loginAsAdmin(page, adminEmail, adminPassword);
+        await page.goto('/pl/dashboard/products');
+
+        // Click add product button
+        await page.getByRole('button', { name: /Dodaj produkt|Add Product/i }).click();
+        await page.waitForSelector('[role="dialog"]');
+
+        // Ensure section is expanded (checks and clicks if needed)
+        await ensureAvailabilitySectionExpanded(page);
+
+        // Find the waitlist checkbox
+        const waitlistLabel = page.locator('label').filter({ hasText: /Włącz zapis na listę|Enable Waitlist/i });
+        await expect(waitlistLabel).toBeVisible({ timeout: 5000 });
+
+        // The checkbox should be ENABLED (not disabled)
+        const checkbox = waitlistLabel.locator('input[type="checkbox"]');
+        await expect(checkbox).toBeEnabled();
+      } finally {
+        // CLEANUP
+        await deleteWebhook(webhookId);
+      }
+    });
+
+    test('should NOT show warning when webhook IS configured', async ({ page }) => {
+      // SETUP: Create a waitlist webhook
+      await deleteAllWaitlistWebhooks();
+      const webhookId = await createWaitlistWebhook();
+
+      try {
+        await loginAsAdmin(page, adminEmail, adminPassword);
+        await page.goto('/pl/dashboard/products');
+
+        // Click add product button
+        await page.getByRole('button', { name: /Dodaj produkt|Add Product/i }).click();
+        await page.waitForSelector('[role="dialog"]');
+
+        // Ensure section is expanded (checks and clicks if needed)
+        await ensureAvailabilitySectionExpanded(page);
+
+        // Should NOT show amber warning box
+        const warningBox = page.locator('.bg-amber-50, .dark\\:bg-amber-900\\/20').filter({ hasText: /webhook/i });
+        await expect(warningBox).not.toBeVisible();
+      } finally {
+        // CLEANUP
+        await deleteWebhook(webhookId);
+      }
+    });
+
+    test('should show warning when deleting last waitlist webhook with products affected', async ({ page }) => {
+      // SETUP: Create exactly one waitlist webhook and ensure a product has waitlist enabled
+      await deleteAllWaitlistWebhooks();
+      const webhookId = await createWaitlistWebhook();
+      // Use any existing product - 'test-oto-active' is always available
+      await setProductWaitlistBySlug('test-oto-active', true);
+
+      try {
+        await loginAsAdmin(page, adminEmail, adminPassword);
+        await page.goto('/pl/dashboard/webhooks');
+
+        // Wait for page to load
+        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(1000);
+
+        // Find the webhook row with our test webhook URL
+        const webhookRow = page.locator('tr').filter({ hasText: 'example.com/test-waitlist-webhook' });
+        await expect(webhookRow).toBeVisible({ timeout: 10000 });
+
+        // Click delete button - this triggers async RPC call before opening modal
+        const deleteButton = webhookRow.getByRole('button', { name: /Usuń|Delete/i });
+        await deleteButton.click();
+
+        // Wait for modal with warning (RPC needs time to complete before modal opens)
+        await page.waitForSelector('[role="dialog"]', { timeout: 10000 });
+
+        // Wait a bit for the warning state to be set (async operation)
+        await page.waitForTimeout(500);
+
+        // Should show waitlist warning (amber box with warning emoji)
+        const warningInModal = page.locator('[role="dialog"]').locator('.bg-amber-50');
+        await expect(warningInModal).toBeVisible({ timeout: 5000 });
+
+        // Cancel to not actually delete
+        await page.getByRole('button', { name: /Anuluj|Cancel/i }).click();
+      } finally {
+        // CLEANUP - delete the webhook we created and reset product
+        await deleteWebhook(webhookId);
+        await setProductWaitlistBySlug('test-oto-active', false);
+      }
+    });
+
+    test('should show warning when editing last webhook to remove waitlist.signup event', async ({ page }) => {
+      // SETUP: Create exactly one waitlist webhook and ensure a product has waitlist enabled
+      await deleteAllWaitlistWebhooks();
+      const webhookId = await createWaitlistWebhook();
+      await setProductWaitlistBySlug('test-oto-active', true);
+
+      try {
+        await loginAsAdmin(page, adminEmail, adminPassword);
+        await page.goto('/pl/dashboard/webhooks');
+
+        // Wait for page to load
+        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(1000);
+
+        // Find the webhook row
+        const webhookRow = page.locator('tr').filter({ hasText: 'example.com/test-waitlist-webhook' });
+        await expect(webhookRow).toBeVisible({ timeout: 10000 });
+
+        // Click edit button
+        const editButton = webhookRow.getByRole('button', { name: /Edytuj|Edit/i });
+        await editButton.click();
+
+        // Wait for edit modal
+        await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
+
+        // Uncheck the waitlist.signup event
+        const waitlistCheckbox = page.locator('[role="dialog"]').locator('input[type="checkbox"]').filter({ has: page.locator('xpath=..').filter({ hasText: /waitlist/i }) });
+
+        // Find checkbox by looking for the label text
+        const waitlistLabel = page.locator('[role="dialog"]').locator('label').filter({ hasText: /waitlist/i });
+        const checkbox = waitlistLabel.locator('input[type="checkbox"]');
+
+        // Verify it's checked, then uncheck it
+        await expect(checkbox).toBeChecked();
+        await checkbox.uncheck();
+        await expect(checkbox).not.toBeChecked();
+
+        // Click update button (submit the form)
+        await page.locator('[role="dialog"]').getByRole('button', { name: /Aktualizuj|Update/i }).click();
+
+        // Should show warning modal with amber box
+        await page.waitForTimeout(1000);
+        const warningBox = page.locator('.bg-amber-50').filter({ hasText: /waitlist/i });
+        await expect(warningBox).toBeVisible({ timeout: 5000 });
+
+        // Cancel the warning modal (click the last Cancel button which is in the warning modal)
+        await page.getByRole('button', { name: /Anuluj|Cancel/i }).last().click();
+      } finally {
+        // CLEANUP
+        await deleteWebhook(webhookId);
+        await setProductWaitlistBySlug('test-oto-active', false);
+      }
     });
   });
 });

@@ -177,6 +177,30 @@ CREATE TABLE IF NOT EXISTS public.webhook_logs (
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
+-- Check waitlist configuration for admin warnings
+-- Returns whether any webhook has waitlist.signup event and count of products with waitlist enabled
+CREATE OR REPLACE FUNCTION check_waitlist_config()
+RETURNS JSON
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+  SELECT json_build_object(
+    'has_webhook', EXISTS(
+      SELECT 1 FROM public.webhook_endpoints
+      WHERE 'waitlist.signup' = ANY(events)
+        AND is_active = true
+    ),
+    'products_count', (
+      SELECT COUNT(*)::integer
+      FROM public.products
+      WHERE enable_waitlist = true
+    )
+  );
+$$;
+
+COMMENT ON FUNCTION check_waitlist_config IS 'Check if waitlist.signup webhook exists and count products with waitlist enabled. Used for admin warnings.';
+
 -- -----------------------------------------------------------------------------
 -- INTEGRATIONS DOMAIN
 -- -----------------------------------------------------------------------------

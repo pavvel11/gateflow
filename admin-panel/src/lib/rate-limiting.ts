@@ -116,6 +116,11 @@ export async function checkRateLimit(
   windowMinutes: number,
   userId?: string
 ): Promise<boolean> {
+  // Skip rate limiting in development and test mode
+  if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+    return true;
+  }
+
   const identifier = await getRateLimitIdentifier(userId);
 
   try {

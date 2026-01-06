@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useWebhooks } from '@/hooks/useWebhooks';
 import { useToast } from '@/contexts/ToastContext';
 import { createClient } from '@/lib/supabase/client';
+import { BaseModal, ModalHeader, ModalBody, ModalFooter, Button } from './ui/Modal';
 
 // Sub-components
 import WebhookListTable from './webhooks/WebhookListTable';
@@ -17,6 +18,7 @@ import WebhookFailuresPanel from './WebhookFailuresPanel';
 
 export default function WebhooksPageContent() {
   const t = useTranslations('admin.webhooks');
+  const tCommon = useTranslations('common');
   const { addToast } = useToast();
   const {
     endpoints,
@@ -42,6 +44,11 @@ export default function WebhooksPageContent() {
     isLastWaitlistWebhook: boolean;
     productsCount: number;
   } | undefined>(undefined);
+  const [editWaitlistWarning, setEditWaitlistWarning] = useState<{
+    show: boolean;
+    productsCount: number;
+    pendingData: any;
+  } | null>(null);
 
   useEffect(() => {
     fetchEndpoints();
@@ -108,14 +115,61 @@ export default function WebhooksPageContent() {
   }, [endpoints]);
 
   const onFormSubmit = async (data: any) => {
-    const success = activeEndpoint 
+    // Check if editing and removing waitlist.signup event
+    if (activeEndpoint && activeEndpoint.events.includes('waitlist.signup')) {
+      const newHasWaitlist = data.events?.includes('waitlist.signup');
+
+      if (!newHasWaitlist) {
+        // User is removing waitlist.signup - check if it's the last one
+        const otherWaitlistWebhooks = endpoints.filter(
+          e => e.id !== activeEndpoint.id && e.events.includes('waitlist.signup') && e.is_active
+        );
+
+        if (otherWaitlistWebhooks.length === 0) {
+          // This is the last webhook with waitlist.signup - check for products
+          try {
+            const supabase = await createClient();
+            const { data: config } = await supabase.rpc('check_waitlist_config');
+            if (config && config.products_count > 0) {
+              // Show warning and save pending data
+              setEditWaitlistWarning({
+                show: true,
+                productsCount: config.products_count,
+                pendingData: data
+              });
+              return; // Don't submit yet
+            }
+          } catch (err) {
+            console.error('Failed to check waitlist config:', err);
+          }
+        }
+      }
+    }
+
+    // Proceed with normal submit
+    const success = activeEndpoint
       ? await updateEndpoint(activeEndpoint.id, data)
       : await createEndpoint(data);
-    
+
     if (success) {
       setShowFormModal(false);
       triggerGlobalRefresh();
     }
+  };
+
+  const onEditWarningConfirm = async () => {
+    if (!editWaitlistWarning?.pendingData || !activeEndpoint) return;
+
+    const success = await updateEndpoint(activeEndpoint.id, editWaitlistWarning.pendingData);
+    if (success) {
+      setEditWaitlistWarning(null);
+      setShowFormModal(false);
+      triggerGlobalRefresh();
+    }
+  };
+
+  const onEditWarningCancel = () => {
+    setEditWaitlistWarning(null);
   };
 
   const onDeleteConfirm = async () => {
@@ -228,6 +282,36 @@ export default function WebhooksPageContent() {
         endpoint={activeEndpoint}
         waitlistWarning={deleteWaitlistWarning}
       />
+
+      {/* Edit Waitlist Warning Modal */}
+      {editWaitlistWarning?.show && (
+        <BaseModal isOpen={true} onClose={onEditWarningCancel} size="md">
+          <ModalHeader title={t('waitlistWarning.editTitle')} />
+          <ModalBody>
+            <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <div className="flex items-start gap-3">
+                <span className="text-xl">⚠️</span>
+                <div>
+                  <p className="font-medium text-amber-800 dark:text-amber-200">
+                    {t('waitlistWarning.title')}
+                  </p>
+                  <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                    {t('waitlistWarning.editDescription', { count: editWaitlistWarning.productsCount })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={onEditWarningCancel} variant="secondary">
+              {tCommon('cancel')}
+            </Button>
+            <Button onClick={onEditWarningConfirm} variant="danger">
+              {t('waitlistWarning.confirmEdit')}
+            </Button>
+          </ModalFooter>
+        </BaseModal>
+      )}
 
       {logsEndpoint && (
         <WebhookLogsDrawer
