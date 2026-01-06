@@ -69,6 +69,7 @@ export async function loginAsAdmin(page: Page, email: string, password: string) 
   await page.waitForLoadState('domcontentloaded');
 
   await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
+    // @ts-ignore - dynamic ESM import works in browser context
     const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
     const supabase = createBrowserClient(supabaseUrl, anonKey);
     await supabase.auth.signInWithPassword({ email, password });

@@ -146,7 +146,9 @@ export interface AdvancedSectionProps extends SectionProps {
   omnibusEnabled: boolean;
 }
 
-export interface AvailabilitySectionProps extends SectionProps {}
+export interface AvailabilitySectionProps extends SectionProps {
+  hasWaitlistWebhook: boolean | null;
+}
 
 export interface AccessSectionProps extends SectionProps {}
 

@@ -1,9 +1,10 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Product } from '@/types';
 import { BaseModal, ModalHeader, ModalBody, ModalFooter, Button, Message } from '@/components/ui/Modal';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 import { useProductForm } from './hooks';
 import { ProductPreview } from './components';
@@ -39,6 +40,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
   error
 }) => {
   const t = useTranslations('admin.products.form');
+  const router = useRouter();
+  const locale = useLocale();
 
   const {
     formData,
@@ -64,6 +67,10 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
     handleSubmit,
     generateSlug,
     validateContentItemUrl,
+    waitlistWarning,
+    proceedWithSubmit,
+    dismissWaitlistWarning,
+    hasWaitlistWebhook,
   } = useProductForm({ product, isOpen, onSubmit });
 
   if (!isOpen) return null;
@@ -143,6 +150,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             formData={formData}
             setFormData={setFormData}
             t={t}
+            hasWaitlistWebhook={hasWaitlistWebhook}
           />
 
           {/* Auto-Grant Access */}
@@ -204,6 +212,41 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
           {product && product.id ? t('updateProduct') : t('createProduct')}
         </Button>
       </ModalFooter>
+
+      {/* Waitlist Warning Modal */}
+      {waitlistWarning.show && (
+        <BaseModal isOpen={true} onClose={dismissWaitlistWarning} size="sm">
+          <ModalHeader
+            title={t('waitlistWarning.title')}
+            icon={<span className="text-2xl">⚠️</span>}
+          />
+          <ModalBody>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              {t('waitlistWarning.description')}
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {t('waitlistWarning.consequence')}
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={dismissWaitlistWarning} variant="secondary">
+              {t('cancel')}
+            </Button>
+            <Button
+              onClick={() => {
+                dismissWaitlistWarning();
+                router.push(`/${locale}/dashboard/webhooks`);
+              }}
+              variant="secondary"
+            >
+              {t('waitlistWarning.configureWebhook')}
+            </Button>
+            <Button onClick={proceedWithSubmit} variant="danger">
+              {t('waitlistWarning.saveAnyway')}
+            </Button>
+          </ModalFooter>
+        </BaseModal>
+      )}
     </BaseModal>
   );
 };

@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import { ModalSection } from '@/components/ui/Modal';
 import DateTimePicker from '@/components/ui/DateTimePicker';
 import { AvailabilitySectionProps } from '../types';
@@ -9,7 +11,12 @@ export function AvailabilitySection({
   formData,
   setFormData,
   t,
+  hasWaitlistWebhook,
 }: AvailabilitySectionProps) {
+  const router = useRouter();
+  const locale = useLocale();
+
+  const isWaitlistDisabled = hasWaitlistWebhook === false;
   return (
     <ModalSection title={t('availabilityAndWaitlist')} collapsible defaultExpanded={true}>
       <div className="space-y-4">
@@ -36,12 +43,13 @@ export function AvailabilitySection({
 
         {/* Waitlist signup option */}
         <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-          <label className="flex items-center gap-3 cursor-pointer">
+          <label className={`flex items-center gap-3 ${isWaitlistDisabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
             <input
               type="checkbox"
               checked={formData.enable_waitlist}
               onChange={(e) => setFormData(prev => ({ ...prev, enable_waitlist: e.target.checked }))}
-              className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
+              disabled={isWaitlistDisabled}
+              className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <div>
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -52,6 +60,20 @@ export function AvailabilitySection({
               </p>
             </div>
           </label>
+          {isWaitlistDisabled && (
+            <div className="mt-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <p className="text-sm text-amber-700 dark:text-amber-300">
+                {t('waitlist.noWebhookWarning')}{' '}
+                <button
+                  type="button"
+                  onClick={() => router.push(`/${locale}/dashboard/webhooks`)}
+                  className="underline font-medium hover:text-amber-800 dark:hover:text-amber-200"
+                >
+                  {t('waitlistWarning.configureWebhook')}
+                </button>
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">

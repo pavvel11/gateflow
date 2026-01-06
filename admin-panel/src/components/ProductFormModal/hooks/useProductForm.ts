@@ -7,6 +7,7 @@ import { getIconEmoji } from '@/utils/themeUtils';
 import { getCategories, getProductCategories, Category } from '@/lib/actions/categories';
 import { getDefaultCurrency, getShopConfig } from '@/lib/actions/shop-config';
 import { parseVideoUrl, isTrustedVideoPlatform } from '@/lib/videoUtils';
+import { createClient } from '@/lib/supabase/client';
 import {
   ProductFormData,
   OtoState,
@@ -14,6 +15,11 @@ import {
   initialFormData,
   initialOtoState,
 } from '../types';
+
+interface WaitlistWarning {
+  show: boolean;
+  productsCount: number;
+}
 
 interface UseProductFormProps {
   product?: Product | null;
@@ -49,6 +55,13 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
   // URL validation state - maps content item index to validation status
   const [urlValidation, setUrlValidation] = useState<Record<number, UrlValidation>>({});
 
+  // Waitlist warning state
+  const [waitlistWarning, setWaitlistWarning] = useState<WaitlistWarning>({ show: false, productsCount: 0 });
+  const [pendingSubmitData, setPendingSubmitData] = useState<ProductFormData | null>(null);
+
+  // Waitlist webhook availability (for disabling checkbox)
+  const [hasWaitlistWebhook, setHasWaitlistWebhook] = useState<boolean | null>(null);
+
   // Fetch categories, default currency, and omnibus setting
   useEffect(() => {
     if (isOpen) {
@@ -83,6 +96,19 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
       }).catch(err => {
         console.error('Failed to fetch shop config', err);
       });
+
+      // Fetch waitlist webhook availability
+      (async () => {
+        try {
+          const supabase = await createClient();
+          const { data, error } = await supabase.rpc('check_waitlist_config');
+          if (!error && data) {
+            setHasWaitlistWebhook(data.has_webhook);
+          }
+        } catch (err) {
+          console.error('Failed to fetch waitlist config', err);
+        }
+      })();
     }
   }, [isOpen, product]);
 
@@ -389,7 +415,33 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
     }
   }, [formData.success_redirect_url]);
 
-  const handleSubmit = useCallback((e: React.FormEvent) => {
+  // Check waitlist configuration via RPC
+  const checkWaitlistConfig = useCallback(async (): Promise<{ has_webhook: boolean; products_count: number }> => {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc('check_waitlist_config');
+    if (error) {
+      console.error('Failed to check waitlist config:', error);
+      return { has_webhook: true, products_count: 0 }; // Assume OK on error
+    }
+    return data as { has_webhook: boolean; products_count: number };
+  }, []);
+
+  // Proceed with submit after user confirms waitlist warning
+  const proceedWithSubmit = useCallback(() => {
+    if (pendingSubmitData) {
+      onSubmit(pendingSubmitData);
+      setPendingSubmitData(null);
+      setWaitlistWarning({ show: false, productsCount: 0 });
+    }
+  }, [pendingSubmitData, onSubmit]);
+
+  // Dismiss waitlist warning
+  const dismissWaitlistWarning = useCallback(() => {
+    setWaitlistWarning({ show: false, productsCount: 0 });
+    setPendingSubmitData(null);
+  }, []);
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validate all content items with URLs before submission
@@ -431,8 +483,19 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
       oto_duration_minutes: oto.durationMinutes,
     };
 
+    // Check waitlist config if enabling waitlist
+    if (formData.enable_waitlist) {
+      const config = await checkWaitlistConfig();
+      if (!config.has_webhook) {
+        // Show warning modal
+        setPendingSubmitData(submitData);
+        setWaitlistWarning({ show: true, productsCount: config.products_count });
+        return;
+      }
+    }
+
     onSubmit(submitData);
-  }, [formData, oto, onSubmit, validateContentItemUrl]);
+  }, [formData, oto, onSubmit, validateContentItemUrl, checkWaitlistConfig]);
 
   return {
     // Form data
@@ -480,5 +543,11 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
     // Utilities
     generateSlug,
     validateContentItemUrl,
+
+    // Waitlist warning
+    waitlistWarning,
+    proceedWithSubmit,
+    dismissWaitlistWarning,
+    hasWaitlistWebhook,
   };
 }

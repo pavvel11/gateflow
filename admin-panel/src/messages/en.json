@@ -1075,7 +1075,15 @@
         "temporalAvailabilityDescription": "Leave both fields empty for permanent availability. Set only \"Available From\" for products launching in the future. Set only \"Available Until\" for limited-time offers.",
         "waitlist": {
           "enableWaitlist": "Enable Waitlist Signup",
-          "enableWaitlistDescription": "Show a waitlist signup form when the product is unavailable (inactive, not yet started, or expired)."
+          "enableWaitlistDescription": "Show a waitlist signup form when the product is unavailable (inactive, not yet started, or expired).",
+          "noWebhookWarning": "To enable waitlist signup, first configure a webhook for the \"waitlist.signup\" event."
+        },
+        "waitlistWarning": {
+          "title": "No Webhook Configured",
+          "description": "You are enabling waitlist signup, but there is no webhook configured for the \"waitlist.signup\" event.",
+          "consequence": "Without a webhook, waitlist signups will not be sent anywhere and the collected emails will be lost.",
+          "configureWebhook": "Configure Webhook",
+          "saveAnyway": "Save Anyway"
         },
         "autoGrantAccessSettings": "Auto-Grant Access Settings",
         "defaultAccessDuration": "Default Access Duration (days)",
@@ -1306,6 +1314,10 @@
       "testFailed": "Test event failed",
       "deleteTitle": "Delete Webhook",
       "deleteConfirm": "Are you sure you want to delete this webhook?",
+      "waitlistWarning": {
+        "title": "Waitlist Products Affected",
+        "description": "This is the last webhook handling waitlist signups. Deleting it will cause {count, plural, one {# product} other {# products}} with waitlist enabled to lose signup notifications."
+      },
       "events_list": {
         "purchase_completed": "Purchase Completed",
         "lead_captured": "Lead Captured (Free Product)",

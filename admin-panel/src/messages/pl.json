@@ -1084,7 +1084,15 @@
         "temporalAvailabilityDescription": "Zostaw oba pola puste dla stałej dostępności. Ustaw tylko \"Dostępny od\" dla produktów uruchamianych w przyszłości. Ustaw tylko \"Dostępny do\" dla ofert czasowych.",
         "waitlist": {
           "enableWaitlist": "Włącz zapis na listę oczekujących",
-          "enableWaitlistDescription": "Pokaż formularz zapisu na listę oczekujących, gdy produkt jest niedostępny (nieaktywny, jeszcze nie rozpoczęty lub wygasły)."
+          "enableWaitlistDescription": "Pokaż formularz zapisu na listę oczekujących, gdy produkt jest niedostępny (nieaktywny, jeszcze nie rozpoczęty lub wygasły).",
+          "noWebhookWarning": "Aby włączyć listę oczekujących, najpierw skonfiguruj webhook dla zdarzenia \"waitlist.signup\"."
+        },
+        "waitlistWarning": {
+          "title": "Brak skonfigurowanego webhooka",
+          "description": "Włączasz zapis na listę oczekujących, ale nie ma skonfigurowanego webhooka dla zdarzenia \"waitlist.signup\".",
+          "consequence": "Bez webhooka zgłoszenia nie zostaną nigdzie wysłane, a zebrane adresy email zostaną utracone.",
+          "configureWebhook": "Skonfiguruj webhook",
+          "saveAnyway": "Zapisz mimo to"
         },
         "autoGrantAccessSettings": "Ustawienia automatycznego przyznawania dostępu",
         "defaultAccessDuration": "Domyślny czas dostępu (dni)",
@@ -1315,6 +1323,10 @@
       "testFailed": "Test nie powiódł się",
       "deleteTitle": "Usuń Webhook",
       "deleteConfirm": "Czy na pewno chcesz usunąć ten webhook?",
+      "waitlistWarning": {
+        "title": "Produkty z listą oczekujących zagrożone",
+        "description": "To ostatni webhook obsługujący zapisy na listę oczekujących. Usunięcie go spowoduje, że {count, plural, one {# produkt} few {# produkty} many {# produktów} other {# produktów}} z włączoną listą oczekujących przestanie wysyłać powiadomienia o zapisach."
+      },
       "events_list": {
         "purchase_completed": "Zakup zakończony",
         "lead_captured": "Lead pozyskany (Darmowy produkt)",

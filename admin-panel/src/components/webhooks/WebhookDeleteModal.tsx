@@ -10,18 +10,25 @@ interface WebhookDeleteModalProps {
   onClose: () => void;
   onConfirm: () => Promise<void>;
   endpoint: WebhookEndpoint | null;
+  waitlistWarning?: {
+    isLastWaitlistWebhook: boolean;
+    productsCount: number;
+  };
 }
 
 export default function WebhookDeleteModal({
   isOpen,
   onClose,
   onConfirm,
-  endpoint
+  endpoint,
+  waitlistWarning
 }: WebhookDeleteModalProps) {
   const t = useTranslations('admin.webhooks');
   const tCommon = useTranslations('common');
 
   if (!endpoint) return null;
+
+  const showWaitlistWarning = waitlistWarning?.isLastWaitlistWebhook && waitlistWarning.productsCount > 0;
 
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} size="md">
@@ -33,6 +40,22 @@ export default function WebhookDeleteModal({
             {endpoint.url}
           </span>
         </p>
+
+        {showWaitlistWarning && (
+          <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <div className="flex items-start gap-3">
+              <span className="text-xl">⚠️</span>
+              <div>
+                <p className="font-medium text-amber-800 dark:text-amber-200">
+                  {t('waitlistWarning.title')}
+                </p>
+                <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                  {t('waitlistWarning.description', { count: waitlistWarning.productsCount })}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </ModalBody>
       <ModalFooter>
         <Button onClick={onClose} variant="secondary">

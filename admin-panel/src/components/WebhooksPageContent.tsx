@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { WebhookEndpoint } from '@/types/webhooks';
 import { useTranslations } from 'next-intl';
 import { useWebhooks } from '@/hooks/useWebhooks';
 import { useToast } from '@/contexts/ToastContext';
+import { createClient } from '@/lib/supabase/client';
 
 // Sub-components
 import WebhookListTable from './webhooks/WebhookListTable';
@@ -37,6 +38,10 @@ export default function WebhooksPageContent() {
   const [logsEndpoint, setLogsEndpoint] = useState<WebhookEndpoint | null>(null);
   const [refreshCounter, setRefreshCounter] = useState(0);
   const [isTesting, setIsTesting] = useState(false);
+  const [deleteWaitlistWarning, setDeleteWaitlistWarning] = useState<{
+    isLastWaitlistWebhook: boolean;
+    productsCount: number;
+  } | undefined>(undefined);
 
   useEffect(() => {
     fetchEndpoints();
@@ -63,10 +68,44 @@ export default function WebhooksPageContent() {
     setShowTestModal(true);
   };
 
-  const handleOpenDelete = (endpoint: WebhookEndpoint) => {
+  const handleOpenDelete = useCallback(async (endpoint: WebhookEndpoint) => {
     setActiveEndpoint(endpoint);
+
+    // Check if this webhook has waitlist.signup event
+    const hasWaitlistEvent = endpoint.events.includes('waitlist.signup');
+
+    if (hasWaitlistEvent) {
+      // Check if it's the last webhook with this event and if there are products using waitlist
+      const otherWaitlistWebhooks = endpoints.filter(
+        e => e.id !== endpoint.id && e.events.includes('waitlist.signup') && e.is_active
+      );
+
+      if (otherWaitlistWebhooks.length === 0) {
+        // This is the last active waitlist webhook - check for products
+        try {
+          const supabase = await createClient();
+          const { data } = await supabase.rpc('check_waitlist_config');
+          if (data && data.products_count > 0) {
+            setDeleteWaitlistWarning({
+              isLastWaitlistWebhook: true,
+              productsCount: data.products_count
+            });
+          } else {
+            setDeleteWaitlistWarning(undefined);
+          }
+        } catch (err) {
+          console.error('Failed to check waitlist config:', err);
+          setDeleteWaitlistWarning(undefined);
+        }
+      } else {
+        setDeleteWaitlistWarning(undefined);
+      }
+    } else {
+      setDeleteWaitlistWarning(undefined);
+    }
+
     setShowDeleteModal(true);
-  };
+  }, [endpoints]);
 
   const onFormSubmit = async (data: any) => {
     const success = activeEndpoint 
@@ -187,6 +226,7 @@ export default function WebhooksPageContent() {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={onDeleteConfirm}
         endpoint={activeEndpoint}
+        waitlistWarning={deleteWaitlistWarning}
       />
 
       {logsEndpoint && (
