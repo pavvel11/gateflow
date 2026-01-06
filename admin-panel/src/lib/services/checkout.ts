@@ -144,10 +144,23 @@ export class CheckoutService {
    */
   async createStripeSession(options: CheckoutSessionOptions): Promise<{ clientSecret: string; sessionId: string }> {
     try {
-      const { coupon } = options;
-      
-      // Calculate discounted price for main product
+      const { coupon, customAmount } = options;
+
+      // Calculate base price - use customAmount if provided (Pay What You Want)
       let mainProductPrice = options.product.price;
+      if (customAmount !== undefined && customAmount > 0) {
+        const minPrice = options.product.custom_price_min || 0.50;
+        if (customAmount < minPrice) {
+          throw new CheckoutError(
+            CheckoutErrorType.VALIDATION_ERROR,
+            `Amount must be at least ${minPrice} ${options.product.currency}`,
+            HTTP_STATUS.BAD_REQUEST
+          );
+        }
+        mainProductPrice = customAmount;
+      }
+
+      // Apply coupon discount
       if (coupon) {
         if (coupon.discount_type === 'percentage') {
           mainProductPrice = mainProductPrice * (1 - coupon.discount_value / 100);
@@ -216,6 +229,11 @@ export class CheckoutService {
             coupon_id: coupon.id,
             coupon_code: coupon.code,
             has_coupon: 'true'
+          }),
+          // Pay What You Want metadata
+          ...((customAmount !== undefined && customAmount > 0) && {
+            custom_amount: customAmount.toString(),
+            is_pwyw: 'true'
           }),
         },
         expires_at: Math.floor(Date.now() / 1000) + (STRIPE_CONFIG.session.expires_hours * 60 * 60),
@@ -356,6 +374,18 @@ export class CheckoutService {
       console.log('🎟 No coupon code provided in request');
     }
 
+    // Validate custom amount for Pay What You Want
+    if (request.customAmount !== undefined && request.customAmount > 0) {
+      const minPrice = product.custom_price_min || 0.50;
+      if (request.customAmount < minPrice) {
+        throw new CheckoutError(
+          CheckoutErrorType.VALIDATION_ERROR,
+          `Amount must be at least ${minPrice} ${product.currency}`,
+          HTTP_STATUS.BAD_REQUEST
+        );
+      }
+    }
+
     // Create Stripe session
     return await this.createStripeSession({
       product,
@@ -363,7 +393,8 @@ export class CheckoutService {
       email: request.email,
       userId,
       returnUrl,
-      coupon: couponInfo
+      coupon: couponInfo,
+      customAmount: request.customAmount
     });
   }
 }

@@ -582,6 +582,28 @@ export function sanitizeProductData(data: Record<string, unknown>): Record<strin
   if (sanitizedData.is_featured === undefined) {
     sanitizedData.is_featured = false;
   }
-  
+
+  // Custom pricing / Pay What You Want fields
+  if (sanitizedData.allow_custom_price === undefined) {
+    sanitizedData.allow_custom_price = false;
+  }
+
+  if (sanitizedData.custom_price_min !== undefined) {
+    // Ensure minimum is at least 0.50 (Stripe requirement)
+    const minPrice = parseFloat(String(sanitizedData.custom_price_min)) || 5.00;
+    sanitizedData.custom_price_min = Math.max(0.50, minPrice);
+  }
+
+  if (sanitizedData.show_price_presets === undefined) {
+    sanitizedData.show_price_presets = true;
+  }
+
+  // Ensure custom_price_presets is a valid array
+  if (sanitizedData.custom_price_presets !== undefined) {
+    if (!Array.isArray(sanitizedData.custom_price_presets)) {
+      sanitizedData.custom_price_presets = [5, 10, 25];
+    }
+  }
+
   return sanitizedData;
 }

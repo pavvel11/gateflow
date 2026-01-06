@@ -18,6 +18,9 @@ export interface ValidatedProduct {
   available_from: string | null;
   available_until: string | null;
   auto_grant_duration_days?: number | null;
+  // Pay What You Want fields
+  allow_custom_price?: boolean;
+  custom_price_min?: number;
 }
 
 export interface UserAccessInfo {
@@ -43,7 +46,7 @@ export class ProductValidationService {
 
     const { data: product, error } = await this.supabase
       .from('products')
-      .select('id, slug, name, description, price, currency, is_active, available_from, available_until, auto_grant_duration_days')
+      .select('id, slug, name, description, price, currency, is_active, available_from, available_until, auto_grant_duration_days, allow_custom_price, custom_price_min')
       .eq('id', productId)
       .eq('is_active', true)
       .single();
@@ -52,8 +55,8 @@ export class ProductValidationService {
       throw new Error('Product not found or inactive');
     }
 
-    // Validate product price
-    if (product.price <= 0) {
+    // Validate product price (skip for Pay What You Want products)
+    if (product.price <= 0 && !product.allow_custom_price) {
       throw new Error('Invalid product price');
     }
 

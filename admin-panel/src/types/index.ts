@@ -40,6 +40,11 @@ export interface Product {
   // Refund settings
   is_refundable: boolean
   refund_period_days?: number | null
+  // Pay What You Want / Custom Pricing
+  allow_custom_price: boolean
+  custom_price_min: number
+  show_price_presets: boolean
+  custom_price_presets: number[]
   // M:N variant relationship (populated by API when needed)
   variant_groups?: ProductVariantGroup[]
   created_at: string

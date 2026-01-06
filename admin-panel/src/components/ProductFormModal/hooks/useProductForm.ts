@@ -115,7 +115,12 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
         sale_quantity_limit: product.sale_quantity_limit || null,
         sale_quantity_sold: product.sale_quantity_sold || 0,
         is_refundable: (product as Product & { is_refundable?: boolean }).is_refundable || false,
-        refund_period_days: (product as Product & { refund_period_days?: number | null }).refund_period_days || null
+        refund_period_days: (product as Product & { refund_period_days?: number | null }).refund_period_days || null,
+        // Pay What You Want / Custom Pricing
+        allow_custom_price: product.allow_custom_price || false,
+        custom_price_min: product.custom_price_min || 5.00,
+        show_price_presets: product.show_price_presets !== false, // default true
+        custom_price_presets: Array.isArray(product.custom_price_presets) ? product.custom_price_presets : [5, 10, 25]
       });
 
       // Fetch assigned categories

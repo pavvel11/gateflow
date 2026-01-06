@@ -61,6 +61,12 @@ CREATE TABLE IF NOT EXISTS products (
   is_refundable BOOLEAN DEFAULT false NOT NULL, -- Whether customers can request refunds for this product
   refund_period_days INTEGER CHECK (refund_period_days IS NULL OR (refund_period_days > 0 AND refund_period_days <= 365)), -- Number of days from purchase within which refund can be requested
 
+  -- Pay What You Want / Custom Pricing
+  allow_custom_price BOOLEAN DEFAULT false NOT NULL, -- Enable customer-chosen pricing
+  custom_price_min NUMERIC(10,2) DEFAULT 5.00 CHECK (custom_price_min >= 0.50), -- Minimum price (Stripe requires 0.50)
+  show_price_presets BOOLEAN DEFAULT true NOT NULL, -- Show preset amount buttons
+  custom_price_presets JSONB DEFAULT '[5, 10, 25]'::jsonb, -- Array of suggested amounts
+
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
 

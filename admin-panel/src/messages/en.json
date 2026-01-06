@@ -26,6 +26,8 @@
     "vat": "VAT",
     "includingVat": "including VAT",
     "payButton": "Pay {amount}",
+    "fixAmountFirst": "Fix the amount above to continue",
+    "invalidAmount": "invalid amount",
     "processing": "Processing payment...",
     "paymentSuccessful": "Payment Successful!",
     "needInvoice": "I need an invoice",
@@ -50,7 +52,13 @@
     "lowestPriceTooltipTitle": "What is the lowest price?",
     "lowestPriceTooltipDescription": "This price reflects the lowest price in the last 30 days before the discount was applied, including previous discounts.",
     "lowestPriceTooltipDisclaimer": "Please note that this price may have been offered only to selected users.",
-    "otoExpired": "The special offer has expired"
+    "otoExpired": "The special offer has expired",
+    "customPrice": {
+      "title": "Choose Your Amount",
+      "minimum": "Minimum",
+      "belowMinimum": "Amount must be at least {minimum}",
+      "aboveMaximum": "Amount must be no more than {maximum}"
+    }
   },
   "oto": {
     "exclusiveOffer": "Exclusive one-time offer!",
@@ -1130,7 +1138,18 @@
           "refundPeriodHelp": "Number of days from purchase within which customer can request a refund. Leave empty for no time limit.",
           "infoTitle": "How refunds work",
           "infoDescription": "Customers can submit refund requests from their purchase history. You will review and approve/reject each request. Admins can always issue refunds regardless of the time limit."
-        }
+        },
+        "customPricing": {
+          "title": "Pay What You Want",
+          "allowCustomPrice": "Allow customer to choose price",
+          "allowCustomPriceHelp": "Enable flexible pricing where customers decide how much to pay",
+          "minimumPrice": "Minimum Price",
+          "stripeMinimum": "Stripe requires a minimum of 0.50 in any currency",
+          "showPresets": "Show buttons with predefined amounts",
+          "showPresetsHelp": "Display suggested amounts as quick-select buttons on checkout",
+          "presetAmount": "Amount"
+        },
+        "enabled": "Enabled"
       },
       "duplicateLabel": "Duplicate {name}"
     },

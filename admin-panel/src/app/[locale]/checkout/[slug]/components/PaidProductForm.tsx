@@ -41,6 +41,22 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
   const [hasAccess, setHasAccess] = useState(false);
   const [countdown, setCountdown] = useState(5);
 
+  // Custom price state (Pay What You Want)
+  // customAmount = numeric value for API/logic
+  // customAmountInput = string value for input display (allows typing "5.", "5.00", etc.)
+  const getInitialAmount = () => {
+    if (product.allow_custom_price) {
+      const presets = product.custom_price_presets;
+      const firstValidPreset = presets?.find(p => p > 0);
+      if (firstValidPreset) return firstValidPreset;
+      return product.custom_price_min || 5;
+    }
+    return product.price;
+  };
+  const [customAmount, setCustomAmount] = useState<number>(getInitialAmount);
+  const [customAmountInput, setCustomAmountInput] = useState<string>(getInitialAmount().toString());
+  const [customAmountError, setCustomAmountError] = useState<string | null>(null);
+
   // Email state - from logged in user, or from URL param (for OTO redirects)
   const urlEmail = searchParams.get('email');
   const [email, setEmail] = useState<string | undefined>(user?.email || urlEmail || undefined);
@@ -254,7 +270,29 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);
 
+  // Validate custom amount
+  const STRIPE_MAX_AMOUNT = 999999.99; // Stripe's maximum amount limit
+  const validateCustomAmount = useCallback((amount: number): boolean => {
+    if (!product.allow_custom_price) return true;
+    const minPrice = product.custom_price_min || 0.50;
+    if (amount < minPrice) {
+      setCustomAmountError(t('customPrice.belowMinimum', { minimum: formatPrice(minPrice, product.currency) }));
+      return false;
+    }
+    if (amount > STRIPE_MAX_AMOUNT) {
+      setCustomAmountError(t('customPrice.aboveMaximum', { maximum: formatPrice(STRIPE_MAX_AMOUNT, product.currency) }));
+      return false;
+    }
+    setCustomAmountError(null);
+    return true;
+  }, [product, t]);
+
   const fetchClientSecret = useCallback(async () => {
+    // Validate custom amount before fetching
+    if (product.allow_custom_price && !validateCustomAmount(customAmount)) {
+      return;
+    }
+
     try {
       const response = await fetch('/api/create-payment-intent', {
         method: 'POST',
@@ -265,6 +303,7 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
           bumpProductId: bumpSelected && orderBump ? orderBump.bump_product_id : undefined,
           couponCode: appliedCoupon?.code,
           successUrl: searchParams.get('success_url') || undefined,
+          customAmount: product.allow_custom_price ? customAmount : undefined,
         }),
       });
 
@@ -284,7 +323,7 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
       setError(t('loadError'));
       throw err;
     }
-  }, [product.id, email, bumpSelected, orderBump, appliedCoupon, searchParams, t]);
+  }, [product, email, bumpSelected, orderBump, appliedCoupon, searchParams, t, customAmount, validateCustomAmount]);
 
   // Fetch client secret when component mounts or dependencies change
   useEffect(() => {
@@ -304,6 +343,88 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
           currency={product.currency}
           onExpire={handleOtoExpire}
         />
+      )}
+
+      {/* Pay What You Want - Custom Price Selection */}
+      {product.allow_custom_price && !hasAccess && !error && (
+        <div className="mb-6 p-5 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10">
+          <h3 className="text-lg font-semibold text-white mb-3">{t('customPrice.title')}</h3>
+
+          {/* Preset Buttons - filter out 0/empty values */}
+          {product.show_price_presets && product.custom_price_presets && product.custom_price_presets.filter(p => p > 0).length > 0 && (
+            <div className="flex gap-2 mb-3">
+              {product.custom_price_presets.filter(preset => preset > 0).map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => {
+                    setCustomAmount(preset);
+                    setCustomAmountInput(preset.toString());
+                    setCustomAmountError(null);
+                    setError(null); // Reset API error to allow new fetch
+                  }}
+                  className={`
+                    px-4 py-2 rounded-lg border text-sm font-medium transition-all
+                    ${customAmount === preset
+                      ? 'bg-blue-500 border-blue-400 text-white'
+                      : 'bg-white/5 border-white/20 text-white hover:bg-white/10 hover:border-white/30'}
+                  `}
+                >
+                  {formatPrice(preset, product.currency)}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Custom Amount Input */}
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                inputMode="decimal"
+                value={customAmountInput}
+                onChange={(e) => {
+                  // Allow typing freely - only validate on blur
+                  // Replace comma with dot for locales that use comma as decimal separator
+                  const rawValue = e.target.value.replace(',', '.');
+                  // Only allow numbers, dots, and empty string
+                  if (rawValue === '' || /^\d*\.?\d*$/.test(rawValue)) {
+                    setCustomAmountInput(rawValue);
+                  }
+                }}
+                onBlur={() => {
+                  // Parse and validate on blur
+                  const value = parseFloat(customAmountInput) || 0;
+                  setCustomAmount(value);
+                  // Clean up display (remove trailing dots, etc.) only if valid
+                  if (value > 0) {
+                    setCustomAmountInput(value.toString());
+                  }
+                  validateCustomAmount(value);
+                }}
+                placeholder={`${product.custom_price_min || 0.50}`}
+                className={`
+                  w-full px-4 py-3 bg-white/5 border rounded-lg text-lg font-semibold text-white
+                  focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all
+                  ${customAmountError ? 'border-red-500' : 'border-white/20'}
+                `}
+              />
+            </div>
+            <span className="text-lg font-medium text-gray-400 min-w-[50px]">
+              {product.currency}
+            </span>
+          </div>
+
+          {/* Error Message */}
+          {customAmountError && (
+            <p className="text-sm text-red-400 mt-2">{customAmountError}</p>
+          )}
+
+          {/* Minimum Price Info */}
+          <p className="text-xs text-gray-400 mt-2">
+            {t('customPrice.minimum')}: {formatPrice(product.custom_price_min || 0.50, product.currency)} {product.currency}
+          </p>
+        </div>
       )}
 
       {/* Order Bump - special offer */}
@@ -531,7 +652,7 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
         
         {!error && !hasAccess && stripePromise && clientSecret && (
           <Elements
-            key={`${product.id}-${bumpSelected}-${appliedCoupon?.id || 'no-coupon'}`}
+            key={`${product.id}-${clientSecret}`}
             stripe={stripePromise}
             options={{
               clientSecret,
@@ -556,6 +677,8 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
               appliedCoupon={appliedCoupon}
               successUrl={searchParams.get('success_url') || undefined}
               onChangeAccount={handleSignOutAndCheckout}
+              customAmount={product.allow_custom_price ? customAmount : undefined}
+              customAmountError={product.allow_custom_price ? customAmountError : null}
             />
           </Elements>
         )}

@@ -47,6 +47,11 @@ export interface ProductFormData {
   // Refund settings
   is_refundable: boolean;
   refund_period_days?: number | null;
+  // Pay What You Want / Custom Pricing
+  allow_custom_price: boolean;
+  custom_price_min: number;
+  show_price_presets: boolean;
+  custom_price_presets: number[];
   // OTO (One-Time Offer) configuration
   oto_enabled?: boolean;
   oto_product_id?: string | null;
@@ -171,7 +176,12 @@ export const initialFormData: ProductFormData = {
   sale_quantity_limit: null,
   sale_quantity_sold: 0,
   is_refundable: false,
-  refund_period_days: null
+  refund_period_days: null,
+  // Pay What You Want / Custom Pricing
+  allow_custom_price: false,
+  custom_price_min: 5.00,
+  show_price_presets: true,
+  custom_price_presets: [5, 10, 25]
 };
 
 export const initialOtoState: OtoState = {

@@ -27,6 +27,7 @@ export interface CreateCheckoutRequest {
   bumpProductId?: string; // Optional order bump product ID
   couponCode?: string; // NEW: Optional discount code
   successUrl?: string; // NEW: Optional OTO redirect URL
+  customAmount?: number; // Pay What You Want - customer-chosen price
 }
 
 export interface CreateCheckoutResponse {
@@ -50,6 +51,9 @@ export interface ProductForCheckout {
   is_active: boolean;
   available_from: string | null;
   available_until: string | null;
+  // Pay What You Want fields
+  allow_custom_price?: boolean;
+  custom_price_min?: number;
 }
 
 // User access types
@@ -73,4 +77,5 @@ export interface CheckoutSessionOptions {
     discount_value: number;
     exclude_order_bumps?: boolean;
   };
+  customAmount?: number; // Pay What You Want - customer-chosen price
 }

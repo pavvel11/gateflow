@@ -573,6 +573,7 @@ export type Database = {
       }
       products: {
         Row: {
+          allow_custom_price: boolean
           auto_grant_duration_days: number | null
           available_from: string | null
           available_until: string | null
@@ -580,6 +581,8 @@ export type Database = {
           content_delivery_type: string
           created_at: string
           currency: string
+          custom_price_min: number
+          custom_price_presets: Json
           description: string | null
           icon: string | null
           id: string
@@ -589,12 +592,14 @@ export type Database = {
           name: string
           pass_params_to_redirect: boolean
           price: number
+          show_price_presets: boolean
           slug: string
           success_redirect_url: string | null
           tenant_id: string | null
           updated_at: string
         }
         Insert: {
+          allow_custom_price?: boolean
           auto_grant_duration_days?: number | null
           available_from?: string | null
           available_until?: string | null
@@ -602,6 +607,8 @@ export type Database = {
           content_delivery_type?: string
           created_at?: string
           currency?: string
+          custom_price_min?: number
+          custom_price_presets?: Json
           description?: string | null
           icon?: string | null
           id?: string
@@ -611,12 +618,14 @@ export type Database = {
           name: string
           pass_params_to_redirect?: boolean
           price?: number
+          show_price_presets?: boolean
           slug: string
           success_redirect_url?: string | null
           tenant_id?: string | null
           updated_at?: string
         }
         Update: {
+          allow_custom_price?: boolean
           auto_grant_duration_days?: number | null
           available_from?: string | null
           available_until?: string | null
@@ -624,6 +633,8 @@ export type Database = {
           content_delivery_type?: string
           created_at?: string
           currency?: string
+          custom_price_min?: number
+          custom_price_presets?: Json
           description?: string | null
           icon?: string | null
           id?: string
@@ -633,6 +644,7 @@ export type Database = {
           name?: string
           pass_params_to_redirect?: boolean
           price?: number
+          show_price_presets?: boolean
           slug?: string
           success_redirect_url?: string | null
           tenant_id?: string | null

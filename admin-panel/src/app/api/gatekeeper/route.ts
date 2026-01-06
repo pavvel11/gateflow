@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { GatekeeperGenerator } from '@/lib/gatekeeper-generator'
 import { createClient } from '@supabase/supabase-js'
+import packageJson from '../../../../package.json'
 
 /**
  * Validate license format and expiry (server-side)
@@ -120,7 +121,7 @@ export async function GET(request: Request) {
       supabaseUrl,
       supabaseAnonKey,
       environment: process.env.NODE_ENV as 'development' | 'production' | 'test',
-      version: process.env.APP_VERSION || '1.0.0',
+      version: packageJson.version,
       mainDomain,
       productSlug: productSlug || undefined,
       licenseValid,

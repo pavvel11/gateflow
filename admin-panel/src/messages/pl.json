@@ -26,6 +26,8 @@
     "vat": "VAT",
     "includingVat": "w tym VAT",
     "payButton": "Zapłać {amount}",
+    "fixAmountFirst": "Popraw kwotę powyżej, aby kontynuować",
+    "invalidAmount": "nieprawidłowa kwota",
     "processing": "Przetwarzanie płatności...",
     "paymentSuccessful": "Płatność Zakończona Sukcesem!",
     "needInvoice": "Potrzebuję faktury",
@@ -50,7 +52,13 @@
     "lowestPriceTooltipTitle": "Co to jest najniższa cena?",
     "lowestPriceTooltipDescription": "Ta cena odzwierciedla najniższą cenę w ciągu ostatnich 30 dni przed zastosowaniem obniżki, w tym wcześniejsze obniżki.",
     "lowestPriceTooltipDisclaimer": "Miej na uwadze, że ta cena mogła być oferowana tylko wybranym użytkownikom.",
-    "otoExpired": "Oferta specjalna wygasła"
+    "otoExpired": "Oferta specjalna wygasła",
+    "customPrice": {
+      "title": "Wybierz kwotę",
+      "minimum": "Minimum",
+      "belowMinimum": "Kwota musi wynosić co najmniej {minimum}",
+      "aboveMaximum": "Kwota nie może przekraczać {maximum}"
+    }
   },
   "oto": {
     "exclusiveOffer": "Ekskluzywna oferta jednorazowa!",
@@ -1139,7 +1147,18 @@
           "refundPeriodHelp": "Liczba dni od zakupu, w których klient może poprosić o zwrot. Pozostaw puste dla braku limitu czasowego.",
           "infoTitle": "Jak działają zwroty",
           "infoDescription": "Klienci mogą składać wnioski o zwrot z historii zakupów. Przejrzysz i zaakceptujesz/odrzucisz każdy wniosek. Administratorzy zawsze mogą dokonać zwrotu niezależnie od limitu czasowego."
-        }
+        },
+        "customPricing": {
+          "title": "Zapłać ile chcesz",
+          "allowCustomPrice": "Pozwól klientowi wybrać cenę",
+          "allowCustomPriceHelp": "Włącz elastyczne ceny, gdzie klient sam decyduje ile płaci",
+          "minimumPrice": "Cena minimalna",
+          "stripeMinimum": "Stripe wymaga minimum 0.50 w dowolnej walucie",
+          "showPresets": "Pokaż przyciski z predefiniowanymi kwotami",
+          "showPresetsHelp": "Wyświetl sugerowane kwoty jako przyciski szybkiego wyboru na stronie checkout",
+          "presetAmount": "Kwota"
+        },
+        "enabled": "Włączone"
       },
       "duplicateLabel": "Duplikuj {name}"
     },

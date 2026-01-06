@@ -74,65 +74,67 @@ export default function ProductShowcase({ product }: ProductShowcaseProps) {
         </div>
       </div>
 
-      {/* Price Display - Clean & Minimal (EasyCart-inspired) */}
-      <div className="mb-8">
-        {/* Strikethrough regular price if on sale */}
-        {isSaleActive && (
-          <div className="text-2xl font-medium text-gray-500 line-through mb-1">
-            {formatPrice(product.price, product.currency)} {product.currency}
-          </div>
-        )}
+      {/* Price Display - Hide when Pay What You Want is enabled */}
+      {!product.allow_custom_price && (
+        <div className="mb-8">
+          {/* Strikethrough regular price if on sale */}
+          {isSaleActive && (
+            <div className="text-2xl font-medium text-gray-500 line-through mb-1">
+              {formatPrice(product.price, product.currency)} {product.currency}
+            </div>
+          )}
 
-        <div className="text-5xl font-bold text-white mb-2 tracking-tight">
-          {formatPrice(grossPrice, product.currency)} {product.currency}
+          <div className="text-5xl font-bold text-white mb-2 tracking-tight">
+            {formatPrice(grossPrice, product.currency)} {product.currency}
+          </div>
+
+          {product.vat_rate && product.vat_rate > 0 && (
+            <div className="text-sm text-gray-400">
+              {t('includingVat', { defaultValue: 'including VAT' })} {vatRate}%
+            </div>
+          )}
+
+          {/* Sale end date */}
+          {isSaleActive && product.sale_price_until && (
+            <div className="text-sm text-yellow-400 mt-2 flex items-center gap-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {t('saleEndsAt', {
+                date: new Date(product.sale_price_until).toLocaleString('pl-PL', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })
+              })}
+            </div>
+          )}
+
+          {/* Remaining quantity at sale price */}
+          {isSaleActive && saleQuantityRemaining !== null && saleQuantityRemaining > 0 && (
+            <div className="text-sm text-orange-400 mt-2 flex items-center gap-1" data-testid="sale-quantity-remaining">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              {t('saleQuantityRemaining', {
+                defaultValue: 'Only {count} left at this price!',
+                count: saleQuantityRemaining
+              })}
+            </div>
+          )}
+
+          {/* EU Omnibus Directive - Lowest price from last 30 days */}
+          <div className="mt-3">
+            <OmnibusPrice
+              productId={product.id}
+              currentPrice={grossPrice}
+              currency={product.currency}
+            />
+          </div>
         </div>
-
-        {product.vat_rate && product.vat_rate > 0 && (
-          <div className="text-sm text-gray-400">
-            {t('includingVat', { defaultValue: 'including VAT' })} {vatRate}%
-          </div>
-        )}
-
-        {/* Sale end date */}
-        {isSaleActive && product.sale_price_until && (
-          <div className="text-sm text-yellow-400 mt-2 flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {t('saleEndsAt', {
-              date: new Date(product.sale_price_until).toLocaleString('pl-PL', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })
-            })}
-          </div>
-        )}
-
-        {/* Remaining quantity at sale price */}
-        {isSaleActive && saleQuantityRemaining !== null && saleQuantityRemaining > 0 && (
-          <div className="text-sm text-orange-400 mt-2 flex items-center gap-1" data-testid="sale-quantity-remaining">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            {t('saleQuantityRemaining', {
-              defaultValue: 'Only {count} left at this price!',
-              count: saleQuantityRemaining
-            })}
-          </div>
-        )}
-
-        {/* EU Omnibus Directive - Lowest price from last 30 days */}
-        <div className="mt-3">
-          <OmnibusPrice
-            productId={product.id}
-            currentPrice={grossPrice}
-            currency={product.currency}
-          />
-        </div>
-      </div>
+      )}
 
       {/* Long Description with Markdown Support */}
       {product.long_description && (

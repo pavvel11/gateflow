@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from '@/lib/rate-limiting';
+import { calculatePricing, toStripeCents, STRIPE_MINIMUM_AMOUNT } from '@/hooks/usePricing';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-12-15.clover',
@@ -12,8 +13,8 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    // Rate limiting: 20 requests per 5 minutes (generous for form validation retries)
-    const rateLimitOk = await checkRateLimit('create_payment_intent', 20, 5, user?.id);
+    // Rate limiting: 60 requests per 5 minutes (allows PWYW price changes + form retries)
+    const rateLimitOk = await checkRateLimit('create_payment_intent', 60, 5, user?.id);
     if (!rateLimitOk) {
       return NextResponse.json(
         { error: 'Too many payment attempts. Please try again later.' },
@@ -36,7 +37,8 @@ export async function POST(request: NextRequest) {
       city,
       postalCode,
       country,
-      successUrl
+      successUrl,
+      customAmount  // Pay What You Want
     } = await request.json();
 
     if (!productId) {
@@ -45,8 +47,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    console.log('[CreatePaymentIntent] User from session:', user ? { id: user.id, email: user.email } : 'null');
 
     // Use email from request if provided, otherwise from user session
     // For guests without email, we'll let Stripe collect it via billing details
@@ -84,11 +84,37 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 3. Calculate price
-    let totalAmount = product.price * 100; // Convert to cents
-    let bumpProduct = null;
+    // 3. Validate PWYW (Pay What You Want) custom pricing
+    const STRIPE_MAX_AMOUNT = 999999.99; // Stripe's maximum amount limit
+    if (customAmount !== undefined && customAmount > 0) {
+      // Security: Reject customAmount if product doesn't allow custom pricing
+      if (!product.allow_custom_price) {
+        return NextResponse.json(
+          { error: 'This product does not allow custom pricing' },
+          { status: 400 }
+        );
+      }
 
-    // Add bump product if selected
+      // Validate minimum price
+      const minPrice = product.custom_price_min || STRIPE_MINIMUM_AMOUNT;
+      if (customAmount < minPrice) {
+        return NextResponse.json(
+          { error: `Amount must be at least ${minPrice} ${product.currency}` },
+          { status: 400 }
+        );
+      }
+
+      // Validate maximum price (Stripe limit)
+      if (customAmount > STRIPE_MAX_AMOUNT) {
+        return NextResponse.json(
+          { error: `Amount must be no more than ${STRIPE_MAX_AMOUNT} ${product.currency}` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // 4. Fetch bump product if selected
+    let bumpProduct = null;
     if (bumpProductId) {
       const { data: bump } = await supabase
         .from('products')
@@ -99,11 +125,10 @@ export async function POST(request: NextRequest) {
 
       if (bump && bump.currency === product.currency) {
         bumpProduct = bump;
-        totalAmount += bump.price * 100;
       }
     }
 
-    // Apply coupon discount
+    // 5. Fetch and validate coupon
     let appliedCoupon = null;
     if (couponCode) {
       const { data: coupon } = await supabase
@@ -114,25 +139,32 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (coupon) {
-        // Verify coupon is valid for this product
         const isValidForProduct = coupon.applies_to_all_products ||
           (coupon.applicable_product_ids && coupon.applicable_product_ids.includes(productId));
 
         if (isValidForProduct) {
           appliedCoupon = coupon;
-          if (coupon.discount_type === 'percentage') {
-            totalAmount = Math.round(totalAmount * (1 - coupon.discount_value / 100));
-          } else {
-            totalAmount -= coupon.discount_value * 100;
-          }
         }
       }
     }
 
-    // Ensure total is at least minimum (e.g., 50 cents)
-    totalAmount = Math.max(totalAmount, 50);
+    // 6. Calculate pricing using centralized function
+    const pricing = calculatePricing({
+      productPrice: product.price,
+      productCurrency: product.currency,
+      customAmount,
+      bumpPrice: bumpProduct?.price,
+      bumpSelected: !!bumpProduct,
+      coupon: appliedCoupon ? {
+        discount_type: appliedCoupon.discount_type,
+        discount_value: appliedCoupon.discount_value,
+        code: appliedCoupon.code,
+      } : null,
+    });
 
-    // 4. Create PaymentIntent
+    const totalAmount = toStripeCents(pricing.totalGross);
+
+    // 7. Create PaymentIntent
     const paymentIntentParams: Stripe.PaymentIntentCreateParams = {
       amount: totalAmount,
       currency: product.currency.toLowerCase(),
@@ -166,6 +198,8 @@ export async function POST(request: NextRequest) {
         postal_code: postalCode || '',
         country: country || '',
         success_url: successUrl || '',
+        custom_amount: pricing.isPwyw ? pricing.basePrice.toString() : '',
+        is_pwyw: pricing.isPwyw ? 'true' : 'false',
       },
     };
 
