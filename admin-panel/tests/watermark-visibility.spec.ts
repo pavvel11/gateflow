@@ -28,8 +28,7 @@ test.describe('Watermark Visibility Based on License', () => {
   const setLicense = async (license: string | null) => {
     await supabaseAdmin
       .from('integrations_config')
-      .update({ gateflow_license: license })
-      .eq('id', 1);
+      .upsert({ id: 1, gateflow_license: license });
   };
 
   const clearGeneratorCache = async (page: typeof import('@playwright/test').Page.prototype) => {

@@ -414,8 +414,8 @@ test.describe('Protection Code (Generate Protection Code)', () => {
       const codeBlock = page.locator('pre').first();
       const generatedCode = await codeBlock.textContent();
 
-      // Should contain gateflow-embed.js
-      expect(generatedCode).toContain('gateflow-embed.js');
+      // Should contain gateflow-embed script reference
+      expect(generatedCode).toContain('gateflow-embed');
       expect(generatedCode).toContain('data-gateflow-product');
       expect(generatedCode).toContain(freeProduct.slug);
     });

@@ -120,8 +120,8 @@ test.describe('Product Duplication', () => {
     const productRow = page.locator('tr').filter({ hasText: 'Original Product' });
     await expect(productRow).toBeVisible({ timeout: 10000 });
 
-    // Find the duplicate button by aria-label
-    const duplicateButton = productRow.getByRole('button', { name: /Duplicate Original Product/i });
+    // Find the duplicate button by aria-label (using regex to match both EN and PL)
+    const duplicateButton = productRow.getByRole('button', { name: /Duplikuj Original Product|Duplicate Original Product/i });
     await expect(duplicateButton).toBeVisible({ timeout: 5000 });
   });
 
@@ -132,7 +132,7 @@ test.describe('Product Duplication', () => {
 
     // Click duplicate button
     const productRow = page.locator('tr').filter({ hasText: 'Original Product' });
-    const duplicateButton = productRow.getByRole('button', { name: /Duplicate Original Product/i });
+    const duplicateButton = productRow.getByRole('button', { name: /Duplikuj Original Product|Duplicate Original Product/i });
     await duplicateButton.click();
 
     // Wait for modal to open
