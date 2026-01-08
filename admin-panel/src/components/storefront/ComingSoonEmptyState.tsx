@@ -41,6 +41,18 @@ export default function ComingSoonEmptyState({ shopName, contactEmail }: ComingS
           {t('subtitle')}
         </p>
 
+        {/* Learn More Link */}
+        <div className="mb-12">
+          <a 
+            href="/about" 
+            className="inline-flex items-center px-6 py-3 rounded-full bg-gradient-to-r from-purple-600/10 to-blue-600/10 dark:from-purple-400/10 dark:to-blue-400/10 text-purple-600 dark:text-purple-400 font-bold hover:from-purple-600/20 hover:to-blue-600/20 transition-all group border border-purple-200 dark:border-purple-800"
+          >
+            <span className="mr-2">🚀</span>
+            {t('learnMore')}
+            <span className="ml-2 transform transition-transform group-hover:translate-x-1">→</span>
+          </a>
+        </div>
+
         {/* Contact Information */}
         {contactEmail && (
           <div className="mt-12 p-6 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700">

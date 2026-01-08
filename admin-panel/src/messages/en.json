@@ -141,7 +141,8 @@
     "myPurchases": "My Purchases",
     "refundRequests": "Refund Requests",
     "store": "Store",
-    "about": "About GateFlow"
+    "about": "About GateFlow",
+    "getGateflow": "Get GateFlow for Free"
   },
   "about": {
     "title": "About GateFlow",
@@ -615,7 +616,8 @@
     "comingSoon": {
       "title": "We're Setting Up Shop!",
       "subtitle": "Our store is being prepared with amazing products. Check back soon!",
-      "contactUs": "Questions? Reach us at {email}"
+      "contactUs": "Have questions? Reach out at {email}",
+      "learnMore": "Build your own digital empire with GateFlow"
     },
     "hero": {
       "title": "Discover Our",

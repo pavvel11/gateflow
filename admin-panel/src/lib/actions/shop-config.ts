@@ -38,14 +38,14 @@ export async function getShopConfig(): Promise<ShopConfig | null> {
   const { data, error } = await supabase
     .from('shop_config')
     .select('*')
-    .single()
+    .maybeSingle()
 
   if (error) {
     console.error('Error fetching shop config:', error)
     return null
   }
 
-  return data as ShopConfig
+  return data as ShopConfig | null
 }
 
 /**

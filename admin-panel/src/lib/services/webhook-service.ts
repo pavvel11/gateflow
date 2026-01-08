@@ -9,15 +9,29 @@ interface WebhookPayload {
 
 const MOCK_PAYLOADS: Record<string, any> = {
   'purchase.completed': {
-    email: 'customer@example.com',
-    productId: 'prod_12345678',
-    productName: 'Premium Course',
-    amount: 4999,
-    currency: 'usd',
-    sessionId: 'cs_test_a1b2c3d4e5f6g7h8i9j0',
-    isGuest: false,
-    firstName: 'Jan',
-    lastName: 'Kowalski',
+    customer: {
+      email: 'customer@example.com',
+      firstName: 'Jan',
+      lastName: 'Kowalski',
+      userId: null
+    },
+    product: {
+      id: 'prod_12345678',
+      name: 'Premium Course',
+      slug: 'premium-course',
+      price: 4999,
+      currency: 'usd',
+      icon: '🎓'
+    },
+    bumpProduct: null,
+    order: {
+      amount: 4999,
+      currency: 'usd',
+      sessionId: 'cs_test_a1b2c3d4e5f6g7h8i9j0',
+      paymentIntentId: 'pi_test_123',
+      couponId: null,
+      isGuest: false
+    },
     invoice: {
       needsInvoice: true,
       nip: '1234567890',
@@ -26,18 +40,26 @@ const MOCK_PAYLOADS: Record<string, any> = {
       city: 'Warszawa',
       postalCode: '00-001',
       country: 'PL'
-    },
-    timestamp: new Date().toISOString()
+    }
   },
   'lead.captured': {
-    email: 'lead@example.com',
-    productId: 'prod_free_123',
-    productName: 'Free Tutorial',
-    userId: 'user_123abc',
-    timestamp: new Date().toISOString()
+    customer: {
+      email: 'lead@example.com',
+      userId: 'user_123abc'
+    },
+    product: {
+      id: 'prod_free_123',
+      name: 'Free Tutorial',
+      slug: 'free-tutorial',
+      price: 0,
+      currency: 'USD',
+      icon: '📚'
+    }
   },
   'waitlist.signup': {
-    email: 'interested@example.com',
+    customer: {
+      email: 'interested@example.com'
+    },
     product: {
       id: 'prod_upcoming_123',
       name: 'Upcoming Course',
@@ -45,8 +67,7 @@ const MOCK_PAYLOADS: Record<string, any> = {
       price: 9900,
       currency: 'PLN',
       icon: '🚀'
-    },
-    signed_up_at: new Date().toISOString()
+    }
   },
   'subscription.started': {
     email: 'subscriber@example.com',

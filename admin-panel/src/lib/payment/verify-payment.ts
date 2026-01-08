@@ -379,18 +379,55 @@ export async function verifyPaymentSession(
 
           // Trigger webhook for new successful purchases
           if (!paymentResult.already_had_access) {
+            // Fetch detailed product info for webhook
+            const { data: productDetails } = await serviceClient
+              .from('products')
+              .select('id, name, slug, price, currency, icon')
+              .eq('id', productId)
+              .single();
+
+            // Fetch bump product info if exists
+            let bumpProductDetails = null;
+            if (hasBump && bumpProductId) {
+               const { data: bump } = await serviceClient
+                .from('products')
+                .select('id, name, slug, price, currency, icon')
+                .eq('id', bumpProductId)
+                .single();
+               bumpProductDetails = bump;
+            }
+
             const webhookData: any = {
-              email: customerEmail,
-              productId: productId,
-              amount: session.amount_total,
-              currency: session.currency,
-              sessionId: session.id,
-              isGuest: paymentResult.is_guest_purchase,
-              bumpProductId: hasBump && bumpProductId ? bumpProductId : null,
-              couponId: hasCoupon && couponId ? couponId : null,
-              // Customer details
-              firstName: session.metadata?.first_name || null,
-              lastName: session.metadata?.last_name || null,
+              customer: {
+                email: customerEmail,
+                firstName: session.metadata?.first_name || null,
+                lastName: session.metadata?.last_name || null,
+                userId: user?.id || null
+              },
+              product: productDetails ? {
+                 id: productDetails.id,
+                 name: productDetails.name,
+                 slug: productDetails.slug,
+                 price: productDetails.price,
+                 currency: productDetails.currency,
+                 icon: productDetails.icon
+              } : { id: productId },
+              bumpProduct: bumpProductDetails ? {
+                 id: bumpProductDetails.id,
+                 name: bumpProductDetails.name,
+                 slug: bumpProductDetails.slug,
+                 price: bumpProductDetails.price,
+                 currency: bumpProductDetails.currency,
+                 icon: bumpProductDetails.icon
+              } : null,
+              order: {
+                amount: session.amount_total,
+                currency: session.currency,
+                sessionId: session.id,
+                paymentIntentId: stripePaymentIntentId,
+                couponId: hasCoupon && couponId ? couponId : null,
+                isGuest: paymentResult.is_guest_purchase
+              }
             };
 
             // Add invoice data if requested
@@ -648,18 +685,54 @@ export async function verifyPaymentIntent(
 
           // Trigger webhook for new successful purchases
           if (!paymentResult.already_had_access) {
+            // Fetch detailed product info for webhook
+            const { data: productDetails } = await serviceClient
+              .from('products')
+              .select('id, name, slug, price, currency, icon')
+              .eq('id', productId)
+              .single();
+
+            // Fetch bump product info if exists
+            let bumpProductDetails = null;
+            if (bumpProductId) {
+               const { data: bump } = await serviceClient
+                .from('products')
+                .select('id, name, slug, price, currency, icon')
+                .eq('id', bumpProductId)
+                .single();
+               bumpProductDetails = bump;
+            }
+
             const webhookData: any = {
-              email: customerEmail,
-              productId: productId,
-              amount: paymentIntent.amount,
-              currency: paymentIntent.currency,
-              paymentIntentId: paymentIntent.id,
-              isGuest: paymentResult.is_guest_purchase,
-              bumpProductId: bumpProductId,
-              couponId: couponId,
-              // Customer details
-              firstName: paymentIntent.metadata?.first_name || null,
-              lastName: paymentIntent.metadata?.last_name || null,
+              customer: {
+                email: customerEmail,
+                firstName: paymentIntent.metadata?.first_name || null,
+                lastName: paymentIntent.metadata?.last_name || null,
+                userId: user?.id || null
+              },
+              product: productDetails ? {
+                 id: productDetails.id,
+                 name: productDetails.name,
+                 slug: productDetails.slug,
+                 price: productDetails.price,
+                 currency: productDetails.currency,
+                 icon: productDetails.icon
+              } : { id: productId },
+              bumpProduct: bumpProductDetails ? {
+                 id: bumpProductDetails.id,
+                 name: bumpProductDetails.name,
+                 slug: bumpProductDetails.slug,
+                 price: bumpProductDetails.price,
+                 currency: bumpProductDetails.currency,
+                 icon: bumpProductDetails.icon
+              } : null,
+              order: {
+                amount: paymentIntent.amount,
+                currency: paymentIntent.currency,
+                paymentIntentId: paymentIntent.id,
+                couponId: couponId || null,
+                isGuest: paymentResult.is_guest_purchase
+              }
             };
 
             // Add invoice data if requested

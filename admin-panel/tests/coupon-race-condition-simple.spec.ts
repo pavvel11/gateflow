@@ -8,28 +8,40 @@ import { test, expect } from '@playwright/test';
 import { supabaseAdmin } from './helpers/admin-auth';
 
 test.describe('Coupon Race Condition - Simplified', () => {
+  test.describe.configure({ mode: 'serial' }); // Ensure database check runs after race test
+
   let productId: string;
   let couponId: string;
   let couponCode: string;
 
   test.beforeAll(async () => {
-    // Get any existing product from seed data (bypass create issues)
-    const { data: products } = await supabaseAdmin
+    // Create a truly unique product for this test to avoid interference with other tests
+    const timestamp = Date.now();
+    const randomSuffix = Math.random().toString(36).substring(7);
+    const slug = `race-test-product-${timestamp}-${randomSuffix}`;
+
+    const { data: product, error: productError } = await supabaseAdmin
       .from('products')
-      .select('id, name, price')
-      .eq('is_active', true)
-      .limit(1);
+      .insert({
+        name: 'Race Condition Test Product',
+        slug: slug,
+        price: 100.00,
+        currency: 'USD',
+        is_active: true,
+        enable_waitlist: false,
+        vat_rate: 23,
+        price_includes_vat: true,
+        features: [{ title: 'Test', items: ['Race test'] }]
+      })
+      .select()
+      .single();
 
-    if (!products || products.length === 0) {
-      throw new Error('No products found in database. Run seed.sql first.');
-    }
+    if (productError) throw productError;
+    productId = product.id;
+    console.log(`Created unique product for race test: ${slug} (${productId})`);
 
-    productId = products[0].id;
-    console.log(`Using existing product: ${products[0].name} (${productId})`);
-
-    // Create coupon with usage_limit_global = 1 using RPC (bypasses RLS)
-    // Use more random suffix to avoid duplicates in concurrent tests
-    couponCode = 'RACE' + Date.now() + '_' + Math.random().toString(36).substring(7);
+    // Create coupon with usage_limit_global = 1
+    couponCode = 'RACE' + timestamp + '_' + randomSuffix;
 
     const { data: insertResult, error } = await supabaseAdmin
       .rpc('create_test_coupon', {

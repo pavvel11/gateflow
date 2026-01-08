@@ -100,18 +100,56 @@ async function handleCheckoutSessionCompleted(
 
   // Trigger internal webhook for purchase.completed
   if (!result.already_had_access) {
+    // Fetch detailed product info for webhook
+    const { data: productDetails } = await supabase
+      .from('products')
+      .select('id, name, slug, price, currency, icon')
+      .eq('id', productId)
+      .single();
+
+    // Fetch bump product info if exists
+    let bumpProductDetails = null;
+    if (hasBump && bumpProductId) {
+       const { data: bump } = await supabase
+        .from('products')
+        .select('id, name, slug, price, currency, icon')
+        .eq('id', bumpProductId)
+        .single();
+       bumpProductDetails = bump;
+    }
+
     WebhookService.trigger('purchase.completed', {
-      email: customerEmail,
-      productId: productId,
-      amount: session.amount_total,
-      currency: session.currency,
-      sessionId: sessionId,
-      isGuest: result.is_guest_purchase,
-      bumpProductId: hasBump && bumpProductId ? bumpProductId : null,
-      couponId: hasCoupon && couponId ? couponId : null,
-      firstName: session.metadata?.first_name || null,
-      lastName: session.metadata?.last_name || null,
-      source: 'stripe_webhook',
+      customer: {
+        email: customerEmail,
+        firstName: session.metadata?.first_name || null,
+        lastName: session.metadata?.last_name || null,
+        userId: userId
+      },
+      product: productDetails ? {
+         id: productDetails.id,
+         name: productDetails.name,
+         slug: productDetails.slug,
+         price: productDetails.price,
+         currency: productDetails.currency,
+         icon: productDetails.icon
+      } : { id: productId },
+      bumpProduct: bumpProductDetails ? {
+         id: bumpProductDetails.id,
+         name: bumpProductDetails.name,
+         slug: bumpProductDetails.slug,
+         price: bumpProductDetails.price,
+         currency: bumpProductDetails.currency,
+         icon: bumpProductDetails.icon
+      } : null,
+      order: {
+        amount: session.amount_total,
+        currency: session.currency,
+        sessionId: sessionId,
+        paymentIntentId: stripePaymentIntentId,
+        couponId: hasCoupon && couponId ? couponId : null,
+        isGuest: result.is_guest_purchase
+      },
+      source: 'stripe_webhook'
     }).catch(err => console.error('[Stripe Webhook] Internal webhook error:', err));
   }
 
@@ -175,18 +213,55 @@ async function handlePaymentIntentSucceeded(
 
   // Trigger internal webhook for purchase.completed
   if (!result.already_had_access) {
+    // Fetch detailed product info for webhook
+    const { data: productDetails } = await supabase
+      .from('products')
+      .select('id, name, slug, price, currency, icon')
+      .eq('id', productId)
+      .single();
+
+    // Fetch bump product info if exists
+    let bumpProductDetails = null;
+    if (hasBump && bumpProductId) {
+       const { data: bump } = await supabase
+        .from('products')
+        .select('id, name, slug, price, currency, icon')
+        .eq('id', bumpProductId)
+        .single();
+       bumpProductDetails = bump;
+    }
+
     WebhookService.trigger('purchase.completed', {
-      email: customerEmail,
-      productId: productId,
-      amount: paymentIntent.amount,
-      currency: paymentIntent.currency,
-      paymentIntentId: paymentIntent.id,
-      isGuest: result.is_guest_purchase,
-      bumpProductId: hasBump && bumpProductId ? bumpProductId : null,
-      couponId: hasCoupon && couponId ? couponId : null,
-      firstName: paymentIntent.metadata?.first_name || null,
-      lastName: paymentIntent.metadata?.last_name || null,
-      source: 'stripe_webhook',
+      customer: {
+        email: customerEmail,
+        firstName: paymentIntent.metadata?.first_name || null,
+        lastName: paymentIntent.metadata?.last_name || null,
+        userId: userId
+      },
+      product: productDetails ? {
+         id: productDetails.id,
+         name: productDetails.name,
+         slug: productDetails.slug,
+         price: productDetails.price,
+         currency: productDetails.currency,
+         icon: productDetails.icon
+      } : { id: productId },
+      bumpProduct: bumpProductDetails ? {
+         id: bumpProductDetails.id,
+         name: bumpProductDetails.name,
+         slug: bumpProductDetails.slug,
+         price: bumpProductDetails.price,
+         currency: bumpProductDetails.currency,
+         icon: bumpProductDetails.icon
+      } : null,
+      order: {
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+        paymentIntentId: paymentIntent.id,
+        couponId: hasCoupon && couponId ? couponId : null,
+        isGuest: result.is_guest_purchase
+      },
+      source: 'stripe_webhook'
     }).catch(err => console.error('[Stripe Webhook] Internal webhook error:', err));
   }
 

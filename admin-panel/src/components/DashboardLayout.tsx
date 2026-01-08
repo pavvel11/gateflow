@@ -16,6 +16,7 @@ interface DashboardLayoutProps {
   } | null
   isAdmin?: boolean
   shopConfig?: ShopConfig | null
+  showGateFlowCTA?: boolean
 }
 
 // Icons
@@ -113,7 +114,7 @@ const Icons = {
   )
 };
 
-export default function DashboardLayout({ children, user, isAdmin: isAdminProp, shopConfig }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, user, isAdmin: isAdminProp, shopConfig, showGateFlowCTA }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const { signOut, isAdmin: isAdminContext } = useAuth()
   const t = useTranslations('navigation')
@@ -206,6 +207,15 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
               </Link>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
+              {showGateFlowCTA && (
+                <Link
+                  href="/about"
+                  className="hidden sm:inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold hover:shadow-lg transition-all transform hover:scale-105"
+                >
+                  <span className="mr-1.5">🚀</span>
+                  {t('getGateflow', { defaultValue: 'Get GateFlow' })}
+                </Link>
+              )}
               <div className="flex items-center h-full">
                 <FloatingLanguageSwitcher mode="static" variant="compact" />
               </div>
@@ -390,6 +400,15 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
           </button>
 
           <div className="flex-1 flex justify-end items-center space-x-4">
+            {showGateFlowCTA && (
+              <Link
+                href="/about"
+                className="hidden sm:inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold hover:shadow-lg transition-all transform hover:scale-105"
+              >
+                <span className="mr-1.5">🚀</span>
+                {t('getGateflow', { defaultValue: 'Get GateFlow' })}
+              </Link>
+            )}
             <div className="hidden md:block">
               <FloatingLanguageSwitcher mode="static" variant="compact" />
             </div>

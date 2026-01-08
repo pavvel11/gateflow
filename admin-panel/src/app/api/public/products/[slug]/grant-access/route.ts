@@ -32,7 +32,7 @@ export async function POST(
     // Get product
     const { data: product, error: productError } = await supabase
       .from('products')
-      .select('id, name, slug, price, is_active, available_from, available_until')
+      .select('id, name, slug, price, currency, icon, is_active, available_from, available_until')
       .eq('slug', slug)
       .single();
 
@@ -95,11 +95,18 @@ export async function POST(
 
     // Trigger webhook for lead capture
     WebhookService.trigger('lead.captured', {
-      email: user.email,
-      productId: product.id,
-      productName: product.name,
-      userId: user.id,
-      timestamp: new Date().toISOString()
+      customer: {
+        email: user.email,
+        userId: user.id
+      },
+      product: {
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        price: product.price,
+        currency: product.currency,
+        icon: product.icon
+      }
     }).catch(err => console.error('Webhook trigger error:', err));
 
     // Track server-side Lead conversion to Facebook CAPI

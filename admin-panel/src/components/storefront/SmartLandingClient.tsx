@@ -45,7 +45,11 @@ export default function SmartLandingClient({
   // SCENARIO 2: No products + Guest/Regular user → Show coming soon
   if (!hasProducts && !isAdmin) {
     return (
-      <DashboardLayout user={user ? { email: user.email || '', id: user.id || '' } : null} shopConfig={shopConfig}>
+      <DashboardLayout 
+        user={user ? { email: user.email || '', id: user.id || '' } : null} 
+        shopConfig={shopConfig}
+        showGateFlowCTA={true}
+      >
         <ComingSoonEmptyState shopName={shopName} contactEmail={contactEmail} />
       </DashboardLayout>
     );

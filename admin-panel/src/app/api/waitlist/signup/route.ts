@@ -89,7 +89,9 @@ export async function POST(request: Request) {
     // Trigger webhook for waitlist signup
     // Note: We're not storing in DB yet - that will be added later (see backlog)
     await WebhookService.trigger('waitlist.signup', {
-      email,
+      customer: {
+        email
+      },
       product: {
         id: product.id,
         name: product.name,
@@ -97,8 +99,7 @@ export async function POST(request: Request) {
         price: product.price,
         currency: product.currency,
         icon: product.icon,
-      },
-      signed_up_at: new Date().toISOString(),
+      }
     });
 
     // Log the signup for debugging (can be removed in production)

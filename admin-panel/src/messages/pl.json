@@ -141,7 +141,8 @@
     "myPurchases": "Moje Zakupy",
     "refundRequests": "Prośby o Zwrot",
     "store": "Sklep",
-    "about": "O GateFlow"
+    "about": "O GateFlow",
+    "getGateflow": "Pobierz GateFlow za darmo"
   },
   "about": {
     "title": "O GateFlow",
@@ -623,8 +624,9 @@
     },
     "comingSoon": {
       "title": "Przygotowujemy sklep!",
-      "subtitle": "Nasz sklep jest przygotowywany z niesamowitymi produktami. Wróć wkrótce!",
-      "contactUs": "Pytania? Napisz do nas na {email}"
+      "subtitle": "Nasz sklep jest w trakcie konfiguracji. Zapraszamy wkrótce po niesamowite produkty!",
+      "contactUs": "Masz pytania? Napisz do nas: {email}",
+      "learnMore": "Zbuduj własne cyfrowe imperium z GateFlow"
     },
     "hero": {
       "title": "Odkryj nasze",
