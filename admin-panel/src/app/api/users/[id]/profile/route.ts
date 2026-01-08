@@ -6,14 +6,29 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  
+
   try {
     const supabase = await createClient();
-    
+
     // Check if user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // SECURITY FIX (V5): Check if user is accessing their own profile OR is an admin
+    if (user.id !== id) {
+      // Not their own profile - check if they're an admin
+      const { data: adminRecord, error: adminError } = await supabase
+        .from('admin_users')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (adminError || !adminRecord) {
+        // Not admin, not their own profile - forbidden
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
     }
 
     // Call our database function to get the complete user profile

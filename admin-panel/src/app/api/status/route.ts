@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { checkRateLimit } from '@/lib/rate-limiting';
 
 /**
  * Handle CORS preflight requests
@@ -24,6 +25,18 @@ export async function OPTIONS(request: Request) {
  */
 export async function GET() {
   try {
+    // Rate limiting: 30 requests per minute
+    const rateLimitOk = await checkRateLimit('status', 30, 60);
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        {
+          system: { status: 'error', error: 'Too many requests. Please try again later.' },
+          error: 'Rate limit exceeded'
+        },
+        { status: 429 }
+      );
+    }
+
     const supabase = await createClient();
     
     // Get basic product count (public products only)

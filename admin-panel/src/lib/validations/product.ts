@@ -6,6 +6,49 @@
 
 import { parseVideoUrl, isTrustedVideoPlatform } from '@/lib/videoUtils';
 
+/**
+ * SECURITY FIX (V13): Escape ILIKE special characters to prevent SQL pattern injection
+ * PostgreSQL ILIKE treats %, _, and \ as wildcards/escape chars
+ * @param input - Raw user input for ILIKE search
+ * @returns Escaped string safe for ILIKE patterns
+ */
+export function escapeIlikePattern(input: string): string {
+  if (!input || typeof input !== 'string') {
+    return '';
+  }
+  // Escape backslash first, then % and _
+  return input
+    .replace(/\\/g, '\\\\')  // \ -> \\
+    .replace(/%/g, '\\%')    // % -> \%
+    .replace(/_/g, '\\_');   // _ -> \_
+}
+
+/**
+ * Allowed sort columns for product queries - prevents SQL injection via sortBy
+ * SECURITY: Only whitelisted columns can be used for sorting
+ */
+export const PRODUCT_SORT_COLUMNS: Record<string, string> = {
+  'name': 'name',
+  'price': 'price',
+  'created_at': 'created_at',
+  'updated_at': 'updated_at',
+  'is_active': 'is_active',
+  'is_featured': 'is_featured',
+  'slug': 'slug',
+};
+
+/**
+ * Validate and map sortBy parameter to prevent SQL injection
+ * @param sortBy - User-provided sort column name
+ * @returns Safe column name or default
+ */
+export function validateProductSortColumn(sortBy: string | null): string {
+  if (!sortBy || typeof sortBy !== 'string') {
+    return 'created_at';
+  }
+  return PRODUCT_SORT_COLUMNS[sortBy] || 'created_at';
+}
+
 // Validation result type
 export interface ValidationResult {
   isValid: boolean;
@@ -510,6 +553,10 @@ export function sanitizeProductData(data: Record<string, unknown>, setDefaults: 
   delete sanitizedData.oto_discount_value;
   delete sanitizedData.oto_duration_minutes;
 
+  // SECURITY FIX: Remove sale_quantity_sold - this is a system counter
+  // that should only be incremented by increment_sale_quantity_sold() function
+  delete sanitizedData.sale_quantity_sold;
+
   // Sanitize and trim string fields
   if (sanitizedData.name && typeof sanitizedData.name === 'string') {
     sanitizedData.name = sanitizedData.name.trim();
@@ -552,14 +599,7 @@ export function sanitizeProductData(data: Record<string, unknown>, setDefaults: 
     sanitizedData.sale_quantity_limit = parseInt(sanitizedData.sale_quantity_limit, 10) || null;
   }
 
-  // Ensure sale_quantity_sold is always a valid number (only when explicitly provided)
-  if (sanitizedData.sale_quantity_sold !== undefined) {
-    if (sanitizedData.sale_quantity_sold === '' || sanitizedData.sale_quantity_sold === null) {
-      sanitizedData.sale_quantity_sold = 0;
-    } else if (typeof sanitizedData.sale_quantity_sold === 'string') {
-      sanitizedData.sale_quantity_sold = parseInt(sanitizedData.sale_quantity_sold, 10) || 0;
-    }
-  }
+  // NOTE: sale_quantity_sold is deleted above - it's a system counter, not user-editable
 
   // Validate custom_price_min if provided
   if (sanitizedData.custom_price_min !== undefined) {

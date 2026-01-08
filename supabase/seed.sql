@@ -212,6 +212,8 @@ VALUES ('COURSE20', 'Course Special 20%', 'percentage', 20, (SELECT jsonb_build_
 
 -- Insert sample webhook data
 -- 1. Sample Webhook Endpoint
+-- SECURITY NOTE: Secret is auto-generated using PostgreSQL's gen_random_bytes
+-- In production, each webhook endpoint gets a unique cryptographically secure secret
 INSERT INTO webhook_endpoints (id, url, events, description, is_active, secret)
 VALUES (
   '88888888-8888-4888-a888-888888888888',
@@ -219,7 +221,7 @@ VALUES (
   ARRAY['purchase.completed', 'lead.captured'],
   'Zapier CRM Integration',
   true,
-  'sk_test_webhook_secret_key_12345'
+  encode(gen_random_bytes(32), 'hex')  -- Generates unique 64-char hex secret
 );
 
 -- 2. Sample Webhook Logs (Updated schema: status, http_status)

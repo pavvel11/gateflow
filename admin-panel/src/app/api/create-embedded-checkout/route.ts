@@ -2,15 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { CheckoutService } from '@/lib/services/checkout';
 import { CheckoutError, CheckoutErrorType } from '@/types/checkout';
+import { checkRateLimit } from '@/lib/rate-limiting';
 import type { CreateCheckoutRequest, CreateCheckoutResponse, CheckoutErrorResponse } from '@/types/checkout';
 
 export async function POST(request: NextRequest): Promise<NextResponse<CreateCheckoutResponse | CheckoutErrorResponse>> {
   try {
     const supabase = await createClient();
-    const requestData: CreateCheckoutRequest = await request.json();
-    
-    // Get authenticated user (optional for guest checkout)
+
+    // Get authenticated user first for rate limiting
     const { data: { user } } = await supabase.auth.getUser();
+
+    // Rate limiting: 20 requests per 5 minutes (prevents Stripe API abuse)
+    const rateLimitOk = await checkRateLimit('create_embedded_checkout', 20, 300, user?.id);
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        { error: 'Too many checkout attempts. Please try again later.', type: CheckoutErrorType.UNKNOWN_ERROR },
+        { status: 429 }
+      );
+    }
+
+    const requestData: CreateCheckoutRequest = await request.json();
     
     // Get origin for return URL
     const origin = request.headers.get('origin') || process.env.SITE_URL;

@@ -19,6 +19,7 @@ test.describe('Smart Landing Page', () => {
   let regularUserEmail: string;
   const password = 'password123';
   let testProductId: string;
+  let originallyActiveProductIds: string[] = [];
 
   const loginAsAdmin = async (page: Page) => {
     await acceptAllCookies(page);
@@ -87,6 +88,13 @@ test.describe('Smart Landing Page', () => {
   };
 
   test.beforeAll(async () => {
+    // Save originally active products before any test runs
+    const { data: activeProducts } = await supabaseAdmin
+      .from('products')
+      .select('id')
+      .eq('is_active', true);
+    originallyActiveProductIds = activeProducts?.map(p => p.id) || [];
+
     const randomStr = Math.random().toString(36).substring(7);
     adminEmail = `test-smart-admin-${Date.now()}-${randomStr}@example.com`;
     regularUserEmail = `test-smart-user-${Date.now()}-${randomStr}@example.com`;
@@ -130,9 +138,17 @@ test.describe('Smart Landing Page', () => {
   });
 
   test.afterAll(async () => {
-    // Cleanup
+    // Cleanup test product
     if (testProductId) {
       await supabaseAdmin.from('products').delete().eq('id', testProductId);
+    }
+
+    // Restore originally active products
+    if (originallyActiveProductIds.length > 0) {
+      await supabaseAdmin
+        .from('products')
+        .update({ is_active: true })
+        .in('id', originallyActiveProductIds);
     }
 
     // Delete users by email

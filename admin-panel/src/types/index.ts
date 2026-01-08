@@ -237,7 +237,8 @@ export interface PaymentTransaction {
   payment_method: string;
   stripe_payment_intent_id: string;
   refund_id?: string;
-  refund_amount?: number;
+  refunded_amount?: number;
+  refunded_by?: string;
   refund_reason?: string;
   refunded_at?: string;
   created_at: string;

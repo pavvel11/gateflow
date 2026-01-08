@@ -10,9 +10,31 @@ export async function GET(
     const supabase = await createClient();
     
     // Get product by slug
+    // SECURITY FIX (V18): Only select public-safe fields
+    // Previously used select('*') which exposed content_config with download URLs
+    // This allowed anyone to get download links without paying
     const { data: product, error: productError } = await supabase
       .from('products')
-      .select('*')
+      .select(`
+        id,
+        name,
+        slug,
+        description,
+        icon,
+        price,
+        currency,
+        is_active,
+        is_featured,
+        available_from,
+        available_until,
+        allow_custom_price,
+        custom_price_min,
+        custom_price_presets,
+        show_price_presets,
+        enable_waitlist,
+        content_delivery_type,
+        layout_template
+      `)
       .eq('slug', slug)
       .single();
 

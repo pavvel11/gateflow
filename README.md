@@ -1,210 +1,212 @@
-# 🚀 GateFlow - Self-Hosted Product Access Management
+<div align="center">
 
-**GateFlow** is an enterprise-grade platform for selling and protecting digital products. It combines powerful authentication (Magic Links), flexible payment processing (Stripe), and intuitive content protection.
+# GateFlow
 
-> **Your Products. Your Infrastructure. Your Rules.**
+**Self-hosted platform for selling and protecting digital products**
 
-## ✨ Key Features
+[![Version](https://img.shields.io/badge/version-1.0.0--rc.1-blue?style=flat-square)](https://github.com/pavvel11/gateflow/releases)
+[![Tests](https://img.shields.io/badge/tests-571%20passing-brightgreen?style=flat-square)](./admin-panel/tests)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
 
-- **💳 Stripe Integration**: Complete checkout flow with **visual wizard** for easy setup (2 configuration methods: .env or encrypted database).
-- **🔐 Content Protection**: Protect pages, elements, or specific resources.
-- **⚡ Funnels & OTO**: Create One-Time Offers and upsell flows.
-- **🔌 Webhooks Automation**: Connect with Zapier, Make, or custom endpoints (with HMAC security).
-- **🌍 Internationalization**: Ready for global sales (EN/PL included).
-- **⚙️ Settings Dashboard**: Shop configuration, multi-currency support, Stripe management.
-- **🎨 Modern UI**: Beautiful, responsive dashboard built with Tailwind CSS.
+[Demo](https://demo.gateflow.io) · [Documentation](./FEATURES.md) · [Deployment Guide](./DEPLOYMENT.md)
 
-## 🏗️ Tech Stack
+<br />
 
-- **Framework**: Next.js 16 (App Router, Turbopack)
-- **Database**: Supabase (PostgreSQL + Auth + RLS)
-- **Styling**: Tailwind CSS
-- **Payments**: Stripe Elements & Checkout
-- **Deployment**: Docker / PM2
+<img src="./Screenshot 2025-12-10 at 17.53.19.png" alt="GateFlow Dashboard" width="800" />
 
-## 🚀 Quick Start (Local Development)
-
-### Prerequisites
-- Node.js 20+ (required by Next.js 16)
-- Docker (for local Supabase)
-- Stripe Account (for test keys)
-
-### 1. Setup
-```bash
-# Clone the repository
-git clone https://github.com/pavvel11/gateflow.git
-cd gateflow/admin-panel
-
-# Install dependencies
-npm install
-```
-
-### 2. Database
-```bash
-# Go back to root
-cd ..
-
-# Start local Supabase
-npx supabase start
-
-# Apply migrations and seed data
-npx supabase db reset
-```
-
-### 3. Environment Variables
-Create `admin-panel/.env.local` and populate it with keys from `npx supabase status` and your Stripe Dashboard.
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-SUPABASE_SERVICE_ROLE_KEY=...
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_SECRET_KEY=sk_test_...
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-```
-
-### 4. Run
-```bash
-cd admin-panel
-npm run dev
-```
-Visit **http://localhost:3000** to see your GateFlow instance.
-
-## ⚙️ Integrations Configuration
-
-GateFlow supports multiple integration methods - some via environment variables only, others through both `.env` and the admin panel. Admin panel configuration uses **AES-256-GCM encryption** for API keys.
-
-### 💳 Stripe Payment Processing
-
-**Method 1: Visual Wizard (Recommended)**
-1. Navigate to **Dashboard → Integrations**
-2. Click **"Stripe Setup Wizard"**
-3. Follow the 4-step wizard:
-   - Enter API keys (encrypted in database)
-   - Configure webhook endpoint
-   - Set up products
-   - Test payment flow
-4. Keys are encrypted with AES-256-GCM and stored in `shop_config.custom_settings`
-
-**Method 2: Environment Variables**
-```env
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-```
-
-**Priority**: Database config > .env variables
-
-### 🏢 GUS REGON API (Polish Company Data)
-
-Auto-fill company details by NIP (Polish Tax ID). Admin panel only - no .env option.
-
-1. Navigate to **Dashboard → Integrations**
-2. Scroll to **"GUS API Settings"**
-3. Enter your GUS API Key (get from [stat.gov.pl](https://wyszukiwarkaregon.stat.gov.pl/))
-4. Enable the integration
-5. Keys are encrypted with AES-256-GCM
-
-**How it works**: When customers enter a 10-digit NIP during checkout (with invoice selected), GateFlow automatically fetches company name, address, and VAT details from the official GUS database.
-
-### 💱 Currency Exchange Rates
-
-**Method 1: Admin Panel (Recommended)**
-1. Navigate to **Dashboard → Integrations**
-2. Scroll to **"Currency Exchange Rate API"**
-3. Choose provider:
-   - **ECB (European Central Bank)** - Free, no API key required (default)
-   - **ExchangeRate-API** - Requires API key
-   - **Fixer.io** - Requires API key
-4. Enter API key if needed (encrypted with AES-256-GCM)
-5. Save configuration
-
-**Method 2: Environment Variables**
-```env
-CURRENCY_API_PROVIDER=ecb  # or exchangerate-api, fixer
-CURRENCY_API_KEY=your_api_key  # only for exchangerate-api and fixer
-```
-
-**Priority**: Database config > .env variables > ECB fallback
-
-**Note**: ECB provider is free and enabled by default - no configuration needed unless you want a different provider.
-
-### 📊 Google Tag Manager (GTM)
-
-Admin panel only - no .env option.
-
-1. Navigate to **Dashboard → Integrations**
-2. Find **"Google Tag Manager"** section
-3. Enter your GTM Container ID (format: `GTM-XXXXXXX`)
-4. Save configuration
-5. Container ID is stored in `shop_config.custom_settings`
-
-**Events tracked**: Page views, purchases, checkout steps, product views.
-
-### 📘 Facebook Pixel
-
-Admin panel only - no .env option.
-
-1. Navigate to **Dashboard → Integrations**
-2. Find **"Facebook Pixel"** section
-3. Enter your Facebook Pixel ID
-4. Save configuration
-5. Pixel ID is stored in `shop_config.custom_settings`
-
-**Events tracked**: PageView, ViewContent, AddToCart, InitiateCheckout, Purchase.
-
-### 🔒 Security Notes
-
-- All API keys configured via admin panel are encrypted with **AES-256-GCM**
-- Encryption key stored in `STRIPE_ENCRYPTION_KEY` environment variable
-- Database stores: `encrypted_value`, `iv` (initialization vector), `tag` (authentication tag)
-- Keys are decrypted only server-side - never exposed to client
-- Admin-only access (RLS policies enforce this)
-
-### 🔍 Configuration Status
-
-Check your integration status:
-- **Dashboard** shows active integrations (non-default configs only)
-- **Dashboard → Integrations** shows detailed config for each service
-- Database config takes priority over environment variables
-
-## 📦 Deployment
-
-**Want to deploy GateFlow?** Choose your guide:
-
-### 🚀 [DEPLOYMENT.md](./DEPLOYMENT.md) - For Humans
-
-Simple step-by-step guide for deploying to **mikr.us** or any Ubuntu VPS.
-
-- ✅ Works with Docker + Supabase Cloud
-- ✅ Auto SSL with Caddy
-- ✅ ~16 zł/month total cost
-- ✅ Perfect for 90% of users
-
-### 🤖 [AI-DEPLOYMENT.md](./AI-DEPLOYMENT.md) - For AI Agents
-
-Comprehensive guide for AI-assisted deployment with decision trees and automation.
-
-- ✅ Docker & PM2 methods
-- ✅ Troubleshooting diagnostics
-- ✅ Success criteria validation
-- ✅ Automated update workflows
-
-### Advanced Options
-
-For specific needs, see `deployment/advanced/`:
-- **Full Self-Hosted** (no Supabase Cloud, GDPR) → [FULL-STACK.md](./deployment/advanced/FULL-STACK.md)
-- **PM2 without Docker** (Node.js experts) → [PM2-VPS.md](./deployment/advanced/PM2-VPS.md)
-
-## 📚 Documentation
-
-- **[CLAUDE.md](./CLAUDE.md)**: Technical architecture and development guidelines.
-- **[BACKLOG.md](./BACKLOG.md)**: Current roadmap and planned features.
-- **[CONTRIBUTING.md](./CONTRIBUTING.md)**: How to contribute to the project.
-
-## 📝 License
-
-MIT License. See [LICENSE](LICENSE) for details.
+</div>
 
 ---
-Made with ❤️ by [GateFlow Team](https://github.com/pavvel11/gateflow)
+
+## Why GateFlow?
+
+GateFlow gives you **complete control** over your digital product business. No monthly fees to platforms. No revenue sharing. Your data stays on your infrastructure.
+
+- **Stripe-powered payments** with visual setup wizard — no code required
+- **Content protection** that works on any website (WordPress, Webflow, custom)
+- **Sales funnels built-in** — One-Time Offers, Order Bumps, Coupons
+- **EU-compliant** — Omnibus Directive price history, GDPR consent management
+- **Battle-tested** — 571 E2E tests with 100% pass rate
+
+---
+
+## Features
+
+<details>
+<summary><strong>Payments & Checkout</strong></summary>
+
+- Stripe Elements & Checkout integration
+- Guest checkout with Magic Link login
+- 26 currencies with automatic conversion
+- Pay What You Want (PWYW) pricing
+- Coupons (percentage, fixed amount, per-user limits)
+- Order Bumps for upselling
+- One-Time Offers (OTO) post-purchase
+- Refund management with configurable periods
+
+</details>
+
+<details>
+<summary><strong>Product Management</strong></summary>
+
+- Product variants (Basic/Pro/Enterprise tiers)
+- Sale pricing with quantity and time limits
+- Timed access (30-day, lifetime, custom)
+- Waitlist for upcoming products
+- Categories and featured products
+- Rich descriptions with Markdown support
+
+</details>
+
+<details>
+<summary><strong>Content Protection (Gatekeeper)</strong></summary>
+
+- Page-level or element-level protection
+- JavaScript SDK for any website
+- Custom fallback content for non-buyers
+- Multi-product access on single page
+- License validation
+
+</details>
+
+<details>
+<summary><strong>Marketing & Analytics</strong></summary>
+
+- Google Tag Manager integration
+- Facebook Pixel with Conversions API (CAPI)
+- Webhooks (HMAC-secured) for Zapier, Make, n8n
+- Revenue dashboard with goals
+- Real-time sales notifications
+
+</details>
+
+<details>
+<summary><strong>Compliance & Security</strong></summary>
+
+- EU Omnibus Directive (30-day price history)
+- GDPR consent logging
+- Cloudflare Turnstile CAPTCHA
+- AES-256-GCM encryption for API keys
+- Row Level Security (RLS) policies
+- Rate limiting (Upstash Redis)
+- Audit logging
+
+</details>
+
+For the complete feature list, see **[FEATURES.md](./FEATURES.md)**.
+
+---
+
+## Quick Start
+
+```bash
+# 1. Clone
+git clone https://github.com/pavvel11/gateflow.git
+cd gateflow
+
+# 2. Start database
+npx supabase start
+
+# 3. Install & configure
+cd admin-panel
+npm install
+cp .env.example .env.local  # Edit with your keys
+
+# 4. Run
+npm run dev
+```
+
+Open **http://localhost:3000** — the first registered user becomes admin.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Framework | Next.js 16 (App Router, Turbopack) |
+| Language | TypeScript 5.9 |
+| Database | Supabase (PostgreSQL + Auth + Realtime) |
+| Styling | Tailwind CSS 4 |
+| Payments | Stripe (Elements, Checkout, Webhooks) |
+| Testing | Playwright (571 E2E tests) |
+| i18n | next-intl (EN, PL) |
+
+---
+
+## Configuration
+
+All integrations can be configured via the admin panel (encrypted storage) or environment variables.
+
+| Integration | Admin Panel | Env Variables | Notes |
+|-------------|:-----------:|:-------------:|-------|
+| Stripe | ✓ | ✓ | Visual wizard available |
+| GUS REGON (PL) | ✓ | — | Polish company auto-fill |
+| Currency Rates | ✓ | ✓ | ECB free, or paid providers |
+| Google Tag Manager | ✓ | — | Container ID |
+| Facebook Pixel | ✓ | — | Pixel ID + CAPI token |
+
+See **[Integrations Guide](./DEPLOYMENT.md#integrations-configuration)** for details.
+
+---
+
+## Deployment
+
+| Guide | Best For |
+|-------|----------|
+| **[DEPLOYMENT.md](./DEPLOYMENT.md)** | VPS/mikr.us (~16 zł/month) |
+| **[AI-DEPLOYMENT.md](./AI-DEPLOYMENT.md)** | AI-assisted setup |
+
+Both guides cover Docker deployment with Supabase Cloud and automatic SSL via Caddy.
+
+---
+
+## Documentation
+
+| File | Description |
+|------|-------------|
+| [FEATURES.md](./FEATURES.md) | Complete feature list with roadmap |
+| [DEPLOYMENT.md](./DEPLOYMENT.md) | Step-by-step deployment guide |
+| [STRIPE-TESTING-GUIDE.md](./STRIPE-TESTING-GUIDE.md) | Testing payments locally |
+| [BACKLOG.md](./BACKLOG.md) | Development roadmap |
+
+---
+
+## Project Stats
+
+```
+├── 571 E2E tests (100% pass rate)
+├── 54+ API routes
+├── 25+ database tables
+├── 40+ RPC functions
+├── 50+ RLS policies
+└── 2 languages (EN, PL)
+```
+
+---
+
+## Contributing
+
+Contributions are welcome. Please read the contribution guidelines before submitting a pull request.
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+---
+
+## License
+
+MIT License. See [LICENSE](./LICENSE) for details.
+
+---
+
+<div align="center">
+
+**[Website](https://gateflow.io)** · **[Documentation](./FEATURES.md)** · **[Report Bug](https://github.com/pavvel11/gateflow/issues)**
+
+</div>

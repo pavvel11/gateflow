@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { readFileSync } from 'fs'
 import { join } from 'path'
+import { checkRateLimit } from '@/lib/rate-limiting';
 
 /**
  * Handle CORS preflight requests
@@ -28,9 +29,18 @@ export async function OPTIONS(request: Request) {
  */
 export async function GET(request: Request) {
   try {
+    // Rate limiting: 60 requests per minute
+    const rateLimitOk = await checkRateLimit('product_page', 60, 60);
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
     // Get origin from request headers for proper CORS support
     const origin = request.headers.get('origin') || '*';
-    
+
     // Read the original index.html file
     const indexPath = join(process.cwd(), '../index.html')
     let indexContent = readFileSync(indexPath, 'utf-8')

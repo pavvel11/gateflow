@@ -67,3 +67,5 @@ CLAUDE.md
 
 # GateFlow license private key (NEVER commit!)
 scripts/.gateflow-private-key.pem
+SECURITY-AUDIT-REPORT.md
+admin-panel/SECURITY-AUDIT-REPORT.md

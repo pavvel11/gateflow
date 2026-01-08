@@ -1,8 +1,18 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { checkRateLimit } from '@/lib/rate-limiting'
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: 30 requests per minute (prevents DB flooding)
+    const rateLimitOk = await checkRateLimit('consent_log', 30, 60);
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
     const supabase = await createClient()
     const body = await request.json()
     

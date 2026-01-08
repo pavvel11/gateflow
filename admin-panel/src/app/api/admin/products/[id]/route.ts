@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { 
-  validateProductId, 
-  validateUpdateProduct, 
-  sanitizeProductData 
+import { requireAdminApi } from '@/lib/auth-server';
+import {
+  validateProductId,
+  validateUpdateProduct,
+  sanitizeProductData
 } from '@/lib/validations/product';
 
 /**
@@ -40,11 +41,14 @@ export async function GET(
     const { id } = await context.params;
     const supabase = await createClient();
     
-    // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { 
-        status: 401,
+    // SECURITY: Verify admin access
+    try {
+      await requireAdminApi(supabase);
+    } catch (authError: unknown) {
+      const errorMessage = authError instanceof Error ? authError.message : 'Unauthorized';
+      const status = errorMessage === 'Forbidden' ? 403 : 401;
+      return NextResponse.json({ error: errorMessage }, {
+        status,
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
@@ -53,16 +57,13 @@ export async function GET(
       });
     }
 
-    // TODO: Add admin role check here
-    // For now, any authenticated user can access (should be admin only)
-
     // Validate product ID
     const idValidation = validateProductId(id);
     if (!idValidation.isValid) {
-      return NextResponse.json({ 
-        error: 'Invalid product ID', 
-        details: idValidation.errors 
-      }, { 
+      return NextResponse.json({
+        error: 'Invalid product ID',
+        details: idValidation.errors
+      }, {
         status: 400,
         headers: {
           'Access-Control-Allow-Origin': '*',
@@ -134,11 +135,14 @@ export async function PUT(
     const { id } = await context.params;
     const supabase = await createClient();
     
-    // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { 
-        status: 401,
+    // SECURITY: Verify admin access
+    try {
+      await requireAdminApi(supabase);
+    } catch (authError: unknown) {
+      const errorMessage = authError instanceof Error ? authError.message : 'Unauthorized';
+      const status = errorMessage === 'Forbidden' ? 403 : 401;
+      return NextResponse.json({ error: errorMessage }, {
+        status,
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
@@ -147,16 +151,13 @@ export async function PUT(
       });
     }
 
-    // TODO: Add admin role check here
-    // For now, any authenticated user can access (should be admin only)
-
     // Validate product ID
     const idValidation = validateProductId(id);
     if (!idValidation.isValid) {
-      return NextResponse.json({ 
-        error: 'Invalid product ID', 
-        details: idValidation.errors 
-      }, { 
+      return NextResponse.json({
+        error: 'Invalid product ID',
+        details: idValidation.errors
+      }, {
         status: 400,
         headers: {
           'Access-Control-Allow-Origin': '*',
@@ -328,11 +329,14 @@ export async function DELETE(
     const { id } = await context.params;
     const supabase = await createClient();
     
-    // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { 
-        status: 401,
+    // SECURITY: Verify admin access
+    try {
+      await requireAdminApi(supabase);
+    } catch (authError: unknown) {
+      const errorMessage = authError instanceof Error ? authError.message : 'Unauthorized';
+      const status = errorMessage === 'Forbidden' ? 403 : 401;
+      return NextResponse.json({ error: errorMessage }, {
+        status,
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
@@ -341,16 +345,13 @@ export async function DELETE(
       });
     }
 
-    // TODO: Add admin role check here
-    // For now, any authenticated user can access (should be admin only)
-
     // Validate product ID
     const idValidation = validateProductId(id);
     if (!idValidation.isValid) {
-      return NextResponse.json({ 
-        error: 'Invalid product ID', 
-        details: idValidation.errors 
-      }, { 
+      return NextResponse.json({
+        error: 'Invalid product ID',
+        details: idValidation.errors
+      }, {
         status: 400,
         headers: {
           'Access-Control-Allow-Origin': '*',

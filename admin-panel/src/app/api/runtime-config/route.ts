@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { checkRateLimit } from '@/lib/rate-limiting';
 
 /**
  * Runtime Configuration API
@@ -6,6 +7,15 @@ import { NextResponse } from 'next/server'
  * Cached for performance
  */
 export async function GET() {
+  // Rate limiting: 60 requests per minute
+  const rateLimitOk = await checkRateLimit('runtime_config', 60, 60);
+  if (!rateLimitOk) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      { status: 429 }
+    );
+  }
+
   const config = {
     supabaseUrl: process.env.SUPABASE_URL!,
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY!,

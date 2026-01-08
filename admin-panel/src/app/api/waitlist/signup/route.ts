@@ -1,9 +1,19 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { WebhookService } from '@/lib/services/webhook-service';
+import { checkRateLimit } from '@/lib/rate-limiting';
 
 export async function POST(request: Request) {
   try {
+    // Rate limiting: 5 requests per 5 minutes (prevents webhook spam)
+    const rateLimitOk = await checkRateLimit('waitlist_signup', 5, 300);
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        { error: 'Too many signup attempts. Please try again in a few minutes.' },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const { email, productId, productSlug, captchaToken } = body;
 

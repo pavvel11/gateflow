@@ -4,6 +4,7 @@
  */
 
 import { JSProcessor } from './js-processor';
+import { MemoryCache, generateHash } from './script-cache';
 
 interface ConfigOptions {
   supabaseUrl: string;
@@ -14,7 +15,7 @@ interface ConfigOptions {
   customDomain?: string;
 }
 
-interface GeneratedConfig {
+export interface GeneratedConfig {
   content: string;
   hash: string;
   lastModified: Date;
@@ -32,36 +33,36 @@ interface ConfigComments {
   usage: string;
 }
 
+// Use shared MemoryCache for caching
+const configCache = new MemoryCache<GeneratedConfig>({ ttl: 30 * 60 * 1000 }); // 30 minutes
+
 /**
  * Template-based config generator with caching
  */
 export class ConfigGenerator {
-  private static cache = new Map<string, GeneratedConfig>();
-  private static readonly CACHE_TTL = 1000 * 60 * 30; // 30 minutes
-
   /**
    * Generate the complete config script with proper formatting
    */
   static async generateConfig(options: ConfigOptions): Promise<GeneratedConfig> {
     const cacheKey = this.getCacheKey(options);
-    
+
     // Check cache first
-    const cached = this.cache.get(cacheKey);
-    if (cached && this.isCacheValid(cached)) {
-      return cached;
+    const cached = configCache.get(cacheKey);
+    if (cached) {
+      return cached.data;
     }
 
     // Generate new config
     let content = this.buildConfigScript(options);
-    
+
     // Process the script (minify/obfuscate) in production
     const processingConfig = JSProcessor.getConfigForEnvironment(
       options.environment as 'development' | 'production'
     );
     content = await JSProcessor.processCode(content, processingConfig);
-    
-    const hash = this.generateHash(content);
-    
+
+    const hash = generateHash(content);
+
     const generated: GeneratedConfig = {
       content,
       hash,
@@ -74,11 +75,8 @@ export class ConfigGenerator {
     };
 
     // Cache the result
-    this.cache.set(cacheKey, generated);
-    
-    // Clean old cache entries
-    this.cleanCache();
-    
+    configCache.set(cacheKey, generated, hash);
+
     return generated;
   }
 
@@ -244,39 +242,7 @@ if (typeof window !== 'undefined' && window.supabase) {
    * Generate cache key for configuration
    */
   private static getCacheKey(options: ConfigOptions): string {
-    return `config_${options.environment}_${options.format}_${options.includeComments}_${this.generateHash(options.supabaseUrl + options.supabaseAnonKey)}`;
-  }
-
-  /**
-   * Check if cache entry is still valid
-   */
-  private static isCacheValid(cached: GeneratedConfig): boolean {
-    return Date.now() - cached.lastModified.getTime() < this.CACHE_TTL;
-  }
-
-  /**
-   * Generate hash for content
-   */
-  private static generateHash(content: string): string {
-    let hash = 0;
-    for (let i = 0; i < content.length; i++) {
-      const char = content.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
-    }
-    return Math.abs(hash).toString(36);
-  }
-
-  /**
-   * Clean old cache entries
-   */
-  private static cleanCache(): void {
-    const now = Date.now();
-    for (const [key, value] of this.cache.entries()) {
-      if (now - value.lastModified.getTime() > this.CACHE_TTL) {
-        this.cache.delete(key);
-      }
-    }
+    return `config_${options.environment}_${options.format}_${options.includeComments}_${generateHash(options.supabaseUrl + options.supabaseAnonKey)}`;
   }
 
   /**
@@ -284,14 +250,7 @@ if (typeof window !== 'undefined' && window.supabase) {
    */
   static getCacheStats() {
     return {
-      size: this.cache.size,
-      entries: Array.from(this.cache.entries()).map(([key, value]) => ({
-        key,
-        lastModified: value.lastModified,
-        size: value.content.length,
-        environment: value.metadata.environment,
-        format: value.metadata.format
-      }))
+      size: configCache.size,
     };
   }
 
@@ -299,6 +258,6 @@ if (typeof window !== 'undefined' && window.supabase) {
    * Clear cache manually
    */
   static clearCache(): void {
-    this.cache.clear();
+    configCache.clear();
   }
 }

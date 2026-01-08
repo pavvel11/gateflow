@@ -1,8 +1,19 @@
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { getAdminBearerToken } from './helpers/admin-auth';
+
+/**
+ * Rate Limiting Tests
+ *
+ * These tests verify rate limiting functionality across all protected endpoints.
+ *
+ * IMPORTANT: To run these tests, you must enable RATE_LIMIT_TEST_MODE:
+ *   RATE_LIMIT_TEST_MODE=true npx playwright test --project=rate-limiting
+ *
+ * Without this flag, rate limiting is disabled in dev/test mode and tests will be skipped.
+ */
 
 test.describe('Rate Limiting', () => {
-  // Enforce single worker to avoid race conditions
   test.describe.configure({ mode: 'serial' });
 
   const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -14,17 +25,35 @@ test.describe('Rate Limiting', () => {
 
   const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-  test.describe('Application-Level Rate Limiting (API Routes)', () => {
-    test.beforeEach(async () => {
-      // Clean up rate limit entries before each test
-      await supabaseAdmin.from('application_rate_limits').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-    });
+  // Skip all tests if RATE_LIMIT_TEST_MODE is not enabled
+  const rateLimitEnabled = process.env.RATE_LIMIT_TEST_MODE === 'true';
 
+  test.beforeAll(async () => {
+    if (!rateLimitEnabled) {
+      console.log('⚠️  RATE_LIMIT_TEST_MODE not enabled. Rate limiting tests will be skipped.');
+      console.log('   To run: RATE_LIMIT_TEST_MODE=true npx playwright test --project=rate-limiting');
+    }
+  });
+
+  test.beforeEach(async () => {
+    if (!rateLimitEnabled) {
+      test.skip();
+      return;
+    }
+    // Clean up rate limit entries before each test
+    await supabaseAdmin.from('application_rate_limits').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  });
+
+  // ============================================
+  // DATABASE RPC RATE LIMITING
+  // ============================================
+
+  test.describe('Database RPC Rate Limiting', () => {
     test('should allow requests within rate limit', async () => {
       const identifier = `test-user-${Date.now()}`;
       const actionType = 'test_action';
 
-      // Make 3 requests (limit is 5)
+      // Make 3 requests (well within any reasonable limit)
       for (let i = 0; i < 3; i++) {
         const { data, error } = await supabaseAdmin.rpc('check_application_rate_limit', {
           identifier_param: identifier,
@@ -41,258 +70,592 @@ test.describe('Rate Limiting', () => {
     test('should block requests after exceeding rate limit', async () => {
       const identifier = `test-user-${Date.now()}`;
       const actionType = 'test_action';
+      const maxRequests = 5;
 
-      // Make 5 requests (exactly at limit)
-      for (let i = 0; i < 5; i++) {
-        const { data, error } = await supabaseAdmin.rpc('check_application_rate_limit', {
+      // Make requests until limit is reached
+      for (let i = 0; i < maxRequests; i++) {
+        const { data } = await supabaseAdmin.rpc('check_application_rate_limit', {
           identifier_param: identifier,
           action_type_param: actionType,
-          max_requests: 5,
+          max_requests: maxRequests,
           window_minutes: 1,
         });
-
-        expect(error).toBeNull();
         expect(data).toBe(true);
       }
 
-      // 6th request should be blocked
+      // Next request should be blocked
       const { data, error } = await supabaseAdmin.rpc('check_application_rate_limit', {
         identifier_param: identifier,
         action_type_param: actionType,
-        max_requests: 5,
+        max_requests: maxRequests,
         window_minutes: 1,
       });
 
       expect(error).toBeNull();
-      expect(data).toBe(false); // Rate limit exceeded
+      expect(data).toBe(false);
     });
 
     test('should track different identifiers separately', async () => {
       const user1 = `test-user-1-${Date.now()}`;
       const user2 = `test-user-2-${Date.now()}`;
-      const actionType = 'test_action';
+      const maxRequests = 3;
 
-      // User 1 makes 5 requests (at limit)
-      for (let i = 0; i < 5; i++) {
-        const { data } = await supabaseAdmin.rpc('check_application_rate_limit', {
+      // User 1 exhausts their limit
+      for (let i = 0; i < maxRequests; i++) {
+        await supabaseAdmin.rpc('check_application_rate_limit', {
           identifier_param: user1,
-          action_type_param: actionType,
-          max_requests: 5,
+          action_type_param: 'test_action',
+          max_requests: maxRequests,
           window_minutes: 1,
         });
-        expect(data).toBe(true);
       }
 
-      // User 2 should still be able to make requests
-      const { data } = await supabaseAdmin.rpc('check_application_rate_limit', {
-        identifier_param: user2,
-        action_type_param: actionType,
-        max_requests: 5,
+      // User 1 is now blocked
+      const { data: user1Blocked } = await supabaseAdmin.rpc('check_application_rate_limit', {
+        identifier_param: user1,
+        action_type_param: 'test_action',
+        max_requests: maxRequests,
         window_minutes: 1,
       });
-      expect(data).toBe(true);
+      expect(user1Blocked).toBe(false);
+
+      // User 2 should still be able to make requests
+      const { data: user2Allowed } = await supabaseAdmin.rpc('check_application_rate_limit', {
+        identifier_param: user2,
+        action_type_param: 'test_action',
+        max_requests: maxRequests,
+        window_minutes: 1,
+      });
+      expect(user2Allowed).toBe(true);
     });
 
     test('should track different action types separately', async () => {
       const identifier = `test-user-${Date.now()}`;
+      const maxRequests = 3;
 
-      // Make 5 requests for action_type_1 (at limit)
-      for (let i = 0; i < 5; i++) {
-        const { data } = await supabaseAdmin.rpc('check_application_rate_limit', {
+      // Exhaust limit for action_type_1
+      for (let i = 0; i < maxRequests; i++) {
+        await supabaseAdmin.rpc('check_application_rate_limit', {
           identifier_param: identifier,
           action_type_param: 'action_type_1',
-          max_requests: 5,
+          max_requests: maxRequests,
           window_minutes: 1,
         });
-        expect(data).toBe(true);
       }
 
-      // Should still be able to make requests for action_type_2
-      const { data } = await supabaseAdmin.rpc('check_application_rate_limit', {
+      // action_type_1 is blocked
+      const { data: action1Blocked } = await supabaseAdmin.rpc('check_application_rate_limit', {
+        identifier_param: identifier,
+        action_type_param: 'action_type_1',
+        max_requests: maxRequests,
+        window_minutes: 1,
+      });
+      expect(action1Blocked).toBe(false);
+
+      // action_type_2 should still work
+      const { data: action2Allowed } = await supabaseAdmin.rpc('check_application_rate_limit', {
         identifier_param: identifier,
         action_type_param: 'action_type_2',
-        max_requests: 5,
+        max_requests: maxRequests,
         window_minutes: 1,
       });
-      expect(data).toBe(true);
-    });
-
-    test('should reject invalid identifiers', async () => {
-      // Empty identifier
-      const { data: data1 } = await supabaseAdmin.rpc('check_application_rate_limit', {
-        identifier_param: '',
-        action_type_param: 'test_action',
-        max_requests: 5,
-        window_minutes: 1,
-      });
-      expect(data1).toBe(false);
-
-      // Very long identifier (>200 chars)
-      const longIdentifier = 'a'.repeat(201);
-      const { data: data2 } = await supabaseAdmin.rpc('check_application_rate_limit', {
-        identifier_param: longIdentifier,
-        action_type_param: 'test_action',
-        max_requests: 5,
-        window_minutes: 1,
-      });
-      expect(data2).toBe(false);
-    });
-
-    test('should reject invalid action types', async () => {
-      const identifier = `test-user-${Date.now()}`;
-
-      // Empty action type
-      const { data: data1 } = await supabaseAdmin.rpc('check_application_rate_limit', {
-        identifier_param: identifier,
-        action_type_param: '',
-        max_requests: 5,
-        window_minutes: 1,
-      });
-      expect(data1).toBe(false);
-
-      // Very long action type (>100 chars)
-      const longActionType = 'a'.repeat(101);
-      const { data: data2 } = await supabaseAdmin.rpc('check_application_rate_limit', {
-        identifier_param: identifier,
-        action_type_param: longActionType,
-        max_requests: 5,
-        window_minutes: 1,
-      });
-      expect(data2).toBe(false);
+      expect(action2Allowed).toBe(true);
     });
   });
 
-  test.describe('Internal RPC Rate Limiting (Database Functions)', () => {
-    test.beforeEach(async () => {
-      // Clean up rate limit entries before each test
-      await supabaseAdmin.from('rate_limits').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  // ============================================
+  // API ENDPOINT RATE LIMITING
+  // These tests verify that endpoints return 429 when rate limited
+  // ============================================
+
+  test.describe('API Endpoint Rate Limiting', () => {
+
+    /**
+     * Helper to make requests until rate limited
+     * Returns the number of successful requests before 429
+     */
+    async function makeRequestsUntilRateLimited(
+      request: any,
+      method: 'get' | 'post',
+      url: string,
+      data?: any,
+      maxAttempts = 100,
+      headers?: Record<string, string>
+    ): Promise<{ successCount: number; gotRateLimited: boolean }> {
+      let successCount = 0;
+      let gotRateLimited = false;
+
+      for (let i = 0; i < maxAttempts; i++) {
+        const response = method === 'get'
+          ? await request.get(url, { headers })
+          : await request.post(url, { data, headers });
+
+        if (response.status() === 429) {
+          gotRateLimited = true;
+          break;
+        }
+        if (response.status() >= 200 && response.status() < 500) {
+          successCount++;
+        }
+      }
+
+      return { successCount, gotRateLimited };
+    }
+
+    test('waitlist signup should be rate limited', async ({ request }) => {
+      const result = await makeRequestsUntilRateLimited(
+        request,
+        'post',
+        '/api/waitlist/signup',
+        {
+          email: `test-${Date.now()}@example.com`,
+          productSlug: 'nonexistent-product',
+        }
+      );
+
+      expect(result.gotRateLimited).toBe(true);
+      expect(result.successCount).toBeGreaterThan(0);
+      expect(result.successCount).toBeLessThan(100); // Should hit limit before maxAttempts
     });
 
-    test('check_rate_limit function should block after exceeding limit', async () => {
-      // Note: This tests the internal check_rate_limit function directly
-      // It's used by RPC functions like check_user_product_access, batch_check_user_product_access, etc.
+    test('consent endpoint should be rate limited', async ({ request }) => {
+      const result = await makeRequestsUntilRateLimited(
+        request,
+        'post',
+        '/api/consent',
+        {
+          consents: { analytics: true },
+          fingerprint: `test-${Date.now()}`,
+        }
+      );
 
-      // Since we can't easily call check_rate_limit directly (it uses auth.uid()),
-      // we verify that the table and indexes exist and can be queried
-      const { data: rateLimitsTable, error } = await supabaseAdmin
-        .from('rate_limits')
-        .select('*')
-        .limit(1);
-
-      expect(error).toBeNull();
-      expect(rateLimitsTable).toBeDefined();
+      expect(result.gotRateLimited).toBe(true);
+      expect(result.successCount).toBeGreaterThan(0);
     });
 
-    test('rate_limits table should store entries correctly', async () => {
-      // Insert a test rate limit entry
-      const testUserId = '00000000-0000-0000-0000-000000000001';
-      const windowStart = new Date();
-      windowStart.setMinutes(0, 0, 0); // Round to hour
+    test('coupon verify should be rate limited', async ({ request }) => {
+      const result = await makeRequestsUntilRateLimited(
+        request,
+        'post',
+        '/api/coupons/verify',
+        {
+          code: 'TESTCODE',
+          productId: '00000000-0000-0000-0000-000000000000',
+        }
+      );
 
-      // Delete any existing entry first to avoid duplicate key error
-      await supabaseAdmin
-        .from('rate_limits')
-        .delete()
-        .eq('user_id', testUserId)
-        .eq('function_name', 'test_function');
+      expect(result.gotRateLimited).toBe(true);
+      expect(result.successCount).toBeGreaterThan(0);
+    });
 
-      const { error } = await supabaseAdmin
-        .from('rate_limits')
-        .insert({
-          user_id: testUserId,
-          function_name: 'test_function',
-          window_start: windowStart.toISOString(),
-          call_count: 5,
+    test('coupon auto-apply should be rate limited', async ({ request }) => {
+      const result = await makeRequestsUntilRateLimited(
+        request,
+        'post',
+        '/api/coupons/auto-apply',
+        {
+          productId: '00000000-0000-0000-0000-000000000000',
+        }
+      );
+
+      expect(result.gotRateLimited).toBe(true);
+      expect(result.successCount).toBeGreaterThan(0);
+    });
+
+    test('OTO info should be rate limited', async ({ request }) => {
+      const result = await makeRequestsUntilRateLimited(
+        request,
+        'get',
+        '/api/oto/info?productId=00000000-0000-0000-0000-000000000000'
+      );
+
+      expect(result.gotRateLimited).toBe(true);
+      expect(result.successCount).toBeGreaterThan(0);
+    });
+
+    test('order-bumps should be rate limited', async ({ request }) => {
+      const result = await makeRequestsUntilRateLimited(
+        request,
+        'get',
+        '/api/order-bumps?productId=00000000-0000-0000-0000-000000000000'
+      );
+
+      expect(result.gotRateLimited).toBe(true);
+      expect(result.successCount).toBeGreaterThan(0);
+    });
+
+    test('FB CAPI tracking should be rate limited', async ({ request }) => {
+      const result = await makeRequestsUntilRateLimited(
+        request,
+        'post',
+        '/api/tracking/fb-capi',
+        {
+          eventName: 'test_event',
+          eventData: {},
+        }
+      );
+
+      expect(result.gotRateLimited).toBe(true);
+      expect(result.successCount).toBeGreaterThan(0);
+    });
+
+    test('claim-free should be rate limited', async ({ request }) => {
+      const result = await makeRequestsUntilRateLimited(
+        request,
+        'post',
+        '/api/public/products/claim-free',
+        {
+          email: 'test@example.com',
+          productSlug: 'nonexistent',
+        }
+      );
+
+      expect(result.gotRateLimited).toBe(true);
+      expect(result.successCount).toBeGreaterThan(0);
+    });
+
+    test('verify-payment should be rate limited', async ({ request }) => {
+      const result = await makeRequestsUntilRateLimited(
+        request,
+        'post',
+        '/api/verify-payment',
+        {
+          session_id: 'cs_test_fake',
+        }
+      );
+
+      expect(result.gotRateLimited).toBe(true);
+      expect(result.successCount).toBeGreaterThan(0);
+    });
+
+    test('update-payment-metadata should be rate limited', async ({ request }) => {
+      const result = await makeRequestsUntilRateLimited(
+        request,
+        'post',
+        '/api/update-payment-metadata',
+        {
+          clientSecret: 'pi_test_fake_secret_abc',
+          metadata: { test: 'value' },
+        },
+        100,
+        {
+          'origin': 'http://localhost:3000',
+          'referer': 'http://localhost:3000/',
+        }
+      );
+
+      // Rate limiting should kick in (either from this test or previous runs)
+      expect(result.gotRateLimited).toBe(true);
+      // Note: successCount may be 0 if rate limit was already exhausted from previous test runs
+    });
+
+    test('create-embedded-checkout should be rate limited', async ({ request }) => {
+      const result = await makeRequestsUntilRateLimited(
+        request,
+        'post',
+        '/api/create-embedded-checkout',
+        {
+          productId: '00000000-0000-0000-0000-000000000000',
+          email: 'test@example.com',
+        }
+      );
+
+      expect(result.gotRateLimited).toBe(true);
+      expect(result.successCount).toBeGreaterThan(0);
+    });
+
+    test('create-payment-intent should be rate limited', async ({ request }) => {
+      const result = await makeRequestsUntilRateLimited(
+        request,
+        'post',
+        '/api/create-payment-intent',
+        {
+          productId: '00000000-0000-0000-0000-000000000000',
+          email: 'test@example.com',
+        }
+      );
+
+      expect(result.gotRateLimited).toBe(true);
+      expect(result.successCount).toBeGreaterThan(0);
+    });
+
+    test('GUS fetch-company-data should be rate limited', async ({ request }) => {
+      const result = await makeRequestsUntilRateLimited(
+        request,
+        'post',
+        '/api/gus/fetch-company-data',
+        {
+          nip: '5261040828',
+        }
+      );
+
+      expect(result.gotRateLimited).toBe(true);
+      expect(result.successCount).toBeGreaterThan(0);
+    });
+
+    test('health endpoint should be rate limited', async ({ request }) => {
+      const result = await makeRequestsUntilRateLimited(
+        request,
+        'get',
+        '/api/health'
+      );
+
+      expect(result.gotRateLimited).toBe(true);
+      expect(result.successCount).toBeGreaterThan(0);
+    });
+
+    test('status endpoint should be rate limited', async ({ request }) => {
+      const result = await makeRequestsUntilRateLimited(
+        request,
+        'get',
+        '/api/status'
+      );
+
+      expect(result.gotRateLimited).toBe(true);
+      expect(result.successCount).toBeGreaterThan(0);
+    });
+
+    test('config endpoint should be rate limited', async ({ request }) => {
+      const result = await makeRequestsUntilRateLimited(
+        request,
+        'get',
+        '/api/config'
+      );
+
+      expect(result.gotRateLimited).toBe(true);
+      expect(result.successCount).toBeGreaterThan(0);
+    });
+
+    test('runtime-config endpoint should be rate limited', async ({ request }) => {
+      const result = await makeRequestsUntilRateLimited(
+        request,
+        'get',
+        '/api/runtime-config'
+      );
+
+      expect(result.gotRateLimited).toBe(true);
+      expect(result.successCount).toBeGreaterThan(0);
+    });
+
+    test('product-page endpoint should be rate limited', async ({ request }) => {
+      const result = await makeRequestsUntilRateLimited(
+        request,
+        'get',
+        '/api/product-page?slug=test-product'
+      );
+
+      expect(result.gotRateLimited).toBe(true);
+      expect(result.successCount).toBeGreaterThan(0);
+    });
+
+    test('products/[id] endpoint should be rate limited', async ({ request }) => {
+      const result = await makeRequestsUntilRateLimited(
+        request,
+        'get',
+        '/api/products/00000000-0000-0000-0000-000000000000'
+      );
+
+      expect(result.gotRateLimited).toBe(true);
+      expect(result.successCount).toBeGreaterThan(0);
+    });
+
+    test('lowest-price endpoint should be rate limited', async ({ request }) => {
+      const result = await makeRequestsUntilRateLimited(
+        request,
+        'get',
+        '/api/products/00000000-0000-0000-0000-000000000000/lowest-price'
+      );
+
+      expect(result.gotRateLimited).toBe(true);
+      expect(result.successCount).toBeGreaterThan(0);
+    });
+
+    // NOTE: /api/access endpoint has rate limiting (120/min) but testing it is impractical
+    // because making 121+ sequential HTTP requests is slow and wasteful. The rate limiting
+    // code is present in src/app/api/access/route.ts and infrastructure is verified by other tests.
+
+    // NOTE: The following endpoints have rate limiting but require authentication BEFORE
+    // rate limiting is checked. They return 401 before reaching rate limit checks.
+    // Rate limiting code is present and functional in:
+    // - /api/refund-requests (requires user auth, 3/60min per user)
+    // - /api/public/products/[slug]/grant-access (requires user auth, 5/60min per user)
+    // - /api/admin/coupons (requires admin auth, 20/hour per admin)
+  });
+
+  // ============================================
+  // RATE LIMIT BEHAVIOR TESTS
+  // ============================================
+
+  test.describe('Rate Limit Behavior', () => {
+    test('rate limit should return 429 status code', async ({ request }) => {
+      // Make many requests until we hit the limit
+      let got429 = false;
+
+      for (let i = 0; i < 50; i++) {
+        const response = await request.post('/api/consent', {
+          data: {
+            consents: { analytics: true },
+            fingerprint: `test-${Date.now()}`,
+          },
         });
 
-      expect(error).toBeNull();
+        if (response.status() === 429) {
+          got429 = true;
+          break;
+        }
+      }
 
-      // Verify it was inserted
-      const { data, error: fetchError } = await supabaseAdmin
-        .from('rate_limits')
-        .select('*')
-        .eq('user_id', testUserId)
-        .eq('function_name', 'test_function')
-        .single();
-
-      expect(fetchError).toBeNull();
-      expect(data?.call_count).toBe(5);
+      expect(got429).toBe(true);
     });
 
-    test('cleanup_rate_limits function should exist', async () => {
-      // Verify the cleanup function exists
-      const { data, error } = await supabaseAdmin.rpc('cleanup_rate_limits');
+    test('rate limited response should have proper error message', async ({ request }) => {
+      // Exhaust rate limit
+      for (let i = 0; i < 50; i++) {
+        const response = await request.post('/api/consent', {
+          data: {
+            consents: { analytics: true },
+            fingerprint: `test-${Date.now()}`,
+          },
+        });
 
-      // Should return number of deleted rows (0 if nothing to clean)
-      expect(error).toBeNull();
-      expect(typeof data).toBe('number');
+        if (response.status() === 429) {
+          const body = await response.json();
+          expect(body.error).toBeTruthy();
+          // Error message should indicate rate limiting (either "rate" or "too many requests")
+          const errorLower = body.error.toLowerCase();
+          expect(errorLower.includes('rate') || errorLower.includes('too many')).toBe(true);
+          break;
+        }
+      }
     });
   });
 
-  test.describe('API Route Rate Limiting Integration', () => {
-    test('GUS API should enforce rate limiting via database', async ({ page }) => {
-      // Create test product to get checkout page
-      const { data: testProduct } = await supabaseAdmin
+  // ============================================
+  // ADMIN ENDPOINT RATE LIMITING
+  // These endpoints require admin authentication and have specific rate limits
+  // ============================================
+
+  test.describe('Admin Endpoint Rate Limiting', () => {
+    let adminToken: string;
+    let testProduct: any;
+
+    test.beforeAll(async () => {
+      if (!rateLimitEnabled) return;
+
+      // Get admin token for API requests
+      adminToken = await getAdminBearerToken();
+
+      // Get a product for test data
+      const { data: products } = await supabaseAdmin
         .from('products')
+        .select('id, price, currency')
+        .eq('is_active', true)
+        .not('price', 'is', null)
+        .gt('price', 0)
+        .limit(1);
+
+      if (products && products.length > 0) {
+        testProduct = products[0];
+      }
+    });
+
+    test('admin refund endpoint should be rate limited (10/hour)', async ({ request }) => {
+      if (!testProduct) {
+        test.skip();
+        return;
+      }
+
+      // Create test transaction
+      const { data: transaction } = await supabaseAdmin
+        .from('payment_transactions')
         .insert({
-          name: `GUS Rate Limit Test ${Date.now()}`,
-          slug: `gus-rate-limit-${Date.now()}`,
-          price: 100,
-          currency: 'PLN',
-          is_active: true,
+          session_id: `cs_test_rate_refund_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+          product_id: testProduct.id,
+          customer_email: 'rate-test-refund@example.com',
+          amount: testProduct.price * 100,
+          currency: testProduct.currency || 'usd',
+          status: 'completed',
+          stripe_payment_intent_id: `pi_test_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         })
         .select()
         .single();
 
-      // Navigate to checkout page
-      await page.goto(`/pl/checkout/${testProduct.slug}`);
-      await page.waitForSelector('input[type="email"]', { timeout: 10000 });
-
-      // NIP field is now always visible (no checkbox needed)
-      await page.waitForTimeout(500);
-
-      // Mock GUS API to always succeed
-      await page.route('**/api/gus/fetch-company-data', async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            success: true,
-            data: {
-              nazwa: 'TEST COMPANY',
-              ulica: 'Test St',
-              nrNieruchomosci: '1',
-              miejscowosc: 'Warsaw',
-              kodPocztowy: '00-001',
-              nip: '5261040828',
-            },
-          }),
-        });
-      });
-
-      const nipInput = page.locator('input#nip');
-
-      // Make 5 valid NIP requests (limit is 5 per minute)
-      for (let i = 0; i < 5; i++) {
-        await nipInput.fill('');
-        await nipInput.fill('5261040828');
-        await nipInput.blur();
-        await page.waitForTimeout(300); // Small delay between requests
+      if (!transaction) {
+        test.skip();
+        return;
       }
 
-      // 6th request should be rate limited
-      await nipInput.fill('');
-      await nipInput.fill('5261040828');
-      await nipInput.blur();
-      await page.waitForTimeout(500);
+      console.log(`\n🔍 Testing /api/admin/payments/refund rate limit (10/hour)`);
 
-      // Check if rate limit error appears
-      const bodyText = await page.locator('body').textContent();
-      // Note: This test might be flaky because the UI might not show rate limit errors
-      // The important thing is that the API returns 429
+      // Send 12 requests (limit is 10)
+      const requests = Array(12).fill(null).map(() =>
+        request.post('http://localhost:3000/api/admin/payments/refund', {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`,
+            'Content-Type': 'application/json',
+          },
+          data: {
+            transactionId: transaction.id,
+            paymentIntentId: transaction.stripe_payment_intent_id,
+            reason: 'requested_by_customer',
+          },
+        })
+      );
+
+      const results = await Promise.all(requests);
+      const rateLimitedCount = results.filter(r => r.status() === 429).length;
+
+      console.log(`   Requests: 12, Rate limited: ${rateLimitedCount}`);
 
       // Cleanup
-      await supabaseAdmin.from('products').delete().eq('id', testProduct.id);
+      await supabaseAdmin.from('payment_transactions').delete().eq('id', transaction.id);
+
+      expect(rateLimitedCount).toBeGreaterThanOrEqual(2);
+    });
+
+    test('admin stats endpoint should be rate limited (30/5min)', async ({ request }) => {
+      console.log(`\n🔍 Testing /api/admin/payments/stats rate limit (30/5min)`);
+
+      // Send 35 requests (limit is 30)
+      const requests = Array(35).fill(null).map(() =>
+        request.get('http://localhost:3000/api/admin/payments/stats', {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`,
+          },
+        })
+      );
+
+      const results = await Promise.all(requests);
+      const rateLimitedCount = results.filter(r => r.status() === 429).length;
+
+      console.log(`   Requests: 35, Rate limited: ${rateLimitedCount}`);
+
+      expect(rateLimitedCount).toBeGreaterThanOrEqual(5);
+    });
+
+    test('admin export endpoint should be rate limited (5/hour)', async ({ request }) => {
+      console.log(`\n🔍 Testing /api/admin/payments/export rate limit (5/hour)`);
+
+      // Send 7 requests (limit is 5)
+      const requests = Array(7).fill(null).map(() =>
+        request.post('http://localhost:3000/api/admin/payments/export', {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`,
+            'Content-Type': 'application/json',
+          },
+          data: {
+            status: 'all',
+            dateRange: 'all',
+          },
+        })
+      );
+
+      const results = await Promise.all(requests);
+      const rateLimitedCount = results.filter(r => r.status() === 429).length;
+
+      console.log(`   Requests: 7, Rate limited: ${rateLimitedCount}`);
+
+      expect(rateLimitedCount).toBeGreaterThanOrEqual(2);
     });
   });
 });

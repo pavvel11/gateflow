@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { requireAdminApi } from '@/lib/auth-server';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -9,27 +10,50 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const { data: admin } = await supabase.from('admin_users').select('id').eq('user_id', user.id).single();
-    if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    await requireAdminApi(supabase);
 
     const body = await request.json();
-    
-    // Normalize code if present
-    if (body.code) body.code = body.code.toUpperCase();
+
+    // SECURITY FIX (V9): Whitelist allowed fields to prevent mass assignment
+    // Fields like current_usage_count should NEVER be modifiable via API
+    const allowedFields = [
+      'code',
+      'name',
+      'discount_type',
+      'discount_value',
+      'is_active',
+      'usage_limit_global',
+      'usage_limit_per_user',
+      'valid_from',
+      'valid_until',
+      'currency',
+      'applicable_products',
+      'minimum_order_amount',
+      'exclude_order_bumps',
+      'max_discount_amount',
+    ];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updateData: Record<string, any> = {};
+    for (const field of allowedFields) {
+      if (body[field] !== undefined) {
+        // Normalize code to uppercase
+        if (field === 'code' && body[field]) {
+          updateData[field] = body[field].toUpperCase();
+        } else {
+          updateData[field] = body[field];
+        }
+      }
+    }
+
+    // Reject if no valid fields provided
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
+    }
 
     const { data, error } = await supabase
       .from('coupons')
-      .update({
-        ...body,
-        // Ensure currency is explicitly handled if present (null or string)
-        ...(body.currency !== undefined && { currency: body.currency }),
-        // Handle exclude_order_bumps
-        ...(body.exclude_order_bumps !== undefined && { exclude_order_bumps: body.exclude_order_bumps })
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
@@ -38,6 +62,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(data);
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (error instanceof Error && error.message === 'Forbidden') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
     console.error('Coupons PATCH error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
@@ -47,12 +77,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const { data: admin } = await supabase.from('admin_users').select('id').eq('user_id', user.id).single();
-    if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    await requireAdminApi(supabase);
 
     const { error } = await supabase
       .from('coupons')
@@ -63,6 +88,12 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (error instanceof Error && error.message === 'Forbidden') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
     console.error('Coupons DELETE error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

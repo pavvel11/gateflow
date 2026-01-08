@@ -262,39 +262,20 @@ CREATE OR REPLACE FUNCTION public.increment_sale_quantity_sold(
   p_product_id UUID
 ) RETURNS BOOLEAN AS $$
 DECLARE
-  v_product RECORD;
-  v_was_incremented BOOLEAN := FALSE;
+  v_rows_updated INTEGER;
 BEGIN
-  -- Get current product state with FOR UPDATE to prevent race conditions
-  SELECT
-    sale_price,
-    sale_price_until,
-    sale_quantity_limit,
-    sale_quantity_sold
-  INTO v_product
-  FROM public.products
+  -- SECURITY: Atomic check-and-update in single statement to prevent race conditions
+  -- This ensures sale validity is checked at the exact moment of update, not before
+  UPDATE public.products
+  SET sale_quantity_sold = COALESCE(sale_quantity_sold, 0) + 1
   WHERE id = p_product_id
-  FOR UPDATE;
+    AND sale_price IS NOT NULL
+    AND sale_price > 0
+    AND (sale_price_until IS NULL OR sale_price_until > NOW())
+    AND (sale_quantity_limit IS NULL OR COALESCE(sale_quantity_sold, 0) < sale_quantity_limit);
 
-  IF NOT FOUND THEN
-    RETURN FALSE;
-  END IF;
-
-  -- Only increment if sale was active at time of purchase
-  IF public.is_sale_price_active(
-    v_product.sale_price,
-    v_product.sale_price_until,
-    v_product.sale_quantity_limit,
-    v_product.sale_quantity_sold
-  ) THEN
-    UPDATE public.products
-    SET sale_quantity_sold = COALESCE(sale_quantity_sold, 0) + 1
-    WHERE id = p_product_id;
-
-    v_was_incremented := TRUE;
-  END IF;
-
-  RETURN v_was_incremented;
+  GET DIAGNOSTICS v_rows_updated = ROW_COUNT;
+  RETURN v_rows_updated > 0;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

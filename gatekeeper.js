@@ -60,10 +60,212 @@ bBv/FwWkjy1pnLiuFZDGNITxN6YC1L4628tXv1cPey6WcQqEC3jTWz2ZsQ==
     // Fallback modes
     FALLBACK_MODES: {
         SHOW_ALL: 'show_all',
-        HIDE_ALL: 'hide_all', 
+        HIDE_ALL: 'hide_all',
         SHOW_FREE: 'show_free'
     }
 };
+
+// ============================================================================
+// INTERNATIONALIZATION (i18n)
+// ============================================================================
+
+/**
+ * Built-in translations - auto-detected from <html lang="..."> or navigator.language
+ */
+const TRANSLATIONS = {
+    en: {
+        // Loading & status
+        checking_access: 'Checking access...',
+        please_wait: 'Please wait while we verify your access',
+        powered_by: 'Powered by GateFlow',
+        secured_by: 'Secured by',
+
+        // Errors
+        something_wrong: 'Something went wrong',
+        temporary_issue: 'We encountered a temporary issue. Please try again.',
+        debug_info: 'Debug Info',
+        try_again: 'Try Again',
+        product_page: 'Product Page',
+        error_at: 'Error at',
+
+        // Login form
+        access_required: 'Access Required',
+        sign_in_to_access: 'Sign in to access this content',
+        email_address: 'Email address',
+        email_placeholder: 'name@example.com',
+        send_access_link: 'Send Access Link',
+        no_access_yet: "Don't have access yet?",
+        get_access_now: 'Get Access Now',
+
+        // Watermark
+        get_license: 'Get license to remove this notice',
+
+        // Magic link
+        magic_link_sent: 'Access link sent!',
+        check_inbox: 'Check your inbox and click the link to access this content.',
+        sending: 'Sending...',
+        error_sending: 'Error sending link. Please try again.'
+    },
+    pl: {
+        // Loading & status
+        checking_access: 'Sprawdzanie dostępu...',
+        please_wait: 'Proszę czekać, weryfikujemy Twój dostęp',
+        powered_by: 'Powered by GateFlow',
+        secured_by: 'Zabezpieczone przez',
+
+        // Errors
+        something_wrong: 'Coś poszło nie tak',
+        temporary_issue: 'Wystąpił tymczasowy problem. Spróbuj ponownie.',
+        debug_info: 'Informacje debugowania',
+        try_again: 'Spróbuj ponownie',
+        product_page: 'Strona produktu',
+        error_at: 'Błąd o',
+
+        // Login form
+        access_required: 'Wymagany dostęp',
+        sign_in_to_access: 'Zaloguj się, aby uzyskać dostęp',
+        email_address: 'Adres email',
+        email_placeholder: 'nazwa@example.com',
+        send_access_link: 'Wyślij link dostępu',
+        no_access_yet: 'Nie masz jeszcze dostępu?',
+        get_access_now: 'Uzyskaj dostęp',
+
+        // Watermark
+        get_license: 'Kup licencję, aby usunąć tę informację',
+
+        // Magic link
+        magic_link_sent: 'Link dostępu wysłany!',
+        check_inbox: 'Sprawdź skrzynkę i kliknij link, aby uzyskać dostęp.',
+        sending: 'Wysyłanie...',
+        error_sending: 'Błąd wysyłania. Spróbuj ponownie.'
+    },
+    de: {
+        checking_access: 'Zugriff wird überprüft...',
+        please_wait: 'Bitte warten Sie, während wir Ihren Zugriff überprüfen',
+        powered_by: 'Powered by GateFlow',
+        secured_by: 'Gesichert durch',
+        something_wrong: 'Etwas ist schief gelaufen',
+        temporary_issue: 'Ein vorübergehendes Problem ist aufgetreten. Bitte versuchen Sie es erneut.',
+        debug_info: 'Debug-Info',
+        try_again: 'Erneut versuchen',
+        product_page: 'Produktseite',
+        error_at: 'Fehler um',
+        access_required: 'Zugriff erforderlich',
+        sign_in_to_access: 'Melden Sie sich an, um auf diesen Inhalt zuzugreifen',
+        email_address: 'E-Mail-Adresse',
+        email_placeholder: 'name@beispiel.de',
+        send_access_link: 'Zugangslink senden',
+        no_access_yet: 'Noch keinen Zugang?',
+        get_access_now: 'Jetzt Zugang erhalten',
+        get_license: 'Lizenz erwerben, um diesen Hinweis zu entfernen',
+        magic_link_sent: 'Zugangslink gesendet!',
+        check_inbox: 'Überprüfen Sie Ihren Posteingang und klicken Sie auf den Link.',
+        sending: 'Wird gesendet...',
+        error_sending: 'Fehler beim Senden. Bitte erneut versuchen.'
+    },
+    fr: {
+        checking_access: 'Vérification de l\'accès...',
+        please_wait: 'Veuillez patienter pendant la vérification de votre accès',
+        powered_by: 'Powered by GateFlow',
+        secured_by: 'Sécurisé par',
+        something_wrong: 'Une erreur s\'est produite',
+        temporary_issue: 'Un problème temporaire s\'est produit. Veuillez réessayer.',
+        debug_info: 'Info de débogage',
+        try_again: 'Réessayer',
+        product_page: 'Page produit',
+        error_at: 'Erreur à',
+        access_required: 'Accès requis',
+        sign_in_to_access: 'Connectez-vous pour accéder à ce contenu',
+        email_address: 'Adresse e-mail',
+        email_placeholder: 'nom@exemple.fr',
+        send_access_link: 'Envoyer le lien d\'accès',
+        no_access_yet: 'Pas encore d\'accès?',
+        get_access_now: 'Obtenir l\'accès',
+        get_license: 'Obtenez une licence pour supprimer cet avis',
+        magic_link_sent: 'Lien d\'accès envoyé!',
+        check_inbox: 'Vérifiez votre boîte de réception et cliquez sur le lien.',
+        sending: 'Envoi en cours...',
+        error_sending: 'Erreur d\'envoi. Veuillez réessayer.'
+    },
+    es: {
+        checking_access: 'Verificando acceso...',
+        please_wait: 'Por favor espere mientras verificamos su acceso',
+        powered_by: 'Powered by GateFlow',
+        secured_by: 'Protegido por',
+        something_wrong: 'Algo salió mal',
+        temporary_issue: 'Ocurrió un problema temporal. Por favor, inténtelo de nuevo.',
+        debug_info: 'Info de depuración',
+        try_again: 'Intentar de nuevo',
+        product_page: 'Página del producto',
+        error_at: 'Error a las',
+        access_required: 'Acceso requerido',
+        sign_in_to_access: 'Inicie sesión para acceder a este contenido',
+        email_address: 'Correo electrónico',
+        email_placeholder: 'nombre@ejemplo.es',
+        send_access_link: 'Enviar enlace de acceso',
+        no_access_yet: '¿Aún no tiene acceso?',
+        get_access_now: 'Obtener acceso',
+        get_license: 'Obtenga una licencia para eliminar este aviso',
+        magic_link_sent: '¡Enlace de acceso enviado!',
+        check_inbox: 'Revise su bandeja de entrada y haga clic en el enlace.',
+        sending: 'Enviando...',
+        error_sending: 'Error al enviar. Por favor, inténtelo de nuevo.'
+    }
+};
+
+/**
+ * Internationalization helper - auto-detects language
+ */
+class I18n {
+    static _lang = null;
+
+    /**
+     * Detect language from <html lang="..."> or navigator.language
+     */
+    static detectLanguage() {
+        if (this._lang) return this._lang;
+
+        // Priority: <html lang> > navigator.language > 'en'
+        const htmlLang = document.documentElement.lang?.split('-')[0]?.toLowerCase();
+        const navLang = navigator.language?.split('-')[0]?.toLowerCase();
+
+        const detected = htmlLang || navLang || 'en';
+        this._lang = TRANSLATIONS[detected] ? detected : 'en';
+
+        return this._lang;
+    }
+
+    /**
+     * Get translation for key
+     * @param {string} key - Translation key
+     * @param {Object} params - Optional parameters for interpolation
+     */
+    static t(key, params = {}) {
+        const lang = this.detectLanguage();
+        let text = TRANSLATIONS[lang]?.[key] || TRANSLATIONS['en']?.[key] || key;
+
+        // Simple parameter interpolation: {name} -> value
+        Object.entries(params).forEach(([k, v]) => {
+            text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+        });
+
+        return text;
+    }
+
+    /**
+     * Get current language code
+     */
+    static getLang() {
+        return this.detectLanguage();
+    }
+
+    /**
+     * Force a specific language (useful for testing)
+     */
+    static setLang(lang) {
+        this._lang = TRANSLATIONS[lang] ? lang : 'en';
+    }
+}
 
 // ============================================================================
 // CRITICAL CSS INJECTION (CSS-first content hiding)
@@ -543,9 +745,9 @@ class LicenseManager {
                onmouseout="this.style.transform='scale(1)'"
                onclick="window.open('https://gateflow.pl/pricing', '_blank')">
                 <span style="margin-right: 8px;">🔐</span>
-                Secured by <strong>GateFlow</strong> v${CONSTANTS.VERSION}
+                ${I18n.t('secured_by')} <strong>GateFlow</strong> v${CONSTANTS.VERSION}
                 <div style="font-size: 10px; opacity: 0.8; margin-top: 2px;">
-                    Get license to remove this notice
+                    ${I18n.t('get_license')}
                 </div>
             </div>
         `;
@@ -811,20 +1013,21 @@ class UITemplates {
         return themes[theme] || themes.default;
     }
     
-    static getLoadingTemplate(message = 'Checking access...') {
+    static getLoadingTemplate(message = null) {
         const theme = this.getThemeColors(this.getTheme());
-        
+        const displayMessage = message || I18n.t('checking_access');
+
         return `
         <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
             <div style="text-align: center; padding: 40px; background: ${theme.background}; border-radius: 16px; border: ${theme.border}; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
                 <div style="font-size: 48px; margin-bottom: 24px; animation: pulse 2s ease-in-out infinite;">🔐</div>
-                <div style="font-size: 20px; color: ${theme.textColor}; margin-bottom: 12px; font-weight: 600;">${message}</div>
-                <div style="font-size: 14px; color: ${theme.textColor}; opacity: 0.7; margin-bottom: 24px;">Please wait while we verify your access</div>
+                <div style="font-size: 20px; color: ${theme.textColor}; margin-bottom: 12px; font-weight: 600;">${displayMessage}</div>
+                <div style="font-size: 14px; color: ${theme.textColor}; opacity: 0.7; margin-bottom: 24px;">${I18n.t('please_wait')}</div>
                 <div style="width: 240px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin: 0 auto; overflow: hidden;">
                     <div style="width: 100%; height: 100%; background: linear-gradient(90deg, ${theme.accentColor}, ${theme.accentColor}dd); border-radius: 3px; animation: loading-bar 2s ease-in-out infinite;"></div>
                 </div>
                 <div style="margin-top: 20px; font-size: 12px; color: ${theme.textColor}; opacity: 0.5;">
-                    Powered by GateFlow v${CONSTANTS.VERSION}
+                    ${I18n.t('powered_by')} v${CONSTANTS.VERSION}
                 </div>
             </div>
             <style>
@@ -849,32 +1052,32 @@ class UITemplates {
         const theme = this.getThemeColors(this.getTheme());
         const config = window.gatekeeperConfig || {};
         const isDev = config.development || window.location.hostname === 'localhost';
-        
+
         return `
         <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); padding: 20px;">
             <div style="text-align: center; padding: 40px; background: ${theme.background}; border-radius: 20px; border: ${theme.border}; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); max-width: 500px; width: 100%;">
                 <div style="font-size: 72px; margin-bottom: 24px; animation: shake 0.5s ease-in-out;">⚠️</div>
-                <div style="font-size: 24px; color: #ff6b6b; margin-bottom: 16px; font-weight: 600;">Something went wrong</div>
+                <div style="font-size: 24px; color: #ff6b6b; margin-bottom: 16px; font-weight: 600;">${I18n.t('something_wrong')}</div>
                 <div style="font-size: 16px; color: ${theme.textColor}; opacity: 0.8; margin-bottom: 24px; line-height: 1.5;">
-                    ${isDev ? error : 'We encountered a temporary issue. Please try again.'}
+                    ${isDev ? error : I18n.t('temporary_issue')}
                 </div>
                 ${isDev ? `
                 <div style="font-size: 12px; color: #666; margin-bottom: 24px; padding: 16px; background: rgba(0,0,0,0.3); border-radius: 8px; font-family: monospace; text-align: left; word-break: break-word;">
-                    <strong>Debug Info:</strong><br>${error}
+                    <strong>${I18n.t('debug_info')}:</strong><br>${error}
                 </div>
                 ` : ''}
                 <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px;">
                     <button onclick="location.reload()" style="background: #00aaff; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s ease;">
-                        🔄 Try Again
+                        🔄 ${I18n.t('try_again')}
                     </button>
                     ${productSlug ? `
                     <a href="/?product=${productSlug}" style="background: #28a745; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; display: inline-block; transition: all 0.3s ease;">
-                        🛒 Product Page
+                        🛒 ${I18n.t('product_page')}
                     </a>
                     ` : ''}
                 </div>
                 <div style="font-size: 12px; color: ${theme.textColor}; opacity: 0.4;">
-                    Error at ${new Date().toLocaleString()} • GateFlow v${CONSTANTS.VERSION}
+                    ${I18n.t('error_at')} ${new Date().toLocaleString()} • GateFlow v${CONSTANTS.VERSION}
                 </div>
             </div>
             <style>
@@ -890,41 +1093,41 @@ class UITemplates {
     
     static getLoginTemplate(productSlug) {
         const theme = this.getThemeColors(this.getTheme());
-        
+
         return `
         <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px;">
             <div style="width: 100%; max-width: 400px; background: ${theme.background}; border-radius: 20px; border: ${theme.border}; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); overflow: hidden;">
                 <div style="padding: 40px;">
                     <div id="gatekeeper-message-area" style="margin-bottom: 20px;"></div>
-                    
+
                     <div style="text-align: center; margin-bottom: 32px;">
                         <div style="font-size: 64px; margin-bottom: 16px;">🔐</div>
-                        <h2 style="color: ${theme.textColor}; margin: 0 0 8px 0; font-size: 24px; font-weight: 600;">Access Required</h2>
-                        <p style="color: ${theme.textColor}; opacity: 0.7; margin: 0; font-size: 16px;">Sign in to access this content</p>
+                        <h2 style="color: ${theme.textColor}; margin: 0 0 8px 0; font-size: 24px; font-weight: 600;">${I18n.t('access_required')}</h2>
+                        <p style="color: ${theme.textColor}; opacity: 0.7; margin: 0; font-size: 16px;">${I18n.t('sign_in_to_access')}</p>
                     </div>
-                    
+
                     <form id="gatekeeper-magic-link-form" style="margin-bottom: 24px;">
                         <div style="margin-bottom: 20px;">
-                            <label for="gatekeeper-email" style="display: block; color: ${theme.textColor}; font-weight: 500; margin-bottom: 8px; font-size: 14px;">Email address</label>
-                            <input type="email" id="gatekeeper-email" placeholder="name@example.com" required 
+                            <label for="gatekeeper-email" style="display: block; color: ${theme.textColor}; font-weight: 500; margin-bottom: 8px; font-size: 14px;">${I18n.t('email_address')}</label>
+                            <input type="email" id="gatekeeper-email" placeholder="${I18n.t('email_placeholder')}" required
                                    style="width: 100%; padding: 12px 16px; border: 2px solid rgba(255,255,255,0.2); border-radius: 8px; background: rgba(255,255,255,0.1); color: ${theme.textColor}; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box;">
                         </div>
                         <button type="submit" style="width: 100%; padding: 14px; background: linear-gradient(135deg, ${theme.accentColor}, ${theme.accentColor}dd); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
-                            ✨ Send Access Link
+                            ✨ ${I18n.t('send_access_link')}
                         </button>
                     </form>
-                    
+
                     <div style="text-align: center; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
                         <p style="color: ${theme.textColor}; opacity: 0.6; margin: 0 0 16px 0; font-size: 14px;">
-                            Don't have access yet?
+                            ${I18n.t('no_access_yet')}
                         </p>
                         <a href="/?product=${productSlug}" style="display: inline-block; padding: 10px 20px; background: rgba(255,255,255,0.1); color: ${theme.textColor}; text-decoration: none; border-radius: 6px; font-size: 14px; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.2);">
-                            🛒 Get Access Now
+                            🛒 ${I18n.t('get_access_now')}
                         </a>
                     </div>
-                    
+
                     <div style="margin-top: 24px; text-align: center; font-size: 12px; color: ${theme.textColor}; opacity: 0.4;">
-                        Secured by GateFlow v${CONSTANTS.VERSION}
+                        ${I18n.t('secured_by')} GateFlow v${CONSTANTS.VERSION}
                     </div>
                 </div>
             </div>
@@ -1087,7 +1290,7 @@ class GateFlow {
 
         const overlay = document.createElement('div');
         overlay.id = 'gateflow-loading-overlay';
-        overlay.innerHTML = UITemplates.getLoadingTemplate('Checking access...');
+        overlay.innerHTML = UITemplates.getLoadingTemplate();
         overlay.style.cssText = `
             position: fixed;
             top: 0;

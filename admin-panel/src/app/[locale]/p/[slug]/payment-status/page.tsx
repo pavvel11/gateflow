@@ -303,7 +303,19 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
       console.log('OTO was skipped (user owns product) - no redirect');
     } else {
       // No OTO configured - use regular success_redirect_url
-      const overrideRedirectUrl = resolvedSearchParams.success_url;
+      // SECURITY FIX (V11): Validate success_url to prevent open redirect
+      // Only allow relative paths from URL params, external URLs must come from admin config
+      let overrideRedirectUrl = resolvedSearchParams.success_url;
+      if (overrideRedirectUrl) {
+        // Reject external URLs, protocol-relative URLs, javascript: etc.
+        const decoded = decodeURIComponent(overrideRedirectUrl).trim();
+        if (!decoded.startsWith('/') || decoded.startsWith('//') ||
+            decoded.toLowerCase().includes('javascript:') ||
+            decoded.includes('://')) {
+          console.warn('Rejected unsafe success_url:', overrideRedirectUrl);
+          overrideRedirectUrl = undefined; // Fall back to admin-configured URL
+        }
+      }
       const targetUrl = overrideRedirectUrl || product.success_redirect_url;
 
       console.log('No OTO - checking success_redirect_url:', { overrideRedirectUrl, targetUrl });

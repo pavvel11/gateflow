@@ -273,39 +273,8 @@ test.describe('GUS Integration - API Metadata Update', () => {
     expect([200, 500, 503]).toContain(response.status());
   });
 
-  test('should enforce rate limiting on metadata update', async ({ page }) => {
-    const mockClientSecret = 'pi_test_123456789_secret_abcdefghij';
-
-    // Make 11 consecutive requests (limit is 10/minute)
-    const requests = [];
-
-    for (let i = 0; i < 11; i++) {
-      const promise = page.request.post('/api/update-payment-metadata', {
-        data: {
-          clientSecret: mockClientSecret,
-          needsInvoice: true,
-          nip: '5261040828',
-        },
-        headers: {
-          'origin': 'http://localhost:3000',
-          'referer': 'http://localhost:3000/',
-        },
-      });
-      requests.push(promise);
-    }
-
-    const responses = await Promise.all(requests);
-
-    // At least one should be rate limited (429)
-    const rateLimited = responses.some(r => r.status() === 429);
-    expect(rateLimited).toBe(true);
-
-    const limitedResponse = responses.find(r => r.status() === 429);
-    if (limitedResponse) {
-      const body = await limitedResponse.json();
-      expect(body.error).toContain('Too many requests');
-    }
-  });
+  // Rate limiting test moved to tests/rate-limiting.spec.ts
+  // Run with: RATE_LIMIT_TEST_MODE=true npx playwright test --project=rate-limiting
 });
 
 test.describe('GUS Integration - Data Validation', () => {

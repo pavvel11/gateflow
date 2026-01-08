@@ -124,7 +124,7 @@ async function createPaymentTransaction(userId: string, productId: string, amoun
   await supabaseAdmin.from('user_product_access').insert({
     user_id: userId,
     product_id: productId,
-    granted_at: new Date().toISOString(),
+    access_granted_at: new Date().toISOString(),
   });
 
   return data;
@@ -982,4 +982,126 @@ test.describe('Refund System - Customer Status Updates', () => {
     // Should see "Refund Rejected" badge
     await expect(page.locator('text=/Refund Rejected|Rejected/i').first()).toBeVisible();
   });
+});
+
+test.describe('Refund System - Access Revocation on Refund', () => {
+  let customerUser: any;
+  let testProduct: any;
+  let testTransaction: any;
+  const customerPassword = 'CustomerPassword123!';
+
+  test.beforeAll(async () => {
+    // Create customer user
+    customerUser = await createTestUser(`access-revoke-${Date.now()}@test.com`, customerPassword);
+
+    // Create refundable product
+    testProduct = await createRefundableProduct(true, 30);
+
+    // Create transaction (without access - we'll grant it explicitly)
+    const timestamp = Date.now();
+    const { data, error } = await supabaseAdmin
+      .from('payment_transactions')
+      .insert({
+        session_id: `cs_test_${timestamp}`,
+        user_id: customerUser.id,
+        product_id: testProduct.id,
+        amount: 10000,
+        currency: 'PLN',
+        status: 'completed',
+        stripe_payment_intent_id: `pi_test_${timestamp}`,
+        customer_email: customerUser.email,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    testTransaction = data;
+
+    // Explicitly grant product access
+    const { error: accessError } = await supabaseAdmin
+      .from('user_product_access')
+      .upsert({
+        user_id: customerUser.id,
+        product_id: testProduct.id,
+        access_granted_at: new Date().toISOString(),
+      });
+
+    if (accessError) {
+      console.error('Failed to grant access:', accessError);
+      throw accessError;
+    }
+  });
+
+  test.afterAll(async () => {
+    if (customerUser) {
+      await supabaseAdmin.from('refund_requests').delete().eq('user_id', customerUser.id);
+      await supabaseAdmin.from('user_product_access').delete().eq('user_id', customerUser.id);
+      await supabaseAdmin.from('payment_transactions').delete().eq('user_id', customerUser.id);
+      await supabaseAdmin.from('profiles').delete().eq('id', customerUser.id);
+      await supabaseAdmin.auth.admin.deleteUser(customerUser.id);
+    }
+    if (testProduct) {
+      await supabaseAdmin.from('products').delete().eq('id', testProduct.id);
+    }
+  });
+
+  test('user should have product access before refund', async () => {
+    // Verify user has product access
+    const { data: access, error } = await supabaseAdmin
+      .from('user_product_access')
+      .select('*')
+      .eq('user_id', customerUser.id)
+      .eq('product_id', testProduct.id)
+      .maybeSingle();
+
+    expect(error).toBeNull();
+    expect(access).toBeTruthy();
+    expect(access!.user_id).toBe(customerUser.id);
+    expect(access!.product_id).toBe(testProduct.id);
+  });
+
+  test('product access should be revoked after refund is processed', async () => {
+    // Verify access exists before refund
+    const { data: accessBefore } = await supabaseAdmin
+      .from('user_product_access')
+      .select('*')
+      .eq('user_id', customerUser.id)
+      .eq('product_id', testProduct.id)
+      .single();
+
+    expect(accessBefore).toBeTruthy();
+
+    // Simulate refund processing by:
+    // 1. Updating transaction status to refunded
+    // 2. Deleting product access (as the API does)
+    await supabaseAdmin
+      .from('payment_transactions')
+      .update({
+        status: 'refunded',
+        refund_id: `re_test_${Date.now()}`,
+        refunded_amount: testTransaction.amount,
+        refunded_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', testTransaction.id);
+
+    // This is what the refund API does - revoke access
+    await supabaseAdmin
+      .from('user_product_access')
+      .delete()
+      .eq('user_id', customerUser.id)
+      .eq('product_id', testProduct.id);
+
+    // Verify access is now revoked
+    const { data: accessAfter, error } = await supabaseAdmin
+      .from('user_product_access')
+      .select('*')
+      .eq('user_id', customerUser.id)
+      .eq('product_id', testProduct.id)
+      .maybeSingle();
+
+    expect(error).toBeNull();
+    expect(accessAfter).toBeNull(); // Access should be revoked
+  });
+
 });

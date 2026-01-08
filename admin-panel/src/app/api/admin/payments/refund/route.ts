@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import { getStripeServer } from '@/lib/stripe/server';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limiting';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -29,15 +30,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if user is admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
+    // Check if user is admin (using admin_users table, consistent with other admin routes)
+    const { data: adminUser } = await supabase
+      .from('admin_users')
+      .select('id')
+      .eq('user_id', user.id)
       .single();
 
-    if (!profile || profile.role !== 'admin') {
+    if (!adminUser) {
       return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
+    }
+
+    // SECURITY: Rate limit refund operations (prevents abuse of compromised admin accounts)
+    const rateLimitOk = await checkRateLimit(
+      RATE_LIMITS.ADMIN_REFUND.actionType,
+      RATE_LIMITS.ADMIN_REFUND.maxRequests,
+      RATE_LIMITS.ADMIN_REFUND.windowMinutes,
+      user.id
+    );
+
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        { message: 'Rate limit exceeded. Maximum 10 refunds per hour.' },
+        { status: 429 }
+      );
     }
 
     const { transactionId, paymentIntentId, amount, reason } = await request.json();
@@ -67,13 +83,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // SECURITY: Validate refund amount to prevent integer overflow/abuse
+    const MAX_REFUND_AMOUNT = 99999999; // Same as DB constraint (~$999,999.99)
+    const refundAmount = amount ? Number(amount) : transaction.amount;
+
+    if (!Number.isInteger(refundAmount) || refundAmount <= 0) {
+      return NextResponse.json(
+        { message: 'Refund amount must be a positive integer (in cents)' },
+        { status: 400 }
+      );
+    }
+
+    if (refundAmount > MAX_REFUND_AMOUNT) {
+      return NextResponse.json(
+        { message: `Refund amount cannot exceed ${MAX_REFUND_AMOUNT} cents` },
+        { status: 400 }
+      );
+    }
+
+    const alreadyRefunded = transaction.refunded_amount || 0;
+    const maxRefundable = transaction.amount - alreadyRefunded;
+
+    if (refundAmount > maxRefundable) {
+      return NextResponse.json(
+        { message: `Refund amount (${refundAmount}) exceeds refundable amount (${maxRefundable})` },
+        { status: 400 }
+      );
+    }
+
     // Process refund through Stripe
     const refundData: Stripe.RefundCreateParams = {
       payment_intent: paymentIntentId,
     };
 
     if (amount) {
-      refundData.amount = amount; // Amount in cents
+      refundData.amount = refundAmount;
     }
 
     if (reason) {
@@ -88,7 +132,9 @@ export async function POST(request: NextRequest) {
       .update({
         status: 'refunded',
         refund_id: refund.id,
-        refund_amount: refund.amount,
+        refunded_amount: refund.amount,
+        refunded_at: new Date().toISOString(),
+        refunded_by: user.id,
         refund_reason: reason || null,
         updated_at: new Date().toISOString(),
       })
@@ -100,6 +146,37 @@ export async function POST(request: NextRequest) {
         { message: 'Refund processed but failed to update database' },
         { status: 500 }
       );
+    }
+
+    // SECURITY: Revoke product access after successful refund
+    // This prevents users from keeping access after getting their money back
+    if (transaction.user_id && transaction.product_id) {
+      // Authenticated user - revoke from user_product_access
+      const { error: revokeError } = await supabase
+        .from('user_product_access')
+        .delete()
+        .eq('user_id', transaction.user_id)
+        .eq('product_id', transaction.product_id);
+
+      if (revokeError) {
+        console.error('Warning: Failed to revoke product access after refund:', revokeError);
+        // Don't fail the refund - it's already processed, just log the issue
+      }
+    }
+
+    // SECURITY FIX (V16): Also revoke guest purchases after refund
+    // Guest purchases are stored in guest_purchases table, keyed by session_id
+    // Without this, refunded guests could later create an account and claim the product
+    if (transaction.session_id && transaction.product_id) {
+      const { error: guestRevokeError } = await supabase
+        .from('guest_purchases')
+        .delete()
+        .eq('session_id', transaction.session_id);
+
+      if (guestRevokeError) {
+        console.error('Warning: Failed to revoke guest purchase after refund:', guestRevokeError);
+        // Don't fail the refund - it's already processed, just log the issue
+      }
     }
 
     // Log the refund action

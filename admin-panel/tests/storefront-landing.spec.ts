@@ -16,6 +16,26 @@ const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
 test.describe('Modern Storefront Landing Page 2026', () => {
   let testProductIds: string[] = [];
+  let originallyActiveProductIds: string[] = [];
+
+  // Save originally active products before any test runs
+  test.beforeAll(async () => {
+    const { data } = await supabaseAdmin
+      .from('products')
+      .select('id')
+      .eq('is_active', true);
+    originallyActiveProductIds = data?.map(p => p.id) || [];
+  });
+
+  // Restore originally active products after all tests
+  test.afterAll(async () => {
+    if (originallyActiveProductIds.length > 0) {
+      await supabaseAdmin
+        .from('products')
+        .update({ is_active: true })
+        .in('id', originallyActiveProductIds);
+    }
+  });
 
   // Cleanup helper
   const cleanupTestProducts = async () => {

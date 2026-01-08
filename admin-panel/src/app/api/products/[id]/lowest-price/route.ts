@@ -7,12 +7,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getLowestPriceInLast30Days, isSalePriceActive } from '@/lib/services/omnibus';
 import { createClient } from '@/lib/supabase/server';
+import { checkRateLimit } from '@/lib/rate-limiting';
 
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Rate limiting: 60 requests per minute
+    const rateLimitOk = await checkRateLimit('lowest_price', 60, 60);
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
     const params = await context.params;
     const productId = params.id;
 

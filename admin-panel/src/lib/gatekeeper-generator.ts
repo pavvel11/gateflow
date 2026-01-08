@@ -4,6 +4,7 @@
  */
 
 import { JSProcessor } from './js-processor';
+import { MemoryCache, generateHash } from './script-cache';
 
 interface GatekeeperConfig {
   supabaseUrl: string;
@@ -20,42 +21,42 @@ interface GatekeeperConfig {
   };
 }
 
-interface GeneratedScript {
+export interface GeneratedScript {
   content: string;
   hash: string;
   lastModified: Date;
 }
 
+// Use shared MemoryCache for caching
+const scriptCache = new MemoryCache<GeneratedScript>({ ttl: 60 * 60 * 1000 }); // 1 hour
+
 /**
  * Template-based approach with proper escaping and injection
  */
 export class GatekeeperGenerator {
-  private static cache = new Map<string, GeneratedScript>();
-  private static readonly CACHE_TTL = 1000 * 60 * 60; // 1 hour
-
   /**
    * Generate the complete gatekeeper script with injected configuration
    */
   static async generateScript(config: GatekeeperConfig): Promise<GeneratedScript> {
     const cacheKey = this.getCacheKey(config);
-    
+
     // Check cache first
-    const cached = this.cache.get(cacheKey);
-    if (cached && this.isCacheValid(cached)) {
-      return cached;
+    const cached = scriptCache.get(cacheKey);
+    if (cached) {
+      return cached.data;
     }
 
     // Generate new script
     let content = await this.buildScript(config);
-    
+
     // Process the script (minify/obfuscate) in production
     const processingConfig = JSProcessor.getConfigForEnvironment(
       config.environment as 'development' | 'production'
     );
     content = await JSProcessor.processCode(content, processingConfig);
-    
-    const hash = this.generateHash(content);
-    
+
+    const hash = generateHash(content);
+
     const generated: GeneratedScript = {
       content,
       hash,
@@ -63,11 +64,8 @@ export class GatekeeperGenerator {
     };
 
     // Cache the result
-    this.cache.set(cacheKey, generated);
-    
-    // Clean old cache entries
-    this.cleanCache();
-    
+    scriptCache.set(cacheKey, generated, hash);
+
     return generated;
   }
 
@@ -242,20 +240,7 @@ if (typeof GATEKEEPER_CONFIG !== 'undefined') {
    */
   private static getCacheKey(config: GatekeeperConfig): string {
     const key = `${config.supabaseUrl}_${config.environment}_${config.version}_${config.productSlug || 'default'}_${config.licenseValid || false}_${JSON.stringify(config.features)}`;
-    return this.generateHash(key);
-  }
-
-  /**
-   * Generate hash for content or cache key
-   */
-  private static generateHash(content: string): string {
-    let hash = 0;
-    for (let i = 0; i < content.length; i++) {
-      const char = content.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32bit integer
-    }
-    return Math.abs(hash).toString(36);
+    return generateHash(key);
   }
 
   /**
@@ -263,28 +248,7 @@ if (typeof GATEKEEPER_CONFIG !== 'undefined') {
    */
   private static generateBuildHash(config: GatekeeperConfig): string {
     const hashInput = `${config.supabaseUrl}_${config.version}_${Date.now()}`;
-    return this.generateHash(hashInput).substring(0, 8);
-  }
-
-  /**
-   * Check if cached script is still valid
-   */
-  private static isCacheValid(cached: GeneratedScript): boolean {
-    const age = Date.now() - cached.lastModified.getTime();
-    return age < this.CACHE_TTL;
-  }
-
-  /**
-   * Clean expired cache entries
-   */
-  private static cleanCache(): void {
-    const now = Date.now();
-    for (const [key, cached] of this.cache.entries()) {
-      const age = now - cached.lastModified.getTime();
-      if (age > this.CACHE_TTL) {
-        this.cache.delete(key);
-      }
-    }
+    return generateHash(hashInput).substring(0, 8);
   }
 
   /**
@@ -292,8 +256,7 @@ if (typeof GATEKEEPER_CONFIG !== 'undefined') {
    */
   static getCacheStats() {
     return {
-      size: this.cache.size,
-      entries: Array.from(this.cache.keys()),
+      size: scriptCache.size,
       lastCleanup: new Date()
     };
   }
@@ -302,6 +265,6 @@ if (typeof GATEKEEPER_CONFIG !== 'undefined') {
    * Clear all cache (useful for development)
    */
   static clearCache(): void {
-    this.cache.clear();
+    scriptCache.clear();
   }
 }

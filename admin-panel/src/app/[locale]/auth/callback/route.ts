@@ -127,17 +127,19 @@ export async function GET(request: NextRequest) {
     try {
       // Decode the redirect URL to handle encoded parameters
       const decodedRedirectTo = decodeURIComponent(redirectTo)
-      
-      // Check if it's a relative path (starts with /)
-      if (decodedRedirectTo.startsWith('/')) {
+
+      // SECURITY: Check if it's a safe relative path (starts with / but not //)
+      // Paths like "//evil.com" would redirect to external domains in some browsers
+      if (decodedRedirectTo.startsWith('/') && !decodedRedirectTo.startsWith('//')) {
         redirectPath = decodedRedirectTo
-      } else {
+      } else if (!decodedRedirectTo.startsWith('/')) {
         // If it's a full URL, validate it's on our domain
         const redirectToUrl = new URL(decodedRedirectTo)
         if (redirectToUrl.origin === origin) {
           redirectPath = redirectToUrl.pathname + redirectToUrl.search
         }
       }
+      // If path starts with //, ignore it (potential open redirect attack)
     } catch {
       // Silent error handling - if decoding fails, fallback to default
     }

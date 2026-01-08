@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { checkRateLimit } from '@/lib/rate-limiting';
 
 /**
  * Handle CORS preflight requests
@@ -19,6 +20,15 @@ export async function OPTIONS(request: Request) {
 
 export async function GET() {
   try {
+    // Rate limiting: 60 requests per minute
+    const rateLimitOk = await checkRateLimit('health', 60, 60);
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        { status: 'error', error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
     // Basic health check
     const health = {
       status: 'ok',

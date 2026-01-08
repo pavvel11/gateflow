@@ -95,7 +95,9 @@ async function checkRateLimitDatabase(
 
   if (error) {
     console.error('Rate limit check error:', error);
-    return true; // Fail open
+    // SECURITY: Fail closed - deny requests when rate limit check fails
+    // This prevents attackers from bypassing rate limits by causing errors
+    return false;
   }
 
   return !!rateLimitOk;
@@ -117,7 +119,9 @@ export async function checkRateLimit(
   userId?: string
 ): Promise<boolean> {
   // Skip rate limiting in development and test mode
-  if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+  // Unless RATE_LIMIT_TEST_MODE is enabled (for running rate limit tests)
+  const isTestMode = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
+  if (isTestMode && process.env.RATE_LIMIT_TEST_MODE !== 'true') {
     return true;
   }
 
@@ -133,7 +137,8 @@ export async function checkRateLimit(
     return await checkRateLimitDatabase(actionType, maxRequests, windowMinutes, identifier);
   } catch (error) {
     console.error('Rate limit check exception:', error);
-    return true; // Fail open
+    // SECURITY: Fail closed - deny requests when rate limit check throws
+    return false;
   }
 }
 
@@ -160,5 +165,38 @@ export const RATE_LIMITS = {
     maxRequests: 3,
     windowMinutes: 60,
     actionType: 'password_reset',
+  },
+  // ADMIN DESTRUCTIVE OPERATIONS
+  ADMIN_REFUND: {
+    maxRequests: 10,
+    windowMinutes: 60,
+    actionType: 'admin_refund',
+  },
+  ADMIN_DELETE: {
+    maxRequests: 20,
+    windowMinutes: 60,
+    actionType: 'admin_delete',
+  },
+  // ADMIN HEAVY QUERIES
+  ADMIN_EXPORT: {
+    maxRequests: 5,
+    windowMinutes: 60,
+    actionType: 'admin_export',
+  },
+  ADMIN_ANALYTICS: {
+    maxRequests: 30,
+    windowMinutes: 5,
+    actionType: 'admin_analytics',
+  },
+  ADMIN_BULK_READ: {
+    maxRequests: 50,
+    windowMinutes: 5,
+    actionType: 'admin_bulk_read',
+  },
+  // ADMIN COUPON OPERATIONS
+  ADMIN_COUPON_CREATE: {
+    maxRequests: 20,
+    windowMinutes: 60,
+    actionType: 'admin_coupon_create',
   },
 } as const;

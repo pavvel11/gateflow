@@ -1,36 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { 
-  validateCreateProduct, 
-  sanitizeProductData 
+import {
+  validateCreateProduct,
+  sanitizeProductData,
+  escapeIlikePattern,
+  validateProductSortColumn
 } from '@/lib/validations/product';
 import { requireAdminApi } from '@/lib/auth-server';
 
 /**
  * Handle CORS preflight requests
+ * SECURITY: Admin routes should only be accessed from the same origin
  */
 export async function OPTIONS(request: Request) {
-  const origin = request.headers.get('origin') || '*';
-  
+  const origin = request.headers.get('origin');
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL;
+
+  // Only allow same-origin or configured site URL
+  const allowedOrigin = origin && (
+    origin === siteUrl ||
+    origin.startsWith('http://localhost:') ||
+    origin.startsWith('http://127.0.0.1:')
+  ) ? origin : (siteUrl || 'null');
+
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Origin': allowedOrigin,
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Max-Age': '86400', // 24 hours
+      'Access-Control-Allow-Credentials': 'true',
+      'Access-Control-Max-Age': '86400',
     },
   });
 }
 
-// Helper to standard headers
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+// Helper function to get allowed CORS origin for admin routes
+function getAdminCorsOrigin(requestOrigin: string | null): string {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL;
+
+  if (requestOrigin && (
+    requestOrigin === siteUrl ||
+    requestOrigin.startsWith('http://localhost:') ||
+    requestOrigin.startsWith('http://127.0.0.1:')
+  )) {
+    return requestOrigin;
+  }
+
+  return siteUrl || 'null';
+}
+
+// Helper for standard headers - SECURITY: No wildcard CORS for admin routes
+const getCorsHeaders = (requestOrigin: string | null) => ({
+  'Access-Control-Allow-Origin': getAdminCorsOrigin(requestOrigin),
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
+  'Access-Control-Allow-Credentials': 'true',
+});
 
 export async function GET(request: NextRequest) {
+  const origin = request.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   try {
     const supabase = await createClient();
     await requireAdminApi(supabase); // Enforce Admin Access
@@ -40,17 +71,22 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
-    const sortBy = searchParams.get('sortBy') || 'created_at';
+    const sortByRaw = searchParams.get('sortBy') || 'created_at';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
+
+    // SECURITY FIX (V13): Validate sortBy to prevent SQL injection
+    const sortBy = validateProductSortColumn(sortByRaw);
 
     // Build query
     let query = supabase
       .from('products')
       .select('*', { count: 'exact' });
 
-    // Apply search filter
+    // SECURITY FIX (V13): Escape ILIKE special characters to prevent pattern injection
+    // Without escaping, attacker could use % or _ as wildcards in unexpected ways
     if (search) {
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+      const escapedSearch = escapeIlikePattern(search);
+      query = query.or(`name.ilike.%${escapedSearch}%,description.ilike.%${escapedSearch}%`);
     }
 
     // Apply status filter
@@ -59,7 +95,7 @@ export async function GET(request: NextRequest) {
       query = query.eq('is_active', status === 'active');
     }
 
-    // Apply sorting
+    // Apply sorting (sortBy is already validated)
     query = query.order(sortBy, { ascending: sortOrder === 'asc' });
 
     // Apply pagination
@@ -101,6 +137,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const origin = request.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   try {
     const supabase = await createClient();
     await requireAdminApi(supabase); // Enforce Admin Access

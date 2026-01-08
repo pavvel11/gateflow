@@ -149,6 +149,18 @@ CREATE TABLE IF NOT EXISTS public.coupon_redemptions (
   redeemed_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
+-- Coupon reservations - prevent race conditions by reserving slots
+CREATE TABLE IF NOT EXISTS public.coupon_reservations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  coupon_id UUID REFERENCES public.coupons(id) ON DELETE CASCADE NOT NULL,
+  customer_email TEXT NOT NULL,
+  reserved_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  session_id TEXT,
+  -- One active reservation per email per coupon
+  UNIQUE(coupon_id, customer_email)
+);
+
 -- -----------------------------------------------------------------------------
 -- WEBHOOKS DOMAIN
 -- -----------------------------------------------------------------------------
@@ -390,6 +402,9 @@ CREATE INDEX IF NOT EXISTS idx_coupons_code ON public.coupons(code);
 CREATE INDEX IF NOT EXISTS idx_coupons_active ON public.coupons(is_active) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_coupon_redemptions_email ON public.coupon_redemptions(customer_email);
 CREATE INDEX IF NOT EXISTS idx_coupon_redemptions_user ON public.coupon_redemptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_coupon_reservations_expires ON public.coupon_reservations(expires_at);
+CREATE INDEX IF NOT EXISTS idx_coupon_reservations_email ON public.coupon_reservations(customer_email);
+CREATE INDEX IF NOT EXISTS idx_coupon_reservations_coupon ON public.coupon_reservations(coupon_id);
 
 -- Webhooks
 CREATE INDEX IF NOT EXISTS idx_webhook_logs_endpoint_id ON public.webhook_logs(endpoint_id);
@@ -645,8 +660,8 @@ BEGIN
     END IF;
   END IF;
 
-  -- Get product
-  SELECT id, auto_grant_duration_days INTO product_record
+  -- Get product with price and currency for validation
+  SELECT id, auto_grant_duration_days, price, currency INTO product_record
   FROM public.products
   WHERE id = product_id_param AND is_active = true;
 
@@ -654,11 +669,21 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'error', 'Product not found or inactive');
   END IF;
 
-  -- Get bump product if provided
+  -- SECURITY: Validate currency matches product currency
+  IF product_record.currency IS NOT NULL THEN
+    IF upper(currency_param) != upper(product_record.currency) THEN
+      RAISE EXCEPTION 'Currency mismatch: expected %, got %',
+        product_record.currency, currency_param;
+    END IF;
+  END IF;
+
+  -- Get bump product if provided (with price for validation)
   IF bump_product_id_param IS NOT NULL THEN
     SELECT
       p.id,
-      COALESCE(ob.access_duration_days, p.auto_grant_duration_days) as auto_grant_duration_days
+      COALESCE(ob.access_duration_days, p.auto_grant_duration_days) as auto_grant_duration_days,
+      COALESCE(ob.bump_price, p.price) as price,
+      p.currency
     INTO bump_product_record
     FROM public.products p
     JOIN public.order_bumps ob ON ob.bump_product_id = p.id AND ob.main_product_id = product_id_param
@@ -667,6 +692,63 @@ BEGIN
     IF FOUND THEN
       bump_found := true;
     END IF;
+  END IF;
+
+  -- SECURITY: Validate amount matches product price (prevent price manipulation)
+  -- Check total: main product + bump (if present), accounting for coupons
+  -- Skip validation if product has no fixed price (PWYW - Pay What You Want)
+  -- NOTE: Stripe sends amount_total AFTER applying coupon discount, so we need to
+  --       account for that. However, we can't validate exact amount with coupons
+  --       because we don't have coupon details at this point (only coupon_id).
+  --       The coupon was already validated in verify_coupon() and reserved.
+  --       We only validate that amount is reasonable (not manipulated to zero or negative).
+  IF product_record.price IS NOT NULL THEN
+    DECLARE
+      bump_price NUMERIC := NULL;
+    BEGIN
+      -- Extract bump price if bump was found
+      IF bump_found THEN
+        bump_price := bump_product_record.price;
+      END IF;
+
+      IF coupon_id_param IS NULL THEN
+        -- No coupon: validate exact amount
+        IF bump_price IS NOT NULL THEN
+          -- Validate: amount = main product + bump product
+          IF amount_total != ((product_record.price + bump_price) * 100) THEN
+            RAISE EXCEPTION 'Amount mismatch with bump: expected % cents (product % + bump %), got % cents',
+              ((product_record.price + bump_price) * 100),
+              (product_record.price * 100),
+              (bump_price * 100),
+              amount_total;
+          END IF;
+        ELSE
+          -- Validate: amount = main product only (no bump or bump has no price)
+          IF amount_total != (product_record.price * 100) THEN
+            RAISE EXCEPTION 'Amount mismatch: expected % cents, got % cents',
+              (product_record.price * 100), amount_total;
+          END IF;
+        END IF;
+      ELSE
+        -- Coupon applied: only validate amount is reasonable (not zero/negative/too high)
+        -- Cannot validate exact amount without fetching coupon details
+        IF amount_total <= 0 THEN
+          RAISE EXCEPTION 'Invalid amount with coupon: amount cannot be zero or negative';
+        END IF;
+
+        IF bump_price IS NOT NULL THEN
+          IF amount_total > ((product_record.price + bump_price) * 100) THEN
+            RAISE EXCEPTION 'Amount too high with coupon: got % cents but max possible is % cents',
+              amount_total, ((product_record.price + bump_price) * 100);
+          END IF;
+        ELSE
+          IF amount_total > (product_record.price * 100) THEN
+            RAISE EXCEPTION 'Amount too high with coupon: got % cents but max possible is % cents',
+              amount_total, (product_record.price * 100);
+          END IF;
+        END IF;
+      END IF;
+    END;
   END IF;
 
   -- Find existing user
@@ -705,8 +787,35 @@ BEGIN
     -- This is done atomically to prevent race conditions
     PERFORM public.increment_sale_quantity_sold(product_id_param);
 
-    -- Handle coupon redemption
+    -- SECURITY FIX: Handle coupon redemption with reservation system
     IF coupon_id_param IS NOT NULL THEN
+      -- STEP 1: Verify and consume reservation
+      DELETE FROM public.coupon_reservations
+      WHERE coupon_id = coupon_id_param
+        AND customer_email = customer_email_param
+        AND expires_at > NOW();
+
+      IF NOT FOUND THEN
+        -- No valid reservation - this should not happen if frontend uses verify_coupon first
+        -- But we handle it gracefully: reject the payment
+        RAISE EXCEPTION 'No valid coupon reservation found. Coupon may have expired or reached limit.';
+      END IF;
+
+      -- STEP 2: Atomic increment (reservation guarantees this will succeed)
+      -- We still do atomic check as defense-in-depth
+      UPDATE public.coupons
+      SET current_usage_count = COALESCE(current_usage_count, 0) + 1
+      WHERE id = coupon_id_param
+        AND is_active = true
+        AND (usage_limit_global IS NULL OR COALESCE(current_usage_count, 0) < usage_limit_global);
+
+      IF NOT FOUND THEN
+        -- This should never happen if reservation system works correctly
+        -- But if it does, we handle it gracefully
+        RAISE EXCEPTION 'Coupon limit reached despite reservation (system error)';
+      END IF;
+
+      -- STEP 3: Record redemption
       INSERT INTO public.coupon_redemptions (
         coupon_id, user_id, customer_email, transaction_id, discount_amount
       ) VALUES (
@@ -716,10 +825,6 @@ BEGIN
         transaction_id_var,
         0
       );
-
-      UPDATE public.coupons
-      SET current_usage_count = current_usage_count + 1
-      WHERE id = coupon_id_param;
     END IF;
 
     -- SCENARIO 1: Logged-in user
@@ -803,10 +908,19 @@ CREATE OR REPLACE FUNCTION public.verify_coupon(
 DECLARE
   coupon_record RECORD;
   user_usage_count INTEGER;
+  reserved_count INTEGER;
+  available_slots INTEGER;
+  existing_reservation_id UUID;
 BEGIN
+  -- STEP 1: Self-cleaning - remove expired reservations
+  -- This happens automatically on every verify call (no cron needed!)
+  DELETE FROM public.coupon_reservations WHERE expires_at < NOW();
+
+  -- STEP 2: Lock coupon row (must use FOR UPDATE to ensure atomicity)
   SELECT * INTO coupon_record
   FROM public.coupons
-  WHERE code = code_param AND is_active = true;
+  WHERE code = code_param AND is_active = true
+  FOR UPDATE;
 
   IF NOT FOUND THEN
     RETURN jsonb_build_object('valid', false, 'error', 'Invalid code');
@@ -818,10 +932,6 @@ BEGIN
 
   IF coupon_record.starts_at > NOW() THEN
     RETURN jsonb_build_object('valid', false, 'error', 'Code not active yet');
-  END IF;
-
-  IF coupon_record.usage_limit_global IS NOT NULL AND coupon_record.current_usage_count >= coupon_record.usage_limit_global THEN
-    RETURN jsonb_build_object('valid', false, 'error', 'Code usage limit reached');
   END IF;
 
   IF coupon_record.discount_type = 'fixed' AND coupon_record.currency IS NOT NULL AND coupon_record.currency != currency_param THEN
@@ -840,6 +950,7 @@ BEGIN
     END IF;
   END IF;
 
+  -- STEP 3: Check per-user limit (actual redemptions)
   IF customer_email_param IS NOT NULL THEN
     SELECT COUNT(*) INTO user_usage_count
     FROM public.coupon_redemptions
@@ -850,13 +961,71 @@ BEGIN
     END IF;
   END IF;
 
+  -- STEP 4: Check if user already has an active reservation
+  IF customer_email_param IS NOT NULL THEN
+    SELECT id INTO existing_reservation_id
+    FROM public.coupon_reservations
+    WHERE coupon_id = coupon_record.id
+      AND customer_email = customer_email_param
+      AND expires_at > NOW();
+
+    IF existing_reservation_id IS NOT NULL THEN
+      -- User already reserved - return success with existing reservation
+      RETURN jsonb_build_object(
+        'valid', true,
+        'id', coupon_record.id,
+        'code', coupon_record.code,
+        'discount_type', coupon_record.discount_type,
+        'discount_value', coupon_record.discount_value,
+        'exclude_order_bumps', coupon_record.exclude_order_bumps,
+        'already_reserved', true,
+        'reservation_id', existing_reservation_id
+      );
+    END IF;
+  END IF;
+
+  -- STEP 5: Calculate available slots (global limit with reservations)
+  IF coupon_record.usage_limit_global IS NOT NULL THEN
+    -- Count active reservations
+    SELECT COUNT(*) INTO reserved_count
+    FROM public.coupon_reservations
+    WHERE coupon_id = coupon_record.id AND expires_at > NOW();
+
+    -- Available = limit - redemptions - reservations
+    available_slots := coupon_record.usage_limit_global
+                     - coupon_record.current_usage_count
+                     - reserved_count;
+
+    IF available_slots <= 0 THEN
+      RETURN jsonb_build_object('valid', false, 'error', 'Code usage limit reached');
+    END IF;
+  END IF;
+
+  -- STEP 6: CREATE RESERVATION (15 minute expiry)
+  IF customer_email_param IS NOT NULL THEN
+    INSERT INTO public.coupon_reservations (
+      coupon_id,
+      customer_email,
+      expires_at
+    ) VALUES (
+      coupon_record.id,
+      customer_email_param,
+      NOW() + INTERVAL '15 minutes'
+    )
+    ON CONFLICT (coupon_id, customer_email) DO UPDATE
+    SET expires_at = NOW() + INTERVAL '15 minutes',
+        reserved_at = NOW();
+  END IF;
+
   RETURN jsonb_build_object(
     'valid', true,
     'id', coupon_record.id,
     'code', coupon_record.code,
     'discount_type', coupon_record.discount_type,
     'discount_value', coupon_record.discount_value,
-    'exclude_order_bumps', coupon_record.exclude_order_bumps
+    'exclude_order_bumps', coupon_record.exclude_order_bumps,
+    'reserved', true,
+    'expires_in_minutes', 15
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
@@ -868,6 +1037,7 @@ CREATE OR REPLACE FUNCTION public.find_auto_apply_coupon(
 DECLARE
   coupon_record RECORD;
 BEGIN
+  -- SECURITY FIX: Add FOR UPDATE SKIP LOCKED to prevent race conditions
   SELECT * INTO coupon_record
   FROM public.coupons
   WHERE is_active = true
@@ -880,7 +1050,8 @@ BEGIN
     AND (starts_at <= NOW())
     AND (usage_limit_global IS NULL OR current_usage_count < usage_limit_global)
   ORDER BY created_at DESC
-  LIMIT 1;
+  LIMIT 1
+  FOR UPDATE SKIP LOCKED;
 
   IF NOT FOUND THEN
     RETURN jsonb_build_object('found', false);
@@ -1292,6 +1463,7 @@ ALTER TABLE public.video_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_bumps ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.coupons ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.coupon_redemptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.coupon_reservations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.webhook_endpoints ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.webhook_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.integrations_config ENABLE ROW LEVEL SECURITY;
@@ -1391,6 +1563,13 @@ CREATE POLICY "Service role full access redemptions" ON public.coupon_redemption
 
 CREATE POLICY "Users view own redemptions" ON public.coupon_redemptions
   FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Admins full access reservations" ON public.coupon_reservations
+  FOR ALL TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()));
+
+CREATE POLICY "Service role full access reservations" ON public.coupon_reservations
+  FOR ALL TO service_role USING (true) WITH CHECK (true);
 
 -- -----------------------------------------------------------------------------
 -- WEBHOOKS POLICIES

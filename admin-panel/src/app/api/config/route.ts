@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ConfigGenerator } from '@/lib/config-generator';
+import { checkRateLimit } from '@/lib/rate-limiting';
+import { handleConditionalRequest, createScriptResponse } from '@/lib/script-cache';
 
 /**
  * Dynamic Config.js Generator API
@@ -8,9 +10,26 @@ import { ConfigGenerator } from '@/lib/config-generator';
  */
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting: 60 requests per minute
+    const rateLimitOk = await checkRateLimit('config_js', 60, 60);
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
     // Get configuration from environment variables (runtime config)
-    const supabaseUrl = process.env.SUPABASE_URL || 'http://127.0.0.1:54321';
-    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return NextResponse.json({
+        error: 'Supabase configuration missing',
+        message: 'SUPABASE_URL and SUPABASE_ANON_KEY must be set in environment variables',
+        timestamp: new Date().toISOString()
+      }, { status: 500 });
+    }
     
     // Get optional parameters from query string
     const { searchParams } = new URL(request.url);
@@ -28,22 +47,27 @@ export async function GET(request: NextRequest) {
       format,
       customDomain
     });
-    
+
+    // CORS headers
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    };
+
+    // Check for conditional request (ETag/If-None-Match)
+    const conditionalResponse = handleConditionalRequest(request, result.hash, corsHeaders);
+    if (conditionalResponse) {
+      return conditionalResponse;
+    }
+
     // Return with proper headers
-    return new NextResponse(result.content, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/javascript',
-        'Cache-Control': 'public, max-age=1800', // Cache for 30 minutes
-        'X-Generated-At': result.lastModified.toISOString(),
-        'X-Environment': environment,
-        'X-Format': format,
-        'X-Content-Hash': result.hash,
-        'X-Config-Size': result.content.length.toString(),
-        'Access-Control-Allow-Origin': '*', // Allow cross-origin requests
-        'Access-Control-Allow-Methods': 'GET',
-        'Access-Control-Allow-Headers': 'Content-Type'
-      }
+    return createScriptResponse(result.content, result.hash, {
+      ...corsHeaders,
+      'X-Generated-At': result.lastModified.toISOString(),
+      'X-Environment': environment,
+      'X-Format': format,
+      'X-Config-Size': result.content.length.toString(),
     });
     
   } catch (error) {

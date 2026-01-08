@@ -1,37 +1,33 @@
 import { test, expect, Page } from '@playwright/test';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from './helpers/admin-auth';
 
 /**
  * Payment Status Redirect E2E Tests
  *
  * Strategy: Insert mock payment data directly into database.
- * The verifyPaymentSession function checks database first before calling Stripe.
+ * Creates own test data - independent from seed.sql
  */
 
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// For browser-side login
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-
-const JOHN_DOE = {
-  email: 'john.doe@example.com',
-  password: 'password123',
-  id: 'aaaaaaaa-1111-4111-a111-111111111111',
+// Will be set in beforeAll
+let TEST_USER: { id: string; email: string; password: string };
+let PRODUCTS: {
+  otoActive: string;
+  productRedirect: string;
+  customRedirect: string;
+  otoOwned: string;
+  noRedirect: string;
+  otoTarget: string;
 };
+let PRODUCT_IDS: Record<string, string> = {};
+let OTO_OFFER_IDS: string[] = [];
 
-const GUEST_EMAIL = 'guest-test@example.com';
+const GUEST_EMAIL = `guest-test-${Date.now()}@example.com`;
 
-const PRODUCTS = {
-  otoActive: 'test-oto-active',
-  productRedirect: 'test-product-redirect',
-  customRedirect: 'test-custom-redirect',
-  otoOwned: 'test-oto-owned',
-  noRedirect: 'test-no-redirect',
-  otoTarget: 'test-oto-target',
-};
-
-async function loginAsJohnDoe(page: Page) {
+async function loginAsTestUser(page: Page) {
   await page.goto('/');
   await page.waitForLoadState('domcontentloaded');
 
@@ -40,8 +36,8 @@ async function loginAsJohnDoe(page: Page) {
     const supabase = createBrowserClient(supabaseUrl, anonKey);
     await supabase.auth.signInWithPassword({ email, password });
   }, {
-    email: JOHN_DOE.email,
-    password: JOHN_DOE.password,
+    email: TEST_USER.email,
+    password: TEST_USER.password,
     supabaseUrl: SUPABASE_URL,
     anonKey: ANON_KEY,
   });
@@ -110,21 +106,127 @@ function generateSessionId(prefix: string): string {
   return `cs_test_${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-// Global setup - ensure all test products are active
+// Global setup - create test data
 test.beforeAll(async () => {
-  const productSlugs = Object.values(PRODUCTS);
-  for (const slug of productSlugs) {
-    await supabaseAdmin.from('products').update({ is_active: true }).eq('slug', slug);
+  const suffix = Date.now().toString();
+
+  // Create test user
+  const email = `redirect-test-${suffix}@test.local`;
+  const password = 'TestPassword123!';
+  const { data: { user }, error: userErr } = await supabaseAdmin.auth.admin.createUser({
+    email, password, email_confirm: true,
+  });
+  if (userErr) throw userErr;
+  TEST_USER = { id: user!.id, email, password };
+
+  // Create OTO target product first (needed by other products)
+  const { data: otoTarget } = await supabaseAdmin.from('products').insert({
+    name: `OTO Target ${suffix}`, slug: `test-oto-target-${suffix}`,
+    price: 9.99, currency: 'USD', is_active: true,
+  }).select().single();
+
+  // Create test-oto-active (has OTO offer)
+  const { data: otoActive } = await supabaseAdmin.from('products').insert({
+    name: `OTO Active ${suffix}`, slug: `test-oto-active-${suffix}`,
+    price: 19.99, currency: 'USD', is_active: true,
+  }).select().single();
+
+  // Create test-product-redirect (internal redirect)
+  const { data: productRedirect } = await supabaseAdmin.from('products').insert({
+    name: `Product Redirect ${suffix}`, slug: `test-product-redirect-${suffix}`,
+    price: 29.99, currency: 'USD', is_active: true,
+    success_redirect_url: `/p/test-oto-target-${suffix}`, pass_params_to_redirect: true,
+  }).select().single();
+
+  // Create test-custom-redirect (external URL)
+  const { data: customRedirect } = await supabaseAdmin.from('products').insert({
+    name: `Custom Redirect ${suffix}`, slug: `test-custom-redirect-${suffix}`,
+    price: 39.99, currency: 'USD', is_active: true,
+    success_redirect_url: 'https://google.com', pass_params_to_redirect: true,
+  }).select().single();
+
+  // Create test-oto-owned (OTO but user owns target)
+  const { data: otoOwned } = await supabaseAdmin.from('products').insert({
+    name: `OTO Owned ${suffix}`, slug: `test-oto-owned-${suffix}`,
+    price: 24.99, currency: 'USD', is_active: true,
+  }).select().single();
+
+  // Create test-no-redirect (plain product)
+  const { data: noRedirect } = await supabaseAdmin.from('products').insert({
+    name: `No Redirect ${suffix}`, slug: `test-no-redirect-${suffix}`,
+    price: 14.99, currency: 'USD', is_active: true,
+  }).select().single();
+
+  PRODUCTS = {
+    otoActive: otoActive!.slug,
+    productRedirect: productRedirect!.slug,
+    customRedirect: customRedirect!.slug,
+    otoOwned: otoOwned!.slug,
+    noRedirect: noRedirect!.slug,
+    otoTarget: otoTarget!.slug,
+  };
+
+  PRODUCT_IDS = {
+    [otoActive!.slug]: otoActive!.id,
+    [productRedirect!.slug]: productRedirect!.id,
+    [customRedirect!.slug]: customRedirect!.id,
+    [otoOwned!.slug]: otoOwned!.id,
+    [noRedirect!.slug]: noRedirect!.id,
+    [otoTarget!.slug]: otoTarget!.id,
+  };
+
+  // Create OTO offers
+  const { data: oto1 } = await supabaseAdmin.from('oto_offers').insert({
+    source_product_id: otoActive!.id, oto_product_id: otoTarget!.id,
+    discount_type: 'percentage', discount_value: 20, duration_minutes: 15, is_active: true,
+  }).select().single();
+  const { data: oto2 } = await supabaseAdmin.from('oto_offers').insert({
+    source_product_id: otoOwned!.id, oto_product_id: otoTarget!.id,
+    discount_type: 'percentage', discount_value: 25, duration_minutes: 20, is_active: true,
+  }).select().single();
+  OTO_OFFER_IDS = [oto1!.id, oto2!.id];
+
+  // Give TEST_USER access to otoTarget (for test-oto-owned scenario)
+  await supabaseAdmin.from('user_product_access').insert({
+    user_id: TEST_USER.id, product_id: otoTarget!.id,
+    access_granted_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+  });
+
+  console.log('Created test user:', TEST_USER.email);
+  console.log('Created test products:', Object.values(PRODUCTS));
+});
+
+// Global teardown - cleanup test data
+test.afterAll(async () => {
+  console.log('Cleaning up test data...');
+
+  if (TEST_USER?.id) {
+    await supabaseAdmin.from('user_product_access').delete().eq('user_id', TEST_USER.id);
+    await supabaseAdmin.from('payment_transactions').delete().eq('user_id', TEST_USER.id);
   }
-  console.log('Activated test products:', productSlugs);
+
+  for (const otoId of OTO_OFFER_IDS) {
+    await supabaseAdmin.from('oto_offers').delete().eq('id', otoId);
+  }
+
+  for (const productId of Object.values(PRODUCT_IDS)) {
+    await supabaseAdmin.from('guest_purchases').delete().eq('product_id', productId);
+    await supabaseAdmin.from('payment_transactions').delete().eq('product_id', productId);
+    await supabaseAdmin.from('products').delete().eq('id', productId);
+  }
+
+  if (TEST_USER?.id) {
+    await supabaseAdmin.from('profiles').delete().eq('id', TEST_USER.id);
+    await supabaseAdmin.auth.admin.deleteUser(TEST_USER.id);
+  }
 });
 
 test.describe('Payment Status Redirect - Logged-in User', () => {
-  // Run tests serially because they share john.doe's product access data
+  // Run tests serially because they share TEST_USER's product access data
   test.describe.configure({ mode: 'serial' });
 
   test.beforeEach(async ({ page }) => {
-    await loginAsJohnDoe(page);
+    await loginAsTestUser(page);
   });
 
   test('test-oto-active: should show OTO offer after purchase', async ({ page }) => {
@@ -135,15 +237,15 @@ test.describe('Payment Status Redirect - Logged-in User', () => {
     await supabaseAdmin
       .from('user_product_access')
       .delete()
-      .eq('user_id', JOHN_DOE.id)
+      .eq('user_id', TEST_USER.id)
       .eq('product_id', otoTarget!.id);
 
     try {
       await createMockPayment({
         sessionId,
         productSlug: PRODUCTS.otoActive,
-        email: JOHN_DOE.email,
-        userId: JOHN_DOE.id,
+        email: TEST_USER.email,
+        userId: TEST_USER.id,
       });
 
       await page.goto(`/p/${PRODUCTS.otoActive}/payment-status?session_id=${sessionId}`);
@@ -156,7 +258,7 @@ test.describe('Payment Status Redirect - Logged-in User', () => {
       await supabaseAdmin
         .from('user_product_access')
         .upsert({
-          user_id: JOHN_DOE.id,
+          user_id: TEST_USER.id,
           product_id: otoTarget!.id,
           access_granted_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
         }, { onConflict: 'user_id,product_id' });
@@ -171,14 +273,14 @@ test.describe('Payment Status Redirect - Logged-in User', () => {
       await createMockPayment({
         sessionId,
         productSlug: PRODUCTS.productRedirect,
-        email: JOHN_DOE.email,
-        userId: JOHN_DOE.id,
+        email: TEST_USER.email,
+        userId: TEST_USER.id,
       });
 
       await page.goto(`/p/${PRODUCTS.productRedirect}/payment-status?session_id=${sessionId}`);
 
-      // Should redirect to premium-course (either see payment success first or direct redirect)
-      await page.waitForURL(/\/p\/premium-course/, { timeout: 15000 });
+      // Should redirect to otoTarget product (configured in setup)
+      await page.waitForURL(new RegExp(`/p/${PRODUCTS.otoTarget}`), { timeout: 15000 });
     } finally {
       await cleanupMockPayment(sessionId);
     }
@@ -191,8 +293,8 @@ test.describe('Payment Status Redirect - Logged-in User', () => {
       await createMockPayment({
         sessionId,
         productSlug: PRODUCTS.customRedirect,
-        email: JOHN_DOE.email,
-        userId: JOHN_DOE.id,
+        email: TEST_USER.email,
+        userId: TEST_USER.id,
       });
 
       let redirectUrl: string | null = null;
@@ -218,8 +320,8 @@ test.describe('Payment Status Redirect - Logged-in User', () => {
       await createMockPayment({
         sessionId,
         productSlug: PRODUCTS.otoOwned,
-        email: JOHN_DOE.email,
-        userId: JOHN_DOE.id,
+        email: TEST_USER.email,
+        userId: TEST_USER.id,
       });
 
       await page.goto(`/p/${PRODUCTS.otoOwned}/payment-status?session_id=${sessionId}`);
@@ -241,8 +343,8 @@ test.describe('Payment Status Redirect - Logged-in User', () => {
       await createMockPayment({
         sessionId,
         productSlug: PRODUCTS.noRedirect,
-        email: JOHN_DOE.email,
-        userId: JOHN_DOE.id,
+        email: TEST_USER.email,
+        userId: TEST_USER.id,
       });
 
       await page.goto(`/p/${PRODUCTS.noRedirect}/payment-status?session_id=${sessionId}`);

@@ -86,7 +86,15 @@ export async function POST(request: NextRequest) {
 
     // 3. Validate PWYW (Pay What You Want) custom pricing
     const STRIPE_MAX_AMOUNT = 999999.99; // Stripe's maximum amount limit
-    if (customAmount !== undefined && customAmount > 0) {
+    if (customAmount !== undefined) {
+      // SECURITY: Explicitly reject zero or negative amounts
+      if (customAmount <= 0) {
+        return NextResponse.json(
+          { error: 'Custom amount must be greater than zero' },
+          { status: 400 }
+        );
+      }
+
       // Security: Reject customAmount if product doesn't allow custom pricing
       if (!product.allow_custom_price) {
         return NextResponse.json(
@@ -113,38 +121,73 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 4. Fetch bump product if selected
+    // 4. Fetch and validate bump product if selected
+    // SECURITY: Must validate that bumpProductId is a valid order bump for this product
     let bumpProduct = null;
+    let bumpPrice = 0;
     if (bumpProductId) {
-      const { data: bump } = await supabase
-        .from('products')
-        .select('*')
-        .eq('id', bumpProductId)
-        .eq('is_active', true)
-        .single();
+      // Use the same RPC function that frontend uses to get valid bumps
+      const { data: validBumps } = await supabase.rpc('get_product_order_bumps', {
+        product_id_param: productId,
+      });
 
-      if (bump && bump.currency === product.currency) {
-        bumpProduct = bump;
+      // Find if the requested bump is in the valid bumps list
+      const validBump = validBumps?.find((b: any) => b.bump_product_id === bumpProductId);
+
+      if (validBump && validBump.bump_currency === product.currency) {
+        // Fetch full product data for metadata
+        const { data: bump } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', bumpProductId)
+          .single();
+
+        if (bump) {
+          bumpProduct = bump;
+          // SECURITY: Use the bump_price from order_bumps, not the product's regular price
+          bumpPrice = validBump.bump_price;
+        }
       }
+      // If bumpProductId is not a valid bump for this product, silently ignore it
+      // (could also return 400 error, but ignoring is more user-friendly)
     }
 
-    // 5. Fetch and validate coupon
+    // 5. Fetch and validate coupon using secure DB function
+    // SECURITY: Must use verify_coupon RPC which checks all constraints:
+    // - usage_limit_global, usage_limit_per_user
+    // - expires_at, starts_at
+    // - allowed_emails, allowed_product_ids
+    // - Race condition prevention with reservations
     let appliedCoupon = null;
     if (couponCode) {
-      const { data: coupon } = await supabase
-        .from('coupons')
-        .select('*')
-        .eq('code', couponCode.toUpperCase())
-        .eq('is_active', true)
-        .single();
+      const { data: couponResult, error: couponError } = await supabase.rpc('verify_coupon', {
+        code_param: couponCode.toUpperCase(),
+        product_id_param: productId,
+        customer_email_param: finalEmail || null,
+        currency_param: product.currency,
+      });
 
-      if (coupon) {
-        const isValidForProduct = coupon.applies_to_all_products ||
-          (coupon.applicable_product_ids && coupon.applicable_product_ids.includes(productId));
-
-        if (isValidForProduct) {
-          appliedCoupon = coupon;
-        }
+      if (couponError) {
+        console.error('Coupon verification error:', couponError);
+        return NextResponse.json(
+          { error: 'Failed to verify coupon. Please try again.' },
+          { status: 500 }
+        );
+      } else if (couponResult?.valid) {
+        appliedCoupon = {
+          id: couponResult.id,
+          code: couponResult.code,
+          discount_type: couponResult.discount_type,
+          discount_value: couponResult.discount_value,
+          exclude_order_bumps: couponResult.exclude_order_bumps,
+        };
+      } else {
+        // SECURITY: Don't silently ignore invalid coupon - user expects discount!
+        // This prevents charging full price when user thought they had a discount
+        return NextResponse.json(
+          { error: couponResult?.error || 'Coupon code is no longer valid. Please remove it and try again.' },
+          { status: 400 }
+        );
       }
     }
 
@@ -153,12 +196,13 @@ export async function POST(request: NextRequest) {
       productPrice: product.price,
       productCurrency: product.currency,
       customAmount,
-      bumpPrice: bumpProduct?.price,
+      bumpPrice: bumpPrice, // SECURITY: Use validated bump_price from order_bumps, not product.price
       bumpSelected: !!bumpProduct,
       coupon: appliedCoupon ? {
         discount_type: appliedCoupon.discount_type,
         discount_value: appliedCoupon.discount_value,
         code: appliedCoupon.code,
+        exclude_order_bumps: appliedCoupon.exclude_order_bumps,
       } : null,
     });
 
@@ -186,7 +230,7 @@ export async function POST(request: NextRequest) {
         first_name: firstName || '',
         last_name: lastName || '',
         terms_accepted: termsAccepted ? 'true' : '',
-        bump_product_id: bumpProductId || '',
+        bump_product_id: bumpProduct?.id || '',  // Only set if bump was validated and applied
         bump_product_name: bumpProduct?.name || '',
         coupon_code: appliedCoupon?.code || '',
         coupon_discount: appliedCoupon ? `${appliedCoupon.discount_value}${appliedCoupon.discount_type === 'percentage' ? '%' : product.currency}` : '',

@@ -14,6 +14,8 @@ test.describe('Waitlist Feature', () => {
   let testProductWithWaitlistSlug: string;
   let testProductWithoutWaitlistId: string;
   let testProductWithoutWaitlistSlug: string;
+  let testProductActiveWithWaitlistId: string;
+  let testProductActiveWithWaitlistSlug: string;
 
   /**
    * Helper to create a test product
@@ -101,7 +103,7 @@ test.describe('Waitlist Feature', () => {
 
   // Create test products before all tests
   test.beforeAll(async () => {
-    const timestamp = Date.now();
+    const timestamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     // Create product with waitlist enabled (inactive)
     const withWaitlist = await createTestProduct({
@@ -122,6 +124,16 @@ test.describe('Waitlist Feature', () => {
     });
     testProductWithoutWaitlistId = withoutWaitlist.id;
     testProductWithoutWaitlistSlug = withoutWaitlist.slug;
+
+    // Create ACTIVE product with waitlist enabled (for webhook warning tests)
+    const activeWithWaitlist = await createTestProduct({
+      name: 'Test Active Waitlist Product',
+      slug: `test-active-waitlist-${timestamp}`,
+      isActive: true,
+      enableWaitlist: true,
+    });
+    testProductActiveWithWaitlistId = activeWithWaitlist.id;
+    testProductActiveWithWaitlistSlug = activeWithWaitlist.slug;
   });
 
   // Clean up test products after all tests
@@ -131,6 +143,9 @@ test.describe('Waitlist Feature', () => {
     }
     if (testProductWithoutWaitlistId) {
       await deleteTestProduct(testProductWithoutWaitlistId);
+    }
+    if (testProductActiveWithWaitlistId) {
+      await deleteTestProduct(testProductActiveWithWaitlistId);
     }
   });
 
@@ -383,8 +398,8 @@ test.describe('Waitlist Feature', () => {
    */
   test.describe('Debug - Check Waitlist Setup', () => {
     test('check checkout page response', async ({ page, request }) => {
-      // Direct API check for product
-      const productResponse = await request.get('/api/public/products/test-oto-target');
+      // Direct API check for product (use dynamically created product)
+      const productResponse = await request.get(`/api/public/products/${testProductWithWaitlistSlug}`);
       console.log('Product API response status:', productResponse.status());
       if (productResponse.ok()) {
         const product = await productResponse.json();
@@ -394,7 +409,7 @@ test.describe('Waitlist Feature', () => {
       }
 
       // Check checkout page
-      const checkoutResponse = await page.goto('/pl/checkout/test-oto-target');
+      const checkoutResponse = await page.goto(`/pl/checkout/${testProductWithWaitlistSlug}`);
       console.log('Checkout page status:', checkoutResponse?.status());
 
       // Log page content
@@ -556,8 +571,8 @@ test.describe('Waitlist Feature', () => {
       // SETUP: Create exactly one waitlist webhook and ensure a product has waitlist enabled
       await deleteAllWaitlistWebhooks();
       const webhookId = await createWaitlistWebhook();
-      // Use any existing product - 'test-oto-active' is always available
-      await setProductWaitlistBySlug('test-oto-active', true);
+      // Use dynamically created product
+      await setProductWaitlistBySlug(testProductActiveWithWaitlistSlug, true);
 
       try {
         await loginAsAdmin(page, adminEmail, adminPassword);
@@ -590,7 +605,7 @@ test.describe('Waitlist Feature', () => {
       } finally {
         // CLEANUP - delete the webhook we created and reset product
         await deleteWebhook(webhookId);
-        await setProductWaitlistBySlug('test-oto-active', false);
+        await setProductWaitlistBySlug(testProductActiveWithWaitlistSlug, false);
       }
     });
 
@@ -598,7 +613,7 @@ test.describe('Waitlist Feature', () => {
       // SETUP: Create exactly one waitlist webhook and ensure a product has waitlist enabled
       await deleteAllWaitlistWebhooks();
       const webhookId = await createWaitlistWebhook();
-      await setProductWaitlistBySlug('test-oto-active', true);
+      await setProductWaitlistBySlug(testProductActiveWithWaitlistSlug, true);
 
       try {
         await loginAsAdmin(page, adminEmail, adminPassword);
@@ -644,7 +659,7 @@ test.describe('Waitlist Feature', () => {
       } finally {
         // CLEANUP
         await deleteWebhook(webhookId);
-        await setProductWaitlistBySlug('test-oto-active', false);
+        await setProductWaitlistBySlug(testProductActiveWithWaitlistSlug, false);
       }
     });
   });

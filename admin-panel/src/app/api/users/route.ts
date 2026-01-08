@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireAdminApi } from '@/lib/auth-server';
-import { 
-  validateUserAction, 
-  sanitizeUserActionData 
+import {
+  validateUserAction,
+  sanitizeUserActionData
 } from '@/lib/validations/access';
+import { escapeIlikePattern } from '@/lib/validations/product';
 
 export async function GET(request: NextRequest) {
   try {
@@ -44,9 +45,10 @@ export async function GET(request: NextRequest) {
       .from('user_access_stats')
       .select('*', { count: 'exact' });
 
-    // Apply search filter
+    // SECURITY FIX (V13): Escape ILIKE special characters to prevent pattern injection
     if (searchTerm) {
-      query = query.ilike('email', `%${searchTerm}%`);
+      const escapedSearchTerm = escapeIlikePattern(searchTerm);
+      query = query.ilike('email', `%${escapedSearchTerm}%`);
     }
     
     // Get users with their access statistics from the view

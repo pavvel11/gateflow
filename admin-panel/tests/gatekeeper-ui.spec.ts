@@ -142,24 +142,26 @@ test.describe('Gatekeeper UI Protection Tests', () => {
 
   test.describe('External Pages - Anonymous Access', () => {
 
-    test('Page protection: anonymous user is redirected to product page', async ({ page }) => {
+    test('Page protection: anonymous user is redirected to checkout', async ({ page }) => {
       const testPageUrl = `${STATIC_SERVER_URL}/page-protection.html?product=${paidProduct.slug}&apiUrl=${NEXT_JS_URL}`;
 
       await page.goto(testPageUrl);
 
-      // Wait for gatekeeper to load and process - it should redirect anonymous user
-      // The redirect goes to http://localhost:3000/p/{slug}?return_url=...
-      await page.waitForURL(url => url.hostname === 'localhost' && url.port === '3000', { timeout: 15000 });
+      // Wait for full redirect chain: gatekeeper -> /p/{slug} -> /checkout/{slug}
+      // The useProductAccess hook redirects users without access to checkout
+      await page.waitForURL(url =>
+        url.hostname === 'localhost' &&
+        url.port === '3000' &&
+        url.pathname.includes('/checkout/'),
+        { timeout: 15000 }
+      );
 
       const currentUrl = page.url();
 
-      // Should redirect to product page on Next.js server (port 3000, not 3002)
+      // Should redirect to checkout page on Next.js server (port 3000, not 3002)
+      // Anonymous user without access gets redirected to checkout to purchase
       expect(currentUrl).toMatch(/^http:\/\/localhost:3000/);
-      expect(currentUrl).toContain(`/p/${paidProduct.slug}`);
-
-      // Should include return_url parameter for post-login redirect
-      expect(currentUrl).toContain('return_url=');
-      expect(currentUrl).toContain(encodeURIComponent('localhost:3002'));
+      expect(currentUrl).toContain(`/checkout/${paidProduct.slug}`);
     });
 
     test('Element protection: anonymous user sees fallback content', async ({ page }) => {

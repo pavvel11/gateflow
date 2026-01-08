@@ -1049,8 +1049,12 @@ CREATE POLICY "Allow admin users to read audit logs" ON audit_log
   );
 
 -- Allow system to insert audit logs (for triggers and functions)
+-- SECURITY FIX (V-CRITICAL-09): Restricted to service_role only to prevent audit log forgery
+-- The log_audit_entry() function uses SECURITY DEFINER which bypasses RLS,
+-- so legitimate audit logging from triggers and functions still works.
 CREATE POLICY "Allow system to insert audit logs" ON audit_log
   FOR INSERT
+  TO service_role
   WITH CHECK (true);
 
 -- Combined SELECT policy for rate limits

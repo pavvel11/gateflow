@@ -127,6 +127,12 @@ CREATE TABLE IF NOT EXISTS payment_transactions (
   refunded_amount NUMERIC DEFAULT 0 CHECK (refunded_amount >= 0 AND refunded_amount IS NOT NULL), -- Refunded amount in cents, must be non-negative and not null
   refunded_at TIMESTAMPTZ,
   refunded_by UUID REFERENCES auth.users(id), -- Admin who processed refund
+  refund_id TEXT CHECK (
+    refund_id IS NULL OR (
+      length(refund_id) BETWEEN 1 AND 255 AND
+      refund_id ~* '^re_[a-zA-Z0-9_]+$'
+    )
+  ), -- Stripe refund ID (re_xxx)
   refund_reason TEXT CHECK (refund_reason IS NULL OR length(refund_reason) BETWEEN 1 AND 1000),
   metadata JSONB DEFAULT '{}' NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,

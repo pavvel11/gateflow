@@ -17,6 +17,7 @@ export interface PricingInput {
     discount_type: 'percentage' | 'fixed';
     discount_value: number;
     code: string;
+    exclude_order_bumps?: boolean;
   } | null;
 }
 
@@ -59,12 +60,14 @@ export function calculatePricing(input: PricingInput): PricingResult {
   const subtotal = basePrice + bumpAmount;
 
   // Apply coupon discount
+  // If exclude_order_bumps is true, discount applies only to basePrice (not bump)
   let discountAmount = 0;
   if (coupon) {
+    const discountBase = coupon.exclude_order_bumps ? basePrice : subtotal;
     if (coupon.discount_type === 'percentage') {
-      discountAmount = subtotal * (coupon.discount_value / 100);
+      discountAmount = discountBase * (coupon.discount_value / 100);
     } else {
-      discountAmount = coupon.discount_value;
+      discountAmount = Math.min(coupon.discount_value, discountBase);
     }
   }
 

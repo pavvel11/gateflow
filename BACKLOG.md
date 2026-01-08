@@ -321,6 +321,197 @@ export async function rateLimit(
 
 ### 🔌 Integrations & Automation
 
+#### Model Context Protocol (MCP) Server
+**Status**: 💭 Idea
+**Priority**: 🟡 Medium
+**Effort**: ~1-2 weeks
+**Description**: Implement MCP server for AI-powered management and automation of GateFlow through Claude and other AI assistants.
+
+**Why This Matters**:
+- **AI-Native Management**: Manage entire shop through conversational AI interface
+- **Automation**: Create complex workflows using natural language
+- **Developer Experience**: Integrate GateFlow with AI coding assistants
+- **Future-Proof**: MCP is Anthropic's open standard for AI-tool communication
+
+**Core Features**:
+
+1. **Product Management Tools**:
+   - `create_product`: Create new products with all metadata
+   - `update_product`: Modify existing products
+   - `list_products`: Query products with filters
+   - `delete_product`: Remove products
+   - `publish_product`: Toggle product visibility
+
+2. **Analytics & Reporting Tools**:
+   - `get_revenue_stats`: Fetch revenue data with date ranges
+   - `get_top_products`: Best sellers analysis
+   - `get_customer_stats`: Customer acquisition metrics
+   - `export_transactions`: Generate CSV reports
+
+3. **Customer Management Tools**:
+   - `list_customers`: Query customer database
+   - `get_customer_purchases`: Purchase history for specific customer
+   - `grant_access`: Manually grant product access
+   - `revoke_access`: Remove product access
+
+4. **Coupon & Promotion Tools**:
+   - `create_coupon`: Generate discount codes
+   - `list_coupons`: Query active/expired coupons
+   - `update_coupon`: Modify coupon rules
+   - `get_coupon_stats`: Track coupon performance
+
+5. **Order Management Tools**:
+   - `list_orders`: Query transactions with filters
+   - `get_order_details`: Full order information
+   - `process_refund`: Issue refunds programmatically
+   - `update_order_status`: Modify order states
+
+6. **Configuration Tools**:
+   - `get_shop_config`: Fetch shop settings
+   - `update_shop_config`: Modify branding, currency, etc.
+   - `test_integrations`: Verify Stripe/GUS/GTM connections
+
+**Example Use Cases**:
+
+```typescript
+// Conversational product creation with Claude
+User: "Create a new ebook product called 'AI Marketing Guide'
+      priced at $29 with a 20% launch discount"
+
+Claude → MCP Server → GateFlow:
+{
+  "tool": "create_product",
+  "arguments": {
+    "name": "AI Marketing Guide",
+    "price": 29,
+    "currency": "usd",
+    "coupon": {
+      "code": "LAUNCH20",
+      "discount": 20,
+      "type": "percentage"
+    }
+  }
+}
+
+// Analytics queries
+User: "Show me revenue for last 30 days grouped by product"
+Claude → get_revenue_stats → Returns formatted data & chart
+
+// Bulk operations
+User: "Give all customers from December access to the new course"
+Claude → list_customers → grant_access (batch) → Done
+```
+
+**Technical Architecture**:
+
+1. **MCP Server Implementation** (`/mcp-server`):
+   ```
+   /mcp-server/
+     /src/
+       server.ts          # Main MCP server
+       /tools/
+         products.ts      # Product management tools
+         analytics.ts     # Analytics tools
+         customers.ts     # Customer tools
+         orders.ts        # Order tools
+       /auth/
+         tokens.ts        # API key verification
+         rls.ts          # Row-level security
+   ```
+
+2. **Authentication**:
+   - Generate MCP API keys in `/dashboard/integrations`
+   - Key scopes: read-only, read-write, admin
+   - Rate limiting per key (leveraging existing system)
+
+3. **API Layer**:
+   - Reuse existing Next.js API routes or direct Supabase RPC
+   - All MCP tools call authenticated endpoints
+   - Standard error handling and validation
+
+4. **Tool Definitions** (MCP JSON Schema):
+   ```json
+   {
+     "name": "create_product",
+     "description": "Create a new digital product",
+     "inputSchema": {
+       "type": "object",
+       "properties": {
+         "name": { "type": "string" },
+         "price": { "type": "number" },
+         "currency": { "type": "string", "enum": ["usd", "eur", "pln"] }
+       },
+       "required": ["name", "price", "currency"]
+     }
+   }
+   ```
+
+5. **Deployment Options**:
+   - **Standalone Server**: Run MCP server separately (port 3001)
+   - **Embedded**: Integrate into main Next.js app as `/api/mcp/*`
+   - **Docker**: Package as separate container for self-hosted deployments
+
+**Security Considerations**:
+- ✅ All MCP calls require valid API key
+- ✅ Respect existing RLS policies (admin_users checks)
+- ✅ Rate limiting on destructive operations
+- ✅ Audit logging for all MCP actions
+- ⚠️ Disable by default, opt-in via admin panel
+- ⚠️ Warning about AI access to sensitive operations
+
+**Integration with Claude Desktop**:
+```json
+// claude_desktop_config.json
+{
+  "mcpServers": {
+    "gateflow": {
+      "command": "npx",
+      "args": ["@gateflow/mcp-server"],
+      "env": {
+        "GATEFLOW_API_URL": "https://yourshop.com",
+        "GATEFLOW_API_KEY": "gf_xxx"
+      }
+    }
+  }
+}
+```
+
+**Implementation Phases**:
+
+**Phase 1 (MVP)**: ~4-5 days
+- Basic MCP server structure
+- Authentication layer
+- 5 core tools: list_products, get_revenue_stats, create_product, list_orders, get_order_details
+- Documentation & setup guide
+
+**Phase 2 (Complete)**: ~1 week
+- All 20+ tools implemented
+- Admin UI for API key management
+- E2E tests for tool execution
+- MCP Server npm package (`@gateflow/mcp-server`)
+
+**Phase 3 (Advanced)**: ~3-4 days
+- Streaming support for large datasets
+- Webhook integration (trigger MCP actions via webhooks)
+- Claude Code skill integration
+- Examples & tutorials
+
+**References**:
+- [MCP Specification](https://modelcontextprotocol.io/)
+- [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)
+- [Claude MCP Integration](https://docs.anthropic.com/claude/docs/mcp)
+
+**Benefits**:
+- ✅ First self-hosted e-commerce platform with native AI management
+- ✅ Competitive advantage over Gumroad, Lemon Squeezy (they don't have MCP)
+- ✅ Developer-friendly automation for power users
+- ✅ Future-proof integration with AI ecosystem
+- ✅ Showcase GateFlow's technical sophistication
+
+**Note**: This is a forward-thinking feature that positions GateFlow at the intersection of e-commerce and AI. Consider implementing after core features are stable.
+
+---
+
 #### Outgoing Webhooks (Automation)
 **Status**: 🏗️ Partially Done (v1.5 Implemented)
 **Description**: Trigger external automations when key events occur in GateFlow. Essential for CRM, Mailing, and Marketing Automation.

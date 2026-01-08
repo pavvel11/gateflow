@@ -5,6 +5,7 @@ import { formatPrice } from '@/lib/constants';
 import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeSanitize from 'rehype-sanitize';
 import { useTranslations } from 'next-intl';
 import OmnibusPrice from '@/components/OmnibusPrice';
 
@@ -139,8 +140,10 @@ export default function ProductShowcase({ product }: ProductShowcaseProps) {
       {/* Long Description with Markdown Support */}
       {product.long_description && (
         <div className="mb-8 prose prose-invert prose-sm max-w-none">
+          {/* SECURITY: rehype-sanitize strips dangerous HTML/JS from markdown */}
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeSanitize]}
             components={{
               // Custom styling for Markdown elements
               h1: ({ children }) => (

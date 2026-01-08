@@ -30,8 +30,9 @@
   "engines": {
     "node": ">=14.0.0"
   },
-  "dependencies": {},
-  "devDependencies": {},
+  "devDependencies": {
+    "supabase": "^2.70.5"
+  },
   "files": [
     "gatekeeper.js",
     "dist/",

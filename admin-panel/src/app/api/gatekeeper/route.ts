@@ -1,7 +1,56 @@
 import { NextResponse } from 'next/server'
 import { GatekeeperGenerator } from '@/lib/gatekeeper-generator'
 import { createClient } from '@supabase/supabase-js'
+import { MemoryCache, handleConditionalRequest, createScriptResponse } from '@/lib/script-cache'
 import packageJson from '../../../../package.json'
+
+/**
+ * License cache using shared MemoryCache (5 min TTL)
+ */
+const licenseCache = new MemoryCache<boolean>({ ttl: 5 * 60 * 1000 });
+
+/**
+ * Get cached license validity or fetch from database
+ */
+async function getCachedLicenseValid(
+  supabaseUrl: string,
+  supabaseServiceKey: string
+): Promise<boolean> {
+  const cacheKey = 'license_valid';
+
+  // Check cache first
+  const cached = licenseCache.get(cacheKey);
+  if (cached) {
+    return cached.data;
+  }
+
+  // Fetch from database
+  try {
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    const { data: integrationsConfig } = await supabaseAdmin
+      .from('integrations_config')
+      .select('gateflow_license')
+      .eq('id', 1)
+      .single();
+
+    const isValid = validateLicense(integrationsConfig?.gateflow_license || null);
+
+    // Cache the result
+    licenseCache.set(cacheKey, isValid);
+
+    return isValid;
+  } catch {
+    // If DB read fails, return false
+    return false;
+  }
+}
+
+/**
+ * Clear license cache (useful when license is updated via admin panel)
+ */
+export function clearLicenseCache(): void {
+  licenseCache.clear();
+}
 
 /**
  * Validate license format and expiry (server-side)
@@ -57,6 +106,12 @@ export async function OPTIONS(request: Request) {
 
 /**
  * Serve the gatekeeper.js file with dynamic Supabase configuration
+ *
+ * Performance optimizations:
+ * - License check cached for 5 minutes (avoids DB query on every request)
+ * - Script generation cached for 1 hour (in GatekeeperGenerator)
+ * - HTTP caching with ETag support (304 Not Modified responses)
+ * - Stale-while-revalidate for better UX
  */
 export async function GET(request: Request) {
   try {
@@ -89,24 +144,13 @@ export async function GET(request: Request) {
     // Clear cache if requested
     if (clearCache) {
       GatekeeperGenerator.clearCache();
+      clearLicenseCache();
     }
 
-    // Read license from database
+    // Get license validity from cache (5 min TTL) or fetch from database
     let licenseValid = false;
     if (supabaseServiceKey) {
-      try {
-        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-        const { data: integrationsConfig } = await supabaseAdmin
-          .from('integrations_config')
-          .select('gateflow_license')
-          .eq('id', 1)
-          .single();
-
-        licenseValid = validateLicense(integrationsConfig?.gateflow_license || null);
-      } catch {
-        // If DB read fails, default to showing watermark
-        licenseValid = false;
-      }
+      licenseValid = await getCachedLicenseValid(supabaseUrl, supabaseServiceKey);
     }
 
     // Get productSlug from URL params for full page protection
@@ -132,24 +176,30 @@ export async function GET(request: Request) {
 
     const generatedResult = await GatekeeperGenerator.generateScript(config);
 
-    return new NextResponse(generatedResult.content, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/javascript',
-        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
-        'Access-Control-Allow-Origin': origin,
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        'Access-Control-Max-Age': '86400', // 24 hours
-        'ETag': generatedResult.hash,
-        'Last-Modified': generatedResult.lastModified.toUTCString(),
-      },
+    // CORS headers
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400',
+    };
+
+    // Check for conditional request (ETag/If-None-Match)
+    const conditionalResponse = handleConditionalRequest(request, generatedResult.hash, corsHeaders);
+    if (conditionalResponse) {
+      return conditionalResponse;
+    }
+
+    return createScriptResponse(generatedResult.content, generatedResult.hash, {
+      ...corsHeaders,
+      'Last-Modified': generatedResult.lastModified.toUTCString(),
+      'X-License-Cached': licenseCache.size > 0 ? 'true' : 'false',
     })
   } catch (error) {
     console.error('Error serving gatekeeper.js:', error)
     return NextResponse.json(
       { error: 'Failed to serve gatekeeper.js' },
-      { 
+      {
         status: 500,
         headers: {
           'Access-Control-Allow-Origin': '*',

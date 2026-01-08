@@ -1,29 +1,69 @@
 // app/api/admin/payments/stats/route.ts
 // API endpoint for payment statistics
 
-import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient as createServerClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limiting';
 
-export async function GET() {
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    
-    // Check if user is authenticated and is admin
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
+    let user: { id: string } | null = null;
+
+    // Try Bearer token auth first (for API clients)
+    const authHeader = request.headers.get('authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      const { data: { user: tokenUser }, error: authError } = await supabase.auth.getUser(token);
+      if (!authError && tokenUser) {
+        user = tokenUser;
+      }
+    }
+
+    // Fall back to cookie auth (for browser clients)
+    if (!user) {
+      const supabase = await createServerClient();
+      const { data: { user: cookieUser }, error: authError } = await supabase.auth.getUser();
+      if (!authError && cookieUser) {
+        user = cookieUser;
+      }
+    }
+
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
+
+    // Use service role client for admin operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
     // Check admin privileges
     const { data: adminUser, error: adminError } = await supabase
       .from('admin_users')
       .select('id')
       .eq('user_id', user.id)
       .single();
-    
+
     if (adminError || !adminUser) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
+
+    // SECURITY: Rate limit analytics operations (aggregation queries can be expensive)
+    const rateLimitOk = await checkRateLimit(
+      RATE_LIMITS.ADMIN_ANALYTICS.actionType,
+      RATE_LIMITS.ADMIN_ANALYTICS.maxRequests,
+      RATE_LIMITS.ADMIN_ANALYTICS.windowMinutes,
+      user.id
+    );
+
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Maximum 30 requests per 5 minutes.' },
+        { status: 429 }
+      );
     }
 
     // Calculate date ranges

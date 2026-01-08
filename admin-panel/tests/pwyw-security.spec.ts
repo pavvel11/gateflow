@@ -203,9 +203,11 @@ test.describe('PWYW Security - Bypass Prevention', () => {
       }
     });
 
-    // Zero should use product price, not fail - but let's verify behavior
-    // Actually with allow_custom_price=true and customAmount=0, it should use product.price
-    expect(response.status()).toBe(200);
+    // SECURITY: Zero is explicitly rejected (security audit requirement)
+    // Attackers cannot bypass payment by sending customAmount=0
+    expect(response.status()).toBe(400);
+    const json = await response.json();
+    expect(json.error).toContain('greater than zero');
   });
 
   test('SECURITY: Reject negative customAmount', async ({ request }) => {
@@ -217,9 +219,11 @@ test.describe('PWYW Security - Bypass Prevention', () => {
       }
     });
 
-    // Negative amounts should either be rejected or treated as no custom amount
-    // The current logic: customAmount > 0 check will fail, so product.price is used
-    expect(response.status()).toBe(200);  // Falls back to product price
+    // SECURITY: Negative amounts are explicitly rejected (security audit requirement)
+    // Attackers cannot bypass payment validation by sending negative amounts
+    expect(response.status()).toBe(400);
+    const json = await response.json();
+    expect(json.error).toContain('greater than zero');
   });
 
   test('SECURITY: Handle string customAmount (type coercion attempt)', async ({ request }) => {

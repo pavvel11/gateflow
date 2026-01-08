@@ -440,8 +440,8 @@ test.describe('GUS Checkout Flow - Security', () => {
       },
     });
 
-    // Should return 403 Forbidden (or 429 if rate limited from previous tests)
-    expect([403, 429]).toContain(response.status());
+    // Should return 403 Forbidden
+    expect(response.status()).toBe(403);
 
     const body = await response.json();
     if (response.status() === 403) {
@@ -449,39 +449,6 @@ test.describe('GUS Checkout Flow - Security', () => {
     }
   });
 
-  test('should enforce rate limiting', async ({ page }) => {
-    // Navigate to a page first to establish origin/referer context
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
-
-    const origin = page.url().split('/').slice(0, 3).join('/'); // Get origin from current page
-
-    // Make 6 consecutive requests (limit is 5/minute)
-    const requests = [];
-
-    for (let i = 0; i < 6; i++) {
-      const promise = page.request.post('/api/gus/fetch-company-data', {
-        data: { nip: TEST_NIP_VALID },
-        headers: {
-          'origin': origin,
-          'referer': origin + '/',
-        }
-      });
-      requests.push(promise);
-    }
-
-    const responses = await Promise.all(requests);
-
-    // At least one should be rate limited (429)
-    const rateLimited = responses.some(r => r.status() === 429);
-    expect(rateLimited).toBe(true);
-
-    // Check that rate limited response has correct error code
-    const limitedResponse = responses.find(r => r.status() === 429);
-    if (limitedResponse) {
-      const body = await limitedResponse.json();
-      expect(body.code).toBe('RATE_LIMIT_EXCEEDED');
-      expect(body.error).toContain('Too many requests');
-    }
-  });
+  // Rate limiting test moved to tests/rate-limiting.spec.ts
+  // Run with: RATE_LIMIT_TEST_MODE=true npx playwright test --project=rate-limiting
 });

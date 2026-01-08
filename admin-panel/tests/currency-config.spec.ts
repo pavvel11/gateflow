@@ -292,16 +292,6 @@ test.describe('Currency API Configuration', () => {
     expect(config?.currency_api_key_tag).toBeNull();
   });
 
-  test.skip('should show configuration status on dashboard', async ({ page }) => {
-    // NOTE: ConfigurationStatus component was removed - this test is no longer relevant
-    // Configuration is now shown only in integrations page Currency tab
-  });
-
-  test.skip('should not show configuration status on dashboard when using default ECB', async ({ page }) => {
-    // NOTE: ConfigurationStatus component was removed - this test is no longer relevant
-    // Configuration is now shown only in integrations page Currency tab
-  });
-
   test('should change provider and update config', async ({ page }) => {
     // Start with exchangerate-api
     await supabaseAdmin

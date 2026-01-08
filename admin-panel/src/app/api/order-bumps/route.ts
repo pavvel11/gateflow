@@ -7,9 +7,19 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { checkRateLimit } from '@/lib/rate-limiting';
 
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting: 60 requests per minute (prevents scraping)
+    const rateLimitOk = await checkRateLimit('order_bumps', 60, 60);
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const productId = searchParams.get('productId');
 

@@ -5,14 +5,25 @@ import { validateEmailAction } from '@/lib/actions/validate-email';
 
 /**
  * Helper to create CORS-enabled responses
+ * Note: This is a public endpoint designed for embedding on external landing pages
+ * CORS is intentionally permissive, but security is enforced via:
+ * - Rate limiting
+ * - Turnstile CAPTCHA
+ * - Email validation
+ * - Server-side product validation
  */
 function corsResponse(data: any, status: number, origin: string | null): NextResponse {
+  // In production, prefer explicit origin over wildcard for security
+  const allowedOrigin = origin || '*';
+
   return NextResponse.json(data, {
     status,
     headers: {
-      'Access-Control-Allow-Origin': origin || '*',
+      'Access-Control-Allow-Origin': allowedOrigin,
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
+      // Don't allow credentials with wildcard origin
+      ...(origin && origin !== '*' ? { 'Access-Control-Allow-Credentials': 'true' } : {}),
     },
   });
 }

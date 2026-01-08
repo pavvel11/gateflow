@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { embedCache } from '@/lib/script-cache';
 
 // Cloudflare dummy sitekey for testing (always passes)
 const TURNSTILE_TEST_KEY = '1x00000000000000000000AA';
@@ -104,6 +105,11 @@ function detectLanguage(acceptLanguage: string | null): string {
  * - API_BASE_URL automatically set to the serving domain
  * - TURNSTILE_SITE_KEY from integrations_config (or test key for localhost)
  * - Translations based on browser's Accept-Language header
+ *
+ * Performance optimizations:
+ * - Script cached in memory for 1 hour per language/host combination
+ * - HTTP caching with ETag support (304 Not Modified responses)
+ * - Stale-while-revalidate for better UX
  */
 export async function GET(request: NextRequest) {
   // Get the origin/host for API_BASE_URL
@@ -124,16 +130,27 @@ export async function GET(request: NextRequest) {
     ? TURNSTILE_TEST_KEY
     : (process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || TURNSTILE_TEST_KEY);
 
-  const script = generateEmbedScript(apiBaseUrl, turnstileSiteKey, t);
+  // Generate cache key based on host + language + turnstile key
+  const cacheKey = `embed_${host}_${lang}_${turnstileSiteKey}`;
 
-  return new NextResponse(script, {
-    headers: {
-      'Content-Type': 'application/javascript; charset=utf-8',
-      'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
-      'Access-Control-Allow-Origin': '*', // Allow embedding on any domain
-      'Vary': 'Accept-Language', // Cache varies by language
-    },
-  });
+  // Get cached script or generate new one
+  const cached = embedCache.getOrGenerate(cacheKey, () =>
+    generateEmbedScript(apiBaseUrl, turnstileSiteKey, t)
+  );
+
+  // CORS headers for embedding
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Vary': 'Accept-Language',
+  };
+
+  // Check for conditional request (ETag/If-None-Match)
+  const conditionalResponse = embedCache.checkConditionalRequest(request, cached, corsHeaders);
+  if (conditionalResponse) {
+    return conditionalResponse;
+  }
+
+  return embedCache.createResponse(cached, corsHeaders);
 }
 
 function generateEmbedScript(

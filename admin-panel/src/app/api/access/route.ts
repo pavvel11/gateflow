@@ -10,6 +10,7 @@ import {
   getCrossOriginHeaders,
   createCrossOriginOptionsResponse
 } from '@/lib/cors';
+import { checkRateLimit } from '@/lib/rate-limiting';
 
 /**
  * Handle CORS preflight requests
@@ -29,6 +30,15 @@ export async function POST(request: Request) {
   const corsHeaders = getCrossOriginHeaders(request);
 
   try {
+    // Rate limiting: 120 requests per minute (access checks can be frequent)
+    const rateLimitOk = await checkRateLimit('access_check', 120, 60);
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        { hasAccess: false, error: 'Too many requests. Please try again later.' },
+        { status: 429, headers: corsHeaders }
+      );
+    }
+
     // 🔐 SECURITY: Validate X-Requested-With header (CSRF protection)
     const validationError = validateCrossOriginRequest(request);
     if (validationError) {
@@ -52,13 +62,21 @@ export async function POST(request: Request) {
     // Create Supabase client with server-side auth
     const supabase = await createClient()
 
-    // Get current session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    // SECURITY FIX (V10): Use getUser() instead of getSession()
+    // getSession() only reads cookies which can be tampered on client-side
+    // getUser() validates the session with the auth server
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
 
-    if (sessionError) {
-      logger.error('Session check error:', sessionError.message);
+    // Note: userError can occur when there's no session at all (not just invalid session)
+    // We treat "no user" as unauthenticated and continue to check for free products
+    if (userError && user === null) {
+      // This is expected for unauthenticated requests - continue to free product check
+      logger.security('Unauthenticated access check request');
+    } else if (userError) {
+      // Actual auth error with partial data - log and return error
+      logger.error('User check error:', userError.message);
       return NextResponse.json(
-        { hasAccess: false, error: sessionError.message },
+        { hasAccess: false, error: userError.message },
         { status: 200, headers: corsHeaders }
       )
     }
@@ -90,26 +108,21 @@ export async function POST(request: Request) {
       )
     }
 
-    if (!session?.user) {
-      // No user session - check if these are free access products
-      const freeAccessResults: { [key: string]: boolean } = {};
-
-      for (const slug of slugsToCheck) {
-        const { data: freeAccess } = await supabase.rpc('grant_free_product_access', {
-          product_slug_param: slug
-        });
-        freeAccessResults[slug] = !!freeAccess;
-      }
-
-      // Return format depends on whether it was single or batch request
+    if (!user) {
+      // No authenticated user - access denied for ALL products (including free ones)
+      // Free products require login (email) to grant access
       if (productSlugs) {
+        const noAccessResults: { [key: string]: boolean } = {};
+        for (const slug of slugsToCheck) {
+          noAccessResults[slug] = false;
+        }
         return NextResponse.json(
-          { accessResults: freeAccessResults, isFreeAccess: true },
+          { accessResults: noAccessResults, authenticated: false },
           { status: 200, headers: corsHeaders }
         )
       } else {
         return NextResponse.json(
-          { hasAccess: freeAccessResults[slugsToCheck[0]], isFreeAccess: true },
+          { hasAccess: false, authenticated: false },
           { status: 200, headers: corsHeaders }
         )
       }
@@ -131,7 +144,7 @@ export async function POST(request: Request) {
       }
 
       return NextResponse.json(
-        { accessResults: accessResults || {}, userId: session.user.id },
+        { accessResults: accessResults || {}, userId: user.id },
         {
           status: 200,
           headers: {
@@ -157,7 +170,7 @@ export async function POST(request: Request) {
       }
 
       return NextResponse.json(
-        { hasAccess: !!hasAccess, userId: session.user.id },
+        { hasAccess: !!hasAccess, userId: user.id },
         {
           status: 200,
           headers: {

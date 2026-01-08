@@ -6,6 +6,42 @@ import { Product } from '@/types';
 import DigitalContentRenderer from '@/components/DigitalContentRenderer';
 import Confetti from 'react-confetti';
 
+/**
+ * SECURITY FIX (V7): Validate return URL to prevent open redirect attacks.
+ * Only allows relative paths starting with / (not //).
+ * Rejects: external URLs, protocol-relative URLs (//evil.com), javascript: URLs
+ */
+function validateReturnUrl(url: string | null): string | null {
+  if (!url) return null;
+
+  try {
+    const decoded = decodeURIComponent(url).trim();
+
+    // Must start with exactly one / (not //)
+    if (!decoded.startsWith('/') || decoded.startsWith('//')) {
+      return null;
+    }
+
+    // Reject javascript:, data:, vbscript: URLs (case insensitive)
+    const lowerDecoded = decoded.toLowerCase();
+    if (lowerDecoded.includes('javascript:') ||
+        lowerDecoded.includes('data:') ||
+        lowerDecoded.includes('vbscript:')) {
+      return null;
+    }
+
+    // Reject URLs with protocol indicators
+    if (decoded.includes('://')) {
+      return null;
+    }
+
+    return decoded;
+  } catch {
+    // If decoding fails, reject the URL
+    return null;
+  }
+}
+
 interface ProductAccessViewProps {
   product: Product;
   userAccess?: {
@@ -122,20 +158,16 @@ export default function ProductAccessView({ product }: ProductAccessViewProps) {
       
       return () => clearTimeout(timer);
     } else if (showConfetti && countdown === 0) {
-      // Check for return URL
+      // Check for return URL - SECURITY FIX (V7): Validate URL to prevent open redirect
       const urlParams = new URLSearchParams(window.location.search);
-      const returnUrl = urlParams.get('return_url');
-      
-      if (returnUrl) {
-        try {
-          const decodedUrl = decodeURIComponent(returnUrl);
-          window.location.href = decodedUrl;
-          return;
-        } catch {
-          // Fallback to showing content if URL decoding fails
-        }
+      const rawReturnUrl = urlParams.get('return_url');
+      const safeReturnUrl = validateReturnUrl(rawReturnUrl);
+
+      if (safeReturnUrl) {
+        window.location.href = safeReturnUrl;
+        return;
       }
-      // No return URL, stop confetti and show content
+      // No valid return URL, stop confetti and show content
       setShowConfetti(false);
     }
   }, [showConfetti, countdown]);

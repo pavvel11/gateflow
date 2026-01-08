@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from './helpers/admin-auth';
 
 /**
  * Complete Payment Flow E2E Tests
@@ -7,36 +7,155 @@ import { createClient } from '@supabase/supabase-js';
  * Strategy: Insert mock payment data directly into database.
  * The verifyPaymentSession function checks database first before calling Stripe.
  *
- * Uses existing seed products to avoid test isolation issues.
+ * Creates own test data - independent from seed.sql
  */
 
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
 
-const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-
-// Test user from seed data
-const JOHN_DOE = {
-  email: 'john.doe@example.com',
-  password: 'password123',
-  id: 'aaaaaaaa-1111-4111-a111-111111111111',
+// Will be set in beforeAll
+let TEST_USER: { id: string; email: string; password: string };
+let PRODUCTS: {
+  premiumCourse: string;
+  proToolkit: string;
+  customRedirect: string;
+  enterprise: string;
+  noRedirect: string;
 };
+let PRODUCT_IDS: Record<string, string> = {};
+let ORDER_BUMP_ID: string;
 
-// Existing seed products
-const PRODUCTS = {
-  // premium-course has bump: pro-toolkit
-  premiumCourse: 'premium-course',
-  proToolkit: 'pro-toolkit',
-  // test-custom-redirect has pass_params_to_redirect=true, redirects to google.com
-  customRedirect: 'test-custom-redirect',
-  // enterprise-package has 3 days timed access
-  enterprise: 'enterprise-package',
-  // test-no-redirect - basic product
-  noRedirect: 'test-no-redirect',
-};
+// ============================================================================
+// GLOBAL SETUP - Create test data
+// ============================================================================
 
-async function loginAsJohnDoe(page: Page) {
+async function createTestData() {
+  const suffix = Date.now().toString();
+
+  // Create test user
+  const email = `payment-flow-${suffix}@test.local`;
+  const password = 'TestPassword123!';
+  const { data: { user }, error: userErr } = await supabaseAdmin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  });
+  if (userErr) throw userErr;
+  TEST_USER = { id: user!.id, email, password };
+
+  // Create main product (premium-course equivalent)
+  const { data: main, error: mainErr } = await supabaseAdmin.from('products').insert({
+    name: `Premium Course ${suffix}`,
+    slug: `premium-course-${suffix}`,
+    price: 199.00,
+    currency: 'PLN',
+    is_active: true,
+  }).select().single();
+  if (mainErr) throw mainErr;
+
+  // Create bump product (pro-toolkit equivalent)
+  const { data: bump, error: bumpErr } = await supabaseAdmin.from('products').insert({
+    name: `Pro Toolkit ${suffix}`,
+    slug: `pro-toolkit-${suffix}`,
+    price: 49.00,
+    currency: 'PLN',
+    is_active: true,
+  }).select().single();
+  if (bumpErr) throw bumpErr;
+
+  // Create order bump relationship
+  const { data: ob, error: obErr } = await supabaseAdmin.from('order_bumps').insert({
+    main_product_id: main.id,
+    bump_product_id: bump.id,
+    bump_title: 'Add Pro Toolkit!',
+    bump_price: 49.00,
+    is_active: true,
+  }).select().single();
+  if (obErr) throw obErr;
+  ORDER_BUMP_ID = ob.id;
+
+  // Create redirect product (test-custom-redirect equivalent)
+  const { data: redirect, error: redirectErr } = await supabaseAdmin.from('products').insert({
+    name: `Custom Redirect ${suffix}`,
+    slug: `test-custom-redirect-${suffix}`,
+    price: 49.00,
+    currency: 'PLN',
+    is_active: true,
+    success_redirect_url: 'https://google.com/search?q=success',
+    pass_params_to_redirect: true,
+  }).select().single();
+  if (redirectErr) throw redirectErr;
+
+  // Create timed access product (enterprise-package equivalent - 3 days)
+  const { data: enterprise, error: entErr } = await supabaseAdmin.from('products').insert({
+    name: `Enterprise Package ${suffix}`,
+    slug: `enterprise-package-${suffix}`,
+    price: 499.99,
+    currency: 'PLN',
+    is_active: true,
+    auto_grant_duration_days: 3,
+  }).select().single();
+  if (entErr) throw entErr;
+
+  // Create basic product (test-no-redirect equivalent)
+  const { data: noRedirect, error: nrErr } = await supabaseAdmin.from('products').insert({
+    name: `Basic Product ${suffix}`,
+    slug: `test-no-redirect-${suffix}`,
+    price: 99.00,
+    currency: 'PLN',
+    is_active: true,
+  }).select().single();
+  if (nrErr) throw nrErr;
+
+  PRODUCTS = {
+    premiumCourse: main.slug,
+    proToolkit: bump.slug,
+    customRedirect: redirect.slug,
+    enterprise: enterprise.slug,
+    noRedirect: noRedirect.slug,
+  };
+
+  PRODUCT_IDS = {
+    [main.slug]: main.id,
+    [bump.slug]: bump.id,
+    [redirect.slug]: redirect.id,
+    [enterprise.slug]: enterprise.id,
+    [noRedirect.slug]: noRedirect.id,
+  };
+
+  console.log('Created test user:', TEST_USER.email);
+  console.log('Created test products:', Object.values(PRODUCTS));
+}
+
+async function cleanupTestData() {
+  console.log('Cleaning up test data...');
+
+  // Delete user access
+  if (TEST_USER?.id) {
+    await supabaseAdmin.from('user_product_access').delete().eq('user_id', TEST_USER.id);
+    await supabaseAdmin.from('payment_transactions').delete().eq('user_id', TEST_USER.id);
+  }
+
+  // Delete order bump
+  if (ORDER_BUMP_ID) {
+    await supabaseAdmin.from('order_bumps').delete().eq('id', ORDER_BUMP_ID);
+  }
+
+  // Delete products
+  for (const productId of Object.values(PRODUCT_IDS)) {
+    await supabaseAdmin.from('guest_purchases').delete().eq('product_id', productId);
+    await supabaseAdmin.from('payment_transactions').delete().eq('product_id', productId);
+    await supabaseAdmin.from('products').delete().eq('id', productId);
+  }
+
+  // Delete test user
+  if (TEST_USER?.id) {
+    await supabaseAdmin.from('profiles').delete().eq('id', TEST_USER.id);
+    await supabaseAdmin.auth.admin.deleteUser(TEST_USER.id);
+  }
+}
+
+async function loginAsTestUser(page: Page) {
   await page.goto('/');
   await page.waitForLoadState('domcontentloaded');
 
@@ -45,8 +164,8 @@ async function loginAsJohnDoe(page: Page) {
     const supabase = createBrowserClient(supabaseUrl, anonKey);
     await supabase.auth.signInWithPassword({ email, password });
   }, {
-    email: JOHN_DOE.email,
-    password: JOHN_DOE.password,
+    email: TEST_USER.email,
+    password: TEST_USER.password,
     supabaseUrl: SUPABASE_URL,
     anonKey: ANON_KEY,
   });
@@ -223,16 +342,15 @@ async function setExpiredAccess(userId: string, productSlug: string, durationDay
 }
 
 // ============================================================================
-// GLOBAL SETUP - Ensure seed products are active
+// GLOBAL SETUP & TEARDOWN
 // ============================================================================
 
 test.beforeAll(async () => {
-  // Ensure all test products are active (might have been deactivated by other tests)
-  const productSlugs = Object.values(PRODUCTS);
-  for (const slug of productSlugs) {
-    await supabaseAdmin.from('products').update({ is_active: true }).eq('slug', slug);
-  }
-  console.log('Activated all test products:', productSlugs);
+  await createTestData();
+});
+
+test.afterAll(async () => {
+  await cleanupTestData();
 });
 
 // ============================================================================
@@ -243,15 +361,15 @@ test.describe('Order Bump - Logged-in User', () => {
   test.describe.configure({ mode: 'serial' });
 
   test.beforeEach(async ({ page }) => {
-    await loginAsJohnDoe(page);
+    await loginAsTestUser(page);
     // Clean up before each test
-    await removeUserAccess(JOHN_DOE.id, PRODUCTS.premiumCourse);
-    await removeUserAccess(JOHN_DOE.id, PRODUCTS.proToolkit);
+    await removeUserAccess(TEST_USER.id, PRODUCTS.premiumCourse);
+    await removeUserAccess(TEST_USER.id, PRODUCTS.proToolkit);
   });
 
   test.afterEach(async () => {
-    await removeUserAccess(JOHN_DOE.id, PRODUCTS.premiumCourse);
-    await removeUserAccess(JOHN_DOE.id, PRODUCTS.proToolkit);
+    await removeUserAccess(TEST_USER.id, PRODUCTS.premiumCourse);
+    await removeUserAccess(TEST_USER.id, PRODUCTS.proToolkit);
   });
 
   test('should grant access to ONLY main product when bump NOT selected', async ({ page }) => {
@@ -261,8 +379,8 @@ test.describe('Order Bump - Logged-in User', () => {
       await createMockPayment({
         sessionId,
         productSlug: PRODUCTS.premiumCourse,
-        email: JOHN_DOE.email,
-        userId: JOHN_DOE.id,
+        email: TEST_USER.email,
+        userId: TEST_USER.id,
         amount: 19900,
         // No bumpProductSlug - bump not selected
       });
@@ -271,11 +389,11 @@ test.describe('Order Bump - Logged-in User', () => {
       await page.waitForTimeout(3000);
 
       // Verify main product access granted
-      const mainAccess = await getUserAccess(JOHN_DOE.id, PRODUCTS.premiumCourse);
+      const mainAccess = await getUserAccess(TEST_USER.id, PRODUCTS.premiumCourse);
       expect(mainAccess).toBeTruthy();
 
       // Verify bump product access NOT granted
-      const bumpAccess = await getUserAccess(JOHN_DOE.id, PRODUCTS.proToolkit);
+      const bumpAccess = await getUserAccess(TEST_USER.id, PRODUCTS.proToolkit);
       expect(bumpAccess).toBeNull();
 
       // Verify UI shows access granted
@@ -292,8 +410,8 @@ test.describe('Order Bump - Logged-in User', () => {
       await createMockPayment({
         sessionId,
         productSlug: PRODUCTS.premiumCourse,
-        email: JOHN_DOE.email,
-        userId: JOHN_DOE.id,
+        email: TEST_USER.email,
+        userId: TEST_USER.id,
         amount: 24800,
         bumpProductSlug: PRODUCTS.proToolkit,
         bumpAmount: 4900,
@@ -303,11 +421,11 @@ test.describe('Order Bump - Logged-in User', () => {
       await page.waitForTimeout(3000);
 
       // Verify main product access granted
-      const mainAccess = await getUserAccess(JOHN_DOE.id, PRODUCTS.premiumCourse);
+      const mainAccess = await getUserAccess(TEST_USER.id, PRODUCTS.premiumCourse);
       expect(mainAccess).toBeTruthy();
 
       // Verify bump product access also granted
-      const bumpAccess = await getUserAccess(JOHN_DOE.id, PRODUCTS.proToolkit);
+      const bumpAccess = await getUserAccess(TEST_USER.id, PRODUCTS.proToolkit);
       expect(bumpAccess).toBeTruthy();
 
       // Verify UI shows access granted
@@ -405,12 +523,12 @@ test.describe('Order Bump - Guest User', () => {
 
 test.describe('Pass Params to Redirect', () => {
   test.beforeEach(async ({ page }) => {
-    await loginAsJohnDoe(page);
-    await removeUserAccess(JOHN_DOE.id, PRODUCTS.customRedirect);
+    await loginAsTestUser(page);
+    await removeUserAccess(TEST_USER.id, PRODUCTS.customRedirect);
   });
 
   test.afterEach(async () => {
-    await removeUserAccess(JOHN_DOE.id, PRODUCTS.customRedirect);
+    await removeUserAccess(TEST_USER.id, PRODUCTS.customRedirect);
   });
 
   test('should pass email and session_id to external redirect URL', async ({ page }) => {
@@ -420,8 +538,8 @@ test.describe('Pass Params to Redirect', () => {
       await createMockPayment({
         sessionId,
         productSlug: PRODUCTS.customRedirect,
-        email: JOHN_DOE.email,
-        userId: JOHN_DOE.id,
+        email: TEST_USER.email,
+        userId: TEST_USER.id,
         amount: 4900,
       });
 
@@ -438,7 +556,7 @@ test.describe('Pass Params to Redirect', () => {
       // Verify redirect URL contains expected params
       expect(redirectUrl).not.toBeNull();
       expect(redirectUrl).toContain('google.com');
-      expect(redirectUrl).toContain(`email=${encodeURIComponent(JOHN_DOE.email)}`);
+      expect(redirectUrl).toContain(`email=${encodeURIComponent(TEST_USER.email)}`);
       // Note: param name is 'sessionId' not 'session_id' (camelCase from buildSuccessRedirectUrl)
       expect(redirectUrl).toContain(`sessionId=${sessionId}`);
     } finally {
@@ -453,11 +571,11 @@ test.describe('Pass Params to Redirect', () => {
 
 test.describe('Already Has Access', () => {
   test.beforeEach(async ({ page }) => {
-    await loginAsJohnDoe(page);
+    await loginAsTestUser(page);
   });
 
   test.afterEach(async () => {
-    await removeUserAccess(JOHN_DOE.id, PRODUCTS.noRedirect);
+    await removeUserAccess(TEST_USER.id, PRODUCTS.noRedirect);
   });
 
   test('should handle user who already has access to product', async ({ page }) => {
@@ -465,9 +583,9 @@ test.describe('Already Has Access', () => {
     const product = await getProductBySlug(PRODUCTS.noRedirect);
 
     try {
-      // First, give john.doe existing access
+      // First, give TEST_USER existing access
       await supabaseAdmin.from('user_product_access').upsert({
-        user_id: JOHN_DOE.id,
+        user_id: TEST_USER.id,
         product_id: product!.id,
         access_granted_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
         access_expires_at: null,
@@ -477,8 +595,8 @@ test.describe('Already Has Access', () => {
       await createMockPayment({
         sessionId,
         productSlug: PRODUCTS.noRedirect,
-        email: JOHN_DOE.email,
-        userId: JOHN_DOE.id,
+        email: TEST_USER.email,
+        userId: TEST_USER.id,
         amount: 9900,
       });
 
@@ -489,7 +607,7 @@ test.describe('Already Has Access', () => {
       await expect(page.getByText(/Access Granted/i)).toBeVisible({ timeout: 10000 });
 
       // User should still have access
-      const access = await getUserAccess(JOHN_DOE.id, PRODUCTS.noRedirect);
+      const access = await getUserAccess(TEST_USER.id, PRODUCTS.noRedirect);
       expect(access).toBeTruthy();
     } finally {
       await cleanupMockPayment(sessionId);
@@ -505,12 +623,12 @@ test.describe('Timed Access', () => {
   test.describe.configure({ mode: 'serial' });
 
   test.beforeEach(async ({ page }) => {
-    await loginAsJohnDoe(page);
-    await removeUserAccess(JOHN_DOE.id, PRODUCTS.enterprise);
+    await loginAsTestUser(page);
+    await removeUserAccess(TEST_USER.id, PRODUCTS.enterprise);
   });
 
   test.afterEach(async () => {
-    await removeUserAccess(JOHN_DOE.id, PRODUCTS.enterprise);
+    await removeUserAccess(TEST_USER.id, PRODUCTS.enterprise);
   });
 
   test('should grant timed access (3 days) after purchase', async ({ page }) => {
@@ -520,8 +638,8 @@ test.describe('Timed Access', () => {
       await createMockPayment({
         sessionId,
         productSlug: PRODUCTS.enterprise,
-        email: JOHN_DOE.email,
-        userId: JOHN_DOE.id,
+        email: TEST_USER.email,
+        userId: TEST_USER.id,
         amount: 49999,
       });
 
@@ -529,7 +647,7 @@ test.describe('Timed Access', () => {
       await page.waitForTimeout(3000);
 
       // Verify access with expiry
-      const access = await getUserAccess(JOHN_DOE.id, PRODUCTS.enterprise);
+      const access = await getUserAccess(TEST_USER.id, PRODUCTS.enterprise);
       expect(access).toBeTruthy();
       expect(access!.access_duration_days).toBe(3);
       expect(access!.access_expires_at).not.toBeNull();
@@ -552,10 +670,10 @@ test.describe('Timed Access', () => {
 
     try {
       // Set expired access (3 days product, expired 1 day ago)
-      await setExpiredAccess(JOHN_DOE.id, PRODUCTS.enterprise, 3);
+      await setExpiredAccess(TEST_USER.id, PRODUCTS.enterprise, 3);
 
       // Verify access is expired
-      const expiredAccess = await getUserAccess(JOHN_DOE.id, PRODUCTS.enterprise);
+      const expiredAccess = await getUserAccess(TEST_USER.id, PRODUCTS.enterprise);
       expect(expiredAccess).toBeTruthy();
       expect(new Date(expiredAccess!.access_expires_at).getTime()).toBeLessThan(Date.now());
 
@@ -563,8 +681,8 @@ test.describe('Timed Access', () => {
       await createMockPayment({
         sessionId,
         productSlug: PRODUCTS.enterprise,
-        email: JOHN_DOE.email,
-        userId: JOHN_DOE.id,
+        email: TEST_USER.email,
+        userId: TEST_USER.id,
         amount: 49999,
       });
 
@@ -572,7 +690,7 @@ test.describe('Timed Access', () => {
       await page.waitForTimeout(3000);
 
       // Verify access renewed (new expiry in future)
-      const renewedAccess = await getUserAccess(JOHN_DOE.id, PRODUCTS.enterprise);
+      const renewedAccess = await getUserAccess(TEST_USER.id, PRODUCTS.enterprise);
       expect(renewedAccess).toBeTruthy();
 
       const expiresAt = new Date(renewedAccess!.access_expires_at);
@@ -594,12 +712,12 @@ test.describe('Purchase History - /my-purchases', () => {
   test.describe.configure({ mode: 'serial' });
 
   test.beforeEach(async ({ page }) => {
-    await loginAsJohnDoe(page);
-    await removeUserAccess(JOHN_DOE.id, PRODUCTS.noRedirect);
+    await loginAsTestUser(page);
+    await removeUserAccess(TEST_USER.id, PRODUCTS.noRedirect);
   });
 
   test.afterEach(async () => {
-    await removeUserAccess(JOHN_DOE.id, PRODUCTS.noRedirect);
+    await removeUserAccess(TEST_USER.id, PRODUCTS.noRedirect);
   });
 
   test('should display purchase in /my-purchases after successful payment', async ({ page }) => {
@@ -611,8 +729,8 @@ test.describe('Purchase History - /my-purchases', () => {
       await createMockPayment({
         sessionId,
         productSlug: PRODUCTS.noRedirect,
-        email: JOHN_DOE.email,
-        userId: JOHN_DOE.id,
+        email: TEST_USER.email,
+        userId: TEST_USER.id,
         amount: 9900,
       });
 
@@ -625,7 +743,7 @@ test.describe('Purchase History - /my-purchases', () => {
 
       expect(transaction).toBeTruthy();
       expect(transaction.status).toBe('completed');
-      expect(transaction.user_id).toBe(JOHN_DOE.id);
+      expect(transaction.user_id).toBe(TEST_USER.id);
 
       // Navigate to my-purchases page
       await page.goto('/en/my-purchases');
@@ -654,14 +772,14 @@ test.describe('Purchase History - /my-purchases', () => {
 
     try {
       // Clean up any existing access for second product
-      await removeUserAccess(JOHN_DOE.id, PRODUCTS.premiumCourse);
+      await removeUserAccess(TEST_USER.id, PRODUCTS.premiumCourse);
 
       // Create first purchase
       await createMockPayment({
         sessionId: sessionId1,
         productSlug: PRODUCTS.noRedirect,
-        email: JOHN_DOE.email,
-        userId: JOHN_DOE.id,
+        email: TEST_USER.email,
+        userId: TEST_USER.id,
         amount: 9900,
       });
 
@@ -669,8 +787,8 @@ test.describe('Purchase History - /my-purchases', () => {
       await createMockPayment({
         sessionId: sessionId2,
         productSlug: PRODUCTS.premiumCourse,
-        email: JOHN_DOE.email,
-        userId: JOHN_DOE.id,
+        email: TEST_USER.email,
+        userId: TEST_USER.id,
         amount: 19900,
       });
 
@@ -686,20 +804,27 @@ test.describe('Purchase History - /my-purchases', () => {
     } finally {
       await cleanupMockPayment(sessionId1);
       await cleanupMockPayment(sessionId2);
-      await removeUserAccess(JOHN_DOE.id, PRODUCTS.premiumCourse);
+      await removeUserAccess(TEST_USER.id, PRODUCTS.premiumCourse);
     }
   });
 
   test('should not show purchases from other users', async ({ page }) => {
     const sessionId = generateSessionId('other_user_purchase');
-    const otherUserId = 'bbbbbbbb-2222-4222-b222-222222222222'; // Jane Doe from seed
-    const uniqueProductSlug = `jane-only-product-${Date.now()}`;
+    const uniqueProductSlug = `other-user-product-${Date.now()}`;
 
-    // Create a unique product that only Jane will have
+    // Create another test user dynamically
+    const otherEmail = `other-user-${Date.now()}@test.local`;
+    const { data: { user: otherUser } } = await supabaseAdmin.auth.admin.createUser({
+      email: otherEmail,
+      password: 'OtherPassword123!',
+      email_confirm: true,
+    });
+
+    // Create a unique product that only other user will have
     const { data: uniqueProduct } = await supabaseAdmin
       .from('products')
       .insert({
-        name: `Jane Only Product ${Date.now()}`,
+        name: `Other User Product ${Date.now()}`,
         slug: uniqueProductSlug,
         price: 5000,
         currency: 'PLN',
@@ -709,21 +834,21 @@ test.describe('Purchase History - /my-purchases', () => {
       .single();
 
     try {
-      // Create a purchase for Jane Doe only
+      // Create a purchase for other user only
       await supabaseAdmin
         .from('payment_transactions')
         .insert({
           session_id: sessionId,
           product_id: uniqueProduct!.id,
-          customer_email: 'jane.doe@example.com',
-          user_id: otherUserId,
+          customer_email: otherEmail,
+          user_id: otherUser!.id,
           amount: 5000,
           currency: 'pln',
           status: 'completed',
           stripe_payment_intent_id: `pi_test_${sessionId}`,
         });
 
-      // Log in as John Doe and check my-purchases
+      // Log in as TEST_USER and check my-purchases
       await page.goto('/en/my-purchases');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(2000);
@@ -731,13 +856,15 @@ test.describe('Purchase History - /my-purchases', () => {
       // Should see the page title
       await expect(page.getByRole('heading', { level: 1 }).getByText('My Purchases')).toBeVisible({ timeout: 10000 });
 
-      // Should NOT see Jane's unique product (John doesn't have this purchase)
+      // Should NOT see other user's product (TEST_USER doesn't have this purchase)
       const productVisible = await page.getByText(uniqueProduct!.name).isVisible().catch(() => false);
       expect(productVisible).toBe(false);
 
     } finally {
       await supabaseAdmin.from('payment_transactions').delete().eq('session_id', sessionId);
       await supabaseAdmin.from('products').delete().eq('id', uniqueProduct!.id);
+      await supabaseAdmin.from('profiles').delete().eq('id', otherUser!.id);
+      await supabaseAdmin.auth.admin.deleteUser(otherUser!.id);
     }
   });
 });
