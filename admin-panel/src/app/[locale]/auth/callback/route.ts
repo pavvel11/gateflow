@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
         getAll() {
           return request.cookies.getAll()
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
           // Set cookies on the temporary response object
           cookiesToSet.forEach(({ name, value, options }) => {
             tempResponse.cookies.set({

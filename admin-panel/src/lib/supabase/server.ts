@@ -17,16 +17,15 @@ export async function createClient() {
         getAll() {
           return cookieStore.getAll()
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
           try {
             cookiesToSet.forEach(({ name, value, options }) => {
               // For cross-origin support in production, use SameSite=None; Secure
-              const cookieOptions = {
-                ...options,
-                sameSite: isProduction ? 'none' as const : (options?.sameSite || 'lax' as const),
-                secure: isProduction ? true : (options?.secure || false),
-              }
-              cookieStore.set(name, value, cookieOptions)
+              cookieStore.set(name, value, {
+                ...(options as object),
+                sameSite: isProduction ? 'none' : ((options?.sameSite as 'lax' | 'strict' | 'none' | undefined) ?? 'lax'),
+                secure: isProduction ? true : ((options?.secure as boolean | undefined) ?? false),
+              })
             })
           } catch {
             // The `setAll` method was called from a Server Component.
