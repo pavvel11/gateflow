@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { GatekeeperGenerator } from '@/lib/gatekeeper-generator'
 import { createClient } from '@supabase/supabase-js'
 import { MemoryCache, handleConditionalRequest, createScriptResponse } from '@/lib/script-cache'
+import { validateLicense as verifyLicense, extractDomainFromUrl } from '@/lib/license/verify'
 import packageJson from '../../../../package.json'
 
 /**
@@ -14,7 +15,8 @@ const licenseCache = new MemoryCache<boolean>({ ttl: 5 * 60 * 1000 });
  */
 async function getCachedLicenseValid(
   supabaseUrl: string,
-  supabaseServiceKey: string
+  supabaseServiceKey: string,
+  siteUrl?: string
 ): Promise<boolean> {
   const cacheKey = 'license_valid';
 
@@ -33,7 +35,7 @@ async function getCachedLicenseValid(
       .eq('id', 1)
       .single();
 
-    const isValid = validateLicense(integrationsConfig?.gateflow_license || null);
+    const isValid = validateLicense(integrationsConfig?.gateflow_license || null, siteUrl);
 
     // Cache the result
     licenseCache.set(cacheKey, isValid);
@@ -53,37 +55,19 @@ export function clearLicenseCache(): void {
 }
 
 /**
- * Validate license format and expiry (server-side)
- * Returns true if license is valid and not expired
+ * Validate license with cryptographic signature verification
+ * Returns true if license is valid, not expired, and matches domain
  */
-function validateLicense(licenseKey: string | null): boolean {
+function validateLicense(licenseKey: string | null, siteUrl?: string): boolean {
   if (!licenseKey) return false;
 
-  // Parse license: GF-domain-YYYYMMDD-signature or GF-domain-UNLIMITED-signature
-  const parts = licenseKey.split('-');
-  if (parts.length < 4 || parts[0] !== 'GF') {
-    return false;
-  }
+  // Get current domain from site URL
+  const currentDomain = siteUrl ? extractDomainFromUrl(siteUrl) : null;
 
-  const expiry = parts[2];
+  // Use the proper license verification with ECDSA signature check
+  const result = verifyLicense(licenseKey, currentDomain || undefined);
 
-  // UNLIMITED license is always valid
-  if (expiry === 'UNLIMITED') {
-    return true;
-  }
-
-  // Check date format and expiry
-  if (!/^\d{8}$/.test(expiry)) {
-    return false;
-  }
-
-  // Parse YYYYMMDD
-  const year = parseInt(expiry.substring(0, 4), 10);
-  const month = parseInt(expiry.substring(4, 6), 10) - 1; // JS months are 0-indexed
-  const day = parseInt(expiry.substring(6, 8), 10);
-  const expiryDate = new Date(year, month, day, 23, 59, 59);
-
-  return expiryDate >= new Date();
+  return result.valid;
 }
 
 /**
@@ -150,7 +134,8 @@ export async function GET(request: Request) {
     // Get license validity from cache (5 min TTL) or fetch from database
     let licenseValid = false;
     if (supabaseServiceKey) {
-      licenseValid = await getCachedLicenseValid(supabaseUrl, supabaseServiceKey);
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL;
+      licenseValid = await getCachedLicenseValid(supabaseUrl, supabaseServiceKey, siteUrl);
     }
 
     // Get productSlug from URL params for full page protection

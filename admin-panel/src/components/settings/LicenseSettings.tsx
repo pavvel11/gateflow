@@ -28,16 +28,27 @@ export default function LicenseSettings() {
     loadLicense();
   }, []);
 
+  const [validationError, setValidationError] = useState<string | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setValidationError(null);
 
     try {
       const result = await updateIntegrationsConfig({ gateflow_license: license || null });
 
       if (result.error) {
-        addToast(result.error, 'error');
+        // Extract specific error message for license
+        const licenseError = result.details?.gateflow_license?.[0];
+        if (licenseError) {
+          setValidationError(licenseError);
+          addToast(licenseError, 'error');
+        } else {
+          addToast(result.error, 'error');
+        }
       } else {
+        setValidationError(null);
         addToast(t('saveSuccess'), 'success');
       }
     } catch (error) {
@@ -109,6 +120,14 @@ export default function LicenseSettings() {
           <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
             {t('formatHint')}
           </p>
+          {validationError && (
+            <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {validationError}
+            </p>
+          )}
         </div>
 
         {license && licenseInfo && (

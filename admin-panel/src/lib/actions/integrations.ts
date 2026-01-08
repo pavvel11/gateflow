@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { validateIntegrations, validateScript, type IntegrationsInput, type CustomScriptInput } from '@/lib/validations/integrations'
+import { validateLicense, extractDomainFromUrl } from '@/lib/license/verify'
 import { revalidatePath } from 'next/cache'
 
 // --- GLOBAL CONFIG ---
@@ -20,6 +21,24 @@ export async function updateIntegrationsConfig(values: IntegrationsInput) {
   const supabase = await createClient()
   const validation = validateIntegrations(values)
   if (!validation.isValid) return { error: 'Invalid fields', details: validation.errors }
+
+  // Validate GateFlow license if provided
+  if (values.gateflow_license) {
+    // Get current site URL from environment
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL;
+    const currentDomain = siteUrl ? extractDomainFromUrl(siteUrl) : null;
+
+    const licenseValidation = validateLicense(values.gateflow_license, currentDomain || undefined);
+
+    if (!licenseValidation.valid) {
+      return {
+        error: 'Invalid license',
+        details: {
+          gateflow_license: [licenseValidation.error || 'License validation failed']
+        }
+      };
+    }
+  }
 
   const { error } = await supabase.from('integrations_config')
     .update({ ...values, updated_at: new Date().toISOString() })
