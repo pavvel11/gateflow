@@ -11,6 +11,45 @@ Plan implementacji:
 
 ---
 
+## INSTRUKCJE IMPLEMENTACJI
+
+> **WAŻNE - przestrzegać podczas całej implementacji:**
+
+1. **Testy** - sam piszę i uruchamiam testy
+2. **Istniejące testy** - uruchamiam tylko z obszaru nad którym pracuję (nie wszystkie)
+3. **Failing tests** - analizuję czy to bug czy zamierzone działanie, poprawiam testy jeśli trzeba
+4. **Migracje DB** - obecne są ZAMROŻONE, nie ruszać
+5. **Nowe migracje** - nie tworzyć osobnej dla każdej zmiany, edytować te które stworzyłem
+6. **Progress** - aktualizować w tym pliku (sekcja Progress Tracker poniżej)
+
+---
+
+## PROGRESS TRACKER
+
+| Faza | Status | Data rozpoczęcia | Data zakończenia | Uwagi |
+|------|--------|------------------|------------------|-------|
+| 1. REST API `/api/v1/*` | ⏳ Not started | - | - | - |
+| 2. MCP Server | ⏳ Not started | - | - | - |
+| 3. Frontend Migration P1 | ⏳ Not started | - | - | - |
+| 4. Frontend Migration P2 | ⏳ Not started | - | - | - |
+| 5. Frontend Migration P3 | ⏳ Not started | - | - | - |
+| 6. Cleanup | ⏳ Not started | - | - | - |
+
+### Szczegółowy progress API endpoints
+
+| Endpoint Group | Migracja | Nowe | Testy | Status |
+|----------------|----------|------|-------|--------|
+| Products | 0/5 | 0/3 | ❌ | ⏳ |
+| Users | 0/5 | 0/4 | ❌ | ⏳ |
+| Payments | 0/2 | 0/5 | ❌ | ⏳ |
+| Coupons | 0/4 | 0/3 | ❌ | ⏳ |
+| Analytics | 0/1 | 0/7 | ❌ | ⏳ |
+| Webhooks | 0/5 | 0/0 | ❌ | ⏳ |
+| Refund Requests | 0/2 | 0/1 | ❌ | ⏳ |
+| System | 0/1 | 0/1 | ❌ | ⏳ |
+
+---
+
 ## 0. Funkcjonalności MCP Server
 
 ### 0.1 Wzorce z popularnych MCP serwerów
