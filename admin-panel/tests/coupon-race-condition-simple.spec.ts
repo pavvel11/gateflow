@@ -5,7 +5,7 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { supabaseAdmin } from './helpers/admin-auth';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 test.describe('Coupon Race Condition - Simplified', () => {
   test.describe.configure({ mode: 'serial' }); // Ensure database check runs after race test
@@ -13,8 +13,15 @@ test.describe('Coupon Race Condition - Simplified', () => {
   let productId: string;
   let couponId: string;
   let couponCode: string;
+  let supabaseAdmin: SupabaseClient;
 
   test.beforeAll(async () => {
+    // Create a fresh Supabase admin client for this test suite
+    // This avoids potential connection pooling issues when running after many other tests
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz';
+    supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+
     // Create a truly unique product for this test to avoid interference with other tests
     const timestamp = Date.now();
     const randomSuffix = Math.random().toString(36).substring(7);
@@ -41,42 +48,34 @@ test.describe('Coupon Race Condition - Simplified', () => {
     console.log(`Created unique product for race test: ${slug} (${productId})`);
 
     // Create coupon with usage_limit_global = 1
-    couponCode = 'RACE' + timestamp + '_' + randomSuffix;
+    // NOTE: Code must be uppercase because verify API does .toUpperCase()
+    couponCode = ('RACE' + timestamp + '_' + randomSuffix).toUpperCase();
 
-    const { data: insertResult, error } = await supabaseAdmin
-      .rpc('create_test_coupon', {
-        p_code: couponCode,
-        p_discount_type: 'percentage',
-        p_discount_value: 50,
-        p_usage_limit_global: 1,
-        p_usage_limit_per_user: 1,
+    const { data: coupon, error: couponError } = await supabaseAdmin
+      .from('coupons')
+      .insert({
+        code: couponCode,
+        discount_type: 'percentage',
+        discount_value: 50,
+        usage_limit_global: 1,
+        usage_limit_per_user: 1,
+        current_usage_count: 0,
+        is_active: true,
+        starts_at: new Date().toISOString(),
       })
+      .select()
       .single();
 
-    if (error) {
-      // Fallback: direct insert with service_role bypassing RLS
-      const { data: coupon, error: insertError } = await supabaseAdmin
-        .from('coupons')
-        .insert({
-          code: couponCode,
-          discount_type: 'percentage',
-          discount_value: 50,
-          usage_limit_global: 1,
-          usage_limit_per_user: 1,
-          current_usage_count: 0,
-          is_active: true,
-          starts_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      if (insertError) throw insertError;
-      couponId = coupon!.id;
-    } else {
-      couponId = insertResult;
+    if (couponError) {
+      console.error('Failed to create test coupon:', couponError);
+      throw couponError;
     }
+    couponId = coupon.id;
 
     console.log(`Created test coupon: ${couponCode} (limit=1, id=${couponId})`);
+
+    // Small delay to ensure DB is ready (avoids flaky first-run failures)
+    await new Promise(resolve => setTimeout(resolve, 100));
   });
 
   test.afterAll(async () => {
@@ -109,7 +108,6 @@ test.describe('Coupon Race Condition - Simplified', () => {
 
     const responses = await Promise.all(verifyPromises);
     const results = await Promise.all(responses.map(r => r.json()));
-
     const validCount = results.filter(r => r.valid === true).length;
 
     console.log(`\n🔍 RACE CONDITION TEST RESULTS:`);

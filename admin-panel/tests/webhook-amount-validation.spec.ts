@@ -194,57 +194,9 @@ test.describe('Webhook Amount Validation Security', () => {
   });
 });
 
-test.describe('Webhook Amount Validation - Recommended Fix', () => {
-  test('Documentation: How to fix the vulnerability', async () => {
-    const fixDocumentation = `
-    VULNERABILITY FIX REQUIRED:
-    ============================
-
-    File: supabase/migrations/20250103000000_features.sql
-    Function: process_stripe_payment_completion_with_bump
-
-    CURRENT CODE (lines 648-651):
-    ------------------------------
-    SELECT id, auto_grant_duration_days INTO product_record
-    FROM public.products
-    WHERE id = product_id_param AND is_active = true;
-
-    FIXED CODE:
-    -----------
-    SELECT
-      id,
-      auto_grant_duration_days,
-      price,
-      currency
-    INTO product_record
-    FROM public.products
-    WHERE id = product_id_param AND is_active = true;
-
-    -- Add validation after SELECT:
-    IF amount_total != (product_record.price * 100) THEN
-      RETURN jsonb_build_object(
-        'success', false,
-        'error', 'Amount mismatch: expected ' || product_record.price || ' but got ' || (amount_total / 100.0)
-      );
-    END IF;
-
-    IF upper(currency_param) != upper(product_record.currency) THEN
-      RETURN jsonb_build_object(
-        'success', false,
-        'error', 'Currency mismatch'
-      );
-    END IF;
-
-    NOTES:
-    ------
-    - amount_total from Stripe is in cents (100 = $1.00)
-    - product.price is in dollars ($1.00)
-    - Need to multiply price * 100 for comparison
-    - For PWYW products, validate amount >= custom_price_min * 100
-    - For products with coupons, calculate expected_amount after discount
-    `;
-
-    console.log(fixDocumentation);
-    expect(true).toBe(true); // Documentation test
-  });
-});
+// Note: Amount validation was already implemented in
+// supabase/migrations/20250103000000_features.sql (lines 718-729)
+// The process_stripe_payment_completion_with_bump function validates:
+// - Amount matches product price (with bump if applicable)
+// - Currency matches product currency
+// - PWYW products allow flexible amounts within limits

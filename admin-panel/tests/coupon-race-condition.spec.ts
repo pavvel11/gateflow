@@ -6,14 +6,24 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { supabaseAdmin } from './helpers/admin-auth';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+
+// Helper to create fresh Supabase admin client
+function createFreshAdminClient(): SupabaseClient {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz';
+  return createClient(supabaseUrl, serviceRoleKey);
+}
 
 test.describe('Coupon Race Condition Security', () => {
   let couponId: string;
   let couponCode: string;
   let productId: string;
+  let supabaseAdmin: SupabaseClient;
 
   test.beforeAll(async () => {
+    supabaseAdmin = createFreshAdminClient();
+
     // Get an existing active product from database
     const { data: products } = await supabaseAdmin
       .from('products')
@@ -335,8 +345,11 @@ test.describe('Coupon Race Condition Security', () => {
 
 test.describe('Coupon Race Condition - Edge Cases', () => {
   let productId: string;
+  let supabaseAdmin: SupabaseClient;
 
   test.beforeAll(async () => {
+    supabaseAdmin = createFreshAdminClient();
+
     const { data: products } = await supabaseAdmin
       .from('products')
       .select('id')
