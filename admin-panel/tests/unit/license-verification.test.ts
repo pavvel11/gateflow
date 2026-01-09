@@ -16,11 +16,11 @@ import {
 } from '../../src/lib/license/verify';
 
 describe('License Verification', () => {
-  // Valid test licenses generated with the official key
+  // Valid test licenses generated with /Users/pavvel/workspace/gateflow/scripts/generate-license.js
   // These are real signatures that should verify correctly
-  const VALID_LICENSE_UNLIMITED = 'GF-test.example.com-UNLIMITED-MEUCIQC41EQb2yL1YkbzaL3ldDFF2RBeFtJFcDpjSiFfTGrijAIgPV_vJSaPXzW1PDGRWbfjHH36UnaxATWdiqw3fOsHKm8';
-  const VALID_LICENSE_DATED = 'GF-test.example.com-20301231-MEUCIHmdrjO3fwcD897aWGOyMviulkAdPpC-z5YF-c63NsnwAiEAmcnjj9QmoHPz0t18eh1okgbDJlwrJ7H5TNv47HC6nik';
-  const EXPIRED_LICENSE = 'GF-test.example.com-20201231-MEQCIFxXP3g0VBUn9jQI0D0gI_4TF0Xr5AhOvWj9h8YZzS0WAiB4X0D0Y0TvN4nE0G0k0L0u0K0m0J0i0H0g0F0e0D0c0B';
+  const VALID_LICENSE_UNLIMITED = 'GF-test.example.com-UNLIMITED-MEUCIFu0eHmjYGTkO2LeOf-H9wbPADxtb2e2y9zwI-UbNs2IAiEA9zLeqLOTNsyeIR8APM0wkZOcKY4RYJw2T_DqPWfjCwQ';
+  const VALID_LICENSE_DATED = 'GF-test.example.com-20301231-MEUCIQCs9QVA6-9uwH2wdoNy3UAlR_bzB4IivExlM1KeqUgPiQIgKNkpD5XEFVKMELTu8T3RAhi80hOuRnSWaef0T-JNSFA';
+  const EXPIRED_LICENSE = 'GF-test.example.com-20201231-MEUCIGHfTwXx0_VbMaS1iK4uZ9yx72FzyDJ0iu4_1wMjz4mAAiEAwHCJIx1owoyCTg4xDqaSnVhHKxCtl4pdJkyrZ3p7pAo';
 
   // Invalid license (tampered signature)
   const INVALID_LICENSE = 'GF-test.example.com-UNLIMITED-INVALID_SIGNATURE_HERE';

@@ -12,13 +12,14 @@ if (!SUPABASE_URL || !SERVICE_ROLE_KEY || !ANON_KEY) {
 
 const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-// Test licenses (generated with scripts/generate-license.js)
+// Test licenses for localhost (generated with /Users/pavvel/workspace/gateflow/scripts/generate-license.js)
+// These licenses are for 'localhost' domain to match NEXT_PUBLIC_SITE_URL=http://localhost:3000
 const TEST_LICENSES = {
-  unlimited: 'GF-test.example.com-UNLIMITED-MEUCIQC41EQb2yL1YkbzaL3ldDFF2RBeFtJFcDpjSiFfTGrijAIgPV_vJSaPXzW1PDGRWbfjHH36UnaxATWdiqw3fOsHKm8',
-  expired: 'GF-test.example.com-20251231-MEYCIQD72nhrdBnsS8QtmoWSZi3Vo6-qjYAZov-m9SkgySi-UgIhAMifv_hXfcFMCuSuMoQuw0u7baCsMCI78ou-39wwiYg_',
-  future: 'GF-test.example.com-20301231-MEUCIHmdrjO3fwcD897aWGOyMviulkAdPpC-z5YF-c63NsnwAiEAmcnjj9QmoHPz0t18eh1okgbDJlwrJ7H5TNv47HC6nik',
+  unlimited: 'GF-localhost-UNLIMITED-MEYCIQDmEAvHQyvdCu-BFEm1pXh1GCsm8sUVN6k_0lB5loj-CgIhAKdKPs0tPFtAlRgS4LWLSDFddvAJrmK4EgfbDuCm9fcd',
+  expired: 'GF-localhost-20251231-MEUCIQDWCdAQqEooBjrY-NcDSCd6ULjXuv-FfF54wNPoNbdOzgIgcDcMfPZaACiniDg_Ph0qvZE91Qy8K1fJqZ5rwBRHNKQ',
+  future: 'GF-localhost-20301231-MEYCIQCOLJqPK06fqDwAxJyuGiUfMaWZYmRjqkN8U4VzfwRJLQIhAPMZN5P5BqaEhUXa3TmafNtg2gW3ghwI4YeEvhruMXSK',
   invalid: 'INVALID-LICENSE-FORMAT',
-  wrongPrefix: 'XX-test.example.com-UNLIMITED-signature',
+  wrongPrefix: 'XX-localhost-UNLIMITED-signature',
   tooShort: 'GF-test',
 };
 
@@ -135,7 +136,7 @@ test.describe('License Settings', () => {
     await expect(detailsSection).toBeVisible();
 
     // Should show domain
-    const domainText = page.locator('text=test.example.com');
+    const domainText = page.locator('text=localhost');
     await expect(domainText).toBeVisible();
 
     // Should show "Never" for unlimited
@@ -160,7 +161,7 @@ test.describe('License Settings', () => {
     await expect(dateText).toBeVisible();
 
     // Should show domain
-    const domainText = page.locator('text=test.example.com');
+    const domainText = page.locator('text=localhost');
     await expect(domainText).toBeVisible();
   });
 
@@ -257,7 +258,7 @@ test.describe('License Settings', () => {
     await page.waitForTimeout(2000);
 
     // Should see the saved license details
-    const domainText = page.locator('text=test.example.com');
+    const domainText = page.locator('text=localhost');
     await expect(domainText).toBeVisible();
 
     // Should see the expiry date
@@ -291,7 +292,7 @@ test.describe('License Settings', () => {
     await expect(dateText).toBeVisible();
 
     // Should show domain
-    const domainText = page.locator('text=test.example.com');
+    const domainText = page.locator('text=localhost');
     await expect(domainText).toBeVisible();
   });
 
