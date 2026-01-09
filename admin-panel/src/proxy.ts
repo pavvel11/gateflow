@@ -11,13 +11,32 @@ const intlMiddleware = createMiddleware({
 })
 
 export async function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+
+  // Block deprecated /api/admin/* endpoints (except payments)
+  // Set ALLOW_DEPRECATED_API=true to re-enable
+  if (
+    pathname.startsWith('/api/admin/') &&
+    !pathname.startsWith('/api/admin/payments/') &&
+    process.env.ALLOW_DEPRECATED_API !== 'true'
+  ) {
+    return NextResponse.json(
+      {
+        error: 'Deprecated API endpoint',
+        message: `Use /api/v1/* instead of ${pathname}`,
+        hint: 'Set ALLOW_DEPRECATED_API=true to temporarily re-enable',
+      },
+      { status: 503 }
+    );
+  }
+
   // Skip proxy processing for API routes, static files, and payment success page
   if (
-    request.nextUrl.pathname.startsWith('/api') ||
-    request.nextUrl.pathname.startsWith('/_next') ||
-    request.nextUrl.pathname.startsWith('/payment') ||
-    request.nextUrl.pathname.startsWith('/test-pages') ||
-    request.nextUrl.pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico|js|css|html)$/)
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/payment') ||
+    pathname.startsWith('/test-pages') ||
+    pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico|js|css|html)$/)
   ) {
     return NextResponse.next()
   }
@@ -61,8 +80,6 @@ export async function proxy(request: NextRequest) {
   // Get current session
   const { data: { session } } = await supabase.auth.getSession()
 
-  const pathname = request.nextUrl.pathname
-  
   // Extract locale from pathname
   const localeMatch = pathname.match(/^\/([a-z]{2})(?:\/|$)/)
   const locale = localeMatch ? localeMatch[1] : ''
