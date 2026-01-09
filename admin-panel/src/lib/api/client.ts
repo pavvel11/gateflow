@@ -221,6 +221,27 @@ class ApiClient {
   }
 
   /**
+   * PUT request to custom endpoint
+   */
+  async putCustom<T>(
+    path: string,
+    data: Record<string, unknown> = {}
+  ): Promise<T> {
+    const response = await fetch(`${this.baseUrl}/${path}`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    const result = await handleResponse<SingleResponse<T>>(response);
+    return result.data;
+  }
+
+  /**
    * DELETE request
    */
   async delete(resource: string, id: string): Promise<void> {

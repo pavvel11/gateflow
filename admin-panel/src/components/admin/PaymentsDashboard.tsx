@@ -36,30 +36,35 @@ export default function PaymentsDashboard() {
     searchTerm: '',
   });
 
-  // Fetch payment data (transactions from v1 API, sessions and stats from old API)
+  // Fetch payment data (all from v1 API)
   const fetchPaymentData = useCallback(async () => {
     setLoading(true);
     try {
       const [transactionsRes, sessionsRes, statsRes] = await Promise.all([
         api.list<PaymentTransaction>('payments', { limit: 500 }),
-        fetch('/api/admin/payments/sessions'),
-        fetch('/api/admin/payments/stats'),
+        fetch('/api/admin/payments/sessions'), // sessions still use old API - no dedicated v1 endpoint
+        api.getCustom<{ data: { total_transactions: number; total_revenue: number; pending_count: number; refunded_amount: number; today_revenue: number; this_month_revenue: number } }>('payments/stats'),
       ]);
 
       // Transactions from v1 API
       setTransactions(transactionsRes.data || []);
 
-      // Sessions from old API (not migrated to v1 yet)
+      // Sessions from old API (embedded checkout doesn't use sessions)
       if (sessionsRes.ok) {
         const sessionsData = await sessionsRes.json();
         setSessions(sessionsData);
       }
 
-      // Stats from old API (not migrated to v1 yet)
-      if (statsRes.ok) {
-        const statsData = await statsRes.json();
-        setStats(statsData);
-      }
+      // Stats from v1 API
+      const statsData = statsRes.data;
+      setStats({
+        totalTransactions: statsData.total_transactions,
+        totalRevenue: statsData.total_revenue,
+        pendingSessions: statsData.pending_count,
+        refundedAmount: statsData.refunded_amount,
+        todayRevenue: statsData.today_revenue,
+        thisMonthRevenue: statsData.this_month_revenue,
+      });
     } catch {
       addToast('Failed to load payment data', 'error');
     } finally {

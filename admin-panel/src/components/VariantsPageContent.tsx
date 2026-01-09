@@ -78,20 +78,14 @@ const VariantsPageContent: React.FC = () => {
     }
   }, []);
 
-  // Fetch variant groups
+  // Fetch variant groups using v1 API
   const fetchGroups = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/admin/variant-groups');
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setGroups(data.groups || []);
+      const response = await api.getCustom<{ data: VariantGroup[] }>('variant-groups');
+      setGroups(response.data || []);
     } catch (err) {
       setError('Failed to load variant groups');
       console.error('Error:', err);
@@ -106,18 +100,10 @@ const VariantsPageContent: React.FC = () => {
     fetchProducts();
   }, [fetchGroups, fetchProducts]);
 
-  // Delete entire group
+  // Delete entire group using v1 API
   const handleDeleteGroup = async (group: VariantGroup) => {
     try {
-      const response = await fetch(`/api/admin/variant-groups?groupId=${group.id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete variant group');
-      }
-
+      await api.delete('variant-groups', group.id);
       setGroupToDelete(null);
       await fetchGroups();
       addToast(t('deleteSuccess'), 'success');
@@ -126,7 +112,7 @@ const VariantsPageContent: React.FC = () => {
     }
   };
 
-  // Remove single product from group (update group without this product)
+  // Remove single product from group using v1 API
   const handleRemoveProduct = async (group: VariantGroup, productToRemove: ProductInGroup) => {
     // If removing would leave less than 2 products, delete the whole group
     if (group.products.length <= 2) {
@@ -145,16 +131,7 @@ const VariantsPageContent: React.FC = () => {
           is_featured: p.is_featured
         }));
 
-      const response = await fetch(`/api/admin/variant-groups?groupId=${group.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ products: remainingProducts }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to remove product');
-      }
+      await api.update('variant-groups', group.id, { products: remainingProducts });
 
       setProductToRemove(null);
       await fetchGroups();
@@ -164,7 +141,7 @@ const VariantsPageContent: React.FC = () => {
     }
   };
 
-  // Toggle featured status
+  // Toggle featured status using v1 API
   const handleToggleFeatured = async (group: VariantGroup, product: ProductInGroup) => {
     try {
       const updatedProducts = group.products.map(p => ({
@@ -174,15 +151,7 @@ const VariantsPageContent: React.FC = () => {
         is_featured: p.product_id === product.product_id ? !p.is_featured : p.is_featured
       }));
 
-      const response = await fetch(`/api/admin/variant-groups?groupId=${group.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ products: updatedProducts }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update featured status');
-      }
+      await api.update('variant-groups', group.id, { products: updatedProducts });
 
       await fetchGroups();
       addToast(t('featuredUpdated'), 'success');

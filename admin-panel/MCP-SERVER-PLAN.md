@@ -33,7 +33,9 @@ Plan implementacji:
 | 3. Frontend Migration P1 | ✅ Done | 2026-01-09 | 2026-01-09 | Products pages (ProductsPageContent, useProducts hook) |
 | 4. Frontend Migration P2 | ✅ Done | 2026-01-09 | 2026-01-09 | Users, Coupons, Payments (useUsers, useCoupons, PaymentsDashboard) |
 | 5. Frontend Migration P3 | ✅ Done | 2026-01-09 | 2026-01-09 | Webhooks, Refunds (useWebhooks, WebhookLogsDrawer, WebhookFailuresPanel) |
-| 6. Cleanup | ⏳ Not started | - | - | Usunięcie /api/admin/* |
+| 6. Frontend Migration P4 | ✅ Done | 2026-01-09 | 2026-01-09 | Order Bumps, Variant Groups, OTO, Webhook archive |
+| 7. Test Migration | ✅ Done | 2026-01-09 | 2026-01-09 | v1-refund (19), v1-variant-groups (17), security tests migrated |
+| 8. Cleanup | ⏳ Not started | - | - | Usunięcie /api/admin/* |
 
 ### Szczegółowy progress API endpoints
 
@@ -77,22 +79,45 @@ Plan implementacji:
 
 **Components migrated to v1 API:**
 - ✅ `ProductsPageContent.tsx` - Full CRUD via useProducts hook
-- ✅ `ProductFormModal/hooks/useProductForm.ts` - Products dropdown
+- ✅ `ProductFormModal/hooks/useProductForm.ts` - Products dropdown + OTO operations
 - ✅ `UsersPageContent.tsx` - Full list via useUsers hook
 - ✅ `CouponsPageContent.tsx` - Full CRUD via api client
-- ✅ `PaymentsDashboard.tsx` - Transactions via v1 (sessions/stats still on old API)
+- ✅ `PaymentsDashboard.tsx` - Transactions + stats via v1 API
+- ✅ `PaymentFilters.tsx` - Export via v1 API
 - ✅ `useWebhooks.ts` - Full CRUD via api client
 - ✅ `WebhookLogsDrawer.tsx` - Logs and retry via v1 API
+- ✅ `WebhookLogsTable.tsx` - Archive via v1 API
 - ✅ `WebhookFailuresPanel.tsx` - Failed logs via v1 API
-- ✅ `OrderBumpsPageContent.tsx` - Products dropdown
+- ✅ `WebhooksPageContent.tsx` - Status toggle via v1 API
+- ✅ `OrderBumpsPageContent.tsx` - Full CRUD via v1 API
 - ✅ `VariantsPageContent.tsx` - Products dropdown
+- ✅ `VariantGroupFormModal.tsx` - Full CRUD via v1 API
 - ✅ `AccessManagementModal.tsx` - Products dropdown
+- ✅ `refund-requests/page.tsx` - Full operations via v1 API
 
-**Note:** Some specialized endpoints remain on old API:
-- `/api/admin/payments/sessions` - Checkout sessions
-- `/api/admin/payments/stats` - Payment statistics
-- `/api/admin/webhooks/logs/[logId]/archive` - Archive log (not in v1)
-- `/api/admin/products/[id]/oto` - OTO configuration
+**New v1 API endpoints created for frontend:**
+- ✅ `/api/v1/payments/stats` - Payment statistics
+- ✅ `/api/v1/payments/export` - CSV export
+- ✅ `/api/v1/webhooks/logs/[logId]/archive` - Archive webhook log
+- ✅ `/api/v1/products/[id]/oto` - OTO configuration (GET/PUT/DELETE)
+- ✅ `/api/v1/variant-groups` - Variant groups CRUD
+- ✅ `/api/v1/order-bumps` - Order bumps CRUD
+
+**Note:** Checkout sessions remain on old API (intentionally - different use case):
+- `/api/admin/payments/sessions` - Used only for admin panel payment session creation
+
+### Test Migration (2026-01-09)
+
+**New v1 test files:**
+- `tests/v1-refund.spec.ts` - 19 tests (auth, validation, security, access revocation)
+- `tests/v1-variant-groups.spec.ts` - 17 tests (CRUD, M:N relationships)
+
+**Migrated security tests to v1 API:**
+- ✅ `tests/mass-assignment-coupon.spec.ts` - URL + response format
+- ✅ `tests/ssrf-webhook.spec.ts` - URL + response format
+- ✅ `tests/variants-e2e.spec.ts` - URL + response format
+
+**Total v1 API test coverage:** 36 tests (matching old admin API coverage)
 
 ---
 

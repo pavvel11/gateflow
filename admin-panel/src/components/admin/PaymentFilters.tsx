@@ -45,14 +45,14 @@ export default function PaymentFilters({
 
   const exportPayments = async () => {
     try {
-      const response = await fetch('/api/admin/payments/export', {
+      const response = await fetch('/api/v1/payments/export', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(filters),
       });
-      
+
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);

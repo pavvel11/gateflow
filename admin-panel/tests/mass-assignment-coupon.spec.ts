@@ -92,7 +92,7 @@ test.describe('Mass Assignment - Coupon PATCH', () => {
 
     // Attempt to reset usage count
     const response = await page.evaluate(async ({ couponId }) => {
-      const res = await fetch(`/api/admin/coupons/${couponId}`, {
+      const res = await fetch(`/api/v1/coupons/${couponId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -134,7 +134,7 @@ test.describe('Mass Assignment - Coupon PATCH', () => {
     const fakeId = '00000000-0000-0000-0000-000000000000';
 
     const response = await page.evaluate(async ({ couponId, fakeId }) => {
-      const res = await fetch(`/api/admin/coupons/${couponId}`, {
+      const res = await fetch(`/api/v1/coupons/${couponId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -162,7 +162,7 @@ test.describe('Mass Assignment - Coupon PATCH', () => {
     console.log(`\nValid field update test:`);
 
     const response = await page.evaluate(async ({ couponId }) => {
-      const res = await fetch(`/api/admin/coupons/${couponId}`, {
+      const res = await fetch(`/api/v1/coupons/${couponId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -177,7 +177,7 @@ test.describe('Mass Assignment - Coupon PATCH', () => {
 
     // Valid fields should be updated
     expect(response.status).toBe(200);
-    expect(response.body.discount_value).toBe(15);
-    expect(response.body.is_active).toBe(false);
+    expect(response.body.data.discount_value).toBe(15);
+    expect(response.body.data.is_active).toBe(false);
   });
 });

@@ -973,29 +973,33 @@ test.describe('API v1 Comparison with Old Endpoints', () => {
     });
   });
 
-  test.describe('Endpoints Not Migrated to v1 (P3)', () => {
-    test('order-bumps endpoint exists only in old API', async ({ page }) => {
+  test.describe('Migrated Endpoints (Previously P3)', () => {
+    test('order-bumps endpoint exists in both old and new API', async ({ page }) => {
       await loginAsAdmin(page, adminEmail, adminPassword);
 
       // Old API has order-bumps
       const oldResponse = await page.request.get('/api/admin/order-bumps');
       expect(oldResponse.status()).toBe(200);
 
-      // New API does NOT have order-bumps (not migrated - P3)
+      // New API also has order-bumps (migrated)
       const newResponse = await page.request.get('/api/v1/order-bumps');
-      expect(newResponse.status()).toBe(404);
+      expect(newResponse.status()).toBe(200);
+      const newJson = await newResponse.json();
+      expect(newJson).toHaveProperty('data');
     });
 
-    test('variant-groups endpoint exists only in old API', async ({ page }) => {
+    test('variant-groups endpoint exists in both old and new API', async ({ page }) => {
       await loginAsAdmin(page, adminEmail, adminPassword);
 
       // Old API has variant-groups
       const oldResponse = await page.request.get('/api/admin/variant-groups');
       expect(oldResponse.status()).toBe(200);
 
-      // New API does NOT have variant-groups (not migrated - P3)
+      // New API also has variant-groups (migrated)
       const newResponse = await page.request.get('/api/v1/variant-groups');
-      expect(newResponse.status()).toBe(404);
+      expect(newResponse.status()).toBe(200);
+      const newJson = await newResponse.json();
+      expect(newJson).toHaveProperty('data');
     });
 
     test('payments/sessions endpoint exists only in old API (mirrors transactions)', async ({ page }) => {
@@ -1016,7 +1020,7 @@ test.describe('API v1 Comparison with Old Endpoints', () => {
       expect([400, 404]).toContain(newResponse.status());
     });
 
-    test('payments/export endpoint exists only in old API (uses POST)', async ({ page }) => {
+    test('payments/export endpoint exists in both old and new API', async ({ page }) => {
       await loginAsAdmin(page, adminEmail, adminPassword);
 
       // Old API export uses POST method (not GET)
@@ -1026,14 +1030,219 @@ test.describe('API v1 Comparison with Old Endpoints', () => {
       // Should return CSV or error, but endpoint exists
       expect([200, 500]).toContain(oldResponse.status());
 
-      // New API does NOT have export endpoint
-      // /api/v1/payments/export matches /api/v1/payments/[id] with "export" as ID
-      // Returns 400 (invalid UUID) or 405 (method not allowed for POST on GET-only route)
+      // New API also has export endpoint (migrated)
       const newResponse = await page.request.post('/api/v1/payments/export', {
         data: { status: 'all' },
       });
-      // 400 = validation error, 404 = not found, 405 = method not allowed
-      expect([400, 404, 405]).toContain(newResponse.status());
+      expect(newResponse.status()).toBe(200);
+      // Should return CSV
+      const contentType = newResponse.headers()['content-type'];
+      expect(contentType).toContain('text/csv');
+    });
+
+    test('payments/stats endpoint exists in both old and new API', async ({ page }) => {
+      await loginAsAdmin(page, adminEmail, adminPassword);
+
+      // Old API has stats
+      const oldResponse = await page.request.get('/api/admin/payments/stats');
+      expect(oldResponse.status()).toBe(200);
+
+      // New API also has stats (migrated)
+      const newResponse = await page.request.get('/api/v1/payments/stats');
+      expect(newResponse.status()).toBe(200);
+      const newJson = await newResponse.json();
+      expect(newJson.data).toHaveProperty('total_transactions');
+      expect(newJson.data).toHaveProperty('total_revenue');
+    });
+  });
+
+  test.describe('v1 Endpoint CRUD Tests', () => {
+    test('order-bumps: full CRUD cycle works', async ({ page }) => {
+      await loginAsAdmin(page, adminEmail, adminPassword);
+
+      // Create a second product for order bump
+      const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+      const createProductResponse = await page.request.post('/api/v1/products', {
+        data: {
+          name: `Bump Product ${uniqueId}`,
+          slug: `bump-${uniqueId}`,
+          description: 'Product for order bump testing',
+          price: 500,
+          currency: 'PLN',
+          is_active: true,
+        },
+      });
+      expect(createProductResponse.status()).toBe(201);
+      const bumpProductId = (await createProductResponse.json()).data.id;
+
+      try {
+        // CREATE order bump
+        const createResponse = await page.request.post('/api/v1/order-bumps', {
+          data: {
+            main_product_id: testProductId,
+            bump_product_id: bumpProductId,
+            bump_title: 'Test Bump Title',
+            bump_description: 'Test bump description',
+            bump_price: 300,
+            is_active: true,
+          },
+        });
+        expect(createResponse.status()).toBe(201);
+        const createBody = await createResponse.json();
+        expect(createBody.data).toHaveProperty('id');
+        const orderBumpId = createBody.data.id;
+
+        // READ single order bump
+        const getResponse = await page.request.get(`/api/v1/order-bumps/${orderBumpId}`);
+        expect(getResponse.status()).toBe(200);
+        const getBody = await getResponse.json();
+        expect(getBody.data.bump_title).toBe('Test Bump Title');
+
+        // UPDATE order bump
+        const updateResponse = await page.request.patch(`/api/v1/order-bumps/${orderBumpId}`, {
+          data: {
+            bump_title: 'Updated Bump Title',
+            bump_price: 400,
+          },
+        });
+        expect(updateResponse.status()).toBe(200);
+        const updateBody = await updateResponse.json();
+        expect(updateBody.data.bump_title).toBe('Updated Bump Title');
+        expect(updateBody.data.bump_price).toBe(400);
+
+        // DELETE order bump
+        const deleteResponse = await page.request.delete(`/api/v1/order-bumps/${orderBumpId}`);
+        expect(deleteResponse.status()).toBe(204);
+
+        // Verify deleted
+        const verifyResponse = await page.request.get(`/api/v1/order-bumps/${orderBumpId}`);
+        expect(verifyResponse.status()).toBe(404);
+      } finally {
+        // Cleanup bump product
+        await page.request.delete(`/api/v1/products/${bumpProductId}`);
+      }
+    });
+
+    test('variant-groups: full CRUD cycle works', async ({ page }) => {
+      await loginAsAdmin(page, adminEmail, adminPassword);
+
+      // Create a second product for variant group
+      const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+      const createProductResponse = await page.request.post('/api/v1/products', {
+        data: {
+          name: `Variant Product ${uniqueId}`,
+          slug: `variant-${uniqueId}`,
+          description: 'Product for variant testing',
+          price: 1500,
+          currency: 'PLN',
+          is_active: true,
+        },
+      });
+      expect(createProductResponse.status()).toBe(201);
+      const secondProductId = (await createProductResponse.json()).data.id;
+
+      try {
+        // CREATE variant group
+        const createResponse = await page.request.post('/api/v1/variant-groups', {
+          data: {
+            name: 'Test Variant Group',
+            slug: `test-vg-${uniqueId}`,
+            products: [
+              { product_id: testProductId, variant_name: 'Basic', is_featured: true },
+              { product_id: secondProductId, variant_name: 'Premium', is_featured: false },
+            ],
+          },
+        });
+        expect(createResponse.status()).toBe(201);
+        const createBody = await createResponse.json();
+        expect(createBody.data).toHaveProperty('id');
+        const groupId = createBody.data.id;
+
+        // READ single variant group
+        const getResponse = await page.request.get(`/api/v1/variant-groups/${groupId}`);
+        expect(getResponse.status()).toBe(200);
+        const getBody = await getResponse.json();
+        expect(getBody.data.name).toBe('Test Variant Group');
+        expect(getBody.data.products).toHaveLength(2);
+
+        // UPDATE variant group
+        const updateResponse = await page.request.patch(`/api/v1/variant-groups/${groupId}`, {
+          data: {
+            name: 'Updated Variant Group',
+          },
+        });
+        expect(updateResponse.status()).toBe(200);
+        const updateBody = await updateResponse.json();
+        expect(updateBody.data.name).toBe('Updated Variant Group');
+
+        // DELETE variant group
+        const deleteResponse = await page.request.delete(`/api/v1/variant-groups/${groupId}`);
+        expect(deleteResponse.status()).toBe(204);
+
+        // Verify deleted
+        const verifyResponse = await page.request.get(`/api/v1/variant-groups/${groupId}`);
+        expect(verifyResponse.status()).toBe(404);
+      } finally {
+        // Cleanup second product
+        await page.request.delete(`/api/v1/products/${secondProductId}`);
+      }
+    });
+
+    test('OTO (One-Time Offer): full cycle works', async ({ page }) => {
+      await loginAsAdmin(page, adminEmail, adminPassword);
+
+      // Create OTO product
+      const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+      const createProductResponse = await page.request.post('/api/v1/products', {
+        data: {
+          name: `OTO Product ${uniqueId}`,
+          slug: `oto-${uniqueId}`,
+          description: 'Product for OTO testing',
+          price: 2000,
+          currency: 'PLN',
+          is_active: true,
+        },
+      });
+      expect(createProductResponse.status()).toBe(201);
+      const otoProductId = (await createProductResponse.json()).data.id;
+
+      try {
+        // GET OTO config (initially none)
+        const getEmptyResponse = await page.request.get(`/api/v1/products/${testProductId}/oto`);
+        expect(getEmptyResponse.status()).toBe(200);
+        const emptyBody = await getEmptyResponse.json();
+        expect(emptyBody.data.has_oto).toBe(false);
+
+        // PUT (create) OTO config
+        const putResponse = await page.request.put(`/api/v1/products/${testProductId}/oto`, {
+          data: {
+            oto_product_id: otoProductId,
+            discount_type: 'percentage',
+            discount_value: 25,
+            duration_minutes: 30,
+          },
+        });
+        expect(putResponse.status()).toBe(200);
+
+        // GET OTO config (now exists)
+        const getResponse = await page.request.get(`/api/v1/products/${testProductId}/oto`);
+        expect(getResponse.status()).toBe(200);
+        const getBody = await getResponse.json();
+        expect(getBody.data.has_oto).toBe(true);
+
+        // DELETE OTO config
+        const deleteResponse = await page.request.delete(`/api/v1/products/${testProductId}/oto`);
+        expect(deleteResponse.status()).toBe(204);
+
+        // Verify deleted
+        const verifyResponse = await page.request.get(`/api/v1/products/${testProductId}/oto`);
+        expect(verifyResponse.status()).toBe(200);
+        const verifyBody = await verifyResponse.json();
+        expect(verifyBody.data.has_oto).toBe(false);
+      } finally {
+        // Cleanup OTO product
+        await page.request.delete(`/api/v1/products/${otoProductId}`);
+      }
     });
   });
 });

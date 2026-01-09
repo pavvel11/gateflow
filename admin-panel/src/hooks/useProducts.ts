@@ -147,20 +147,14 @@ export function useProducts(params: UseProductsParams = {}): UseProductsResult {
     // Create the product
     const product = await api.create<Product>('products', productData);
 
-    // If OTO is enabled, save OTO configuration
-    // Note: OTO endpoint might not be migrated to v1 yet, use old endpoint
+    // If OTO is enabled, save OTO configuration using v1 API
     if (oto_enabled && oto_product_id && product.id) {
       try {
-        await fetch(`/api/admin/products/${product.id}/oto`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            oto_enabled,
-            oto_product_id,
-            oto_discount_type,
-            oto_discount_value,
-            oto_duration_minutes,
-          }),
+        await api.putCustom(`products/${product.id}/oto`, {
+          oto_product_id,
+          discount_type: oto_discount_type || 'percentage',
+          discount_value: oto_discount_value || 20,
+          duration_minutes: oto_duration_minutes || 15,
         });
       } catch (otoErr) {
         console.error('Failed to save OTO configuration:', otoErr);
@@ -181,20 +175,20 @@ export function useProducts(params: UseProductsParams = {}): UseProductsResult {
     // Update the product
     const product = await api.update<Product>('products', id, productData);
 
-    // Save OTO configuration (create/update/delete)
-    // Note: OTO endpoint might not be migrated to v1 yet, use old endpoint
+    // Save OTO configuration using v1 API (create/update/delete)
     try {
-      await fetch(`/api/admin/products/${id}/oto`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          oto_enabled: oto_enabled ?? false,
-          oto_product_id: oto_product_id ?? null,
-          oto_discount_type: oto_discount_type ?? 'percentage',
-          oto_discount_value: oto_discount_value ?? 0,
-          oto_duration_minutes: oto_duration_minutes ?? 30,
-        }),
-      });
+      if (oto_enabled && oto_product_id) {
+        // Create or update OTO
+        await api.putCustom(`products/${id}/oto`, {
+          oto_product_id,
+          discount_type: oto_discount_type || 'percentage',
+          discount_value: oto_discount_value || 20,
+          duration_minutes: oto_duration_minutes || 15,
+        });
+      } else {
+        // Delete OTO configuration
+        await api.deleteCustom(`products/${id}/oto`);
+      }
     } catch (otoErr) {
       console.error('Failed to save OTO configuration:', otoErr);
       // Don't throw - product was updated successfully

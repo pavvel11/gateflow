@@ -159,9 +159,9 @@ test.describe('Product Variants E2E Flow', () => {
     await expect(modal).not.toBeVisible({ timeout: 20000 });
 
     // Step 9: Get the created group info from the API
-    const response = await page.request.get('/api/admin/variant-groups');
+    const response = await page.request.get('/api/v1/variant-groups');
     const data = await response.json();
-    const ourGroup = data.groups.find((g: any) => g.name?.startsWith('E2E License Plans') && g.products?.length >= 2);
+    const ourGroup = data.data.find((g: any) => g.name?.startsWith('E2E License Plans') && g.products?.length >= 2);
     expect(ourGroup).toBeDefined();
 
     createdGroupId = ourGroup.id;
@@ -204,9 +204,9 @@ test.describe('Product Variants E2E Flow', () => {
     await acceptAllCookies(page);
 
     // Get the group ID/slug from API (don't depend on previous test state)
-    const response = await request.get('/api/admin/variant-groups');
+    const response = await request.get('/api/v1/variant-groups');
     const data = await response.json();
-    const group = data.groups?.find((g: any) => g.products?.length >= 2);
+    const group = data.data?.find((g: any) => g.products?.length >= 2);
 
     if (!group) {
       console.log('No variant groups with products found');
@@ -225,9 +225,9 @@ test.describe('Product Variants E2E Flow', () => {
     await acceptAllCookies(page);
 
     // Get the group ID/slug from API
-    const response = await request.get('/api/admin/variant-groups');
+    const response = await request.get('/api/v1/variant-groups');
     const data = await response.json();
-    const group = data.groups?.find((g: any) => g.products?.length >= 2);
+    const group = data.data?.find((g: any) => g.products?.length >= 2);
 
     if (!group) {
       console.log('No variant groups with products found');

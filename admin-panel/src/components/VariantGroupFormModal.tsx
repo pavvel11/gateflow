@@ -12,6 +12,7 @@ import { Product } from '@/types';
 import { formatPrice } from '@/lib/constants';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/contexts/ToastContext';
+import { api } from '@/lib/api/client';
 
 interface ProductInGroup {
   id: string;
@@ -216,42 +217,21 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
       }));
 
       if (editingGroup) {
-        // Update existing group
-        const response = await fetch(
-          `/api/admin/variant-groups?groupId=${editingGroup.id}`,
-          {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: groupName || null,
-              slug: groupSlug || null,
-              products: productsData,
-            }),
-          }
-        );
-
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || 'Failed to update variant group');
-        }
+        // Update existing group using v1 API
+        await api.update('variant-groups', editingGroup.id, {
+          name: groupName || null,
+          slug: groupSlug || null,
+          products: productsData,
+        });
 
         addToast(t('updateSuccess'), 'success');
       } else {
-        // Create new group
-        const response = await fetch('/api/admin/variant-groups', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: groupName || null,
-            slug: groupSlug || null,
-            products: productsData,
-          }),
+        // Create new group using v1 API
+        await api.create('variant-groups', {
+          name: groupName || null,
+          slug: groupSlug || null,
+          products: productsData,
         });
-
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || 'Failed to create variant group');
-        }
 
         addToast(t('createSuccess'), 'success');
       }

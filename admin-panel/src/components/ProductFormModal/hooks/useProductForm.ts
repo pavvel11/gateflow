@@ -157,9 +157,8 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
         setFormData(prev => ({ ...prev, categories: catIds }));
       }).catch(err => console.error(err));
 
-      // Fetch OTO configuration for this product
-      fetch(`/api/admin/products/${product.id}/oto`)
-        .then(res => res.json())
+      // Fetch OTO configuration for this product using v1 API
+      api.getCustom<{ has_oto: boolean; oto_product_id?: string; discount_type?: 'percentage' | 'fixed'; discount_value?: number; duration_minutes?: number }>(`products/${product.id}/oto`)
         .then(data => {
           if (data.has_oto) {
             setOto({

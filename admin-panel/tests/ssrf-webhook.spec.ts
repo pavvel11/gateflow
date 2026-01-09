@@ -83,7 +83,7 @@ test.describe('SSRF - Webhook URL Validation', () => {
 
       // Try to create webhook with internal URL
       const response = await page.evaluate(async (webhookUrl) => {
-        const res = await fetch('/api/admin/webhooks', {
+        const res = await fetch('/api/v1/webhooks', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -109,7 +109,7 @@ test.describe('SSRF - Webhook URL Validation', () => {
       }
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toContain('URL');
+      expect(response.body.error.message).toContain('URL');
     });
   }
 
@@ -122,7 +122,7 @@ test.describe('SSRF - Webhook URL Validation', () => {
     console.log(`  URL: ${validUrl}`);
 
     const response = await page.evaluate(async (webhookUrl) => {
-      const res = await fetch('/api/admin/webhooks', {
+      const res = await fetch('/api/v1/webhooks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -138,11 +138,11 @@ test.describe('SSRF - Webhook URL Validation', () => {
 
     // Should accept valid external URLs
     expect(response.ok).toBe(true);
-    expect(response.body.url).toBe(validUrl);
+    expect(response.body.data.url).toBe(validUrl);
 
     // Cleanup
-    if (response.body?.id) {
-      await supabaseAdmin.from('webhook_endpoints').delete().eq('id', response.body.id);
+    if (response.body?.data?.id) {
+      await supabaseAdmin.from('webhook_endpoints').delete().eq('id', response.body.data.id);
     }
   });
 });
