@@ -10,6 +10,7 @@ import CodeGeneratorModal from './CodeGeneratorModal';
 import { exportProductsToCsv } from '@/utils/csvExport';
 import { useTranslations } from 'next-intl';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useProducts } from '@/hooks/useProducts';
 
 const ProductsPageContent: React.FC = () => {
   const { addToast } = useToast();
@@ -17,11 +18,6 @@ const ProductsPageContent: React.FC = () => {
   const t = useTranslations('admin.products');
   const searchParams = useSearchParams();
   const router = useRouter();
-
-  // State for products and loading status
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // State for modals
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
@@ -34,16 +30,35 @@ const ProductsPageContent: React.FC = () => {
 
   // State for pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [limit] = useState(10);
-  const [totalItems, setTotalItems] = useState(0);
-  
+
   // State for filtering and sorting
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  // Use the v1 API products hook
+  const {
+    products,
+    loading,
+    error,
+    pagination,
+    fetchProducts,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    toggleStatus,
+    toggleFeatured,
+  } = useProducts({
+    page: currentPage,
+    limit,
+    search: debouncedSearchTerm,
+    status: statusFilter,
+    sortBy,
+    sortOrder,
+  });
 
   const handleSort = (column: string) => {
     if (sortBy === column) {
@@ -65,42 +80,7 @@ const ProductsPageContent: React.FC = () => {
     };
   }, [searchTerm]);
 
-  // Fetch products from the API
-  const fetchProducts = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: limit.toString(),
-        search: debouncedSearchTerm,
-        sortBy,
-        sortOrder,
-        status: statusFilter
-      });
-      
-      const response = await fetch(`/api/admin/products?${params}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      setProducts(data.products || []);
-      
-      if (data.pagination) {
-        setTotalPages(data.pagination.totalPages);
-        setTotalItems(data.pagination.total);
-      }
-    } catch {
-      setError('Failed to load products. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  }, [currentPage, limit, debouncedSearchTerm, sortBy, sortOrder, statusFilter]);
-
-  // Re-fetch products when dependencies change
+  // Fetch products when dependencies change
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
@@ -117,34 +97,8 @@ const ProductsPageContent: React.FC = () => {
   const handleCreateProduct = async (formData: ProductFormData) => {
     setSubmitting(true);
     try {
-      const response = await fetch('/api/admin/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create product');
-      }
-
-      // Get the created product ID from response
-      const createdProduct = await response.json();
-      const productId = createdProduct.id;
-
-      // Save OTO configuration if enabled
-      if (productId && formData.oto_enabled && formData.oto_product_id) {
-        await fetch(`/api/admin/products/${productId}/oto`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            oto_enabled: formData.oto_enabled,
-            oto_product_id: formData.oto_product_id,
-            oto_discount_type: formData.oto_discount_type,
-            oto_discount_value: formData.oto_discount_value,
-            oto_duration_minutes: formData.oto_duration_minutes,
-          }),
-        });
-      }
+      // Use the v1 API hook to create the product (OTO is handled inside the hook)
+      await createProduct(formData);
 
       setShowProductForm(false);
       // Remove query param if present
@@ -168,36 +122,8 @@ const ProductsPageContent: React.FC = () => {
     if (!editingProduct) return Promise.reject(new Error('No product selected for editing'));
     setSubmitting(true);
     try {
-      const response = await fetch(`/api/admin/products/${editingProduct.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      if (!response.ok) {
-        const responseText = await response.text();
-        let errorData;
-        try {
-          errorData = JSON.parse(responseText);
-        } catch {
-          console.error('Product update error - non-JSON response:', response.status, responseText);
-          throw new Error(`Server error: ${response.status}`);
-        }
-        console.error('Product update validation error:', errorData);
-        throw new Error(errorData.details?.join(', ') || errorData.error || 'Failed to update product');
-      }
-
-      // Save OTO configuration (create/update/delete)
-      await fetch(`/api/admin/products/${editingProduct.id}/oto`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          oto_enabled: formData.oto_enabled,
-          oto_product_id: formData.oto_product_id,
-          oto_discount_type: formData.oto_discount_type,
-          oto_discount_value: formData.oto_discount_value,
-          oto_duration_minutes: formData.oto_duration_minutes,
-        }),
-      });
+      // Use the v1 API hook to update the product (OTO is handled inside the hook)
+      await updateProduct(editingProduct.id, formData);
 
       setShowProductForm(false);
       setEditingProduct(null);
@@ -221,22 +147,16 @@ const ProductsPageContent: React.FC = () => {
 
   const confirmDelete = async () => {
     if (!productToDelete) return;
-    
-    try {
-      const response = await fetch(`/api/admin/products/${productToDelete.id}`, {
-        method: 'DELETE',
-      });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete product');
-      }
+    try {
+      // Use the v1 API hook to delete the product
+      await deleteProduct(productToDelete.id);
 
       const productName = productToDelete.name;
-      
+
       await fetchProducts();
       setProductToDelete(null);
-      
+
       addToast(t('deleteSuccess', { name: productName }), 'success');
     } catch (err) {
       addToast(err instanceof Error ? err.message : t('deleteError'), 'error');
@@ -286,66 +206,36 @@ const ProductsPageContent: React.FC = () => {
   };
 
   const handleToggleStatus = async (productId: string, currentStatus: boolean) => {
-    const newStatus = !currentStatus;
-
     try {
-      const response = await fetch(`/api/admin/products/${productId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_active: newStatus }),
-      });
+      // Use the v1 API hook to toggle status
+      await toggleStatus(productId, currentStatus);
 
-      if (!response.ok) {
-        throw new Error('Failed to toggle status');
-      }
-
-      // Update local state optimistically
-      setProducts(prevProducts =>
-        prevProducts.map(p =>
-          p.id === productId ? { ...p, is_active: newStatus } : p
-        )
-      );
+      // Refetch to get updated data
+      await fetchProducts();
 
       addToast(
-        newStatus ? t('statusActivated') : t('statusDeactivated'),
+        !currentStatus ? t('statusActivated') : t('statusDeactivated'),
         'success'
       );
     } catch (err) {
       addToast(t('statusToggleError'), 'error');
-      // Revert on error by refetching
-      await fetchProducts();
     }
   };
 
   const handleToggleFeatured = async (productId: string, currentFeatured: boolean) => {
-    const newFeatured = !currentFeatured;
-
     try {
-      const response = await fetch(`/api/admin/products/${productId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_featured: newFeatured }),
-      });
+      // Use the v1 API hook to toggle featured status
+      await toggleFeatured(productId, currentFeatured);
 
-      if (!response.ok) {
-        throw new Error('Failed to toggle featured status');
-      }
-
-      // Update local state optimistically
-      setProducts(prevProducts =>
-        prevProducts.map(p =>
-          p.id === productId ? { ...p, is_featured: newFeatured } : p
-        )
-      );
+      // Refetch to get updated data
+      await fetchProducts();
 
       addToast(
-        newFeatured ? t('featuredEnabled') : t('featuredDisabled'),
+        !currentFeatured ? t('featuredEnabled') : t('featuredDisabled'),
         'success'
       );
     } catch (err) {
       addToast(t('featuredToggleError'), 'error');
-      // Revert on error by refetching
-      await fetchProducts();
     }
   };
 
@@ -360,7 +250,7 @@ const ProductsPageContent: React.FC = () => {
   };
 
   const handleStatusFilterChange = (status: string) => {
-    setStatusFilter(status);
+    setStatusFilter(status as 'all' | 'active' | 'inactive');
     setCurrentPage(1);
   };
 
@@ -407,9 +297,9 @@ const ProductsPageContent: React.FC = () => {
         onGenerateCode={handleGenerateCode}
         onToggleStatus={handleToggleStatus}
         onToggleFeatured={handleToggleFeatured}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={totalItems}
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalItems={pagination.totalItems}
         onPageChange={handlePageChange}
         limit={limit}
         sortBy={sortBy}

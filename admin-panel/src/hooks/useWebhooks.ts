@@ -1,13 +1,20 @@
+/**
+ * Webhooks Hook for v1 API
+ *
+ * Provides a consistent interface for webhook endpoint operations.
+ */
+
 import { useState, useCallback } from 'react';
 import { WebhookEndpoint } from '@/types/webhooks';
 import { useToast } from '@/contexts/ToastContext';
 import { useTranslations } from 'next-intl';
+import { api, ApiError } from '@/lib/api/client';
 
 export function useWebhooks() {
   const t = useTranslations('admin.webhooks');
   const tCommon = useTranslations('common');
   const { addToast } = useToast();
-  
+
   const [endpoints, setEndpoints] = useState<WebhookEndpoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -15,10 +22,8 @@ export function useWebhooks() {
   const fetchEndpoints = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/admin/webhooks');
-      if (!res.ok) throw new Error('Failed to fetch');
-      const data = await res.json();
-      setEndpoints(data);
+      const response = await api.list<WebhookEndpoint>('webhooks', { limit: 100 });
+      setEndpoints(response.data || []);
     } catch (err) {
       console.error(err);
       addToast(tCommon('error'), 'error');
@@ -30,17 +35,16 @@ export function useWebhooks() {
   const createEndpoint = async (data: Partial<WebhookEndpoint>) => {
     setSubmitting(true);
     try {
-      const res = await fetch('/api/admin/webhooks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      if (!res.ok) throw new Error('Failed');
+      await api.create<WebhookEndpoint>('webhooks', data as Record<string, unknown>);
       addToast(t('createSuccess'), 'success');
       fetchEndpoints();
       return true;
-    } catch {
-      addToast(tCommon('error'), 'error');
+    } catch (err) {
+      if (err instanceof ApiError) {
+        addToast(err.message, 'error');
+      } else {
+        addToast(tCommon('error'), 'error');
+      }
       return false;
     } finally {
       setSubmitting(false);
@@ -50,17 +54,16 @@ export function useWebhooks() {
   const updateEndpoint = async (id: string, data: Partial<WebhookEndpoint>) => {
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/admin/webhooks/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      if (!res.ok) throw new Error('Failed');
+      await api.update<WebhookEndpoint>('webhooks', id, data as Record<string, unknown>);
       addToast(t('updateSuccess'), 'success');
       fetchEndpoints();
       return true;
-    } catch {
-      addToast(tCommon('error'), 'error');
+    } catch (err) {
+      if (err instanceof ApiError) {
+        addToast(err.message, 'error');
+      } else {
+        addToast(tCommon('error'), 'error');
+      }
       return false;
     } finally {
       setSubmitting(false);
@@ -69,35 +72,41 @@ export function useWebhooks() {
 
   const deleteEndpoint = async (id: string) => {
     try {
-      const res = await fetch(`/api/admin/webhooks/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed');
+      await api.delete('webhooks', id);
       addToast(tCommon('success'), 'success');
       fetchEndpoints();
       return true;
-    } catch {
-      addToast(tCommon('error'), 'error');
+    } catch (err) {
+      if (err instanceof ApiError) {
+        addToast(err.message, 'error');
+      } else {
+        addToast(tCommon('error'), 'error');
+      }
       return false;
     }
   };
 
   const testEndpoint = async (id: string, eventType: string) => {
     try {
-      const res = await fetch('/api/admin/webhooks/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ endpointId: id, eventType })
-      });
-      const data = await res.json();
-      
-      if (data.success) {
-        addToast(t('testSuccess') + ` (HTTP ${data.status})`, 'success');
+      // Use v1 test endpoint
+      const response = await api.postCustom<{ success: boolean; status?: number; error?: string }>(
+        `webhooks/${id}/test`,
+        { event_type: eventType }
+      );
+
+      if (response.success) {
+        addToast(t('testSuccess') + ` (HTTP ${response.status})`, 'success');
         return true;
       } else {
-        addToast(t('testFailed') + `: ${data.error}`, 'error');
+        addToast(t('testFailed') + `: ${response.error}`, 'error');
         return false;
       }
-    } catch {
-      addToast(tCommon('error'), 'error');
+    } catch (err) {
+      if (err instanceof ApiError) {
+        addToast(t('testFailed') + `: ${err.message}`, 'error');
+      } else {
+        addToast(tCommon('error'), 'error');
+      }
       return false;
     }
   };

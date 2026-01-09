@@ -30,9 +30,9 @@ Plan implementacji:
 |------|--------|------------------|------------------|-------|
 | 1. REST API `/api/v1/*` | ✅ Done | 2026-01-08 | 2026-01-09 | 239 testów, wszystkie endpointy zaimplementowane |
 | 2. MCP Server | ⏳ Not started | - | - | Thin wrapper nad REST API |
-| 3. Frontend Migration P1 | ⏳ Not started | - | - | Products pages |
-| 4. Frontend Migration P2 | ⏳ Not started | - | - | Users, Coupons, Payments |
-| 5. Frontend Migration P3 | ⏳ Not started | - | - | Webhooks, Refunds, pozostałe |
+| 3. Frontend Migration P1 | ✅ Done | 2026-01-09 | 2026-01-09 | Products pages (ProductsPageContent, useProducts hook) |
+| 4. Frontend Migration P2 | ✅ Done | 2026-01-09 | 2026-01-09 | Users, Coupons, Payments (useUsers, useCoupons, PaymentsDashboard) |
+| 5. Frontend Migration P3 | ✅ Done | 2026-01-09 | 2026-01-09 | Webhooks, Refunds (useWebhooks, WebhookLogsDrawer, WebhookFailuresPanel) |
 | 6. Cleanup | ⏳ Not started | - | - | Usunięcie /api/admin/* |
 
 ### Szczegółowy progress API endpoints
@@ -66,6 +66,33 @@ Plan implementacji:
 - ✅ Cursor-based pagination
 - ✅ Standardized error format `{ error: { code, message, details? } }`
 - ✅ noContentResponse() helper for DELETE operations
+
+### Frontend Migration (2026-01-09)
+
+**New files created:**
+- `src/lib/api/client.ts` - Centralized v1 API client with error handling
+- `src/hooks/useProducts.ts` - Products hook with pagination translation
+- `src/hooks/useUsers.ts` - Users hook for v1 API
+- `src/hooks/useCoupons.ts` - Coupons hook for v1 API
+
+**Components migrated to v1 API:**
+- ✅ `ProductsPageContent.tsx` - Full CRUD via useProducts hook
+- ✅ `ProductFormModal/hooks/useProductForm.ts` - Products dropdown
+- ✅ `UsersPageContent.tsx` - Full list via useUsers hook
+- ✅ `CouponsPageContent.tsx` - Full CRUD via api client
+- ✅ `PaymentsDashboard.tsx` - Transactions via v1 (sessions/stats still on old API)
+- ✅ `useWebhooks.ts` - Full CRUD via api client
+- ✅ `WebhookLogsDrawer.tsx` - Logs and retry via v1 API
+- ✅ `WebhookFailuresPanel.tsx` - Failed logs via v1 API
+- ✅ `OrderBumpsPageContent.tsx` - Products dropdown
+- ✅ `VariantsPageContent.tsx` - Products dropdown
+- ✅ `AccessManagementModal.tsx` - Products dropdown
+
+**Note:** Some specialized endpoints remain on old API:
+- `/api/admin/payments/sessions` - Checkout sessions
+- `/api/admin/payments/stats` - Payment statistics
+- `/api/admin/webhooks/logs/[logId]/archive` - Archive log (not in v1)
+- `/api/admin/products/[id]/oto` - OTO configuration
 
 ---
 

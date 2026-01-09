@@ -5,6 +5,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { useTranslations } from 'next-intl';
 import { WebhookLog } from '@/types/webhooks';
 import WebhookLogsTable from './webhooks/WebhookLogsTable';
+import { api } from '@/lib/api/client';
 
 interface WebhookFailuresPanelProps {
   refreshTrigger: number; // To reload when main list updates
@@ -25,10 +26,12 @@ export default function WebhookFailuresPanel({ refreshTrigger, onRefresh }: Webh
   const fetchFailures = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/admin/webhooks/logs?status=failed&limit=5');
-      if (!res.ok) throw new Error('Failed to fetch failures');
-      const data = await res.json();
-      setFailures(data);
+      // Use v1 API for webhook logs
+      const response = await api.list<WebhookLog>('webhooks/logs', {
+        status: 'failed',
+        limit: 5,
+      });
+      setFailures(response.data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -58,10 +61,11 @@ export default function WebhookFailuresPanel({ refreshTrigger, onRefresh }: Webh
   const executeRetry = async (logId: string) => {
     setRetrying(logId);
     try {
-      const res = await fetch(`/api/admin/webhooks/logs/${logId}/retry`, {
-        method: 'POST'
-      });
-      const data = await res.json();
+      // Use v1 API for retry
+      const data = await api.postCustom<{ success: boolean; error?: string }>(
+        `webhooks/logs/${logId}/retry`,
+        {}
+      );
 
       // Show appropriate toast based on result
       if (data.success) {

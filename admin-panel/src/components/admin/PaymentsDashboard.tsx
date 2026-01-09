@@ -11,6 +11,7 @@ import PaymentTransactionsTable from './PaymentTransactionsTable';
 import PaymentSessionsTable from './PaymentSessionsTable';
 import PaymentFilters from './PaymentFilters';
 import type { PaymentTransaction, PaymentSession } from '@/types/payment';
+import { api } from '@/lib/api/client';
 
 interface PaymentStats {
   totalTransactions: number;
@@ -35,26 +36,26 @@ export default function PaymentsDashboard() {
     searchTerm: '',
   });
 
-  // Fetch payment data
+  // Fetch payment data (transactions from v1 API, sessions and stats from old API)
   const fetchPaymentData = useCallback(async () => {
     setLoading(true);
     try {
       const [transactionsRes, sessionsRes, statsRes] = await Promise.all([
-        fetch('/api/admin/payments/transactions'),
+        api.list<PaymentTransaction>('payments', { limit: 500 }),
         fetch('/api/admin/payments/sessions'),
         fetch('/api/admin/payments/stats'),
       ]);
 
-      if (transactionsRes.ok) {
-        const transactionsData = await transactionsRes.json();
-        setTransactions(transactionsData);
-      }
+      // Transactions from v1 API
+      setTransactions(transactionsRes.data || []);
 
+      // Sessions from old API (not migrated to v1 yet)
       if (sessionsRes.ok) {
         const sessionsData = await sessionsRes.json();
         setSessions(sessionsData);
       }
 
+      // Stats from old API (not migrated to v1 yet)
       if (statsRes.ok) {
         const statsData = await statsRes.json();
         setStats(statsData);

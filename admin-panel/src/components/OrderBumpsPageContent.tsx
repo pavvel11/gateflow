@@ -17,6 +17,7 @@ import { useToast } from '@/contexts/ToastContext';
 import OrderBumpFormModal from './OrderBumpFormModal';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import { api } from '@/lib/api/client';
 
 interface OrderBumpWithDetails {
   id: string;
@@ -62,18 +63,16 @@ const OrderBumpsPageContent: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [bumpToDelete, setBumpToDelete] = useState<OrderBumpWithDetails | null>(null);
 
-  // Fetch products for dropdown
+  // Fetch products for dropdown using v1 API
   const fetchProducts = useCallback(async () => {
     try {
       setLoadingProducts(true);
-      const response = await fetch('/api/admin/products?limit=1000&status=active');
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch products');
-      }
-
-      const data = await response.json();
-      setProducts(data.products || []);
+      const response = await api.list<Product>('products', {
+        limit: 1000,
+        status: 'active',
+        sort: 'name',
+      });
+      setProducts(response.data || []);
     } catch (err) {
       console.error('Error fetching products:', err);
     } finally {

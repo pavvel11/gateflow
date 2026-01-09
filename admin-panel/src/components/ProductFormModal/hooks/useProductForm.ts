@@ -8,6 +8,7 @@ import { getCategories, getProductCategories, Category } from '@/lib/actions/cat
 import { getDefaultCurrency, getShopConfig } from '@/lib/actions/shop-config';
 import { parseVideoUrl, isTrustedVideoPlatform } from '@/lib/videoUtils';
 import { createClient } from '@/lib/supabase/client';
+import { api } from '@/lib/api/client';
 import {
   ProductFormData,
   OtoState,
@@ -201,15 +202,18 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
     }
   }, [product, isOpen, defaultCurrency]);
 
-  // Fetch products for OTO dropdown
+  // Fetch products for OTO dropdown using v1 API
   useEffect(() => {
     const fetchProducts = async () => {
       if (!isOpen) return;
       try {
         setLoadingProducts(true);
-        const res = await fetch('/api/admin/products?limit=1000&status=active');
-        const data = await res.json();
-        setProducts(data.products || []);
+        const response = await api.list<Product>('products', {
+          limit: 1000,
+          status: 'active',
+          sort: 'name',
+        });
+        setProducts(response.data || []);
       } catch (err) {
         console.error('Failed to fetch products', err);
       } finally {

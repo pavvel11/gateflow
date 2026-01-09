@@ -15,6 +15,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { useTranslations } from 'next-intl';
 import { formatPrice } from '@/lib/constants';
 import VariantGroupFormModal from './VariantGroupFormModal';
+import { api } from '@/lib/api/client';
 
 interface ProductInGroup {
   id: string;
@@ -61,18 +62,15 @@ const VariantsPageContent: React.FC = () => {
   const [groupToDelete, setGroupToDelete] = useState<VariantGroup | null>(null);
   const [productToRemove, setProductToRemove] = useState<{ group: VariantGroup; product: ProductInGroup } | null>(null);
 
-  // Fetch all products for the form
+  // Fetch all products for the form using v1 API
   const fetchProducts = useCallback(async () => {
     try {
       setLoadingProducts(true);
-      const response = await fetch('/api/admin/products?limit=1000');
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch products');
-      }
-
-      const data = await response.json();
-      setAllProducts(data.products || []);
+      const response = await api.list<Product>('products', {
+        limit: 1000,
+        sort: 'name',
+      });
+      setAllProducts(response.data || []);
     } catch (err) {
       console.error('Error fetching products:', err);
     } finally {

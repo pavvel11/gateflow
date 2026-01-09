@@ -6,6 +6,7 @@ import { WebhookLog, WebhookEndpoint } from '@/types/webhooks';
 import { BaseModal, ModalHeader, ModalBody, ModalFooter, Button } from './ui/Modal';
 import { useTranslations } from 'next-intl';
 import WebhookLogsTable from './webhooks/WebhookLogsTable';
+import { api } from '@/lib/api/client';
 
 interface WebhookLogsDrawerProps {
   endpoint: WebhookEndpoint;
@@ -29,10 +30,13 @@ export default function WebhookLogsDrawer({ endpoint, onClose, isOpen, onRefresh
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/admin/webhooks/logs?endpointId=${endpoint.id}&status=${filter}&limit=50`);
-      if (!res.ok) throw new Error('Failed to fetch logs');
-      const data = await res.json();
-      setLogs(data);
+      // Use v1 API for webhook logs
+      const response = await api.list<WebhookLog>('webhooks/logs', {
+        endpoint_id: endpoint.id,
+        status: filter,
+        limit: 50,
+      });
+      setLogs(response.data || []);
     } catch (err) {
       console.error(err);
       addToast('Failed to load logs', 'error');
@@ -62,10 +66,11 @@ export default function WebhookLogsDrawer({ endpoint, onClose, isOpen, onRefresh
   const executeRetry = async (logId: string) => {
     setRetrying(logId);
     try {
-      const res = await fetch(`/api/admin/webhooks/logs/${logId}/retry`, {
-        method: 'POST'
-      });
-      const data = await res.json();
+      // Use v1 API for retry
+      const data = await api.postCustom<{ success: boolean; error?: string }>(
+        `webhooks/logs/${logId}/retry`,
+        {}
+      );
 
       // Show appropriate toast based on result
       if (data.success) {
