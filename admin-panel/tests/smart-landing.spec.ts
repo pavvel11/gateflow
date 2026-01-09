@@ -221,12 +221,12 @@ test.describe('Smart Landing Page', () => {
     const comingSoon = page.locator('[data-testid="coming-soon"]');
     await expect(comingSoon).toBeVisible({ timeout: 10000 });
 
-    // Should see rocket emoji
-    const rocket = page.locator('text=🚀');
+    // Should see large rocket emoji (the main animated one, not in marketing links)
+    const rocket = comingSoon.locator('.text-8xl', { hasText: '🚀' });
     await expect(rocket).toBeVisible();
 
     // Should see subtitle about checking back soon
-    const subtitle = page.locator('text=/Check back soon|Wróć wkrótce/i');
+    const subtitle = comingSoon.locator('text=/Check back soon|Wróć wkrótce/i');
     await expect(subtitle).toBeVisible();
 
     // Should NOT see admin onboarding elements
