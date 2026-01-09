@@ -15,7 +15,9 @@ if (!SUPABASE_URL || !SERVICE_ROLE_KEY || !ANON_KEY) {
 
 const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-test.describe('Product Variants API (M:N Schema)', () => {
+// SKIP: Deprecated /api/admin/variant-groups endpoints are now blocked (return 503)
+// Use /api/v1/variant-groups instead - see api-v1-webhooks.spec.ts for v1 API tests
+test.describe.skip('Product Variants API (M:N Schema)', () => {
   let adminUserId: string;
   let adminEmail: string;
   const adminPassword = 'TestPassword123!';

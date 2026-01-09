@@ -37,7 +37,9 @@ async function loginAsAdmin(page: any, email: string, password: string) {
   await page.reload();
 }
 
-test.describe('API v1 Comparison with Old Endpoints', () => {
+// SKIP: Deprecated /api/admin/* endpoints are now blocked (return 503)
+// These comparison tests are no longer needed - v1 migration is complete
+test.describe.skip('API v1 Comparison with Old Endpoints', () => {
   let adminUserId: string;
   let adminEmail: string;
   const adminPassword = 'TestPassword123!';
