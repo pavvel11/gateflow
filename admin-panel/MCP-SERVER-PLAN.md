@@ -28,12 +28,12 @@ Plan implementacji:
 
 | Faza | Status | Data rozpoczęcia | Data zakończenia | Uwagi |
 |------|--------|------------------|------------------|-------|
-| 1. REST API `/api/v1/*` | 🔄 In progress | 2026-01-08 | - | Products, Users, API Keys, Coupons, Analytics, Payments done |
-| 2. MCP Server | ⏳ Not started | - | - | - |
-| 3. Frontend Migration P1 | ⏳ Not started | - | - | - |
-| 4. Frontend Migration P2 | ⏳ Not started | - | - | - |
-| 5. Frontend Migration P3 | ⏳ Not started | - | - | - |
-| 6. Cleanup | ⏳ Not started | - | - | - |
+| 1. REST API `/api/v1/*` | ✅ Done | 2026-01-08 | 2026-01-09 | 239 testów, wszystkie endpointy zaimplementowane |
+| 2. MCP Server | ⏳ Not started | - | - | Thin wrapper nad REST API |
+| 3. Frontend Migration P1 | ⏳ Not started | - | - | Products pages |
+| 4. Frontend Migration P2 | ⏳ Not started | - | - | Users, Coupons, Payments |
+| 5. Frontend Migration P3 | ⏳ Not started | - | - | Webhooks, Refunds, pozostałe |
+| 6. Cleanup | ⏳ Not started | - | - | Usunięcie /api/admin/* |
 
 ### Szczegółowy progress API endpoints
 
@@ -41,13 +41,15 @@ Plan implementacji:
 |----------------|----------|------|-------|--------|
 | Products | 5/5 | 0/3 | ✅ 20 | ✅ Done |
 | Users | 5/5 | 0/4 | ✅ 20 | ✅ Done |
-| **API Keys** | - | **7/7** | ✅ 27 | ✅ Done (bonus!) |
-| **Coupons** | **5/5** | **1/3** | ✅ 24 | ✅ Done |
-| **Analytics** | **1/1** | **2/7** | ✅ 16 | ✅ Done |
-| **Payments** | **2/2** | **1/5** | ✅ 25 | ✅ Done |
-| **Webhooks** | **5/5** | **0/0** | ✅ 43 | ✅ Done |
-| **Refund Requests** | **2/2** | **0/1** | ✅ 23 | ✅ Done |
-| **System** | **1/1** | **0/1** | ✅ 9 | ✅ Done |
+| API Keys | - | 7/7 | ✅ 27 | ✅ Done (bonus!) |
+| Coupons | 5/5 | 1/3 | ✅ 24 | ✅ Done |
+| Analytics | 1/1 | 2/7 | ✅ 16 | ✅ Done |
+| Payments | 2/2 | 1/5 | ✅ 25 | ✅ Done |
+| Webhooks | 5/5 | 0/0 | ✅ 43 | ✅ Done |
+| Refund Requests | 2/2 | 0/1 | ✅ 23 | ✅ Done |
+| System | 1/1 | 0/1 | ✅ 9 | ✅ Done |
+| **Comparison Tests** | - | - | ✅ 32 | ✅ Old vs New API |
+| **TOTAL** | **26/26** | **11** | **239** | ✅ **Phase 1 Complete** |
 
 ### Security Features (2026-01-09)
 - ✅ API Key authentication with SHA-256 hashing
@@ -56,6 +58,14 @@ Plan implementacji:
 - ✅ Timing-safe key verification (Node.js crypto)
 - ✅ Key rotation with grace period
 - ✅ Admin panel UI for API key management
+
+### REST Best Practices Applied (2026-01-09)
+- ✅ DELETE returns 204 No Content (not 200 with body)
+- ✅ POST returns 201 Created
+- ✅ PATCH for partial updates (not PUT)
+- ✅ Cursor-based pagination
+- ✅ Standardized error format `{ error: { code, message, details? } }`
+- ✅ noContentResponse() helper for DELETE operations
 
 ---
 
