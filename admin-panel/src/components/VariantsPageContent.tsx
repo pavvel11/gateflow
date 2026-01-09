@@ -184,18 +184,21 @@ const VariantsPageContent: React.FC = () => {
             {t('description')}
           </p>
         </div>
-        <button
-          onClick={() => {
-            setEditingGroup(null);
-            setShowFormModal(true);
-          }}
-          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2 shadow-sm"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          <span>{t('createGroup')}</span>
-        </button>
+        {/* Only show header button when there are existing groups (empty state has its own CTA) */}
+        {groups.length > 0 && (
+          <button
+            onClick={() => {
+              setEditingGroup(null);
+              setShowFormModal(true);
+            }}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2 shadow-sm"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span>{t('createGroup')}</span>
+          </button>
+        )}
       </div>
 
       {/* Stats Cards */}
