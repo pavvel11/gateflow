@@ -28,7 +28,7 @@ Plan implementacji:
 
 | Faza | Status | Data rozpoczęcia | Data zakończenia | Uwagi |
 |------|--------|------------------|------------------|-------|
-| 1. REST API `/api/v1/*` | ⏳ Not started | - | - | - |
+| 1. REST API `/api/v1/*` | 🔄 In progress | 2026-01-08 | - | Products, Users, API Keys, Coupons, Analytics, Payments done |
 | 2. MCP Server | ⏳ Not started | - | - | - |
 | 3. Frontend Migration P1 | ⏳ Not started | - | - | - |
 | 4. Frontend Migration P2 | ⏳ Not started | - | - | - |
@@ -39,14 +39,23 @@ Plan implementacji:
 
 | Endpoint Group | Migracja | Nowe | Testy | Status |
 |----------------|----------|------|-------|--------|
-| Products | 0/5 | 0/3 | ❌ | ⏳ |
-| Users | 0/5 | 0/4 | ❌ | ⏳ |
-| Payments | 0/2 | 0/5 | ❌ | ⏳ |
-| Coupons | 0/4 | 0/3 | ❌ | ⏳ |
-| Analytics | 0/1 | 0/7 | ❌ | ⏳ |
-| Webhooks | 0/5 | 0/0 | ❌ | ⏳ |
-| Refund Requests | 0/2 | 0/1 | ❌ | ⏳ |
-| System | 0/1 | 0/1 | ❌ | ⏳ |
+| Products | 5/5 | 0/3 | ✅ 20 | ✅ Done |
+| Users | 5/5 | 0/4 | ✅ 20 | ✅ Done |
+| **API Keys** | - | **7/7** | ✅ 27 | ✅ Done (bonus!) |
+| **Coupons** | **5/5** | **1/3** | ✅ 24 | ✅ Done |
+| **Analytics** | **1/1** | **2/7** | ✅ 16 | ✅ Done |
+| **Payments** | **2/2** | **1/5** | ✅ 25 | ✅ Done |
+| **Webhooks** | **5/5** | **0/0** | ✅ 43 | ✅ Done |
+| **Refund Requests** | **2/2** | **0/1** | ✅ 23 | ✅ Done |
+| **System** | **1/1** | **0/1** | ✅ 9 | ✅ Done |
+
+### Security Features (2026-01-09)
+- ✅ API Key authentication with SHA-256 hashing
+- ✅ Fine-grained scopes (`products:read`, `users:write`, `*`, etc.)
+- ✅ Rate limiting per API key (in-memory, configurable per-minute)
+- ✅ Timing-safe key verification (Node.js crypto)
+- ✅ Key rotation with grace period
+- ✅ Admin panel UI for API key management
 
 ---
 

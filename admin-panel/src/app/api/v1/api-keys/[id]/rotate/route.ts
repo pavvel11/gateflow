@@ -1,0 +1,163 @@
+/**
+ * API Key Rotation
+ *
+ * POST /api/v1/api-keys/:id/rotate - Rotate an API key
+ *
+ * Creates a new key and optionally keeps the old one valid for a grace period.
+ * This allows for zero-downtime key rotation.
+ */
+
+import { NextRequest } from 'next/server';
+import {
+  handleCorsPreFlight,
+  jsonResponse,
+  apiError,
+  handleApiError,
+  parseJsonBody,
+  ApiValidationError,
+  successResponse,
+  generateApiKey,
+} from '@/lib/api';
+import { createClient } from '@/lib/supabase/server';
+import { requireAdminApi } from '@/lib/auth-server';
+import { validateProductId } from '@/lib/validations/product';
+
+interface RouteParams {
+  params: Promise<{ id: string }>;
+}
+
+export async function OPTIONS(request: NextRequest) {
+  return handleCorsPreFlight(request);
+}
+
+/**
+ * POST /api/v1/api-keys/:id/rotate
+ *
+ * Rotate an API key - generates a new key while optionally keeping the old one
+ * valid for a grace period.
+ *
+ * Request body:
+ * - grace_period_hours: number (optional) - Hours to keep old key valid (default: 24, max: 168)
+ */
+export async function POST(request: NextRequest, { params }: RouteParams) {
+  try {
+    const supabase = await createClient();
+    const { admin } = await requireAdminApi(supabase);
+    const { id } = await params;
+
+    // Validate ID format
+    const idValidation = validateProductId(id);
+    if (!idValidation.isValid) {
+      return apiError(request, 'INVALID_INPUT', 'Invalid key ID format');
+    }
+
+    // Check key exists and belongs to this admin
+    const { data: oldKey, error: checkError } = await supabase
+      .from('api_keys')
+      .select('id, name, scopes, rate_limit_per_minute, expires_at, is_active, revoked_at')
+      .eq('id', id)
+      .eq('admin_user_id', admin.id)
+      .single();
+
+    if (checkError || !oldKey) {
+      return apiError(request, 'NOT_FOUND', 'API key not found');
+    }
+
+    if (oldKey.revoked_at) {
+      return apiError(request, 'VALIDATION_ERROR', 'Cannot rotate a revoked key');
+    }
+
+    if (!oldKey.is_active) {
+      return apiError(request, 'VALIDATION_ERROR', 'Cannot rotate an inactive key');
+    }
+
+    // Parse request body
+    const body = await parseJsonBody<{
+      grace_period_hours?: number;
+    }>(request);
+
+    // Validate grace period (default 24 hours, max 168 hours = 7 days)
+    const gracePeriodHours = body.grace_period_hours ?? 24;
+    if (gracePeriodHours < 0 || gracePeriodHours > 168) {
+      throw new ApiValidationError('Grace period must be between 0 and 168 hours');
+    }
+
+    // Generate new key
+    const newKeyData = generateApiKey(false);
+
+    // Calculate grace period end time
+    const graceUntil = gracePeriodHours > 0
+      ? new Date(Date.now() + gracePeriodHours * 60 * 60 * 1000).toISOString()
+      : null;
+
+    // Create new key with reference to old key
+    const { data: newKey, error: insertError } = await supabase
+      .from('api_keys')
+      .insert({
+        name: `${oldKey.name} (rotated)`,
+        key_prefix: newKeyData.prefix,
+        key_hash: newKeyData.hash,
+        admin_user_id: admin.id,
+        scopes: oldKey.scopes,
+        rate_limit_per_minute: oldKey.rate_limit_per_minute,
+        expires_at: oldKey.expires_at,
+        rotated_from_id: oldKey.id,
+      })
+      .select('id, name, key_prefix, scopes, rate_limit_per_minute, expires_at, created_at')
+      .single();
+
+    if (insertError) {
+      console.error('Error creating rotated key:', insertError);
+      return apiError(request, 'INTERNAL_ERROR', 'Failed to create new key');
+    }
+
+    // Update old key with grace period (or deactivate immediately if no grace period)
+    const oldKeyUpdate: Record<string, unknown> = graceUntil
+      ? { rotation_grace_until: graceUntil }
+      : { is_active: false, revoked_at: new Date().toISOString(), revoked_reason: 'Rotated' };
+
+    const { error: updateError } = await supabase
+      .from('api_keys')
+      .update(oldKeyUpdate)
+      .eq('id', oldKey.id);
+
+    if (updateError) {
+      console.error('Error updating old key:', updateError);
+      // Don't fail - new key is already created
+    }
+
+    // Log rotation event
+    await supabase
+      .from('api_key_audit_log')
+      .insert({
+        api_key_id: oldKey.id,
+        event_type: 'rotated',
+        event_data: {
+          new_key_id: newKey.id,
+          grace_period_hours: gracePeriodHours,
+          grace_until: graceUntil,
+        },
+      });
+
+    return jsonResponse(
+      successResponse({
+        new_key: {
+          ...newKey,
+          key: newKeyData.plaintext,
+          warning: 'Save this key now - it will not be shown again!',
+        },
+        old_key: {
+          id: oldKey.id,
+          grace_until: graceUntil,
+          message: graceUntil
+            ? `Old key will remain valid until ${graceUntil}`
+            : 'Old key has been immediately deactivated',
+        },
+      }),
+      request,
+      201
+    );
+  } catch (error) {
+    return handleApiError(error, request);
+  }
+}
