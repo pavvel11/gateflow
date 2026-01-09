@@ -348,21 +348,32 @@ function validateContentConfig(contentConfig: unknown): ValidationResult {
               }
 
               // Check for trusted storage providers
-              const trustedStorageProviders = [
+              // SECURITY FIX (V15): Use endsWith() instead of includes() to prevent domain spoofing
+              // e.g., cdn.attacker.com should NOT match just because it contains 'cdn.'
+              const trustedDomains = [
+                // AWS
                 'amazonaws.com',        // AWS S3
+                'cloudfront.net',       // AWS CloudFront
+                // Google
                 'googleapis.com',       // Google Cloud Storage
-                'supabase.co',          // Supabase Storage
-                'cdn.',                 // Generic CDN
-                'storage.',             // Generic Storage
-                'bunny.net',            // Bunny CDN
-                'b-cdn.net',            // Bunny CDN
                 'drive.google.com',     // Google Drive
-                'docs.google.com',      // Google Drive
-                'dropbox.com',          // Dropbox
-                'dl.dropboxusercontent.com', // Dropbox direct links
+                'docs.google.com',      // Google Docs
+                // Microsoft
                 'onedrive.live.com',    // OneDrive
                 '1drv.ms',              // OneDrive short links
                 'sharepoint.com',       // Microsoft SharePoint
+                'azureedge.net',        // Azure CDN
+                // Supabase
+                'supabase.co',          // Supabase Storage
+                // Bunny CDN
+                'bunny.net',            // Bunny CDN
+                'b-cdn.net',            // Bunny CDN alt domain
+                // Dropbox
+                'dropbox.com',          // Dropbox
+                'dropboxusercontent.com', // Dropbox direct links
+                // Cloudflare
+                'cloudflarestorage.com', // Cloudflare R2
+                // Other trusted providers
                 'box.com',              // Box
                 'mega.nz',              // Mega
                 'mediafire.com',        // MediaFire
@@ -370,11 +381,12 @@ function validateContentConfig(contentConfig: unknown): ValidationResult {
                 'sendspace.com',        // SendSpace
                 'cloudinary.com',       // Cloudinary
                 'imgix.net',            // Imgix CDN
-                'fastly.net'            // Fastly CDN
+                'fastly.net',           // Fastly CDN
               ];
 
-              const isTrustedStorage = trustedStorageProviders.some(provider =>
-                urlObj.hostname.includes(provider)
+              const hostname = urlObj.hostname.toLowerCase();
+              const isTrustedStorage = trustedDomains.some(domain =>
+                hostname === domain || hostname.endsWith('.' + domain)
               );
 
               if (!isTrustedStorage) {
