@@ -111,9 +111,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return apiError(request, 'INTERNAL_ERROR', 'Failed to create new key');
     }
 
-    // Update old key with grace period (or deactivate immediately if no grace period)
+    // Update old key - always deactivate, but set grace period if requested
+    // The verify_api_key function checks rotation_grace_until when is_active = false
     const oldKeyUpdate: Record<string, unknown> = graceUntil
-      ? { rotation_grace_until: graceUntil }
+      ? { is_active: false, rotation_grace_until: graceUntil }
       : { is_active: false, revoked_at: new Date().toISOString(), revoked_reason: 'Rotated' };
 
     const { error: updateError } = await supabase

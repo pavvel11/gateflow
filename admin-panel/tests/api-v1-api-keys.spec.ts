@@ -498,6 +498,130 @@ test.describe('API Keys v1', () => {
 
       expect(response.status()).toBe(401);
     });
+
+    test('should reject revoked API key', async ({ page, request }) => {
+      await loginAsAdmin(page, adminEmail, adminPassword);
+
+      // Create a key
+      const createResponse = await page.request.post('/api/v1/api-keys', {
+        data: { name: 'Revoked Key Auth Test' }
+      });
+      const createBody = await createResponse.json();
+      const apiKey = createBody.data.key;
+      createdKeyIds.push(createBody.data.id);
+
+      // Revoke it
+      await page.request.delete(`/api/v1/api-keys/${createBody.data.id}?reason=Testing`);
+
+      // Try to use the revoked key
+      const response = await request.get('/api/v1/products', {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`
+        }
+      });
+
+      expect(response.status()).toBe(401);
+      const body = await response.json();
+      expect(body.error.code).toBe('INVALID_TOKEN');
+    });
+
+    test('should accept old key during rotation grace period', async ({ page, request }) => {
+      await loginAsAdmin(page, adminEmail, adminPassword);
+
+      // Create a key
+      const createResponse = await page.request.post('/api/v1/api-keys', {
+        data: { name: 'Grace Period Test Key' }
+      });
+      const createBody = await createResponse.json();
+      const oldApiKey = createBody.data.key;
+      createdKeyIds.push(createBody.data.id);
+
+      // Rotate with 24h grace period
+      const rotateResponse = await page.request.post(`/api/v1/api-keys/${createBody.data.id}/rotate`, {
+        data: { grace_period_hours: 24 }
+      });
+      const rotateBody = await rotateResponse.json();
+      const newApiKey = rotateBody.data.new_key.key;
+      createdKeyIds.push(rotateBody.data.new_key.id);
+
+      // OLD key should still work during grace period
+      const oldKeyResponse = await request.get('/api/v1/products', {
+        headers: {
+          'Authorization': `Bearer ${oldApiKey}`
+        }
+      });
+      expect(oldKeyResponse.status()).toBe(200);
+
+      // NEW key should also work
+      const newKeyResponse = await request.get('/api/v1/products', {
+        headers: {
+          'Authorization': `Bearer ${newApiKey}`
+        }
+      });
+      expect(newKeyResponse.status()).toBe(200);
+    });
+
+    test('should reject old key after rotation grace period expires', async ({ page, request }) => {
+      await loginAsAdmin(page, adminEmail, adminPassword);
+
+      // Create a key
+      const createResponse = await page.request.post('/api/v1/api-keys', {
+        data: { name: 'Expired Grace Period Key' }
+      });
+      const createBody = await createResponse.json();
+      const oldApiKey = createBody.data.key;
+      createdKeyIds.push(createBody.data.id);
+
+      // Rotate with grace period
+      const rotateResponse = await page.request.post(`/api/v1/api-keys/${createBody.data.id}/rotate`, {
+        data: { grace_period_hours: 24 }
+      });
+      const rotateBody = await rotateResponse.json();
+      createdKeyIds.push(rotateBody.data.new_key.id);
+
+      // Manually expire the grace period in DB
+      await supabaseAdmin
+        .from('api_keys')
+        .update({ rotation_grace_until: new Date(Date.now() - 1000).toISOString() })
+        .eq('id', createBody.data.id);
+
+      // OLD key should now be rejected
+      const response = await request.get('/api/v1/products', {
+        headers: {
+          'Authorization': `Bearer ${oldApiKey}`
+        }
+      });
+
+      expect(response.status()).toBe(401);
+    });
+
+    test('should reject old key immediately when rotated without grace period', async ({ page, request }) => {
+      await loginAsAdmin(page, adminEmail, adminPassword);
+
+      // Create a key
+      const createResponse = await page.request.post('/api/v1/api-keys', {
+        data: { name: 'No Grace Period Key' }
+      });
+      const createBody = await createResponse.json();
+      const oldApiKey = createBody.data.key;
+      createdKeyIds.push(createBody.data.id);
+
+      // Rotate WITHOUT grace period
+      const rotateResponse = await page.request.post(`/api/v1/api-keys/${createBody.data.id}/rotate`, {
+        data: { grace_period_hours: 0 }
+      });
+      const rotateBody = await rotateResponse.json();
+      createdKeyIds.push(rotateBody.data.new_key.id);
+
+      // OLD key should be immediately rejected
+      const response = await request.get('/api/v1/products', {
+        headers: {
+          'Authorization': `Bearer ${oldApiKey}`
+        }
+      });
+
+      expect(response.status()).toBe(401);
+    });
   });
 
   test.describe('Scope Enforcement', () => {
