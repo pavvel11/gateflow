@@ -4,8 +4,8 @@
 
 **Self-hosted platform for selling and protecting digital products**
 
-[![Version](https://img.shields.io/badge/version-1.0.0--rc.1-blue?style=flat-square)](https://github.com/pavvel11/gateflow/releases)
-[![Tests](https://img.shields.io/badge/tests-571%20passing-brightgreen?style=flat-square)](./admin-panel/tests)
+[![Version](https://img.shields.io/badge/version-1.0.0--rc.2-blue?style=flat-square)](https://github.com/pavvel11/gateflow/releases)
+[![Tests](https://img.shields.io/badge/tests-981%20passing-brightgreen?style=flat-square)](./admin-panel/tests)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
@@ -28,7 +28,7 @@ GateFlow gives you **complete control** over your digital product business. No m
 - **Content protection** that works on any website (WordPress, Webflow, custom)
 - **Sales funnels built-in** — One-Time Offers, Order Bumps, Coupons
 - **EU-compliant** — Omnibus Directive price history, GDPR consent management
-- **Battle-tested** — 571 E2E tests with 100% pass rate
+- **Battle-tested** — 981 tests (899 E2E + 82 unit) with 100% pass rate
 
 ---
 
@@ -111,11 +111,11 @@ npx supabase start
 
 # 3. Install & configure
 cd admin-panel
-npm install
+bun install
 cp .env.example .env.local  # Edit with your keys
 
 # 4. Run
-npm run dev
+bun run dev
 ```
 
 Open **http://localhost:3000** — the first registered user becomes admin.
@@ -131,7 +131,7 @@ Open **http://localhost:3000** — the first registered user becomes admin.
 | Database | Supabase (PostgreSQL + Auth + Realtime) |
 | Styling | Tailwind CSS 4 |
 | Payments | Stripe (Elements, Checkout, Webhooks) |
-| Testing | Playwright (571 E2E tests) |
+| Testing | Playwright (899 E2E) + Vitest (82 unit) |
 | i18n | next-intl (EN, PL) |
 
 ---
@@ -177,11 +177,12 @@ Both guides cover Docker deployment with Supabase Cloud and automatic SSL via Ca
 ## Project Stats
 
 ```
-├── 571 E2E tests (100% pass rate)
-├── 54+ API routes
+├── 981 tests (899 E2E + 82 unit, 100% pass rate)
+├── 120+ API routes (v1 REST API + admin + public)
 ├── 25+ database tables
 ├── 40+ RPC functions
 ├── 50+ RLS policies
+├── MCP Server (45 tools, 4 resources, 6 prompts)
 └── 2 languages (EN, PL)
 ```
 

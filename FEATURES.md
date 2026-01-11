@@ -505,7 +505,8 @@
 ## 23. Testing
 
 ### E2E Tests (Playwright)
-- **571 testów** - Kompleksowe pokrycie
+- **899 testów E2E** - Kompleksowe pokrycie
+- **82 testy jednostkowe MCP** - Vitest
 - **53 pliki testowe** - Modularna struktura
 
 ### Testowane Obszary
@@ -734,9 +735,10 @@
 ## Testing
 | Metryka | Wartość |
 |---------|---------|
-| E2E Tests | 571 |
+| E2E Tests | 899 |
+| MCP Unit Tests | 82 |
 | Test Files | 53 |
-| Test Framework | Playwright |
+| Test Framework | Playwright + Vitest |
 | Pass Rate | 100% |
 
 ## Tech Stack

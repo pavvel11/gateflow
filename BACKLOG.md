@@ -79,7 +79,7 @@ Pay-as-you-go:
 **Implementation:**
 ```bash
 # 1. Install
-npm install @upstash/redis @upstash/ratelimit
+bun add @upstash/redis @upstash/ratelimit
 
 # 2. Create account: https://upstash.com
 # 3. Create Redis database
