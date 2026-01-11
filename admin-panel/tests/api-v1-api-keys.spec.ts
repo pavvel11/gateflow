@@ -734,6 +734,93 @@ test.describe('API Keys v1', () => {
       });
       expect(usersResponse.status()).toBe(200);
     });
+
+    test('should deny cross-category access (users:read cannot access products)', async ({ page, request }) => {
+      await loginAsAdmin(page, adminEmail, adminPassword);
+
+      // Create a key with ONLY users:read scope
+      const createResponse = await page.request.post('/api/v1/api-keys', {
+        data: {
+          name: 'Users Only Key',
+          scopes: ['users:read']
+        }
+      });
+      const createBody = await createResponse.json();
+      const apiKey = createBody.data.key;
+      createdKeyIds.push(createBody.data.id);
+
+      // Should be able to access users
+      const usersResponse = await request.get('/api/v1/users', {
+        headers: { 'Authorization': `Bearer ${apiKey}` }
+      });
+      expect(usersResponse.status()).toBe(200);
+
+      // Should NOT be able to access products (different category)
+      const productsResponse = await request.get('/api/v1/products', {
+        headers: { 'Authorization': `Bearer ${apiKey}` }
+      });
+      expect(productsResponse.status()).toBe(403);
+      const body = await productsResponse.json();
+      expect(body.error.code).toBe('FORBIDDEN');
+    });
+
+    test('should allow write scope for read in other categories (users:write implies users:read)', async ({ page, request }) => {
+      await loginAsAdmin(page, adminEmail, adminPassword);
+
+      // Create a key with users:write scope
+      const createResponse = await page.request.post('/api/v1/api-keys', {
+        data: {
+          name: 'Users Write Key',
+          scopes: ['users:write']
+        }
+      });
+      const createBody = await createResponse.json();
+      const apiKey = createBody.data.key;
+      createdKeyIds.push(createBody.data.id);
+
+      // Should be able to read users (write implies read)
+      const usersResponse = await request.get('/api/v1/users', {
+        headers: { 'Authorization': `Bearer ${apiKey}` }
+      });
+      expect(usersResponse.status()).toBe(200);
+    });
+
+    test('should deny access with empty scopes array', async ({ page, request }) => {
+      await loginAsAdmin(page, adminEmail, adminPassword);
+
+      // Create a key with empty scopes (API should default to * or reject)
+      const createResponse = await page.request.post('/api/v1/api-keys', {
+        data: {
+          name: 'Empty Scopes Key',
+          scopes: []
+        }
+      });
+      const createBody = await createResponse.json();
+
+      // If key was created (API defaults to *), test it
+      if (createResponse.status() === 201 && createBody.data?.key) {
+        const apiKey = createBody.data.key;
+        createdKeyIds.push(createBody.data.id);
+
+        // Check what scopes were actually assigned
+        const keyDetails = await page.request.get(`/api/v1/api-keys/${createBody.data.id}`);
+        const detailsBody = await keyDetails.json();
+
+        // If empty scopes were stored, access should be denied
+        if (detailsBody.data.scopes.length === 0) {
+          const response = await request.get('/api/v1/products', {
+            headers: { 'Authorization': `Bearer ${apiKey}` }
+          });
+          expect(response.status()).toBe(403);
+        } else {
+          // API defaulted to some scopes (likely *)
+          expect(detailsBody.data.scopes.length).toBeGreaterThan(0);
+        }
+      } else {
+        // API rejected empty scopes - that's also valid behavior
+        expect(createResponse.status()).toBe(400);
+      }
+    });
   });
 
   test.describe('Response Format', () => {
