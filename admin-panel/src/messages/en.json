@@ -133,6 +133,7 @@
     "integrations": "Integrations",
     "users": "Users",
     "payments": "Payments",
+    "apiKeys": "API Keys",
     "settings": "Settings",
     "logout": "Logout",
     "login": "Login",
