@@ -40,15 +40,23 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
       // Exclude rate-limiting tests from default run
-      testIgnore: '**/rate-limiting.spec.ts',
+      testIgnore: ['**/rate-limiting.spec.ts', '**/rate-limiting-v1.spec.ts'],
     },
     {
       name: 'rate-limiting',
       use: { ...devices['Desktop Chrome'] },
-      // Only run rate-limiting tests with RATE_LIMIT_TEST_MODE enabled
+      // Only run old API rate-limiting tests with RATE_LIMIT_TEST_MODE enabled
       testMatch: '**/rate-limiting.spec.ts',
       // Note: To run these tests, use:
       // RATE_LIMIT_TEST_MODE=true npx playwright test --project=rate-limiting
+    },
+    {
+      name: 'rate-limiting-v1',
+      use: { ...devices['Desktop Chrome'] },
+      // Only run v1 API rate-limiting tests with RATE_LIMIT_TEST_MODE enabled
+      testMatch: '**/rate-limiting-v1.spec.ts',
+      // Note: To run these tests, use:
+      // RATE_LIMIT_TEST_MODE=true npx playwright test --project=rate-limiting-v1
     },
   ],
 
