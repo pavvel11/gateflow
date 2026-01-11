@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "GateFlow API v1",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

@@ -1,0 +1,25 @@
+meta {
+  name: Dashboard
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{BASE_URL}}/api/v1/analytics/dashboard
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{API_KEY}}
+}
+
+docs {
+  # Dashboard Analytics
+
+  Returns overview statistics:
+  - Total revenue
+  - Total customers
+  - Total products
+  - Recent sales
+}

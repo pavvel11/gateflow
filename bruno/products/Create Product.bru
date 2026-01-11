@@ -1,0 +1,26 @@
+meta {
+  name: Create Product
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{BASE_URL}}/api/v1/products
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{API_KEY}}
+}
+
+body:json {
+  {
+    "name": "Test Product",
+    "slug": "test-product",
+    "description": "Product created via API",
+    "price": 100,
+    "currency": "PLN",
+    "is_active": true
+  }
+}

@@ -1,0 +1,26 @@
+meta {
+  name: List Users
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{BASE_URL}}/api/v1/users
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{API_KEY}}
+}
+
+docs {
+  # List Users
+
+  Returns paginated list of users with their product access.
+
+  ## Query Parameters
+  - `search`: search by email
+  - `cursor`: pagination cursor
+  - `limit`: items per page (default: 20)
+}

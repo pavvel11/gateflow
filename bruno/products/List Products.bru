@@ -1,0 +1,27 @@
+meta {
+  name: List Products
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{BASE_URL}}/api/v1/products
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{API_KEY}}
+}
+
+docs {
+  # List Products
+
+  Returns paginated list of products.
+
+  ## Query Parameters
+  - `status`: active | inactive | all (default: all)
+  - `search`: search by name
+  - `cursor`: pagination cursor
+  - `limit`: items per page (default: 20)
+}

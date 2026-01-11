@@ -1,0 +1,34 @@
+meta {
+  name: Create API Key
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{BASE_URL}}/api/v1/api-keys
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{API_KEY}}
+}
+
+body:json {
+  {
+    "name": "New API Key",
+    "scopes": ["*"]
+  }
+}
+
+docs {
+  # Create API Key
+
+  ## Scopes
+  - `*` - Full access
+  - `products:read` / `products:write`
+  - `users:read` / `users:write`
+  - `coupons:read` / `coupons:write`
+  - `analytics:read`
+  - `webhooks:read` / `webhooks:write`
+}

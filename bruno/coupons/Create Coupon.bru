@@ -1,0 +1,25 @@
+meta {
+  name: Create Coupon
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{BASE_URL}}/api/v1/coupons
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{API_KEY}}
+}
+
+body:json {
+  {
+    "code": "TEST20",
+    "name": "Test Discount",
+    "discount_type": "percentage",
+    "discount_value": 20,
+    "is_active": true
+  }
+}

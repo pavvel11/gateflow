@@ -1,0 +1,24 @@
+meta {
+  name: System Status
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{BASE_URL}}/api/v1/system/status
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{API_KEY}}
+}
+
+docs {
+  # System Status
+
+  Returns system health information:
+  - Database connection
+  - Stripe connection
+  - Version info
+}
