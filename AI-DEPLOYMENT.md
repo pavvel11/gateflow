@@ -45,25 +45,24 @@ whoami    # Should be root (mikr.us default)
 
 ---
 
-## Step 1: Install Node.js 24
+## Step 1: Install Bun
 
 ```bash
-# Install Node.js v24 LTS
-curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
-sudo apt-get install -y nodejs
+# Install Bun
+curl -fsSL https://bun.sh/install | bash
+
+# Add to PATH (or restart shell)
+source ~/.bashrc  # or ~/.zshrc
 
 # Verify
-node --version  # Should show v24.x
-npm --version   # Should show v10.x
+bun --version  # Should show 1.x
 ```
 
-**If Node.js already installed but wrong version:**
+**If bun not in PATH after install:**
 ```bash
-# Remove old Node
-sudo apt-get remove -y nodejs npm
-sudo apt-get autoremove -y
-
-# Install new Node (repeat above)
+# Add manually
+export PATH="$HOME/.bun/bin:$PATH"
+echo 'export PATH="$HOME/.bun/bin:$PATH"' >> ~/.bashrc
 ```
 
 ---
@@ -71,8 +70,8 @@ sudo apt-get autoremove -y
 ## Step 2: Install PM2
 
 ```bash
-# Install PM2 globally
-sudo npm install -g pm2
+# Install PM2 globally (using bun)
+bun install -g pm2
 
 # Verify
 pm2 --version  # Should show 5.x
@@ -190,11 +189,11 @@ chmod 600 .env.local  # Only root can read
 ```bash
 cd ~/gateflow/admin-panel
 
-# Install dependencies
-npm ci  # Use ci for clean install
+# Install dependencies (bun is ~30x faster than npm)
+bun install
 
 # Build for production
-npm run build
+bun run build
 ```
 
 **Expected output:**
@@ -206,7 +205,7 @@ npm run build
 ```bash
 # Check for missing migrations in Supabase
 # Check .env.local variables
-# Check logs: npm run build 2>&1 | tee build.log
+# Check logs: bun run build 2>&1 | tee build.log
 ```
 
 ---
@@ -220,8 +219,8 @@ module.exports = {
   apps: [{
     name: "gateflow-admin",
     cwd: "./admin-panel",
-    script: "npm",
-    args: "start",
+    script: process.env.HOME + "/.bun/bin/bun",
+    args: "run start",
     env: {
       NODE_ENV: "production",
       PORT: 3333
@@ -477,12 +476,12 @@ git pull origin main
 ls -la supabase/migrations/
 # AI: Guide user to run new migrations in Supabase Dashboard
 
-# 3. Install dependencies
+# 3. Install dependencies (fast with bun)
 cd admin-panel
-npm ci
+bun install
 
 # 4. Build
-npm run build
+bun run build
 
 # 5. Restart PM2 (zero-downtime with graceful reload)
 pm2 restart gateflow-admin
@@ -507,9 +506,9 @@ pm2 describe gateflow-admin
 
 **Common causes:**
 1. **Missing .env.local** → Create file with all required vars
-2. **Build not complete** → Run `npm run build` first
+2. **Build not complete** → Run `bun run build` first
 3. **Port 3333 occupied** → `lsof -i :3333` → Change PORT in ecosystem.config.js
-4. **Node version wrong** → `node --version` → Should be v24+
+4. **Bun not in PATH** → Check `~/.bun/bin/bun --version`
 
 **Fix:**
 ```bash
@@ -526,7 +525,7 @@ pm2 start ecosystem.config.js
 **Diagnostic:**
 ```bash
 cd ~/gateflow/admin-panel
-npm run build 2>&1 | tee build.log
+bun run build 2>&1 | tee build.log
 cat build.log
 ```
 
@@ -539,8 +538,8 @@ cat build.log
 ```bash
 # Clean and rebuild
 rm -rf .next
-npm ci
-npm run build
+bun install
+bun run build
 ```
 
 ### Issue: Can't access via domain (502/503)
@@ -699,4 +698,4 @@ sudo ufw enable
 
 ---
 
-**Last updated:** 2025-12-27 (mikr.us + PM2 + Cutrus specific)
+**Last updated:** 2026-01-11 (mikr.us + PM2 + Bun + Cutrus)
