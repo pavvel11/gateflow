@@ -29,7 +29,7 @@ Plan implementacji:
 | Faza | Status | Data rozpoczęcia | Data zakończenia | Uwagi |
 |------|--------|------------------|------------------|-------|
 | 1. REST API `/api/v1/*` | ✅ Done | 2026-01-08 | 2026-01-09 | 239 testów, wszystkie endpointy zaimplementowane |
-| 2. MCP Server | ⏳ Not started | - | - | Thin wrapper nad REST API |
+| 2. MCP Server | ✅ Done | 2026-01-11 | 2026-01-11 | 45 tools, 4 resources, 6 prompts w /mcp-server/ |
 | 3. Frontend Migration P1 | ✅ Done | 2026-01-09 | 2026-01-09 | Products pages (ProductsPageContent, useProducts hook) |
 | 4. Frontend Migration P2 | ✅ Done | 2026-01-09 | 2026-01-09 | Users, Coupons, Payments (useUsers, useCoupons, PaymentsDashboard) |
 | 5. Frontend Migration P3 | ✅ Done | 2026-01-09 | 2026-01-09 | Webhooks, Refunds (useWebhooks, WebhookLogsDrawer, WebhookFailuresPanel) |

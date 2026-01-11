@@ -1,0 +1,38 @@
+{
+  "name": "@gateflow/mcp-server",
+  "version": "1.0.0",
+  "description": "MCP Server for GateFlow - enables AI assistants to manage products, users, payments, and analytics",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "bun src/index.ts",
+    "build": "tsc",
+    "start": "bun dist/index.js",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "test": "bunx vitest run",
+    "test:watch": "bunx vitest",
+    "test:coverage": "bunx vitest run --coverage"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "gateflow",
+    "ai",
+    "claude"
+  ],
+  "author": "GateFlow",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.9.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
