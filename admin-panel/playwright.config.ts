@@ -65,8 +65,8 @@ export default defineConfig({
     {
       // Pass RATE_LIMIT_TEST_MODE to the dev server when running rate-limit tests
       command: isRateLimitTestMode
-        ? 'RATE_LIMIT_TEST_MODE=true npm run dev'
-        : 'npm run dev',
+        ? 'RATE_LIMIT_TEST_MODE=true bun run dev'
+        : 'bun run dev',
       url: 'http://localhost:3000',
       // Don't reuse existing server for rate-limit tests (need fresh server with env var)
       reuseExistingServer: isRateLimitTestMode ? false : !process.env.CI,
