@@ -196,8 +196,8 @@ export default function WebhooksPageContent() {
     const newStatus = !currentStatus;
 
     try {
-      const res = await fetch(`/api/admin/webhooks/${endpointId}`, {
-        method: 'PUT',
+      const res = await fetch(`/api/v1/webhooks/${endpointId}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_active: newStatus })
       });

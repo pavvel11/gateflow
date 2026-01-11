@@ -65,7 +65,7 @@ export default function WebhookLogsTable({
     e.stopPropagation();
     setArchivingId(logId);
     try {
-      const res = await fetch(`/api/admin/webhooks/logs/${logId}/archive`, {
+      const res = await fetch(`/api/v1/webhooks/logs/${logId}/archive`, {
         method: 'POST'
       });
       if (res.ok) {

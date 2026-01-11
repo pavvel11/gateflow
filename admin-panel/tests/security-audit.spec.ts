@@ -71,7 +71,7 @@ test.describe('Security - Admin Authorization', () => {
   // These tests verify that unauthenticated/unauthorized requests are blocked
 
   test('unauthenticated request should be denied for admin products', async ({ request }) => {
-    const response = await request.get('/api/admin/products');
+    const response = await request.get('/api/v1/products');
 
     // Should be 401 (Unauthorized) without cookies
     expect(response.status()).toBe(401);
@@ -168,7 +168,7 @@ test.describe('Security - Open Redirect Prevention', () => {
 
 test.describe('Security - CORS Headers', () => {
   test('admin products route should not allow wildcard CORS', async ({ request }) => {
-    const response = await request.fetch('/api/admin/products', {
+    const response = await request.fetch('/api/v1/products', {
       method: 'OPTIONS',
       headers: {
         Origin: 'https://evil-site.com',
@@ -184,7 +184,7 @@ test.describe('Security - CORS Headers', () => {
   });
 
   test('admin products route should allow localhost in development', async ({ request }) => {
-    const response = await request.fetch('/api/admin/products', {
+    const response = await request.fetch('/api/v1/products', {
       method: 'OPTIONS',
       headers: {
         Origin: 'http://localhost:3000',

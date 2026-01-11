@@ -17,6 +17,7 @@ import { useToast } from '@/contexts/ToastContext';
 import OrderBumpFormModal from './OrderBumpFormModal';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import { api } from '@/lib/api/client';
 
 interface OrderBumpWithDetails {
   id: string;
@@ -62,18 +63,16 @@ const OrderBumpsPageContent: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [bumpToDelete, setBumpToDelete] = useState<OrderBumpWithDetails | null>(null);
 
-  // Fetch products for dropdown
+  // Fetch products for dropdown using v1 API
   const fetchProducts = useCallback(async () => {
     try {
       setLoadingProducts(true);
-      const response = await fetch('/api/admin/products?limit=1000&status=active');
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch products');
-      }
-
-      const data = await response.json();
-      setProducts(data.products || []);
+      const response = await api.list<Product>('products', {
+        limit: 1000,
+        status: 'active',
+        sort: 'name',
+      });
+      setProducts(response.data || []);
     } catch (err) {
       console.error('Error fetching products:', err);
     } finally {
@@ -81,20 +80,14 @@ const OrderBumpsPageContent: React.FC = () => {
     }
   }, []);
 
-  // Fetch order bumps from the API
+  // Fetch order bumps from the v1 API
   const fetchOrderBumps = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/admin/order-bumps');
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setOrderBumps(data || []);
+      const orderBumps = await api.getCustom<OrderBumpWithDetails[]>('order-bumps');
+      setOrderBumps(orderBumps || []);
     } catch (err) {
       setError('Failed to load order bumps');
       console.error('Error:', err);
@@ -113,16 +106,7 @@ const OrderBumpsPageContent: React.FC = () => {
   const handleCreateBump = async (formData: any) => {
     setSubmitting(true);
     try {
-      const response = await fetch('/api/admin/order-bumps', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create order bump');
-      }
+      await api.create('order-bumps', formData);
 
       setShowBumpForm(false);
       await fetchOrderBumps();
@@ -140,16 +124,7 @@ const OrderBumpsPageContent: React.FC = () => {
     setSubmitting(true);
 
     try {
-      const response = await fetch(`/api/admin/order-bumps/${editingBump.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update order bump');
-      }
+      await api.update('order-bumps', editingBump.id, formData);
 
       setShowBumpForm(false);
       setEditingBump(null);
@@ -165,14 +140,7 @@ const OrderBumpsPageContent: React.FC = () => {
 
   const handleDeleteBump = async (bump: OrderBumpWithDetails) => {
     try {
-      const response = await fetch(`/api/admin/order-bumps/${bump.id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete order bump');
-      }
+      await api.delete('order-bumps', bump.id);
 
       setBumpToDelete(null);
       await fetchOrderBumps();
@@ -184,16 +152,7 @@ const OrderBumpsPageContent: React.FC = () => {
 
   const handleToggleActive = async (bump: OrderBumpWithDetails) => {
     try {
-      const response = await fetch(`/api/admin/order-bumps/${bump.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_active: !bump.is_active }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to toggle bump status');
-      }
+      await api.update('order-bumps', bump.id, { is_active: !bump.is_active });
 
       await fetchOrderBumps();
       addToast(

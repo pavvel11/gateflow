@@ -15,6 +15,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { useTranslations } from 'next-intl';
 import { formatPrice } from '@/lib/constants';
 import VariantGroupFormModal from './VariantGroupFormModal';
+import { api } from '@/lib/api/client';
 
 interface ProductInGroup {
   id: string;
@@ -61,18 +62,15 @@ const VariantsPageContent: React.FC = () => {
   const [groupToDelete, setGroupToDelete] = useState<VariantGroup | null>(null);
   const [productToRemove, setProductToRemove] = useState<{ group: VariantGroup; product: ProductInGroup } | null>(null);
 
-  // Fetch all products for the form
+  // Fetch all products for the form using v1 API
   const fetchProducts = useCallback(async () => {
     try {
       setLoadingProducts(true);
-      const response = await fetch('/api/admin/products?limit=1000');
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch products');
-      }
-
-      const data = await response.json();
-      setAllProducts(data.products || []);
+      const response = await api.list<Product>('products', {
+        limit: 1000,
+        sort: 'name',
+      });
+      setAllProducts(response.data || []);
     } catch (err) {
       console.error('Error fetching products:', err);
     } finally {
@@ -80,20 +78,14 @@ const VariantsPageContent: React.FC = () => {
     }
   }, []);
 
-  // Fetch variant groups
+  // Fetch variant groups using v1 API
   const fetchGroups = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/admin/variant-groups');
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setGroups(data.groups || []);
+      const groups = await api.getCustom<VariantGroup[]>('variant-groups');
+      setGroups(groups || []);
     } catch (err) {
       setError('Failed to load variant groups');
       console.error('Error:', err);
@@ -108,18 +100,10 @@ const VariantsPageContent: React.FC = () => {
     fetchProducts();
   }, [fetchGroups, fetchProducts]);
 
-  // Delete entire group
+  // Delete entire group using v1 API
   const handleDeleteGroup = async (group: VariantGroup) => {
     try {
-      const response = await fetch(`/api/admin/variant-groups?groupId=${group.id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete variant group');
-      }
-
+      await api.delete('variant-groups', group.id);
       setGroupToDelete(null);
       await fetchGroups();
       addToast(t('deleteSuccess'), 'success');
@@ -128,7 +112,7 @@ const VariantsPageContent: React.FC = () => {
     }
   };
 
-  // Remove single product from group (update group without this product)
+  // Remove single product from group using v1 API
   const handleRemoveProduct = async (group: VariantGroup, productToRemove: ProductInGroup) => {
     // If removing would leave less than 2 products, delete the whole group
     if (group.products.length <= 2) {
@@ -147,16 +131,7 @@ const VariantsPageContent: React.FC = () => {
           is_featured: p.is_featured
         }));
 
-      const response = await fetch(`/api/admin/variant-groups?groupId=${group.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ products: remainingProducts }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to remove product');
-      }
+      await api.update('variant-groups', group.id, { products: remainingProducts });
 
       setProductToRemove(null);
       await fetchGroups();
@@ -166,7 +141,7 @@ const VariantsPageContent: React.FC = () => {
     }
   };
 
-  // Toggle featured status
+  // Toggle featured status using v1 API
   const handleToggleFeatured = async (group: VariantGroup, product: ProductInGroup) => {
     try {
       const updatedProducts = group.products.map(p => ({
@@ -176,15 +151,7 @@ const VariantsPageContent: React.FC = () => {
         is_featured: p.product_id === product.product_id ? !p.is_featured : p.is_featured
       }));
 
-      const response = await fetch(`/api/admin/variant-groups?groupId=${group.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ products: updatedProducts }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update featured status');
-      }
+      await api.update('variant-groups', group.id, { products: updatedProducts });
 
       await fetchGroups();
       addToast(t('featuredUpdated'), 'success');
@@ -217,18 +184,21 @@ const VariantsPageContent: React.FC = () => {
             {t('description')}
           </p>
         </div>
-        <button
-          onClick={() => {
-            setEditingGroup(null);
-            setShowFormModal(true);
-          }}
-          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2 shadow-sm"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          <span>{t('createGroup')}</span>
-        </button>
+        {/* Only show header button when there are existing groups (empty state has its own CTA) */}
+        {groups.length > 0 && (
+          <button
+            onClick={() => {
+              setEditingGroup(null);
+              setShowFormModal(true);
+            }}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2 shadow-sm"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span>{t('createGroup')}</span>
+          </button>
+        )}
       </div>
 
       {/* Stats Cards */}

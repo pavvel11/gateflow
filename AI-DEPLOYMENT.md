@@ -9,7 +9,7 @@ Human users should use [DEPLOYMENT.md](./DEPLOYMENT.md) instead.
 
 ### mikr.us Context
 - **Hosting**: Polish VPS provider (https://mikr.us)
-- **Reverse Proxy**: Cutrus (built-in, don't install Caddy/Nginx)
+- **Reverse Proxy**: Cytrus (built-in, don't install Caddy/Nginx)
 - **Process Manager**: PM2 (lighter than Docker for 2GB RAM)
 - **Access**: SSH as root
 - **Goal**: Working GateFlow with SSL in ~15 minutes
@@ -21,8 +21,8 @@ Human users should use [DEPLOYMENT.md](./DEPLOYMENT.md) instead.
 - ✅ Direct Node.js control
 
 ### Why No Caddy/Nginx?
-- ✅ mikr.us includes **Cutrus** (reverse proxy panel)
-- ✅ SSL is handled by Cutrus
+- ✅ mikr.us includes **Cytrus** (reverse proxy panel)
+- ✅ SSL is handled by Cytrus
 - ✅ Just expose app on port (e.g., 3333) and configure in panel
 
 ---
@@ -45,25 +45,24 @@ whoami    # Should be root (mikr.us default)
 
 ---
 
-## Step 1: Install Node.js 24
+## Step 1: Install Bun
 
 ```bash
-# Install Node.js v24 LTS
-curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
-sudo apt-get install -y nodejs
+# Install Bun
+curl -fsSL https://bun.sh/install | bash
+
+# Add to PATH (or restart shell)
+source ~/.bashrc  # or ~/.zshrc
 
 # Verify
-node --version  # Should show v24.x
-npm --version   # Should show v10.x
+bun --version  # Should show 1.x
 ```
 
-**If Node.js already installed but wrong version:**
+**If bun not in PATH after install:**
 ```bash
-# Remove old Node
-sudo apt-get remove -y nodejs npm
-sudo apt-get autoremove -y
-
-# Install new Node (repeat above)
+# Add manually
+export PATH="$HOME/.bun/bin:$PATH"
+echo 'export PATH="$HOME/.bun/bin:$PATH"' >> ~/.bashrc
 ```
 
 ---
@@ -71,8 +70,8 @@ sudo apt-get autoremove -y
 ## Step 2: Install PM2
 
 ```bash
-# Install PM2 globally
-sudo npm install -g pm2
+# Install PM2 globally (using bun)
+bun install -g pm2
 
 # Verify
 pm2 --version  # Should show 5.x
@@ -190,11 +189,11 @@ chmod 600 .env.local  # Only root can read
 ```bash
 cd ~/gateflow/admin-panel
 
-# Install dependencies
-npm ci  # Use ci for clean install
+# Install dependencies (bun is ~30x faster than npm)
+bun install
 
 # Build for production
-npm run build
+bun run build
 ```
 
 **Expected output:**
@@ -206,7 +205,7 @@ npm run build
 ```bash
 # Check for missing migrations in Supabase
 # Check .env.local variables
-# Check logs: npm run build 2>&1 | tee build.log
+# Check logs: bun run build 2>&1 | tee build.log
 ```
 
 ---
@@ -220,8 +219,8 @@ module.exports = {
   apps: [{
     name: "gateflow-admin",
     cwd: "./admin-panel",
-    script: "npm",
-    args: "start",
+    script: process.env.HOME + "/.bun/bin/bun",
+    args: "run start",
     env: {
       NODE_ENV: "production",
       PORT: 3333
@@ -283,15 +282,15 @@ curl localhost:3333
 
 ---
 
-## Step 9: Configure Cutrus (mikr.us Panel)
+## Step 9: Configure Cytrus (mikr.us Panel)
 
 **AI: Instruct user to configure reverse proxy in mikr.us panel:**
 
-### Access Cutrus Panel
+### Access Cytrus Panel
 
 1. Login to mikr.us panel: https://mikr.us/panel
 2. Go to your VPS
-3. Click **Cutrus** (reverse proxy manager)
+3. Click **Cytrus** (reverse proxy manager)
 
 ### Add Domain
 
@@ -318,7 +317,7 @@ After 1-2 minutes:
 - SSL certificate should be issued automatically
 - Visit `https://example.com` → should work with green lock
 
-**AI: No need to install Caddy, Nginx, or Certbot - Cutrus handles everything!**
+**AI: No need to install Caddy, Nginx, or Certbot - Cytrus handles everything!**
 
 ---
 
@@ -477,12 +476,12 @@ git pull origin main
 ls -la supabase/migrations/
 # AI: Guide user to run new migrations in Supabase Dashboard
 
-# 3. Install dependencies
+# 3. Install dependencies (fast with bun)
 cd admin-panel
-npm ci
+bun install
 
 # 4. Build
-npm run build
+bun run build
 
 # 5. Restart PM2 (zero-downtime with graceful reload)
 pm2 restart gateflow-admin
@@ -507,9 +506,9 @@ pm2 describe gateflow-admin
 
 **Common causes:**
 1. **Missing .env.local** → Create file with all required vars
-2. **Build not complete** → Run `npm run build` first
+2. **Build not complete** → Run `bun run build` first
 3. **Port 3333 occupied** → `lsof -i :3333` → Change PORT in ecosystem.config.js
-4. **Node version wrong** → `node --version` → Should be v24+
+4. **Bun not in PATH** → Check `~/.bun/bin/bun --version`
 
 **Fix:**
 ```bash
@@ -526,7 +525,7 @@ pm2 start ecosystem.config.js
 **Diagnostic:**
 ```bash
 cd ~/gateflow/admin-panel
-npm run build 2>&1 | tee build.log
+bun run build 2>&1 | tee build.log
 cat build.log
 ```
 
@@ -539,8 +538,8 @@ cat build.log
 ```bash
 # Clean and rebuild
 rm -rf .next
-npm ci
-npm run build
+bun install
+bun run build
 ```
 
 ### Issue: Can't access via domain (502/503)
@@ -560,7 +559,7 @@ nslookup example.com
 
 **Common causes:**
 1. **PM2 not running** → `pm2 start ecosystem.config.js`
-2. **Wrong port in Cutrus** → Check panel, should be 3333
+2. **Wrong port in Cytrus** → Check panel, should be 3333
 3. **DNS not propagated** → Wait 5-15 minutes
 4. **Firewall blocking** → mikr.us usually has UFW disabled by default
 
@@ -572,7 +571,7 @@ pm2 restart gateflow-admin
 # Verify local access
 curl -v localhost:3333
 
-# Check Cutrus panel - ensure backend is localhost:3333
+# Check Cytrus panel - ensure backend is localhost:3333
 ```
 
 ### Issue: SSL not working
@@ -585,9 +584,9 @@ curl -I https://example.com
 
 **Fix:**
 - Wait 2-5 minutes for Let's Encrypt to issue cert
-- Check Cutrus panel → SSL should show "Active"
+- Check Cytrus panel → SSL should show "Active"
 - DNS must be correct first (A records pointing to VPS)
-- If stuck, delete domain in Cutrus and re-add
+- If stuck, delete domain in Cytrus and re-add
 
 ### Issue: Stripe webhook failing
 
@@ -681,8 +680,8 @@ Before marking deployment complete:
 mikr.us usually has UFW disabled. If enabling:
 ```bash
 sudo ufw allow 22     # SSH
-sudo ufw allow 80     # HTTP (Cutrus)
-sudo ufw allow 443    # HTTPS (Cutrus)
+sudo ufw allow 80     # HTTP (Cytrus)
+sudo ufw allow 443    # HTTPS (Cytrus)
 sudo ufw enable
 ```
 
@@ -691,7 +690,7 @@ sudo ufw enable
 ## Additional Resources
 
 - **mikr.us Docs:** https://mikr.us/faq (Polish)
-- **Cutrus Guide:** In mikr.us panel
+- **Cytrus Guide:** In mikr.us panel
 - **PM2 Basics:** https://pm2.keymetrics.io/docs/usage/quick-start/
 - **Advanced PM2:** [deployment/advanced/PM2-VPS.md](./deployment/advanced/PM2-VPS.md)
 - **Human Guide:** [DEPLOYMENT.md](./DEPLOYMENT.md)
@@ -699,4 +698,4 @@ sudo ufw enable
 
 ---
 
-**Last updated:** 2025-12-27 (mikr.us + PM2 + Cutrus specific)
+**Last updated:** 2026-01-11 (mikr.us + PM2 + Bun + Cytrus)

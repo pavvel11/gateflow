@@ -1,0 +1,420 @@
+'use client';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { useToast } from '@/contexts/ToastContext';
+import { useTranslations } from 'next-intl';
+import { Key, Plus, RotateCw, Trash2, Copy, Eye, EyeOff, AlertTriangle } from 'lucide-react';
+import ApiKeyFormModal from './ApiKeyFormModal';
+import { BaseModal, ModalHeader, ModalBody, ModalFooter, Button } from './ui/Modal';
+
+interface ApiKey {
+  id: string;
+  name: string;
+  key_prefix: string;
+  scopes: string[];
+  rate_limit_per_minute: number;
+  is_active: boolean;
+  expires_at: string | null;
+  last_used_at: string | null;
+  usage_count: number;
+  created_at: string;
+  revoked_at: string | null;
+}
+
+const SCOPE_LABELS: Record<string, string> = {
+  '*': 'Full Access',
+  'products:read': 'Products (Read)',
+  'products:write': 'Products (Write)',
+  'users:read': 'Users (Read)',
+  'users:write': 'Users (Write)',
+  'coupons:read': 'Coupons (Read)',
+  'coupons:write': 'Coupons (Write)',
+  'analytics:read': 'Analytics (Read)',
+  'webhooks:read': 'Webhooks (Read)',
+  'webhooks:write': 'Webhooks (Write)',
+};
+
+export default function ApiKeysPageContent() {
+  const { addToast } = useToast();
+  const t = useTranslations('admin.apiKeys');
+  const tCommon = useTranslations('common');
+
+  // State
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Modals
+  const [showForm, setShowForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [keyToRevoke, setKeyToRevoke] = useState<ApiKey | null>(null);
+  const [keyToRotate, setKeyToRotate] = useState<ApiKey | null>(null);
+  const [newKeySecret, setNewKeySecret] = useState<string | null>(null);
+  const [showSecret, setShowSecret] = useState(false);
+
+  // Fetch API keys
+  const fetchApiKeys = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/v1/api-keys');
+      if (!res.ok) throw new Error('Failed to fetch API keys');
+      const data = await res.json();
+      setApiKeys(data.data || []);
+    } catch (err) {
+      console.error('Error fetching API keys:', err);
+      setError(t('fetchError'));
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
+
+  useEffect(() => {
+    fetchApiKeys();
+  }, [fetchApiKeys]);
+
+  // Create API key
+  const handleCreate = async (formData: { name: string; scopes: string[]; rate_limit_per_minute?: number; expires_at?: string }) => {
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/v1/api-keys', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error?.message || 'Failed to create API key');
+      }
+
+      const data = await res.json();
+      setNewKeySecret(data.data.key);
+      await fetchApiKeys();
+      setShowForm(false);
+      addToast(t('createSuccess'), 'success');
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : t('createError'), 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Revoke API key
+  const handleRevoke = async () => {
+    if (!keyToRevoke) return;
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/v1/api-keys/${keyToRevoke.id}?reason=Revoked by admin`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error?.message || 'Failed to revoke API key');
+      }
+
+      await fetchApiKeys();
+      setKeyToRevoke(null);
+      addToast(t('revokeSuccess'), 'success');
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : t('revokeError'), 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Rotate API key
+  const handleRotate = async () => {
+    if (!keyToRotate) return;
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/v1/api-keys/${keyToRotate.id}/rotate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ grace_period_hours: 24 }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error?.message || 'Failed to rotate API key');
+      }
+
+      const data = await res.json();
+      setNewKeySecret(data.data.new_key.key);
+      await fetchApiKeys();
+      setKeyToRotate(null);
+      addToast(t('rotateSuccess'), 'success');
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : t('rotateError'), 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Copy to clipboard
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    addToast(t('copied'), 'success');
+  };
+
+  // Format date
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  // Get status badge
+  const getStatusBadge = (key: ApiKey) => {
+    if (key.revoked_at) {
+      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">{t('statusRevoked')}</span>;
+    }
+    if (!key.is_active) {
+      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400">{t('statusInactive')}</span>;
+    }
+    if (key.expires_at && new Date(key.expires_at) < new Date()) {
+      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">{t('statusExpired')}</span>;
+    }
+    return <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">{t('statusActive')}</span>;
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('title')}</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">{t('subtitle')}</p>
+        </div>
+        <button
+          onClick={() => setShowForm(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          {t('createKey')}
+        </button>
+      </div>
+
+      {/* API Keys Table */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center py-12 text-red-500">
+            <AlertTriangle className="w-5 h-5 mr-2" />
+            {error}
+          </div>
+        ) : apiKeys.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-gray-500 dark:text-gray-400">
+            <Key className="w-12 h-12 mb-4 opacity-50" />
+            <p className="text-lg font-medium">{t('noKeys')}</p>
+            <p className="text-sm">{t('noKeysDescription')}</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{t('columnName')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{t('columnKey')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{t('columnScopes')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{t('columnStatus')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{t('columnLastUsed')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{t('columnCreated')}</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{t('columnActions')}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {apiKeys.map((key) => (
+                  <tr key={key.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <Key className="w-4 h-4 text-gray-400" />
+                        <span className="font-medium text-gray-900 dark:text-white">{key.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <code className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono text-gray-700 dark:text-gray-300">
+                        {key.key_prefix}...
+                      </code>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-wrap gap-1">
+                        {key.scopes.slice(0, 2).map((scope) => (
+                          <span key={scope} className="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                            {SCOPE_LABELS[scope] || scope}
+                          </span>
+                        ))}
+                        {key.scopes.length > 2 && (
+                          <span className="px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400">
+                            +{key.scopes.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">{getStatusBadge(key)}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                      {key.last_used_at ? formatDate(key.last_used_at) : t('neverUsed')}
+                      {key.usage_count > 0 && (
+                        <span className="block text-xs">({key.usage_count} {t('requests')})</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                      {formatDate(key.created_at)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-2">
+                        {!key.revoked_at && key.is_active && (
+                          <>
+                            <button
+                              onClick={() => setKeyToRotate(key)}
+                              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                              title={t('rotateKey')}
+                            >
+                              <RotateCw className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => setKeyToRevoke(key)}
+                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                              title={t('revokeKey')}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Create Key Modal */}
+      <ApiKeyFormModal
+        isOpen={showForm}
+        onClose={() => setShowForm(false)}
+        onSubmit={handleCreate}
+        isSubmitting={isSubmitting}
+      />
+
+      {/* New Key Secret Modal */}
+      {newKeySecret && (
+        <BaseModal isOpen={true} onClose={() => { setNewKeySecret(null); setShowSecret(false); }} size="md">
+          <ModalHeader
+            title={t('keyCreated')}
+            icon={<Key className="w-6 h-6 text-green-500" />}
+          />
+          <ModalBody>
+            <div className="space-y-4">
+              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-amber-800 dark:text-amber-200">{t('saveKeyWarning')}</p>
+                    <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">{t('saveKeyDescription')}</p>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('yourApiKey')}</label>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 relative">
+                    <input
+                      type={showSecret ? 'text' : 'password'}
+                      value={newKeySecret}
+                      readOnly
+                      className="w-full px-3 py-2 pr-10 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowSecret(!showSecret)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                    >
+                      {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(newKeySecret)}
+                    className="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                    title={t('copy')}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={() => { setNewKeySecret(null); setShowSecret(false); }} variant="primary">
+              {t('done')}
+            </Button>
+          </ModalFooter>
+        </BaseModal>
+      )}
+
+      {/* Revoke Confirmation Modal */}
+      {keyToRevoke && (
+        <BaseModal isOpen={true} onClose={() => setKeyToRevoke(null)} size="sm">
+          <ModalHeader
+            title={t('revokeTitle')}
+            icon={<Trash2 className="w-6 h-6 text-red-500" />}
+          />
+          <ModalBody>
+            <p className="text-gray-600 dark:text-gray-400">
+              {t('revokeConfirmation', { name: keyToRevoke.name })}
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+              {t('revokeWarning')}
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={() => setKeyToRevoke(null)} variant="secondary">
+              {tCommon('cancel')}
+            </Button>
+            <Button onClick={handleRevoke} variant="danger" loading={isSubmitting}>
+              {t('revokeKey')}
+            </Button>
+          </ModalFooter>
+        </BaseModal>
+      )}
+
+      {/* Rotate Confirmation Modal */}
+      {keyToRotate && (
+        <BaseModal isOpen={true} onClose={() => setKeyToRotate(null)} size="sm">
+          <ModalHeader
+            title={t('rotateTitle')}
+            icon={<RotateCw className="w-6 h-6 text-blue-500" />}
+          />
+          <ModalBody>
+            <p className="text-gray-600 dark:text-gray-400">
+              {t('rotateConfirmation', { name: keyToRotate.name })}
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+              {t('rotateGracePeriod')}
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={() => setKeyToRotate(null)} variant="secondary">
+              {tCommon('cancel')}
+            </Button>
+            <Button onClick={handleRotate} variant="primary" loading={isSubmitting}>
+              {t('rotateKey')}
+            </Button>
+          </ModalFooter>
+        </BaseModal>
+      )}
+    </div>
+  );
+}

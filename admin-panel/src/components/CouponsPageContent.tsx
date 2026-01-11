@@ -18,6 +18,7 @@ import { useToast } from '@/contexts/ToastContext';
 import CouponFormModal from './CouponFormModal';
 import { Product } from '@/types';
 import { useTranslations } from 'next-intl';
+import { api, ApiError } from '@/lib/api/client';
 
 // Helper to identify OTO coupons by their code prefix
 const isOtoCoupon = (coupon: Coupon): boolean => {
@@ -71,27 +72,25 @@ const CouponsPageContent: React.FC = () => {
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const [showDeleteExpiredConfirm, setShowDeleteExpiredConfirm] = useState(false);
 
-  // Fetch data
+  // Fetch data using v1 API for both coupons and products
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       const [couponsRes, productsRes] = await Promise.all([
-        fetch('/api/admin/coupons'),
-        fetch('/api/admin/products?limit=1000&status=active')
+        api.list<Coupon>('coupons', { limit: 500, sort: '-created_at' }),
+        api.list<Product>('products', { limit: 1000, status: 'active', sort: 'name' })
       ]);
 
-      if (!couponsRes.ok) throw new Error('Failed to fetch coupons');
-      if (!productsRes.ok) throw new Error('Failed to fetch products');
-
-      const couponsData = await couponsRes.json();
-      const productsData = await productsRes.json();
-
-      setCoupons(couponsData);
-      setProducts(productsData.products || []);
+      setCoupons(couponsRes.data || []);
+      setProducts(productsRes.data || []);
     } catch (err) {
       console.error('Error fetching data:', err);
-      setError('Failed to load coupons');
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError('Failed to load coupons');
+      }
     } finally {
       setLoading(false);
     }
@@ -114,26 +113,21 @@ const CouponsPageContent: React.FC = () => {
     return new Date(coupon.expires_at) < new Date();
   });
 
-  // CRUD Handlers
+  // CRUD Handlers using v1 API
   const handleCreate = async (formData: any) => {
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/admin/coupons', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to create coupon');
-      }
+      await api.create<Coupon>('coupons', formData);
 
       await fetchData();
       setShowForm(false);
       addToast(t('createSuccess'), 'success');
     } catch (err) {
-      addToast(err instanceof Error ? err.message : 'Failed to create coupon', 'error');
+      if (err instanceof ApiError) {
+        addToast(err.message, 'error');
+      } else {
+        addToast('Failed to create coupon', 'error');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -143,23 +137,18 @@ const CouponsPageContent: React.FC = () => {
     if (!editingCoupon) return;
     setIsSubmitting(true);
     try {
-      const res = await fetch(`/api/admin/coupons/${editingCoupon.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to update coupon');
-      }
+      await api.update<Coupon>('coupons', editingCoupon.id, formData);
 
       await fetchData();
       setShowForm(false);
       setEditingCoupon(null);
       addToast(t('updateSuccess'), 'success');
     } catch (err) {
-      addToast(err instanceof Error ? err.message : 'Failed to update coupon', 'error');
+      if (err instanceof ApiError) {
+        addToast(err.message, 'error');
+      } else {
+        addToast('Failed to update coupon', 'error');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -167,11 +156,7 @@ const CouponsPageContent: React.FC = () => {
 
   const handleDelete = async (coupon: Coupon) => {
     try {
-      const res = await fetch(`/api/admin/coupons/${coupon.id}`, {
-        method: 'DELETE',
-      });
-
-      if (!res.ok) throw new Error('Failed to delete coupon');
+      await api.delete('coupons', coupon.id);
 
       await fetchData();
       setCouponToDelete(null);
@@ -183,13 +168,7 @@ const CouponsPageContent: React.FC = () => {
 
   const handleToggleActive = async (coupon: Coupon) => {
     try {
-      const res = await fetch(`/api/admin/coupons/${coupon.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_active: !coupon.is_active }),
-      });
-
-      if (!res.ok) throw new Error('Failed to toggle status');
+      await api.update<Coupon>('coupons', coupon.id, { is_active: !coupon.is_active });
 
       await fetchData();
       addToast(t('toggleSuccess', { status: t(!coupon.is_active ? 'activated' : 'deactivated') }), 'success');
@@ -219,21 +198,26 @@ const CouponsPageContent: React.FC = () => {
 
   const handleBulkDelete = async () => {
     try {
-      const deletePromises = Array.from(selectedIds).map(id =>
-        fetch(`/api/admin/coupons/${id}`, { method: 'DELETE' })
-      );
+      const ids = Array.from(selectedIds);
+      let failed = 0;
 
-      const results = await Promise.all(deletePromises);
-      const failed = results.filter(r => !r.ok).length;
+      // Delete sequentially to avoid race conditions
+      for (const id of ids) {
+        try {
+          await api.delete('coupons', id);
+        } catch {
+          failed++;
+        }
+      }
 
       await fetchData();
       setSelectedIds(new Set());
       setShowBulkDeleteConfirm(false);
 
       if (failed > 0) {
-        addToast(t('bulkDeletePartial', { deleted: selectedIds.size - failed, failed }), 'warning');
+        addToast(t('bulkDeletePartial', { deleted: ids.length - failed, failed }), 'warning');
       } else {
-        addToast(t('bulkDeleteSuccess', { count: selectedIds.size }), 'success');
+        addToast(t('bulkDeleteSuccess', { count: ids.length }), 'success');
       }
     } catch (err) {
       addToast('Failed to delete coupons', 'error');
@@ -242,12 +226,16 @@ const CouponsPageContent: React.FC = () => {
 
   const handleDeleteExpired = async () => {
     try {
-      const deletePromises = expiredCoupons.map(coupon =>
-        fetch(`/api/admin/coupons/${coupon.id}`, { method: 'DELETE' })
-      );
+      let failed = 0;
 
-      const results = await Promise.all(deletePromises);
-      const failed = results.filter(r => !r.ok).length;
+      // Delete sequentially to avoid race conditions
+      for (const coupon of expiredCoupons) {
+        try {
+          await api.delete('coupons', coupon.id);
+        } catch {
+          failed++;
+        }
+      }
 
       await fetchData();
       setSelectedIds(new Set());

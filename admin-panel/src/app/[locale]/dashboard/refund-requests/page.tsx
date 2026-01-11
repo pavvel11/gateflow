@@ -46,12 +46,12 @@ export default function RefundRequestsPage() {
       const params = new URLSearchParams();
       if (statusFilter) params.set('status', statusFilter);
 
-      const response = await fetch(`/api/admin/refund-requests?${params.toString()}`);
+      const response = await fetch(`/api/v1/refund-requests?${params.toString()}`);
       const data = await response.json();
 
-      if (!response.ok) throw new Error(data.error || 'Failed to fetch');
+      if (!response.ok) throw new Error(data.error?.message || 'Failed to fetch');
 
-      setRequests(data.requests || []);
+      setRequests(data.data || []);
     } catch (err) {
       const error = err as Error;
       setError(error.message);
@@ -77,7 +77,7 @@ export default function RefundRequestsPage() {
     try {
       setProcessingId(selectedRequest.id);
 
-      const response = await fetch(`/api/admin/refund-requests/${selectedRequest.id}`, {
+      const response = await fetch(`/api/v1/refund-requests/${selectedRequest.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -88,7 +88,7 @@ export default function RefundRequestsPage() {
 
       const data = await response.json();
 
-      if (!response.ok) throw new Error(data.error || 'Failed to process');
+      if (!response.ok) throw new Error(data.error?.message || 'Failed to process');
 
       setActionModalOpen(false);
       setSelectedRequest(null);

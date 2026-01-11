@@ -4,12 +4,15 @@ import { createClient } from '@supabase/supabase-js';
 // Setup Admin Client directly (bypass UI login for API testing)
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!SERVICE_ROLE_KEY) {
   throw new Error('SUPABASE_SERVICE_ROLE_KEY is missing. Cannot run API tests.');
 }
 
 const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+// Separate client for user authentication (to avoid corrupting supabaseAdmin's service role)
+const supabaseAuth = createClient(SUPABASE_URL, ANON_KEY || '');
 
 test.describe('API /api/users', () => {
   let adminUserId: string;
@@ -50,7 +53,8 @@ test.describe('API /api/users', () => {
     // BUT Playwright APIRequest context doesn't easily share cookies with Browser context unless we merge them.
     
     // Simpler: Just log in via REST API to get a session token
-    const { data: sessionData, error: loginError } = await supabaseAdmin.auth.signInWithPassword({
+    // Use supabaseAuth (not supabaseAdmin) to avoid corrupting admin client's service role
+    const { data: sessionData, error: loginError } = await supabaseAuth.auth.signInWithPassword({
       email: adminEmail,
       password: 'password123'
     });

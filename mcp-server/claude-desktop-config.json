@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "gateflow": {
+      "command": "bun",
+      "args": ["/absolute/path/to/mcp-server/src/index.ts"],
+      "env": {
+        "GATEFLOW_API_KEY": "gf_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "GATEFLOW_API_URL": "https://your-gateflow-instance.com"
+      }
+    }
+  }
+}

@@ -11,6 +11,7 @@ import PaymentTransactionsTable from './PaymentTransactionsTable';
 import PaymentSessionsTable from './PaymentSessionsTable';
 import PaymentFilters from './PaymentFilters';
 import type { PaymentTransaction, PaymentSession } from '@/types/payment';
+import { api } from '@/lib/api/client';
 
 interface PaymentStats {
   totalTransactions: number;
@@ -35,30 +36,35 @@ export default function PaymentsDashboard() {
     searchTerm: '',
   });
 
-  // Fetch payment data
+  // Fetch payment data (all from v1 API)
   const fetchPaymentData = useCallback(async () => {
     setLoading(true);
     try {
       const [transactionsRes, sessionsRes, statsRes] = await Promise.all([
-        fetch('/api/admin/payments/transactions'),
-        fetch('/api/admin/payments/sessions'),
-        fetch('/api/admin/payments/stats'),
+        api.list<PaymentTransaction>('payments', { limit: 500 }),
+        fetch('/api/admin/payments/sessions'), // sessions still use old API - no dedicated v1 endpoint
+        api.getCustom<{ total_transactions: number; total_revenue: number; pending_count: number; refunded_amount: number; today_revenue: number; this_month_revenue: number }>('payments/stats'),
       ]);
 
-      if (transactionsRes.ok) {
-        const transactionsData = await transactionsRes.json();
-        setTransactions(transactionsData);
-      }
+      // Transactions from v1 API
+      setTransactions(transactionsRes.data || []);
 
+      // Sessions from old API (embedded checkout doesn't use sessions)
       if (sessionsRes.ok) {
         const sessionsData = await sessionsRes.json();
         setSessions(sessionsData);
       }
 
-      if (statsRes.ok) {
-        const statsData = await statsRes.json();
-        setStats(statsData);
-      }
+      // Stats from v1 API (getCustom already extracts .data)
+      const statsData = statsRes;
+      setStats({
+        totalTransactions: statsData.total_transactions,
+        totalRevenue: statsData.total_revenue,
+        pendingSessions: statsData.pending_count,
+        refundedAmount: statsData.refunded_amount,
+        todayRevenue: statsData.today_revenue,
+        thisMonthRevenue: statsData.this_month_revenue,
+      });
     } catch {
       addToast('Failed to load payment data', 'error');
     } finally {

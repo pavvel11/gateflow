@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserWithAccess } from '@/types';
 import UsersFilterBar from './UsersFilterBar';
 import UsersTable from './UsersTable';
@@ -8,15 +8,11 @@ import { useToast } from '@/contexts/ToastContext';
 import UserDetailsModal from './UserDetailsModal';
 import AccessManagementModal from './AccessManagementModal';
 import { useTranslations } from 'next-intl';
+import { useUsers } from '@/hooks/useUsers';
 
 const UsersPageContent: React.FC = () => {
   const { addToast } = useToast();
   const t = useTranslations('admin.users');
-
-  // State for users and loading status
-  const [users, setUsers] = useState<UserWithAccess[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // State for modals
   const [selectedUser, setSelectedUser] = useState<UserWithAccess | null>(null);
@@ -25,15 +21,28 @@ const UsersPageContent: React.FC = () => {
 
   // State for pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [limit] = useState(10);
-  const [totalItems, setTotalItems] = useState(0);
 
   // State for filtering and sorting
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('user_created_at');
+  const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  // Use the v1 API users hook
+  const {
+    users,
+    loading,
+    error,
+    pagination,
+    fetchUsers,
+  } = useUsers({
+    page: currentPage,
+    limit,
+    search: debouncedSearchTerm,
+    sortBy,
+    sortOrder,
+  });
 
   const handleSort = (column: string) => {
     if (sortBy === column) {
@@ -55,40 +64,7 @@ const UsersPageContent: React.FC = () => {
     };
   }, [searchTerm]);
 
-  // Fetch users from the API
-  const fetchUsers = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: limit.toString(),
-        search: debouncedSearchTerm,
-        sortBy,
-        sortOrder,
-      });
-
-      const response = await fetch(`/api/users?${params}`);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setUsers(data.users || []);
-      if (data.pagination) {
-        setTotalPages(data.pagination.totalPages);
-        setTotalItems(data.pagination.total);
-      }
-    } catch {
-      setError(t('errorLoadingUsers'));
-    } finally {
-      setLoading(false);
-    }
-  }, [currentPage, limit, debouncedSearchTerm, sortBy, sortOrder, t]);
-
-  // Re-fetch users when dependencies change
+  // Fetch users when dependencies change
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
@@ -127,9 +103,9 @@ const UsersPageContent: React.FC = () => {
         onViewDetails={handleViewUserDetails}
         onManageAccess={handleManageAccess}
         onRefresh={fetchUsers}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={totalItems}
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalItems={pagination.totalItems}
         onPageChange={setCurrentPage}
         limit={limit}
         sortBy={sortBy}

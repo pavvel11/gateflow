@@ -8,6 +8,7 @@ import { getCategories, getProductCategories, Category } from '@/lib/actions/cat
 import { getDefaultCurrency, getShopConfig } from '@/lib/actions/shop-config';
 import { parseVideoUrl, isTrustedVideoPlatform } from '@/lib/videoUtils';
 import { createClient } from '@/lib/supabase/client';
+import { api } from '@/lib/api/client';
 import {
   ProductFormData,
   OtoState,
@@ -156,9 +157,8 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
         setFormData(prev => ({ ...prev, categories: catIds }));
       }).catch(err => console.error(err));
 
-      // Fetch OTO configuration for this product
-      fetch(`/api/admin/products/${product.id}/oto`)
-        .then(res => res.json())
+      // Fetch OTO configuration for this product using v1 API
+      api.getCustom<{ has_oto: boolean; oto_product_id?: string; discount_type?: 'percentage' | 'fixed'; discount_value?: number; duration_minutes?: number }>(`products/${product.id}/oto`)
         .then(data => {
           if (data.has_oto) {
             setOto({
@@ -201,15 +201,18 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
     }
   }, [product, isOpen, defaultCurrency]);
 
-  // Fetch products for OTO dropdown
+  // Fetch products for OTO dropdown using v1 API
   useEffect(() => {
     const fetchProducts = async () => {
       if (!isOpen) return;
       try {
         setLoadingProducts(true);
-        const res = await fetch('/api/admin/products?limit=1000&status=active');
-        const data = await res.json();
-        setProducts(data.products || []);
+        const response = await api.list<Product>('products', {
+          limit: 1000,
+          status: 'active',
+          sort: 'name',
+        });
+        setProducts(response.data || []);
       } catch (err) {
         console.error('Failed to fetch products', err);
       } finally {
