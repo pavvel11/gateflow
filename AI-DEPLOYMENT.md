@@ -9,7 +9,7 @@ Human users should use [DEPLOYMENT.md](./DEPLOYMENT.md) instead.
 
 ### mikr.us Context
 - **Hosting**: Polish VPS provider (https://mikr.us)
-- **Reverse Proxy**: Cutrus (built-in, don't install Caddy/Nginx)
+- **Reverse Proxy**: Cytrus (built-in, don't install Caddy/Nginx)
 - **Process Manager**: PM2 (lighter than Docker for 2GB RAM)
 - **Access**: SSH as root
 - **Goal**: Working GateFlow with SSL in ~15 minutes
@@ -21,8 +21,8 @@ Human users should use [DEPLOYMENT.md](./DEPLOYMENT.md) instead.
 - ✅ Direct Node.js control
 
 ### Why No Caddy/Nginx?
-- ✅ mikr.us includes **Cutrus** (reverse proxy panel)
-- ✅ SSL is handled by Cutrus
+- ✅ mikr.us includes **Cytrus** (reverse proxy panel)
+- ✅ SSL is handled by Cytrus
 - ✅ Just expose app on port (e.g., 3333) and configure in panel
 
 ---
@@ -282,15 +282,15 @@ curl localhost:3333
 
 ---
 
-## Step 9: Configure Cutrus (mikr.us Panel)
+## Step 9: Configure Cytrus (mikr.us Panel)
 
 **AI: Instruct user to configure reverse proxy in mikr.us panel:**
 
-### Access Cutrus Panel
+### Access Cytrus Panel
 
 1. Login to mikr.us panel: https://mikr.us/panel
 2. Go to your VPS
-3. Click **Cutrus** (reverse proxy manager)
+3. Click **Cytrus** (reverse proxy manager)
 
 ### Add Domain
 
@@ -317,7 +317,7 @@ After 1-2 minutes:
 - SSL certificate should be issued automatically
 - Visit `https://example.com` → should work with green lock
 
-**AI: No need to install Caddy, Nginx, or Certbot - Cutrus handles everything!**
+**AI: No need to install Caddy, Nginx, or Certbot - Cytrus handles everything!**
 
 ---
 
@@ -559,7 +559,7 @@ nslookup example.com
 
 **Common causes:**
 1. **PM2 not running** → `pm2 start ecosystem.config.js`
-2. **Wrong port in Cutrus** → Check panel, should be 3333
+2. **Wrong port in Cytrus** → Check panel, should be 3333
 3. **DNS not propagated** → Wait 5-15 minutes
 4. **Firewall blocking** → mikr.us usually has UFW disabled by default
 
@@ -571,7 +571,7 @@ pm2 restart gateflow-admin
 # Verify local access
 curl -v localhost:3333
 
-# Check Cutrus panel - ensure backend is localhost:3333
+# Check Cytrus panel - ensure backend is localhost:3333
 ```
 
 ### Issue: SSL not working
@@ -584,9 +584,9 @@ curl -I https://example.com
 
 **Fix:**
 - Wait 2-5 minutes for Let's Encrypt to issue cert
-- Check Cutrus panel → SSL should show "Active"
+- Check Cytrus panel → SSL should show "Active"
 - DNS must be correct first (A records pointing to VPS)
-- If stuck, delete domain in Cutrus and re-add
+- If stuck, delete domain in Cytrus and re-add
 
 ### Issue: Stripe webhook failing
 
@@ -680,8 +680,8 @@ Before marking deployment complete:
 mikr.us usually has UFW disabled. If enabling:
 ```bash
 sudo ufw allow 22     # SSH
-sudo ufw allow 80     # HTTP (Cutrus)
-sudo ufw allow 443    # HTTPS (Cutrus)
+sudo ufw allow 80     # HTTP (Cytrus)
+sudo ufw allow 443    # HTTPS (Cytrus)
 sudo ufw enable
 ```
 
@@ -690,7 +690,7 @@ sudo ufw enable
 ## Additional Resources
 
 - **mikr.us Docs:** https://mikr.us/faq (Polish)
-- **Cutrus Guide:** In mikr.us panel
+- **Cytrus Guide:** In mikr.us panel
 - **PM2 Basics:** https://pm2.keymetrics.io/docs/usage/quick-start/
 - **Advanced PM2:** [deployment/advanced/PM2-VPS.md](./deployment/advanced/PM2-VPS.md)
 - **Human Guide:** [DEPLOYMENT.md](./DEPLOYMENT.md)
@@ -698,4 +698,4 @@ sudo ufw enable
 
 ---
 
-**Last updated:** 2026-01-11 (mikr.us + PM2 + Bun + Cutrus)
+**Last updated:** 2026-01-11 (mikr.us + PM2 + Bun + Cytrus)
