@@ -12,12 +12,42 @@ interface AppConfig {
 
 const ConfigContext = createContext<AppConfig | null>(null)
 
+const CONFIG_CACHE_KEY = 'gf_runtime_config'
+const CONFIG_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
+function getCachedConfig(): AppConfig | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const cached = sessionStorage.getItem(CONFIG_CACHE_KEY)
+    if (!cached) return null
+    const { data, timestamp } = JSON.parse(cached)
+    if (Date.now() - timestamp > CONFIG_CACHE_TTL) {
+      sessionStorage.removeItem(CONFIG_CACHE_KEY)
+      return null
+    }
+    return data
+  } catch {
+    return null
+  }
+}
+
+function setCachedConfig(data: AppConfig): void {
+  if (typeof window === 'undefined') return
+  try {
+    sessionStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }))
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 export function ConfigProvider({ children }: { children: React.ReactNode }) {
-  const [config, setConfig] = useState<AppConfig | null>(null)
-  const [loading, setLoading] = useState(true)
+  // Try to use cached config immediately to avoid loading spinner
+  const [config, setConfig] = useState<AppConfig | null>(() => getCachedConfig())
+  const [loading, setLoading] = useState(() => !getCachedConfig())
   const [error, setError] = useState<string | null>(null)
-  
+
   useEffect(() => {
+    // Always fetch fresh config, but don't block if we have cache
     fetch('/api/runtime-config')
       .then(res => {
         if (!res.ok) {
@@ -27,10 +57,14 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
       })
       .then(data => {
         setConfig(data)
+        setCachedConfig(data)
         setLoading(false)
       })
       .catch(err => {
-        setError(err.message)
+        // Only show error if we don't have cached config
+        if (!config) {
+          setError(err.message)
+        }
         setLoading(false)
       })
   }, [])

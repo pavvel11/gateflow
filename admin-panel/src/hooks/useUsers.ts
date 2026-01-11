@@ -56,8 +56,8 @@ export function useUsers(params: UseUsersParams = {}): UseUsersResult {
   /**
    * Fetch users from v1 API
    *
-   * Note: v1 API uses cursor pagination, but we emulate offset pagination
-   * by fetching enough items to cover the requested page.
+   * Fetches only the needed items for the current page.
+   * Uses limit+1 pattern to detect if there are more pages.
    */
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -67,30 +67,25 @@ export function useUsers(params: UseUsersParams = {}): UseUsersResult {
       // Build sort param (v1 uses "-field" for desc, "field" for asc)
       const sort = sortOrder === 'desc' ? `-${sortBy}` : sortBy;
 
-      // For offset pagination emulation, we fetch all items up to a reasonable limit
-      const fetchLimit = Math.max(limit * page, 100);
-
+      // Fetch limit+1 to detect if there's a next page
       const response = await api.list<UserWithAccess>('users', {
-        limit: fetchLimit,
+        limit: limit + 1,
         search: search || undefined,
         sort,
       });
 
       const allUsers = response.data;
-      const totalItems = allUsers.length;
+      const hasMore = allUsers.length > limit;
 
-      // Calculate pagination info based on fetched data
-      const totalPages = Math.ceil(totalItems / limit);
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const pageUsers = allUsers.slice(startIndex, endIndex);
+      // Take only the requested limit
+      const pageUsers = allUsers.slice(0, limit);
 
       setUsers(pageUsers);
       setPagination({
         currentPage: page,
-        totalPages: Math.max(totalPages, 1),
-        totalItems,
-        hasMore: response.pagination.has_more || endIndex < totalItems,
+        totalPages: hasMore ? page + 1 : page,
+        totalItems: pageUsers.length + (hasMore ? 1 : 0),
+        hasMore,
       });
     } catch (err) {
       if (err instanceof ApiError) {

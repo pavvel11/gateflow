@@ -8,17 +8,42 @@ interface RuntimeConfig {
   siteUrl: string
 }
 
+// Shared cache key with ConfigProvider
+const CONFIG_CACHE_KEY = 'gf_runtime_config'
+const CONFIG_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
 // Runtime configuration with aggressive caching
 let cachedConfig: RuntimeConfig | null = null
 let configPromise: Promise<RuntimeConfig> | null = null
 
+// Check sessionStorage cache (shared with ConfigProvider)
+function getSessionStorageConfig(): RuntimeConfig | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const cached = sessionStorage.getItem(CONFIG_CACHE_KEY)
+    if (!cached) return null
+    const { data, timestamp } = JSON.parse(cached)
+    if (Date.now() - timestamp > CONFIG_CACHE_TTL) return null
+    return data
+  } catch {
+    return null
+  }
+}
+
 async function getRuntimeConfig(): Promise<RuntimeConfig> {
   // Return cached config immediately if available
   if (cachedConfig) return cachedConfig
-  
+
+  // Check sessionStorage (might have been set by ConfigProvider)
+  const sessionConfig = getSessionStorageConfig()
+  if (sessionConfig) {
+    cachedConfig = sessionConfig
+    return sessionConfig
+  }
+
   // Return existing promise if already fetching
   if (configPromise) return configPromise
-  
+
   configPromise = (async () => {
     try {
       const response = await fetch('/api/runtime-config', {
@@ -34,7 +59,7 @@ async function getRuntimeConfig(): Promise<RuntimeConfig> {
     } catch (error) {
       console.error('Failed to load runtime config:', error)
     }
-    
+
     // Fallback to environment variables (if any exist)
     const fallbackConfig = {
       supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321',
@@ -46,7 +71,7 @@ async function getRuntimeConfig(): Promise<RuntimeConfig> {
     cachedConfig = fallbackConfig
     return fallbackConfig
   })()
-  
+
   return configPromise
 }
 

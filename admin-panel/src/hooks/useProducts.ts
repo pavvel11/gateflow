@@ -87,8 +87,8 @@ export function useProducts(params: UseProductsParams = {}): UseProductsResult {
   /**
    * Fetch products from v1 API
    *
-   * Note: v1 API uses cursor pagination, but we emulate offset pagination
-   * by fetching enough items to cover the requested page.
+   * Fetches only the needed items for the current page.
+   * Uses limit+1 pattern to detect if there are more pages.
    */
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -98,32 +98,26 @@ export function useProducts(params: UseProductsParams = {}): UseProductsResult {
       // Build sort param (v1 uses "-field" for desc, "field" for asc)
       const sort = sortOrder === 'desc' ? `-${sortBy}` : sortBy;
 
-      // For offset pagination emulation, we fetch all items up to a reasonable limit
-      // In production, you might want to implement proper cursor caching
-      const fetchLimit = Math.max(limit * page, 100); // Fetch at least 100 or enough for current page
-
+      // Fetch limit+1 to detect if there's a next page
       const response = await api.list<Product>('products', {
-        limit: fetchLimit,
+        limit: limit + 1,
         search: search || undefined,
         status: status === 'all' ? undefined : status,
         sort,
       });
 
       const allProducts = response.data;
-      const totalItems = allProducts.length;
+      const hasMore = allProducts.length > limit;
 
-      // Calculate pagination info based on fetched data
-      const totalPages = Math.ceil(totalItems / limit);
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const pageProducts = allProducts.slice(startIndex, endIndex);
+      // Take only the requested limit
+      const pageProducts = allProducts.slice(0, limit);
 
       setProducts(pageProducts);
       setPagination({
         currentPage: page,
-        totalPages: Math.max(totalPages, 1),
-        totalItems,
-        hasMore: response.pagination.has_more || endIndex < totalItems,
+        totalPages: hasMore ? page + 1 : page, // We don't know exact total, show current+1 if more
+        totalItems: pageProducts.length + (hasMore ? 1 : 0), // Approximate
+        hasMore,
       });
     } catch (err) {
       if (err instanceof ApiError) {
