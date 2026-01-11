@@ -43,7 +43,7 @@ export default function PaymentsDashboard() {
       const [transactionsRes, sessionsRes, statsRes] = await Promise.all([
         api.list<PaymentTransaction>('payments', { limit: 500 }),
         fetch('/api/admin/payments/sessions'), // sessions still use old API - no dedicated v1 endpoint
-        api.getCustom<{ data: { total_transactions: number; total_revenue: number; pending_count: number; refunded_amount: number; today_revenue: number; this_month_revenue: number } }>('payments/stats'),
+        api.getCustom<{ total_transactions: number; total_revenue: number; pending_count: number; refunded_amount: number; today_revenue: number; this_month_revenue: number }>('payments/stats'),
       ]);
 
       // Transactions from v1 API
@@ -55,8 +55,8 @@ export default function PaymentsDashboard() {
         setSessions(sessionsData);
       }
 
-      // Stats from v1 API
-      const statsData = statsRes.data;
+      // Stats from v1 API (getCustom already extracts .data)
+      const statsData = statsRes;
       setStats({
         totalTransactions: statsData.total_transactions,
         totalRevenue: statsData.total_revenue,

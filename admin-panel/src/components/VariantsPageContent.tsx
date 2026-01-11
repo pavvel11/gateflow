@@ -84,8 +84,8 @@ const VariantsPageContent: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const response = await api.getCustom<{ data: VariantGroup[] }>('variant-groups');
-      setGroups(response.data || []);
+      const groups = await api.getCustom<VariantGroup[]>('variant-groups');
+      setGroups(groups || []);
     } catch (err) {
       setError('Failed to load variant groups');
       console.error('Error:', err);

@@ -88,8 +88,15 @@ export function isValidWebhookUrl(urlString: string): { valid: boolean; error?: 
 
 /**
  * Valid webhook event types
+ *
+ * Note: Must match WEBHOOK_EVENTS in src/types/webhooks.ts
  */
 export const WEBHOOK_EVENT_TYPES = [
+  // Active events (used in UI)
+  'purchase.completed',
+  'lead.captured',
+  'waitlist.signup',
+  // Legacy/future events
   'payment.completed',
   'payment.refunded',
   'payment.failed',

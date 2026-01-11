@@ -86,8 +86,8 @@ const OrderBumpsPageContent: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const response = await api.getCustom<{ data: OrderBumpWithDetails[] }>('order-bumps');
-      setOrderBumps(response.data || []);
+      const orderBumps = await api.getCustom<OrderBumpWithDetails[]>('order-bumps');
+      setOrderBumps(orderBumps || []);
     } catch (err) {
       setError('Failed to load order bumps');
       console.error('Error:', err);

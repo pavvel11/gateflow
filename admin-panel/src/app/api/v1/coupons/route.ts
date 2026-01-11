@@ -254,8 +254,8 @@ export async function POST(request: NextRequest) {
       expiresAt = date.toISOString();
     }
 
-    // Validate usage limits
-    if (body.usage_limit_global !== undefined) {
+    // Validate usage limits (null means unlimited)
+    if (body.usage_limit_global !== undefined && body.usage_limit_global !== null) {
       if (!Number.isInteger(body.usage_limit_global) || body.usage_limit_global < 1) {
         throw new ApiValidationError('usage_limit_global must be a positive integer');
       }

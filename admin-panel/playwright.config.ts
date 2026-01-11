@@ -21,8 +21,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry failed tests once */
   retries: 1,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  /* Use single worker for test stability (avoids race conditions with shared database) */
+  workers: 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'list',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */

@@ -124,8 +124,11 @@ export async function getAdminBearerToken(): Promise<string> {
     .from('admin_users')
     .insert({ user_id: user!.id });
 
-  // Sign in to get JWT token
-  const { data: { session }, error: signInError } = await supabaseAdmin.auth.signInWithPassword({
+  // IMPORTANT: Use a SEPARATE client for sign in to avoid corrupting the shared supabaseAdmin client.
+  // signInWithPassword() changes the client's auth state from service role to user session,
+  // which would cause RLS to be enforced for all subsequent tests using supabaseAdmin.
+  const signInClient = createClient(SUPABASE_URL, ANON_KEY);
+  const { data: { session }, error: signInError } = await signInClient.auth.signInWithPassword({
     email,
     password,
   });
