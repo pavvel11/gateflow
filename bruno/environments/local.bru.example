@@ -1,0 +1,4 @@
+vars {
+  BASE_URL: http://localhost:3000
+  API_KEY: gf_live_YOUR_API_KEY_HERE
+}

@@ -228,6 +228,32 @@ If horizontal scaling becomes necessary, consider **Upstash Redis** for faster d
 
 ---
 
+### Migrate API Routes to Zod Validation
+**Current State:** API v1 routes use manual TypeScript validation. Zod schemas exist but are only used for OpenAPI spec generation.
+
+**What Exists:**
+- ✅ Zod schemas in `/src/lib/api/schemas/` for all API v1 endpoints
+- ✅ OpenAPI 3.1 spec generated at `/api/v1/docs/openapi.json`
+- ✅ Swagger UI available at `/api/v1/docs`
+- ❌ API routes still use manual `if (!field)` validation
+
+**What to Do:**
+- Replace manual validation in route handlers with `parseBody()` and `parseQuery()` helpers
+- Use Zod schemas for automatic type inference and validation
+- Return structured validation errors from Zod
+
+**Benefits:**
+- Single source of truth (schemas used for both validation and docs)
+- Better error messages with field-level details
+- Automatic type safety in route handlers
+- Less boilerplate code
+
+**Priority:** Low - current validation works correctly, this is a code quality improvement.
+
+**Estimated Effort:** 2-3 hours per resource (products, users, payments, etc.)
+
+---
+
 ### Refactor Tests to Use Shared Admin Login Helper
 **Current State:** Each test file has its own copy of admin login logic.
 

@@ -69,3 +69,6 @@ CLAUDE.md
 scripts/.gateflow-private-key.pem
 SECURITY-AUDIT-REPORT.md
 admin-panel/SECURITY-AUDIT-REPORT.md
+
+# Bruno environments (may contain API keys)
+bruno/environments/local.bru
