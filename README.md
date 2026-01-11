@@ -83,6 +83,18 @@ GateFlow gives you **complete control** over your digital product business. No m
 </details>
 
 <details>
+<summary><strong>REST API v1 & Integrations</strong></summary>
+
+- Full REST API with OpenAPI 3.1 spec
+- Interactive Swagger UI at `/api/v1/docs`
+- API Keys with scopes (`products:read`, `users:write`, `*`)
+- Rate limiting per key (configurable)
+- MCP Server for Claude Desktop (45 tools, 4 resources, 6 prompts)
+- Bruno API collection for testing
+
+</details>
+
+<details>
 <summary><strong>Compliance & Security</strong></summary>
 
 - EU Omnibus Directive (30-day price history)
@@ -171,6 +183,8 @@ Both guides cover Docker deployment with Supabase Cloud and automatic SSL via Ca
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | Step-by-step deployment guide |
 | [STRIPE-TESTING-GUIDE.md](./STRIPE-TESTING-GUIDE.md) | Testing payments locally |
 | [BACKLOG.md](./BACKLOG.md) | Development roadmap |
+| [mcp-server/README.md](./mcp-server/README.md) | MCP Server setup guide |
+| `/api/v1/docs` | Interactive Swagger UI (OpenAPI 3.1) |
 
 ---
 

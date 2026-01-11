@@ -450,7 +450,121 @@
 
 ---
 
-## 20. Content Delivery
+## 20. REST API v1
+
+### Endpointy
+- **Products** - CRUD, OTO configuration, filters, pagination
+- **Users** - Lista, szczegóły, wyszukiwanie po email
+- **User Access** - Grant, revoke, extend access
+- **Payments** - Lista, szczegóły, refunds, export CSV, stats
+- **Coupons** - CRUD, stats, deactivation
+- **Webhooks** - CRUD, logs, test, retry
+- **Analytics** - Dashboard, revenue, top products
+- **Refund Requests** - Lista, approve/reject
+- **Variant Groups** - CRUD dla grup wariantów
+- **Order Bumps** - CRUD dla order bumpów
+- **System** - Health check, status
+
+### Dokumentacja OpenAPI
+- **Swagger UI** - Interaktywna dokumentacja pod `/api/v1/docs`
+- **OpenAPI 3.1 spec** - JSON spec pod `/api/v1/docs/openapi.json`
+- **Zod schemas** - Type-safe walidacja i generowanie spec
+
+### Autentykacja
+- **API Keys** - Format `gf_live_xxx` / `gf_test_xxx`
+- **Bearer token** - `Authorization: Bearer gf_live_xxx`
+- **X-API-Key header** - Alternatywna metoda
+- **Scopes** - Granularne uprawnienia (`products:read`, `users:write`, `*`)
+- **Rate limiting** - Per-key limits (default 60/min)
+
+### API Keys Management
+- **Create** - Generowanie klucza (pokazany tylko raz!)
+- **List** - Lista kluczy (bez wartości)
+- **Update** - Zmiana nazwy, scopów, rate limit
+- **Rotate** - Rotacja z grace period
+- **Revoke** - Dezaktywacja z powodem (audit trail)
+
+### Bezpieczeństwo API Keys
+- **SHA-256 hashing** - Klucze przechowywane jako hash
+- **Session-only management** - API keys nie mogą zarządzać sobą
+- **Audit logging** - `last_used_at`, `usage_count`, `last_used_ip`
+- **Expiration** - Opcjonalna data wygaśnięcia
+
+### Pagination
+- **Cursor-based** - Wydajna paginacja dla dużych zbiorów
+- **Offset-based** - Wsparcie dla legacy (deprecated)
+- **Consistent response** - `{ data, pagination: { cursor, has_more } }`
+
+---
+
+## 21. MCP Server (Model Context Protocol)
+
+### Architektura
+- **Thin wrapper** - Cienka warstwa nad REST API v1
+- **stdio transport** - Komunikacja przez stdin/stdout
+- **Claude Desktop** - Integracja z Claude Desktop
+
+### Tools (45 narzędzi)
+- **Products** - 8 tools (list, get, create, update, delete, toggle, duplicate, stats)
+- **Users** - 8 tools (list, get, search, grant_access, revoke_access, extend_access, bulk_grant, purchases)
+- **Payments** - 7 tools (list, get, search, refund, export, failed, stats)
+- **Coupons** - 7 tools (list, get, create, update, delete, stats, deactivate)
+- **Analytics** - 8 tools (dashboard, revenue, by_product, trends, top_products, conversion, refund_stats, compare)
+- **Webhooks** - 5 tools (list, create, update, delete, logs)
+- **System** - 2 tools (health, api_usage)
+
+### Resources (4 zasoby)
+- `gateflow://dashboard` - Dane dashboard (5min refresh)
+- `gateflow://products/active` - Aktywne produkty (1min refresh)
+- `gateflow://alerts` - Alerty (pending refunds, failed webhooks)
+- `gateflow://recent-sales` - Ostatnie sprzedaże (1min refresh)
+
+### Prompts (6 promptów)
+- `weekly-report` - Tygodniowe podsumowanie sprzedaży
+- `product-analysis` - Analiza produktu
+- `revenue-forecast` - Prognoza przychodów
+- `user-cohort-analysis` - Analiza kohort użytkowników
+- `coupon-effectiveness` - Efektywność kuponów
+- `refund-analysis` - Analiza zwrotów
+
+### Konfiguracja Claude Desktop
+```json
+{
+  "mcpServers": {
+    "gateflow": {
+      "command": "npx",
+      "args": ["tsx", "/path/to/mcp-server/src/index.ts"],
+      "env": {
+        "GATEFLOW_API_KEY": "gf_live_xxx...",
+        "GATEFLOW_API_URL": "https://app.example.com"
+      }
+    }
+  }
+}
+```
+
+---
+
+## 22. Bruno API Collection
+
+### Kolekcja Bruno
+- **Folder-based** - Kolekcja w `/bruno/` directory
+- **Environment variables** - `BASE_URL`, `API_KEY`
+- **All v1 endpoints** - Products, Users, Coupons, Webhooks, Analytics, System
+
+### Przykładowe requesty
+- `GET /api/v1/products` - Lista produktów
+- `POST /api/v1/api-keys` - Tworzenie klucza API
+- `GET /api/v1/analytics/dashboard` - Dashboard stats
+
+### Konfiguracja
+```
+bruno/environments/local.bru.example → local.bru
+```
+
+---
+
+## 23. Content Delivery
 
 ### Typy Dostarczania
 - **Digital content** - Osadzona treść
@@ -466,7 +580,7 @@
 
 ---
 
-## 21. Storefront (Frontend)
+## 24. Storefront (Frontend)
 
 ### Landing Page
 - **Smart scenarios** - 4 warianty (admin/guest × z/bez produktów)
@@ -488,7 +602,7 @@
 
 ---
 
-## 22. Internationalization
+## 25. Internationalization
 
 ### Języki
 - **English (en)** - Pełne wsparcie
@@ -502,7 +616,7 @@
 
 ---
 
-## 23. Testing
+## 26. Testing
 
 ### E2E Tests (Playwright)
 - **899 testów E2E** - Kompleksowe pokrycie
@@ -572,15 +686,7 @@
 - **Providers**: Fakturownia, iFirma
 - **Future**: KSeF (Krajowy System e-Faktur) - 2-4 months
 
-### 7. Public Developer API
-- **Status**: Planned
-- **Features**:
-  - API Keys Management z scopes
-  - Endpoints: `/v1/products`, `/v1/licenses`, `/v1/customers`
-  - Swagger/OpenAPI spec
-  - Rate limiting per key
-
-### 8. UTM & Affiliate Tracking
+### 7. UTM & Affiliate Tracking
 - **Status**: Planned
 - **Szacowany czas**: 4-6h
 - **Features**:
@@ -594,7 +700,7 @@
 
 ## Średni Priorytet
 
-### 9. Two-Sided Affiliate Program
+### 8. Two-Sided Affiliate Program
 - **Status**: Idea
 - **Szacowany czas**: 2-4 weeks
 - **Features**:
@@ -604,7 +710,7 @@
   - Payout management (PayPal, Bank, Store Credit)
   - Anti-fraud (self-referral prevention, IP detection)
 
-### 10. AI Landing Page Generator
+### 9. AI Landing Page Generator
 - **Status**: Planned
 - **Features**:
   - One-click generation
@@ -612,7 +718,7 @@
   - Design automation
   - Checkout integration
 
-### 11. Automated Review Collection
+### 10. Automated Review Collection
 - **Status**: Planned
 - **Features**:
   - Auto-request emails X days after purchase
@@ -620,7 +726,7 @@
   - Verified buyer badge
   - Checkout widget z top reviews
 
-### 12. Privacy-First Cart Recovery
+### 11. Privacy-First Cart Recovery
 - **Status**: Planned
 - **Features**:
   - Real-time email capture
@@ -629,7 +735,7 @@
   - Automated follow-up
   - Dynamic coupon code
 
-### 13. Stripe Subscriptions
+### 12. Stripe Subscriptions
 - **Status**: Planned
 - **Features**:
   - Stripe Billing integration
@@ -637,7 +743,7 @@
   - "My Subscription" portal
   - Dunning management
 
-### 14. Polish Payment Gateways
+### 13. Polish Payment Gateways
 - **Status**: Planned
 - **Providers**: PayU, Przelewy24, Tpay
 - **Features**:
@@ -645,14 +751,14 @@
   - Webhooks
   - Refunds
 
-### 15. Payment Balancer
+### 14. Payment Balancer
 - **Status**: Planned
 - **Features**:
   - Failover switching
   - Smart routing by currency/fees
   - Zero-downtime switching
 
-### 16. Advanced Video Player
+### 15. Advanced Video Player
 - **Status**: Planned (Presto Player inspired)
 - **Features**:
   - Custom styling (colors, buttons, logo)
@@ -662,7 +768,7 @@
   - Protection (prevent downloads)
   - Analytics (watch %, heatmaps)
 
-### 17. Self-Service Account Deletion
+### 16. Self-Service Account Deletion
 - **Status**: Planned
 - **GDPR requirement**
 - **Features**:
@@ -675,27 +781,27 @@
 
 ## Niski Priorytet / Idee
 
-### 18. Anonymous Analytics Collection
+### 17. Anonymous Analytics Collection
 - Opt-in usage statistics
 - No PII stored
 - Feature adoption tracking
 
-### 19. In-App File Hosting
+### 18. In-App File Hosting
 - Supabase Storage, AWS S3, Cloudinary, Bunny CDN
 - Upload UI
 - Signed URLs, watermarking
 
-### 20. Mux Video Integration
+### 19. Mux Video Integration
 - Alternative video hosting
 
-### 21. Related Products
+### 20. Related Products
 - Cross-selling sections
 
-### 22. Product Bundles
+### 21. Product Bundles
 - Group multiple products
 - Bundle discounts
 
-### 23. Video Course Structure
+### 22. Video Course Structure
 - Chapters & Lessons
 - Progress tracking
 - Sequential unlocking
@@ -719,10 +825,12 @@
 ## API
 | Metryka | Wartość |
 |---------|---------|
-| API Routes | 54+ |
+| API Routes | 120+ |
+| REST API v1 endpoints | 50+ |
 | Admin endpoints | 20+ |
 | Public endpoints | 15+ |
 | Webhook events | 3 |
+| OpenAPI spec | ✓ (Swagger UI) |
 
 ## Frontend
 | Metryka | Wartość |
@@ -735,21 +843,32 @@
 ## Testing
 | Metryka | Wartość |
 |---------|---------|
-| E2E Tests | 899 |
-| MCP Unit Tests | 82 |
-| Test Files | 53 |
+| E2E Tests | 899+ |
+| Unit Tests | 100+ |
+| API v1 Tests | 232 |
+| Test Files | 60+ |
 | Test Framework | Playwright + Vitest |
 | Pass Rate | 100% |
 
+## MCP Server
+| Metryka | Wartość |
+|---------|---------|
+| Tools | 45 |
+| Resources | 4 |
+| Prompts | 6 |
+| Transport | stdio |
+
 ## Tech Stack
-- **Frontend**: Next.js 14, TypeScript, Tailwind CSS
+- **Frontend**: Next.js 16, TypeScript 5.9, Tailwind CSS 4
 - **Backend**: Supabase (PostgreSQL + Auth + Realtime)
 - **Payments**: Stripe (Elements, Checkout, Billing)
-- **Security**: Cloudflare Turnstile, AES-256-GCM
-- **Testing**: Playwright
-- **i18n**: next-intl
+- **API**: REST API v1 + OpenAPI 3.1 + Zod schemas
+- **AI Integration**: MCP Server for Claude Desktop
+- **Security**: Cloudflare Turnstile, AES-256-GCM, API Keys
+- **Testing**: Playwright + Vitest
+- **i18n**: next-intl (EN, PL)
 
 ---
 
-> **Ostatnia aktualizacja**: 2026-01-06
+> **Ostatnia aktualizacja**: 2026-01-11
 > **Autor**: Claude Code
