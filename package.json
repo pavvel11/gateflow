@@ -4,6 +4,8 @@
   "description": "A modern, flexible access control system for product delivery and content protection built on Supabase",
   "main": "gatekeeper.js",
   "scripts": {
+    "setup": "bun run scripts/setup-supabase.ts",
+    "setup:supabase": "bun run scripts/setup-supabase.ts",
     "dev": "python3 -m http.server 8000",
     "lint": "echo 'No linting configured'",
     "test": "echo 'No tests configured'"
