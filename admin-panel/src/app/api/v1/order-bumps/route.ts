@@ -43,10 +43,27 @@ export async function GET(request: NextRequest) {
         return apiError(request, 'INVALID_INPUT', 'Invalid product ID format');
       }
 
-      // Get bumps for specific product using database function
-      const { data, error } = await adminClient.rpc('admin_get_product_order_bumps', {
-        product_id_param: productId,
-      });
+      // Get bumps for specific product using direct query
+      const { data, error } = await adminClient
+        .from('order_bumps')
+        .select(`
+          id,
+          main_product_id,
+          bump_product_id,
+          bump_price,
+          bump_title,
+          bump_description,
+          is_active,
+          display_order,
+          access_duration_days,
+          created_at,
+          updated_at,
+          main_product:products!order_bumps_main_product_id_fkey(id, name, slug),
+          bump_product:products!order_bumps_bump_product_id_fkey(id, name, slug, price, currency)
+        `)
+        .eq('main_product_id', productId)
+        .order('display_order', { ascending: true })
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching product order bumps:', error);
