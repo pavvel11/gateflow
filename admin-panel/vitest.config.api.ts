@@ -1,0 +1,32 @@
+import { defineConfig } from 'vitest/config';
+import path from 'path';
+
+/**
+ * Vitest config for API Integration Tests
+ *
+ * These tests run against a live server.
+ * Before running: npm run dev (in another terminal)
+ *
+ * Run with: npm run test:api
+ */
+export default defineConfig({
+  test: {
+    include: ['tests/api/**/*.test.ts'],
+    environment: 'node',
+    testTimeout: 30000, // 30s timeout for API calls
+    hookTimeout: 60000, // 60s for setup/teardown
+    setupFiles: [],
+    // Run tests sequentially to avoid race conditions
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+});
