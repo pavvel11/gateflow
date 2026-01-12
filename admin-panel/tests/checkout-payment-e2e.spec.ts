@@ -275,12 +275,9 @@ test.describe('Checkout E2E - Invoice & GUS Integration', () => {
     // Fill NIP with 10 digits (even if invalid checksum)
     await nipInput.fill('1234567890');
 
-    // Wait for company fields to appear
-    await page.waitForTimeout(500);
-
-    // Company name field should now be visible
+    // Wait for company fields to appear - use proper wait instead of fixed timeout
     const companyInput = page.locator('input#companyName');
-    await expect(companyInput).toBeVisible();
+    await expect(companyInput).toBeVisible({ timeout: 5000 });
   });
 });
 

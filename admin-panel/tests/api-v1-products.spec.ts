@@ -389,17 +389,21 @@ test.describe('Products API v1', () => {
       const slug1 = uniqueSlug();
       const slug2 = uniqueSlug();
 
-      // Create two products
+      // Create two products and verify they were created successfully
       const first = await page.request.post('/api/v1/products', {
         data: { name: 'First', slug: slug1, description: 'First', price: 10.00 }
       });
+      expect(first.status()).toBe(201);
       const firstBody = await first.json();
+      expect(firstBody.data?.id).toBeDefined();
       testProducts.push(firstBody.data.id);
 
       const second = await page.request.post('/api/v1/products', {
         data: { name: 'Second', slug: slug2, description: 'Second', price: 20.00 }
       });
+      expect(second.status()).toBe(201);
       const secondBody = await second.json();
+      expect(secondBody.data?.id).toBeDefined();
       testProducts.push(secondBody.data.id);
 
       // Try to update second to have first's slug
