@@ -10,6 +10,15 @@ const intlMiddleware = createMiddleware({
   localePrefix: 'as-needed'
 })
 
+// Add security headers to response
+function addSecurityHeaders(response: NextResponse): NextResponse {
+  // Add HSTS header unless disabled (e.g., when behind reverse proxy with SSL termination)
+  if (process.env.DISABLE_HSTS !== 'true') {
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  return response;
+}
+
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
@@ -20,14 +29,14 @@ export async function proxy(request: NextRequest) {
     !pathname.startsWith('/api/admin/payments/') &&
     process.env.ALLOW_DEPRECATED_API !== 'true'
   ) {
-    return NextResponse.json(
+    return addSecurityHeaders(NextResponse.json(
       {
         error: 'Deprecated API endpoint',
         message: `Use /api/v1/* instead of ${pathname}`,
         hint: 'Set ALLOW_DEPRECATED_API=true to temporarily re-enable',
       },
       { status: 503 }
-    );
+    ));
   }
 
   // Skip proxy processing for API routes, static files, and payment success page
@@ -38,15 +47,15 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/test-pages') ||
     pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico|js|css|html)$/)
   ) {
-    return NextResponse.next()
+    return addSecurityHeaders(NextResponse.next());
   }
 
   // Apply internationalization middleware first
   const intlResponse = intlMiddleware(request)
   
-  // If intl middleware redirects, return that response
+  // If intl middleware redirects, return that response with security headers
   if (intlResponse.status === 302 || intlResponse.status === 301) {
-    return intlResponse
+    return addSecurityHeaders(intlResponse as NextResponse)
   }
 
   // Create response based on intl middleware
@@ -103,15 +112,15 @@ export async function proxy(request: NextRequest) {
   // Auth logic
   if (session && isLoginRoute) {
     const redirectPath = locale ? `/${locale}/dashboard` : '/dashboard'
-    return NextResponse.redirect(new URL(redirectPath, request.url))
+    return addSecurityHeaders(NextResponse.redirect(new URL(redirectPath, request.url)))
   }
 
   if (!session && isProtectedRoute) {
     const redirectPath = locale ? `/${locale}/login` : '/login'
-    return NextResponse.redirect(new URL(redirectPath, request.url))
+    return addSecurityHeaders(NextResponse.redirect(new URL(redirectPath, request.url)))
   }
 
-  return response
+  return addSecurityHeaders(response);
 }
 
 export const config = {

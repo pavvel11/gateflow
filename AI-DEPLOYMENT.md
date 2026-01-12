@@ -24,6 +24,7 @@ Human users should use [DEPLOYMENT.md](./DEPLOYMENT.md) instead.
 - ✅ mikr.us includes **Cytrus** (reverse proxy panel)
 - ✅ SSL is handled by Cytrus
 - ✅ Just expose app on port (e.g., 3333) and configure in panel
+- ⚠️ **IMPORTANT:** When behind any reverse proxy (Cytrus, Caddy, Nginx), set `DISABLE_HSTS=true` in `.env.local` - the proxy handles HSTS, not the app
 
 ---
 
@@ -173,6 +174,13 @@ CLOUDFLARE_TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
 # ===========================================
 NODE_ENV=production
 PORT=3333
+
+# ===========================================
+# REVERSE PROXY (when behind Cytrus/Caddy/Nginx)
+# ===========================================
+# IMPORTANT: When behind a reverse proxy with SSL termination,
+# disable HSTS in the app (proxy handles it)
+DISABLE_HSTS=true
 ```
 
 **Save:** `Ctrl+O`, `Enter`, `Ctrl+X`
@@ -768,4 +776,4 @@ sudo ufw enable
 
 ---
 
-**Last updated:** 2026-01-11 (mikr.us + PM2 + Bun + Cytrus)
+**Last updated:** 2026-01-12 (mikr.us + PM2 + Bun + Cytrus + DISABLE_HSTS)

@@ -129,11 +129,8 @@ const nextConfig: NextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
-          {
-            // HSTS - only enable in production with HTTPS
-            key: 'Strict-Transport-Security',
-            value: 'max-age=31536000; includeSubDomains',
-          },
+          // HSTS is now handled by middleware.ts for runtime control
+          // Set DISABLE_HSTS=true to disable (e.g., when behind reverse proxy)
         ],
       },
       {
