@@ -608,8 +608,7 @@ test.describe('Legal Documents Settings', () => {
 
     // Now visit /terms - should redirect to the URL we just set
     await page.goto('/terms', { waitUntil: 'commit' });
-    await page.waitForTimeout(500);
-    expect(redirectUrl).toBe(uiSetUrl);
+    await expect.poll(() => redirectUrl, { timeout: 5000 }).toBe(uiSetUrl);
   });
 
   test('UI-saved URL is used for /privacy redirect', async ({ page }) => {
@@ -658,7 +657,6 @@ test.describe('Legal Documents Settings', () => {
 
     // Now visit /privacy - should redirect to the URL we just set
     await page.goto('/privacy', { waitUntil: 'commit' });
-    await page.waitForTimeout(500);
-    expect(redirectUrl).toBe(uiSetUrl);
+    await expect.poll(() => redirectUrl, { timeout: 5000 }).toBe(uiSetUrl);
   });
 });
