@@ -520,8 +520,7 @@ test.describe('Legal Documents Settings', () => {
 
     // First visit - should redirect to initial URL
     await page.goto('/terms', { waitUntil: 'commit' });
-    await page.waitForTimeout(500);
-    expect(redirectedTo).toBe(initialUrl);
+    await expect.poll(() => redirectedTo, { timeout: 5000 }).toBe(initialUrl);
 
     // Update URL in database
     const updatedUrl = 'https://updated-test.example.com/terms-v2.pdf';
@@ -536,8 +535,7 @@ test.describe('Legal Documents Settings', () => {
 
     // Second visit - should redirect to new URL
     await page.goto('/terms', { waitUntil: 'commit' });
-    await page.waitForTimeout(500);
-    expect(redirectedTo).toBe(updatedUrl);
+    await expect.poll(() => redirectedTo, { timeout: 5000 }).toBe(updatedUrl);
   });
 
   test('Empty string in DB is treated as null (shows fallback)', async ({ page }) => {

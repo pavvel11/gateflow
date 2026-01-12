@@ -68,11 +68,8 @@ test.describe('GUS Checkout Flow - NIP Validation', () => {
     // Fill NIP with 10 digits
     await page.locator('input#nip').fill(TEST_NIP_VALID);
 
-    // Wait for company fields to appear
-    await page.waitForTimeout(500);
-
-    // Company fields should now be visible
-    await expect(page.locator('input#companyName')).toBeVisible();
+    // Company fields should now be visible (auto-wait)
+    await expect(page.locator('input#companyName')).toBeVisible({ timeout: 5000 });
     await expect(page.locator('input#address')).toBeVisible();
     await expect(page.locator('input#city')).toBeVisible();
     await expect(page.locator('input#postalCode')).toBeVisible();
@@ -88,11 +85,8 @@ test.describe('GUS Checkout Flow - NIP Validation', () => {
     await nipInput.fill(TEST_NIP_INVALID_CHECKSUM);
     await nipInput.blur(); // Trigger onBlur
 
-    // Wait for validation
-    await page.waitForTimeout(500);
-
-    // Should show validation error
-    await expect(page.locator('text=Nieprawidłowy numer NIP')).toBeVisible();
+    // Should show validation error (auto-wait)
+    await expect(page.locator('text=Nieprawidłowy numer NIP')).toBeVisible({ timeout: 5000 });
 
     // Should NOT show loading spinner
     await expect(page.locator('svg.animate-spin').first()).not.toBeVisible();
@@ -103,13 +97,12 @@ test.describe('GUS Checkout Flow - NIP Validation', () => {
     await page.goto(`/pl/checkout/${testProduct.slug}`);
     await page.waitForSelector('input[type="email"], input#fullName', { timeout: 30000 });
 
-    // Fill valid NIP
+    // Fill valid NIP and wait for value to be set
     const nipInput = page.locator('input#nip');
     await nipInput.fill(TEST_NIP_VALID);
 
-    // Input should accept exactly 10 characters
-    const value = await nipInput.inputValue();
-    expect(value.length).toBe(10);
+    // Wait for input to have the expected value
+    await expect(nipInput).toHaveValue(TEST_NIP_VALID, { timeout: 5000 });
   });
 
   test('should enforce maxLength=10 on NIP input', async ({ page }) => {
@@ -194,11 +187,8 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
     // Should show loading spinner
     await expect(page.locator('svg.animate-spin').first()).toBeVisible({ timeout: 1000 });
 
-    // Wait for autofill to complete
-    await page.waitForTimeout(2500);
-
-    // Loading spinner should disappear
-    await expect(page.locator('svg.animate-spin').first()).not.toBeVisible();
+    // Loading spinner should disappear (auto-wait with longer timeout for real API)
+    await expect(page.locator('svg.animate-spin').first()).not.toBeVisible({ timeout: 10000 });
   });
 
   test('should autofill company data from mocked GUS response', async ({ page }) => {
@@ -233,11 +223,8 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
     await nipInput.fill(TEST_NIP_VALID);
     await nipInput.blur();
 
-    // Wait for autofill
-    await page.waitForTimeout(1000);
-
-    // Check that fields are autofilled
-    await expect(page.locator('input#companyName')).toHaveValue('PRZYKŁADOWA FIRMA SP. Z O.O.');
+    // Check that fields are autofilled (auto-wait)
+    await expect(page.locator('input#companyName')).toHaveValue('PRZYKŁADOWA FIRMA SP. Z O.O.', { timeout: 10000 });
     await expect(page.locator('input#address')).toHaveValue('ul. Kwiatowa 42/10');
     await expect(page.locator('input#city')).toHaveValue('Kraków');
     await expect(page.locator('input#postalCode')).toHaveValue('30-001');
@@ -269,11 +256,8 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
     await nipInput.fill(TEST_NIP_VALID);
     await nipInput.blur();
 
-    // Wait for response
-    await page.waitForTimeout(1000);
-
-    // Should show error message
-    await expect(page.locator('text=Nie znaleziono firmy w bazie GUS')).toBeVisible();
+    // Should show error message (wait for API response + UI update)
+    await expect(page.locator('text=Nie znaleziono firmy w bazie GUS')).toBeVisible({ timeout: 10000 });
 
     // Fields should remain empty (allow manual entry)
     await expect(page.locator('input#companyName')).toHaveValue('');
@@ -308,11 +292,8 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
     await nipInput.fill(TEST_NIP_VALID);
     await nipInput.blur();
 
-    // Wait for response
-    await page.waitForTimeout(1000);
-
-    // Should show rate limit error
-    await expect(page.locator('text=Zbyt wiele zapytań. Poczekaj chwilę i spróbuj ponownie.')).toBeVisible();
+    // Should show rate limit error (auto-wait)
+    await expect(page.locator('text=Zbyt wiele zapytań. Poczekaj chwilę i spróbuj ponownie.')).toBeVisible({ timeout: 10000 });
   });
 
   test('should allow manual entry when GUS fails', async ({ page }) => {
@@ -338,11 +319,8 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
     await nipInput.fill(TEST_NIP_VALID);
     await nipInput.blur();
 
-    // Wait for error
-    await page.waitForTimeout(1000);
-
-    // Should show generic error
-    await expect(page.locator('text=Nie udało się pobrać danych')).toBeVisible();
+    // Should show generic error (auto-wait)
+    await expect(page.locator('text=Nie udało się pobrać danych')).toBeVisible({ timeout: 10000 });
 
     // User should be able to manually fill fields
     await page.locator('input#companyName').fill('MANUAL COMPANY NAME');
@@ -387,11 +365,8 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
     await nipInput.fill(TEST_NIP_VALID);
     await nipInput.blur();
 
-    // Wait for autofill
-    await page.waitForTimeout(1000);
-
-    // Verify autofill happened
-    await expect(page.locator('input#companyName')).toHaveValue('FIRST COMPANY');
+    // Verify autofill happened (auto-wait)
+    await expect(page.locator('input#companyName')).toHaveValue('FIRST COMPANY', { timeout: 10000 });
 
     // Now change NIP - should clear success message
     await nipInput.clear();
