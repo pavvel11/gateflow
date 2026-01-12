@@ -347,11 +347,14 @@ test.describe('Access Control - Inactive Product', () => {
   });
 
   test('user should LOSE access when access_expires_at passes', async ({ page }) => {
-    // Set access to expire in 2 seconds (constraint prevents past dates)
-    const expiresIn2Seconds = new Date(Date.now() + 2000).toISOString();
+    // First login (takes ~2 seconds), THEN set expiration
+    await loginAsUser(page, userWithAccess.email);
+
+    // Set access to expire in 3 seconds (after login is complete)
+    const expiresIn3Seconds = new Date(Date.now() + 3000).toISOString();
     const { error: updateError } = await supabaseAdmin
       .from('user_product_access')
-      .update({ access_expires_at: expiresIn2Seconds })
+      .update({ access_expires_at: expiresIn3Seconds })
       .eq('user_id', userWithAccess.id)
       .eq('product_id', testProduct.id);
 
@@ -361,8 +364,6 @@ test.describe('Access Control - Inactive Product', () => {
     }
 
     // First check - user should still have access (not expired yet)
-    await loginAsUser(page, userWithAccess.email);
-
     const responseBefore = await page.evaluate(async ({ slug }) => {
       const response = await fetch('/api/access', {
         method: 'POST',
@@ -377,8 +378,8 @@ test.describe('Access Control - Inactive Product', () => {
 
     expect(responseBefore.accessResults[testProduct.slug]).toBe(true);
 
-    // Wait for expiration (3 seconds to be safe)
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    // Wait for expiration (4 seconds to be safe)
+    await new Promise(resolve => setTimeout(resolve, 4000));
 
     // Second check - user should NOT have access (expired)
     const responseAfter = await page.evaluate(async ({ slug }) => {
