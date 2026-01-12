@@ -494,6 +494,76 @@ curl -I https://example.com
 
 ---
 
+## Pre-built Releases (Recommended for Low-RAM VPS)
+
+**For mikr.us and other low-RAM VPS**, use pre-built releases instead of building on the server.
+
+### Why Pre-built?
+- ✅ Build takes 3-5 minutes on GitHub (vs 15+ minutes on 2GB VPS)
+- ✅ No memory pressure during build
+- ✅ Works on mikr.us 0.25 (256MB RAM)
+- ✅ Instant deployment
+
+### Using Pre-built Releases
+
+**First-time setup:**
+```bash
+cd ~
+
+# Download latest release
+curl -L https://github.com/pavvel11/gateflow/releases/latest/download/gateflow-build.tar.gz | tar -xz -C ~/gateflow-admin
+
+# Configure
+cd ~/gateflow-admin
+cp .env.example .env.local
+nano .env.local  # Fill in your values
+
+# Install runtime dependencies only
+bun install --production
+
+# Start with PM2
+pm2 start ./start.sh --name gateflow-admin
+pm2 save
+```
+
+**Update to new version:**
+```bash
+# Stop app
+pm2 stop gateflow-admin
+
+# Backup .env.local
+cp ~/gateflow-admin/.env.local /tmp/.env.local.backup
+
+# Download new version
+rm -rf ~/gateflow-admin
+curl -L https://github.com/pavvel11/gateflow/releases/latest/download/gateflow-build.tar.gz | tar -xz -C ~/gateflow-admin
+
+# Restore config
+cp /tmp/.env.local.backup ~/gateflow-admin/.env.local
+
+# Install dependencies and restart
+cd ~/gateflow-admin
+bun install --production
+pm2 restart gateflow-admin
+```
+
+### Creating a Release (Maintainers)
+
+**Option 1: Push a tag**
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+# GitHub Actions will build and create release automatically
+```
+
+**Option 2: Manual trigger**
+1. Go to GitHub → Actions → "Build & Release"
+2. Click "Run workflow"
+3. Enter version (e.g., v1.0.0)
+4. Click "Run workflow"
+
+---
+
 ## Troubleshooting (AI Decision Tree)
 
 ### Issue: PM2 won't start

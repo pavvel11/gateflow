@@ -1,0 +1,164 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v1.0.0)'
+        required: true
+        type: string
+
+env:
+  NODE_ENV: production
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        working-directory: ./admin-panel
+        run: bun install --frozen-lockfile
+
+      - name: Build application
+        working-directory: ./admin-panel
+        run: bun run build
+        env:
+          # Dummy values for build - real values loaded at runtime via /api/runtime-config
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          NEXT_PUBLIC_SITE_URL: https://placeholder.example.com
+          NEXT_PUBLIC_BASE_URL: https://placeholder.example.com
+          NEXT_PUBLIC_APP_URL: https://placeholder.example.com
+          SUPABASE_URL: https://placeholder.supabase.co
+          SUPABASE_ANON_KEY: placeholder-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-key
+          STRIPE_SECRET_KEY: sk_test_placeholder
+          STRIPE_PUBLISHABLE_KEY: pk_test_placeholder
+          STRIPE_WEBHOOK_SECRET: whsec_placeholder
+
+      - name: Package build artifacts
+        working-directory: ./admin-panel
+        run: |
+          # Create release package
+          mkdir -p ../release
+
+          # Copy built application
+          cp -r .next ../release/
+          cp package.json ../release/
+          cp bun.lock ../release/ 2>/dev/null || true
+
+          # Copy public assets
+          cp -r public ../release/ 2>/dev/null || true
+
+          # Copy necessary config files
+          cp next.config.ts ../release/ 2>/dev/null || cp next.config.js ../release/ 2>/dev/null || true
+          cp tsconfig.json ../release/ 2>/dev/null || true
+
+          # Create .env.example for reference
+          cat > ../release/.env.example << 'EOF'
+          # GateFlow Environment Variables
+          # Copy this file to .env.local and fill in your values
+
+          # Supabase
+          NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+          SUPABASE_URL=https://your-project.supabase.co
+          SUPABASE_ANON_KEY=your-anon-key
+          SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+          # Site URLs
+          NEXT_PUBLIC_SITE_URL=https://your-domain.com
+          NEXT_PUBLIC_BASE_URL=https://your-domain.com
+          NEXT_PUBLIC_APP_URL=https://your-domain.com
+          SITE_URL=https://your-domain.com
+
+          # Stripe
+          STRIPE_PUBLISHABLE_KEY=pk_live_xxx
+          STRIPE_SECRET_KEY=sk_live_xxx
+          STRIPE_WEBHOOK_SECRET=whsec_xxx
+
+          # Cloudflare Turnstile (optional)
+          CLOUDFLARE_TURNSTILE_SITE_KEY=your-site-key
+          CLOUDFLARE_TURNSTILE_SECRET_KEY=your-secret-key
+
+          # Production
+          NODE_ENV=production
+          PORT=3333
+          EOF
+
+          # Create startup script
+          cat > ../release/start.sh << 'EOF'
+          #!/bin/bash
+          cd "$(dirname "$0")"
+          bun run start
+          EOF
+          chmod +x ../release/start.sh
+
+          # Create tarball
+          cd ../release
+          tar -czvf ../gateflow-build.tar.gz .
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "VERSION=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          name: GateFlow ${{ steps.version.outputs.VERSION }}
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.VERSION, '-') }}
+          files: gateflow-build.tar.gz
+          body: |
+            ## GateFlow ${{ steps.version.outputs.VERSION }}
+
+            ### Installation
+
+            ```bash
+            # Download and extract
+            curl -L https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/gateflow-build.tar.gz | tar -xz -C ~/gateflow-admin
+
+            # Configure environment
+            cd ~/gateflow-admin
+            cp .env.example .env.local
+            nano .env.local  # Fill in your values
+
+            # Install runtime dependencies
+            bun install --production
+
+            # Start with PM2
+            pm2 start ./start.sh --name gateflow-admin
+            pm2 save
+            ```
+
+            ### What's included
+            - Pre-built Next.js application (.next/)
+            - Production dependencies (bun.lock)
+            - Environment template (.env.example)
+            - Startup script (start.sh)
+
+            ### Requirements
+            - Bun runtime
+            - PM2 (recommended)
+            - Configured Supabase project
+            - Stripe account (for payments)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
