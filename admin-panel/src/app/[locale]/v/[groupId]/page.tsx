@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import { useTranslations, useLocale } from 'next-intl';
 import { formatPrice } from '@/lib/constants';
+import { useConfig } from '@/components/providers/config-provider';
 
 interface Variant {
   id: string;
@@ -31,6 +32,7 @@ export default function VariantSelectorPage() {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('variants');
+  const config = useConfig();
 
   const groupIdOrSlug = params.groupId as string;
 
@@ -42,8 +44,8 @@ export default function VariantSelectorPage() {
     const fetchVariants = async () => {
       try {
         const supabase = createBrowserClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+          config.supabaseUrl,
+          config.supabaseAnonKey
         );
 
         // Use UUID function if it's a UUID, otherwise use slug function
@@ -78,7 +80,7 @@ export default function VariantSelectorPage() {
     if (groupIdOrSlug) {
       fetchVariants();
     }
-  }, [groupIdOrSlug]);
+  }, [groupIdOrSlug, config.supabaseUrl, config.supabaseAnonKey]);
 
   const handleSelectVariant = (slug: string) => {
     router.push(`/${locale}/checkout/${slug}`);
