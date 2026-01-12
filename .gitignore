@@ -73,3 +73,4 @@ admin-panel/SECURITY-AUDIT-REPORT.md
 # Bruno environments (may contain API keys)
 bruno/environments/local.bru
 MARKET-ANALYSIS.md
+.gemini-clipboard/
