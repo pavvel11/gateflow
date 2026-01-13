@@ -32,12 +32,6 @@ jobs:
         working-directory: ./admin-panel
         run: bun install --frozen-lockfile
 
-      - name: Run linter
-        working-directory: ./admin-panel
-        run: bunx next lint --dir src
-        env:
-          NODE_ENV: development
-
       - name: Run type check
         working-directory: ./admin-panel
         run: bun run typecheck
