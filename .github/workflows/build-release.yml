@@ -11,9 +11,6 @@ on:
         required: true
         type: string
 
-env:
-  NODE_ENV: production
-
 permissions:
   contents: write
 
@@ -38,12 +35,14 @@ jobs:
       - name: Run linter
         working-directory: ./admin-panel
         run: bun run lint
+        env:
+          NODE_ENV: development
 
       - name: Run type check
         working-directory: ./admin-panel
         run: bun run typecheck
         env:
-          # Dummy values for type checking
+          NODE_ENV: development
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
 
@@ -68,6 +67,7 @@ jobs:
         working-directory: ./admin-panel
         run: bun run build
         env:
+          NODE_ENV: production
           # Dummy values for build - real values loaded at runtime via /api/runtime-config
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
