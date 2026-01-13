@@ -1,6 +1,6 @@
 {
   "name": "admin-panel",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0-rc.5",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
