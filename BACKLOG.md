@@ -77,10 +77,10 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 **Priority Order**:
 1. 🔴 **Supabase Setup Wizard** - Most critical, blocks everything else
 2. 🔴 **Stripe OAuth** - Alternative to existing RAK wizard
-3. 🟡 **Upstash Redis OAuth** - For rate limiting upgrade
-4. 🟡 **Turnstile Wizard** - Bot protection
-5. 🟢 **Email Provider OAuth** - Transactional emails
-6. 🟢 **Bunny.net Wizard** - Video hosting
+3. 🔴 **Turnstile Wizard** - Bot protection (required, app doesn't work without it)
+4. 🟡 **Email Provider OAuth** - Transactional emails
+5. 🟡 **Bunny.net Wizard** - Video hosting
+6. 🟢 **Upstash Redis OAuth** - Optional rate limiting upgrade
 
 **User Experience Goal**:
 ```
