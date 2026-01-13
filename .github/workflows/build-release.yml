@@ -93,6 +93,11 @@ jobs:
           cp next.config.ts ../release/ 2>/dev/null || cp next.config.js ../release/ 2>/dev/null || true
           cp tsconfig.json ../release/ 2>/dev/null || true
 
+          # Copy Supabase migrations and email templates
+          mkdir -p ../release/supabase
+          cp -r ../supabase/migrations ../release/supabase/ 2>/dev/null || true
+          cp -r ../supabase/templates ../release/supabase/ 2>/dev/null || true
+
           # Create .env.example for reference
           cat > ../release/.env.example << 'EOF'
           # GateFlow Environment Variables
@@ -181,6 +186,8 @@ jobs:
             - Production dependencies (bun.lock)
             - Environment template (.env.example)
             - Startup script (start.sh)
+            - Supabase migrations (supabase/migrations/)
+            - Email templates (supabase/templates/)
 
             ### Requirements
             - Bun runtime
