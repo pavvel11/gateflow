@@ -18,8 +18,38 @@ permissions:
   contents: write
 
 jobs:
+  # Run tests before building
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        working-directory: ./admin-panel
+        run: bun install --frozen-lockfile
+
+      - name: Run linter
+        working-directory: ./admin-panel
+        run: bun run lint
+
+      - name: Run type check
+        working-directory: ./admin-panel
+        run: bun run typecheck
+        env:
+          # Dummy values for type checking
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+
   build:
     runs-on: ubuntu-latest
+    needs: test  # Only build if tests pass
 
     steps:
       - name: Checkout code
