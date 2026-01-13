@@ -18,6 +18,7 @@ import {
   parseLimit,
   createPaginationResponse,
   applyCursorToQuery,
+  validateCursor,
   API_SCOPES,
 } from '@/lib/api';
 import {
@@ -54,6 +55,12 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || 'all';
     const sortByRaw = searchParams.get('sort_by') || 'created_at';
     const sortOrder = searchParams.get('sort_order') === 'asc' ? 'asc' : 'desc';
+
+    // Validate cursor
+    const cursorError = validateCursor(cursor);
+    if (cursorError) {
+      return apiError(request, 'INVALID_INPUT', cursorError);
+    }
 
     // Validate sort column
     const sortBy = validateProductSortColumn(sortByRaw);

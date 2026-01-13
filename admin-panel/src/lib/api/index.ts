@@ -48,6 +48,8 @@ export {
   parseLimit,
   createPaginationResponse,
   applyCursorToQuery,
+  validateCursor,
+  type PaginationOptions,
 } from './pagination';
 
 // API Keys

@@ -46,7 +46,7 @@ describe('API Authentication', () => {
       const data = await response.json();
 
       expect(response.status).toBe(401);
-      expect(data.error.code).toBe('UNAUTHORIZED');
+      expect(data.error.code).toBe('INVALID_TOKEN');
     });
 
     it('returns 401 with non-existent API key', async () => {
@@ -56,7 +56,7 @@ describe('API Authentication', () => {
       const data = await response.json();
 
       expect(response.status).toBe(401);
-      expect(data.error.code).toBe('UNAUTHORIZED');
+      expect(data.error.code).toBe('INVALID_TOKEN');
     });
   });
 

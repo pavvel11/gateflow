@@ -18,6 +18,7 @@ import {
   API_SCOPES,
 } from '@/lib/api';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { parseLimit, applyCursorToQuery, createPaginationResponse, validateCursor } from '@/lib/api/pagination';
 
 export async function OPTIONS(request: NextRequest) {
   return handleCorsPreFlight(request);
@@ -44,10 +45,16 @@ export async function GET(request: NextRequest) {
 
     // Parse params
     const cursor = searchParams.get('cursor');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
+    const limit = parseLimit(searchParams.get('limit'));
     const status = searchParams.get('status') || 'all';
     const search = searchParams.get('search');
     const sort = searchParams.get('sort') || '-created_at';
+
+    // Validate cursor
+    const cursorError = validateCursor(cursor);
+    if (cursorError) {
+      return apiError(request, 'INVALID_INPUT', cursorError);
+    }
 
     // Build query
     let query = adminClient
@@ -92,16 +99,6 @@ export async function GET(request: NextRequest) {
       query = query.or(`code.ilike.%${search}%,name.ilike.%${search}%`);
     }
 
-    // Cursor pagination
-    if (cursor) {
-      try {
-        const decoded = JSON.parse(Buffer.from(cursor, 'base64').toString());
-        query = query.lt('created_at', decoded.created_at);
-      } catch {
-        return apiError(request, 'INVALID_INPUT', 'Invalid cursor format');
-      }
-    }
-
     // Sorting
     const isDescending = sort.startsWith('-');
     const sortField = isDescending ? sort.slice(1) : sort;
@@ -111,10 +108,15 @@ export async function GET(request: NextRequest) {
       return apiError(request, 'INVALID_INPUT', `Invalid sort field. Allowed: ${allowedSortFields.join(', ')}`);
     }
 
-    query = query.order(sortField, { ascending: !isDescending });
+    const orderDirection = isDescending ? 'desc' : 'asc';
 
-    // Fetch limit + 1 to check has_more
-    query = query.limit(limit + 1);
+    // Apply cursor pagination
+    query = applyCursorToQuery(query, cursor, sortField, orderDirection);
+
+    query = query
+      .order(sortField, { ascending: !isDescending })
+      .order('id', { ascending: !isDescending })
+      .limit(limit + 1);
 
     const { data: coupons, error } = await query;
 
@@ -123,19 +125,18 @@ export async function GET(request: NextRequest) {
       return apiError(request, 'INTERNAL_ERROR', 'Failed to fetch coupons');
     }
 
-    const hasMore = coupons.length > limit;
-    const items = hasMore ? coupons.slice(0, -1) : coupons;
-    const lastItem = items[items.length - 1];
+    const { items, pagination } = createPaginationResponse(
+      coupons as { id: string }[],
+      limit,
+      sortField,
+      orderDirection,
+      cursor
+    );
 
     return jsonResponse(
       {
         data: items,
-        pagination: {
-          next_cursor: hasMore && lastItem
-            ? Buffer.from(JSON.stringify({ created_at: lastItem.created_at })).toString('base64')
-            : null,
-          has_more: hasMore,
-        },
+        pagination,
       },
       request
     );

@@ -53,6 +53,21 @@ export function decodeCursor(cursor: string): CursorData | null {
 }
 
 /**
+ * Validate cursor format and return error message if invalid
+ * Returns null if cursor is valid or empty, error message otherwise
+ */
+export function validateCursor(cursor: string | null): string | null {
+  if (!cursor) return null;
+
+  const decoded = decodeCursor(cursor);
+  if (!decoded) {
+    return 'Invalid cursor format';
+  }
+
+  return null;
+}
+
+/**
  * Parse and validate limit parameter
  */
 export function parseLimit(limitParam: string | null): number {
@@ -66,15 +81,33 @@ export function parseLimit(limitParam: string | null): number {
 }
 
 /**
- * Create pagination response from query results
+ * Pagination options for custom ID field names
  */
-export function createPaginationResponse<T extends { id: string }>(
+export interface PaginationOptions {
+  /** Field name used as unique identifier for tie-breaking (default: 'id') */
+  idField?: string;
+}
+
+/**
+ * Create pagination response from query results
+ *
+ * @param items - Array of items (must include limit + 1 to detect has_more)
+ * @param limit - Page size limit
+ * @param orderField - Field used for ordering
+ * @param orderDirection - Sort direction
+ * @param currentCursor - Current cursor value (for reference in response)
+ * @param options - Optional configuration (e.g., custom idField)
+ */
+export function createPaginationResponse<T extends Record<string, unknown>>(
   items: T[],
   limit: number,
   orderField: string,
   orderDirection: 'asc' | 'desc',
-  currentCursor: string | null
+  currentCursor: string | null,
+  options?: PaginationOptions
 ): { items: T[]; pagination: CursorPagination } {
+  const idField = options?.idField ?? 'id';
+
   // We fetch limit + 1 to check if there's more
   const hasMore = items.length > limit;
   const resultItems = hasMore ? items.slice(0, limit) : items;
@@ -83,14 +116,17 @@ export function createPaginationResponse<T extends { id: string }>(
 
   if (hasMore && resultItems.length > 0) {
     const lastItem = resultItems[resultItems.length - 1];
-    const fieldValue = (lastItem as Record<string, unknown>)[orderField];
+    const fieldValue = lastItem[orderField];
+    const idValue = lastItem[idField];
 
-    nextCursor = encodeCursor({
-      field: orderField,
-      value: String(fieldValue),
-      id: lastItem.id,
-      direction: orderDirection,
-    });
+    if (idValue != null) {
+      nextCursor = encodeCursor({
+        field: orderField,
+        value: String(fieldValue ?? ''),
+        id: String(idValue),
+        direction: orderDirection,
+      });
+    }
   }
 
   return {
@@ -109,12 +145,19 @@ export function createPaginationResponse<T extends { id: string }>(
  *
  * For desc order: get items WHERE (field, id) < (cursor_value, cursor_id)
  * For asc order: get items WHERE (field, id) > (cursor_value, cursor_id)
+ *
+ * @param query - Supabase query builder
+ * @param cursor - Cursor string from previous response
+ * @param orderField - Field used for ordering
+ * @param orderDirection - Sort direction
+ * @param options - Optional configuration (e.g., custom idField)
  */
 export function applyCursorToQuery(
   query: any, // Supabase query builder
   cursor: string | null,
   orderField: string,
-  orderDirection: 'asc' | 'desc'
+  orderDirection: 'asc' | 'desc',
+  options?: PaginationOptions
 ): any {
   if (!cursor) {
     return query;
@@ -132,19 +175,21 @@ export function applyCursorToQuery(
     return query;
   }
 
+  const idField = options?.idField ?? 'id';
+
   // Apply cursor filter using compound comparison
   // For timestamps, we need special handling
   if (orderDirection === 'desc') {
     // Get items before cursor (older items for desc)
     query = query.or(
       `${orderField}.lt.${cursorData.value},` +
-      `and(${orderField}.eq.${cursorData.value},id.lt.${cursorData.id})`
+      `and(${orderField}.eq.${cursorData.value},${idField}.lt.${cursorData.id})`
     );
   } else {
     // Get items after cursor (newer items for asc)
     query = query.or(
       `${orderField}.gt.${cursorData.value},` +
-      `and(${orderField}.eq.${cursorData.value},id.gt.${cursorData.id})`
+      `and(${orderField}.eq.${cursorData.value},${idField}.gt.${cursorData.id})`
     );
   }
 

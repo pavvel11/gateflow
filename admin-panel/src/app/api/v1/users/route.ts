@@ -14,8 +14,8 @@ import {
   successResponse,
   parseLimit,
   createPaginationResponse,
-  decodeCursor,
-  encodeCursor,
+  applyCursorToQuery,
+  validateCursor,
   API_SCOPES,
 } from '@/lib/api';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -69,8 +69,17 @@ export async function GET(request: NextRequest) {
     const sortByRaw = searchParams.get('sort_by') || 'created_at';
     const sortOrder = searchParams.get('sort_order') === 'asc' ? 'asc' : 'desc';
 
+    // Validate cursor
+    const cursorError = validateCursor(cursor);
+    if (cursorError) {
+      return apiError(request, 'INVALID_INPUT', cursorError);
+    }
+
     // Validate sort column
     const sortBy = validateUserSortColumn(sortByRaw);
+
+    // Pagination options - users view uses user_id instead of id
+    const paginationOptions = { idField: 'user_id' };
 
     // Build query for user stats
     let query = adminClient
@@ -84,22 +93,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Apply cursor pagination
-    if (cursor) {
-      const cursorData = decodeCursor(cursor);
-      if (cursorData && cursorData.field === sortBy && cursorData.direction === sortOrder) {
-        if (sortOrder === 'desc') {
-          query = query.or(
-            `${sortBy}.lt.${cursorData.value},` +
-            `and(${sortBy}.eq.${cursorData.value},user_id.lt.${cursorData.id})`
-          );
-        } else {
-          query = query.or(
-            `${sortBy}.gt.${cursorData.value},` +
-            `and(${sortBy}.eq.${cursorData.value},user_id.gt.${cursorData.id})`
-          );
-        }
-      }
-    }
+    query = applyCursorToQuery(query, cursor, sortBy, sortOrder, paginationOptions);
 
     // Apply sorting
     query = query.order(sortBy, { ascending: sortOrder === 'asc' });
@@ -116,11 +110,10 @@ export async function GET(request: NextRequest) {
     }
 
     const allUsers = userStats || [];
-    const hasMore = allUsers.length > limit;
-    const users = hasMore ? allUsers.slice(0, limit) : allUsers;
 
-    // Get product access for the users in this page
-    const userIds = users.map(u => u.user_id);
+    // Get user IDs for access lookup (before pagination slice)
+    const usersForPage = allUsers.length > limit ? allUsers.slice(0, limit) : allUsers;
+    const userIds = usersForPage.map(u => u.user_id);
     let userAccess: any[] = [];
 
     if (userIds.length > 0) {
@@ -138,8 +131,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Transform data
-    const transformedUsers = users.map(userStat => {
+    // Transform data - include user_id for pagination helper
+    const transformedUsers = allUsers.map(userStat => {
       const productAccess = userAccess
         .filter(access => access.user_id === userStat.user_id)
         .map(access => ({
@@ -157,11 +150,13 @@ export async function GET(request: NextRequest) {
 
       return {
         id: userStat.user_id,
+        user_id: userStat.user_id, // Keep for pagination helper
         email: userStat.email,
         created_at: userStat.user_created_at,
         email_confirmed_at: userStat.email_confirmed_at,
         last_sign_in_at: userStat.last_sign_in_at,
         raw_user_meta_data: userStat.raw_user_meta_data,
+        [sortBy]: (userStat as Record<string, unknown>)[sortBy], // Include sort field for pagination
         product_access: productAccess,
         stats: {
           total_products: userStat.total_products,
@@ -172,30 +167,20 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Build pagination
-    let nextCursor: string | null = null;
-    if (hasMore && users.length > 0) {
-      const lastUser = users[users.length - 1];
-      const fieldValue = (lastUser as Record<string, unknown>)[sortBy];
-      if (lastUser.user_id) {
-        nextCursor = encodeCursor({
-          field: sortBy,
-          value: String(fieldValue ?? ''),
-          id: lastUser.user_id,
-          direction: sortOrder,
-        });
-      }
-    }
-
-    return jsonResponse(
-      successResponse(transformedUsers, {
-        cursor,
-        next_cursor: nextCursor,
-        has_more: hasMore,
-        limit,
-      }),
-      request
+    // Use pagination helper
+    const { items, pagination } = createPaginationResponse(
+      transformedUsers,
+      limit,
+      sortBy,
+      sortOrder,
+      cursor,
+      paginationOptions
     );
+
+    // Remove internal fields from response
+    const cleanItems = items.map(({ user_id, [sortBy]: _sortField, ...rest }) => rest);
+
+    return jsonResponse(successResponse(cleanItems, pagination), request);
   } catch (error) {
     return handleApiError(error, request);
   }

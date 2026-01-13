@@ -17,6 +17,7 @@ import {
 } from '@/lib/api';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isValidWebhookUrl, validateEventTypes } from '@/lib/validations/webhook';
+import { parseLimit, applyCursorToQuery, createPaginationResponse, validateCursor } from '@/lib/api/pagination';
 
 export async function OPTIONS(request: NextRequest) {
   return handleCorsPreFlight(request);
@@ -41,8 +42,14 @@ export async function GET(request: NextRequest) {
 
     // Parse params
     const cursor = searchParams.get('cursor');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
+    const limit = parseLimit(searchParams.get('limit'));
     const status = searchParams.get('status') || 'all';
+
+    // Validate cursor
+    const cursorError = validateCursor(cursor);
+    if (cursorError) {
+      return apiError(request, 'INVALID_INPUT', cursorError);
+    }
 
     // Build query
     let query = adminClient
@@ -64,19 +71,13 @@ export async function GET(request: NextRequest) {
       query = query.eq('is_active', false);
     }
 
-    // Cursor pagination
-    if (cursor) {
-      try {
-        const decoded = JSON.parse(Buffer.from(cursor, 'base64').toString());
-        query = query.lt('created_at', decoded.created_at);
-      } catch {
-        return apiError(request, 'INVALID_INPUT', 'Invalid cursor format');
-      }
-    }
+    // Apply cursor pagination
+    query = applyCursorToQuery(query, cursor, 'created_at', 'desc');
 
     // Sort and limit
     query = query
       .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
       .limit(limit + 1);
 
     const { data: webhooks, error } = await query;
@@ -86,19 +87,18 @@ export async function GET(request: NextRequest) {
       return apiError(request, 'INTERNAL_ERROR', 'Failed to fetch webhooks');
     }
 
-    const hasMore = webhooks.length > limit;
-    const items = hasMore ? webhooks.slice(0, -1) : webhooks;
-    const lastItem = items[items.length - 1];
+    const { items, pagination } = createPaginationResponse(
+      webhooks as { id: string }[],
+      limit,
+      'created_at',
+      'desc',
+      cursor
+    );
 
     return jsonResponse(
       {
         data: items,
-        pagination: {
-          next_cursor: hasMore && lastItem
-            ? Buffer.from(JSON.stringify({ created_at: lastItem.created_at })).toString('base64')
-            : null,
-          has_more: hasMore,
-        },
+        pagination,
       },
       request
     );

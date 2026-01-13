@@ -41,13 +41,20 @@ function setCachedConfig(data: AppConfig): void {
 }
 
 export function ConfigProvider({ children }: { children: React.ReactNode }) {
-  // Try to use cached config immediately to avoid loading spinner
-  const [config, setConfig] = useState<AppConfig | null>(() => getCachedConfig())
-  const [loading, setLoading] = useState(() => !getCachedConfig())
+  // Start with null/true to match server render - check cache only after mount
+  const [config, setConfig] = useState<AppConfig | null>(null)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Always fetch fresh config, but don't block if we have cache
+    // Check cache first on client side
+    const cached = getCachedConfig()
+    if (cached) {
+      setConfig(cached)
+      setLoading(false)
+    }
+
+    // Always fetch fresh config
     fetch('/api/runtime-config')
       .then(res => {
         if (!res.ok) {
@@ -62,7 +69,7 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
       })
       .catch(err => {
         // Only show error if we don't have cached config
-        if (!config) {
+        if (!cached) {
           setError(err.message)
         }
         setLoading(false)

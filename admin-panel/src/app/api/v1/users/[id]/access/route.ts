@@ -178,6 +178,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       .single();
 
     if (accessError) {
+      // Check for foreign key violation (user doesn't exist)
+      if (accessError.code === '23503') {
+        return apiError(request, 'NOT_FOUND', 'User not found');
+      }
       console.error('Error granting access:', accessError);
       return apiError(request, 'INTERNAL_ERROR', 'Failed to grant access');
     }

@@ -11,10 +11,10 @@ import {
   apiError,
   authenticate,
   handleApiError,
-  successResponse,
   API_SCOPES,
 } from '@/lib/api';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { parseLimit, applyCursorToQuery, createPaginationResponse, validateCursor } from '@/lib/api/pagination';
 
 export async function OPTIONS(request: NextRequest) {
   return handleCorsPreFlight(request);
@@ -44,13 +44,19 @@ export async function GET(request: NextRequest) {
 
     // Parse params
     const cursor = searchParams.get('cursor');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
+    const limit = parseLimit(searchParams.get('limit'));
     const status = searchParams.get('status') || 'all';
     const productId = searchParams.get('product_id');
     const email = searchParams.get('email');
     const dateFrom = searchParams.get('date_from');
     const dateTo = searchParams.get('date_to');
     const sort = searchParams.get('sort') || '-created_at';
+
+    // Validate cursor
+    const cursorError = validateCursor(cursor);
+    if (cursorError) {
+      return apiError(request, 'INVALID_INPUT', cursorError);
+    }
 
     // Build query
     let query = adminClient
@@ -104,16 +110,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Cursor pagination
-    if (cursor) {
-      try {
-        const decoded = JSON.parse(Buffer.from(cursor, 'base64').toString());
-        query = query.lt('created_at', decoded.created_at);
-      } catch {
-        return apiError(request, 'INVALID_INPUT', 'Invalid cursor format');
-      }
-    }
-
     // Sorting
     const isDescending = sort.startsWith('-');
     const sortField = isDescending ? sort.slice(1) : sort;
@@ -123,10 +119,15 @@ export async function GET(request: NextRequest) {
       return apiError(request, 'INVALID_INPUT', `Invalid sort field. Allowed: ${allowedSortFields.join(', ')}`);
     }
 
-    query = query.order(sortField, { ascending: !isDescending });
+    const orderDirection = isDescending ? 'desc' : 'asc';
 
-    // Fetch limit + 1 to check has_more
-    query = query.limit(limit + 1);
+    // Apply cursor pagination
+    query = applyCursorToQuery(query, cursor, sortField, orderDirection);
+
+    query = query
+      .order(sortField, { ascending: !isDescending })
+      .order('id', { ascending: !isDescending })
+      .limit(limit + 1);
 
     const { data: payments, error } = await query;
 
@@ -135,12 +136,8 @@ export async function GET(request: NextRequest) {
       return apiError(request, 'INTERNAL_ERROR', 'Failed to fetch payments');
     }
 
-    const hasMore = payments.length > limit;
-    const items = hasMore ? payments.slice(0, -1) : payments;
-    const lastItem = items[items.length - 1];
-
     // Transform response
-    const transformedItems = items.map(p => ({
+    const transformedItems = payments.map(p => ({
       id: p.id,
       customer_email: p.customer_email,
       amount: p.amount,
@@ -164,15 +161,18 @@ export async function GET(request: NextRequest) {
       updated_at: p.updated_at,
     }));
 
+    const { items, pagination } = createPaginationResponse(
+      transformedItems,
+      limit,
+      sortField,
+      orderDirection,
+      cursor
+    );
+
     return jsonResponse(
       {
-        data: transformedItems,
-        pagination: {
-          next_cursor: hasMore && lastItem
-            ? Buffer.from(JSON.stringify({ created_at: lastItem.created_at })).toString('base64')
-            : null,
-          has_more: hasMore,
-        },
+        data: items,
+        pagination,
       },
       request
     );

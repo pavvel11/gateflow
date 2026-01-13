@@ -14,6 +14,7 @@ import {
   API_SCOPES,
 } from '@/lib/api';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { parseLimit, applyCursorToQuery, createPaginationResponse, validateCursor } from '@/lib/api/pagination';
 
 export async function OPTIONS(request: NextRequest) {
   return handleCorsPreFlight(request);
@@ -40,10 +41,16 @@ export async function GET(request: NextRequest) {
 
     // Parse params
     const cursor = searchParams.get('cursor');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
+    const limit = parseLimit(searchParams.get('limit'));
     const status = searchParams.get('status') || 'all';
     const userId = searchParams.get('user_id');
     const productId = searchParams.get('product_id');
+
+    // Validate cursor
+    const cursorError = validateCursor(cursor);
+    if (cursorError) {
+      return apiError(request, 'INVALID_INPUT', cursorError);
+    }
 
     // Build query
     let query = adminClient
@@ -96,19 +103,13 @@ export async function GET(request: NextRequest) {
       query = query.eq('product_id', productId);
     }
 
-    // Cursor pagination
-    if (cursor) {
-      try {
-        const decoded = JSON.parse(Buffer.from(cursor, 'base64').toString());
-        query = query.lt('created_at', decoded.created_at);
-      } catch {
-        return apiError(request, 'INVALID_INPUT', 'Invalid cursor format');
-      }
-    }
+    // Apply cursor pagination
+    query = applyCursorToQuery(query, cursor, 'created_at', 'desc');
 
     // Sort and limit
     query = query
       .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
       .limit(limit + 1);
 
     const { data: requests, error } = await query;
@@ -118,12 +119,8 @@ export async function GET(request: NextRequest) {
       return apiError(request, 'INTERNAL_ERROR', 'Failed to fetch refund requests');
     }
 
-    const hasMore = requests.length > limit;
-    const items = hasMore ? requests.slice(0, -1) : requests;
-    const lastItem = items[items.length - 1];
-
     // Transform response
-    const transformedItems = items.map(req => ({
+    const transformedItems = requests.map(req => ({
       id: req.id,
       user_id: req.user_id,
       product_id: req.product_id,
@@ -151,15 +148,18 @@ export async function GET(request: NextRequest) {
       } : null,
     }));
 
+    const { items, pagination } = createPaginationResponse(
+      transformedItems,
+      limit,
+      'created_at',
+      'desc',
+      cursor
+    );
+
     return jsonResponse(
       {
-        data: transformedItems,
-        pagination: {
-          next_cursor: hasMore && lastItem
-            ? Buffer.from(JSON.stringify({ created_at: lastItem.created_at })).toString('base64')
-            : null,
-          has_more: hasMore,
-        },
+        data: items,
+        pagination,
       },
       request
     );
