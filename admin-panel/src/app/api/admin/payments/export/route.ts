@@ -6,8 +6,9 @@ import { createClient as createServerClient } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limiting';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// Note: These must be read at runtime, not build time
+const getSupabaseUrl = () => process.env.SUPABASE_URL!;
+const getSupabaseServiceKey = () => process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
     const authHeader = request.headers.get('authorization');
     if (authHeader?.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
-      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      const supabase = createClient(getSupabaseUrl(), getSupabaseServiceKey());
       const { data: { user: tokenUser }, error: authError } = await supabase.auth.getUser(token);
       if (!authError && tokenUser) {
         user = tokenUser;
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Use service role client for admin operations
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(getSupabaseUrl(), getSupabaseServiceKey());
 
     // Check admin privileges
     const { data: adminUser, error: adminError } = await supabase

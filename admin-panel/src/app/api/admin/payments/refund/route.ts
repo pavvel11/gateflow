@@ -7,15 +7,16 @@ import Stripe from 'stripe';
 import { getStripeServer } from '@/lib/stripe/server';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limiting';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// Note: These must be read at runtime, not build time
+const getSupabaseUrl = () => process.env.SUPABASE_URL!;
+const getSupabaseServiceKey = () => process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function POST(request: NextRequest) {
   try {
     const stripe = await getStripeServer();
 
     // Initialize Supabase client with service role for admin operations
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(getSupabaseUrl(), getSupabaseServiceKey());
 
     // Get authorization header
     const authHeader = request.headers.get('authorization');

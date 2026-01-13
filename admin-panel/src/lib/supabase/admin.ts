@@ -7,8 +7,12 @@ import { Database } from '@/types/database'
  * after verifying that the requesting user has the necessary permissions.
  */
 export function createAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseUrl = process.env.SUPABASE_URL!
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+  if (!supabaseUrl) {
+    throw new Error('SUPABASE_URL is not defined. Admin client cannot be created.')
+  }
 
   if (!serviceRoleKey) {
     throw new Error('SUPABASE_SERVICE_ROLE_KEY is not defined. Admin client cannot be created.')
