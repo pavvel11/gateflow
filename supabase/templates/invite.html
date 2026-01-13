@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zaproszenie do GateFlow</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #0f172a;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" style="width: 100%; max-width: 600px; border-collapse: collapse;">
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding: 30px 40px; background: linear-gradient(135deg, #1e293b 0%, #581c87 50%, #1e293b 100%); border-radius: 16px 16px 0 0;">
+              <div style="width: 64px; height: 64px; background-color: rgba(255,255,255,0.1); border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+                <img src="{{ .SiteURL }}/icon.png" alt="GateFlow" width="32" height="32" style="display: block;" onerror="this.style.display='none'">
+              </div>
+              <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">GateFlow</h1>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 40px; background-color: #1e293b;">
+              <h2 style="margin: 0 0 16px 0; color: #ffffff; font-size: 20px; font-weight: 600;">
+                Zostałeś zaproszony!
+              </h2>
+              <p style="margin: 0 0 24px 0; color: #94a3b8; font-size: 16px; line-height: 1.6;">
+                Otrzymałeś zaproszenie do dołączenia do platformy GateFlow. Twoje konto zostało utworzone i jest gotowe do aktywacji.
+              </p>
+
+              <!-- Invitation details -->
+              <div style="margin: 0 0 32px 0; padding: 20px; background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(168, 85, 247, 0.1) 100%); border-radius: 12px; border: 1px solid rgba(124, 58, 237, 0.3);">
+                <p style="margin: 0 0 8px 0; color: #a855f7; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">
+                  Twój adres email
+                </p>
+                <p style="margin: 0; color: #ffffff; font-size: 18px; font-weight: 500;">
+                  {{ .Email }}
+                </p>
+              </div>
+
+              <p style="margin: 0 0 32px 0; color: #94a3b8; font-size: 16px; line-height: 1.6;">
+                Kliknij poniższy przycisk, aby ustawić hasło i aktywować swoje konto.
+              </p>
+
+              <!-- Button -->
+              <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td align="center">
+                    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite"
+                       style="display: inline-block; padding: 16px 32px; background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 12px; box-shadow: 0 4px 14px 0 rgba(124, 58, 237, 0.4);">
+                      Aktywuj konto
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- What is GateFlow -->
+              <div style="margin-top: 32px; padding: 20px; background-color: rgba(148, 163, 184, 0.1); border-radius: 12px;">
+                <h3 style="margin: 0 0 12px 0; color: #ffffff; font-size: 14px; font-weight: 600;">
+                  Czym jest GateFlow?
+                </h3>
+                <p style="margin: 0; color: #94a3b8; font-size: 14px; line-height: 1.6;">
+                  GateFlow to platforma do sprzedaży i ochrony produktów cyfrowych. Po aktywacji konta uzyskasz dostęp do zakupionych materiałów, kursów i zasobów.
+                </p>
+              </div>
+
+              <!-- Security note -->
+              <p style="margin: 32px 0 0 0; color: #64748b; font-size: 13px; line-height: 1.5;">
+                Link aktywacyjny jest ważny przez 7 dni. Jeśli nie oczekiwałeś tego zaproszenia, możesz zignorować tę wiadomość.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px; background-color: #0f172a; border-radius: 0 0 16px 16px; border-top: 1px solid #334155;">
+              <p style="margin: 0 0 8px 0; color: #64748b; font-size: 12px; text-align: center;">
+                Ten email został wysłany automatycznie przez GateFlow.
+              </p>
+              <p style="margin: 0; color: #64748b; font-size: 12px; text-align: center;">
+                &copy; {{ .SiteURL }} | Wszystkie prawa zastrzeżone
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

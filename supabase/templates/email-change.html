@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Potwierdź zmianę adresu email - GateFlow</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #0f172a;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" style="width: 100%; max-width: 600px; border-collapse: collapse;">
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding: 30px 40px; background: linear-gradient(135deg, #1e293b 0%, #581c87 50%, #1e293b 100%); border-radius: 16px 16px 0 0;">
+              <div style="width: 64px; height: 64px; background-color: rgba(255,255,255,0.1); border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+                <img src="{{ .SiteURL }}/icon.png" alt="GateFlow" width="32" height="32" style="display: block;" onerror="this.style.display='none'">
+              </div>
+              <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">GateFlow</h1>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 40px; background-color: #1e293b;">
+              <h2 style="margin: 0 0 16px 0; color: #ffffff; font-size: 20px; font-weight: 600;">
+                Potwierdź zmianę adresu email
+              </h2>
+              <p style="margin: 0 0 24px 0; color: #94a3b8; font-size: 16px; line-height: 1.6;">
+                Otrzymaliśmy prośbę o zmianę adresu email powiązanego z Twoim kontem GateFlow.
+              </p>
+
+              <!-- Email change info -->
+              <div style="margin: 0 0 32px 0; padding: 20px; background-color: rgba(148, 163, 184, 0.1); border-radius: 12px;">
+                <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 8px 0;">
+                      <p style="margin: 0; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Nowy adres email</p>
+                      <p style="margin: 4px 0 0 0; color: #ffffff; font-size: 16px; font-weight: 500;">{{ .Email }}</p>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+
+              <p style="margin: 0 0 32px 0; color: #94a3b8; font-size: 16px; line-height: 1.6;">
+                Aby potwierdzić zmianę, kliknij poniższy przycisk. Link jest ważny przez 24 godziny.
+              </p>
+
+              <!-- Button -->
+              <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td align="center">
+                    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email_change"
+                       style="display: inline-block; padding: 16px 32px; background: linear-gradient(135deg, #0891b2 0%, #22d3ee 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 12px; box-shadow: 0 4px 14px 0 rgba(8, 145, 178, 0.4);">
+                      Potwierdź nowy email
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Security warning -->
+              <div style="margin-top: 32px; padding: 16px; background-color: rgba(251, 191, 36, 0.1); border-radius: 8px; border-left: 4px solid #f59e0b;">
+                <p style="margin: 0; color: #fbbf24; font-size: 14px; line-height: 1.5;">
+                  <strong>Nie prosiłeś o tę zmianę?</strong>
+                </p>
+                <p style="margin: 8px 0 0 0; color: #94a3b8; font-size: 14px; line-height: 1.5;">
+                  Jeśli nie inicjowałeś tej zmiany, zignoruj tę wiadomość. Twój obecny adres email pozostanie aktywny. Zalecamy również zmianę hasła dla bezpieczeństwa.
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px; background-color: #0f172a; border-radius: 0 0 16px 16px; border-top: 1px solid #334155;">
+              <p style="margin: 0 0 8px 0; color: #64748b; font-size: 12px; text-align: center;">
+                Ten email został wysłany automatycznie przez GateFlow.
+              </p>
+              <p style="margin: 0; color: #64748b; font-size: 12px; text-align: center;">
+                &copy; {{ .SiteURL }} | Wszystkie prawa zastrzeżone
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

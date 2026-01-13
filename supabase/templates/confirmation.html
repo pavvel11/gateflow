@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Potwierdź swój email - GateFlow</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #0f172a;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" style="width: 100%; max-width: 600px; border-collapse: collapse;">
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding: 30px 40px; background: linear-gradient(135deg, #1e293b 0%, #581c87 50%, #1e293b 100%); border-radius: 16px 16px 0 0;">
+              <div style="width: 64px; height: 64px; background-color: rgba(255,255,255,0.1); border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+                <img src="{{ .SiteURL }}/icon.png" alt="GateFlow" width="32" height="32" style="display: block;" onerror="this.style.display='none'">
+              </div>
+              <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">GateFlow</h1>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 40px; background-color: #1e293b;">
+              <h2 style="margin: 0 0 16px 0; color: #ffffff; font-size: 20px; font-weight: 600;">
+                Witaj w GateFlow!
+              </h2>
+              <p style="margin: 0 0 24px 0; color: #94a3b8; font-size: 16px; line-height: 1.6;">
+                Dziękujemy za rejestrację. Aby aktywować swoje konto i uzyskać dostęp do zakupionych produktów, potwierdź swój adres email.
+              </p>
+              <p style="margin: 0 0 8px 0; color: #94a3b8; font-size: 14px;">
+                Adres email:
+              </p>
+              <p style="margin: 0 0 32px 0; color: #ffffff; font-size: 16px; font-weight: 500;">
+                {{ .Email }}
+              </p>
+
+              <!-- Button -->
+              <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td align="center">
+                    <a href="{{ .ConfirmationURL }}"
+                       style="display: inline-block; padding: 16px 32px; background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 12px; box-shadow: 0 4px 14px 0 rgba(5, 150, 105, 0.4);">
+                      Potwierdź email
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- What's next -->
+              <div style="margin-top: 32px; padding: 20px; background-color: rgba(16, 185, 129, 0.1); border-radius: 12px;">
+                <h3 style="margin: 0 0 12px 0; color: #10b981; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                  Co dalej?
+                </h3>
+                <ul style="margin: 0; padding: 0 0 0 20px; color: #94a3b8; font-size: 14px; line-height: 1.8;">
+                  <li>Zaloguj się do swojego konta</li>
+                  <li>Uzyskaj dostęp do zakupionych produktów</li>
+                  <li>Pobierz materiały i zasoby</li>
+                </ul>
+              </div>
+
+              <!-- Security note -->
+              <p style="margin: 32px 0 0 0; color: #64748b; font-size: 13px; line-height: 1.5;">
+                Jeśli nie zakładałeś konta w GateFlow, zignoruj tę wiadomość. Link wygaśnie automatycznie.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px; background-color: #0f172a; border-radius: 0 0 16px 16px; border-top: 1px solid #334155;">
+              <p style="margin: 0 0 8px 0; color: #64748b; font-size: 12px; text-align: center;">
+                Ten email został wysłany automatycznie przez GateFlow.
+              </p>
+              <p style="margin: 0; color: #64748b; font-size: 12px; text-align: center;">
+                &copy; {{ .SiteURL }} | Wszystkie prawa zastrzeżone
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
