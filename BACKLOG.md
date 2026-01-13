@@ -19,6 +19,92 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 
 ### 🔒 Security & Infrastructure
 
+#### Zero-Config OAuth Setup Wizard (All Integrations)
+**Status**: 📋 Planned
+**Priority**: 🔴 CRITICAL (Top Priority)
+**Effort**: ~2-3 weeks
+**Description**: Complete guided setup experience for ALL integrations via OAuth or step-by-step wizards. Goal: user should NOT need to touch .env file at all - everything configurable via Admin UI with hand-holding onboarding.
+
+**Problem**:
+- Currently users must manually edit `.env` or `.env.local` files
+- Technical barrier for non-developers
+- Easy to misconfigure, hard to debug
+- No validation during setup
+
+**Solution**: OAuth-first approach with fallback to guided API key entry for services that don't support OAuth.
+
+**Integrations to Cover**:
+
+| Integration | Current State | Target State |
+|-------------|--------------|--------------|
+| **Supabase** | Manual .env | OAuth "Connect with Supabase" OR guided project setup wizard |
+| **Stripe** | ✅ RAK Wizard | Add OAuth alternative "Connect with Stripe" button |
+| **Cloudflare Turnstile** | Manual .env | Guided wizard with Cloudflare OAuth or API key + site verification |
+| **Upstash Redis** | Manual .env | OAuth "Connect with Upstash" button |
+| **GUS REGON** | ✅ UI Wizard | Already done (API key in UI) |
+| **Currency API** | ✅ UI Wizard | Already done (provider selection in UI) |
+| **GTM** | ✅ Manual ID | Phase 2: OAuth auto-create container |
+| **Facebook CAPI** | ✅ UI Toggle | Add guided token setup wizard |
+| **Email Provider** | Not implemented | OAuth for SendGrid/Resend/AWS SES |
+| **Bunny.net** | Not implemented | API key wizard with validation |
+
+**Implementation Approach**:
+
+1. **First-Run Setup Wizard** (`/setup`):
+   - Detect if essential env vars are missing
+   - Redirect new installations to guided setup
+   - Step-by-step: Supabase → Stripe → (optional) Turnstile → Done
+   - Progress saved to database, can resume later
+
+2. **Per-Integration OAuth/Wizard**:
+   - Each integration has "Connect" button in `/dashboard/integrations`
+   - OAuth flow where available (Stripe, Supabase, Upstash)
+   - Guided API key entry with validation for others
+   - Test connection before saving
+   - Clear error messages with fix suggestions
+
+3. **Environment Variable Migration**:
+   - Read existing .env values as defaults
+   - Store configuration in database (encrypted where needed)
+   - Runtime reads from DB first, .env as fallback
+   - Migration path for existing installations
+
+4. **Validation & Health Checks**:
+   - Test each integration on save
+   - Dashboard widget showing integration status
+   - Automatic alerts for expired/invalid credentials
+
+**Priority Order**:
+1. 🔴 **Supabase Setup Wizard** - Most critical, blocks everything else
+2. 🔴 **Stripe OAuth** - Alternative to existing RAK wizard
+3. 🟡 **Upstash Redis OAuth** - For rate limiting upgrade
+4. 🟡 **Turnstile Wizard** - Bot protection
+5. 🟢 **Email Provider OAuth** - Transactional emails
+6. 🟢 **Bunny.net Wizard** - Video hosting
+
+**User Experience Goal**:
+```
+1. User deploys GateFlow (Docker/PM2)
+2. Opens admin panel → redirected to /setup
+3. "Connect with Supabase" → OAuth → done
+4. "Connect with Stripe" → OAuth → done
+5. Optional: Configure Turnstile, Redis, etc.
+6. 🎉 Shop ready to sell!
+```
+
+**Technical Notes**:
+- OAuth tokens stored encrypted in `integrations_config` table
+- Refresh token rotation handled automatically
+- Fallback to manual entry always available
+- Works offline after initial setup (tokens cached)
+
+**References**:
+- [Supabase Management API](https://supabase.com/docs/reference/api/introduction) - For project creation
+- [Stripe Apps OAuth](https://docs.stripe.com/stripe-apps/api-authentication/oauth)
+- [Upstash OAuth](https://docs.upstash.com/redis/account/oauth)
+
+---
+
 #### Upgrade Rate Limiting to Upstash Redis
 **Status**: 📋 Planned (Recommended for Production)
 **Effort**: ~2-3 hours
