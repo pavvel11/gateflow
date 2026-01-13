@@ -34,7 +34,7 @@ jobs:
 
       - name: Run linter
         working-directory: ./admin-panel
-        run: bun run lint
+        run: bunx next lint --dir src
         env:
           NODE_ENV: development
 
