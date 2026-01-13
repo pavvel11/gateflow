@@ -4,7 +4,33 @@
  * and not hardcoded from build time.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+
+// Parse .env.local file to get expected values
+function parseEnvFile(filePath: string): Record<string, string> {
+  try {
+    const content = readFileSync(filePath, 'utf-8');
+    const vars: Record<string, string> = {};
+
+    for (const line of content.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+
+      const [key, ...valueParts] = trimmed.split('=');
+      if (key && valueParts.length > 0) {
+        vars[key.trim()] = valueParts.join('=').trim();
+      }
+    }
+    return vars;
+  } catch {
+    return {};
+  }
+}
+
+const envLocalPath = resolve(__dirname, '../../.env.local');
+const expectedEnv = parseEnvFile(envLocalPath);
 
 describe('Environment Variables Configuration', () => {
   describe('Supabase Configuration', () => {
@@ -18,6 +44,12 @@ describe('Environment Variables Configuration', () => {
       expect(process.env.SUPABASE_URL).not.toBe('https://placeholder.supabase.co');
     });
 
+    it('should match SUPABASE_URL from .env.local', () => {
+      if (expectedEnv.SUPABASE_URL) {
+        expect(process.env.SUPABASE_URL).toBe(expectedEnv.SUPABASE_URL);
+      }
+    });
+
     it('should have SUPABASE_ANON_KEY defined', () => {
       expect(process.env.SUPABASE_ANON_KEY).toBeDefined();
       expect(process.env.SUPABASE_ANON_KEY).not.toBe('');
@@ -27,6 +59,12 @@ describe('Environment Variables Configuration', () => {
       expect(process.env.SUPABASE_ANON_KEY).not.toBe('placeholder-anon-key');
     });
 
+    it('should match SUPABASE_ANON_KEY from .env.local', () => {
+      if (expectedEnv.SUPABASE_ANON_KEY) {
+        expect(process.env.SUPABASE_ANON_KEY).toBe(expectedEnv.SUPABASE_ANON_KEY);
+      }
+    });
+
     it('should have SUPABASE_SERVICE_ROLE_KEY defined', () => {
       expect(process.env.SUPABASE_SERVICE_ROLE_KEY).toBeDefined();
       expect(process.env.SUPABASE_SERVICE_ROLE_KEY).not.toBe('');
@@ -34,6 +72,12 @@ describe('Environment Variables Configuration', () => {
 
     it('should NOT have placeholder service role key', () => {
       expect(process.env.SUPABASE_SERVICE_ROLE_KEY).not.toBe('placeholder-service-key');
+    });
+
+    it('should match SUPABASE_SERVICE_ROLE_KEY from .env.local', () => {
+      if (expectedEnv.SUPABASE_SERVICE_ROLE_KEY) {
+        expect(process.env.SUPABASE_SERVICE_ROLE_KEY).toBe(expectedEnv.SUPABASE_SERVICE_ROLE_KEY);
+      }
     });
   });
 
@@ -51,6 +95,12 @@ describe('Environment Variables Configuration', () => {
       const key = process.env.STRIPE_SECRET_KEY;
       expect(key).toMatch(/^sk_(test|live)_/);
     });
+
+    it('should match STRIPE_SECRET_KEY from .env.local', () => {
+      if (expectedEnv.STRIPE_SECRET_KEY) {
+        expect(process.env.STRIPE_SECRET_KEY).toBe(expectedEnv.STRIPE_SECRET_KEY);
+      }
+    });
   });
 
   describe('Site URL Configuration', () => {
@@ -60,6 +110,12 @@ describe('Environment Variables Configuration', () => {
 
     it('should NOT have placeholder site URL', () => {
       expect(process.env.SITE_URL).not.toContain('placeholder');
+    });
+
+    it('should match SITE_URL from .env.local', () => {
+      if (expectedEnv.SITE_URL) {
+        expect(process.env.SITE_URL).toBe(expectedEnv.SITE_URL);
+      }
     });
   });
 });
