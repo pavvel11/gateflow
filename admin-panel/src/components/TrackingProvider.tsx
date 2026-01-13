@@ -88,7 +88,7 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
         },
       },
     },
-    apps: [] as any[],
+    services: [] as any[],
     // Callback for Google Consent Mode V2 integration
     callback: function(consent: Record<string, boolean>) {
       // Update Google Consent Mode when user makes consent choices
@@ -106,9 +106,9 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
     },
   }
 
-  // 1. Add Managed Apps
+  // 1. Add Managed Services
   if (gtm_container_id) {
-    klaroConfig.apps.push({
+    klaroConfig.services.push({
       name: 'google-tag-manager',
       title: 'Google Tag Manager',
       purposes: ['analytics'],
@@ -116,7 +116,7 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
     })
   }
   if (facebook_pixel_id) {
-    klaroConfig.apps.push({
+    klaroConfig.services.push({
       name: 'facebook-pixel',
       title: 'Meta Pixel',
       purposes: ['marketing'],
@@ -124,7 +124,7 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
     })
   }
   if (umami_website_id) {
-    klaroConfig.apps.push({
+    klaroConfig.services.push({
       name: 'umami-analytics',
       title: 'Umami Analytics',
       purposes: ['analytics'],
@@ -135,7 +135,7 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
   // 2. Add Custom Scripts to Klaro (if consent required)
   scripts.forEach(script => {
     if (cookie_consent_enabled && script.category !== 'essential') {
-        klaroConfig.apps.push({
+        klaroConfig.services.push({
             name: `script-${script.id}`,
             title: script.name,
             purposes: [script.category],
