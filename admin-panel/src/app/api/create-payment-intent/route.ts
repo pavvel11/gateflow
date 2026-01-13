@@ -3,10 +3,7 @@ import Stripe from 'stripe';
 import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from '@/lib/rate-limiting';
 import { calculatePricing, toStripeCents, STRIPE_MINIMUM_AMOUNT } from '@/hooks/usePricing';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-12-15.clover',
-});
+import { getStripeServer } from '@/lib/stripe/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -252,6 +249,13 @@ export async function POST(request: NextRequest) {
       paymentIntentParams.receipt_email = finalEmail;
     }
 
+    const stripe = await getStripeServer();
+    if (!stripe) {
+      return NextResponse.json(
+        { error: 'Payment system not configured. Please configure Stripe in admin settings.' },
+        { status: 503 }
+      );
+    }
     const paymentIntent = await stripe.paymentIntents.create(paymentIntentParams);
 
     return NextResponse.json({
