@@ -13,6 +13,8 @@ import { DisposableEmailService } from '@/lib/services/disposable-email'
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
+  const tokenHash = requestUrl.searchParams.get('token_hash')
+  const type = requestUrl.searchParams.get('type') as 'magiclink' | 'recovery' | 'invite' | 'email_change' | 'signup' | null
   
   // Get the correct origin for redirects - prioritize env var, then headers, then request URL
   const getOrigin = () => {
@@ -37,8 +39,8 @@ export async function GET(request: NextRequest) {
   
   const origin = getOrigin()
 
-  // Check if we have code parameter
-  if (!code) {
+  // Check if we have code or token_hash parameter
+  if (!code && !tokenHash) {
     return NextResponse.redirect(new URL('/login', origin))
   }
   
@@ -71,24 +73,21 @@ export async function GET(request: NextRequest) {
   // Exchange the code for a session - different methods for different auth types
   let session: Session | null = null;
   let error: AuthError | null = null;
-  
+
   if (code) {
-    // Try OAuth code exchange first (standard PKCE flow for magic links and OAuth)
+    // PKCE flow - exchange code for session
     const oauthResponse = await supabase.auth.exchangeCodeForSession(code);
-    
-    if (oauthResponse.data.session) {
-      session = oauthResponse.data.session;
-      error = oauthResponse.error;
-    } else {
-      // If code exchange fails, try verifyOtp (legacy/implicit flow or direct token)
-      // Note: In PKCE flow, 'code' is an auth code, not a token hash.
-      const otpResponse = await supabase.auth.verifyOtp({
-        token_hash: code,
-        type: 'magiclink'
-      });
-      session = otpResponse.data.session;
-      error = otpResponse.error;
-    }
+    session = oauthResponse.data.session;
+    error = oauthResponse.error;
+  } else if (tokenHash) {
+    // Token hash flow (from custom email templates)
+    const otpType = type || 'magiclink';
+    const otpResponse = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: otpType
+    });
+    session = otpResponse.data.session;
+    error = otpResponse.error;
   }
   
   
