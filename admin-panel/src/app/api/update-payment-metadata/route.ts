@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
       clientSecret,
       firstName,
       lastName,
+      fullName, // New field - if provided, split into first/last name
       termsAccepted,
       needsInvoice,
       nip,
@@ -89,13 +90,29 @@ export async function POST(request: NextRequest) {
     // Extract Payment Intent ID from client secret
     const paymentIntentId = clientSecret.split('_secret_')[0];
 
+    // Handle fullName - split into firstName and lastName
+    let finalFirstName = firstName || '';
+    let finalLastName = lastName || '';
+
+    if (fullName && !firstName && !lastName) {
+      // Split fullName into first and last name
+      const nameParts = fullName.trim().split(/\s+/);
+      if (nameParts.length === 1) {
+        finalFirstName = nameParts[0];
+      } else {
+        finalFirstName = nameParts[0];
+        finalLastName = nameParts.slice(1).join(' ');
+      }
+    }
+
     const stripe = await getStripeServer();
 
     // Update Payment Intent with customer and invoice metadata
     await stripe.paymentIntents.update(paymentIntentId, {
       metadata: {
-        first_name: firstName || '',
-        last_name: lastName || '',
+        first_name: finalFirstName,
+        last_name: finalLastName,
+        full_name: fullName || `${finalFirstName} ${finalLastName}`.trim(), // Store full name too for reference
         terms_accepted: termsAccepted ? 'true' : '',
         needs_invoice: needsInvoice ? 'true' : 'false',
         nip: nip || '',

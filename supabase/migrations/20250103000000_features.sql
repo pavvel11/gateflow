@@ -1109,6 +1109,140 @@ $$;
 GRANT EXECUTE ON FUNCTION public.get_public_integrations_config() TO anon, authenticated, service_role;
 
 -- -----------------------------------------------------------------------------
+-- GUEST PAYMENT DATA MIGRATION
+-- -----------------------------------------------------------------------------
+
+/**
+ * Migrates payment data from guest purchases to user profile on registration.
+ *
+ * ALWAYS migrates (if available in latest payment):
+ * - Customer name: full_name, first_name, last_name
+ *
+ * ONLY if invoice was requested:
+ * - Company data: tax_id, company_name, address, city, zip_code, country
+ *
+ * This function is called automatically by handle_new_user_registration() trigger
+ * when a user registers/signs in for the first time.
+ */
+CREATE OR REPLACE FUNCTION public.migrate_guest_payment_data_to_profile(
+  p_user_id UUID
+) RETURNS json AS $$
+DECLARE
+  user_email_var TEXT;
+  latest_payment RECORD;
+  rows_updated INTEGER := 0;
+  profile_updated BOOLEAN := FALSE;
+BEGIN
+  -- Get user email
+  SELECT email INTO user_email_var
+  FROM auth.users
+  WHERE id = p_user_id;
+
+  IF user_email_var IS NULL THEN
+    RETURN json_build_object(
+      'success', false,
+      'error', 'User not found'
+    );
+  END IF;
+
+  -- Find LATEST guest payment (completed, with metadata)
+  SELECT metadata, created_at
+  INTO latest_payment
+  FROM public.payment_transactions
+  WHERE customer_email = user_email_var
+    AND user_id IS NULL  -- Guest purchases only
+    AND status = 'completed'
+    AND metadata IS NOT NULL
+  ORDER BY created_at DESC
+  LIMIT 1;
+
+  -- If found, update profile with latest payment data
+  IF latest_payment IS NOT NULL THEN
+    UPDATE public.profiles
+    SET
+      -- ALWAYS update customer name (if provided in payment)
+      full_name = CASE
+        WHEN latest_payment.metadata->>'full_name' IS NOT NULL
+          AND latest_payment.metadata->>'full_name' != ''
+        THEN latest_payment.metadata->>'full_name'
+        ELSE full_name
+      END,
+      first_name = CASE
+        WHEN latest_payment.metadata->>'first_name' IS NOT NULL
+          AND latest_payment.metadata->>'first_name' != ''
+        THEN latest_payment.metadata->>'first_name'
+        ELSE first_name
+      END,
+      last_name = CASE
+        WHEN latest_payment.metadata->>'last_name' IS NOT NULL
+          AND latest_payment.metadata->>'last_name' != ''
+        THEN latest_payment.metadata->>'last_name'
+        ELSE last_name
+      END,
+
+      -- Company data ONLY if invoice was requested
+      tax_id = CASE
+        WHEN latest_payment.metadata->>'needs_invoice' = 'true'
+          AND latest_payment.metadata->>'nip' IS NOT NULL
+          AND latest_payment.metadata->>'nip' != ''
+        THEN latest_payment.metadata->>'nip'
+        ELSE tax_id
+      END,
+      company_name = CASE
+        WHEN latest_payment.metadata->>'needs_invoice' = 'true'
+          AND latest_payment.metadata->>'company_name' IS NOT NULL
+          AND latest_payment.metadata->>'company_name' != ''
+        THEN latest_payment.metadata->>'company_name'
+        ELSE company_name
+      END,
+      address_line1 = CASE
+        WHEN latest_payment.metadata->>'needs_invoice' = 'true'
+          AND latest_payment.metadata->>'address' IS NOT NULL
+          AND latest_payment.metadata->>'address' != ''
+        THEN latest_payment.metadata->>'address'
+        ELSE address_line1
+      END,
+      city = CASE
+        WHEN latest_payment.metadata->>'needs_invoice' = 'true'
+          AND latest_payment.metadata->>'city' IS NOT NULL
+          AND latest_payment.metadata->>'city' != ''
+        THEN latest_payment.metadata->>'city'
+        ELSE city
+      END,
+      zip_code = CASE
+        WHEN latest_payment.metadata->>'needs_invoice' = 'true'
+          AND latest_payment.metadata->>'postal_code' IS NOT NULL
+          AND latest_payment.metadata->>'postal_code' != ''
+        THEN latest_payment.metadata->>'postal_code'
+        ELSE zip_code
+      END,
+      country = CASE
+        WHEN latest_payment.metadata->>'needs_invoice' = 'true'
+          AND latest_payment.metadata->>'country' IS NOT NULL
+          AND latest_payment.metadata->>'country' != ''
+        THEN latest_payment.metadata->>'country'
+        ELSE country
+      END,
+
+      updated_at = NOW()
+    WHERE id = p_user_id;
+
+    GET DIAGNOSTICS rows_updated = ROW_COUNT;
+    profile_updated := rows_updated > 0;
+  END IF;
+
+  RETURN json_build_object(
+    'success', true,
+    'data_migrated', profile_updated,
+    'payment_date', latest_payment.created_at,
+    'email', user_email_var
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION public.migrate_guest_payment_data_to_profile(UUID) TO service_role;
+
+-- -----------------------------------------------------------------------------
 -- USER REGISTRATION HANDLER
 -- -----------------------------------------------------------------------------
 
@@ -1129,6 +1263,11 @@ BEGIN
 
   IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'claim_guest_purchases_for_user') THEN
     SELECT public.claim_guest_purchases_for_user(NEW.id) INTO claim_result;
+  END IF;
+
+  -- Migrate payment data from guest purchases to profile
+  IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'migrate_guest_payment_data_to_profile') THEN
+    PERFORM public.migrate_guest_payment_data_to_profile(NEW.id);
   END IF;
 
   PERFORM public.log_audit_entry('auth.users', 'INSERT', NULL, jsonb_build_object('email', NEW.email), NEW.id);

@@ -17,6 +17,63 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 
 ## 🟢 High Priority
 
+### 🚀 Performance & Scalability Optimization (Mikrus/VPS)
+**Status**: 📋 Planned
+**Priority**: 🔴 CRITICAL (Performance)
+**Effort**: ~1-2 weeks
+**Description**: Optimize GateFlow for high-performance delivery on resource-constrained environments and prepare for global scaling.
+
+**Current Benchmarks (Jan 14, 2026):**
+> Tests performed with 50 concurrent users for 10 seconds.
+- **Local (M1 Max)**: 244 req/sec, ~200ms latency (Excellent)
+- **Small VPS (gateflow.tojest.dev)**: ~11 req/sec, ~3.8s latency (Critical bottleneck)
+- **Large VPS (gf.techskills.academy)**: ~12 req/sec, ~3.5s latency (No significant improvement)
+- **Conclusion**: Throwing more hardware at the problem **did not help**. The bottleneck is architectural (CPU-bound Dynamic Rendering), not resource capacity.
+
+**Solution**: Switch from Dynamic SSR to caching strategies (ISR/Redis) to bypass the CPU bottleneck.
+
+**Implementation Plan**:
+
+1. **Incremental Static Regeneration (ISR) - ⚡ QUICK WIN**:
+   - **Problem**: Current `createClient()` uses `cookies()`, which forces Dynamic Rendering and disables caching.
+   - **Fix Step 1 (Supabase Client)**:
+     - Modify `src/lib/supabase/server.ts`.
+     - Add a new exported function `createPublicClient()` that uses `createServerClient` *without* any cookie handling methods.
+     - Use this client ONLY for fetching public data (products, config).
+   - **Fix Step 2 (Page Configuration)**:
+     - In `src/app/[locale]/page.tsx` (Homepage):
+       - Replace `createClient()` with `createPublicClient()`.
+       - Add `export const revalidate = 60;` (Cache for 60 seconds).
+     - In `src/app/[locale]/p/[slug]/page.tsx` (Product Page):
+       - Replace `createClient()` with `createPublicClient()`.
+       - Add `export const revalidate = 60;`.
+   - **Impact**: Server renders page once per minute, not per user. Should boost throughput from 12 -> 500+ req/sec on VPS.
+
+2. **PM2 Scaling & Management**:
+   - Enable **Cluster Mode** (`instances: 'max'`) to utilize all CPU cores.
+   - Configure **Memory Restart** (`max_memory_restart: '250M'`) to prevent OOM.
+   - Implement graceful reloads.
+
+3. **Redis Caching Layer (Upstash or Local)**:
+   - **Rate Limiting**: Move from DB-backed to Redis-backed (Upstash).
+   - **API Response Caching**: Cache expensive `GET` requests (analytics, heavy queries).
+   - **Session Store**: Move session metadata to Redis.
+
+4. **Supabase Edge Functions**:
+   - **API Offloading**: Move read-only public endpoints to Edge Functions.
+   - **Global Delivery**: Use Vercel Edge Network for lower latency.
+
+5. **Asset Optimization**:
+   - **CDN**: Cloudflare/Bunny.net for static assets.
+   - **Image Optimization**: Auto-resize product images.
+
+**Goals**:
+- ✅ Increase throughput from ~12 req/sec to >100 req/sec on VPS.
+- ✅ Reduce P99 latency from ~5s to <500ms.
+- ✅ Reliable operation on 512MB RAM environments.
+
+---
+
 ### 🔒 Security & Infrastructure
 
 #### Zero-Config OAuth Setup Wizard (All Integrations)
@@ -1108,6 +1165,142 @@ CREATE TABLE product_affiliate_rates (
 - 📋 **API Middleware Wrapper**: Create a `withAdminAuth()` Higher-Order Function (HOF) to wrap admin routes, reducing boilerplate and centralizing security/error handling.
 - 📋 **Supabase Custom JWT Claims**: Integrate `is_admin` flag directly into the Supabase JWT token to enable stateless, lightning-fast admin verification in Edge Middleware.
 - 📋 **Standardized Rate Limiting**: Implement a global rate limiting strategy for all public and administrative API endpoints.
+
+### 🔄 Self-Hosted Version Management & Auto-Updates
+
+#### One-Click Auto-Update System
+**Status**: 📋 Planned
+**Priority**: 🟡 Medium
+**Effort**: ~1-2 weeks
+**Description**: Enable self-hosted GateFlow instances to update automatically with a single click from the admin panel, eliminating manual SSH/CLI operations.
+
+**Problem**:
+- Self-hosted users must manually SSH into servers to pull updates
+- Technical barrier for non-developers
+- Risk of skipped updates leading to security vulnerabilities
+- No visibility into available updates or changelogs
+
+**Solution**: Built-in version management system with one-click updates.
+
+**Core Features**:
+
+1. **Version Detection & Notifications**:
+   - Current version stored in `package.json` or database
+   - Periodic check against GitHub releases API (or custom update server)
+   - Admin dashboard banner: "New version X.Y.Z available"
+   - Changelog preview in notification modal
+   - Security update badges for critical patches
+
+2. **One-Click Update Flow**:
+   ```
+   1. Admin clicks "Update to vX.Y.Z" in /dashboard/settings
+   2. System creates automatic backup (DB snapshot + config)
+   3. Downloads new release from GitHub/registry
+   4. Runs database migrations (if any)
+   5. Restarts application (PM2/Docker graceful reload)
+   6. Verifies health check passes
+   7. Shows success message with rollback option
+   ```
+
+3. **Update Strategies** (based on deployment type):
+
+   | Deployment | Update Method |
+   |------------|---------------|
+   | **PM2 (mikr.us)** | `git pull` + `bun install` + `pm2 reload` |
+   | **Docker** | Pull new image + `docker-compose up -d` |
+   | **Docker Swarm/K8s** | Rolling update via orchestrator API |
+   | **Vercel/Netlify** | Webhook trigger to redeploy from latest tag |
+
+4. **Safety Mechanisms**:
+   - **Pre-update backup**: Automatic DB dump before migration
+   - **Rollback capability**: One-click revert to previous version
+   - **Health checks**: Verify app responds after update
+   - **Migration dry-run**: Preview DB changes before applying
+   - **Maintenance mode**: Optional "Updating..." page for users during update
+
+5. **Admin UI** (`/dashboard/settings/updates`):
+   - Current version display with release date
+   - Available updates list with changelogs
+   - Update history (past updates with timestamps)
+   - Auto-update toggle (check daily/weekly)
+   - Backup management (list, download, restore)
+   - Manual "Check for updates" button
+
+**Database Schema**:
+```sql
+CREATE TABLE app_versions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  version VARCHAR(20) NOT NULL,
+  installed_at TIMESTAMPTZ DEFAULT NOW(),
+  update_method VARCHAR(20), -- 'manual', 'auto', 'rollback'
+  previous_version VARCHAR(20),
+  migration_log JSONB,
+  backup_path TEXT,
+  status VARCHAR(20) DEFAULT 'active' -- 'active', 'rolled_back'
+);
+
+CREATE TABLE update_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  auto_check_enabled BOOLEAN DEFAULT true,
+  check_frequency VARCHAR(20) DEFAULT 'daily', -- 'daily', 'weekly', 'manual'
+  auto_install_minor BOOLEAN DEFAULT false,
+  auto_install_patch BOOLEAN DEFAULT true,
+  last_check_at TIMESTAMPTZ,
+  notification_email TEXT
+);
+```
+
+**Implementation Phases**:
+
+**Phase 1 (MVP)**: ~3-4 days
+- Version detection from GitHub releases
+- "New update available" banner in dashboard
+- Changelog display modal
+- Manual update instructions generator
+
+**Phase 2 (One-Click)**: ~1 week
+- Pre-update backup system
+- PM2 update script execution
+- Docker update script execution
+- Health check verification
+- Basic rollback capability
+
+**Phase 3 (Advanced)**: ~3-4 days
+- Auto-update scheduling (patch versions only)
+- Email notifications for new releases
+- Update history and audit log
+- Multi-instance coordination (for load-balanced setups)
+
+**Technical Considerations**:
+- **Permissions**: Update script needs write access to app directory
+- **Downtime**: Graceful reload minimizes downtime (<10s for PM2)
+- **Migrations**: Must handle failed migrations gracefully
+- **Dependencies**: `bun install` may fail on memory-constrained servers
+- **Rollback**: Keep N previous versions for quick rollback
+- **Security**: Verify release signatures to prevent supply chain attacks
+
+**API Endpoints**:
+- `GET /api/admin/updates/check` - Check for available updates
+- `GET /api/admin/updates/changelog/:version` - Get changelog for version
+- `POST /api/admin/updates/install` - Trigger update installation
+- `POST /api/admin/updates/rollback` - Rollback to previous version
+- `GET /api/admin/updates/history` - List past updates
+- `POST /api/admin/backups/create` - Create manual backup
+- `GET /api/admin/backups` - List available backups
+
+**References**:
+- [WordPress Auto-Updates](https://wordpress.org/documentation/article/configuring-automatic-background-updates/)
+- [Ghost Self-Hosted Updates](https://ghost.org/docs/update/)
+- [Discourse Docker Update](https://meta.discourse.org/t/how-do-i-update-my-discourse-instance/30)
+
+**Benefits**:
+- ✅ Removes technical barrier for updates
+- ✅ Ensures security patches are applied quickly
+- ✅ Professional experience matching SaaS platforms
+- ✅ Reduces support requests about manual updates
+- ✅ Audit trail of all version changes
+
+---
 
 ### 🎥 Video & Media
 

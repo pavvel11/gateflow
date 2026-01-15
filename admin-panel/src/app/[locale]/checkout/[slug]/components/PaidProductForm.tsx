@@ -679,6 +679,7 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
               onChangeAccount={handleSignOutAndCheckout}
               customAmount={product.allow_custom_price ? customAmount : undefined}
               customAmountError={product.allow_custom_price ? customAmountError : null}
+              clientSecret={clientSecret || undefined}
             />
           </Elements>
         )}

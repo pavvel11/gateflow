@@ -6,7 +6,7 @@ import { Product } from '@/types';
 import { formatPrice } from '@/lib/constants';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { validateNIPChecksum, normalizeNIP } from '@/lib/validation/nip';
+import { validateTaxId, isPolishNIP, normalizeNIP } from '@/lib/validation/nip';
 import { useTracking } from '@/hooks/useTracking';
 import { usePricing } from '@/hooks/usePricing';
 
@@ -20,6 +20,7 @@ interface CustomPaymentFormProps {
   onChangeAccount?: () => void;
   customAmount?: number; // Pay What You Want - custom price chosen by customer
   customAmountError?: string | null; // Validation error for custom amount
+  clientSecret?: string; // Payment Intent client secret for metadata updates
 }
 
 export default function CustomPaymentForm({
@@ -31,7 +32,8 @@ export default function CustomPaymentForm({
   successUrl,
   onChangeAccount,
   customAmount,
-  customAmountError
+  customAmountError,
+  clientSecret
 }: CustomPaymentFormProps) {
   const t = useTranslations('checkout');
   const stripe = useStripe();
@@ -125,72 +127,80 @@ export default function CustomPaymentForm({
     loadProfileData();
   }, [email]);
 
-  // GUS NIP auto-fill handler
+  // Tax ID / NIP auto-fill handler (supports international formats)
   const handleNIPBlur = async () => {
-    if (!nip || nip.length < 10) return;
+    if (!nip || nip.trim().length === 0) return;
 
-    const normalized = normalizeNIP(nip);
+    // Validate tax ID format (supports PL prefix, other countries, etc.)
+    const validation = validateTaxId(nip, true);
 
-    // Validate NIP checksum before calling API
-    if (!validateNIPChecksum(normalized)) {
-      setNipError('Nieprawidłowy numer NIP (błędna suma kontrolna)');
+    if (!validation.isValid) {
+      setNipError(validation.error || 'Invalid tax ID format');
       setGusError(null);
       setGusSuccess(false);
       return;
     }
 
     setNipError(null);
-    setIsLoadingGUS(true);
-    setGusError(null);
-    setGusSuccess(false);
 
-    try {
-      const response = await fetch('/api/gus/fetch-company-data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nip: normalized }),
-      });
+    // Auto-fill from GUS only for Polish NIP
+    if (validation.isPolish && validation.normalized) {
+      setIsLoadingGUS(true);
+      setGusError(null);
+      setGusSuccess(false);
 
-      const result = await response.json();
+      try {
+        const response = await fetch('/api/gus/fetch-company-data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nip: validation.normalized }),
+        });
 
-      if (result.success && result.data) {
-        // Store GUS data
-        setGusData(result.data);
+        const result = await response.json();
 
-        // Autofill company data
-        setCompanyName(result.data.nazwa);
+        if (result.success && result.data) {
+          // Store GUS data
+          setGusData(result.data);
 
-        // Build address string
-        let addressStr = `${result.data.ulica} ${result.data.nrNieruchomosci}`;
-        if (result.data.nrLokalu) {
-          addressStr += `/${result.data.nrLokalu}`;
-        }
-        setAddress(addressStr.trim());
+          // Autofill company data
+          setCompanyName(result.data.nazwa);
 
-        setCity(result.data.miejscowosc);
-        setPostalCode(result.data.kodPocztowy);
-        setCountry('PL');
-        setGusSuccess(true);
-      } else {
-        // GUS API returned error
-        if (result.code === 'RATE_LIMIT_EXCEEDED') {
-          setGusError('Zbyt wiele zapytań. Poczekaj chwilę i spróbuj ponownie.');
-        } else if (result.code === 'NOT_FOUND') {
-          setGusError('Nie znaleziono firmy w bazie GUS');
-        } else if (result.code === 'NOT_CONFIGURED') {
-          // Silent fail - GUS not configured, user can enter manually
-          setGusError(null);
-        } else if (result.code === 'INVALID_ORIGIN') {
-          setGusError('Błąd bezpieczeństwa. Odśwież stronę i spróbuj ponownie.');
+          // Build address string
+          let addressStr = `${result.data.ulica} ${result.data.nrNieruchomosci}`;
+          if (result.data.nrLokalu) {
+            addressStr += `/${result.data.nrLokalu}`;
+          }
+          setAddress(addressStr.trim());
+
+          setCity(result.data.miejscowosc);
+          setPostalCode(result.data.kodPocztowy);
+          setCountry('PL');
+          setGusSuccess(true);
         } else {
-          setGusError('Nie udało się pobrać danych z GUS. Wprowadź dane ręcznie.');
+          // GUS API returned error
+          if (result.code === 'RATE_LIMIT_EXCEEDED') {
+            setGusError('Zbyt wiele zapytań. Poczekaj chwilę i spróbuj ponownie.');
+          } else if (result.code === 'NOT_FOUND') {
+            setGusError('Nie znaleziono firmy w bazie GUS');
+          } else if (result.code === 'NOT_CONFIGURED') {
+            // Silent fail - GUS not configured, user can enter manually
+            setGusError(null);
+          } else if (result.code === 'INVALID_ORIGIN') {
+            setGusError('Błąd bezpieczeństwa. Odśwież stronę i spróbuj ponownie.');
+          } else {
+            setGusError('Nie udało się pobrać danych z GUS. Wprowadź dane ręcznie.');
+          }
         }
+      } catch (error) {
+        console.error('GUS fetch error:', error);
+        setGusError('Nie udało się pobrać danych z GUS. Wprowadź dane ręcznie.');
+      } finally {
+        setIsLoadingGUS(false);
       }
-    } catch (error) {
-      console.error('GUS fetch error:', error);
-      setGusError('Nie udało się pobrać danych z GUS. Wprowadź dane ręcznie.');
-    } finally {
-      setIsLoadingGUS(false);
+    } else if (!validation.isPolish) {
+      // Non-Polish tax ID - show success message, no GUS auto-fill
+      setGusError(null);
+      setGusSuccess(false);
     }
   };
 
@@ -218,19 +228,23 @@ export default function CustomPaymentForm({
       return;
     }
 
-    // Validate NIP if provided
-    if (nip && nip.length > 0 && nip.length !== 10) {
-      setErrorMessage('NIP musi mieć 10 cyfr');
-      return;
+    // Validate tax ID if provided (supports international formats)
+    if (nip && nip.trim().length > 0) {
+      const validation = validateTaxId(nip, true);
+      if (!validation.isValid) {
+        setErrorMessage(validation.error || 'Invalid tax ID format');
+        return;
+      }
     }
 
     setIsProcessing(true);
     setErrorMessage('');
 
     try {
-      // Update Payment Intent metadata with invoice data if NIP provided
-      if (nip && nip.length === 10) {
-        // Get the client secret from the PaymentElement
+      // Always update Payment Intent metadata with customer data
+      // This ensures fullName and termsAccepted are saved regardless of NIP status
+      if (clientSecret) {
+        // Submit the form to validate payment method
         const { error: submitError } = await elements.submit();
         if (submitError) {
           setErrorMessage(submitError.message || 'Failed to prepare payment');
@@ -238,35 +252,28 @@ export default function CustomPaymentForm({
           return;
         }
 
-        // Get the payment intent client secret
-        const paymentIntent = await stripe.retrievePaymentIntent(
-          // The client secret is stored in the Elements context
-          (elements as any)._commonOptions.clientSecret
-        );
+        // Update metadata via API - works for both NIP and non-NIP scenarios
+        const hasValidTaxId = nip && nip.trim().length > 0 && validateTaxId(nip, false).isValid;
+        const updateResponse = await fetch('/api/update-payment-metadata', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clientSecret: clientSecret,
+            fullName,
+            termsAccepted: !email ? termsAccepted : undefined, // Only for guests
+            needsInvoice: hasValidTaxId ? true : false,
+            nip: nip || undefined,
+            companyName: companyName || undefined,
+            address: address || undefined,
+            city: city || undefined,
+            postalCode: postalCode || undefined,
+            country: country || undefined,
+          }),
+        });
 
-        if (paymentIntent.paymentIntent) {
-          // Update metadata via API
-          const updateResponse = await fetch('/api/update-payment-metadata', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              clientSecret: paymentIntent.paymentIntent.client_secret,
-              fullName,
-              termsAccepted: !email ? termsAccepted : undefined, // Only for guests
-              needsInvoice: true,
-              nip,
-              companyName,
-              address,
-              city,
-              postalCode,
-              country,
-            }),
-          });
-
-          if (!updateResponse.ok) {
-            console.error('Failed to update payment metadata');
-            // Continue anyway - metadata update is not critical for payment
-          }
+        if (!updateResponse.ok) {
+          console.error('Failed to update payment metadata');
+          // Continue anyway - metadata update is not critical for payment
         }
       }
 
@@ -465,7 +472,7 @@ export default function CustomPaymentForm({
       <div className="space-y-3">
         <div>
           <label htmlFor="nip" className="block text-sm font-medium text-gray-300 mb-2">
-            {t('nipLabel', { defaultValue: 'Numer NIP' })} <span className="text-gray-500 text-xs">(opcjonalne)</span>
+            {t('taxIdLabel', { defaultValue: 'Tax ID / NIP / VAT' })} <span className="text-gray-500 text-xs">(opcjonalne)</span>
           </label>
           <div className="relative">
             <input
@@ -480,8 +487,8 @@ export default function CustomPaymentForm({
                 setGusData(null);
               }}
               onBlur={handleNIPBlur}
-              placeholder="0000000000"
-              maxLength={10}
+              placeholder="PL1234567890 or DE123456789"
+              maxLength={20}
               className={`w-full px-3 py-2.5 bg-white/5 border ${
                 nipError ? 'border-red-500/50' : gusSuccess ? 'border-green-500/50' : 'border-white/10'
               } rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${

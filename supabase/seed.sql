@@ -155,6 +155,7 @@ Basic JavaScript knowledge required. Familiarity with HTML/CSS recommended.',
     NULL,
     false
   );
+  
 
 -- Insert sample order bumps
 -- Bump 1: Add Pro Toolkit to Premium Course for $29.99 (Huge discount!)

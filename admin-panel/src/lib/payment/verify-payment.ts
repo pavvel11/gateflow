@@ -13,7 +13,15 @@ import { WebhookService } from '@/lib/services/webhook-service';
 
 /**
  * Helper function to update user profile with customer data from payment
- * Saves first_name and last_name always, company data only if invoice was requested
+ *
+ * ALWAYS updates (for logged-in users):
+ * - Customer name: first_name, last_name, full_name
+ *
+ * ONLY if invoice requested (needs_invoice='true'):
+ * - Company data: tax_id, company_name, address, city, zip_code, country
+ *
+ * Note: For guest purchases, data is migrated on registration via
+ * migrate_guest_payment_data_to_profile() database function.
  */
 async function updateProfileWithCompanyData(
   serviceClient: any,
@@ -25,14 +33,15 @@ async function updateProfileWithCompanyData(
       updated_at: new Date().toISOString()
     };
 
-    // Always save customer name
+    // ALWAYS save customer name (from ANY payment, even without invoice)
     if (metadata.first_name) updateData.first_name = metadata.first_name;
     if (metadata.last_name) updateData.last_name = metadata.last_name;
+    if (metadata.full_name) updateData.full_name = metadata.full_name;
 
-    // Save company data only if invoice was requested
+    // Save company data ONLY if invoice was requested
     if (metadata.needs_invoice === 'true') {
-      if (metadata.company_name) updateData.company_name = metadata.company_name;
       if (metadata.nip) updateData.tax_id = metadata.nip;
+      if (metadata.company_name) updateData.company_name = metadata.company_name;
       if (metadata.address) updateData.address_line1 = metadata.address;
       if (metadata.city) updateData.city = metadata.city;
       if (metadata.postal_code) updateData.zip_code = metadata.postal_code;
