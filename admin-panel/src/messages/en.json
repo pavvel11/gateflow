@@ -58,7 +58,8 @@
       "minimum": "Minimum",
       "belowMinimum": "Amount must be at least {minimum}",
       "aboveMaximum": "Amount must be no more than {maximum}"
-    }
+    },
+    "orPayWith": "or pay with"
   },
   "waitlist": {
     "joinWaitlist": "Join the Waitlist",

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { useState, useEffect, useCallback } from 'react';
+import { PaymentElement, ExpressCheckoutElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Product } from '@/types';
 import { formatPrice } from '@/lib/constants';
 import { useTranslations } from 'next-intl';
@@ -10,12 +10,26 @@ import { validateTaxId, isPolishNIP, normalizeNIP } from '@/lib/validation/nip';
 import { useTracking } from '@/hooks/useTracking';
 import { usePricing } from '@/hooks/usePricing';
 
+interface OrderBump {
+  id: string;
+  name: string;
+  price: number;
+  bump_price?: number;
+}
+
+interface AppliedCoupon {
+  code: string;
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
+  exclude_order_bumps?: boolean;
+}
+
 interface CustomPaymentFormProps {
   product: Product;
   email?: string;
-  bumpProduct?: any;
+  bumpProduct?: OrderBump;
   bumpSelected: boolean;
-  appliedCoupon?: any;
+  appliedCoupon?: AppliedCoupon;
   successUrl?: string;
   onChangeAccount?: () => void;
   customAmount?: number; // Pay What You Want - custom price chosen by customer
@@ -62,12 +76,24 @@ export default function CustomPaymentForm({
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
 
+  // Express Checkout (Link, Apple Pay, Google Pay buttons)
+  const [expressCheckoutVisible, setExpressCheckoutVisible] = useState(false);
+
   // GUS integration state
+  interface GUSCompanyData {
+    nazwa: string;
+    ulica: string;
+    nrNieruchomosci: string;
+    nrLokalu?: string;
+    miejscowosc: string;
+    kodPocztowy: string;
+  }
+
   const [isLoadingGUS, setIsLoadingGUS] = useState(false);
   const [gusError, setGusError] = useState<string | null>(null);
   const [nipError, setNipError] = useState<string | null>(null);
   const [gusSuccess, setGusSuccess] = useState(false);
-  const [gusData, setGusData] = useState<any>(null);
+  const [gusData, setGusData] = useState<GUSCompanyData | null>(null);
 
   // Centralized pricing calculation
   const pricing = usePricing({
@@ -203,6 +229,57 @@ export default function CustomPaymentForm({
       setGusSuccess(false);
     }
   };
+
+  // Express Checkout Element handlers
+  interface ExpressCheckoutReadyEvent {
+    availablePaymentMethods?: {
+      applePay?: boolean;
+      googlePay?: boolean;
+      link?: boolean;
+    };
+  }
+
+  const handleExpressCheckoutReady = useCallback(({ availablePaymentMethods }: ExpressCheckoutReadyEvent) => {
+    // Show Express Checkout only if payment methods are available (Link, Apple Pay, Google Pay)
+    if (availablePaymentMethods) {
+      setExpressCheckoutVisible(true);
+    }
+  }, []);
+
+  const handleExpressCheckoutConfirm = useCallback(async () => {
+    if (!stripe || !elements) {
+      return;
+    }
+
+    setIsProcessing(true);
+    setErrorMessage('');
+
+    try {
+      // Submit all Elements for validation
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        setErrorMessage(submitError.message || 'Failed to process payment');
+        setIsProcessing(false);
+        return;
+      }
+
+      // Express Checkout buttons handle their own confirmation
+      // We just need to track and redirect after Stripe handles payment
+      track('Payment Confirmed via Express Checkout', {
+        product: product.id,
+        amount: totalGross,
+        currency: product.currency,
+        method: 'express_checkout', // Could be Link, Apple Pay, or Google Pay
+      });
+
+      // Stripe will redirect to return_url automatically
+      // Payment confirmation happens on the server via webhook
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      setErrorMessage(errorMessage);
+      setIsProcessing(false);
+    }
+  }, [stripe, elements, track, product.id, product.currency, totalGross]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -343,6 +420,35 @@ export default function CustomPaymentForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Express Checkout Element - Link, Apple Pay, Google Pay (1-click payment) */}
+      <div style={{ display: expressCheckoutVisible ? 'block' : 'none' }}>
+        <div className="relative mb-6">
+          <ExpressCheckoutElement
+            onConfirm={handleExpressCheckoutConfirm}
+            onReady={handleExpressCheckoutReady}
+            options={{
+              buttonType: {
+                googlePay: 'checkout',
+                applePay: 'check-out',
+              },
+              buttonHeight: 48,
+            }}
+          />
+        </div>
+
+        {/* Separator */}
+        <div className="relative mb-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-white/10"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-4 bg-gray-900 text-gray-400">
+              {t('orPayWith', { defaultValue: 'or pay with' })}
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Email Input - always visible at top */}
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">

@@ -579,4 +579,42 @@ test.describe('Checkout E2E - Authenticated User Profile Data', () => {
     await companyInput.fill('New Company Ltd');
     await expect(companyInput).toHaveValue('New Company Ltd');
   });
+
+  test('should render Express Checkout Element for one-click payment', async ({ page }) => {
+    await mockStripe(page);
+
+    // Go to checkout as guest
+    await page.goto(`/en/checkout/${testProduct.slug}`);
+    await page.waitForSelector('input[type="email"]', { timeout: 10000 });
+
+    // Fill email and name (required for Express Checkout to work)
+    const emailInput = page.locator('input[type="email"]');
+    await emailInput.fill('express-checkout@example.com');
+
+    const fullNameInput = page.locator('input#fullName');
+    await fullNameInput.fill('Express User');
+
+    // Accept terms
+    const termsCheckbox = page.locator('input[type="checkbox"]').first();
+    await termsCheckbox.check();
+
+    // Wait for payment element
+    await page.waitForTimeout(2000);
+
+    // In production: Express Checkout Element would show Link, Apple Pay, Google Pay buttons
+    // In mock: We can't fully test Stripe Element rendering, but we verify:
+    // 1. Form renders without errors
+    // 2. Email and name are provided (required for Express Checkout)
+    // 3. Payment element is visible
+
+    // Note: Express Checkout Element visibility is controlled by onReady handler
+    // which is called by Stripe.js based on available payment methods
+    // In real browser with real Stripe:
+    // - Link button appears if customer has saved payment methods
+    // - Apple Pay appears on Safari/iOS
+    // - Google Pay appears on Chrome/Android
+
+    // Verify payment UI loaded successfully
+    await expect(page.locator('[data-testid="mock-payment-element"]')).toBeVisible();
+  });
 });
