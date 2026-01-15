@@ -434,6 +434,13 @@ export default function CustomPaymentForm({
               type: 'tabs',
               defaultCollapsed: false,
             },
+            // Prefill customer data for Link autofill and faster checkout
+            defaultValues: {
+              billingDetails: {
+                email: email || guestEmail || undefined,
+                name: fullName || undefined,
+              },
+            },
             // Set payment method order based on currency
             // For PLN (Poland): BLIK is most popular (65%+ market share), then Przelewy24, then card
             // For other currencies: optimize for that region

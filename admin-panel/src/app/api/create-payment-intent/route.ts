@@ -213,10 +213,12 @@ export async function POST(request: NextRequest) {
         enabled: true,
         allow_redirects: 'always',
       },
-      // Disable Link to prevent LinkAuthenticationElement from showing
+      // Enable Link for one-click checkout with saved payment methods
+      // 'on_session' = payment method can be reused only when customer is present (ideal for one-click checkout)
+      // This allows Link to save customer payment details for faster checkout on return visits
       payment_method_options: {
         link: {
-          setup_future_usage: 'none',
+          setup_future_usage: 'on_session',
         },
       },
       metadata: {
