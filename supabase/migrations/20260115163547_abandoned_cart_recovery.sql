@@ -73,8 +73,9 @@ RETURNS TABLE (
   metadata JSONB
 ) AS $$
 BEGIN
-  -- Check if user is admin
-  IF NOT EXISTS (SELECT 1 FROM admin_users WHERE user_id = auth.uid()) THEN
+  -- Check if user is admin or service_role
+  IF (SELECT auth.role()) != 'service_role' AND
+     NOT EXISTS (SELECT 1 FROM admin_users WHERE user_id = auth.uid()) THEN
     RAISE EXCEPTION 'Access denied: Admin only';
   END IF;
 
@@ -109,8 +110,9 @@ RETURNS JSONB AS $$
 DECLARE
   result JSONB;
 BEGIN
-  -- Check if user is admin
-  IF NOT EXISTS (SELECT 1 FROM admin_users WHERE user_id = auth.uid()) THEN
+  -- Check if user is admin or service_role
+  IF (SELECT auth.role()) != 'service_role' AND
+     NOT EXISTS (SELECT 1 FROM admin_users WHERE user_id = auth.uid()) THEN
     RAISE EXCEPTION 'Access denied: Admin only';
   END IF;
 
