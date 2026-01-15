@@ -614,4 +614,68 @@ Before going live:
 
 ---
 
-**Last updated:** 2025-12-27 (Next.js 16, Advanced PM2)
+## 🆕 Performance Optimization Setup (Jan 2026)
+
+### Using ecosystem.config.js in Root Directory
+
+As of January 2026, GateFlow includes a production-ready `ecosystem.config.js` in the root directory with optimized settings for ISR and cluster mode.
+
+**Quick Start:**
+
+```bash
+# 1. Build the application
+cd admin-panel
+npm install
+npm run build
+cd ..
+
+# 2. Start PM2 cluster
+pm2 start ecosystem.config.js
+
+# 3. Save process list
+pm2 save
+
+# 4. Enable auto-start on boot
+pm2 startup
+# Follow the command output instructions
+```
+
+**Automated Deployment with deploy.sh:**
+
+```bash
+# Make script executable (first time only)
+chmod +x scripts/deploy.sh
+
+# Deploy with zero-downtime reload
+./scripts/deploy.sh
+```
+
+The `deploy.sh` script automatically:
+- Pulls latest code from git
+- Installs dependencies
+- Builds the application
+- Reloads PM2 with zero downtime
+
+**Monitoring:**
+
+```bash
+pm2 list           # List all processes
+pm2 monit          # Real-time monitoring
+pm2 logs           # View logs
+pm2 logs --lines 100
+```
+
+**Key Configuration Features:**
+- ✅ Cluster mode with all CPU cores (`instances: 'max'`)
+- ✅ 512MB memory limit per instance
+- ✅ Graceful shutdown (5s timeout)
+- ✅ Automatic crash recovery
+- ✅ Centralized logging in `./logs/`
+
+**Expected Performance:**
+- **Before ISR + Cluster**: ~12 req/sec, ~3.8s latency on VPS
+- **After ISR + Cluster**: 100-500+ req/sec, <500ms latency on VPS
+
+---
+
+**Last updated:** 2026-01-15 (ISR Optimization + PM2 Cluster)

@@ -62,6 +62,7 @@
     "@types/react-dom": "^19.2.3",
     "@types/swagger-ui-react": "^5.18.0",
     "@vitest/coverage-v8": "^4.0.16",
+    "autocannon": "^8.0.0",
     "dotenv": "^17.2.3",
     "eslint": "^9.39.2",
     "eslint-config-next": "^16.0.5",

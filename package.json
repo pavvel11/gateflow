@@ -33,6 +33,7 @@
     "node": ">=14.0.0"
   },
   "devDependencies": {
+    "autocannon": "^8.0.0",
     "supabase": "^2.70.5"
   },
   "files": [
