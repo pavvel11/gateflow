@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/server'
+import { unstable_noStore as noStore } from 'next/cache'
 
 export const metadata: Metadata = {
   title: 'Terms of Service - GateFlow',
@@ -8,9 +9,16 @@ export const metadata: Metadata = {
   robots: 'index, follow'
 }
 
+// Force dynamic rendering - this page does redirect() which is inherently dynamic
+// Runtime caching happens via browser cache-control headers
+export const dynamic = 'force-dynamic'
+
 export default async function TermsPage() {
+  // Disable cache for this request
+  noStore()
+
   // First check database for configured URL
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data: config } = await supabase
     .from('shop_config')
     .select('terms_of_service_url')

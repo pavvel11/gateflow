@@ -1,71 +1,111 @@
+#!/usr/bin/env node
+
+/**
+ * GateFlow Performance Benchmark Script
+ *
+ * Usage:
+ *   node scripts/benchmark.js [URL]
+ *
+ * Examples:
+ *   node scripts/benchmark.js                              # Test localhost:3000
+ *   node scripts/benchmark.js http://localhost:3000        # Test localhost
+ *   node scripts/benchmark.js https://gf.techskills.academy # Test production
+ */
+
 const autocannon = require('autocannon');
 
-const url = process.argv[2] || 'http://localhost:3000';
-const duration = 10; // sekundy
-const connections = 50; // ilu "wirtualnych użytkowników" naraz
+const TARGET_URL = process.argv[2] || 'http://localhost:3000';
 
-console.log(`🚀 Startuję benchmark dla: ${url}`);
-console.log(`⏱️  Czas trwania: ${duration}s`);
-console.log(`👥 Symulacja: ${connections} użytkowników jednocześnie...\n`);
+// Test scenarios - adjust paths based on your actual product slugs
+const scenarios = [
+  {
+    name: 'Homepage',
+    path: '/',
+    connections: 50,
+    duration: 10,
+  },
+  {
+    name: 'About Page',
+    path: '/about',
+    connections: 50,
+    duration: 10,
+  },
+];
 
-const instance = autocannon({
-  url,
-  connections, // liczba jednoczesnych połączeń
-  duration,    // czas trwania testu w sekundach
-  pipelining: 1, // ile requestów naraz w jednym połączeniu
-  workers: 1,    // worker threads
-}, finishedBench);
+console.log('\n🚀 GateFlow Performance Benchmark');
+console.log('================================\n');
+console.log(`Target: ${TARGET_URL}\n`);
 
-autocannon.track(instance, { renderProgressBar: true });
+async function runBenchmark(scenario) {
+  console.log(`\n📊 Testing: ${scenario.name}`);
+  console.log('─'.repeat(50));
 
-function finishedBench(err, res) {
-  if (err) {
-    console.error('❌ Błąd krytyczny testu:', err);
-    return;
-  }
+  const result = await autocannon({
+    url: `${TARGET_URL}${scenario.path}`,
+    connections: scenario.connections,
+    duration: scenario.duration,
+    pipelining: 1,
+  });
 
-  console.log('\n📊 --- WYNIKI TESTU --- 📊\n');
+  const { requests, latency, throughput, errors } = result;
 
-  // 1. Latency (Opóźnienie)
-  const avgLatency = res.latency.average;
-  const p99Latency = res.latency.p99;
-  
-  console.log(`🕒 Opóźnienie (Latency):`);
-  console.log(`   - Średnie: ${avgLatency.toFixed(2)} ms ${evaluateLatency(avgLatency)}`);
-  console.log(`   - 99% userów czeka krócej niż: ${p99Latency.toFixed(2)} ms`);
+  // Verdicts based on BACKLOG.md benchmarks
+  const latencyVerdict =
+    latency.mean < 500 ? '🟢 Excellent' :
+    latency.mean < 1000 ? '🟡 Good' :
+    latency.mean < 2000 ? '🟠 Slow' : '🔴 Very Slow';
 
-  // 2. Throughput (Przepustowość)
-  const reqPerSec = res.requests.average;
-  console.log(`\n🚀 Przepustowość (Throughput):`);
-  console.log(`   - Obsłużono: ${reqPerSec.toFixed(0)} req/sec`);
-  console.log(`   - Łącznie requestów: ${res.requests.total}`);
+  const reqSecVerdict =
+    requests.mean > 100 ? '🟢 Excellent' :
+    requests.mean > 50 ? '🟡 Good' :
+    requests.mean > 20 ? '🟠 Needs Work' : '🔴 Critical';
 
-  // 3. Błędy
-  const errors = res.errors + res.timeouts;
-  console.log(`\n⚠️  Błędy:`);
-  if (errors === 0) {
-    console.log(`   - ✅ BRAK BŁĘDÓW (0 timeouts, 0 socket errors)`);
-  } else {
-    console.log(`   - ❌ WYKRYTO BŁĘDY: ${errors} (Timeouts: ${res.timeouts})`);
-  }
+  console.log(`\nResults:`);
+  console.log(`  Requests/sec:    ${requests.mean.toFixed(2)} ${reqSecVerdict}`);
+  console.log(`  Latency (avg):   ${latency.mean.toFixed(2)}ms ${latencyVerdict}`);
+  console.log(`  Latency (p50):   ${latency.p50.toFixed(2)}ms`);
+  console.log(`  Latency (p99):   ${latency.p99.toFixed(2)}ms`);
+  console.log(`  Throughput:      ${(throughput.mean / 1024 / 1024).toFixed(2)} MB/s`);
+  console.log(`  Errors:          ${errors}`);
 
-  console.log('\n--------------------------');
-  
-  // Werdykt
-  if (errors > 0) {
-    console.log('🏁 WERDYKT: 🔴 OBLANY (Wystąpiły błędy)');
-  } else if (avgLatency > 1000) {
-    console.log('🏁 WERDYKT: 🟠 OSTRZEŻENIE (Bardzo wolno > 1s)');
-  } else if (avgLatency > 300) {
-    console.log('🏁 WERDYKT: 🟡 ŚREDNIO (Akceptowalnie, ale do poprawy)');
-  } else {
-    console.log('🏁 WERDYKT: 🟢 ŚWIETNIE (Szybko i stabilnie)');
-  }
+  return result;
 }
 
-function evaluateLatency(ms) {
-  if (ms < 100) return '🚀 (Błyskawica)';
-  if (ms < 300) return '✅ (Szybko)';
-  if (ms < 1000) return '⚠️ (Odczuwalne opóźnienie)';
-  return '🐌 (Bardzo wolno)';
+async function main() {
+  const results = [];
+
+  for (const scenario of scenarios) {
+    const result = await runBenchmark(scenario);
+    results.push({ ...scenario, result });
+  }
+
+  // Summary
+  console.log('\n\n📈 SUMMARY');
+  console.log('================================\n');
+
+  const avgReqSec = results.reduce((acc, r) => acc + r.result.requests.mean, 0) / results.length;
+  const avgLatency = results.reduce((acc, r) => acc + r.result.latency.mean, 0) / results.length;
+
+  console.log(`Average across all pages:`);
+  console.log(`  Requests/sec: ${avgReqSec.toFixed(2)}`);
+  console.log(`  Latency:      ${avgLatency.toFixed(2)}ms`);
+
+  // Overall verdict
+  const overallVerdict = avgLatency < 1000 && avgReqSec > 50 ? '🟢 PASS' : '🔴 NEEDS IMPROVEMENT';
+  console.log(`\n${overallVerdict}\n`);
+
+  // Comparison with baselines (from BACKLOG.md)
+  console.log('Reference Baselines (from Jan 14, 2026):');
+  console.log('  Local (M1 Max):  244 req/sec, ~200ms latency');
+  console.log('  Small VPS:       ~11 req/sec, ~3.8s latency (BEFORE optimization)');
+  console.log('  Target (VPS):    >100 req/sec, <500ms latency (AFTER ISR)\n');
+
+  // Exit code based on performance
+  const isCritical = avgLatency > 2000 || avgReqSec < 20;
+  process.exit(isCritical ? 1 : 0);
 }
+
+main().catch((error) => {
+  console.error('\n❌ Benchmark failed:', error.message);
+  process.exit(1);
+});
