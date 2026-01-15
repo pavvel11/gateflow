@@ -258,6 +258,32 @@ export async function POST(request: NextRequest) {
     }
     const paymentIntent = await stripe.paymentIntents.create(paymentIntentParams);
 
+    // Save pending payment transaction for abandoned cart recovery
+    try {
+      const { error: insertError } = await supabase
+        .from('payment_transactions')
+        .insert({
+          session_id: paymentIntent.id, // Use Payment Intent ID as session_id
+          user_id: user?.id || null,
+          product_id: productId,
+          customer_email: finalEmail || 'pending@gateflow.app', // Fallback for guests without email
+          amount: totalAmount,
+          currency: product.currency,
+          stripe_payment_intent_id: paymentIntent.id,
+          status: 'pending',
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+          metadata: paymentIntentParams.metadata
+        });
+
+      if (insertError) {
+        // Log error but don't fail the payment intent creation
+        console.error('Failed to save pending transaction:', insertError);
+      }
+    } catch (dbError) {
+      // Don't fail payment intent creation if DB insert fails
+      console.error('Error saving pending transaction:', dbError);
+    }
+
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,

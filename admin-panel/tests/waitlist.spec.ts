@@ -214,10 +214,7 @@ test.describe('Waitlist Feature', () => {
       // Navigate to checkout page for inactive product with waitlist
       await page.goto(`/pl/checkout/${testProductWithWaitlistSlug}`);
 
-      // Should NOT be 404
-      await expect(page).not.toHaveURL(/404/);
-
-      // Wait for page to hydrate - look for waitlist form title
+      // Wait for page to load and verify it's NOT a 404 by checking for waitlist content
       const waitlistTitle = page.locator('h2').filter({ hasText: /Join the Waitlist|Dołącz do listy oczekujących/i });
       await expect(waitlistTitle).toBeVisible({ timeout: 15000 });
 
