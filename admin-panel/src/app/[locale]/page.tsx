@@ -1,33 +1,26 @@
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/server';
 import { getShopConfig } from '@/lib/actions/shop-config';
 import SmartLandingClient from '@/components/storefront/SmartLandingClient';
 import { Product } from '@/types';
 
+// Enable ISR - cache for 60 seconds
+export const revalidate = 60;
+
 export default async function SmartLandingPage() {
-  const supabase = await createClient();
+  // Use public client (no cookies) to enable ISR
+  const supabase = createPublicClient();
   const shopConfig = await getShopConfig();
 
-  // Efficient EXISTS check - only fetch 1 row to check if products exist
-  const { data: productsCheck } = await supabase
+  // OPTIMIZED: Single query instead of 2 separate queries
+  const { data } = await supabase
     .from('products')
-    .select('id')
+    .select('*')
     .eq('is_active', true)
-    .limit(1);
+    .order('is_featured', { ascending: false })
+    .order('price', { ascending: true });
 
-  const hasProducts = (productsCheck?.length || 0) > 0;
-
-  // Fetch products only if they exist
-  let products: Product[] = [];
-  if (hasProducts) {
-    const { data } = await supabase
-      .from('products')
-      .select('*')
-      .eq('is_active', true)
-      .order('is_featured', { ascending: false })
-      .order('price', { ascending: true });
-
-    products = (data as Product[]) || [];
-  }
+  const products = (data as Product[]) || [];
+  const hasProducts = products.length > 0;
 
   return (
     <SmartLandingClient

@@ -37,3 +37,43 @@ export async function createClient() {
     }
   )
 }
+
+/**
+ * Create a public Supabase client without cookie handling.
+ * This client is suitable for ISR (Incremental Static Regeneration) pages
+ * as it doesn't force Dynamic Rendering like cookies() does.
+ *
+ * Use this for:
+ * - Public pages that can be cached (homepage, product pages, etc.)
+ * - Pages with `export const revalidate = N`
+ * - API routes that return public data
+ *
+ * DO NOT use this for:
+ * - User-specific data
+ * - Admin pages
+ * - Authenticated operations
+ */
+export function createPublicClient() {
+  // Fallback to publicly available env vars for build-time static generation
+  // Runtime: SUPABASE_URL / SUPABASE_ANON_KEY (if set)
+  // Build time: NEXT_PUBLIC_SUPABASE_URL / ANON_KEY (from .env.fullstack)
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.ANON_KEY
+
+  // If env vars are not available (e.g., during build without .env file),
+  // use dummy values to allow build to complete. ISR pages will be marked as dynamic.
+  // In production with proper env vars, ISR will work correctly.
+  const url = supabaseUrl || 'http://localhost:54321'
+  const key = supabaseAnonKey || 'dummy-anon-key-for-build-time'
+
+  return createServerClient(
+    url,
+    key,
+    {
+      cookies: {
+        getAll: () => [],
+        setAll: () => {},
+      },
+    }
+  )
+}

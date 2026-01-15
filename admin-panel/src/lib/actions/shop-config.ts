@@ -1,7 +1,8 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createPublicClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { cache } from 'react'
 
 export interface ShopConfig {
   id: string
@@ -31,9 +32,11 @@ export interface ShopConfig {
 
 /**
  * Get shop configuration (singleton)
+ * OPTIMIZED: Uses React cache() to deduplicate requests in the same render cycle
+ * and createPublicClient() to enable ISR on pages using this function
  */
-export async function getShopConfig(): Promise<ShopConfig | null> {
-  const supabase = await createClient()
+export const getShopConfig = cache(async (): Promise<ShopConfig | null> => {
+  const supabase = createPublicClient()
 
   const { data, error } = await supabase
     .from('shop_config')
@@ -46,7 +49,7 @@ export async function getShopConfig(): Promise<ShopConfig | null> {
   }
 
   return data as ShopConfig | null
-}
+})
 
 /**
  * Get default shop currency
