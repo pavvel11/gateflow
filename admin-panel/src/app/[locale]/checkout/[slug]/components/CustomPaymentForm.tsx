@@ -3,19 +3,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { PaymentElement, ExpressCheckoutElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Product } from '@/types';
+import { OrderBumpWithProduct } from '@/types/order-bump';
 import { formatPrice } from '@/lib/constants';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { validateTaxId, isPolishNIP, normalizeNIP } from '@/lib/validation/nip';
 import { useTracking } from '@/hooks/useTracking';
 import { usePricing } from '@/hooks/usePricing';
-
-interface OrderBump {
-  id: string;
-  name: string;
-  price: number;
-  bump_price?: number;
-}
 
 interface AppliedCoupon {
   code: string;
@@ -27,7 +21,7 @@ interface AppliedCoupon {
 interface CustomPaymentFormProps {
   product: Product;
   email?: string;
-  bumpProduct?: OrderBump;
+  bumpProduct?: OrderBumpWithProduct | null;
   bumpSelected: boolean;
   appliedCoupon?: AppliedCoupon;
   successUrl?: string;
@@ -265,11 +259,19 @@ export default function CustomPaymentForm({
 
       // Express Checkout buttons handle their own confirmation
       // We just need to track and redirect after Stripe handles payment
-      track('Payment Confirmed via Express Checkout', {
-        product: product.id,
-        amount: totalGross,
+      // 'purchase' event will be sent by webhook after payment confirmation
+      track('add_payment_info', {
+        value: totalGross,
         currency: product.currency,
-        method: 'express_checkout', // Could be Link, Apple Pay, or Google Pay
+        items: [
+          {
+            item_id: product.id,
+            item_name: product.name,
+            price: totalGross,
+            quantity: 1,
+            currency: product.currency,
+          },
+        ],
       });
 
       // Stripe will redirect to return_url automatically
