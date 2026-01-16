@@ -59,7 +59,13 @@
       "belowMinimum": "Kwota musi wynosić co najmniej {minimum}",
       "aboveMaximum": "Kwota nie może przekraczać {maximum}"
     },
-    "orPayWith": "lub zapłać przez"
+    "orPayWith": "lub zapłać przez",
+    "nipValidation": {
+      "invalidChecksum": "Nieprawidłowy numer NIP",
+      "mustBe10Digits": "NIP musi mieć 10 cyfr",
+      "required": "NIP jest wymagany",
+      "invalidFormat": "Nieprawidłowy format numeru NIP"
+    }
   },
   "waitlist": {
     "joinWaitlist": "Dołącz do listy oczekujących",

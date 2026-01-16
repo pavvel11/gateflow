@@ -147,6 +147,21 @@ export default function CustomPaymentForm({
     loadProfileData();
   }, [email]);
 
+  // Helper function to translate NIP validation errors
+  const translateNipError = (error: string | undefined): string => {
+    if (!error) return t('nipValidation.invalidFormat');
+
+    if (error.includes('Invalid Polish NIP checksum')) {
+      return t('nipValidation.invalidChecksum');
+    } else if (error.includes('Polish NIP must be 10 digits')) {
+      return t('nipValidation.mustBe10Digits');
+    } else if (error.includes('Tax ID is required')) {
+      return t('nipValidation.required');
+    } else {
+      return t('nipValidation.invalidFormat');
+    }
+  };
+
   // Tax ID / NIP auto-fill handler (supports international formats)
   const handleNIPBlur = async () => {
     if (!nip || nip.trim().length === 0) return;
@@ -155,7 +170,7 @@ export default function CustomPaymentForm({
     const validation = validateTaxId(nip, true);
 
     if (!validation.isValid) {
-      setNipError(validation.error || 'Invalid tax ID format');
+      setNipError(translateNipError(validation.error));
       setGusError(null);
       setGusSuccess(false);
       return;
