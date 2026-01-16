@@ -166,6 +166,9 @@ export function Step4EnterKey() {
   const canValidate = isValidFormat && state.validationStatus === 'idle'
   const canSave = state.validationStatus === 'success' && state.validationResult?.isValid
 
+  // Detect key type for contextual messaging
+  const keyType = localKey.startsWith('sk_') ? 'secret' : localKey.startsWith('rk_') ? 'restricted' : null
+
   return (
     <div className="max-w-3xl mx-auto">
       {/* Header */}
@@ -175,9 +178,35 @@ export function Step4EnterKey() {
         </h3>
         <p className="text-gray-600 dark:text-gray-400">
           {t('subtitle', {
-            defaultValue: 'Paste the Restricted API Key you created in Stripe',
+            defaultValue: 'Enter your Stripe API Key (Restricted or Secret Key)',
           })}
         </p>
+      </div>
+
+      {/* Info Box - Key Type Explanation */}
+      <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-blue-900 dark:text-blue-100">
+            <p className="font-semibold mb-2">
+              {t('keyTypeInfo.title', { defaultValue: 'Choose Your Key Type' })}
+            </p>
+            <ul className="space-y-2 list-disc list-inside">
+              <li>
+                <strong>Restricted Key (rk_*):</strong>{' '}
+                {t('keyTypeInfo.restricted', {
+                  defaultValue: 'More secure, limited permissions. Recommended for production. Requires STRIPE_SECRET_KEY in .env for full functionality.',
+                })}
+              </li>
+              <li>
+                <strong>Secret Key (sk_*):</strong>{' '}
+                {t('keyTypeInfo.secret', {
+                  defaultValue: 'Full access, single key setup. Easier to configure but less secure if leaked. Use for development or if you prefer single-key setup.',
+                })}
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
 
       {/* Key Input */}
@@ -196,7 +225,7 @@ export function Step4EnterKey() {
             onPaste={handlePaste}
             onBlur={handleBlur}
             placeholder={t('input.placeholder', {
-              defaultValue: state.mode === 'test' ? 'rk_test_...' : 'rk_live_...',
+              defaultValue: state.mode === 'test' ? 'rk_test_... or sk_test_...' : 'rk_live_... or sk_live_...',
             })}
             className={`w-full px-4 py-3 pr-12 border rounded-lg font-mono text-sm resize-none ${
               state.validationStatus === 'success'
@@ -314,10 +343,19 @@ export function Step4EnterKey() {
                 {t('success.title', { defaultValue: 'API Key Validated Successfully!' })}
               </p>
               <p className="text-sm text-gray-700 dark:text-gray-300">
-                {t('success.description', {
-                  defaultValue:
-                    'Your key has been verified and all required permissions are granted.',
-                })}
+                {keyType === 'secret' ? (
+                  t('success.descriptionSecret', {
+                    defaultValue: 'Your Secret Key has been verified with full API access. All payment functionality is now available.',
+                  })
+                ) : keyType === 'restricted' ? (
+                  t('success.descriptionRestricted', {
+                    defaultValue: 'Your Restricted Key has been verified. Remember to set STRIPE_SECRET_KEY in .env for full payment functionality.',
+                  })
+                ) : (
+                  t('success.description', {
+                    defaultValue: 'Your key has been verified and all required permissions are granted.',
+                  })
+                )}
               </p>
               {state.validationResult.connectionTest?.accountId && (
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">

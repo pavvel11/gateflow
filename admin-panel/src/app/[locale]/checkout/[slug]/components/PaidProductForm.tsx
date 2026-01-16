@@ -20,10 +20,9 @@ import OtoCountdownBanner from '@/components/storefront/OtoCountdownBanner';
 
 interface PaidProductFormProps {
   product: Product;
-  paymentMethodOrder?: string[];
 }
 
-export default function PaidProductForm({ product, paymentMethodOrder }: PaidProductFormProps) {
+export default function PaidProductForm({ product }: PaidProductFormProps) {
   const t = useTranslations('checkout');
   const { user } = useAuth();
   const { addToast } = useToast();
@@ -681,7 +680,6 @@ export default function PaidProductForm({ product, paymentMethodOrder }: PaidPro
               customAmount={product.allow_custom_price ? customAmount : undefined}
               customAmountError={product.allow_custom_price ? customAmountError : null}
               clientSecret={clientSecret || undefined}
-              paymentMethodOrder={paymentMethodOrder}
             />
           </Elements>
         )}

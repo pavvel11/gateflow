@@ -105,18 +105,18 @@ test.describe('GUS Checkout Flow - NIP Validation', () => {
     await expect(nipInput).toHaveValue(TEST_NIP_VALID, { timeout: 5000 });
   });
 
-  test('should enforce maxLength=10 on NIP input', async ({ page }) => {
+  test('should enforce maxLength=20 on NIP input (supports international tax IDs)', async ({ page }) => {
     // Navigate to checkout
     await page.goto(`/pl/checkout/${testProduct.slug}`);
     await page.waitForSelector('input[type="email"], input#fullName', { timeout: 30000 });
 
-    // Try to fill more than 10 digits
+    // Try to fill more than 20 characters
     const nipInput = page.locator('input#nip');
-    await nipInput.fill('12345678901234567890');
+    await nipInput.fill('PL12345678901234567890EXTRA');
 
-    // Should be truncated to 10
+    // Should be truncated to 20 (supports international formats like "PL1234567890")
     const value = await nipInput.inputValue();
-    expect(value.length).toBeLessThanOrEqual(10);
+    expect(value.length).toBeLessThanOrEqual(20);
   });
 });
 

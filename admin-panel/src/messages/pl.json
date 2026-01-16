@@ -58,6 +58,13 @@
       "minimum": "Minimum",
       "belowMinimum": "Kwota musi wynosić co najmniej {minimum}",
       "aboveMaximum": "Kwota nie może przekraczać {maximum}"
+    },
+    "orPayWith": "lub zapłać przez",
+    "nipValidation": {
+      "invalidChecksum": "Nieprawidłowy numer NIP",
+      "mustBe10Digits": "NIP musi mieć 10 cyfr",
+      "required": "NIP jest wymagany",
+      "invalidFormat": "Nieprawidłowy format numeru NIP"
     }
   },
   "waitlist": {
@@ -1197,8 +1204,7 @@
           "presetAmount": "Kwota"
         },
         "enabled": "Włączone"
-      },
-      "duplicateLabel": "Duplikuj {name}"
+      }
     },
     "categories": {
       "title": "Kategorie",
@@ -2070,11 +2076,16 @@
         "nextButton": "Utworzyłem klucz"
       },
       "step4": {
-        "title": "Wprowadź swój klucz API",
-        "subtitle": "Wklej klucz z ograniczonymi uprawnieniami, który utworzyłeś w Stripe",
+        "title": "Wpisz swój klucz API",
+        "subtitle": "Wpisz klucz API Stripe (Restricted lub Secret Key)",
+        "keyTypeInfo": {
+          "title": "Wybierz typ klucza",
+          "restricted": "Bardziej bezpieczny, ograniczone uprawnienia. Zalecane dla produkcji. Wymaga STRIPE_SECRET_KEY w .env dla pełnej funkcjonalności.",
+          "secret": "Pełny dostęp, konfiguracja jednym kluczem. Łatwiejsze do skonfigurowania ale mniej bezpieczne w razie wycieku. Użyj dla developmentu lub jeśli preferujesz konfigurację jednym kluczem."
+        },
         "input": {
           "label": "Klucz API Stripe",
-          "placeholder": "rk_test_... lub rk_live_...",
+          "placeholder": "rk_test_... lub sk_test_...",
           "help": "Twój klucz zostanie zaszyfrowany algorytmem AES-256-GCM przed zapisaniem."
         },
         "errors": {
@@ -2082,16 +2093,18 @@
             "title": "Nieprawidłowy format"
           },
           "connection": {
-            "title": "Połączenie nie powiodło się"
+            "title": "Błąd połączenia"
           },
           "permissions": {
-            "title": "Brakujące wymagane uprawnienia",
-            "help": "Wróć do Stripe i zaktualizuj uprawnienia swojego klucza."
+            "title": "Brakujące uprawnienia",
+            "help": "Wróć do Stripe i zaktualizuj uprawnienia klucza."
           }
         },
         "success": {
           "title": "Klucz API zwalidowany pomyślnie!",
-          "description": "Twój klucz został zweryfikowany i ma wszystkie wymagane uprawnienia."
+          "description": "Twój klucz został zweryfikowany i wszystkie wymagane uprawnienia są przyznane.",
+          "descriptionSecret": "Twój Secret Key został zweryfikowany z pełnym dostępem do API. Wszystkie funkcje płatności są teraz dostępne.",
+          "descriptionRestricted": "Twój Restricted Key został zweryfikowany. Pamiętaj o ustawieniu STRIPE_SECRET_KEY w .env dla pełnej funkcjonalności płatności."
         },
         "validateButton": {
           "validate": "Waliduj klucz API",

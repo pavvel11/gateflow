@@ -374,4 +374,146 @@ test.describe('Stripe Configuration Wizard', () => {
     expect(pageContent).toContain('STRIPE_SECRET_KEY');
     expect(pageContent).toContain('.env');
   });
+
+  test('should show key type explanation in Step 4', async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.goto('/dashboard/settings');
+    await page.waitForLoadState('networkidle');
+
+    const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
+    await configureButton.click();
+    await page.waitForTimeout(500);
+
+    // Navigate to Step 4
+    await page.locator('button', { hasText: /Start Configuration/i }).click();
+    await page.waitForTimeout(500);
+    await page.locator('button', { hasText: /Test Mode/i }).filter({ has: page.locator('h4') }).first().click();
+    await page.waitForTimeout(300);
+    await page.locator('button', { hasText: /Continue/i }).last().click();
+    await page.waitForTimeout(500);
+    await page.locator('button', { hasText: /I've Created the Key/i }).click();
+    await page.waitForTimeout(500);
+
+    // Should show key type explanation
+    await expect(page.locator('text=Choose Your Key Type')).toBeVisible();
+    await expect(page.locator('text=/Restricted Key.*rk_/i')).toBeVisible();
+    await expect(page.locator('text=/Secret Key.*sk_/i')).toBeVisible();
+
+    // Should mention both key types in subtitle
+    await expect(page.locator('text=/Restricted or Secret Key/i')).toBeVisible();
+
+    // Placeholder should show both options
+    const keyInput = page.locator('textarea[placeholder*="rk_test"]');
+    const placeholder = await keyInput.getAttribute('placeholder');
+    expect(placeholder).toContain('sk_test');
+  });
+
+  test('should accept and validate restricted key (rk_*) with appropriate message', async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.goto('/dashboard/settings');
+    await page.waitForLoadState('networkidle');
+
+    const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
+    await configureButton.click();
+    await page.waitForTimeout(500);
+
+    // Navigate to Step 4
+    await page.locator('button', { hasText: /Start Configuration/i }).click();
+    await page.waitForTimeout(500);
+    await page.locator('button', { hasText: /Test Mode/i }).filter({ has: page.locator('h4') }).first().click();
+    await page.waitForTimeout(300);
+    await page.locator('button', { hasText: /Continue/i }).last().click();
+    await page.waitForTimeout(500);
+    await page.locator('button', { hasText: /I've Created the Key/i }).click();
+    await page.waitForTimeout(500);
+
+    // Enter valid format restricted key
+    const keyInput = page.locator('textarea[placeholder*="rk_test"]');
+    const restrictedKey = 'rk_test_1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJ';
+    await keyInput.fill(restrictedKey);
+    await keyInput.blur();
+    await page.waitForTimeout(1000);
+
+    // Should NOT show format errors
+    await expect(page.locator('text=too short')).not.toBeVisible();
+    await expect(page.locator('text=Invalid key prefix')).not.toBeVisible();
+
+    // Validate button should be enabled
+    const validateButton = page.locator('button', { hasText: /Validate API Key/i });
+    await expect(validateButton).toBeEnabled();
+
+    // Note: We don't actually validate against real Stripe API in tests
+    // Just verify the UI accepts the format correctly
+  });
+
+  test('should accept and validate secret key (sk_*) with appropriate message', async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.goto('/dashboard/settings');
+    await page.waitForLoadState('networkidle');
+
+    const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
+    await configureButton.click();
+    await page.waitForTimeout(500);
+
+    // Navigate to Step 4
+    await page.locator('button', { hasText: /Start Configuration/i }).click();
+    await page.waitForTimeout(500);
+    await page.locator('button', { hasText: /Test Mode/i }).filter({ has: page.locator('h4') }).first().click();
+    await page.waitForTimeout(300);
+    await page.locator('button', { hasText: /Continue/i }).last().click();
+    await page.waitForTimeout(500);
+    await page.locator('button', { hasText: /I've Created the Key/i }).click();
+    await page.waitForTimeout(500);
+
+    // Enter valid format secret key
+    const keyInput = page.locator('textarea[placeholder*="rk_test"]');
+    const secretKey = 'sk_test_1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP';
+    await keyInput.fill(secretKey);
+    await keyInput.blur();
+    await page.waitForTimeout(1000);
+
+    // Should NOT show format errors
+    await expect(page.locator('text=too short')).not.toBeVisible();
+    await expect(page.locator('text=Invalid key prefix')).not.toBeVisible();
+
+    // Validate button should be enabled
+    const validateButton = page.locator('button', { hasText: /Validate API Key/i });
+    await expect(validateButton).toBeEnabled();
+
+    // Note: We don't actually validate against real Stripe API in tests
+    // Just verify the UI accepts the sk_* format correctly
+  });
+
+  test('should reject keys that are not rk_* or sk_*', async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.goto('/dashboard/settings');
+    await page.waitForLoadState('networkidle');
+
+    const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
+    await configureButton.click();
+    await page.waitForTimeout(500);
+
+    // Navigate to Step 4
+    await page.locator('button', { hasText: /Start Configuration/i }).click();
+    await page.waitForTimeout(500);
+    await page.locator('button', { hasText: /Test Mode/i }).filter({ has: page.locator('h4') }).first().click();
+    await page.waitForTimeout(300);
+    await page.locator('button', { hasText: /Continue/i }).last().click();
+    await page.waitForTimeout(500);
+    await page.locator('button', { hasText: /I've Created the Key/i }).click();
+    await page.waitForTimeout(500);
+
+    // Try publishable key (pk_*) which should be rejected
+    const keyInput = page.locator('textarea[placeholder*="rk_test"]');
+    await keyInput.fill('pk_test_1234567890abcdefghijklmnopqrstuvwxyz');
+    await keyInput.blur();
+    await page.waitForTimeout(1000);
+
+    // Should show error about invalid prefix
+    await expect(page.locator('text=/Invalid key prefix/i')).toBeVisible();
+
+    // Validate button should be disabled
+    const validateButton = page.locator('button', { hasText: /Validate API Key/i });
+    await expect(validateButton).toBeDisabled();
+  });
 });

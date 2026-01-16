@@ -1,7 +1,9 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createPublicClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { cache } from 'react'
+import { cacheGet, cacheSet, cacheDel, CacheKeys, CacheTTL } from '@/lib/redis/cache'
 
 export interface ShopConfig {
   id: string
@@ -31,10 +33,24 @@ export interface ShopConfig {
 
 /**
  * Get shop configuration (singleton)
+ *
+ * OPTIMIZED with multi-layer caching:
+ * 1. React cache() - Deduplicates requests in the same render cycle
+ * 2. Redis cache (optional) - <10ms latency if Upstash configured
+ * 3. Database fallback - Works without Redis
+ * 4. createPublicClient() - Enables ISR on pages using this function
  */
-export async function getShopConfig(): Promise<ShopConfig | null> {
-  const supabase = await createClient()
+export const getShopConfig = cache(async (): Promise<ShopConfig | null> => {
+  const cacheKey = CacheKeys.SHOP_CONFIG
 
+  // Try Redis cache first (if configured)
+  const cached = await cacheGet<ShopConfig>(cacheKey)
+  if (cached) {
+    return cached
+  }
+
+  // Fallback to database
+  const supabase = createPublicClient()
   const { data, error } = await supabase
     .from('shop_config')
     .select('*')
@@ -45,8 +61,13 @@ export async function getShopConfig(): Promise<ShopConfig | null> {
     return null
   }
 
+  // Cache for next time (if Redis is available)
+  if (data) {
+    await cacheSet(cacheKey, data, CacheTTL.LONG) // 1 hour
+  }
+
   return data as ShopConfig | null
-}
+})
 
 /**
  * Get default shop currency
@@ -81,6 +102,9 @@ export async function updateShopConfig(updates: Partial<Omit<ShopConfig, 'id' | 
     console.error('Error updating shop config:', error)
     return false
   }
+
+  // Invalidate Redis cache (if configured)
+  await cacheDel(CacheKeys.SHOP_CONFIG)
 
   // Revalidate all dashboard pages that might use shop config
   revalidatePath('/dashboard', 'layout')

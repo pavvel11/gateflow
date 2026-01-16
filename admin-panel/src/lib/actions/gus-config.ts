@@ -54,6 +54,31 @@ export async function saveGUSAPIKey(input: SaveGUSKeyInput): Promise<ActionRespo
 
     // Basic validation
     const trimmedKey = input.apiKey.trim();
+
+    // If KEEP_EXISTING sentinel, only update enabled status without touching the key
+    if (trimmedKey === 'KEEP_EXISTING') {
+      const { error } = await supabase
+        .from('integrations_config')
+        .update({
+          gus_api_enabled: input.enabled,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', 1);
+
+      if (error) {
+        console.error('[saveGUSAPIKey] Failed to update enabled status:', error);
+        return {
+          success: false,
+          error: 'Failed to update configuration',
+          errorCode: 'DATABASE_ERROR'
+        };
+      }
+
+      revalidatePath('/dashboard/integrations');
+      return { success: true };
+    }
+
+    // Validate new key
     if (!trimmedKey) {
       return {
         success: false,

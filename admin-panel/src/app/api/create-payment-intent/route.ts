@@ -4,8 +4,6 @@ import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from '@/lib/rate-limiting';
 import { calculatePricing, toStripeCents, STRIPE_MINIMUM_AMOUNT } from '@/hooks/usePricing';
 import { getStripeServer } from '@/lib/stripe/server';
-import { getPaymentMethodConfig } from '@/lib/actions/payment-config';
-import { getEnabledPaymentMethodsForCurrency } from '@/lib/utils/payment-method-helpers';
 
 export async function POST(request: NextRequest) {
   try {
@@ -207,13 +205,22 @@ export async function POST(request: NextRequest) {
 
     const totalAmount = toStripeCents(pricing.totalGross);
 
-    // 7. Get payment method configuration
-    const paymentConfig = await getPaymentMethodConfig();
-
-    // 8. Create PaymentIntent with payment method configuration
+    // 7. Create PaymentIntent
     const paymentIntentParams: Stripe.PaymentIntentCreateParams = {
       amount: totalAmount,
       currency: product.currency.toLowerCase(),
+      automatic_payment_methods: {
+        enabled: true,
+        allow_redirects: 'always',
+      },
+      // Enable Link for one-click checkout with saved payment methods
+      // 'off_session' = payment method can be reused for future payments (enables one-click checkout)
+      // This allows Link to save customer payment details for faster checkout on return visits
+      payment_method_options: {
+        link: {
+          setup_future_usage: 'off_session',
+        },
+      },
       metadata: {
         product_id: productId,
         product_name: product.name,
@@ -238,83 +245,6 @@ export async function POST(request: NextRequest) {
         is_pwyw: pricing.isPwyw ? 'true' : 'false',
       },
     };
-
-    // Apply payment method configuration based on mode
-    if (paymentConfig) {
-      switch (paymentConfig.config_mode) {
-        case 'automatic':
-          // Use Stripe's automatic payment methods (default behavior)
-          paymentIntentParams.automatic_payment_methods = {
-            enabled: true,
-            allow_redirects: 'always',
-          };
-          break;
-
-        case 'stripe_preset':
-          // Use specific Stripe Payment Method Configuration
-          if (paymentConfig.stripe_pmc_id) {
-            paymentIntentParams.payment_method_configuration = paymentConfig.stripe_pmc_id;
-            // Enable Link if configured
-            if (paymentConfig.enable_link) {
-              paymentIntentParams.payment_method_options = {
-                link: {
-                  // Note: 'on_session' is not a valid value. Use 'off_session' or 'none' if needed
-          // For now, omitting setup_future_usage to use Stripe default behavior
-                },
-              };
-            }
-          } else {
-            // Fallback to automatic if PMC ID is missing
-            console.warn('[create-payment-intent] stripe_preset mode but no PMC ID, falling back to automatic');
-            paymentIntentParams.automatic_payment_methods = {
-              enabled: true,
-              allow_redirects: 'always',
-            };
-          }
-          break;
-
-        case 'custom':
-          // Use explicit payment method types with currency filtering
-          const enabledMethods = getEnabledPaymentMethodsForCurrency(
-            paymentConfig,
-            product.currency
-          );
-
-          if (enabledMethods.length > 0) {
-            paymentIntentParams.payment_method_types = enabledMethods;
-            // Enable Link if configured and included in enabled methods
-            if (paymentConfig.enable_link) {
-              paymentIntentParams.payment_method_options = {
-                link: {
-                  // Note: 'on_session' is not a valid value. Use 'off_session' or 'none' if needed
-          // For now, omitting setup_future_usage to use Stripe default behavior
-                },
-              };
-            }
-          } else {
-            // Fallback if no methods match currency
-            console.warn('[create-payment-intent] No payment methods match currency, falling back to automatic');
-            paymentIntentParams.automatic_payment_methods = {
-              enabled: true,
-              allow_redirects: 'always',
-            };
-          }
-          break;
-      }
-    } else {
-      // Fallback if config is missing
-      console.warn('[create-payment-intent] Payment config not found, using automatic mode');
-      paymentIntentParams.automatic_payment_methods = {
-        enabled: true,
-        allow_redirects: 'always',
-      };
-      paymentIntentParams.payment_method_options = {
-        link: {
-          // Note: 'on_session' is not a valid value. Use 'off_session' or 'none' if needed
-          // For now, omitting setup_future_usage to use Stripe default behavior
-        },
-      };
-    }
 
     // Only set receipt_email if we have an email
     if (finalEmail) {

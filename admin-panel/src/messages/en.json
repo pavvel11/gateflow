@@ -58,7 +58,8 @@
       "minimum": "Minimum",
       "belowMinimum": "Amount must be at least {minimum}",
       "aboveMaximum": "Amount must be no more than {maximum}"
-    }
+    },
+    "orPayWith": "or pay with"
   },
   "waitlist": {
     "joinWaitlist": "Join the Waitlist",
@@ -1188,8 +1189,7 @@
           "presetAmount": "Amount"
         },
         "enabled": "Enabled"
-      },
-      "duplicateLabel": "Duplicate {name}"
+      }
     },
     "categories": {
       "title": "Categories",
@@ -2062,10 +2062,15 @@
       },
       "step4": {
         "title": "Enter Your API Key",
-        "subtitle": "Paste the Restricted API Key you created in Stripe",
+        "subtitle": "Enter your Stripe API Key (Restricted or Secret Key)",
+        "keyTypeInfo": {
+          "title": "Choose Your Key Type",
+          "restricted": "More secure, limited permissions. Recommended for production. Requires STRIPE_SECRET_KEY in .env for full functionality.",
+          "secret": "Full access, single key setup. Easier to configure but less secure if leaked. Use for development or if you prefer single-key setup."
+        },
         "input": {
           "label": "Stripe API Key",
-          "placeholder": "rk_test_... or rk_live_...",
+          "placeholder": "rk_test_... or sk_test_...",
           "help": "Your key will be encrypted with AES-256-GCM before being stored."
         },
         "errors": {
@@ -2082,7 +2087,9 @@
         },
         "success": {
           "title": "API Key Validated Successfully!",
-          "description": "Your key has been verified and all required permissions are granted."
+          "description": "Your key has been verified and all required permissions are granted.",
+          "descriptionSecret": "Your Secret Key has been verified with full API access. All payment functionality is now available.",
+          "descriptionRestricted": "Your Restricted Key has been verified. Remember to set STRIPE_SECRET_KEY in .env for full payment functionality."
         },
         "validateButton": {
           "validate": "Validate API Key",

@@ -1,16 +1,58 @@
 /**
- * Polish NIP (Numer Identyfikacji Podatkowej) validation
+ * Tax ID / VAT Number validation with international support
  *
- * NIP is a 10-digit tax identification number used in Poland.
- * The last digit is a checksum calculated using a weighted sum algorithm.
+ * Supports:
+ * - Polish NIP (10 digits, with or without "PL" prefix)
+ * - EU VAT numbers (with country prefix: DE, FR, etc.)
+ * - International tax IDs
+ *
+ * Polish NIP checksum is validated only for Polish numbers.
  */
 
 /**
- * Normalizes NIP by removing dashes and spaces
- * Example: "123-456-78-90" → "1234567890"
+ * Detects if a tax ID is a Polish NIP (with or without "PL" prefix)
+ * @returns true if it's Polish NIP format
  */
-export function normalizeNIP(nip: string): string {
-  return nip.replace(/[-\s]/g, '');
+export function isPolishNIP(taxId: string): boolean {
+  const cleaned = taxId.replace(/[-\s]/g, '').toUpperCase();
+
+  // Check for explicit PL prefix
+  if (cleaned.startsWith('PL')) {
+    const digits = cleaned.substring(2);
+    return /^\d{10}$/.test(digits);
+  }
+
+  // Check for 10 digits without prefix (assume Polish if exactly 10 digits)
+  return /^\d{10}$/.test(cleaned);
+}
+
+/**
+ * Extracts country code from tax ID (e.g., "PL1234567890" → "PL")
+ * Returns null if no country prefix found
+ */
+export function extractCountryCode(taxId: string): string | null {
+  const cleaned = taxId.replace(/[-\s]/g, '').toUpperCase();
+  const match = cleaned.match(/^([A-Z]{2})/);
+  return match ? match[1] : null;
+}
+
+/**
+ * Normalizes NIP by removing dashes, spaces, and optionally country prefix
+ * Examples:
+ * - "123-456-78-90" → "1234567890"
+ * - "PL1234567890" → "1234567890"
+ * - "PL 123-456-78-90" → "1234567890"
+ * - "DE123456789" → "DE123456789" (keeps non-PL prefixes)
+ */
+export function normalizeNIP(nip: string, removePrefix: boolean = true): string {
+  const cleaned = nip.replace(/[-\s]/g, '').toUpperCase();
+
+  // Remove "PL" prefix if requested and present
+  if (removePrefix && cleaned.startsWith('PL')) {
+    return cleaned.substring(2);
+  }
+
+  return cleaned;
 }
 
 /**
@@ -67,44 +109,116 @@ export function validateNIPChecksum(nip: string): boolean {
 }
 
 /**
- * Validates NIP format and checksum
+ * Validates Tax ID / VAT Number format and checksum (for Polish NIP)
  *
- * @returns validation result with normalized/formatted NIP or error
+ * @param taxId - Tax ID with or without country prefix
+ * @param strictPolishValidation - If true, validates Polish checksum. Default: true
+ * @returns validation result with normalized/formatted value or error
  */
-export interface NIPValidationResult {
+export interface TaxIdValidationResult {
   isValid: boolean;
-  normalized?: string;  // e.g., "1234567890"
-  formatted?: string;   // e.g., "123-456-78-90"
+  isPolish: boolean;
+  countryCode?: string | null;  // e.g., "PL", "DE", "FR"
+  normalized?: string;  // e.g., "1234567890" (without prefix)
+  formatted?: string;   // e.g., "123-456-78-90" (Polish) or "DE123456789" (other)
+  withPrefix?: string;  // e.g., "PL1234567890"
   error?: string;
 }
 
-export function validateNIP(nip: string): NIPValidationResult {
-  if (!nip || nip.trim().length === 0) {
+/**
+ * Main validation function supporting international tax IDs
+ */
+export function validateTaxId(
+  taxId: string,
+  strictPolishValidation: boolean = true
+): TaxIdValidationResult {
+  if (!taxId || taxId.trim().length === 0) {
     return {
       isValid: false,
-      error: 'NIP is required'
+      isPolish: false,
+      error: 'Tax ID is required'
     };
   }
 
-  const normalized = normalizeNIP(nip);
+  const countryCode = extractCountryCode(taxId);
+  const isPolish = isPolishNIP(taxId);
 
-  if (!/^\d{10}$/.test(normalized)) {
+  // Polish NIP validation
+  if (isPolish) {
+    const normalized = normalizeNIP(taxId, true); // Remove PL prefix
+
+    if (!/^\d{10}$/.test(normalized)) {
+      return {
+        isValid: false,
+        isPolish: true,
+        countryCode: 'PL',
+        error: 'Polish NIP must be 10 digits'
+      };
+    }
+
+    // Validate checksum for Polish NIP
+    if (strictPolishValidation && !validateNIPChecksum(normalized)) {
+      return {
+        isValid: false,
+        isPolish: true,
+        countryCode: 'PL',
+        normalized,
+        error: 'Invalid Polish NIP checksum'
+      };
+    }
+
     return {
-      isValid: false,
-      error: 'NIP must be 10 digits'
+      isValid: true,
+      isPolish: true,
+      countryCode: 'PL',
+      normalized,
+      formatted: formatNIP(normalized),
+      withPrefix: `PL${normalized}`
     };
   }
 
-  if (!validateNIPChecksum(normalized)) {
+  // Non-Polish tax ID - basic validation
+  const cleaned = normalizeNIP(taxId, false);
+
+  // Minimum length for international tax IDs (EU VAT numbers are typically 8-15 characters)
+  const MIN_TAX_ID_LENGTH = 8;
+
+  // Basic format check: should have country code + sufficient digits
+  if (countryCode && cleaned.length >= MIN_TAX_ID_LENGTH) {
     return {
-      isValid: false,
-      error: 'Invalid NIP checksum'
+      isValid: true,
+      isPolish: false,
+      countryCode,
+      normalized: cleaned.substring(2), // Remove country prefix
+      formatted: cleaned,
+      withPrefix: cleaned
+    };
+  }
+
+  // No country prefix, not Polish format - accept as generic tax ID if long enough
+  if (!countryCode && cleaned.length >= MIN_TAX_ID_LENGTH) {
+    return {
+      isValid: true,
+      isPolish: false,
+      countryCode: null,
+      normalized: cleaned,
+      formatted: cleaned,
+      withPrefix: cleaned
     };
   }
 
   return {
-    isValid: true,
-    normalized,
-    formatted: formatNIP(normalized)
+    isValid: false,
+    isPolish: false,
+    countryCode,
+    error: 'Invalid tax ID format - too short or invalid format'
   };
+}
+
+/**
+ * Legacy function for backward compatibility
+ * @deprecated Use validateTaxId() instead
+ */
+export function validateNIP(nip: string): TaxIdValidationResult {
+  return validateTaxId(nip, true);
 }

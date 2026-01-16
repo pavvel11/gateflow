@@ -1,6 +1,7 @@
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
+import { cache } from 'react';
 import ProductPurchaseView from './components/ProductPurchaseView';
 import { getPaymentMethodConfig } from '@/lib/actions/payment-config';
 import { getEffectivePaymentMethodOrder } from '@/lib/utils/payment-method-helpers';
@@ -9,17 +10,27 @@ interface PageProps {
   params: Promise<{ slug: string; locale: string }>;
 }
 
+// Enable ISR - cache for 60 seconds
+export const revalidate = 60;
+
+// OPTIMIZED: Cached data fetcher - React cache() deduplicates requests in the same render cycle
+// This eliminates duplicate queries between generateMetadata() and CheckoutPage()
+const getCheckoutProduct = cache(async (slug: string) => {
+  const supabase = createPublicClient();
+  // Don't filter by is_active - we might show waitlist for inactive products
+  const { data: product, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('slug', slug)
+    .single();
+
+  return { product, error };
+});
+
 // Generate metadata for the checkout page
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-
-  const supabase = await createClient();
-  // Don't filter by is_active - we might show waitlist for inactive products
-  const { data: product } = await supabase
-    .from('products')
-    .select('name, description, is_active, enable_waitlist')
-    .eq('slug', slug)
-    .single();
+  const { product } = await getCheckoutProduct(slug); // DEDUPED
 
   // Only show 404 if product doesn't exist at all, or is inactive WITHOUT waitlist
   if (!product || (!product.is_active && !product.enable_waitlist)) {
@@ -37,16 +48,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function CheckoutPage({ params }: PageProps) {
   const { slug } = await params;
+  const { product, error } = await getCheckoutProduct(slug); // DEDUPED - same request as generateMetadata()
 
-  const supabase = await createClient();
-  // Don't filter by is_active - we might show waitlist for inactive products
-  const { data: product } = await supabase
-    .from('products')
-    .select('*')
-    .eq('slug', slug)
-    .single();
-
-  if (!product) {
+  if (error || !product) {
     return notFound();
   }
 

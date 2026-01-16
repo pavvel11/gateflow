@@ -3,13 +3,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { PaymentElement, ExpressCheckoutElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Product } from '@/types';
+import { OrderBumpWithProduct } from '@/types/order-bump';
 import { formatPrice } from '@/lib/constants';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { validateTaxId, isPolishNIP, normalizeNIP } from '@/lib/validation/nip';
 import { useTracking } from '@/hooks/useTracking';
 import { usePricing } from '@/hooks/usePricing';
-import type { OrderBumpWithProduct } from '@/types/order-bump';
 
 interface AppliedCoupon {
   code: string;
@@ -29,7 +29,6 @@ interface CustomPaymentFormProps {
   customAmount?: number; // Pay What You Want - custom price chosen by customer
   customAmountError?: string | null; // Validation error for custom amount
   clientSecret?: string; // Payment Intent client secret for metadata updates
-  paymentMethodOrder?: string[]; // Custom payment method ordering from config
 }
 
 export default function CustomPaymentForm({
@@ -42,8 +41,7 @@ export default function CustomPaymentForm({
   onChangeAccount,
   customAmount,
   customAmountError,
-  clientSecret,
-  paymentMethodOrder
+  clientSecret
 }: CustomPaymentFormProps) {
   const t = useTranslations('checkout');
   const stripe = useStripe();
@@ -149,6 +147,21 @@ export default function CustomPaymentForm({
     loadProfileData();
   }, [email]);
 
+  // Helper function to translate NIP validation errors
+  const translateNipError = (error: string | undefined): string => {
+    if (!error) return t('nipValidation.invalidFormat');
+
+    if (error.includes('Invalid Polish NIP checksum')) {
+      return t('nipValidation.invalidChecksum');
+    } else if (error.includes('Polish NIP must be 10 digits')) {
+      return t('nipValidation.mustBe10Digits');
+    } else if (error.includes('Tax ID is required')) {
+      return t('nipValidation.required');
+    } else {
+      return t('nipValidation.invalidFormat');
+    }
+  };
+
   // Tax ID / NIP auto-fill handler (supports international formats)
   const handleNIPBlur = async () => {
     if (!nip || nip.trim().length === 0) return;
@@ -157,7 +170,7 @@ export default function CustomPaymentForm({
     const validation = validateTaxId(nip, true);
 
     if (!validation.isValid) {
-      setNipError(validation.error || 'Invalid tax ID format');
+      setNipError(translateNipError(validation.error));
       setGusError(null);
       setGusSuccess(false);
       return;
@@ -261,15 +274,19 @@ export default function CustomPaymentForm({
 
       // Express Checkout buttons handle their own confirmation
       // We just need to track and redirect after Stripe handles payment
-      track('purchase', {
+      // 'purchase' event will be sent by webhook after payment confirmation
+      track('add_payment_info', {
         value: totalGross,
         currency: product.currency,
-        items: [{
-          item_id: product.id,
-          item_name: product.name,
-          price: totalGross,
-          quantity: 1,
-        }],
+        items: [
+          {
+            item_id: product.id,
+            item_name: product.name,
+            price: totalGross,
+            quantity: 1,
+            currency: product.currency,
+          },
+        ],
       });
 
       // Stripe will redirect to return_url automatically
@@ -547,11 +564,10 @@ export default function CustomPaymentForm({
                 name: fullName || undefined,
               },
             },
-            // Set payment method order from config (if provided) or fallback to currency-based defaults
-            // Config-based ordering allows admin to customize order per currency in settings
-            paymentMethodOrder: paymentMethodOrder && paymentMethodOrder.length > 0
-              ? paymentMethodOrder
-              : product.currency === 'PLN'
+            // Set payment method order based on currency
+            // For PLN (Poland): BLIK is most popular (65%+ market share), then Przelewy24, then card
+            // For other currencies: optimize for that region
+            paymentMethodOrder: product.currency === 'PLN'
               ? ['blik', 'p24', 'card']
               : product.currency === 'EUR'
               ? ['sepa_debit', 'ideal', 'card', 'klarna']
@@ -690,7 +706,7 @@ export default function CustomPaymentForm({
         )}
       </div>
 
-      {/* Order Summary - Compact */}
+      {/* Order Summary - Compact (Zanfia/EasyCart-inspired) */}
       <div className="space-y-2 py-4 border-t border-white/10">
         {/* Show bump or coupon if present */}
         {(bumpSelected && bumpProduct) || (appliedCoupon && discountAmount > 0) ? (
