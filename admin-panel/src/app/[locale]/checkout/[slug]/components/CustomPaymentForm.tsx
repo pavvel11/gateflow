@@ -1,25 +1,35 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { useState, useEffect, useCallback } from 'react';
+import { PaymentElement, ExpressCheckoutElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Product } from '@/types';
 import { formatPrice } from '@/lib/constants';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { validateNIPChecksum, normalizeNIP } from '@/lib/validation/nip';
+import { validateTaxId, isPolishNIP, normalizeNIP } from '@/lib/validation/nip';
 import { useTracking } from '@/hooks/useTracking';
 import { usePricing } from '@/hooks/usePricing';
+import type { OrderBumpWithProduct } from '@/types/order-bump';
+
+interface AppliedCoupon {
+  code: string;
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
+  exclude_order_bumps?: boolean;
+}
 
 interface CustomPaymentFormProps {
   product: Product;
   email?: string;
-  bumpProduct?: any;
+  bumpProduct?: OrderBumpWithProduct | null;
   bumpSelected: boolean;
-  appliedCoupon?: any;
+  appliedCoupon?: AppliedCoupon;
   successUrl?: string;
   onChangeAccount?: () => void;
   customAmount?: number; // Pay What You Want - custom price chosen by customer
   customAmountError?: string | null; // Validation error for custom amount
+  clientSecret?: string; // Payment Intent client secret for metadata updates
+  paymentMethodOrder?: string[]; // Custom payment method ordering from config
 }
 
 export default function CustomPaymentForm({
@@ -31,7 +41,9 @@ export default function CustomPaymentForm({
   successUrl,
   onChangeAccount,
   customAmount,
-  customAmountError
+  customAmountError,
+  clientSecret,
+  paymentMethodOrder
 }: CustomPaymentFormProps) {
   const t = useTranslations('checkout');
   const stripe = useStripe();
@@ -60,12 +72,24 @@ export default function CustomPaymentForm({
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
 
+  // Express Checkout (Link, Apple Pay, Google Pay buttons)
+  const [expressCheckoutVisible, setExpressCheckoutVisible] = useState(false);
+
   // GUS integration state
+  interface GUSCompanyData {
+    nazwa: string;
+    ulica: string;
+    nrNieruchomosci: string;
+    nrLokalu?: string;
+    miejscowosc: string;
+    kodPocztowy: string;
+  }
+
   const [isLoadingGUS, setIsLoadingGUS] = useState(false);
   const [gusError, setGusError] = useState<string | null>(null);
   const [nipError, setNipError] = useState<string | null>(null);
   const [gusSuccess, setGusSuccess] = useState(false);
-  const [gusData, setGusData] = useState<any>(null);
+  const [gusData, setGusData] = useState<GUSCompanyData | null>(null);
 
   // Centralized pricing calculation
   const pricing = usePricing({
@@ -125,74 +149,137 @@ export default function CustomPaymentForm({
     loadProfileData();
   }, [email]);
 
-  // GUS NIP auto-fill handler
+  // Tax ID / NIP auto-fill handler (supports international formats)
   const handleNIPBlur = async () => {
-    if (!nip || nip.length < 10) return;
+    if (!nip || nip.trim().length === 0) return;
 
-    const normalized = normalizeNIP(nip);
+    // Validate tax ID format (supports PL prefix, other countries, etc.)
+    const validation = validateTaxId(nip, true);
 
-    // Validate NIP checksum before calling API
-    if (!validateNIPChecksum(normalized)) {
-      setNipError('Nieprawidłowy numer NIP (błędna suma kontrolna)');
+    if (!validation.isValid) {
+      setNipError(validation.error || 'Invalid tax ID format');
       setGusError(null);
       setGusSuccess(false);
       return;
     }
 
     setNipError(null);
-    setIsLoadingGUS(true);
-    setGusError(null);
-    setGusSuccess(false);
 
-    try {
-      const response = await fetch('/api/gus/fetch-company-data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nip: normalized }),
-      });
+    // Auto-fill from GUS only for Polish NIP
+    if (validation.isPolish && validation.normalized) {
+      setIsLoadingGUS(true);
+      setGusError(null);
+      setGusSuccess(false);
 
-      const result = await response.json();
+      try {
+        const response = await fetch('/api/gus/fetch-company-data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nip: validation.normalized }),
+        });
 
-      if (result.success && result.data) {
-        // Store GUS data
-        setGusData(result.data);
+        const result = await response.json();
 
-        // Autofill company data
-        setCompanyName(result.data.nazwa);
+        if (result.success && result.data) {
+          // Store GUS data
+          setGusData(result.data);
 
-        // Build address string
-        let addressStr = `${result.data.ulica} ${result.data.nrNieruchomosci}`;
-        if (result.data.nrLokalu) {
-          addressStr += `/${result.data.nrLokalu}`;
-        }
-        setAddress(addressStr.trim());
+          // Autofill company data
+          setCompanyName(result.data.nazwa);
 
-        setCity(result.data.miejscowosc);
-        setPostalCode(result.data.kodPocztowy);
-        setCountry('PL');
-        setGusSuccess(true);
-      } else {
-        // GUS API returned error
-        if (result.code === 'RATE_LIMIT_EXCEEDED') {
-          setGusError('Zbyt wiele zapytań. Poczekaj chwilę i spróbuj ponownie.');
-        } else if (result.code === 'NOT_FOUND') {
-          setGusError('Nie znaleziono firmy w bazie GUS');
-        } else if (result.code === 'NOT_CONFIGURED') {
-          // Silent fail - GUS not configured, user can enter manually
-          setGusError(null);
-        } else if (result.code === 'INVALID_ORIGIN') {
-          setGusError('Błąd bezpieczeństwa. Odśwież stronę i spróbuj ponownie.');
+          // Build address string
+          let addressStr = `${result.data.ulica} ${result.data.nrNieruchomosci}`;
+          if (result.data.nrLokalu) {
+            addressStr += `/${result.data.nrLokalu}`;
+          }
+          setAddress(addressStr.trim());
+
+          setCity(result.data.miejscowosc);
+          setPostalCode(result.data.kodPocztowy);
+          setCountry('PL');
+          setGusSuccess(true);
         } else {
-          setGusError('Nie udało się pobrać danych z GUS. Wprowadź dane ręcznie.');
+          // GUS API returned error
+          if (result.code === 'RATE_LIMIT_EXCEEDED') {
+            setGusError('Zbyt wiele zapytań. Poczekaj chwilę i spróbuj ponownie.');
+          } else if (result.code === 'NOT_FOUND') {
+            setGusError('Nie znaleziono firmy w bazie GUS');
+          } else if (result.code === 'NOT_CONFIGURED') {
+            // Silent fail - GUS not configured, user can enter manually
+            setGusError(null);
+          } else if (result.code === 'INVALID_ORIGIN') {
+            setGusError('Błąd bezpieczeństwa. Odśwież stronę i spróbuj ponownie.');
+          } else {
+            setGusError('Nie udało się pobrać danych z GUS. Wprowadź dane ręcznie.');
+          }
         }
+      } catch (error) {
+        console.error('GUS fetch error:', error);
+        setGusError('Nie udało się pobrać danych z GUS. Wprowadź dane ręcznie.');
+      } finally {
+        setIsLoadingGUS(false);
       }
-    } catch (error) {
-      console.error('GUS fetch error:', error);
-      setGusError('Nie udało się pobrać danych z GUS. Wprowadź dane ręcznie.');
-    } finally {
-      setIsLoadingGUS(false);
+    } else if (!validation.isPolish) {
+      // Non-Polish tax ID - show success message, no GUS auto-fill
+      setGusError(null);
+      setGusSuccess(false);
     }
   };
+
+  // Express Checkout Element handlers
+  interface ExpressCheckoutReadyEvent {
+    availablePaymentMethods?: {
+      applePay?: boolean;
+      googlePay?: boolean;
+      link?: boolean;
+    };
+  }
+
+  const handleExpressCheckoutReady = useCallback(({ availablePaymentMethods }: ExpressCheckoutReadyEvent) => {
+    // Show Express Checkout only if payment methods are available (Link, Apple Pay, Google Pay)
+    if (availablePaymentMethods) {
+      setExpressCheckoutVisible(true);
+    }
+  }, []);
+
+  const handleExpressCheckoutConfirm = useCallback(async () => {
+    if (!stripe || !elements) {
+      return;
+    }
+
+    setIsProcessing(true);
+    setErrorMessage('');
+
+    try {
+      // Submit all Elements for validation
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        setErrorMessage(submitError.message || 'Failed to process payment');
+        setIsProcessing(false);
+        return;
+      }
+
+      // Express Checkout buttons handle their own confirmation
+      // We just need to track and redirect after Stripe handles payment
+      track('purchase', {
+        value: totalGross,
+        currency: product.currency,
+        items: [{
+          item_id: product.id,
+          item_name: product.name,
+          price: totalGross,
+          quantity: 1,
+        }],
+      });
+
+      // Stripe will redirect to return_url automatically
+      // Payment confirmation happens on the server via webhook
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      setErrorMessage(errorMessage);
+      setIsProcessing(false);
+    }
+  }, [stripe, elements, track, product.id, product.currency, totalGross]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -218,19 +305,23 @@ export default function CustomPaymentForm({
       return;
     }
 
-    // Validate NIP if provided
-    if (nip && nip.length > 0 && nip.length !== 10) {
-      setErrorMessage('NIP musi mieć 10 cyfr');
-      return;
+    // Validate tax ID if provided (supports international formats)
+    if (nip && nip.trim().length > 0) {
+      const validation = validateTaxId(nip, true);
+      if (!validation.isValid) {
+        setErrorMessage(validation.error || 'Invalid tax ID format');
+        return;
+      }
     }
 
     setIsProcessing(true);
     setErrorMessage('');
 
     try {
-      // Update Payment Intent metadata with invoice data if NIP provided
-      if (nip && nip.length === 10) {
-        // Get the client secret from the PaymentElement
+      // Always update Payment Intent metadata with customer data
+      // This ensures fullName and termsAccepted are saved regardless of NIP status
+      if (clientSecret) {
+        // Submit the form to validate payment method
         const { error: submitError } = await elements.submit();
         if (submitError) {
           setErrorMessage(submitError.message || 'Failed to prepare payment');
@@ -238,35 +329,28 @@ export default function CustomPaymentForm({
           return;
         }
 
-        // Get the payment intent client secret
-        const paymentIntent = await stripe.retrievePaymentIntent(
-          // The client secret is stored in the Elements context
-          (elements as any)._commonOptions.clientSecret
-        );
+        // Update metadata via API - works for both NIP and non-NIP scenarios
+        const hasValidTaxId = nip && nip.trim().length > 0 && validateTaxId(nip, false).isValid;
+        const updateResponse = await fetch('/api/update-payment-metadata', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clientSecret: clientSecret,
+            fullName,
+            termsAccepted: !email ? termsAccepted : undefined, // Only for guests
+            needsInvoice: hasValidTaxId ? true : false,
+            nip: nip || undefined,
+            companyName: companyName || undefined,
+            address: address || undefined,
+            city: city || undefined,
+            postalCode: postalCode || undefined,
+            country: country || undefined,
+          }),
+        });
 
-        if (paymentIntent.paymentIntent) {
-          // Update metadata via API
-          const updateResponse = await fetch('/api/update-payment-metadata', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              clientSecret: paymentIntent.paymentIntent.client_secret,
-              fullName,
-              termsAccepted: !email ? termsAccepted : undefined, // Only for guests
-              needsInvoice: true,
-              nip,
-              companyName,
-              address,
-              city,
-              postalCode,
-              country,
-            }),
-          });
-
-          if (!updateResponse.ok) {
-            console.error('Failed to update payment metadata');
-            // Continue anyway - metadata update is not critical for payment
-          }
+        if (!updateResponse.ok) {
+          console.error('Failed to update payment metadata');
+          // Continue anyway - metadata update is not critical for payment
         }
       }
 
@@ -336,6 +420,35 @@ export default function CustomPaymentForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Express Checkout Element - Link, Apple Pay, Google Pay (1-click payment) */}
+      <div style={{ display: expressCheckoutVisible ? 'block' : 'none' }}>
+        <div className="relative mb-6">
+          <ExpressCheckoutElement
+            onConfirm={handleExpressCheckoutConfirm}
+            onReady={handleExpressCheckoutReady}
+            options={{
+              buttonType: {
+                googlePay: 'checkout',
+                applePay: 'check-out',
+              },
+              buttonHeight: 48,
+            }}
+          />
+        </div>
+
+        {/* Separator */}
+        <div className="relative mb-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-white/10"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-4 bg-gray-900 text-gray-400">
+              {t('orPayWith', { defaultValue: 'or pay with' })}
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Email Input - always visible at top */}
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
@@ -427,10 +540,18 @@ export default function CustomPaymentForm({
               type: 'tabs',
               defaultCollapsed: false,
             },
-            // Set payment method order based on currency
-            // For PLN (Poland): BLIK is most popular (65%+ market share), then Przelewy24, then card
-            // For other currencies: optimize for that region
-            paymentMethodOrder: product.currency === 'PLN'
+            // Prefill customer data for Link autofill and faster checkout
+            defaultValues: {
+              billingDetails: {
+                email: email || guestEmail || undefined,
+                name: fullName || undefined,
+              },
+            },
+            // Set payment method order from config (if provided) or fallback to currency-based defaults
+            // Config-based ordering allows admin to customize order per currency in settings
+            paymentMethodOrder: paymentMethodOrder && paymentMethodOrder.length > 0
+              ? paymentMethodOrder
+              : product.currency === 'PLN'
               ? ['blik', 'p24', 'card']
               : product.currency === 'EUR'
               ? ['sepa_debit', 'ideal', 'card', 'klarna']
@@ -465,7 +586,7 @@ export default function CustomPaymentForm({
       <div className="space-y-3">
         <div>
           <label htmlFor="nip" className="block text-sm font-medium text-gray-300 mb-2">
-            {t('nipLabel', { defaultValue: 'Numer NIP' })} <span className="text-gray-500 text-xs">(opcjonalne)</span>
+            {t('taxIdLabel', { defaultValue: 'Tax ID / NIP / VAT' })} <span className="text-gray-500 text-xs">(opcjonalne)</span>
           </label>
           <div className="relative">
             <input
@@ -480,8 +601,8 @@ export default function CustomPaymentForm({
                 setGusData(null);
               }}
               onBlur={handleNIPBlur}
-              placeholder="0000000000"
-              maxLength={10}
+              placeholder="PL1234567890 or DE123456789"
+              maxLength={20}
               className={`w-full px-3 py-2.5 bg-white/5 border ${
                 nipError ? 'border-red-500/50' : gusSuccess ? 'border-green-500/50' : 'border-white/10'
               } rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
@@ -569,7 +690,7 @@ export default function CustomPaymentForm({
         )}
       </div>
 
-      {/* Order Summary - Compact (Zanfia/EasyCart-inspired) */}
+      {/* Order Summary - Compact */}
       <div className="space-y-2 py-4 border-t border-white/10">
         {/* Show bump or coupon if present */}
         {(bumpSelected && bumpProduct) || (appliedCoupon && discountAmount > 0) ? (

@@ -803,6 +803,83 @@ Claude → list_customers → grant_access (batch) → Done
 
 ---
 
+### 💳 Global Payment Method Configuration
+**Status**: ✅ Phase 1 Done (Jan 15, 2026)
+**Priority**: 🟢 HIGH (Conversion Optimization)
+**Effort**: ~3-4 days (Phase 1), ~2-3 days (Phase 2)
+**Description**: Admin control over payment methods displayed at checkout with three configuration modes.
+
+**Phase 1 - Global Configuration (✅ Completed)**:
+
+**Implemented Features**:
+1. **Three Configuration Modes**:
+   - `automatic`: Stripe's default (all enabled methods for currency)
+   - `stripe_preset`: Use specific Payment Method Configuration from Stripe Dashboard
+   - `custom`: Manual selection with currency restrictions
+
+2. **Admin UI** (`/dashboard/settings`):
+   - Configuration mode selector (radio buttons)
+   - Stripe PMC dropdown with refresh button (1-hour cache)
+   - Custom payment methods checkboxes with currency chips
+   - Drag & drop ordering (HTML5 native DnD)
+   - Express Checkout toggles (Apple Pay, Google Pay, Link)
+
+3. **Backend Integration**:
+   - New table: `payment_method_config` (singleton, id=1)
+   - Server actions: `getPaymentMethodConfig()`, `updatePaymentMethodConfig()`
+   - Stripe API integration: `fetchStripePaymentMethodConfigs()` with caching
+   - Payment Intent integration: Applies config to all checkout flows
+
+4. **Payment Method Ordering**:
+   - Configurable display order (e.g., BLIK → Przelewy24 → Card for PLN)
+   - Currency-aware filtering
+   - Fallback to currency-based defaults
+
+5. **Testing**:
+   - E2E tests for all three modes
+   - Test drag & drop ordering
+   - Test Express Checkout toggles
+
+**Technical Implementation**:
+- Migration: `20260115000000_payment_method_configuration.sql`
+- Types: `/admin-panel/src/types/payment-config.ts`
+- Stripe API: `/admin-panel/src/lib/stripe/payment-method-configs.ts`
+- Server Actions: `/admin-panel/src/lib/actions/payment-config.ts`
+- UI Component: `/admin-panel/src/components/settings/PaymentMethodSettings.tsx`
+- Integration: `/admin-panel/src/app/api/create-payment-intent/route.ts`
+
+**Phase 2 - Per-Product Override (📋 Backlog)**:
+
+**Planned Features**:
+1. **Product-Level Configuration**:
+   - Add `payment_config_override JSONB` to `products` table
+   - UI: Product edit page → "Override Payment Methods" toggle
+   - Reuse PaymentMethodConfigurator component from global settings
+   - Fallback logic: product override → global config → automatic
+
+2. **Use Cases**:
+   - High-value products: Restrict to cards only
+   - Region-specific products: Show only local payment methods
+   - B2B products: Enable bank transfers, disable BNPL
+
+3. **Architecture**:
+   - Backward compatible: NULL = use global config
+   - Same structure as global config for consistency
+   - Update create-payment-intent to check product override first
+
+**Benefits**:
+- ✅ Optimize conversion rates per currency/region
+- ✅ Reduce payment method clutter at checkout
+- ✅ Compliance with regional payment preferences
+- ✅ Admin control without touching Stripe Dashboard
+- ✅ Future-ready for per-product customization
+
+**Resources**:
+- [Stripe Payment Method Configurations API](https://docs.stripe.com/api/payment_method_configurations)
+- [Payment Methods Guide](https://docs.stripe.com/payments/payment-method-configurations)
+
+---
+
 ## 🟡 Medium Priority
 
 ### 🛒 Product Variants (Pricing Tiers)

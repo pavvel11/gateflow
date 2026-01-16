@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import ProductPurchaseView from './components/ProductPurchaseView';
+import { getPaymentMethodConfig } from '@/lib/actions/payment-config';
+import { getEffectivePaymentMethodOrder } from '@/lib/utils/payment-method-helpers';
 
 interface PageProps {
   params: Promise<{ slug: string; locale: string }>;
@@ -64,6 +66,12 @@ export default async function CheckoutPage({ params }: PageProps) {
     return notFound();
   }
 
+  // Get payment method configuration and order for this product's currency
+  const paymentConfig = await getPaymentMethodConfig();
+  const paymentMethodOrder = paymentConfig
+    ? getEffectivePaymentMethodOrder(paymentConfig, product.currency)
+    : undefined;
+
   // ProductPurchaseView handles showing either checkout form or waitlist form
-  return <ProductPurchaseView product={product} />;
+  return <ProductPurchaseView product={product} paymentMethodOrder={paymentMethodOrder} />;
 }

@@ -8,6 +8,7 @@ import FloatingToolbar from '@/components/FloatingToolbar';
 
 interface ProductPurchaseViewProps {
   product: Product;
+  paymentMethodOrder?: string[];
 }
 
 type UnavailableReason = 'not_started' | 'expired' | 'inactive' | null;
@@ -38,7 +39,7 @@ function getProductUnavailableReason(product: Product): UnavailableReason {
   return null; // Product is available
 }
 
-export default function ProductPurchaseView({ product }: ProductPurchaseViewProps) {
+export default function ProductPurchaseView({ product, paymentMethodOrder }: ProductPurchaseViewProps) {
   const unavailableReason = getProductUnavailableReason(product);
 
   // Show waitlist form if product is unavailable AND waitlist is enabled
@@ -54,7 +55,7 @@ export default function ProductPurchaseView({ product }: ProductPurchaseViewProp
       ) : product.price === 0 ? (
         <FreeProductForm product={product} />
       ) : (
-        <PaidProductForm product={product} />
+        <PaidProductForm product={product} paymentMethodOrder={paymentMethodOrder} />
       )}
     </div>
   );

@@ -1872,6 +1872,94 @@
       "howItWorks2": "Ważna licencja usuwa watermark \"Secured by GateFlow\"",
       "howItWorks3": "Licencja jest przypisana do konkretnej domeny",
       "howItWorks4": "Kup licencję na"
+    },
+    "paymentMethods": {
+      "title": "Konfiguracja Metod Płatności",
+      "subtitle": "Zarządzaj metodami płatności wyświetlanymi podczas checkout",
+      "mode": {
+        "label": "Tryb konfiguracji",
+        "automatic": "Automatyczny",
+        "automaticDescription": "Użyj domyślnych metod płatności Stripe",
+        "stripePreset": "Stripe Preset",
+        "stripePresetDescription": "Wybierz konfigurację z Stripe Dashboard",
+        "custom": "Niestandardowy",
+        "customDescription": "Ręczny wybór i kolejność metod płatności"
+      },
+      "stripeConfig": {
+        "title": "Konfiguracja Stripe PMC",
+        "selectLabel": "Wybierz konfigurację Stripe",
+        "selectPlaceholder": "Wybierz konfigurację metod płatności",
+        "refresh": "Odśwież listę",
+        "refreshing": "Odświeżanie...",
+        "noConfigs": "Brak dostępnych konfiguracji Stripe",
+        "preview": "Podgląd metod",
+        "error": "Błąd podczas ładowania konfiguracji Stripe"
+      },
+      "customConfig": {
+        "title": "Wybierz Metody Płatności",
+        "selectAll": "Zaznacz wszystkie",
+        "deselectAll": "Odznacz wszystkie",
+        "noneSelected": "Nie wybrano metod płatności",
+        "selected": "Wybrano {count} {count, plural, one {metodę} other {metod}}",
+        "currencyNote": "Niektóre metody są dostępne tylko dla określonych walut",
+        "orderTitle": "Kolejność Metod Płatności",
+        "orderDescription": "Przeciągnij i upuść, aby zmienić kolejność",
+        "dragToReorder": "Przeciągnij aby zmienić kolejność"
+      },
+      "expressCheckout": {
+        "title": "Express Checkout",
+        "enable": "Włącz Express Checkout",
+        "enableDescription": "Pokaż przyciski szybkiej płatności (Apple Pay, Google Pay, Link)",
+        "applePay": "Apple Pay",
+        "googlePay": "Google Pay",
+        "link": "Link",
+        "applePayDescription": "Szybkie płatności dla użytkowników Apple",
+        "googlePayDescription": "Szybkie płatności dla użytkowników Android",
+        "linkDescription": "Szybkie płatności z zapisanymi danymi"
+      },
+      "recommended": {
+        "title": "Rekomendowana Konfiguracja",
+        "description": "Optymalna konfiguracja dla polskiego rynku, bazująca na najlepszych praktykach e-commerce",
+        "reset": "Przywróć Rekomendowane",
+        "resetConfirm": "Czy na pewno chcesz przywrócić rekomendowaną konfigurację? Bieżące ustawienia zostaną zastąpione.",
+        "features": "Zawiera: BLIK, Przelewy24, Karta + Express Checkout (Link, Apple Pay, Google Pay)"
+      },
+      "buttons": {
+        "save": "Zapisz Konfigurację",
+        "saving": "Zapisywanie...",
+        "reset": "Resetuj",
+        "cancel": "Anuluj",
+        "loading": "Ładowanie..."
+      },
+      "messages": {
+        "saveSuccess": "Konfiguracja metod płatności zapisana pomyślnie",
+        "saveError": "Nie udało się zapisać konfiguracji",
+        "resetSuccess": "Przywrócono rekomendowaną konfigurację",
+        "refreshSuccess": "Lista konfiguracji Stripe została odświeżona",
+        "configReset": "Przywrócono zapisaną konfigurację",
+        "error": "Wystąpił błąd"
+      },
+      "validation": {
+        "noMethods": "Wybierz przynajmniej jedną metodę płatności",
+        "noStripePMC": "Wybierz konfigurację Stripe PMC",
+        "saveRequired": "Zapisz zmiany przed opuszczeniem strony"
+      },
+      "paymentMethodNames": {
+        "card": "Karta płatnicza",
+        "blik": "BLIK",
+        "p24": "Przelewy24",
+        "sepa_debit": "Przelew SEPA",
+        "ideal": "iDEAL",
+        "bancontact": "Bancontact",
+        "giropay": "Giropay",
+        "eps": "EPS",
+        "sofort": "Sofort",
+        "alipay": "Alipay",
+        "wechat_pay": "WeChat Pay",
+        "affirm": "Affirm",
+        "afterpay_clearpay": "Afterpay / Clearpay",
+        "klarna": "Klarna"
+      }
     }
   },
   "stripe": {
