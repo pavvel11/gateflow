@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { PaymentElement, ExpressCheckoutElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Product } from '@/types';
 import { OrderBumpWithProduct } from '@/types/order-bump';
+import { ExpressCheckoutConfig } from '@/types/payment-config';
 import { formatPrice } from '@/lib/constants';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
@@ -29,6 +30,8 @@ interface CustomPaymentFormProps {
   customAmount?: number; // Pay What You Want - custom price chosen by customer
   customAmountError?: string | null; // Validation error for custom amount
   clientSecret?: string; // Payment Intent client secret for metadata updates
+  paymentMethodOrder?: string[]; // Custom payment method ordering from config
+  expressCheckoutConfig?: ExpressCheckoutConfig; // Express Checkout visibility config
 }
 
 export default function CustomPaymentForm({
@@ -41,7 +44,9 @@ export default function CustomPaymentForm({
   onChangeAccount,
   customAmount,
   customAmountError,
-  clientSecret
+  clientSecret,
+  paymentMethodOrder,
+  expressCheckoutConfig
 }: CustomPaymentFormProps) {
   const t = useTranslations('checkout');
   const stripe = useStripe();
@@ -438,33 +443,42 @@ export default function CustomPaymentForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Express Checkout Element - Link, Apple Pay, Google Pay (1-click payment) */}
-      <div style={{ display: expressCheckoutVisible ? 'block' : 'none' }}>
-        <div className="relative mb-6">
-          <ExpressCheckoutElement
-            onConfirm={handleExpressCheckoutConfirm}
-            onReady={handleExpressCheckoutReady}
-            options={{
-              buttonType: {
-                googlePay: 'checkout',
-                applePay: 'check-out',
-              },
-              buttonHeight: 48,
-            }}
-          />
-        </div>
+      {/* Only render if express checkout is enabled in config (default: enabled) */}
+      {(expressCheckoutConfig?.enabled !== false) && (
+        <div style={{ display: expressCheckoutVisible ? 'block' : 'none' }}>
+          <div className="relative mb-6">
+            <ExpressCheckoutElement
+              onConfirm={handleExpressCheckoutConfirm}
+              onReady={handleExpressCheckoutReady}
+              options={{
+                buttonType: {
+                  googlePay: 'checkout',
+                  applePay: 'check-out',
+                },
+                buttonHeight: 48,
+                // Control which payment methods appear based on config
+                paymentMethods: {
+                  applePay: expressCheckoutConfig?.applePay !== false ? 'auto' : 'never',
+                  googlePay: expressCheckoutConfig?.googlePay !== false ? 'auto' : 'never',
+                  link: expressCheckoutConfig?.link !== false ? 'auto' : 'never',
+                },
+              }}
+            />
+          </div>
 
-        {/* Separator */}
-        <div className="relative mb-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-white/10"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-4 bg-gray-900 text-gray-400">
-              {t('orPayWith', { defaultValue: 'or pay with' })}
-            </span>
+          {/* Separator */}
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-white/10"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-gray-900 text-gray-400">
+                {t('orPayWith', { defaultValue: 'or pay with' })}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Email Input - always visible at top */}
       <div>

@@ -4,8 +4,14 @@
  * Admin UI for configuring global payment method settings.
  * Supports three modes: automatic, Stripe preset, custom
  *
- * @see /supabase/migrations/20260115000000_payment_method_configuration.sql
+ * @see /supabase/migrations/20260116000000_payment_method_configuration.sql
  * @see /admin-panel/src/lib/actions/payment-config.ts
+ *
+ * SECURITY: XSS Protection
+ * - All string values (stripe_pmc_name, payment method labels) are rendered
+ *   via JSX which auto-escapes HTML entities by default
+ * - No dangerouslySetInnerHTML is used in this component
+ * - User input is validated via Zod schemas before storage (see payment-config.ts)
  */
 
 'use client';
@@ -20,7 +26,7 @@ import {
   refreshStripePaymentMethodConfigs,
   resetToRecommendedConfig,
 } from '@/lib/actions/payment-config';
-import { getAvailablePaymentMethods } from '@/lib/stripe/payment-method-configs';
+import { getAvailablePaymentMethods, KNOWN_PAYMENT_METHODS } from '@/lib/stripe/payment-method-configs';
 import type {
   PaymentMethodConfig,
   PaymentConfigMode,
@@ -28,7 +34,7 @@ import type {
   StripePaymentMethodConfig,
   PaymentMethodInfo,
 } from '@/types/payment-config';
-import { RefreshCw, AlertTriangle, Check, GripVertical, RotateCcw } from 'lucide-react';
+import { RefreshCw, AlertTriangle, Check, GripVertical, RotateCcw, ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
 
 export default function PaymentMethodSettings() {
   const { addToast } = useToast();
@@ -49,6 +55,8 @@ export default function PaymentMethodSettings() {
   const [enableApplePay, setEnableApplePay] = useState(true);
   const [enableGooglePay, setEnableGooglePay] = useState(true);
   const [enableLink, setEnableLink] = useState(true);
+  const [currencyOverrides, setCurrencyOverrides] = useState<Record<string, string[]>>({});
+  const [showCurrencyOverrides, setShowCurrencyOverrides] = useState(false);
 
   // Stripe PMCs
   const [stripePmcs, setStripePmcs] = useState<StripePaymentMethodConfig[]>([]);
@@ -80,6 +88,8 @@ export default function PaymentMethodSettings() {
         setEnableApplePay(config.enable_apple_pay);
         setEnableGooglePay(config.enable_google_pay);
         setEnableLink(config.enable_link);
+        setCurrencyOverrides(config.currency_overrides || {});
+        setShowCurrencyOverrides(Object.keys(config.currency_overrides || {}).length > 0);
 
         // Initialize custom payment methods if empty
         if (config.config_mode === 'custom' && config.custom_payment_methods.length === 0) {
@@ -168,6 +178,7 @@ export default function PaymentMethodSettings() {
         stripe_pmc_name: configMode === 'stripe_preset' ? stripePmcName : null,
         custom_payment_methods: configMode === 'custom' ? customPaymentMethods : [],
         payment_method_order: paymentMethodOrder,
+        currency_overrides: currencyOverrides,
         enable_express_checkout: enableExpressCheckout,
         enable_apple_pay: enableApplePay,
         enable_google_pay: enableGooglePay,
@@ -280,6 +291,57 @@ export default function PaymentMethodSettings() {
     }
   }, [customPaymentMethods, configMode]);
 
+  // Currency overrides helpers
+  const commonCurrencies = ['PLN', 'EUR', 'USD', 'GBP'];
+
+  function addCurrencyOverride(currency: string) {
+    if (currencyOverrides[currency]) return; // Already exists
+    setCurrencyOverrides((prev) => ({
+      ...prev,
+      [currency]: [...paymentMethodOrder], // Copy default order
+    }));
+  }
+
+  function removeCurrencyOverride(currency: string) {
+    setCurrencyOverrides((prev) => {
+      const newOverrides = { ...prev };
+      delete newOverrides[currency];
+      return newOverrides;
+    });
+  }
+
+  function updateCurrencyOrder(currency: string, newOrder: string[]) {
+    setCurrencyOverrides((prev) => ({
+      ...prev,
+      [currency]: newOrder,
+    }));
+  }
+
+  // Drag handlers for currency-specific ordering
+  const [currencyDraggedIndex, setCurrencyDraggedIndex] = useState<{ currency: string; index: number } | null>(null);
+
+  function handleCurrencyDragStart(currency: string, index: number) {
+    setCurrencyDraggedIndex({ currency, index });
+  }
+
+  function handleCurrencyDragOver(e: React.DragEvent, currency: string, index: number) {
+    e.preventDefault();
+    if (!currencyDraggedIndex || currencyDraggedIndex.currency !== currency || currencyDraggedIndex.index === index) return;
+
+    const currentOrder = currencyOverrides[currency] || [];
+    const newOrder = [...currentOrder];
+    const draggedItem = newOrder[currencyDraggedIndex.index];
+    newOrder.splice(currencyDraggedIndex.index, 1);
+    newOrder.splice(index, 0, draggedItem);
+
+    updateCurrencyOrder(currency, newOrder);
+    setCurrencyDraggedIndex({ currency, index });
+  }
+
+  function handleCurrencyDragEnd() {
+    setCurrencyDraggedIndex(null);
+  }
+
   if (loading) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
@@ -313,6 +375,7 @@ export default function PaymentMethodSettings() {
             <input
               type="radio"
               name="config_mode"
+              value="automatic"
               checked={configMode === 'automatic'}
               onChange={() => handleModeChange('automatic')}
               className="mt-1 h-4 w-4 text-purple-600"
@@ -332,6 +395,7 @@ export default function PaymentMethodSettings() {
             <input
               type="radio"
               name="config_mode"
+              value="stripe_preset"
               checked={configMode === 'stripe_preset'}
               onChange={() => handleModeChange('stripe_preset')}
               className="mt-1 h-4 w-4 text-purple-600"
@@ -351,6 +415,7 @@ export default function PaymentMethodSettings() {
             <input
               type="radio"
               name="config_mode"
+              value="custom"
               checked={configMode === 'custom'}
               onChange={() => handleModeChange('custom')}
               className="mt-1 h-4 w-4 text-purple-600"
@@ -403,6 +468,51 @@ export default function PaymentMethodSettings() {
           {stripePmcsLoading && (
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{t('paymentMethods.stripeConfig.refreshing')}</p>
           )}
+
+          {/* Stripe Preset Preview - show enabled payment methods */}
+          {stripePmcId && !stripePmcsLoading && (() => {
+            const selectedPmc = stripePmcs.find((pmc) => pmc.id === stripePmcId);
+            if (!selectedPmc) return null;
+
+            // Extract enabled payment methods from PMC
+            const enabledMethods: string[] = [];
+            // Use shared constant for known payment methods (DRY principle)
+            KNOWN_PAYMENT_METHODS.forEach((method) => {
+              const methodConfig = selectedPmc[method as keyof typeof selectedPmc] as { enabled?: boolean } | undefined;
+              if (methodConfig?.enabled) {
+                enabledMethods.push(method);
+              }
+            });
+
+            return (
+              <div className="mt-4 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('paymentMethods.stripeConfig.preview')}
+                </p>
+                {enabledMethods.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {enabledMethods.map((method) => {
+                      const info = getPaymentMethodDisplayInfo(method);
+                      return (
+                        <span
+                          key={method}
+                          className="inline-flex items-center px-2.5 py-1 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm rounded-full border border-green-200 dark:border-green-800"
+                        >
+                          <Check className="w-3 h-3 mr-1" />
+                          <span className="mr-1">{info.icon}</span>
+                          {info.name}
+                        </span>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {t('paymentMethods.stripeConfig.noMethodsEnabled')}
+                  </p>
+                )}
+              </div>
+            );
+          })()}
         </div>
       )}
 
@@ -528,6 +638,101 @@ export default function PaymentMethodSettings() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Currency Overrides (Advanced) */}
+      <div className="mb-8">
+        <button
+          type="button"
+          onClick={() => setShowCurrencyOverrides(!showCurrencyOverrides)}
+          className="flex items-center w-full text-left text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+        >
+          {showCurrencyOverrides ? (
+            <ChevronDown className="w-4 h-4 mr-2" />
+          ) : (
+            <ChevronRight className="w-4 h-4 mr-2" />
+          )}
+          {t('paymentMethods.currencyOverrides.title')}
+          <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+            ({t('paymentMethods.currencyOverrides.advanced')})
+          </span>
+        </button>
+
+        {showCurrencyOverrides && (
+          <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg space-y-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {t('paymentMethods.currencyOverrides.description')}
+            </p>
+
+            {/* Add Currency Override */}
+            <div className="flex gap-2 flex-wrap">
+              {commonCurrencies
+                .filter((currency) => !currencyOverrides[currency])
+                .map((currency) => (
+                  <button
+                    key={currency}
+                    type="button"
+                    onClick={() => addCurrencyOverride(currency)}
+                    className="px-3 py-1.5 text-sm border border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-purple-400 dark:hover:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" />
+                    {currency}
+                  </button>
+                ))}
+            </div>
+
+            {/* Currency Override Cards */}
+            {Object.entries(currencyOverrides).map(([currency, order]) => (
+              <div key={currency} className="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs rounded">
+                      {currency}
+                    </span>
+                    {t('paymentMethods.currencyOverrides.orderFor', { currency })}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeCurrencyOverride(currency)}
+                    className="text-gray-400 hover:text-red-500 transition-colors"
+                    title={t('paymentMethods.currencyOverrides.remove')}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="space-y-1">
+                  {order.map((type, index) => {
+                    const info = getPaymentMethodDisplayInfo(type);
+                    const isDragging = currencyDraggedIndex?.currency === currency && currencyDraggedIndex?.index === index;
+                    return (
+                      <div
+                        key={type}
+                        draggable
+                        onDragStart={() => handleCurrencyDragStart(currency, index)}
+                        onDragOver={(e) => handleCurrencyDragOver(e, currency, index)}
+                        onDragEnd={handleCurrencyDragEnd}
+                        className="flex items-center p-2 bg-gray-50 dark:bg-gray-700/50 rounded cursor-move hover:bg-gray-100 dark:hover:bg-gray-600/50 transition-colors"
+                        style={{ opacity: isDragging ? 0.5 : 1 }}
+                      >
+                        <GripVertical className="w-4 h-4 text-gray-400 mr-2" />
+                        <span className="text-sm text-gray-600 dark:text-gray-400 mr-2">{index + 1}.</span>
+                        <span className="text-lg mr-2">{info.icon}</span>
+                        <span className="text-sm text-gray-900 dark:text-white">{info.name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {Object.keys(currencyOverrides).length === 0 && (
+              <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                {t('paymentMethods.currencyOverrides.empty')}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Recommended Configuration */}

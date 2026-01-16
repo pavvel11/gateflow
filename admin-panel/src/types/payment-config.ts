@@ -4,7 +4,7 @@
  * Type definitions for global payment method configuration system.
  * Supports three modes: automatic, stripe_preset, custom
  *
- * @see /supabase/migrations/20260115000000_payment_method_configuration.sql
+ * @see /supabase/migrations/20260116000000_payment_method_configuration.sql
  */
 
 // =============================================================================
@@ -232,6 +232,56 @@ export interface PaymentConfigActionResult<T = void> {
   data?: T;
   error?: string;
   errorCode?: string;
+}
+
+// =============================================================================
+// VALIDATION HELPERS
+// =============================================================================
+
+// =============================================================================
+// EXPRESS CHECKOUT CONFIG (for frontend)
+// =============================================================================
+
+/**
+ * Express Checkout configuration passed to frontend components
+ * Controls visibility of Link, Apple Pay, and Google Pay buttons
+ */
+export interface ExpressCheckoutConfig {
+  /** Master toggle for Express Checkout Element */
+  enabled: boolean;
+
+  /** Enable Apple Pay */
+  applePay: boolean;
+
+  /** Enable Google Pay */
+  googlePay: boolean;
+
+  /** Enable Stripe Link */
+  link: boolean;
+}
+
+/**
+ * Extract Express Checkout config from PaymentMethodConfig
+ */
+export function extractExpressCheckoutConfig(
+  config: PaymentMethodConfig | null | undefined
+): ExpressCheckoutConfig {
+  if (!config) {
+    // Default: all enabled
+    return {
+      enabled: true,
+      applePay: true,
+      googlePay: true,
+      link: true,
+    };
+  }
+
+  return {
+    enabled: config.enable_express_checkout,
+    applePay: config.enable_apple_pay,
+    googlePay: config.enable_google_pay,
+    link: config.enable_link,
+  };
 }
 
 // =============================================================================

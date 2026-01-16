@@ -4,6 +4,19 @@ import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from '@/lib/rate-limiting';
 import { calculatePricing, toStripeCents, STRIPE_MINIMUM_AMOUNT } from '@/hooks/usePricing';
 import { getStripeServer } from '@/lib/stripe/server';
+import { getPaymentMethodConfig } from '@/lib/actions/payment-config';
+import { getEnabledPaymentMethodsForCurrency } from '@/lib/utils/payment-method-helpers';
+
+/**
+ * Apply automatic payment methods configuration to PaymentIntent params.
+ * Used as fallback when no custom config is set or config is invalid.
+ */
+function applyAutomaticPaymentMethods(params: Stripe.PaymentIntentCreateParams): void {
+  params.automatic_payment_methods = {
+    enabled: true,
+    allow_redirects: 'always',
+  };
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -245,6 +258,56 @@ export async function POST(request: NextRequest) {
         is_pwyw: pricing.isPwyw ? 'true' : 'false',
       },
     };
+
+    // Fetch payment method configuration
+    const paymentConfig = await getPaymentMethodConfig();
+
+    // Apply payment method configuration based on mode
+    // SECURITY: Payment method configuration is applied server-side only.
+    // Client cannot override which payment methods are available.
+    // FALLBACK STRATEGY: If config is missing/invalid, we fallback to Stripe's
+    // automatic_payment_methods to ensure checkout always works. This is logged
+    // for monitoring but doesn't expose any sensitive information.
+    if (paymentConfig) {
+      switch (paymentConfig.config_mode) {
+        case 'automatic':
+          // Use Stripe's automatic payment methods (default behavior)
+          applyAutomaticPaymentMethods(paymentIntentParams);
+          break;
+
+        case 'stripe_preset':
+          // Use specific Stripe Payment Method Configuration
+          if (paymentConfig.stripe_pmc_id) {
+            paymentIntentParams.payment_method_configuration = paymentConfig.stripe_pmc_id;
+          } else {
+            // Fallback to automatic if PMC ID is missing
+            console.warn('[create-payment-intent] stripe_preset mode but no PMC ID, falling back to automatic');
+            applyAutomaticPaymentMethods(paymentIntentParams);
+          }
+          break;
+
+        case 'custom':
+          // Use explicit payment method types with currency filtering
+          const enabledMethods = getEnabledPaymentMethodsForCurrency(
+            paymentConfig,
+            product.currency
+          );
+
+          if (enabledMethods.length > 0) {
+            paymentIntentParams.payment_method_types = enabledMethods;
+          } else {
+            // Fallback if no methods match currency
+            console.warn('[create-payment-intent] No payment methods match currency, falling back to automatic');
+            applyAutomaticPaymentMethods(paymentIntentParams);
+          }
+          break;
+      }
+    } else {
+      // Fallback if config is missing (shouldn't happen due to migration seed)
+      // This ensures checkout always works even if config table is empty/corrupted
+      console.warn('[create-payment-intent] Payment config not found, using automatic mode');
+      applyAutomaticPaymentMethods(paymentIntentParams);
+    }
 
     // Only set receipt_email if we have an email
     if (finalEmail) {

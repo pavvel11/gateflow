@@ -1898,7 +1898,8 @@
         "refresh": "Odśwież listę",
         "refreshing": "Odświeżanie...",
         "noConfigs": "Brak dostępnych konfiguracji Stripe",
-        "preview": "Podgląd metod",
+        "preview": "Włączone metody",
+        "noMethodsEnabled": "Nie wykryto metod płatności w tej konfiguracji",
         "error": "Błąd podczas ładowania konfiguracji Stripe"
       },
       "customConfig": {
@@ -1907,7 +1908,7 @@
         "deselectAll": "Odznacz wszystkie",
         "noneSelected": "Nie wybrano metod płatności",
         "selected": "Wybrano {count} {count, plural, one {metodę} other {metod}}",
-        "currencyNote": "Niektóre metody są dostępne tylko dla określonych walut",
+        "currencyNote": "Wszystkie waluty",
         "orderTitle": "Kolejność Metod Płatności",
         "orderDescription": "Przeciągnij i upuść, aby zmienić kolejność",
         "dragToReorder": "Przeciągnij aby zmienić kolejność"
@@ -1922,6 +1923,16 @@
         "applePayDescription": "Szybkie płatności dla użytkowników Apple",
         "googlePayDescription": "Szybkie płatności dla użytkowników Android",
         "linkDescription": "Szybkie płatności z zapisanymi danymi"
+      },
+      "currencyOverrides": {
+        "title": "Kolejność dla walut",
+        "advanced": "Zaawansowane",
+        "description": "Ustaw różną kolejność metod płatności dla konkretnych walut. Przydatne do priorytetyzacji lokalnych metod płatności.",
+        "addCurrency": "Dodaj walutę",
+        "orderFor": "Kolejność {currency}",
+        "remove": "Usuń",
+        "empty": "Brak niestandardowej kolejności dla walut. Kliknij walutę powyżej, aby dodać własną kolejność.",
+        "allCurrencies": "Wszystkie waluty"
       },
       "recommended": {
         "title": "Rekomendowana Konfiguracja",

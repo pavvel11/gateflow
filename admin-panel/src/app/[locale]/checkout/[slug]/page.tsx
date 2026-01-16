@@ -5,6 +5,7 @@ import { cache } from 'react';
 import ProductPurchaseView from './components/ProductPurchaseView';
 import { getPaymentMethodConfig } from '@/lib/actions/payment-config';
 import { getEffectivePaymentMethodOrder } from '@/lib/utils/payment-method-helpers';
+import { extractExpressCheckoutConfig } from '@/types/payment-config';
 
 interface PageProps {
   params: Promise<{ slug: string; locale: string }>;
@@ -75,7 +76,14 @@ export default async function CheckoutPage({ params }: PageProps) {
   const paymentMethodOrder = paymentConfig
     ? getEffectivePaymentMethodOrder(paymentConfig, product.currency)
     : undefined;
+  const expressCheckoutConfig = extractExpressCheckoutConfig(paymentConfig);
 
   // ProductPurchaseView handles showing either checkout form or waitlist form
-  return <ProductPurchaseView product={product} paymentMethodOrder={paymentMethodOrder} />;
+  return (
+    <ProductPurchaseView
+      product={product}
+      paymentMethodOrder={paymentMethodOrder}
+      expressCheckoutConfig={expressCheckoutConfig}
+    />
+  );
 }

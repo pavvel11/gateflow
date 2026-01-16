@@ -97,6 +97,45 @@ export async function fetchStripePaymentMethodConfig(id: string): Promise<{
 }
 
 // =============================================================================
+// KNOWN PAYMENT METHODS (SHARED CONSTANT)
+// =============================================================================
+
+/**
+ * List of all known Stripe payment method types.
+ * Used for extracting enabled methods from PMC configs and UI display.
+ *
+ * Note: Update this list when Stripe adds new payment methods.
+ * This is the single source of truth for payment method types in the codebase.
+ */
+export const KNOWN_PAYMENT_METHODS = [
+  'card',
+  'blik',
+  'p24',
+  'sepa_debit',
+  'ideal',
+  'klarna',
+  'affirm',
+  'cashapp',
+  'giropay',
+  'bancontact',
+  'eps',
+  'sofort',
+  'alipay',
+  'wechat_pay',
+  'au_becs_debit',
+  'bacs_debit',
+  'acss_debit',
+  'us_bank_account',
+  'konbini',
+  'paynow',
+  'promptpay',
+  'fpx',
+  'grabpay',
+] as const;
+
+export type KnownPaymentMethod = typeof KNOWN_PAYMENT_METHODS[number];
+
+// =============================================================================
 // PAYMENT METHOD EXTRACTION
 // =============================================================================
 
@@ -111,35 +150,7 @@ export function extractEnabledPaymentMethods(
 ): string[] {
   const enabled: string[] = [];
 
-  // List of payment methods to check
-  // Note: This list should be updated when Stripe adds new payment methods
-  const paymentMethods = [
-    'card',
-    'blik',
-    'p24',
-    'sepa_debit',
-    'ideal',
-    'klarna',
-    'affirm',
-    'cashapp',
-    'giropay',
-    'bancontact',
-    'eps',
-    'sofort',
-    'alipay',
-    'wechat_pay',
-    'au_becs_debit',
-    'bacs_debit',
-    'acss_debit',
-    'us_bank_account',
-    'konbini',
-    'paynow',
-    'promptpay',
-    'fpx',
-    'grabpay',
-  ] as const;
-
-  for (const method of paymentMethods) {
+  for (const method of KNOWN_PAYMENT_METHODS) {
     if (config[method]?.enabled) {
       enabled.push(method);
     }

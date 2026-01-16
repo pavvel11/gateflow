@@ -4,7 +4,7 @@
  * Server-side actions for managing global payment method configuration.
  * Includes CRUD operations, validation, and Stripe PMC caching.
  *
- * @see /supabase/migrations/20260115000000_payment_method_configuration.sql
+ * @see /supabase/migrations/20260116000000_payment_method_configuration.sql
  * @see /admin-panel/src/types/payment-config.ts
  */
 

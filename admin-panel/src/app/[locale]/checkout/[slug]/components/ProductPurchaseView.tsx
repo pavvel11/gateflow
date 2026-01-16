@@ -1,6 +1,7 @@
 'use client';
 
 import { Product } from '@/types';
+import { ExpressCheckoutConfig } from '@/types/payment-config';
 import FreeProductForm from './FreeProductForm';
 import PaidProductForm from './PaidProductForm';
 import WaitlistForm from '@/components/WaitlistForm';
@@ -9,6 +10,7 @@ import FloatingToolbar from '@/components/FloatingToolbar';
 interface ProductPurchaseViewProps {
   product: Product;
   paymentMethodOrder?: string[];
+  expressCheckoutConfig?: ExpressCheckoutConfig;
 }
 
 type UnavailableReason = 'not_started' | 'expired' | 'inactive' | null;
@@ -39,7 +41,7 @@ function getProductUnavailableReason(product: Product): UnavailableReason {
   return null; // Product is available
 }
 
-export default function ProductPurchaseView({ product, paymentMethodOrder }: ProductPurchaseViewProps) {
+export default function ProductPurchaseView({ product, paymentMethodOrder, expressCheckoutConfig }: ProductPurchaseViewProps) {
   const unavailableReason = getProductUnavailableReason(product);
 
   // Show waitlist form if product is unavailable AND waitlist is enabled
@@ -55,7 +57,7 @@ export default function ProductPurchaseView({ product, paymentMethodOrder }: Pro
       ) : product.price === 0 ? (
         <FreeProductForm product={product} />
       ) : (
-        <PaidProductForm product={product} paymentMethodOrder={paymentMethodOrder} />
+        <PaidProductForm product={product} paymentMethodOrder={paymentMethodOrder} expressCheckoutConfig={expressCheckoutConfig} />
       )}
     </div>
   );

@@ -52,14 +52,25 @@ export function getEffectivePaymentMethodOrder(
 /**
  * Get enabled payment methods for custom mode with currency filtering
  *
+ * IMPORTANT: This function is designed specifically for 'custom' config_mode.
+ * For 'automatic' and 'stripe_preset' modes, it returns an empty array because:
+ * - 'automatic': Stripe determines available methods dynamically
+ * - 'stripe_preset': Methods are defined in Stripe Dashboard PMC
+ *
+ * This follows Liskov Substitution Principle by having consistent behavior
+ * (always returns string[]) while the caller (create-payment-intent) handles
+ * mode-specific logic via switch statement.
+ *
  * @param config - Payment method configuration
  * @param currency - ISO 4217 currency code
- * @returns Array of enabled payment method types that support the currency
+ * @returns Array of enabled payment method types for custom mode, empty array for other modes
  */
 export function getEnabledPaymentMethodsForCurrency(
   config: PaymentMethodConfig,
   currency: string
 ): string[] {
+  // Only process custom mode - automatic and stripe_preset modes
+  // delegate payment method selection to Stripe (see create-payment-intent/route.ts)
   if (config.config_mode !== 'custom') {
     return [];
   }

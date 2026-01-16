@@ -41,12 +41,12 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     await page.waitForLoadState('networkidle');
 
     // Verify Payment Method Configuration section exists
-    const heading = page.locator('text=Payment Method Configuration');
+    const heading = page.locator('text=Konfiguracja Metod Płatności');
     await expect(heading).toBeVisible();
 
     // Verify description
     await expect(
-      page.locator('text=Configure how payment methods are displayed at checkout')
+      page.locator('text=Zarządzaj metodami płatności wyświetlanymi podczas checkout')
     ).toBeVisible();
   });
 
@@ -60,15 +60,15 @@ test.describe('Payment Method Configuration - Admin UI', () => {
 
     // Verify automatic mode description
     await expect(
-      page.locator('text=Use Stripe\'s default payment methods')
+      page.locator('text=Użyj domyślnych metod płatności Stripe')
     ).toBeVisible();
 
     // Save configuration
-    const saveButton = page.locator('button:has-text("Save Configuration")');
+    const saveButton = page.locator('button:has-text("Zapisz Konfigurację")');
     await saveButton.click();
 
     // Verify success toast
-    await expect(page.locator('text=Payment configuration saved successfully')).toBeVisible({
+    await expect(page.locator('text=Konfiguracja metod płatności zapisana pomyślnie')).toBeVisible({
       timeout: 10000,
     });
   });
@@ -83,7 +83,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
 
     // Verify Stripe PMC selector appears
     await expect(
-      page.locator('text=Stripe Payment Method Configuration')
+      page.locator('text=Konfiguracja Stripe PMC')
     ).toBeVisible();
 
     // Verify dropdown exists
@@ -100,7 +100,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     await customRadio.check();
 
     // Verify payment methods list appears
-    await expect(page.locator('text=Select Payment Methods')).toBeVisible();
+    await expect(page.locator('text=Wybierz Metody Płatności')).toBeVisible();
 
     // Enable Card (should be visible)
     const cardCheckbox = page.locator('input[type="checkbox"]').first();
@@ -113,11 +113,11 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     await page.waitForTimeout(500);
 
     // Save configuration
-    const saveButton = page.locator('button:has-text("Save Configuration")');
+    const saveButton = page.locator('button:has-text("Zapisz Konfigurację")');
     await saveButton.click();
 
     // Verify success
-    await expect(page.locator('text=Payment configuration saved successfully')).toBeVisible({
+    await expect(page.locator('text=Konfiguracja metod płatności zapisana pomyślnie')).toBeVisible({
       timeout: 10000,
     });
   });
@@ -154,17 +154,17 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     await page.waitForTimeout(1000);
 
     // Verify payment method order section appears
-    await expect(page.locator('text=Payment Method Order')).toBeVisible();
+    await expect(page.getByText('Kolejność Metod Płatności', { exact: true })).toBeVisible();
 
     // TODO: Test drag & drop reordering (requires more complex Playwright interaction)
     // For now, just verify the order list exists
 
     // Save configuration
-    const saveButton = page.locator('button:has-text("Save Configuration")');
+    const saveButton = page.locator('button:has-text("Zapisz Konfigurację")');
     await saveButton.click();
 
     // Verify success
-    await expect(page.locator('text=Payment configuration saved successfully')).toBeVisible({
+    await expect(page.locator('text=Konfiguracja metod płatności zapisana pomyślnie')).toBeVisible({
       timeout: 10000,
     });
   });
@@ -199,7 +199,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     await expect(expressCheckoutSection).toBeVisible();
 
     // Master toggle should be visible
-    const masterToggle = page.locator('label:has-text("Enable Express Checkout")').locator('input[type="checkbox"]');
+    const masterToggle = page.locator('label:has-text("Włącz Express Checkout")').locator('input[type="checkbox"]');
 
     // Ensure master toggle is checked
     if (!(await masterToggle.isChecked())) {
@@ -209,8 +209,8 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     await page.waitForTimeout(500);
 
     // Verify sub-options appear
-    await expect(page.locator('text=Apple Pay')).toBeVisible();
-    await expect(page.locator('text=Google Pay')).toBeVisible();
+    await expect(page.getByText('Apple Pay', { exact: true })).toBeVisible();
+    await expect(page.getByText('Google Pay', { exact: true })).toBeVisible();
 
     // Disable Apple Pay as per test case
     const applePayCheckbox = page.locator('label:has-text("Apple Pay")').locator('input[type="checkbox"]');
@@ -219,11 +219,11 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     }
 
     // Save configuration
-    const saveButton = page.locator('button:has-text("Save Configuration")');
+    const saveButton = page.locator('button:has-text("Zapisz Konfigurację")');
     await saveButton.click();
 
     // Verify success
-    await expect(page.locator('text=Payment configuration saved successfully')).toBeVisible({
+    await expect(page.locator('text=Konfiguracja metod płatności zapisana pomyślnie')).toBeVisible({
       timeout: 10000,
     });
 
@@ -243,9 +243,9 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     const automaticRadio = page.locator('input[type="radio"][value="automatic"]').first();
     await automaticRadio.check();
 
-    const saveButton = page.locator('button:has-text("Save Configuration")');
+    const saveButton = page.locator('button:has-text("Zapisz Konfigurację")');
     await saveButton.click();
-    await expect(page.locator('text=Payment configuration saved successfully')).toBeVisible({
+    await expect(page.locator('text=Konfiguracja metod płatności zapisana pomyślnie')).toBeVisible({
       timeout: 10000,
     });
 
@@ -263,7 +263,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
 
     // Save
     await saveButton.click();
-    await expect(page.locator('text=Payment configuration saved successfully')).toBeVisible({
+    await expect(page.locator('text=Konfiguracja metod płatności zapisana pomyślnie')).toBeVisible({
       timeout: 10000,
     });
 
@@ -290,9 +290,9 @@ test.describe('Payment Method Configuration - Admin UI', () => {
       await cardCheckbox.check();
     }
 
-    const saveButton = page.locator('button:has-text("Save Configuration")');
+    const saveButton = page.locator('button:has-text("Zapisz Konfigurację")');
     await saveButton.click();
-    await expect(page.locator('text=Payment configuration saved successfully')).toBeVisible({
+    await expect(page.locator('text=Konfiguracja metod płatności zapisana pomyślnie')).toBeVisible({
       timeout: 10000,
     });
 
@@ -301,7 +301,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     await automaticRadio.check();
 
     await saveButton.click();
-    await expect(page.locator('text=Payment configuration saved successfully')).toBeVisible({
+    await expect(page.locator('text=Konfiguracja metod płatności zapisana pomyślnie')).toBeVisible({
       timeout: 10000,
     });
 
@@ -322,7 +322,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     await customRadio.check();
 
     // Click reset button
-    const resetButton = page.locator('button:has-text("Reset")');
+    const resetButton = page.getByRole('button', { name: 'Resetuj', exact: true });
     await resetButton.click();
 
     // Verify configuration was reset (mode should revert)
@@ -343,23 +343,24 @@ test.describe('Payment Method Configuration - Admin UI', () => {
 
     await page.waitForTimeout(500);
 
-    // Make sure no payment methods are enabled (uncheck all if any are checked)
-    const checkboxes = page.locator('input[type="checkbox"]');
+    // Make sure no payment methods are enabled (uncheck all visible checkboxes)
+    const checkboxes = page.locator('input[type="checkbox"]:visible');
     const count = await checkboxes.count();
 
     for (let i = 0; i < count; i++) {
       const checkbox = checkboxes.nth(i);
-      if (await checkbox.isChecked()) {
+      // Double-check visibility before interacting
+      if (await checkbox.isVisible() && await checkbox.isChecked()) {
         await checkbox.uncheck();
       }
     }
 
     // Try to save
-    const saveButton = page.locator('button:has-text("Save Configuration")');
+    const saveButton = page.locator('button:has-text("Zapisz Konfigurację")');
     await saveButton.click();
 
     // Verify error message appears
-    await expect(page.locator('text=At least one payment method must be enabled')).toBeVisible({
+    await expect(page.locator('text=Wybierz przynajmniej jedną metodę płatności')).toBeVisible({
       timeout: 5000,
     });
   });
@@ -379,11 +380,11 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     await dropdown.selectOption({ index: 0 }); // Select first option (usually empty/placeholder)
 
     // Try to save
-    const saveButton = page.locator('button:has-text("Save Configuration")');
+    const saveButton = page.locator('button:has-text("Zapisz Konfigurację")');
     await saveButton.click();
 
     // Verify error message appears
-    await expect(page.locator('text=Please select a Stripe Payment Method Configuration')).toBeVisible({
+    await expect(page.locator('text=Wybierz konfigurację Stripe PMC')).toBeVisible({
       timeout: 5000,
     });
   });
@@ -395,7 +396,12 @@ test.describe('Payment Method Configuration - Security', () => {
 
     // Try to access settings page directly
     await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+
+    // Wait for redirect or page load (shorter timeout, don't require networkidle)
+    await page.waitForLoadState('domcontentloaded');
+
+    // Wait a bit for any redirects to complete
+    await page.waitForTimeout(2000);
 
     // Should be redirected to login page or see 403 error
     // Check for either login page or unauthorized message
@@ -403,7 +409,8 @@ test.describe('Payment Method Configuration - Security', () => {
     const isLoginPage = url.includes('/auth/login') || url.includes('/login');
     const hasUnauthorizedMessage = await page.locator('text=403').isVisible().catch(() => false) ||
                                     await page.locator('text=Unauthorized').isVisible().catch(() => false) ||
-                                    await page.locator('text=Access denied').isVisible().catch(() => false);
+                                    await page.locator('text=Access denied').isVisible().catch(() => false) ||
+                                    await page.locator('text=Brak dostępu').isVisible().catch(() => false);
 
     // Either redirected to login OR shows unauthorized message
     expect(isLoginPage || hasUnauthorizedMessage).toBeTruthy();

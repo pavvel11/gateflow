@@ -2,7 +2,7 @@ import { verifyAdminAccess } from '@/lib/auth-server';
 import ShopSettings from '@/components/settings/ShopSettings';
 import BrandingSettings from '@/components/settings/BrandingSettings';
 import StripeSettings from '@/components/settings/StripeSettings';
-import PaymentMethodSettings from '@/components/settings/PaymentMethodSettings';
+import PaymentMethodSettingsWrapper from '@/components/settings/PaymentMethodSettingsWrapper';
 import OmnibusSettings from '@/components/settings/OmnibusSettings';
 import LegalDocumentsSettings from '@/components/settings/LegalDocumentsSettings';
 import LicenseSettings from '@/components/settings/LicenseSettings';
@@ -34,7 +34,7 @@ export default async function SettingsPage() {
 
       <StripeSettings />
 
-      <PaymentMethodSettings />
+      <PaymentMethodSettingsWrapper />
 
       <LicenseSettings />
     </div>

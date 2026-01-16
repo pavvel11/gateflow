@@ -1883,7 +1883,8 @@
         "refresh": "Refresh List",
         "refreshing": "Refreshing...",
         "noConfigs": "No Stripe configurations available",
-        "preview": "Preview Methods",
+        "preview": "Enabled Methods",
+        "noMethodsEnabled": "No payment methods detected in this configuration",
         "error": "Error loading Stripe configurations"
       },
       "customConfig": {
@@ -1892,7 +1893,7 @@
         "deselectAll": "Deselect All",
         "noneSelected": "No payment methods selected",
         "selected": "{count} method(s) selected",
-        "currencyNote": "Some methods are only available for specific currencies",
+        "currencyNote": "All currencies",
         "orderTitle": "Payment Method Order",
         "orderDescription": "Drag and drop to reorder",
         "dragToReorder": "Drag to reorder"
@@ -1907,6 +1908,16 @@
         "applePayDescription": "Quick payments for Apple users",
         "googlePayDescription": "Quick payments for Android users",
         "linkDescription": "Quick payments with saved details"
+      },
+      "currencyOverrides": {
+        "title": "Currency-Specific Ordering",
+        "advanced": "Advanced",
+        "description": "Set different payment method ordering for specific currencies. Useful for prioritizing local payment methods.",
+        "addCurrency": "Add Currency",
+        "orderFor": "{currency} Order",
+        "remove": "Remove",
+        "empty": "No currency-specific ordering configured. Click a currency above to add custom ordering.",
+        "allCurrencies": "All currencies"
       },
       "recommended": {
         "title": "Recommended Configuration",
