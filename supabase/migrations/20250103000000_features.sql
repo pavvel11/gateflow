@@ -590,6 +590,7 @@ DECLARE
   bump_access_expires_at TIMESTAMPTZ := NULL;
   bump_found BOOLEAN := false;
   transaction_id_var UUID;
+  pending_transaction_id UUID;
 BEGIN
   bump_product_record := NULL;
   bump_found := false;
@@ -768,8 +769,33 @@ BEGIN
   END IF;
 
   BEGIN
-    -- Record transaction
-    INSERT INTO public.payment_transactions (
+    -- Check for existing pending transaction and update it (abandoned cart recovery)
+    SELECT pt.id INTO pending_transaction_id
+    FROM public.payment_transactions pt
+    WHERE pt.stripe_payment_intent_id = process_stripe_payment_completion_with_bump.stripe_payment_intent_id
+      AND pt.status = 'pending'
+    LIMIT 1;
+
+    IF pending_transaction_id IS NOT NULL THEN
+      -- Update existing pending transaction to completed
+      UPDATE public.payment_transactions
+      SET
+        status = 'completed',
+        user_id = current_user_id,
+        customer_email = customer_email_param,
+        metadata = metadata || jsonb_build_object(
+          'has_bump', bump_found,
+          'bump_product_id', bump_product_id_param,
+          'has_coupon', coupon_id_param IS NOT NULL,
+          'coupon_id', coupon_id_param,
+          'converted_from_pending', true
+        ),
+        updated_at = NOW()
+      WHERE id = pending_transaction_id
+      RETURNING id INTO transaction_id_var;
+    ELSE
+      -- No pending transaction found - insert new record
+      INSERT INTO public.payment_transactions (
       session_id, user_id, product_id, customer_email, amount, currency,
       stripe_payment_intent_id, status, metadata
     ) VALUES (
@@ -782,6 +808,7 @@ BEGIN
         'coupon_id', coupon_id_param
       )
     ) RETURNING id INTO transaction_id_var;
+    END IF;
 
     -- Increment sale quantity sold if sale price is active
     -- This is done atomically to prevent race conditions
