@@ -578,16 +578,16 @@ export default function CustomPaymentForm({
                 name: fullName || undefined,
               },
             },
-            // Set payment method order based on currency
-            // For PLN (Poland): BLIK is most popular (65%+ market share), then Przelewy24, then card
-            // For other currencies: optimize for that region
-            paymentMethodOrder: product.currency === 'PLN'
+            // Use payment method order from admin config, fallback to currency-based defaults
+            paymentMethodOrder: paymentMethodOrder && paymentMethodOrder.length > 0
+              ? paymentMethodOrder
+              : product.currency === 'PLN'
               ? ['blik', 'p24', 'card']
               : product.currency === 'EUR'
               ? ['sepa_debit', 'ideal', 'card', 'klarna']
               : product.currency === 'USD'
               ? ['card', 'cashapp', 'affirm']
-              : undefined, // Let Stripe determine optimal order for other currencies
+              : undefined,
             // Enable wallets and Link for supported currencies (USD, EUR, GBP, etc.)
             // Link provides 1-click autofill, Apple/Google Pay provide express checkout
             wallets: {
