@@ -633,8 +633,8 @@ When documenting changes or adding information:
 2. **Core Documentation Files**:
    - `README.md` - Main project documentation
    - `AGENTS.md` - AI assistant instructions (this file)
-   - `DEPLOYMENT-SIMPLE.md` - Simple production deployment guide
-   - `DEPLOYMENT.md` - Full stack deployment guide
+   - `deployment/advanced/DOCKER-SIMPLE.md` - Simple Docker deployment guide
+   - `docs/DEPLOYMENT-MIKRUS.md` - Main deployment guide (VPS/PM2)
    - `templates/README.md` - Template customization guide
 3. **When to Create New Files**:
    - Only when information doesn't fit naturally in core docs

@@ -1,57 +1,57 @@
-# GateFlow - Instrukcja Wdrożenia Produkcyjnego
+# GateFlow - Production Deployment Guide
 
-Pełna instrukcja wdrożenia GateFlow na serwerze produkcyjnym za pomocą Docker Compose.
+Complete guide for deploying GateFlow on a production server using Docker Compose.
 
-## Spis Treści
+## Table of Contents
 
-1. [Wymagania](#wymagania)
-2. [Przygotowanie Serwera](#przygotowanie-serwera)
-3. [Konfiguracja Zmiennych Środowiskowych](#konfiguracja-zmiennych-środowiskowych)
-4. [Konfiguracja Bazy Danych](#konfiguracja-bazy-danych)
-5. [Uruchomienie Aplikacji](#uruchomienie-aplikacji)
-6. [Konfiguracja Domeny i SSL](#konfiguracja-domeny-i-ssl)
-7. [Konfiguracja Stripe Webhooks](#konfiguracja-stripe-webhooks)
-8. [Pierwsza Konfiguracja](#pierwsza-konfiguracja)
-9. [Monitorowanie i Logi](#monitorowanie-i-logi)
-10. [Aktualizacja](#aktualizacja)
-11. [Backup i Przywracanie](#backup-i-przywracanie)
-12. [Rozwiązywanie Problemów](#rozwiązywanie-problemów)
+1. [Requirements](#requirements)
+2. [Server Preparation](#server-preparation)
+3. [Environment Variables Configuration](#environment-variables-configuration)
+4. [Database Configuration](#database-configuration)
+5. [Starting the Application](#starting-the-application)
+6. [Domain and SSL Configuration](#domain-and-ssl-configuration)
+7. [Stripe Webhooks Configuration](#stripe-webhooks-configuration)
+8. [Initial Setup](#initial-setup)
+9. [Monitoring and Logs](#monitoring-and-logs)
+10. [Updating](#updating)
+11. [Backup and Restore](#backup-and-restore)
+12. [Troubleshooting](#troubleshooting)
 
-## Wymagania
+## Requirements
 
-### Minimalne Wymagania Sprzętowe
+### Minimum Hardware Requirements
 - **CPU**: 2 vCPU
-- **RAM**: 4 GB (zalecane: 8 GB)
-- **Dysk**: 20 GB SSD (zalecane: 50 GB)
-- **Transfer**: 100 GB/miesiąc
+- **RAM**: 4 GB (recommended: 8 GB)
+- **Disk**: 20 GB SSD (recommended: 50 GB)
+- **Transfer**: 100 GB/month
 
-### Oprogramowanie
-- **System Operacyjny**: Ubuntu 22.04 LTS lub nowszy (zalecane)
-- **Docker**: wersja 24.0 lub nowsza
-- **Docker Compose**: wersja 2.20 lub nowsza
-- **Git**: do pobrania kodu
+### Software
+- **Operating System**: Ubuntu 22.04 LTS or newer (recommended)
+- **Docker**: version 24.0 or newer
+- **Docker Compose**: version 2.20 or newer
+- **Git**: for downloading the code
 
-### Zewnętrzne Usługi
-- **Domena**: własna domena z dostępem do DNS
-- **SMTP**: usługa email (SendGrid, AWS SES, Mailgun, itp.)
-- **Stripe**: konto produkcyjne
-- **Cloudflare Turnstile**: konto (opcjonalne, dla CAPTCHA)
+### External Services
+- **Domain**: your own domain with DNS access
+- **SMTP**: email service (SendGrid, AWS SES, Mailgun, etc.)
+- **Stripe**: production account
+- **Cloudflare Turnstile**: account (optional, for CAPTCHA)
 
-## Przygotowanie Serwera
+## Server Preparation
 
-### 1. Aktualizacja Systemu
+### 1. System Update
 
 ```bash
 sudo apt update && sudo apt upgrade -y
 ```
 
-### 2. Instalacja Docker
+### 2. Docker Installation
 
 ```bash
-# Usuń stare wersje
+# Remove old versions
 sudo apt remove docker docker-engine docker.io containerd runc
 
-# Instalacja zależności
+# Install dependencies
 sudo apt install -y \
     apt-transport-https \
     ca-certificates \
@@ -59,130 +59,130 @@ sudo apt install -y \
     gnupg \
     lsb-release
 
-# Dodaj oficjalny klucz GPG Docker
+# Add official Docker GPG key
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 
-# Dodaj repozytorium Docker
+# Add Docker repository
 echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
   $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-# Instalacja Docker Engine
+# Install Docker Engine
 sudo apt update
 sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
-# Weryfikacja instalacji
+# Verify installation
 docker --version
 docker compose version
 ```
 
-### 3. Konfiguracja Docker (opcjonalne, ale zalecane)
+### 3. Docker Configuration (optional but recommended)
 
 ```bash
-# Dodaj użytkownika do grupy docker (uniknięcie sudo)
+# Add user to docker group (avoid sudo)
 sudo usermod -aG docker $USER
 
-# Zaloguj się ponownie lub:
+# Log in again or:
 newgrp docker
 
-# Skonfiguruj Docker do automatycznego startu
+# Configure Docker to start automatically
 sudo systemctl enable docker
 sudo systemctl start docker
 ```
 
-### 4. Instalacja Git
+### 4. Git Installation
 
 ```bash
 sudo apt install -y git
 ```
 
-### 5. Konfiguracja Firewall
+### 5. Firewall Configuration
 
 ```bash
-# Włącz UFW
+# Enable UFW
 sudo ufw enable
 
-# Zezwól na SSH
+# Allow SSH
 sudo ufw allow 22/tcp
 
-# Zezwól na HTTP i HTTPS
+# Allow HTTP and HTTPS
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 
-# Sprawdź status
+# Check status
 sudo ufw status
 ```
 
-## Konfiguracja Zmiennych Środowiskowych
+## Environment Variables Configuration
 
-### 1. Pobierz Kod Źródłowy
+### 1. Download Source Code
 
 ```bash
-# Przejdź do katalogu domowego
+# Go to home directory
 cd ~
 
-# Sklonuj repozytorium
-git clone https://github.com/twoja-organizacja/gateflow.git
+# Clone the repository
+git clone https://github.com/your-organization/gateflow.git
 cd gateflow
 ```
 
-### 2. Utwórz Plik Konfiguracyjny
+### 2. Create Configuration File
 
 ```bash
-# Skopiuj przykładowy plik
+# Copy the example file
 cp .env.production.example .env.production
 
-# Edytuj plik
+# Edit the file
 nano .env.production
 ```
 
-### 3. Wygeneruj Bezpieczne Klucze
+### 3. Generate Secure Keys
 
 ```bash
-# Generowanie JWT_SECRET
+# Generate JWT_SECRET
 openssl rand -base64 32
 
-# Generowanie REALTIME_SECRET_KEY_BASE
+# Generate REALTIME_SECRET_KEY_BASE
 openssl rand -base64 32
 
-# Generowanie POSTGRES_PASSWORD (długie hasło)
+# Generate POSTGRES_PASSWORD (long password)
 openssl rand -base64 48
 ```
 
-### 4. Wypełnij Wszystkie Zmienne
+### 4. Fill In All Variables
 
-Poniżej znajdziesz szczegółowy opis każdej zmiennej:
+Below you will find a detailed description of each variable:
 
-#### Baza Danych
+#### Database
 ```env
-POSTGRES_PASSWORD=twoje_bardzo_bezpieczne_haslo_postgresql
+POSTGRES_PASSWORD=your_very_secure_postgresql_password
 ```
 
-#### JWT i Autoryzacja
+#### JWT and Authorization
 ```env
-JWT_SECRET=wklej_wygenerowany_jwt_secret
-REALTIME_SECRET_KEY_BASE=wklej_wygenerowany_realtime_secret
-ANON_KEY=pobierz_z_supabase_dashboard
-SERVICE_ROLE_KEY=pobierz_z_supabase_dashboard
+JWT_SECRET=paste_generated_jwt_secret
+REALTIME_SECRET_KEY_BASE=paste_generated_realtime_secret
+ANON_KEY=get_from_supabase_dashboard
+SERVICE_ROLE_KEY=get_from_supabase_dashboard
 ```
 
-**Uwaga**: Klucze `ANON_KEY` i `SERVICE_ROLE_KEY` można wygenerować w Supabase Dashboard lub użyć narzędzia do generowania JWT z odpowiednim secretem.
+**Note**: The `ANON_KEY` and `SERVICE_ROLE_KEY` keys can be generated in the Supabase Dashboard or using a JWT generation tool with the appropriate secret.
 
-#### URL-e i Domeny
+#### URLs and Domains
 ```env
-API_EXTERNAL_URL=https://api.twoja-domena.pl
-NEXT_PUBLIC_SUPABASE_URL=https://api.twoja-domena.pl
-GOTRUE_SITE_URL=https://twoja-domena.pl
-NEXT_PUBLIC_SITE_URL=https://twoja-domena.pl
-NEXT_PUBLIC_BASE_URL=https://twoja-domena.pl
-MAIN_DOMAIN=twoja-domena.pl
-GOTRUE_URI_ALLOW_LIST=https://twoja-domena.pl/*,https://www.twoja-domena.pl/*
+API_EXTERNAL_URL=https://api.your-domain.com
+NEXT_PUBLIC_SUPABASE_URL=https://api.your-domain.com
+GOTRUE_SITE_URL=https://your-domain.com
+NEXT_PUBLIC_SITE_URL=https://your-domain.com
+NEXT_PUBLIC_BASE_URL=https://your-domain.com
+MAIN_DOMAIN=your-domain.com
+GOTRUE_URI_ALLOW_LIST=https://your-domain.com/*,https://www.your-domain.com/*
 ```
 
 #### SMTP (Email)
-Przykład dla SendGrid:
+Example for SendGrid:
 ```env
-SMTP_ADMIN_EMAIL=noreply@twoja-domena.pl
+SMTP_ADMIN_EMAIL=noreply@your-domain.com
 SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
 SMTP_USER=apikey
@@ -190,34 +190,34 @@ SMTP_PASS=SG.xxxxxxxxxxxxxxxxxxxxxxxxx
 SMTP_SENDER_NAME=GateFlow
 ```
 
-Przykład dla Gmail:
+Example for Gmail:
 ```env
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=twoj-email@gmail.com
-SMTP_PASS=twoje-haslo-aplikacji
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
 ```
 
-#### Stripe - Wybierz JEDNĄ z metod konfiguracji
+#### Stripe - Choose ONE Configuration Method
 
-**METODA 1: Konfiguracja .env (Zalecana dla deweloperów, Docker, CI/CD)**
+**METHOD 1: .env Configuration (Recommended for developers, Docker, CI/CD)**
 ```env
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_xxxxxxxxxxxxx
-STRIPE_SECRET_KEY=sk_live_xxxxxxxxxxxxx  # Standard Secret Key lub Restricted Key
+STRIPE_SECRET_KEY=sk_live_xxxxxxxxxxxxx  # Standard Secret Key or Restricted Key
 STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxx
 ```
 
-**METODA 2: Kreator w Admin Panel (Zalecana dla użytkowników nietechnicznych)**
+**METHOD 2: Admin Panel Wizard (Recommended for non-technical users)**
 ```env
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_xxxxxxxxxxxxx
-STRIPE_ENCRYPTION_KEY=ONIgOXqmoHOYZphEDkhydpL4briQsVlS9IS3o59mW9E=  # Wygeneruj: openssl rand -base64 32
+STRIPE_ENCRYPTION_KEY=ONIgOXqmoHOYZphEDkhydpL4briQsVlS9IS3o59mW9E=  # Generate: openssl rand -base64 32
 STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxx
 ```
-Następnie skonfiguruj Restricted API Key przez interfejs graficzny w Settings.
+Then configure the Restricted API Key through the graphical interface in Settings.
 
-**Obie metody są w pełni wspierane. Wybierz tę, która pasuje do Twojego workflow.**
+**Both methods are fully supported. Choose the one that fits your workflow.**
 
-**Szczegóły:** Zobacz sekcję [5. Konfiguracja Stripe](#5-konfiguracja-stripe) poniżej.
+**Details:** See section [5. Stripe Configuration](#5-stripe-configuration) below.
 
 #### Cloudflare Turnstile (CAPTCHA)
 ```env
@@ -225,186 +225,186 @@ NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=1x00000000000000000000AA
 CLOUDFLARE_TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
 ```
 
-### 5. Konfiguracja Stripe
+### 5. Stripe Configuration
 
-GateFlow obsługuje **dwie równoważne metody** konfiguracji Stripe. Wybierz jedną, która najlepiej pasuje do Twojego przypadku użycia.
+GateFlow supports **two equivalent methods** for Stripe configuration. Choose the one that best fits your use case.
 
-#### Metoda 1: Konfiguracja przez .env (Zalecana dla deweloperów)
+#### Method 1: .env Configuration (Recommended for developers)
 
-**Zalety:**
-- ✅ Szybka konfiguracja (jedna zmienna środowiskowa)
-- ✅ Idealna dla Docker, CI/CD, automatyzacji
-- ✅ Deweloperzy znają ten pattern
-- ✅ Łatwy rollback (zmień .env i restart)
+**Advantages:**
+- ✅ Quick setup (one environment variable)
+- ✅ Ideal for Docker, CI/CD, automation
+- ✅ Developers are familiar with this pattern
+- ✅ Easy rollback (change .env and restart)
 
-**Kroki:**
-1. Pobierz klucz Secret Key ze Stripe Dashboard:
+**Steps:**
+1. Get the Secret Key from Stripe Dashboard:
    - Test Mode: https://dashboard.stripe.com/test/apikeys
    - Live Mode: https://dashboard.stripe.com/apikeys
-   - Możesz użyć Standard Secret Key (`sk_test_` lub `sk_live_`)
-   - Lub Restricted Key (`rk_test_` lub `rk_live_`) z odpowiednimi uprawnieniami
+   - You can use the Standard Secret Key (`sk_test_` or `sk_live_`)
+   - Or a Restricted Key (`rk_test_` or `rk_live_`) with the appropriate permissions
 
-2. Dodaj do `.env.production`:
+2. Add to `.env.production`:
    ```bash
    # Test Mode (development)
    STRIPE_SECRET_KEY=sk_test_51ABC...xyz
 
-   # LUB Live Mode (production)
+   # OR Live Mode (production)
    STRIPE_SECRET_KEY=sk_live_51ABC...xyz
    ```
 
-3. Zrestartuj aplikację:
+3. Restart the application:
    ```bash
    docker compose restart admin-panel
    ```
 
-4. Zweryfikuj w Settings:
-   - Przejdź do: `https://twoja-domena.pl/dashboard/settings`
-   - Powinieneś zobaczyć niebieski banner: **"Currently using: .env configuration"**
+4. Verify in Settings:
+   - Go to: `https://your-domain.com/dashboard/settings`
+   - You should see a blue banner: **"Currently using: .env configuration"**
 
-#### Metoda 2: Kreator w Admin Panel (Zalecana dla użytkowników nietechnicznych)
+#### Method 2: Admin Panel Wizard (Recommended for non-technical users)
 
-**Zalety:**
-- ✅ Wizualny przewodnik krok po kroku
-- ✅ Szyfrowanie AES-256-GCM (klucze w bazie)
-- ✅ Automatyczna walidacja uprawnień
-- ✅ Przypomnienia o rotacji kluczy (co 90 dni)
-- ✅ Nie wymaga edycji plików
+**Advantages:**
+- ✅ Visual step-by-step guide
+- ✅ AES-256-GCM encryption (keys in database)
+- ✅ Automatic permission validation
+- ✅ Key rotation reminders (every 90 days)
+- ✅ No file editing required
 
-**Kroki:**
+**Steps:**
 
-1. **Wygeneruj klucz szyfrowania** (jednorazowo):
+1. **Generate an encryption key** (one-time):
    ```bash
    openssl rand -base64 32
    ```
 
-2. **Dodaj klucz do `.env.production`**:
+2. **Add the key to `.env.production`**:
    ```bash
-   echo "STRIPE_ENCRYPTION_KEY=TWÓJ_WYGENEROWANY_KLUCZ" >> .env.production
+   echo "STRIPE_ENCRYPTION_KEY=YOUR_GENERATED_KEY" >> .env.production
    ```
 
-   **⚠️ KRYTYCZNE: Nigdy nie commituj tego klucza do Git!**
+   **⚠️ CRITICAL: Never commit this key to Git!**
 
-3. **Zrestartuj aplikację**:
+3. **Restart the application**:
    ```bash
    docker compose restart admin-panel
    ```
 
-4. **Otwórz kreator**:
-   - Przejdź do: `https://twoja-domena.pl/dashboard/settings`
-   - Kliknij przycisk **"Configure Stripe"**
+4. **Open the wizard**:
+   - Go to: `https://your-domain.com/dashboard/settings`
+   - Click the **"Configure Stripe"** button
 
-5. **Przejdź przez 5 kroków**:
-   - **Krok 1 (Witaj)**: Kliknij "Start Configuration"
-   - **Krok 2 (Wybór trybu)**: Wybierz "Test Mode" lub "Live Mode"
-   - **Krok 3 (Utwórz klucz)**: Postępuj według wizualnego przewodnika:
-     1. Otwórz Stripe Dashboard
-     2. Przejdź do API Keys → Create restricted key
-     3. Ustaw uprawnienia:
+5. **Go through 5 steps**:
+   - **Step 1 (Welcome)**: Click "Start Configuration"
+   - **Step 2 (Mode selection)**: Choose "Test Mode" or "Live Mode"
+   - **Step 3 (Create key)**: Follow the visual guide:
+     1. Open Stripe Dashboard
+     2. Go to API Keys → Create restricted key
+     3. Set permissions:
         - ✅ Charges: Write
         - ✅ Customers: Write
         - ✅ Checkout Sessions: Write
         - ✅ Payment Intents: Read
-        - ✅ Webhooks: Read (opcjonalne)
-     4. Skopiuj klucz (zaczyna się od `rk_test_` lub `rk_live_`)
-     5. Wróć do kreatora i kliknij "I've Created the Key"
-   - **Krok 4 (Walidacja)**: Wklej klucz i kliknij "Validate API Key"
-   - **Krok 5 (Sukces)**: Kliknij "Finish"
+        - ✅ Webhooks: Read (optional)
+     4. Copy the key (starts with `rk_test_` or `rk_live_`)
+     5. Return to the wizard and click "I've Created the Key"
+   - **Step 4 (Validation)**: Paste the key and click "Validate API Key"
+   - **Step 5 (Success)**: Click "Finish"
 
-6. **Zweryfikuj konfigurację**:
-   - Powinieneś zobaczyć zielony banner: **"Currently using: Database configuration"**
-   - Twój zamaskowany klucz: `rk_test_****1234` (tylko ostatnie 4 znaki)
+6. **Verify configuration**:
+   - You should see a green banner: **"Currently using: Database configuration"**
+   - Your masked key: `rk_test_****1234` (only last 4 characters)
    - Status: Test Mode / Live Mode
-   - Uprawnienia: ✅ Verified
+   - Permissions: ✅ Verified
 
-#### Przełączanie między metodami
+#### Switching Between Methods
 
-**Z .env na Kreator**:
-1. Po prostu uruchom kreator i skonfiguruj klucz
-2. Konfiguracja z bazy ma priorytet nad .env
-3. Możesz zostawić zmienną `STRIPE_SECRET_KEY` w .env jako fallback
+**From .env to Wizard**:
+1. Simply launch the wizard and configure the key
+2. Database configuration takes priority over .env
+3. You can leave the `STRIPE_SECRET_KEY` variable in .env as a fallback
 
-**Z Kreatora na .env**:
-1. Dodaj `STRIPE_SECRET_KEY` do .env
-2. Usuń konfigurację z bazy:
+**From Wizard to .env**:
+1. Add `STRIPE_SECRET_KEY` to .env
+2. Remove configuration from the database:
    ```bash
    docker exec supabase_db_gemini-test psql -U postgres -d postgres -c \
      "DELETE FROM stripe_configurations WHERE is_active = true;"
    ```
-3. Zrestartuj aplikację
+3. Restart the application
 
-#### Testowanie konfiguracji
+#### Testing Configuration
 
-**Test z kartą testową Stripe:**
-1. Utwórz testowy produkt w Admin Panel
-2. Przejdź na stronę produktu
-3. Kliknij "Buy Now"
-4. Użyj karty testowej: `4242 4242 4242 4242`
-   - Expiry: dowolna przyszła data (np. 12/34)
-   - CVC: dowolne 3 cyfry (np. 123)
-5. Zweryfikuj płatność w:
+**Test with a Stripe test card:**
+1. Create a test product in the Admin Panel
+2. Go to the product page
+3. Click "Buy Now"
+4. Use the test card: `4242 4242 4242 4242`
+   - Expiry: any future date (e.g. 12/34)
+   - CVC: any 3 digits (e.g. 123)
+5. Verify the payment in:
    - Dashboard → Payments
    - Stripe Dashboard → Payments
 
-**📖 Pełny przewodnik testowania:** Zobacz `/STRIPE-TESTING-GUIDE.md`
+**📖 Full testing guide:** See `/STRIPE-TESTING-GUIDE.md`
 
-#### Wymagane migracje bazy danych
+#### Required Database Migrations
 
-Kreator wymaga tabeli `stripe_configurations` w bazie:
+The wizard requires the `stripe_configurations` table in the database:
 
 ```bash
-# Sprawdź czy migracja istnieje
+# Check if the migration exists
 ls -la supabase/migrations/ | grep stripe
 
-# Powinna być: 20251227000000_stripe_rak_configuration.sql
+# Should be: 20251227000000_stripe_rak_configuration.sql
 ```
 
-Jeśli migracja nie istnieje, zostanie automatycznie wykonana podczas uruchomienia bazy danych.
+If the migration does not exist, it will be automatically executed during database startup.
 
-## Konfiguracja Bazy Danych
+## Database Configuration
 
-### 1. Przygotuj Migracje
+### 1. Prepare Migrations
 
-Sprawdź, czy wszystkie migracje są w miejscu:
+Check that all migrations are in place:
 
 ```bash
 ls -la supabase/migrations/
 ```
 
-Powinny być pliki:
-- `20250709000000_initial_schema.sql` - Schemat początkowy
-- `20250717000000_payment_system.sql` - System płatności
-- `20251227000000_stripe_rak_configuration.sql` - Konfiguracja Stripe (kreator)
-- `20251227100000_shop_config.sql` - Konfiguracja sklepu
-- inne...
+The following files should be present:
+- `20250709000000_initial_schema.sql` - Initial schema
+- `20250717000000_payment_system.sql` - Payment system
+- `20251227000000_stripe_rak_configuration.sql` - Stripe configuration (wizard)
+- `20251227100000_shop_config.sql` - Shop configuration
+- others...
 
-### 2. Opcjonalnie: Zmodyfikuj Seed Data
+### 2. Optionally: Modify Seed Data
 
-Jeśli chcesz mieć własne przykładowe dane:
+If you want to have your own sample data:
 
 ```bash
 nano supabase/seed.sql
 ```
 
-## Uruchomienie Aplikacji
+## Starting the Application
 
-### 1. Zbuduj i Uruchom Kontenery
+### 1. Build and Start Containers
 
 ```bash
-# Upewnij się, że jesteś w głównym katalogu projektu
+# Make sure you are in the main project directory
 cd ~/gateflow
 
-# Zbuduj obrazy (może zająć kilka minut przy pierwszym uruchomieniu)
+# Build images (may take a few minutes on the first run)
 docker compose build
 
-# Uruchom wszystkie usługi
+# Start all services
 docker compose up -d
 
-# Sprawdź status kontenerów
+# Check container status
 docker compose ps
 ```
 
-Oczekiwany output:
+Expected output:
 ```
 NAME                  STATUS              PORTS
 gateflow-admin        running             0.0.0.0:3000->3000/tcp
@@ -416,273 +416,273 @@ gateflow-nginx        running             0.0.0.0:8080->80/tcp
 ...
 ```
 
-### 2. Sprawdź Logi
+### 2. Check Logs
 
 ```bash
-# Wszystkie kontenery
+# All containers
 docker compose logs -f
 
-# Konkretny kontener
+# Specific container
 docker compose logs -f admin-panel
 docker compose logs -f db
 ```
 
-### 3. Zainicjalizuj Bazę Danych
+### 3. Initialize Database
 
-Jeśli baza została automatycznie zainicjalizowana (migracje w `/docker-entrypoint-initdb.d`), możesz pominąć ten krok. W przeciwnym razie:
+If the database was automatically initialized (migrations in `/docker-entrypoint-initdb.d`), you can skip this step. Otherwise:
 
 ```bash
-# Połącz się z bazą
+# Connect to the database
 docker compose exec db psql -U postgres
 
-# Sprawdź tabele
+# Check tables
 \dt
 
-# Wyjdź
+# Exit
 \q
 ```
 
-Jeśli tabele nie istnieją, uruchom migracje ręcznie:
+If the tables do not exist, run migrations manually:
 
 ```bash
-# Skopiuj migracje do kontenera
+# Copy migrations to the container
 docker compose cp supabase/migrations/. db:/tmp/migrations/
 
-# Wykonaj migracje
+# Execute migrations
 docker compose exec db psql -U postgres -d postgres -f /tmp/migrations/20250709000000_initial_schema.sql
 docker compose exec db psql -U postgres -d postgres -f /tmp/migrations/20250717000000_payment_system.sql
 ```
 
-## Konfiguracja Domeny i SSL
+## Domain and SSL Configuration
 
-### Opcja 1: Nginx Proxy Manager (Zalecane dla początkujących)
+### Option 1: Nginx Proxy Manager (Recommended for beginners)
 
-1. Zainstaluj Nginx Proxy Manager:
+1. Install Nginx Proxy Manager:
 ```bash
-# Utwórz osobny katalog
+# Create a separate directory
 mkdir ~/nginx-proxy-manager
 cd ~/nginx-proxy-manager
 
-# Pobierz docker-compose.yml dla NPM
+# Download docker-compose.yml for NPM
 wget https://github.com/NginxProxyManager/nginx-proxy-manager/blob/main/docker-compose.yml
 
-# Uruchom
+# Start
 docker compose up -d
 ```
 
-2. Zaloguj się do panelu: `http://twoj-serwer:81`
+2. Log in to the panel: `http://your-server:81`
    - Email: `admin@example.com`
-   - Hasło: `changeme`
+   - Password: `changeme`
 
-3. Dodaj Proxy Host:
-   - Domain: `twoja-domena.pl`
+3. Add a Proxy Host:
+   - Domain: `your-domain.com`
    - Forward Hostname: `admin-panel`
    - Forward Port: `3000`
    - Websockets: ✅
-   - SSL: Wybierz "Request a new SSL Certificate" (Let's Encrypt)
+   - SSL: Select "Request a new SSL Certificate" (Let's Encrypt)
 
-4. Dodaj drugi Proxy Host dla API:
-   - Domain: `api.twoja-domena.pl`
+4. Add a second Proxy Host for the API:
+   - Domain: `api.your-domain.com`
    - Forward Hostname: `kong`
    - Forward Port: `8000`
    - SSL: ✅
 
-5. Dodaj trzeci Proxy Host dla przykładów:
-   - Domain: `examples.twoja-domena.pl` (opcjonalne)
+5. Add a third Proxy Host for examples:
+   - Domain: `examples.your-domain.com` (optional)
    - Forward Hostname: `nginx`
    - Forward Port: `80`
    - SSL: ✅
 
-### Opcja 2: Certbot + Nginx (Dla zaawansowanych)
+### Option 2: Certbot + Nginx (For advanced users)
 
 ```bash
-# Instalacja Certbot
+# Install Certbot
 sudo apt install -y certbot python3-certbot-nginx
 
-# Uzyskaj certyfikat
-sudo certbot --nginx -d twoja-domena.pl -d www.twoja-domena.pl -d api.twoja-domena.pl
+# Obtain certificate
+sudo certbot --nginx -d your-domain.com -d www.your-domain.com -d api.your-domain.com
 
-# Automatyczne odnawianie
+# Automatic renewal
 sudo systemctl enable certbot.timer
 ```
 
-### Konfiguracja DNS
+### DNS Configuration
 
-Ustaw rekordy DNS w swoim dostawcy:
+Set DNS records with your provider:
 
 ```
-Typ    Nazwa    Wartość              TTL
-A      @        IP_TWOJEGO_SERWERA   3600
-A      www      IP_TWOJEGO_SERWERA   3600
-A      api      IP_TWOJEGO_SERWERA   3600
+Type   Name     Value                TTL
+A      @        YOUR_SERVER_IP       3600
+A      www      YOUR_SERVER_IP       3600
+A      api      YOUR_SERVER_IP       3600
 ```
 
-## Konfiguracja Stripe Webhooks
+## Stripe Webhooks Configuration
 
-### 1. Utwórz Webhook Endpoint w Stripe Dashboard
+### 1. Create a Webhook Endpoint in Stripe Dashboard
 
-1. Przejdź do: https://dashboard.stripe.com/webhooks
-2. Kliknij "Add endpoint"
-3. URL: `https://twoja-domena.pl/api/webhooks/stripe`
-4. Wybierz zdarzenia:
+1. Go to: https://dashboard.stripe.com/webhooks
+2. Click "Add endpoint"
+3. URL: `https://your-domain.com/api/webhooks/stripe`
+4. Select events:
    - `checkout.session.completed`
    - `payment_intent.succeeded`
    - `payment_intent.payment_failed`
-5. Zapisz i skopiuj **Signing secret** (`whsec_...`)
+5. Save and copy the **Signing secret** (`whsec_...`)
 
-### 2. Zaktualizuj Zmienne Środowiskowe
+### 2. Update Environment Variables
 
 ```bash
 nano .env.production
 ```
 
-Dodaj/zaktualizuj:
+Add/update:
 ```env
-STRIPE_WEBHOOK_SECRET=whsec_twoj_webhook_secret
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
 ```
 
-Zrestartuj aplikację:
+Restart the application:
 ```bash
 docker compose restart admin-panel
 ```
 
-## Pierwsza Konfiguracja
+## Initial Setup
 
-### 1. Utwórz Pierwsze Konto Administratora
+### 1. Create First Administrator Account
 
-1. Przejdź do: `https://twoja-domena.pl/login`
-2. Wpisz swój email
-3. Kliknij "Send Magic Link"
-4. Sprawdź skrzynkę email i kliknij link
-5. Pierwsze konto automatycznie dostaje uprawnienia administratora!
+1. Go to: `https://your-domain.com/login`
+2. Enter your email
+3. Click "Send Magic Link"
+4. Check your email inbox and click the link
+5. The first account automatically gets administrator privileges!
 
-### 2. Przetestuj Dashboard
+### 2. Test the Dashboard
 
-1. Po zalogowaniu przejdź do: `https://twoja-domena.pl/dashboard`
-2. Sprawdź sekcję Admin: `https://twoja-domena.pl/admin/products`
-3. Utwórz pierwszy produkt testowy
+1. After logging in, go to: `https://your-domain.com/dashboard`
+2. Check the Admin section: `https://your-domain.com/admin/products`
+3. Create your first test product
 
-### 3. Przetestuj Płatność
+### 3. Test a Payment
 
-1. Utwórz produkt z ceną testową (np. 10 PLN)
-2. Przejdź na stronę produktu: `https://twoja-domena.pl/p/slug-produktu`
-3. Użyj testowej karty Stripe: `4242 4242 4242 4242`
-4. Zweryfikuj, że płatność przeszła
+1. Create a product with a test price (e.g. 10 PLN)
+2. Go to the product page: `https://your-domain.com/p/product-slug`
+3. Use the Stripe test card: `4242 4242 4242 4242`
+4. Verify that the payment went through
 
-## Monitorowanie i Logi
+## Monitoring and Logs
 
-### Sprawdzanie Statusu
+### Checking Status
 
 ```bash
-# Status wszystkich kontenerów
+# Status of all containers
 docker compose ps
 
-# Użycie zasobów
+# Resource usage
 docker stats
 
-# Logi w czasie rzeczywistym
+# Real-time logs
 docker compose logs -f
 
-# Logi konkretnej usługi
+# Logs of a specific service
 docker compose logs -f admin-panel
 docker compose logs -f db
 ```
 
-### Logi Aplikacji
+### Application Logs
 
-Logi są dostępne w kontenerach:
+Logs are available in containers:
 
 ```bash
 # Admin Panel
 docker compose exec admin-panel sh
 ls -la /app/.next/
 
-# Baza danych - logi PostgreSQL
+# Database - PostgreSQL logs
 docker compose logs db | grep ERROR
 
 # Nginx
 docker compose logs nginx
 ```
 
-### Monitorowanie Bazy Danych
+### Database Monitoring
 
 ```bash
-# Połącz się z bazą
+# Connect to the database
 docker compose exec db psql -U postgres
 
-# Sprawdź rozmiar bazy
+# Check database size
 SELECT pg_size_pretty(pg_database_size('postgres'));
 
-# Sprawdź aktywne połączenia
+# Check active connections
 SELECT count(*) FROM pg_stat_activity;
 
-# Sprawdź najpopularniejsze zapytania
+# Check most popular queries
 SELECT query, calls, total_exec_time
 FROM pg_stat_statements
 ORDER BY total_exec_time DESC
 LIMIT 10;
 ```
 
-## Aktualizacja
+## Updating
 
-### Aktualizacja Kodu
+### Updating the Code
 
 ```bash
-# Przejdź do katalogu projektu
+# Go to the project directory
 cd ~/gateflow
 
-# Zatrzymaj aplikację
+# Stop the application
 docker compose down
 
-# Pobierz najnowszy kod
+# Pull the latest code
 git pull origin main
 
-# Przebuduj obrazy
+# Rebuild images
 docker compose build --no-cache
 
-# Uruchom ponownie
+# Start again
 docker compose up -d
 
-# Sprawdź logi
+# Check logs
 docker compose logs -f admin-panel
 ```
 
-### Aktualizacja Bazy Danych (Migracje)
+### Updating the Database (Migrations)
 
 ```bash
-# Nowa migracja pojawi się w supabase/migrations/
+# New migration will appear in supabase/migrations/
 ls -la supabase/migrations/
 
-# Wykonaj migrację
-docker compose exec db psql -U postgres -d postgres -f /tmp/migrations/NOWA_MIGRACJA.sql
+# Execute the migration
+docker compose exec db psql -U postgres -d postgres -f /tmp/migrations/NEW_MIGRATION.sql
 ```
 
-### Backup Przed Aktualizacją
+### Backup Before Updating
 
-**ZAWSZE rób backup przed aktualizacją!**
+**ALWAYS make a backup before updating!**
 
 ```bash
-# Backup bazy danych
+# Database backup
 docker compose exec db pg_dump -U postgres postgres > backup_$(date +%Y%m%d_%H%M%S).sql
 
-# Backup volumes
+# Volume backup
 docker run --rm \
   -v gateflow_postgres_data:/data \
   -v $(pwd):/backup \
   alpine tar czf /backup/postgres_backup_$(date +%Y%m%d_%H%M%S).tar.gz /data
 ```
 
-## Backup i Przywracanie
+## Backup and Restore
 
-### Automatyczny Backup Bazy Danych
+### Automatic Database Backup
 
-Utwórz skrypt backup:
+Create a backup script:
 
 ```bash
 nano ~/backup-gateflow.sh
 ```
 
-Zawartość:
+Contents:
 ```bash
 #!/bin/bash
 BACKUP_DIR="/home/$(whoami)/backups/gateflow"
@@ -690,179 +690,179 @@ DATE=$(date +%Y%m%d_%H%M%S)
 
 mkdir -p $BACKUP_DIR
 
-# Backup bazy danych
+# Database backup
 docker compose -f /home/$(whoami)/gateflow/docker-compose.yml \
   exec -T db pg_dump -U postgres postgres | gzip > $BACKUP_DIR/db_$DATE.sql.gz
 
-# Usuń stare backupy (starsze niż 7 dni)
+# Remove old backups (older than 7 days)
 find $BACKUP_DIR -name "db_*.sql.gz" -mtime +7 -delete
 
 echo "Backup completed: $BACKUP_DIR/db_$DATE.sql.gz"
 ```
 
-Ustaw uprawnienia i cron:
+Set permissions and cron:
 ```bash
 chmod +x ~/backup-gateflow.sh
 
-# Dodaj do crona (backup codziennie o 2:00)
+# Add to cron (backup daily at 2:00 AM)
 crontab -e
 
-# Dodaj linię:
-0 2 * * * /home/twojanazwa/backup-gateflow.sh >> /home/twojanazwa/backup-gateflow.log 2>&1
+# Add the line:
+0 2 * * * /home/yourusername/backup-gateflow.sh >> /home/yourusername/backup-gateflow.log 2>&1
 ```
 
-### Przywracanie z Backupu
+### Restoring from Backup
 
 ```bash
-# Zatrzymaj aplikację
+# Stop the application
 cd ~/gateflow
 docker compose down
 
-# Przywróć bazę danych
+# Restore the database
 gunzip -c ~/backups/gateflow/db_20250126_020000.sql.gz | \
   docker compose run --rm -T db psql -U postgres
 
-# Uruchom ponownie
+# Start again
 docker compose up -d
 ```
 
-### Backup Plików
+### File Backup
 
 ```bash
-# Backup volumes (storage, uploads, etc.)
+# Volume backup (storage, uploads, etc.)
 docker run --rm \
   -v gateflow_storage_data:/data \
   -v ~/backups/gateflow:/backup \
   alpine tar czf /backup/storage_$(date +%Y%m%d).tar.gz /data
 ```
 
-## Rozwiązywanie Problemów
+## Troubleshooting
 
-### Problem: Kontenery nie startują
+### Problem: Containers won't start
 
 ```bash
-# Sprawdź logi
+# Check logs
 docker compose logs
 
-# Sprawdź konfigurację
+# Check configuration
 docker compose config
 
-# Usuń wszystko i zacznij od nowa
+# Remove everything and start from scratch
 docker compose down -v
 docker compose up -d
 ```
 
-### Problem: Baza danych nie odpowiada
+### Problem: Database not responding
 
 ```bash
-# Sprawdź status
+# Check status
 docker compose ps db
 
-# Sprawdź logi
+# Check logs
 docker compose logs db
 
-# Zrestartuj bazę
+# Restart the database
 docker compose restart db
 
-# Jeśli to nie pomoże, sprawdź wolne miejsce
+# If that doesn't help, check free disk space
 df -h
 ```
 
-### Problem: Admin Panel zwraca 500
+### Problem: Admin Panel returns 500
 
 ```bash
-# Sprawdź logi
+# Check logs
 docker compose logs admin-panel
 
-# Sprawdź zmienne środowiskowe
+# Check environment variables
 docker compose exec admin-panel env | grep SUPABASE
 
-# Zrestartuj panel
+# Restart the panel
 docker compose restart admin-panel
 ```
 
-### Problem: Magic link nie działa
+### Problem: Magic link doesn't work
 
-1. Sprawdź konfigurację SMTP:
+1. Check SMTP configuration:
 ```bash
 docker compose logs auth | grep SMTP
 ```
 
-2. Sprawdź `GOTRUE_URI_ALLOW_LIST` w `.env.production`
+2. Check `GOTRUE_URI_ALLOW_LIST` in `.env.production`
 
-3. Sprawdź czy email dotarł (sprawdź spam)
+3. Check if the email arrived (check spam)
 
-### Problem: Płatności Stripe nie działają
+### Problem: Stripe payments don't work
 
-1. Sprawdź webhook secret:
+1. Check webhook secret:
 ```bash
 docker compose exec admin-panel env | grep STRIPE
 ```
 
-2. Sprawdź logi webhooków w Stripe Dashboard
+2. Check webhook logs in Stripe Dashboard
 
-3. Przetestuj endpoint ręcznie:
+3. Test the endpoint manually:
 ```bash
-curl -X POST https://twoja-domena.pl/api/webhooks/stripe \
+curl -X POST https://your-domain.com/api/webhooks/stripe \
   -H "stripe-signature: test" \
   -d '{}'
 ```
 
-### Problem: Brak miejsca na dysku
+### Problem: No disk space
 
 ```bash
-# Sprawdź miejsce
+# Check space
 df -h
 
-# Usuń nieużywane obrazy
+# Remove unused images
 docker image prune -a
 
-# Usuń nieużywane volumes
+# Remove unused volumes
 docker volume prune
 
-# Usuń stare logi
+# Remove old logs
 docker compose logs --tail=0
 ```
 
-### Problem: Zbyt wolne działanie
+### Problem: Slow performance
 
-1. Sprawdź użycie zasobów:
+1. Check resource usage:
 ```bash
 docker stats
 ```
 
-2. Dodaj więcej RAM lub CPU w ustawieniach serwera
+2. Add more RAM or CPU in server settings
 
-3. Optymalizuj bazę danych:
+3. Optimize the database:
 ```bash
 docker compose exec db psql -U postgres -c "VACUUM ANALYZE;"
 ```
 
-4. Dodaj indeksy do często używanych kolumn
+4. Add indexes to frequently used columns
 
-## Wsparcie i Dokumentacja
+## Support and Documentation
 
-- **Dokumentacja GateFlow**: `/CLAUDE.md` w repozytorium
-- **Dokumentacja Docker**: https://docs.docker.com/
-- **Dokumentacja Supabase**: https://supabase.com/docs
-- **Dokumentacja Stripe**: https://stripe.com/docs
-- **GitHub Issues**: [link do repozytorium]
+- **GateFlow Documentation**: `/CLAUDE.md` in the repository
+- **Docker Documentation**: https://docs.docker.com/
+- **Supabase Documentation**: https://supabase.com/docs
+- **Stripe Documentation**: https://stripe.com/docs
+- **GitHub Issues**: [link to repository]
 
-## Bezpieczeństwo - Checklist
+## Security - Checklist
 
-Po wdrożeniu sprawdź:
+After deployment, check:
 
-- [ ] Wszystkie hasła są długie i bezpieczne
-- [ ] `.env.production` NIE jest w repozytorium Git
-- [ ] Firewall jest skonfigurowany (tylko porty 22, 80, 443)
-- [ ] SSL/TLS jest włączony (HTTPS)
-- [ ] Backupy są skonfigurowane i testowane
-- [ ] SMTP używa szyfrowanego połączenia
-- [ ] Stripe jest w trybie produkcyjnym (klucze `pk_live_` i `sk_live_`)
-- [ ] Rate limiting jest włączony
-- [ ] Logi nie zawierają wrażliwych danych
-- [ ] Monitorowanie jest skonfigurowane
+- [ ] All passwords are long and secure
+- [ ] `.env.production` is NOT in the Git repository
+- [ ] Firewall is configured (only ports 22, 80, 443)
+- [ ] SSL/TLS is enabled (HTTPS)
+- [ ] Backups are configured and tested
+- [ ] SMTP uses an encrypted connection
+- [ ] Stripe is in production mode (keys `pk_live_` and `sk_live_`)
+- [ ] Rate limiting is enabled
+- [ ] Logs do not contain sensitive data
+- [ ] Monitoring is configured
 
 ---
 
-**Gratulacje! GateFlow jest teraz uruchomiony produkcyjnie!** 🎉
+**Congratulations! GateFlow is now running in production!** 🎉

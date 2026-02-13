@@ -160,7 +160,7 @@ All integrations can be configured via the admin panel (encrypted storage) or en
 | Google Tag Manager | ✓ | — | Container ID |
 | Facebook Pixel | ✓ | — | Pixel ID + CAPI token |
 
-See **[Integrations Guide](./DEPLOYMENT.md#integrations-configuration)** for details.
+See **[FEATURES.md](./FEATURES.md)** for details on all integrations.
 
 ---
 
@@ -168,10 +168,8 @@ See **[Integrations Guide](./DEPLOYMENT.md#integrations-configuration)** for det
 
 | Guide | Best For |
 |-------|----------|
-| **[DEPLOYMENT.md](./DEPLOYMENT.md)** | VPS/mikr.us (~16 zł/month) |
-| **[AI-DEPLOYMENT.md](./AI-DEPLOYMENT.md)** | AI-assisted setup |
-
-Both guides cover Docker deployment with Supabase Cloud and automatic SSL via Caddy.
+| **[Deployment Guide](./docs/DEPLOYMENT-MIKRUS.md)** | VPS/mikr.us with PM2 (recommended) |
+| **[Advanced Options](./deployment/README.md)** | Docker, Full-Stack, PM2 Cluster |
 
 ---
 
@@ -180,7 +178,7 @@ Both guides cover Docker deployment with Supabase Cloud and automatic SSL via Ca
 | File | Description |
 |------|-------------|
 | [FEATURES.md](./FEATURES.md) | Complete feature list with roadmap |
-| [DEPLOYMENT.md](./DEPLOYMENT.md) | Step-by-step deployment guide |
+| [Deployment Guide](./docs/DEPLOYMENT-MIKRUS.md) | Step-by-step deployment guide |
 | [STRIPE-TESTING-GUIDE.md](./STRIPE-TESTING-GUIDE.md) | Testing payments locally |
 | [BACKLOG.md](./BACKLOG.md) | Development roadmap |
 | [mcp-server/README.md](./mcp-server/README.md) | MCP Server setup guide |

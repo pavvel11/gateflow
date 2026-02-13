@@ -956,6 +956,31 @@ Claude → list_customers → grant_access (batch) → Done
 
 ---
 
+### ☁️ Serverless Deployment (Vercel / Cloudflare / Netlify)
+**Status**: Planned
+**Priority**: 🟢 High
+**Effort**: 2-3 days
+**Goal**: Deploy GateFlow in minutes without server management
+
+**Motivation**: Current deployment requires VPS setup, PM2/Docker configuration, and reverse proxy. For most users (especially solo creators), a serverless one-click deployment would dramatically lower the barrier to entry.
+
+**Features**:
+- One-click Vercel deployment (`vercel.json` + environment setup guide)
+- Cloudflare Pages support
+- Netlify adapter
+- "Deploy in 5 minutes" quick-start documentation
+- Supabase Cloud as managed database (already supported)
+- Automatic SSL, CDN, and scaling out of the box
+
+**Implementation Notes**:
+- Next.js 16 standalone mode already works well with serverless
+- Main challenge: ensure all API routes work in edge/serverless runtime
+- ISR and revalidation should work natively on Vercel
+- Need to verify Stripe webhooks work with serverless function timeouts
+- Consider adding "Deploy to Vercel" button in README.md
+
+---
+
 ## 🟡 Medium Priority
 
 ### 🛒 Product Variants (Pricing Tiers)
