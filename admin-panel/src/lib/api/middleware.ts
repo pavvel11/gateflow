@@ -25,52 +25,14 @@ import {
   ApiScope,
   API_SCOPES,
 } from './api-keys';
-
-// Simple in-memory rate limiter for API keys
-// In production with multiple instances, use Redis/Upstash for distributed rate limiting
-interface RateLimitEntry {
-  count: number;
-  windowStart: number;
-}
-
-const apiKeyRateLimits = new Map<string, RateLimitEntry>();
-
-// Clean up old entries every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of apiKeyRateLimits.entries()) {
-    if (now - entry.windowStart > 60000) { // 1 minute window expired
-      apiKeyRateLimits.delete(key);
-    }
-  }
-}, 300000);
+import { checkRateLimit } from '@/lib/rate-limiting';
 
 /**
- * Check rate limit for API key
+ * Check rate limit for API key using distributed backend (Upstash Redis or Supabase DB)
  * Returns true if request is allowed, false if rate limited
  */
-function checkApiKeyRateLimit(keyId: string, limitPerMinute: number): boolean {
-  // Skip rate limiting in test mode (unless RATE_LIMIT_TEST_MODE is set)
-  const isTestMode = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
-  if (isTestMode && process.env.RATE_LIMIT_TEST_MODE !== 'true') {
-    return true;
-  }
-
-  const now = Date.now();
-  const entry = apiKeyRateLimits.get(keyId);
-
-  if (!entry || now - entry.windowStart >= 60000) {
-    // New window
-    apiKeyRateLimits.set(keyId, { count: 1, windowStart: now });
-    return true;
-  }
-
-  if (entry.count >= limitPerMinute) {
-    return false;
-  }
-
-  entry.count++;
-  return true;
+async function checkApiKeyRateLimit(keyId: string, limitPerMinute: number): Promise<boolean> {
+  return checkRateLimit(`api_key:${keyId}`, limitPerMinute, 1);
 }
 
 // Auth method used
@@ -327,7 +289,7 @@ export async function authenticate(
   const apiKeyAuth = await authenticateViaApiKey(request);
   if (apiKeyAuth) {
     // Check rate limit for API key
-    const rateLimitAllowed = checkApiKeyRateLimit(
+    const rateLimitAllowed = await checkApiKeyRateLimit(
       apiKeyAuth.apiKey.id,
       apiKeyAuth.apiKey.rateLimitPerMinute
     );
