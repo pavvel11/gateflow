@@ -205,7 +205,7 @@ VALUES ('SAVE50', '$50 Savings', 'fixed', 50, 'USD', true);
 
 -- 3. Email-specific exclusive coupon (targeted offer)
 INSERT INTO coupons (code, name, discount_type, discount_value, allowed_emails, is_active) 
-VALUES ('EXCLUSIVE90', 'VIP 90% Discount', 'percentage', 90, '["vip@example.com", "plkjurczyk@gmail.com"]'::jsonb, true);
+VALUES ('EXCLUSIVE90', 'VIP 90% Discount', 'percentage', 90, '["vip@example.com", "admin@example.com"]'::jsonb, true);
 
 -- 4. Product-specific coupon
 INSERT INTO coupons (code, name, discount_type, discount_value, allowed_product_ids, is_active) 

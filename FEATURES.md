@@ -1,252 +1,252 @@
-# GateFlow - Lista Ficzerów
+# GateFlow - Feature List
 
-> **Wygenerowano**: 2026-01-06
-> **Wersja**: 1.0
+> **Generated**: 2026-01-06
+> **Version**: 1.0
 > **Status**: Production-ready
 
 ---
 
-## Spis Treści
+## Table of Contents
 
-1. [Zaimplementowane Ficzery](#zaimplementowane-ficzery)
-2. [Planowane Ficzery (TURBO Roadmap)](#planowane-ficzery-turbo-roadmap)
-3. [Statystyki Projektu](#statystyki-projektu)
+1. [Implemented Features](#implemented-features)
+2. [Planned Features (TURBO Roadmap)](#planned-features-turbo-roadmap)
+3. [Project Statistics](#project-statistics)
 
 ---
 
-# Zaimplementowane Ficzery
+# Implemented Features
 
-## 1. Zarządzanie Produktami
+## 1. Product Management
 
-### Podstawy Produktów
-- **CRUD produktów** - Pełne tworzenie, edycja, usuwanie, duplikowanie
-- **Slugi URL** - Unikalne, SEO-friendly adresy produktów
-- **Status produktu** - Aktywny/Nieaktywny z kontrolą widoczności
-- **Featured products** - Wyróżnianie produktów na stronie głównej
-- **Opisy produktów** - Krótki + długi opis (markdown support)
-- **Ikony i obrazy** - Icon URL, Image URL, Thumbnail URL
+### Product Basics
+- **Product CRUD** - Full create, edit, delete, duplicate
+- **URL slugs** - Unique, SEO-friendly product addresses
+- **Product status** - Active/Inactive with visibility control
+- **Featured products** - Highlighting products on the homepage
+- **Product descriptions** - Short + long description (markdown support)
+- **Icons and images** - Icon URL, Image URL, Thumbnail URL
 
-### Cennik i Promocje
-- **Ceny w wielu walutach** - 26 walut (USD, EUR, PLN, GBP, JPY, CAD, AUD, etc.)
-- **VAT handling** - Stawka VAT + opcja "cena zawiera VAT"
-- **Sale price** - Cena promocyjna z:
-  - Limitem czasowym (`sale_price_until`)
-  - Limitem ilościowym (`sale_quantity_limit`)
-  - Automatycznym licznikiem sprzedanych (`sale_quantity_sold`)
-- **EU Omnibus Directive** - 30-dniowa historia cen, wyświetlanie najniższej ceny
+### Pricing and Promotions
+- **Prices in multiple currencies** - 26 currencies (USD, EUR, PLN, GBP, JPY, CAD, AUD, etc.)
+- **VAT handling** - VAT rate + "price includes VAT" option
+- **Sale price** - Promotional price with:
+  - Time limit (`sale_price_until`)
+  - Quantity limit (`sale_quantity_limit`)
+  - Automatic sold counter (`sale_quantity_sold`)
+- **EU Omnibus Directive** - 30-day price history, lowest price display
 
 ### Pay What You Want (PWYW)
-- **Toggle PWYW** - Włączanie trybu "zapłać ile chcesz"
-- **Minimalna cena** - Limit 0.50 (wymóg Stripe)
-- **Preset buttons** - Konfigurowalne przyciski z sugerowanymi kwotami
-- **UI checkout** - Slider/input dla custom amount
+- **PWYW toggle** - Enabling "pay what you want" mode
+- **Minimum price** - 0.50 limit (Stripe requirement)
+- **Preset buttons** - Configurable buttons with suggested amounts
+- **Checkout UI** - Slider/input for custom amount
 
-### Dostępność Czasowa
-- **Available from/until** - Okno czasowe dostępności produktu
-- **Early bird pricing** - Specjalne ceny przed datą startu
-- **Coming Soon badges** - Automatyczne etykiety dla produktów w przyszłości
+### Time-Based Availability
+- **Available from/until** - Product availability time window
+- **Early bird pricing** - Special prices before the start date
+- **Coming Soon badges** - Automatic labels for future products
 
-### Dostęp do Produktu
-- **Lifetime access** - Dostęp bez ograniczeń czasowych
-- **Timed access** - Dostęp na X dni (`auto_grant_duration_days`)
-- **Access expiry tracking** - Monitorowanie wygasających dostępów
-- **Repurchase renewal** - Możliwość przedłużenia dostępu
-
----
-
-## 2. Warianty Produktów (M:N)
-
-### Grupy Wariantów
-- **Variant groups** - Grupowanie produktów w warianty (np. Basic/Pro/Enterprise)
-- **M:N relacja** - Jeden produkt może być w wielu grupach
-- **Display order** - Kolejność wyświetlania wariantów
-- **Featured variant** - Domyślnie wybrany wariant
-
-### UI Wariantów
-- **Variant selector page** - Strona wyboru wariantu przed checkout
-- **Radio buttons/Dropdown** - Różne style wyboru
-- **Link copying** - Kopiowanie linków do konkretnych wariantów
+### Product Access
+- **Lifetime access** - Access without time restrictions
+- **Timed access** - Access for X days (`auto_grant_duration_days`)
+- **Access expiry tracking** - Monitoring expiring access
+- **Repurchase renewal** - Ability to extend access
 
 ---
 
-## 3. Kategorie i Tagi
+## 2. Product Variants (M:N)
 
-### Kategorie (🏗️ Częściowo)
-- **CRUD kategorii** - Pełne zarządzanie w `/dashboard/categories`
-- **Hierarchia** - Parent/child categories (drzewo)
-- **Slugi URL** - SEO-friendly adresy kategorii
-- **M:N przypisanie** - Produkt może być w wielu kategoriach
-- **Product Form** - Przypisywanie kategorii w edycji produktu
+### Variant Groups
+- **Variant groups** - Grouping products into variants (e.g., Basic/Pro/Enterprise)
+- **M:N relationship** - One product can be in multiple groups
+- **Display order** - Variant display ordering
+- **Featured variant** - Default selected variant
 
-**Brakuje wykorzystania:**
-- Filtrowanie na storefront
-- Strony kategorii `/category/[slug]`
-- Nawigacja po kategoriach
+### Variant UI
+- **Variant selector page** - Variant selection page before checkout
+- **Radio buttons/Dropdown** - Different selection styles
+- **Link copying** - Copying links to specific variants
+
+---
+
+## 3. Categories and Tags
+
+### Categories (🏗️ Partial)
+- **Category CRUD** - Full management in `/dashboard/categories`
+- **Hierarchy** - Parent/child categories (tree)
+- **URL slugs** - SEO-friendly category addresses
+- **M:N assignment** - A product can be in multiple categories
+- **Product Form** - Assigning categories in product editing
+
+**Missing usage:**
+- Storefront filtering
+- Category pages `/category/[slug]`
+- Category navigation
 - Breadcrumbs
 
-### Tagi (🏗️ Częściowo - tylko DB)
-- **Tabele DB** - `tags`, `product_tags` (M:N)
-- **Brak GUI** - Nie ma UI do zarządzania tagami
-- **Brak wykorzystania** - Tagi nie są nigdzie używane
+### Tags (🏗️ Partial - DB only)
+- **DB tables** - `tags`, `product_tags` (M:N)
+- **No GUI** - No UI for tag management
+- **No usage** - Tags are not used anywhere
 
 ---
 
-## 4. System Płatności
+## 4. Payment System
 
-### Integracja Stripe
+### Stripe Integration
 - **Stripe Elements** - Custom payment form (PCI DSS compliant)
 - **Embedded Checkout** - Stripe checkout session
-- **Payment Intent** - PaymentIntent API z idempotency
-- **Stripe Configuration Wizard** - 5-krokowy wizard do konfiguracji:
+- **Payment Intent** - PaymentIntent API with idempotency
+- **Stripe Configuration Wizard** - 5-step wizard for configuration:
   1. Welcome
   2. Mode Selection (Test/Live)
   3. Create Key (RAK - Restricted API Keys)
   4. Enter Key
   5. Success
-- **Multi-mode support** - Test i Live mode osobno
+- **Multi-mode support** - Test and Live mode separately
 
 ### Checkout Flow
-- **Guest checkout** - Zakupy bez konta
-- **Magic link login** - Logowanie przez email (bez hasła)
-- **Email validation** - Weryfikacja formatu + blokada disposable emails
+- **Guest checkout** - Purchases without an account
+- **Magic link login** - Login via email (no password)
+- **Email validation** - Format verification + disposable email blocking
 - **Turnstile CAPTCHA** - Cloudflare protection
-- **Terms acceptance** - Obowiązkowa akceptacja regulaminu
+- **Terms acceptance** - Mandatory terms of service acceptance
 
-### Transakcje
-- **Payment transactions table** - Pełna historia transakcji
-- **Idempotency** - UNIQUE constraints na session_id i stripe_payment_intent_id
-- **Race condition protection** - Optimistic locking z retries
-- **Guest purchases** - Claiming zakupów po rejestracji konta
+### Transactions
+- **Payment transactions table** - Full transaction history
+- **Idempotency** - UNIQUE constraints on session_id and stripe_payment_intent_id
+- **Race condition protection** - Optimistic locking with retries
+- **Guest purchases** - Claiming purchases after account registration
 
 ---
 
-## 5. Kupony i Rabaty
+## 5. Coupons and Discounts
 
-### Typy Kuponów
-- **Percentage discount** - Rabat procentowy (np. 20%)
-- **Fixed amount** - Rabat kwotowy (np. 10 PLN)
-- **Multi-currency support** - Fixed amount per waluta
+### Coupon Types
+- **Percentage discount** - Percentage discount (e.g., 20%)
+- **Fixed amount** - Fixed amount discount (e.g., 10 PLN)
+- **Multi-currency support** - Fixed amount per currency
 
-### Ograniczenia Kuponów
-- **Usage limits** - Global i per-user
-- **Email whitelist** - Kupony tylko dla konkretnych emaili
-- **Product whitelist** - Kupony tylko na konkretne produkty
-- **Exclude order bumps** - Opcja wykluczenia bumpów z rabatu
+### Coupon Restrictions
+- **Usage limits** - Global and per-user
+- **Email whitelist** - Coupons only for specific emails
+- **Product whitelist** - Coupons only for specific products
+- **Exclude order bumps** - Option to exclude bumps from discount
 - **Validity period** - Starts at / Expires at
-- **Is public flag** - Omnibus compliance (czy kupon jest publiczny)
+- **Is public flag** - Omnibus compliance (whether the coupon is public)
 
 ### Auto-Apply
-- **Auto-apply coupon** - Automatyczne znalezienie kuponu dla emaila
-- **URL parameter** - `?coupon=CODE` w URL
+- **Auto-apply coupon** - Automatic coupon lookup for email
+- **URL parameter** - `?coupon=CODE` in URL
 
 ---
 
 ## 6. Order Bumps (Upsell)
 
-### Konfiguracja
-- **Main + Bump product** - Linkowanie produktów
-- **Custom bump price** - Specjalna cena bumpa (lub default)
-- **Bump title/description** - Dedykowane teksty marketingowe
-- **Display order** - Kolejność bumpów
-- **Access duration** - Osobny czas dostępu dla bumpa
+### Configuration
+- **Main + Bump product** - Linking products
+- **Custom bump price** - Special bump price (or default)
+- **Bump title/description** - Dedicated marketing texts
+- **Display order** - Bump ordering
+- **Access duration** - Separate access duration for bump
 
 ### Checkout Integration
-- **Bump checkbox** - Wyświetlanie w checkout
-- **Two-product transaction** - Jedna transakcja, dwa produkty
-- **Guest bump support** - Bump dla niezalogowanych
+- **Bump checkbox** - Display in checkout
+- **Two-product transaction** - One transaction, two products
+- **Guest bump support** - Bump for non-logged-in users
 
 ---
 
 ## 7. OTO System (One-Time Offers)
 
-### Generowanie OTO
-- **Post-purchase generation** - Automatyczny kupon po zakupie
-- **Email binding** - Kupon tylko dla kupującego
+### OTO Generation
+- **Post-purchase generation** - Automatic coupon after purchase
+- **Email binding** - Coupon only for the buyer
 - **Single-use** - usage_limit = 1
-- **Time-limited** - Duration w minutach (default 15, max 1440)
+- **Time-limited** - Duration in minutes (default 15, max 1440)
 - **Code format** - OTO-XXXXXXXX
 
 ### OTO Flow
-- **Idempotency** - Jeden kupon per transakcja
-- **Ownership check** - Sprawdzenie czy user już ma OTO produkt
+- **Idempotency** - One coupon per transaction
+- **Ownership check** - Checking if user already has the OTO product
 - **Race condition protection** - UNIQUE constraint + exception handling
-- **Countdown timer** - UI z odliczaniem
-- **Auto-apply** - Automatyczne zastosowanie w checkout
+- **Countdown timer** - UI with countdown
+- **Auto-apply** - Automatic application in checkout
 
 ### Admin Management
 - **OTO configuration** - Source product → OTO product mapping
 - **Discount settings** - Percentage/Fixed + value
-- **Duration settings** - Czas ważności oferty
-- **Active/Inactive toggle** - Włączanie/wyłączanie OTO
+- **Duration settings** - Offer validity duration
+- **Active/Inactive toggle** - Enabling/disabling OTO
 
 ---
 
-## 8. System Refundów
+## 8. Refund System
 
-### Konfiguracja Produktu
-- **is_refundable** - Czy produkt podlega zwrotowi
-- **refund_period_days** - Ile dni na zwrot (np. 14, 30)
+### Product Configuration
+- **is_refundable** - Whether the product is eligible for refund
+- **refund_period_days** - Number of days for refund (e.g., 14, 30)
 
-### Request Flow (Klient)
-- **Request form** - Formularz z powodem zwrotu
-- **My Purchases integration** - Przycisk w historii zakupów
-- **Period validation** - Blokada po upływie terminu
-- **Non-refundable handling** - Komunikat dla produktów bez zwrotu
+### Request Flow (Customer)
+- **Request form** - Form with refund reason
+- **My Purchases integration** - Button in purchase history
+- **Period validation** - Blocking after the deadline expires
+- **Non-refundable handling** - Message for non-refundable products
 
 ### Admin Management
-- **Pending requests** - Lista wniosków do rozpatrzenia
-- **Approve/Reject** - Decyzja admina
-- **Admin notes** - Notatki/odpowiedzi
+- **Pending requests** - List of requests to review
+- **Approve/Reject** - Admin decision
+- **Admin notes** - Notes/responses
 - **Status tracking** - pending → approved/rejected → refunded
-- **Stripe refund processing** - Automatyczny zwrot w Stripe
+- **Stripe refund processing** - Automatic refund in Stripe
 
 ---
 
-## 9. Waitlist (Lista Oczekujących)
+## 9. Waitlist
 
-### Konfiguracja
-- **enable_waitlist** - Toggle per produkt
-- **Inactive + waitlist = form** - Formularz dla nieaktywnych produktów
-- **Inactive + no waitlist = 404** - Standardowy błąd
+### Configuration
+- **enable_waitlist** - Toggle per product
+- **Inactive + waitlist = form** - Form for inactive products
+- **Inactive + no waitlist = 404** - Standard error
 
 ### Signup Flow
-- **Email capture** - Zbieranie emaili
-- **Terms acceptance** - Obowiązkowa zgoda
-- **Turnstile CAPTCHA** - Ochrona przed botami
+- **Email capture** - Collecting emails
+- **Terms acceptance** - Mandatory consent
+- **Turnstile CAPTCHA** - Bot protection
 - **Webhook trigger** - `waitlist.signup` event
 
 ### Admin Features
-- **Webhook configuration warnings** - Alert gdy brak webhooka
-- **Products count** - Ile produktów ma włączony waitlist
-- **Dashboard warning** - Powiadomienie o braku konfiguracji
+- **Webhook configuration warnings** - Alert when webhook is missing
+- **Products count** - How many products have waitlist enabled
+- **Dashboard warning** - Notification about missing configuration
 
 ---
 
 ## 10. Gatekeeper (Content Protection)
 
-### Typy Ochrony
-- **Page-level protection** - Cała strona wymaga dostępu
-- **Element-level protection** - Konkretne elementy (klasa `.gateflow-protected`)
-- **Multi-product** - Różne produkty na jednej stronie
-- **Free content** - Publiczny content bez logowania
+### Protection Types
+- **Page-level protection** - Entire page requires access
+- **Element-level protection** - Specific elements (`.gateflow-protected` class)
+- **Multi-product** - Different products on one page
+- **Free content** - Public content without login
 
 ### Fallback Content
-- **Custom fallback** - Własna treść dla osób bez dostępu
-- **Upgrade buttons** - Przyciski do zakupu
-- **Graceful degradation** - Działanie przy błędach API
+- **Custom fallback** - Custom content for users without access
+- **Upgrade buttons** - Purchase buttons
+- **Graceful degradation** - Functioning during API errors
 
 ### JavaScript SDK
-- **gatekeeper.js** - Dynamiczny skrypt do ochrony
-- **License validation** - Weryfikacja licencji GateFlow
-- **Auto-detection** - Automatyczne wykrywanie chronionych elementów
+- **gatekeeper.js** - Dynamic script for protection
+- **License validation** - GateFlow license verification
+- **Auto-detection** - Automatic detection of protected elements
 
 ---
 
 ## 11. Webhooks
 
-### Konfiguracja
-- **URL endpoint** - Adres docelowy
-- **Events selection** - Wybór eventów:
+### Configuration
+- **URL endpoint** - Target address
+- **Events selection** - Event selection:
   - `purchase.completed`
   - `lead.captured`
   - `waitlist.signup`
@@ -254,73 +254,73 @@
 - **Active/Inactive** - Toggle
 
 ### Delivery & Logging
-- **Secure delivery** - HMAC signature w headerze
-- **Webhook logs** - Historia wywołań
+- **Secure delivery** - HMAC signature in header
+- **Webhook logs** - Call history
 - **Status tracking** - success/failed/retried/archived
-- **HTTP status** - Kod odpowiedzi
-- **Response body** - Treść odpowiedzi
-- **Duration tracking** - Czas wywołania (ms)
+- **HTTP status** - Response code
+- **Response body** - Response content
+- **Duration tracking** - Call duration (ms)
 
 ### Management
-- **Test modal** - Testowanie webhook'a
-- **Retry button** - Ponowne wysłanie
-- **Logs filtering** - Filtrowanie po statusie
-- **Archive functionality** - Archiwizacja logów
+- **Test modal** - Testing webhooks
+- **Retry button** - Resending
+- **Logs filtering** - Filtering by status
+- **Archive functionality** - Log archiving
 
 ---
 
 ## 12. Analytics & Dashboard
 
 ### Dashboard Stats
-- **Total revenue** - Suma przychodów (multi-currency)
-- **Today's revenue** - Przychód z dzisiaj
-- **Total orders** - Liczba zamówień
-- **Active products** - Produkty aktywne
-- **Active users** - Użytkownicy z dostępem
+- **Total revenue** - Total revenue (multi-currency)
+- **Today's revenue** - Today's revenue
+- **Total orders** - Number of orders
+- **Active products** - Active products
+- **Active users** - Users with access
 
 ### Revenue Charts
-- **Sales chart** - Wykres sprzedaży (daily aggregation)
-- **Hourly breakdown** - Rozkład godzinowy
-- **Product filter** - Filtrowanie po produkcie
-- **Date range** - Wybór zakresu dat
-- **Currency selector** - Wybór waluty wyświetlania
+- **Sales chart** - Sales chart (daily aggregation)
+- **Hourly breakdown** - Hourly distribution
+- **Product filter** - Filtering by product
+- **Date range** - Date range selection
+- **Currency selector** - Display currency selection
 
 ### Revenue Goals
-- **Goal setting** - Cel przychodowy (global lub per-product)
-- **Progress tracking** - Pasek postępu
-- **Start date** - Data początkowa celu
+- **Goal setting** - Revenue goal (global or per-product)
+- **Progress tracking** - Progress bar
+- **Start date** - Goal start date
 
 ### Real-time Updates
 - **Supabase Realtime** - Live updates
-- **Recent activity** - Ostatnie transakcje
-- **Failed webhooks count** - Alert o błędach
+- **Recent activity** - Recent transactions
+- **Failed webhooks count** - Error alert
 
 ---
 
 ## 13. Multi-Currency Support
 
-### Konwersja Walut
-- **26 walut** - USD, EUR, PLN, GBP, JPY, CAD, AUD, CHF, etc.
+### Currency Conversion
+- **26 currencies** - USD, EUR, PLN, GBP, JPY, CAD, AUD, CHF, etc.
 - **Currency providers** - ECB, ExchangeRate-API, Fixer.io
 - **Encrypted API keys** - AES-256-GCM encryption
-- **Auto-refresh** - Automatyczne odświeżanie kursów
+- **Auto-refresh** - Automatic rate refresh
 
 ### Display Modes
-- **Converted view** - Wszystko w jednej walucie
-- **Grouped view** - Osobno per waluta
-- **Hide values toggle** - Ukrywanie kwot
+- **Converted view** - Everything in one currency
+- **Grouped view** - Separate per currency
+- **Hide values toggle** - Hiding amounts
 
 ---
 
-## 14. Integracje Marketingowe
+## 14. Marketing Integrations
 
 ### Google Tag Manager
 - **Container ID** - GTM-XXXXXXX
 - **DataLayer events** - view_item, begin_checkout, purchase, etc.
-- **Server-side container** - URL dla GTM Server
+- **Server-side container** - URL for GTM Server
 
 ### Facebook Pixel
-- **Pixel ID** - Identyfikator Pixela
+- **Pixel ID** - Pixel identifier
 - **Client-side tracking** - PageView, ViewContent, InitiateCheckout, Purchase
 - **CAPI (Server-Side)** - Facebook Conversions API:
   - `/api/tracking/fb-capi` endpoint
@@ -330,32 +330,32 @@
 
 ### Google Consent Mode V2
 - **Klaro integration** - Consent management
-- **Cookie consent** - Blocking przed zgodą
+- **Cookie consent** - Blocking before consent
 - **Consent logging** - `consent_logs` table
 
 ### Umami Analytics
-- **Website ID** - Identyfikator strony
-- **Self-hosted URL** - Własna instancja Umami
+- **Website ID** - Website identifier
+- **Self-hosted URL** - Self-hosted Umami instance
 
 ### Custom Scripts
-- **Script injection** - Własne skrypty
-- **Head/Body placement** - Lokalizacja skryptu
+- **Script injection** - Custom scripts
+- **Head/Body placement** - Script location
 - **Category tagging** - essential/analytics/marketing
-- **GDPR compliance** - Blokowanie przed zgodą
+- **GDPR compliance** - Blocking before consent
 
 ---
 
 ## 15. GUS REGON Integration
 
-### Funkcjonalność
-- **NIP validation** - Weryfikacja 10-cyfrowego NIP
-- **SOAP client** - Integracja z API GUS
-- **Auto-fill** - Automatyczne wypełnianie danych firmy:
-  - Nazwa firmy
-  - Adres (ulica, numer, kod, miasto)
+### Functionality
+- **NIP validation** - 10-digit NIP verification
+- **SOAP client** - GUS API integration
+- **Auto-fill** - Automatic company data population:
+  - Company name
+  - Address (street, number, postal code, city)
   - REGON
 
-### Bezpieczeństwo
+### Security
 - **Encrypted API key** - AES-256-GCM
 - **Rate limiting** - 5 req/min
 - **CORS protection** - Origin/referer validation
@@ -365,146 +365,146 @@
 ## 16. Branding & Whitelabel
 
 ### Customization
-- **Logo URL** - Własne logo (Supabase Storage upload)
+- **Logo URL** - Custom logo (Supabase Storage upload)
 - **Colors** - Primary, Secondary, Accent
 - **Font family** - Inter, Roboto, Montserrat, Poppins, Playfair Display, System
-- **Shop name** - Nazwa sklepu
+- **Shop name** - Store name
 
 ### Preview
-- **Real-time preview** - Podgląd zmian na żywo
-- **Reset to defaults** - Przywracanie domyślnych
+- **Real-time preview** - Live preview of changes
+- **Reset to defaults** - Restoring defaults
 
 ---
 
 ## 17. Legal & Compliance
 
-### Dokumenty Prawne
-- **Terms of Service URL** - Link do regulaminu
-- **Privacy Policy URL** - Link do polityki prywatności
-- **GDPR settings** - Ustawienia RODO
+### Legal Documents
+- **Terms of Service URL** - Link to terms of service
+- **Privacy Policy URL** - Link to privacy policy
+- **GDPR settings** - GDPR settings
 
 ### EU Omnibus Directive
-- **30-day price history** - Automatyczne śledzenie cen
-- **Lowest price display** - Wyświetlanie najniższej ceny
-- **Per-product exempt** - Wyłączenie dla konkretnych produktów
-- **Global toggle** - Włączanie/wyłączanie globalnie
+- **30-day price history** - Automatic price tracking
+- **Lowest price display** - Displaying the lowest price
+- **Per-product exempt** - Exemption for specific products
+- **Global toggle** - Enabling/disabling globally
 
 ### Consent Management
 - **Consent logging** - `consent_logs` table
-- **Anonymous ID** - Identyfikator sesji
-- **IP tracking** - Adres IP zgody
-- **Consent version** - Wersja regulaminu
+- **Anonymous ID** - Session identifier
+- **IP tracking** - Consent IP address
+- **Consent version** - Terms of service version
 
 ---
 
 ## 18. User Management
 
 ### Profile
-- **Full name** - Imię i nazwisko
-- **Company info** - Nazwa firmy, NIP
-- **Address** - Pełny adres (ulica, miasto, kod, kraj)
-- **Preferences** - Język, strefa czasowa
+- **Full name** - First and last name
+- **Company info** - Company name, NIP
+- **Address** - Full address (street, city, postal code, country)
+- **Preferences** - Language, timezone
 
 ### Access Control
-- **User product access** - Tabela dostępów
-- **Grant/Revoke** - Przyznawanie/odbieranie
-- **Temporal access** - Dostęp czasowy z expiry date
-- **Admin override** - Admin może wszystko
+- **User product access** - Access table
+- **Grant/Revoke** - Granting/revoking
+- **Temporal access** - Time-limited access with expiry date
+- **Admin override** - Admin can do everything
 
 ### Admin Panel
-- **Users list** - Lista z paginacją
-- **Search & filter** - Wyszukiwanie po emailu
-- **User details modal** - Szczegóły użytkownika
-- **Access management modal** - Zarządzanie dostępami
+- **Users list** - List with pagination
+- **Search & filter** - Search by email
+- **User details modal** - User details
+- **Access management modal** - Access management
 
 ---
 
 ## 19. Security
 
 ### Rate Limiting
-- **Server-side only** - Bez client headers (bezpieczne)
+- **Server-side only** - No client headers (secure)
 - **Multi-layer** - Connection + JWT + time buckets
-- **Per-function limits** - Różne limity per endpoint
-- **Application rate limits** - Dla Next.js routes
+- **Per-function limits** - Different limits per endpoint
+- **Application rate limits** - For Next.js routes
 
 ### Encryption
 - **AES-256-GCM** - API keys (Stripe, GUS, Currency)
-- **IV + Tag** - Pełne szyfrowanie
+- **IV + Tag** - Full encryption
 
 ### Authentication
 - **Supabase Auth** - Email/password + OAuth
 - **Magic links** - Passwordless login
-- **First user = admin** - Automatyczna rola
+- **First user = admin** - Automatic role
 
 ### RLS Policies
-- **Row Level Security** - Izolacja danych
-- **Admin policies** - Pełny dostęp dla adminów
-- **User policies** - Tylko własne dane
-- **Public policies** - Publiczne produkty
+- **Row Level Security** - Data isolation
+- **Admin policies** - Full access for admins
+- **User policies** - Own data only
+- **Public policies** - Public products
 
 ### Audit Logging
-- **audit_log table** - Wszystkie zmiany
-- **admin_actions table** - Akcje adminów
-- **Automatic triggers** - Bez manualnego logowania
+- **audit_log table** - All changes
+- **admin_actions table** - Admin actions
+- **Automatic triggers** - No manual logging
 - **CRITICAL/WARNING alerts** - Monitoring
 
 ---
 
 ## 20. REST API v1
 
-### Endpointy
+### Endpoints
 - **Products** - CRUD, OTO configuration, filters, pagination
-- **Users** - Lista, szczegóły, wyszukiwanie po email
+- **Users** - List, details, search by email
 - **User Access** - Grant, revoke, extend access
-- **Payments** - Lista, szczegóły, refunds, export CSV, stats
+- **Payments** - List, details, refunds, export CSV, stats
 - **Coupons** - CRUD, stats, deactivation
 - **Webhooks** - CRUD, logs, test, retry
 - **Analytics** - Dashboard, revenue, top products
-- **Refund Requests** - Lista, approve/reject
-- **Variant Groups** - CRUD dla grup wariantów
-- **Order Bumps** - CRUD dla order bumpów
+- **Refund Requests** - List, approve/reject
+- **Variant Groups** - CRUD for variant groups
+- **Order Bumps** - CRUD for order bumps
 - **System** - Health check, status
 
-### Dokumentacja OpenAPI
-- **Swagger UI** - Interaktywna dokumentacja pod `/api/v1/docs`
-- **OpenAPI 3.1 spec** - JSON spec pod `/api/v1/docs/openapi.json`
-- **Zod schemas** - Type-safe walidacja i generowanie spec
+### OpenAPI Documentation
+- **Swagger UI** - Interactive documentation at `/api/v1/docs`
+- **OpenAPI 3.1 spec** - JSON spec at `/api/v1/docs/openapi.json`
+- **Zod schemas** - Type-safe validation and spec generation
 
-### Autentykacja
+### Authentication
 - **API Keys** - Format `gf_live_xxx` / `gf_test_xxx`
 - **Bearer token** - `Authorization: Bearer gf_live_xxx`
-- **X-API-Key header** - Alternatywna metoda
-- **Scopes** - Granularne uprawnienia (`products:read`, `users:write`, `*`)
+- **X-API-Key header** - Alternative method
+- **Scopes** - Granular permissions (`products:read`, `users:write`, `*`)
 - **Rate limiting** - Per-key limits (default 60/min)
 
 ### API Keys Management
-- **Create** - Generowanie klucza (pokazany tylko raz!)
-- **List** - Lista kluczy (bez wartości)
-- **Update** - Zmiana nazwy, scopów, rate limit
-- **Rotate** - Rotacja z grace period
-- **Revoke** - Dezaktywacja z powodem (audit trail)
+- **Create** - Key generation (shown only once!)
+- **List** - Key list (without values)
+- **Update** - Change name, scopes, rate limit
+- **Rotate** - Rotation with grace period
+- **Revoke** - Deactivation with reason (audit trail)
 
-### Bezpieczeństwo API Keys
-- **SHA-256 hashing** - Klucze przechowywane jako hash
-- **Session-only management** - API keys nie mogą zarządzać sobą
+### API Keys Security
+- **SHA-256 hashing** - Keys stored as hash
+- **Session-only management** - API keys cannot manage themselves
 - **Audit logging** - `last_used_at`, `usage_count`, `last_used_ip`
-- **Expiration** - Opcjonalna data wygaśnięcia
+- **Expiration** - Optional expiration date
 
 ### Pagination
-- **Cursor-based** - Wydajna paginacja dla dużych zbiorów
-- **Offset-based** - Wsparcie dla legacy (deprecated)
+- **Cursor-based** - Efficient pagination for large datasets
+- **Offset-based** - Legacy support (deprecated)
 - **Consistent response** - `{ data, pagination: { cursor, has_more } }`
 
 ---
 
 ## 21. MCP Server (Model Context Protocol)
 
-### Architektura
-- **Thin wrapper** - Cienka warstwa nad REST API v1
-- **stdio transport** - Komunikacja przez stdin/stdout
-- **Claude Desktop** - Integracja z Claude Desktop
+### Architecture
+- **Thin wrapper** - Thin layer over REST API v1
+- **stdio transport** - Communication via stdin/stdout
+- **Claude Desktop** - Integration with Claude Desktop
 
-### Tools (45 narzędzi)
+### Tools (45 tools)
 - **Products** - 8 tools (list, get, create, update, delete, toggle, duplicate, stats)
 - **Users** - 8 tools (list, get, search, grant_access, revoke_access, extend_access, bulk_grant, purchases)
 - **Payments** - 7 tools (list, get, search, refund, export, failed, stats)
@@ -513,21 +513,21 @@
 - **Webhooks** - 5 tools (list, create, update, delete, logs)
 - **System** - 2 tools (health, api_usage)
 
-### Resources (4 zasoby)
-- `gateflow://dashboard` - Dane dashboard (5min refresh)
-- `gateflow://products/active` - Aktywne produkty (1min refresh)
-- `gateflow://alerts` - Alerty (pending refunds, failed webhooks)
-- `gateflow://recent-sales` - Ostatnie sprzedaże (1min refresh)
+### Resources (4 resources)
+- `gateflow://dashboard` - Dashboard data (5min refresh)
+- `gateflow://products/active` - Active products (1min refresh)
+- `gateflow://alerts` - Alerts (pending refunds, failed webhooks)
+- `gateflow://recent-sales` - Recent sales (1min refresh)
 
-### Prompts (6 promptów)
-- `weekly-report` - Tygodniowe podsumowanie sprzedaży
-- `product-analysis` - Analiza produktu
-- `revenue-forecast` - Prognoza przychodów
-- `user-cohort-analysis` - Analiza kohort użytkowników
-- `coupon-effectiveness` - Efektywność kuponów
-- `refund-analysis` - Analiza zwrotów
+### Prompts (6 prompts)
+- `weekly-report` - Weekly sales summary
+- `product-analysis` - Product analysis
+- `revenue-forecast` - Revenue forecast
+- `user-cohort-analysis` - User cohort analysis
+- `coupon-effectiveness` - Coupon effectiveness
+- `refund-analysis` - Refund analysis
 
-### Konfiguracja Claude Desktop
+### Claude Desktop Configuration
 ```json
 {
   "mcpServers": {
@@ -547,17 +547,17 @@
 
 ## 22. Bruno API Collection
 
-### Kolekcja Bruno
-- **Folder-based** - Kolekcja w `/bruno/` directory
+### Bruno Collection
+- **Folder-based** - Collection in `/bruno/` directory
 - **Environment variables** - `BASE_URL`, `API_KEY`
 - **All v1 endpoints** - Products, Users, Coupons, Webhooks, Analytics, System
 
-### Przykładowe requesty
-- `GET /api/v1/products` - Lista produktów
-- `POST /api/v1/api-keys` - Tworzenie klucza API
+### Example Requests
+- `GET /api/v1/products` - Product list
+- `POST /api/v1/api-keys` - Creating an API key
 - `GET /api/v1/analytics/dashboard` - Dashboard stats
 
-### Konfiguracja
+### Configuration
 ```
 bruno/environments/local.bru.example → local.bru
 ```
@@ -566,64 +566,64 @@ bruno/environments/local.bru.example → local.bru
 
 ## 23. Content Delivery
 
-### Typy Dostarczania
-- **Digital content** - Osadzona treść
-- **File download** - Pliki do pobrania
-- **Redirect** - Przekierowanie na zewnętrzny URL
-- **Video embed** - Osadzone video
+### Delivery Types
+- **Digital content** - Embedded content
+- **File download** - Downloadable files
+- **Redirect** - Redirect to external URL
+- **Video embed** - Embedded video
 
 ### Video Features
-- **Bunny.net support** - Streaming video
+- **Bunny.net support** - Video streaming
 - **Progress tracking** - `video_progress` table
 - **Event tracking** - play/pause/seek/complete
-- **Resume position** - Pamiętanie pozycji
+- **Resume position** - Remembering position
 
 ---
 
 ## 24. Storefront (Frontend)
 
 ### Landing Page
-- **Smart scenarios** - 4 warianty (admin/guest × z/bez produktów)
-- **Featured products** - Wyróżnione produkty na górze
-- **Product grid** - Siatka wszystkich produktów
+- **Smart scenarios** - 4 variants (admin/guest x with/without products)
+- **Featured products** - Featured products at the top
+- **Product grid** - Grid of all products
 - **Temporal badges** - Coming Soon, Limited Time, Sale
 
 ### Product Pages
-- **Product showcase** - Opis, cena, obrazy
-- **Checkout button** - Przycisk zakupu
-- **Variant selector** - Wybór wariantu
-- **Order bump display** - Wyświetlanie bumpów
+- **Product showcase** - Description, price, images
+- **Checkout button** - Purchase button
+- **Variant selector** - Variant selection
+- **Order bump display** - Displaying bumps
 
 ### Customer Area
-- **My Purchases** - Historia zakupów
-- **My Products** - Dostępne produkty
-- **Profile** - Edycja profilu
-- **Refund requests** - Wnioski o zwrot
+- **My Purchases** - Purchase history
+- **My Products** - Available products
+- **Profile** - Profile editing
+- **Refund requests** - Refund requests
 
 ---
 
 ## 25. Internationalization
 
-### Języki
-- **English (en)** - Pełne wsparcie
-- **Polish (pl)** - Pełne wsparcie
+### Languages
+- **English (en)** - Full support
+- **Polish (pl)** - Full support
 
 ### Features
-- **next-intl** - Framework i18n
+- **next-intl** - i18n framework
 - **URL-based locale** - `/en/...`, `/pl/...`
 - **Language switcher** - Floating button
-- **Translations** - Wszystkie UI strings
+- **Translations** - All UI strings
 
 ---
 
 ## 26. Testing
 
 ### E2E Tests (Playwright)
-- **899 testów E2E** - Kompleksowe pokrycie
-- **82 testy jednostkowe MCP** - Vitest
-- **53 pliki testowe** - Modularna struktura
+- **899 E2E tests** - Comprehensive coverage
+- **82 MCP unit tests** - Vitest
+- **53 test files** - Modular structure
 
-### Testowane Obszary
+### Tested Areas
 - Authentication flow
 - Product management
 - Payment processing
@@ -642,24 +642,24 @@ bruno/environments/local.bru.example → local.bru
 
 ---
 
-# Planowane Ficzery (TURBO Roadmap)
+# Planned Features (TURBO Roadmap)
 
-## Wysoki Priorytet
+## High Priority
 
 ### 1. Upstash Redis Rate Limiting
 - **Status**: Planned
-- **Szacowany czas**: 2-3h
-- **Opis**: Upgrade z in-memory na serverless Redis dla skalowalności w Vercel/Lambda
+- **Estimated time**: 2-3h
+- **Description**: Upgrade from in-memory to serverless Redis for scalability in Vercel/Lambda
 
 ### 2. GTM Integration Phase 2
 - **Status**: Planned
-- **Opis**: Google OAuth App + one-click setup z automatycznym tworzeniem Container i Tags
+- **Description**: Google OAuth App + one-click setup with automatic Container and Tags creation
 
 ### 3. Real-time Social Proof
 - **Status**: Planned
 - **Features**:
-  - "Just Bought" popup (anonymizowana notyfikacja)
-  - Aggregate Activity (X osób kupiło w 24h)
+  - "Just Bought" popup (anonymized notification)
+  - Aggregate Activity (X people bought in 24h)
   - Live Viewer Count
   - Per-product configuration
 
@@ -668,7 +668,7 @@ bruno/environments/local.bru.example → local.bru
 - **Features**:
   - EmailLabs / AWS SES
   - `email_logs` table (Sent, Delivered, Bounced, Opened)
-  - Admin UI do przeglądania
+  - Admin UI for browsing
   - React Email / MJML templates
 
 ### 5. Follow-up Email Sequences
@@ -684,11 +684,11 @@ bruno/environments/local.bru.example → local.bru
 ### 6. Invoicing Integration
 - **Status**: Planned
 - **Providers**: Fakturownia, iFirma
-- **Future**: KSeF (Krajowy System e-Faktur) - 2-4 months
+- **Future**: KSeF (National e-Invoice System) - 2-4 months
 
 ### 7. UTM & Affiliate Tracking
 - **Status**: Planned
-- **Szacowany czas**: 4-6h
+- **Estimated time**: 4-6h
 - **Features**:
   - UTM capture (source, medium, campaign, term, content)
   - Affiliate ID tracking (`?ref=john123`)
@@ -698,11 +698,11 @@ bruno/environments/local.bru.example → local.bru
 
 ---
 
-## Średni Priorytet
+## Medium Priority
 
 ### 8. Two-Sided Affiliate Program
 - **Status**: Idea
-- **Szacowany czas**: 2-4 weeks
+- **Estimated time**: 2-4 weeks
 - **Features**:
   - Self-service affiliate signup
   - Commission structures (percentage, fixed, tiered, recurring)
@@ -724,7 +724,7 @@ bruno/environments/local.bru.example → local.bru
   - Auto-request emails X days after purchase
   - Rich media (photos/videos)
   - Verified buyer badge
-  - Checkout widget z top reviews
+  - Checkout widget with top reviews
 
 ### 11. Privacy-First Cart Recovery
 - **Status**: Planned
@@ -779,7 +779,7 @@ bruno/environments/local.bru.example → local.bru
 
 ---
 
-## Niski Priorytet / Idee
+## Low Priority / Ideas
 
 ### 17. Anonymous Analytics Collection
 - Opt-in usage statistics
@@ -810,21 +810,21 @@ bruno/environments/local.bru.example → local.bru
 
 ---
 
-# Statystyki Projektu
+# Project Statistics
 
-## Baza Danych
-| Metryka | Wartość |
-|---------|---------|
-| Migracje SQL | 6 |
-| Tabele | 25+ |
+## Database
+| Metric | Value |
+|--------|-------|
+| SQL Migrations | 6 |
+| Tables | 25+ |
 | RPC Functions | 40+ |
 | Triggers | 20+ |
 | RLS Policies | 50+ |
 | Indexes | 30+ |
 
 ## API
-| Metryka | Wartość |
-|---------|---------|
+| Metric | Value |
+|--------|-------|
 | API Routes | 120+ |
 | REST API v1 endpoints | 50+ |
 | Admin endpoints | 20+ |
@@ -833,16 +833,16 @@ bruno/environments/local.bru.example → local.bru
 | OpenAPI spec | ✓ (Swagger UI) |
 
 ## Frontend
-| Metryka | Wartość |
-|---------|---------|
+| Metric | Value |
+|--------|-------|
 | React Components | 100+ |
 | Pages | 30+ |
 | Languages | 2 (EN, PL) |
 | UI Libraries | Tailwind CSS |
 
 ## Testing
-| Metryka | Wartość |
-|---------|---------|
+| Metric | Value |
+|--------|-------|
 | E2E Tests | 899+ |
 | Unit Tests | 100+ |
 | API v1 Tests | 232 |
@@ -851,8 +851,8 @@ bruno/environments/local.bru.example → local.bru
 | Pass Rate | 100% |
 
 ## MCP Server
-| Metryka | Wartość |
-|---------|---------|
+| Metric | Value |
+|--------|-------|
 | Tools | 45 |
 | Resources | 4 |
 | Prompts | 6 |
@@ -870,5 +870,5 @@ bruno/environments/local.bru.example → local.bru
 
 ---
 
-> **Ostatnia aktualizacja**: 2026-01-11
-> **Autor**: Claude Code
+> **Last updated**: 2026-01-11
+> **Author**: Claude Code

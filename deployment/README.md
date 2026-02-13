@@ -1,6 +1,6 @@
 # 📁 Advanced Deployment Options
 
-Most users should use the main **[DEPLOYMENT.md](../DEPLOYMENT.md)** guide.
+Most users should use the main **[Deployment Guide](../docs/DEPLOYMENT-MIKRUS.md)**.
 
 The files in this directory are for **advanced use cases**:
 
@@ -36,7 +36,7 @@ The files in this directory are for **advanced use cases**:
 - Node.js performance tuning knowledge
 - 4GB+ RAM (for cluster mode)
 
-**Note:** For basic PM2 setup, see [AI-DEPLOYMENT.md](../AI-DEPLOYMENT.md) instead.
+**Note:** For basic setup, see the main [Deployment Guide](../docs/DEPLOYMENT-MIKRUS.md) instead.
 
 ---
 
@@ -52,6 +52,6 @@ This is similar to the main guide but with more technical details.
 
 ## Still not sure?
 
-**→ Use [DEPLOYMENT.md](../DEPLOYMENT.md)**
+**→ Use the [Deployment Guide](../docs/DEPLOYMENT-MIKRUS.md)**
 
 It's the recommended option for 90% of users.
