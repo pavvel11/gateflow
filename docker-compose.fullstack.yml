@@ -248,7 +248,6 @@ services:
       - ./themes:/usr/share/nginx/html/themes:ro
       - ./layouts:/usr/share/nginx/html/layouts:ro
       - ./index.html:/usr/share/nginx/html/index.html:ro
-      - ./gateflow-config.example.js:/usr/share/nginx/html/gateflow-config.example.js:ro
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     networks:
       - gateflow-network

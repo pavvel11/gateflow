@@ -510,9 +510,6 @@ To maintain Realtime functionality, the following "Golden Stack" of dependencies
 ```
 gateflow/
 ├── gatekeeper.js                  # Core SDK (dynamically served by /api/gatekeeper)
-├── config.js                      # Basic config template (not used directly)
-├── config.example.js              # Configuration example
-├── gateflow-config.example.js     # Advanced configuration example
 ├── index.html                     # Main landing page
 ├── templates/                     # 12+ pre-built HTML product pages
 ├── themes/                        # CSS themes (dark.css, light.css)
