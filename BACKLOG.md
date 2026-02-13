@@ -972,11 +972,18 @@ Claude → list_customers → grant_access (batch) → Done
 - Supabase Cloud as managed database (already supported)
 - Automatic SSL, CDN, and scaling out of the box
 
-**Implementation Notes**:
-- Next.js 16 standalone mode already works well with serverless
-- Main challenge: ensure all API routes work in edge/serverless runtime
-- ISR and revalidation should work natively on Vercel
-- Need to verify Stripe webhooks work with serverless function timeouts
+**Known Blockers (minor, ~2-4h total fix)**:
+- `src/lib/logger.ts` writes to filesystem (`fs.appendFileSync`) - replace with `console.log` or cloud logging
+- `src/app/api/validate-email/route.ts` uses in-memory `Map` for rate limiting - switch to existing `checkRateLimit()` from DB
+- `src/lib/api/middleware.ts` uses in-memory API key rate limiting - switch to Upstash Redis
+- `src/lib/script-cache.ts` in-memory cache won't share across instances (perf issue, not a blocker)
+
+**What already works**:
+- `output: 'standalone'` in next.config.ts (Vercel-ready)
+- Supabase Cloud as external DB (no self-hosted dependency)
+- All server actions are serverless-compatible (no Node.js-only APIs)
+- No WebSocket servers, no `child_process`, no long-running processes
+- ISR and revalidation work natively on Vercel
 - Consider adding "Deploy to Vercel" button in README.md
 
 ---
