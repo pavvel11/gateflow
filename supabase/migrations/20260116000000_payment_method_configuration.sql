@@ -111,6 +111,20 @@ CREATE TRIGGER payment_method_config_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_payment_method_config_timestamp();
 
+-- Trigger to protect created_at from modification
+CREATE OR REPLACE FUNCTION protect_payment_method_config_created_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.created_at = OLD.created_at;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER payment_method_config_protect_created_at
+  BEFORE UPDATE ON public.payment_method_config
+  FOR EACH ROW
+  EXECUTE FUNCTION protect_payment_method_config_created_at();
+
 -- =============================================================================
 -- COMMENTS (DOCUMENTATION)
 -- =============================================================================

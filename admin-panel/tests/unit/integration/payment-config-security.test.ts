@@ -135,20 +135,40 @@ describe('Payment Config Security - OWASP Top 10', () => {
 
   describe('SEC-002: Broken Authentication & Authorization', () => {
     it('should require admin authentication for updates', async () => {
+      // Save original value
+      const { data: before } = await supabaseAdmin
+        .from('payment_method_config')
+        .select('config_mode')
+        .eq('id', 1)
+        .single();
+
       const unauthClient = createClient(SUPABASE_URL, ANON_KEY);
 
-      const { error } = await unauthClient
+      await unauthClient
         .from('payment_method_config')
         .update({
-          config_mode: 'custom',
+          config_mode: 'automatic',
         })
         .eq('id', 1);
 
-      // Should fail - no authentication
-      expect(error).not.toBeNull();
+      // Verify data was NOT modified (RLS blocks silently — no error, 0 rows affected)
+      const { data: after } = await supabaseAdmin
+        .from('payment_method_config')
+        .select('config_mode')
+        .eq('id', 1)
+        .single();
+
+      expect(after?.config_mode).toBe(before?.config_mode);
     });
 
     it('should prevent non-admin users from modifying config', async () => {
+      // Save original value
+      const { data: before } = await supabaseAdmin
+        .from('payment_method_config')
+        .select('config_mode')
+        .eq('id', 1)
+        .single();
+
       const nonAdminClient = createClient(SUPABASE_URL, ANON_KEY);
 
       // Sign in as non-admin
@@ -157,15 +177,21 @@ describe('Payment Config Security - OWASP Top 10', () => {
         password: 'test123456',
       });
 
-      const { error } = await nonAdminClient
+      await nonAdminClient
         .from('payment_method_config')
         .update({
           config_mode: 'stripe_preset',
         })
         .eq('id', 1);
 
-      // Should fail - not an admin
-      expect(error).not.toBeNull();
+      // Verify data was NOT modified (RLS blocks silently — no error, 0 rows affected)
+      const { data: after } = await supabaseAdmin
+        .from('payment_method_config')
+        .select('config_mode')
+        .eq('id', 1)
+        .single();
+
+      expect(after?.config_mode).toBe(before?.config_mode);
     });
 
     it('should verify admin status via admin_users table', async () => {

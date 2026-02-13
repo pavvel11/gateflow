@@ -486,7 +486,8 @@ describe('Payment Config Server Actions - Database Integration', () => {
       expect(data?.created_at).toBeDefined();
 
       const createdAt = new Date(data!.created_at);
-      expect(createdAt.getTime()).toBeGreaterThanOrEqual(beforeInsert.getTime());
+      // Allow 1s tolerance for clock skew between Node.js and Postgres
+      expect(createdAt.getTime()).toBeGreaterThanOrEqual(beforeInsert.getTime() - 1000);
     });
 
     it('should update updated_at timestamp on update', async () => {

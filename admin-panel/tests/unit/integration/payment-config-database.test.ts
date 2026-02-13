@@ -23,6 +23,10 @@ const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
+const TEST_ID = Date.now();
+const ADMIN_EMAIL = `admin-rls-test-${TEST_ID}@example.com`;
+const NON_ADMIN_EMAIL = `user-rls-test-${TEST_ID}@example.com`;
+
 describe('Payment Config Database - RLS Policies & Constraints', () => {
   let testAdminUserId: string;
   let testNonAdminUserId: string;
@@ -32,7 +36,7 @@ describe('Payment Config Database - RLS Policies & Constraints', () => {
   beforeAll(async () => {
     // Create admin user
     const { data: adminAuth } = await supabaseAdmin.auth.admin.createUser({
-      email: `admin-rls-test-${Date.now()}@example.com`,
+      email: ADMIN_EMAIL,
       password: 'test123456',
       email_confirm: true,
     });
@@ -45,7 +49,7 @@ describe('Payment Config Database - RLS Policies & Constraints', () => {
 
     // Create non-admin user
     const { data: userAuth } = await supabaseAdmin.auth.admin.createUser({
-      email: `user-rls-test-${Date.now()}@example.com`,
+      email: NON_ADMIN_EMAIL,
       password: 'test123456',
       email_confirm: true,
     });
@@ -54,8 +58,8 @@ describe('Payment Config Database - RLS Policies & Constraints', () => {
 
     // Create authenticated clients
     adminClient = createClient(SUPABASE_URL, ANON_KEY);
-    const { data: adminSession } = await adminClient.auth.signInWithPassword({
-      email: `admin-rls-test-${Date.now()}@example.com`,
+    await adminClient.auth.signInWithPassword({
+      email: ADMIN_EMAIL,
       password: 'test123456',
     });
 
@@ -109,7 +113,7 @@ describe('Payment Config Database - RLS Policies & Constraints', () => {
     it('should deny non-admin users from reading payment config', async () => {
       // Sign in as non-admin
       await nonAdminClient.auth.signInWithPassword({
-        email: `user-rls-test-${Date.now()}@example.com`,
+        email: NON_ADMIN_EMAIL,
         password: 'test123456',
       });
 
@@ -161,15 +165,27 @@ describe('Payment Config Database - RLS Policies & Constraints', () => {
 
     // DB-RLS-005: Non-admin cannot update config
     it('should deny non-admin users from updating payment config', async () => {
-      const { error } = await nonAdminClient
+      const { data: before } = await supabaseAdmin
+        .from('payment_method_config')
+        .select('config_mode')
+        .eq('id', 1)
+        .single();
+
+      await nonAdminClient
         .from('payment_method_config')
         .update({
           config_mode: 'stripe_preset',
         })
         .eq('id', 1);
 
-      // Should fail due to RLS policy
-      expect(error).not.toBeNull();
+      // RLS blocks silently (no error, 0 rows affected) — verify data unchanged
+      const { data: after } = await supabaseAdmin
+        .from('payment_method_config')
+        .select('config_mode')
+        .eq('id', 1)
+        .single();
+
+      expect(after?.config_mode).toBe(before?.config_mode);
     });
 
     // DB-RLS-006: Service role bypasses RLS
