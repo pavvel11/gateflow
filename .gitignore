@@ -62,3 +62,6 @@ bruno/environments/local.bru
 
 # Copilot instructions (IDE-specific)
 .copilot-codeGeneration-instructions.md
+
+# Local dev server config
+Caddyfile
