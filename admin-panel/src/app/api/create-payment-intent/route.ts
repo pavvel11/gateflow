@@ -10,12 +10,18 @@ import { getEnabledPaymentMethodsForCurrency } from '@/lib/utils/payment-method-
 /**
  * Apply automatic payment methods configuration to PaymentIntent params.
  * Used as fallback when no custom config is set or config is invalid.
+ *
+ * IMPORTANT: Cleans up mutually exclusive fields to prevent Stripe errors.
+ * Stripe rejects requests that combine automatic_payment_methods with
+ * payment_method_types or payment_method_configuration.
  */
 function applyAutomaticPaymentMethods(params: Stripe.PaymentIntentCreateParams): void {
   params.automatic_payment_methods = {
     enabled: true,
     allow_redirects: 'always',
   };
+  delete params.payment_method_types;
+  delete params.payment_method_configuration;
 }
 
 export async function POST(request: NextRequest) {
@@ -278,6 +284,8 @@ export async function POST(request: NextRequest) {
           // Use specific Stripe Payment Method Configuration
           if (paymentConfig.stripe_pmc_id) {
             paymentIntentParams.payment_method_configuration = paymentConfig.stripe_pmc_id;
+            delete paymentIntentParams.automatic_payment_methods;
+            delete paymentIntentParams.payment_method_types;
           } else {
             // Fallback to automatic if PMC ID is missing
             console.warn('[create-payment-intent] stripe_preset mode but no PMC ID, falling back to automatic');
@@ -294,6 +302,8 @@ export async function POST(request: NextRequest) {
 
           if (enabledMethods.length > 0) {
             paymentIntentParams.payment_method_types = enabledMethods;
+            delete paymentIntentParams.automatic_payment_methods;
+            delete paymentIntentParams.payment_method_configuration;
           } else {
             // Fallback if no methods match currency
             console.warn('[create-payment-intent] No payment methods match currency, falling back to automatic');

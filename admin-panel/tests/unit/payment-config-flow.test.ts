@@ -48,13 +48,21 @@ function makeConfig(overrides: Partial<PaymentMethodConfig> = {}): PaymentMethod
 
 /**
  * Simulates the create-payment-intent logic that builds PaymentIntent params
- * from payment config. Extracted from route.ts for testability.
+ * from payment config. Must match route.ts behavior exactly, including
+ * defensive cleanup of mutually exclusive Stripe fields.
+ *
+ * Stripe rejects PaymentIntents that combine any two of:
+ * - automatic_payment_methods
+ * - payment_method_types
+ * - payment_method_configuration
  */
 function buildPaymentIntentConfig(config: PaymentMethodConfig | null, currency: string) {
   const params: Record<string, any> = {};
 
   function applyAutomatic() {
     params.automatic_payment_methods = { enabled: true, allow_redirects: 'always' };
+    delete params.payment_method_types;
+    delete params.payment_method_configuration;
   }
 
   if (config) {
@@ -65,6 +73,8 @@ function buildPaymentIntentConfig(config: PaymentMethodConfig | null, currency: 
       case 'stripe_preset':
         if (config.stripe_pmc_id) {
           params.payment_method_configuration = config.stripe_pmc_id;
+          delete params.automatic_payment_methods;
+          delete params.payment_method_types;
         } else {
           applyAutomatic();
         }
@@ -73,6 +83,8 @@ function buildPaymentIntentConfig(config: PaymentMethodConfig | null, currency: 
         const enabledMethods = getEnabledPaymentMethodsForCurrency(config, currency);
         if (enabledMethods.length > 0) {
           params.payment_method_types = enabledMethods;
+          delete params.automatic_payment_methods;
+          delete params.payment_method_configuration;
         } else {
           applyAutomatic();
         }
@@ -510,5 +522,204 @@ describe('full checkout config pipeline', () => {
     // All three fallbacks produce consistent automatic config
     expect(params1).toEqual(params2);
     expect(params2).toEqual(params3);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Stripe param mutual exclusivity - defensive cleanup
+// ---------------------------------------------------------------------------
+
+describe('Stripe param mutual exclusivity (defensive cleanup)', () => {
+  it('every mode produces exactly one Stripe payment param', () => {
+    const modes: Array<{ config: PaymentMethodConfig; label: string }> = [
+      { config: makeConfig({ config_mode: 'automatic' }), label: 'automatic' },
+      { config: makeConfig({ config_mode: 'stripe_preset', stripe_pmc_id: 'pmc_test12345' }), label: 'stripe_preset' },
+      {
+        config: makeConfig({
+          config_mode: 'custom',
+          custom_payment_methods: [{ type: 'card', enabled: true, display_order: 0 }],
+        }),
+        label: 'custom',
+      },
+    ];
+
+    for (const { config, label } of modes) {
+      const params = buildPaymentIntentConfig(config, 'PLN');
+      const setFields = [
+        params.automatic_payment_methods !== undefined,
+        params.payment_method_types !== undefined,
+        params.payment_method_configuration !== undefined,
+      ].filter(Boolean);
+
+      expect(setFields).toHaveLength(1);
+    }
+  });
+
+  it('fallback paths also produce exactly one Stripe payment param', () => {
+    const fallbackCases = [
+      // null config
+      buildPaymentIntentConfig(null, 'PLN'),
+      // stripe_preset without PMC ID
+      buildPaymentIntentConfig(makeConfig({ config_mode: 'stripe_preset', stripe_pmc_id: null }), 'PLN'),
+      // custom with no matching methods for currency
+      buildPaymentIntentConfig(
+        makeConfig({
+          config_mode: 'custom',
+          custom_payment_methods: [{ type: 'blik', enabled: true, display_order: 0, currency_restrictions: ['PLN'] }],
+        }),
+        'USD'
+      ),
+      // custom with all methods disabled
+      buildPaymentIntentConfig(
+        makeConfig({
+          config_mode: 'custom',
+          custom_payment_methods: [{ type: 'card', enabled: false, display_order: 0 }],
+        }),
+        'PLN'
+      ),
+    ];
+
+    for (const params of fallbackCases) {
+      const setFields = [
+        params.automatic_payment_methods !== undefined,
+        params.payment_method_types !== undefined,
+        params.payment_method_configuration !== undefined,
+      ].filter(Boolean);
+
+      expect(setFields).toHaveLength(1);
+      expect(params.automatic_payment_methods).toBeDefined(); // All fallbacks → automatic
+    }
+  });
+
+  it('no mode ever sets two Stripe payment params simultaneously', () => {
+    // Exhaustive check across all currencies and modes
+    const currencies = ['PLN', 'EUR', 'USD', 'GBP', 'CZK'];
+    const configs = [
+      null,
+      makeConfig({ config_mode: 'automatic' }),
+      makeConfig({ config_mode: 'stripe_preset', stripe_pmc_id: 'pmc_test12345' }),
+      makeConfig({ config_mode: 'stripe_preset', stripe_pmc_id: null }),
+      makeConfig({
+        config_mode: 'custom',
+        custom_payment_methods: [
+          { type: 'blik', enabled: true, display_order: 0, currency_restrictions: ['PLN'] },
+          { type: 'card', enabled: true, display_order: 1, currency_restrictions: [] },
+          { type: 'sepa_debit', enabled: true, display_order: 2, currency_restrictions: ['EUR'] },
+        ],
+      }),
+      makeConfig({
+        config_mode: 'custom',
+        custom_payment_methods: [{ type: 'blik', enabled: false, display_order: 0 }],
+      }),
+    ];
+
+    for (const config of configs) {
+      for (const currency of currencies) {
+        const params = buildPaymentIntentConfig(config, currency);
+        const setCount = [
+          params.automatic_payment_methods !== undefined,
+          params.payment_method_types !== undefined,
+          params.payment_method_configuration !== undefined,
+        ].filter(Boolean).length;
+
+        expect(setCount).toBe(1);
+      }
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Admin config → Stripe: field mapping validation
+// ---------------------------------------------------------------------------
+
+describe('admin config field mapping to Stripe', () => {
+  it('custom mode: disabled methods are excluded from payment_method_types', () => {
+    const config = makeConfig({
+      config_mode: 'custom',
+      custom_payment_methods: [
+        { type: 'blik', enabled: true, display_order: 0, currency_restrictions: ['PLN'] },
+        { type: 'p24', enabled: false, display_order: 1, currency_restrictions: ['PLN'] },
+        { type: 'card', enabled: true, display_order: 2, currency_restrictions: [] },
+      ],
+    });
+
+    const params = buildPaymentIntentConfig(config, 'PLN');
+    expect(params.payment_method_types).toEqual(['blik', 'card']);
+    expect(params.payment_method_types).not.toContain('p24');
+  });
+
+  it('custom mode: currency_restrictions filter works correctly', () => {
+    const config = makeConfig({
+      config_mode: 'custom',
+      custom_payment_methods: [
+        { type: 'blik', enabled: true, display_order: 0, currency_restrictions: ['PLN'] },
+        { type: 'ideal', enabled: true, display_order: 1, currency_restrictions: ['EUR'] },
+        { type: 'card', enabled: true, display_order: 2, currency_restrictions: [] },
+        { type: 'p24', enabled: true, display_order: 3, currency_restrictions: ['PLN', 'EUR'] },
+      ],
+    });
+
+    // PLN: blik, card, p24 (ideal excluded)
+    const plnParams = buildPaymentIntentConfig(config, 'PLN');
+    expect(plnParams.payment_method_types).toEqual(['blik', 'card', 'p24']);
+
+    // EUR: ideal, card, p24 (blik excluded)
+    const eurParams = buildPaymentIntentConfig(config, 'EUR');
+    expect(eurParams.payment_method_types).toEqual(['ideal', 'card', 'p24']);
+
+    // USD: only card (no restrictions = all currencies)
+    const usdParams = buildPaymentIntentConfig(config, 'USD');
+    expect(usdParams.payment_method_types).toEqual(['card']);
+
+    // GBP: only card
+    const gbpParams = buildPaymentIntentConfig(config, 'GBP');
+    expect(gbpParams.payment_method_types).toEqual(['card']);
+  });
+
+  it('custom mode: empty custom_payment_methods array falls back to automatic', () => {
+    const config = makeConfig({
+      config_mode: 'custom',
+      custom_payment_methods: [],
+    });
+
+    const params = buildPaymentIntentConfig(config, 'PLN');
+    expect(params.automatic_payment_methods).toBeDefined();
+    expect(params.payment_method_types).toBeUndefined();
+  });
+
+  it('stripe_preset: PMC ID is passed exactly as stored', () => {
+    const pmcId = 'pmc_1QBxYZ2eZvKYlo2C0123abcd';
+    const config = makeConfig({
+      config_mode: 'stripe_preset',
+      stripe_pmc_id: pmcId,
+    });
+
+    const params = buildPaymentIntentConfig(config, 'EUR');
+    expect(params.payment_method_configuration).toBe(pmcId);
+  });
+
+  it('express checkout config maps DB fields to frontend correctly', () => {
+    // All possible toggle combinations
+    const combinations = [
+      { express: true, apple: true, google: true, link: true },
+      { express: true, apple: false, google: true, link: false },
+      { express: false, apple: true, google: true, link: true },
+      { express: true, apple: false, google: false, link: false },
+    ];
+
+    for (const combo of combinations) {
+      const config = makeConfig({
+        enable_express_checkout: combo.express,
+        enable_apple_pay: combo.apple,
+        enable_google_pay: combo.google,
+        enable_link: combo.link,
+      });
+
+      const result = extractExpressCheckoutConfig(config);
+      expect(result.enabled).toBe(combo.express);
+      expect(result.applePay).toBe(combo.apple);
+      expect(result.googlePay).toBe(combo.google);
+      expect(result.link).toBe(combo.link);
+    }
   });
 });
