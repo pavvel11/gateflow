@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createPublicClient } from '@/lib/supabase/server'
 import { validateIntegrations, validateScript, type IntegrationsInput, type CustomScriptInput } from '@/lib/validations/integrations'
 import { validateLicense, extractDomainFromUrl } from '@/lib/license/verify'
 import { revalidatePath } from 'next/cache'
@@ -89,7 +89,7 @@ export async function toggleScript(id: string, is_active: boolean) {
 // --- PUBLIC API ---
 
 export async function getPublicIntegrationsConfig() {
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   // RPC returns a JSON object with config + scripts array
   const { data, error } = await supabase.rpc('get_public_integrations_config')
   
