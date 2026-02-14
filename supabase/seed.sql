@@ -222,7 +222,7 @@ VALUES (
   ARRAY['purchase.completed', 'lead.captured'],
   'Zapier CRM Integration',
   true,
-  encode(gen_random_bytes(32), 'hex')  -- Generates unique 64-char hex secret
+  replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '')  -- Generates unique hex secret
 );
 
 -- 2. Sample Webhook Logs (Updated schema: status, http_status)
@@ -334,7 +334,7 @@ BEGIN
     'authenticated',
     'authenticated',
     'john.doe@example.com',
-    crypt('password123', gen_salt('bf')),
+    extensions.crypt('password123', extensions.gen_salt('bf')),
     NOW(),
     '', '', '', '', '', '',
     '{"provider":"email","providers":["email"]}'::jsonb,
@@ -368,7 +368,7 @@ BEGIN
     'authenticated',
     'authenticated',
     'maria.schmidt@example.com',
-    crypt('password123', gen_salt('bf')),
+    extensions.crypt('password123', extensions.gen_salt('bf')),
     NOW(),
     '', '', '', '', '', '',
     '{"provider":"email","providers":["email"]}'::jsonb,
@@ -402,7 +402,7 @@ BEGIN
     'authenticated',
     'authenticated',
     'anna.kowalska@example.com',
-    crypt('password123', gen_salt('bf')),
+    extensions.crypt('password123', extensions.gen_salt('bf')),
     NOW(),
     '', '', '', '', '', '',
     '{"provider":"email","providers":["email"]}'::jsonb,
