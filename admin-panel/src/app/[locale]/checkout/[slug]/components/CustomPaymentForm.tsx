@@ -593,6 +593,7 @@ export default function CustomPaymentForm({
             wallets: {
               applePay: expressCheckoutConfig?.applePay !== false ? 'auto' : 'never',
               googlePay: expressCheckoutConfig?.googlePay !== false ? 'auto' : 'never',
+              link: 'never', // Link shows only in ExpressCheckoutElement, not as PaymentElement tab
             },
             // Hide email and name fields since we collect them above
             fields: {

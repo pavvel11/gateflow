@@ -82,6 +82,9 @@ function buildPaymentIntentConfig(config: PaymentMethodConfig | null, currency: 
       case 'custom': {
         const enabledMethods = getEnabledPaymentMethodsForCurrency(config, currency);
         if (enabledMethods.length > 0) {
+          if (config.enable_link && !enabledMethods.includes('link')) {
+            enabledMethods.push('link');
+          }
           params.payment_method_types = enabledMethods;
           delete params.automatic_payment_methods;
           delete params.payment_method_configuration;
@@ -287,11 +290,11 @@ describe('create-payment-intent config logic', () => {
       });
 
       const paramsPLN = buildPaymentIntentConfig(config, 'PLN');
-      expect(paramsPLN.payment_method_types).toEqual(['blik', 'card']);
+      expect(paramsPLN.payment_method_types).toEqual(['blik', 'card', 'link']);
       expect(paramsPLN.automatic_payment_methods).toBeUndefined();
 
       const paramsEUR = buildPaymentIntentConfig(config, 'EUR');
-      expect(paramsEUR.payment_method_types).toEqual(['card', 'sepa_debit']);
+      expect(paramsEUR.payment_method_types).toEqual(['card', 'sepa_debit', 'link']);
     });
 
     it('should fallback to automatic when no methods match currency', () => {
@@ -335,7 +338,7 @@ describe('create-payment-intent config logic', () => {
       });
 
       const params = buildPaymentIntentConfig(config, 'PLN');
-      expect(params.payment_method_types).toEqual(['p24', 'blik', 'card']);
+      expect(params.payment_method_types).toEqual(['p24', 'blik', 'card', 'link']);
     });
   });
 
@@ -414,9 +417,9 @@ describe('full checkout config pipeline', () => {
       enable_link: true,
     });
 
-    // Server-side
+    // Server-side: link appended because enable_link=true
     const piParams = buildPaymentIntentConfig(config, 'PLN');
-    expect(piParams.payment_method_types).toEqual(['blik', 'p24', 'card']);
+    expect(piParams.payment_method_types).toEqual(['blik', 'p24', 'card', 'link']);
 
     // Client-side order
     const order = getEffectivePaymentMethodOrder(config, 'PLN');
@@ -438,9 +441,9 @@ describe('full checkout config pipeline', () => {
       currency_overrides: { EUR: ['sepa_debit', 'card'] },
     });
 
-    // Server-side: BLIK filtered out for EUR
+    // Server-side: BLIK filtered out for EUR, link appended (enable_link=true default)
     const piParams = buildPaymentIntentConfig(config, 'EUR');
-    expect(piParams.payment_method_types).toEqual(['sepa_debit', 'card']);
+    expect(piParams.payment_method_types).toEqual(['sepa_debit', 'card', 'link']);
     expect(piParams.payment_method_types).not.toContain('blik');
 
     // Client-side: currency override used
@@ -644,7 +647,7 @@ describe('admin config field mapping to Stripe', () => {
     });
 
     const params = buildPaymentIntentConfig(config, 'PLN');
-    expect(params.payment_method_types).toEqual(['blik', 'card']);
+    expect(params.payment_method_types).toEqual(['blik', 'card', 'link']);
     expect(params.payment_method_types).not.toContain('p24');
   });
 
@@ -659,21 +662,21 @@ describe('admin config field mapping to Stripe', () => {
       ],
     });
 
-    // PLN: blik, card, p24 (ideal excluded)
+    // PLN: blik, card, p24, link (ideal excluded, link appended)
     const plnParams = buildPaymentIntentConfig(config, 'PLN');
-    expect(plnParams.payment_method_types).toEqual(['blik', 'card', 'p24']);
+    expect(plnParams.payment_method_types).toEqual(['blik', 'card', 'p24', 'link']);
 
-    // EUR: ideal, card, p24 (blik excluded)
+    // EUR: ideal, card, p24, link (blik excluded, link appended)
     const eurParams = buildPaymentIntentConfig(config, 'EUR');
-    expect(eurParams.payment_method_types).toEqual(['ideal', 'card', 'p24']);
+    expect(eurParams.payment_method_types).toEqual(['ideal', 'card', 'p24', 'link']);
 
-    // USD: only card (no restrictions = all currencies)
+    // USD: card, link (no restrictions = all currencies, link appended)
     const usdParams = buildPaymentIntentConfig(config, 'USD');
-    expect(usdParams.payment_method_types).toEqual(['card']);
+    expect(usdParams.payment_method_types).toEqual(['card', 'link']);
 
-    // GBP: only card
+    // GBP: card, link
     const gbpParams = buildPaymentIntentConfig(config, 'GBP');
-    expect(gbpParams.payment_method_types).toEqual(['card']);
+    expect(gbpParams.payment_method_types).toEqual(['card', 'link']);
   });
 
   it('custom mode: empty custom_payment_methods array falls back to automatic', () => {

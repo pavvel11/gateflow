@@ -310,12 +310,14 @@ export async function POST(request: NextRequest) {
           );
 
           if (enabledMethods.length > 0) {
-            // Do NOT add 'link' to payment_method_types.
-            // Link in payment_method_types causes it to appear inside PaymentElement
-            // (as a tab), which conflicts with ExpressCheckoutElement's Link button
-            // (double Link) and can hide other methods when user has a saved Link account.
-            // GPay/ApplePay still work in Express Checkout via 'card' type.
-            // Link Express Checkout button only works in automatic/preset modes.
+            // Add 'link' to payment_method_types when enabled in config.
+            // Link needs to be in the types for ExpressCheckoutElement to show the Link button.
+            // To prevent double Link (Express + PaymentElement tab), the frontend sets
+            // wallets: { link: 'never' } on the PaymentElement component.
+            // GPay/ApplePay work in Express Checkout via 'card' type (they're card wallets).
+            if (paymentConfig.enable_link && !enabledMethods.includes('link')) {
+              enabledMethods.push('link');
+            }
             paymentIntentParams.payment_method_types = enabledMethods;
             delete paymentIntentParams.automatic_payment_methods;
             delete paymentIntentParams.payment_method_configuration;
