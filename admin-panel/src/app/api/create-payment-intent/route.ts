@@ -232,14 +232,6 @@ export async function POST(request: NextRequest) {
       // NOTE: automatic_payment_methods is set by the config switch below.
       // Do NOT set it here - it's mutually exclusive with payment_method_types
       // and payment_method_configuration.
-      // Enable Link for one-click checkout with saved payment methods
-      // 'off_session' = payment method can be reused for future payments (enables one-click checkout)
-      // This allows Link to save customer payment details for faster checkout on return visits
-      payment_method_options: {
-        link: {
-          setup_future_usage: 'off_session',
-        },
-      },
       metadata: {
         product_id: productId,
         product_name: product.name,
@@ -287,6 +279,10 @@ export async function POST(request: NextRequest) {
         case 'automatic':
           // Use Stripe's automatic payment methods (default behavior)
           applyAutomaticPaymentMethods(paymentIntentParams);
+          // Enable Link saved payment methods for one-click checkout
+          paymentIntentParams.payment_method_options = {
+            link: { setup_future_usage: 'off_session' },
+          };
           break;
 
         case 'stripe_preset':
@@ -295,6 +291,10 @@ export async function POST(request: NextRequest) {
             paymentIntentParams.payment_method_configuration = paymentConfig.stripe_pmc_id;
             delete paymentIntentParams.automatic_payment_methods;
             delete paymentIntentParams.payment_method_types;
+            // Enable Link saved payment methods for one-click checkout
+            paymentIntentParams.payment_method_options = {
+              link: { setup_future_usage: 'off_session' },
+            };
           } else {
             // Fallback to automatic if PMC ID is missing
             console.warn('[create-payment-intent] stripe_preset mode but no PMC ID, falling back to automatic');
@@ -310,11 +310,12 @@ export async function POST(request: NextRequest) {
           );
 
           if (enabledMethods.length > 0) {
-            // Add Link if enabled in config (Link is a separate payment method type
-            // that must be explicitly listed, unlike GPay/ApplePay which are card wallets)
-            if (paymentConfig.enable_link && !enabledMethods.includes('link')) {
-              enabledMethods.push('link');
-            }
+            // Do NOT add 'link' to payment_method_types.
+            // Link in payment_method_types causes it to appear inside PaymentElement
+            // (as a tab), which conflicts with ExpressCheckoutElement's Link button
+            // (double Link) and can hide other methods when user has a saved Link account.
+            // GPay/ApplePay still work in Express Checkout via 'card' type.
+            // Link Express Checkout button only works in automatic/preset modes.
             paymentIntentParams.payment_method_types = enabledMethods;
             delete paymentIntentParams.automatic_payment_methods;
             delete paymentIntentParams.payment_method_configuration;
