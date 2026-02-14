@@ -34,7 +34,7 @@ import type {
   StripePaymentMethodConfig,
   PaymentMethodInfo,
 } from '@/types/payment-config';
-import { RefreshCw, AlertTriangle, Check, GripVertical, RotateCcw, ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { RefreshCw, AlertTriangle, Check, GripVertical, RotateCcw, ChevronDown, ChevronRight, Plus, Trash2, X } from 'lucide-react';
 
 export default function PaymentMethodSettings() {
   const { addToast } = useToast();
@@ -291,6 +291,30 @@ export default function PaymentMethodSettings() {
     }
   }, [customPaymentMethods, configMode]);
 
+  // Auto-sync currency overrides when global methods change (bug fix):
+  // Remove disabled methods from all currency overrides so they stay consistent
+  useEffect(() => {
+    if (configMode !== 'custom') return;
+    const enabledTypes = new Set(
+      customPaymentMethods.filter((pm) => pm.enabled).map((pm) => pm.type)
+    );
+
+    setCurrencyOverrides((prev) => {
+      const updated: Record<string, string[]> = {};
+      let changed = false;
+      for (const [currency, order] of Object.entries(prev)) {
+        const filtered = order.filter((type) => enabledTypes.has(type));
+        if (filtered.length !== order.length) changed = true;
+        if (filtered.length > 0) {
+          updated[currency] = filtered;
+        } else {
+          changed = true; // Remove empty override entirely
+        }
+      }
+      return changed ? updated : prev;
+    });
+  }, [customPaymentMethods, configMode]);
+
   // Currency overrides helpers
   const commonCurrencies = ['PLN', 'EUR', 'USD', 'GBP'];
 
@@ -315,6 +339,42 @@ export default function PaymentMethodSettings() {
       ...prev,
       [currency]: newOrder,
     }));
+  }
+
+  // Get globally enabled methods that are valid for a currency but not in its override
+  function getExcludedMethodsForCurrency(currency: string): string[] {
+    const override = currencyOverrides[currency] || [];
+    const overrideSet = new Set(override);
+    return customPaymentMethods
+      .filter((pm) => {
+        if (!pm.enabled) return false;
+        if (overrideSet.has(pm.type)) return false;
+        // Check currency restrictions from static metadata
+        const info = availablePaymentMethods.find((m) => m.type === pm.type);
+        if (info && !info.currencies.includes('*') && !info.currencies.includes(currency)) return false;
+        return true;
+      })
+      .sort((a, b) => a.display_order - b.display_order)
+      .map((pm) => pm.type);
+  }
+
+  function addMethodToOverride(currency: string, type: string) {
+    setCurrencyOverrides((prev) => ({
+      ...prev,
+      [currency]: [...(prev[currency] || []), type],
+    }));
+  }
+
+  function removeMethodFromOverride(currency: string, type: string) {
+    setCurrencyOverrides((prev) => {
+      const filtered = (prev[currency] || []).filter((t) => t !== type);
+      if (filtered.length === 0) {
+        const newOverrides = { ...prev };
+        delete newOverrides[currency];
+        return newOverrides;
+      }
+      return { ...prev, [currency]: filtered };
+    });
   }
 
   // Drag handlers for currency-specific ordering
@@ -718,11 +778,49 @@ export default function PaymentMethodSettings() {
                         <GripVertical className="w-4 h-4 text-gray-400 mr-2" />
                         <span className="text-sm text-gray-600 dark:text-gray-400 mr-2">{index + 1}.</span>
                         <span className="text-lg mr-2">{info.icon}</span>
-                        <span className="text-sm text-gray-900 dark:text-white">{info.name}</span>
+                        <span className="text-sm text-gray-900 dark:text-white flex-1">{info.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeMethodFromOverride(currency, type)}
+                          className="text-gray-400 hover:text-red-500 transition-colors ml-2"
+                          title={t('paymentMethods.currencyOverrides.remove')}
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     );
                   })}
                 </div>
+
+                {/* Excluded methods available to add */}
+                {(() => {
+                  const excluded = getExcludedMethodsForCurrency(currency);
+                  if (excluded.length === 0) return null;
+                  return (
+                    <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
+                        {t('paymentMethods.currencyOverrides.excludedMethods')}
+                      </span>
+                      <div className="flex gap-1 flex-wrap">
+                        {excluded.map((type) => {
+                          const info = getPaymentMethodDisplayInfo(type);
+                          return (
+                            <button
+                              key={type}
+                              type="button"
+                              onClick={() => addMethodToOverride(currency, type)}
+                              className="flex items-center gap-1 px-2 py-1 text-xs border border-dashed border-gray-300 dark:border-gray-600 rounded hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 text-gray-600 dark:text-gray-400 transition-colors"
+                            >
+                              <Plus className="w-3 h-3" />
+                              <span>{info.icon}</span>
+                              <span>{info.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             ))}
 

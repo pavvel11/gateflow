@@ -690,6 +690,65 @@ describe('admin config field mapping to Stripe', () => {
     expect(params.payment_method_types).toBeUndefined();
   });
 
+  it('custom mode: currency_overrides filters methods (not just orders)', () => {
+    const config = makeConfig({
+      config_mode: 'custom',
+      custom_payment_methods: [
+        { type: 'blik', enabled: true, display_order: 0, currency_restrictions: ['PLN'] },
+        { type: 'p24', enabled: true, display_order: 1, currency_restrictions: ['PLN'] },
+        { type: 'card', enabled: true, display_order: 2, currency_restrictions: [] },
+      ],
+      // PLN override only includes blik + card (p24 excluded for this currency)
+      currency_overrides: { PLN: ['blik', 'card'] },
+    });
+
+    // Override filters out p24 even though it's globally enabled for PLN
+    const methods = getEnabledPaymentMethodsForCurrency(config, 'PLN');
+    expect(methods).toEqual(['blik', 'card']);
+    expect(methods).not.toContain('p24');
+
+    // With link appended in buildPaymentIntentConfig
+    const params = buildPaymentIntentConfig(config, 'PLN');
+    expect(params.payment_method_types).toEqual(['blik', 'card', 'link']);
+
+    // EUR has no override → falls back to globally enabled methods for EUR
+    const eurMethods = getEnabledPaymentMethodsForCurrency(config, 'EUR');
+    expect(eurMethods).toEqual(['card']);
+  });
+
+  it('custom mode: currency_overrides ignores globally disabled methods', () => {
+    const config = makeConfig({
+      config_mode: 'custom',
+      custom_payment_methods: [
+        { type: 'blik', enabled: true, display_order: 0, currency_restrictions: ['PLN'] },
+        { type: 'p24', enabled: false, display_order: 1, currency_restrictions: ['PLN'] },
+        { type: 'card', enabled: true, display_order: 2, currency_restrictions: [] },
+      ],
+      // Override includes p24 but it's disabled globally → should be filtered out
+      currency_overrides: { PLN: ['blik', 'p24', 'card'] },
+    });
+
+    const methods = getEnabledPaymentMethodsForCurrency(config, 'PLN');
+    expect(methods).toEqual(['blik', 'card']);
+    expect(methods).not.toContain('p24');
+  });
+
+  it('custom mode: currency_overrides preserves override ordering', () => {
+    const config = makeConfig({
+      config_mode: 'custom',
+      custom_payment_methods: [
+        { type: 'blik', enabled: true, display_order: 0, currency_restrictions: ['PLN'] },
+        { type: 'p24', enabled: true, display_order: 1, currency_restrictions: ['PLN'] },
+        { type: 'card', enabled: true, display_order: 2, currency_restrictions: [] },
+      ],
+      // Override reverses the order
+      currency_overrides: { PLN: ['card', 'p24', 'blik'] },
+    });
+
+    const methods = getEnabledPaymentMethodsForCurrency(config, 'PLN');
+    expect(methods).toEqual(['card', 'p24', 'blik']);
+  });
+
   it('stripe_preset: PMC ID is passed exactly as stored', () => {
     const pmcId = 'pmc_1QBxYZ2eZvKYlo2C0123abcd';
     const config = makeConfig({

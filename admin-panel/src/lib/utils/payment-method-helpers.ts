@@ -77,18 +77,30 @@ export function getEnabledPaymentMethodsForCurrency(
 
   const currencyUpper = currency.toUpperCase();
 
+  // Get all globally enabled methods valid for this currency
+  const enabledSet = new Set(
+    config.custom_payment_methods
+      .filter((pm: PaymentMethodMetadata) => {
+        if (!pm.enabled) return false;
+        if (pm.currency_restrictions && pm.currency_restrictions.length > 0) {
+          return pm.currency_restrictions.includes(currencyUpper);
+        }
+        return true;
+      })
+      .map((pm) => pm.type)
+  );
+
+  // If currency override exists, use it as filter + ordering.
+  // Only methods present in both the override AND globally enabled are returned.
+  // This allows per-currency method selection (not just reordering).
+  const override = config.currency_overrides?.[currencyUpper];
+  if (override && override.length > 0) {
+    return override.filter((type) => enabledSet.has(type));
+  }
+
+  // Default: return by display_order
   return config.custom_payment_methods
-    .filter((pm: PaymentMethodMetadata) => {
-      if (!pm.enabled) return false;
-
-      // Check currency restrictions
-      if (pm.currency_restrictions && pm.currency_restrictions.length > 0) {
-        return pm.currency_restrictions.includes(currencyUpper);
-      }
-
-      // No restrictions = supports all currencies
-      return true;
-    })
+    .filter((pm) => enabledSet.has(pm.type))
     .sort((a, b) => a.display_order - b.display_order)
     .map((pm) => pm.type);
 }

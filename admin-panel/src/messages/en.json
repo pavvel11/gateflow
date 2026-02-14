@@ -1911,14 +1911,15 @@
         "linkDescription": "Quick payments with saved details"
       },
       "currencyOverrides": {
-        "title": "Currency-Specific Ordering",
+        "title": "Currency-Specific Configuration",
         "advanced": "Advanced",
-        "description": "Set different payment method ordering for specific currencies. Useful for prioritizing local payment methods.",
+        "description": "Select and order payment methods for specific currencies. Add or remove methods per currency to optimize checkout for each market.",
         "addCurrency": "Add Currency",
-        "orderFor": "{currency} Order",
+        "orderFor": "{currency} Methods",
         "remove": "Remove",
-        "empty": "No currency-specific ordering configured. Click a currency above to add custom ordering.",
-        "allCurrencies": "All currencies"
+        "empty": "No currency-specific configuration. Click a currency above to customize methods for that currency.",
+        "allCurrencies": "All currencies",
+        "excludedMethods": "Available to add:"
       },
       "recommended": {
         "title": "Recommended Configuration",

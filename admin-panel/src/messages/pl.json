@@ -1926,14 +1926,15 @@
         "linkDescription": "Szybkie płatności z zapisanymi danymi"
       },
       "currencyOverrides": {
-        "title": "Kolejność dla walut",
+        "title": "Konfiguracja per waluta",
         "advanced": "Zaawansowane",
-        "description": "Ustaw różną kolejność metod płatności dla konkretnych walut. Przydatne do priorytetyzacji lokalnych metod płatności.",
+        "description": "Wybierz i ustaw kolejność metod płatności dla konkretnych walut. Dodawaj lub usuwaj metody per waluta, aby zoptymalizować checkout.",
         "addCurrency": "Dodaj walutę",
-        "orderFor": "Kolejność {currency}",
+        "orderFor": "Metody {currency}",
         "remove": "Usuń",
-        "empty": "Brak niestandardowej kolejności dla walut. Kliknij walutę powyżej, aby dodać własną kolejność.",
-        "allCurrencies": "Wszystkie waluty"
+        "empty": "Brak konfiguracji per waluta. Kliknij walutę powyżej, aby dostosować metody dla tej waluty.",
+        "allCurrencies": "Wszystkie waluty",
+        "excludedMethods": "Dostępne do dodania:"
       },
       "recommended": {
         "title": "Rekomendowana Konfiguracja",
