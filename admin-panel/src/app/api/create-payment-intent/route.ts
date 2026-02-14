@@ -222,10 +222,9 @@ export async function POST(request: NextRequest) {
     const paymentIntentParams: Stripe.PaymentIntentCreateParams = {
       amount: totalAmount,
       currency: product.currency.toLowerCase(),
-      automatic_payment_methods: {
-        enabled: true,
-        allow_redirects: 'always',
-      },
+      // NOTE: automatic_payment_methods is set by the config switch below.
+      // Do NOT set it here - it's mutually exclusive with payment_method_types
+      // and payment_method_configuration.
       // Enable Link for one-click checkout with saved payment methods
       // 'off_session' = payment method can be reused for future payments (enables one-click checkout)
       // This allows Link to save customer payment details for faster checkout on return visits
