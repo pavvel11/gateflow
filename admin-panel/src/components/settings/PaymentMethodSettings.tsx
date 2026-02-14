@@ -166,7 +166,8 @@ export default function PaymentMethodSettings() {
 
       if (configMode === 'custom') {
         const enabledCount = customPaymentMethods.filter((pm) => pm.enabled).length;
-        if (enabledCount === 0) {
+        const hasExpressMethod = enableExpressCheckout && (enableLink || enableApplePay || enableGooglePay);
+        if (enabledCount === 0 && !hasExpressMethod) {
           addToast(t('paymentMethods.validation.noMethods'), 'error');
           return;
         }

@@ -309,20 +309,28 @@ export async function POST(request: NextRequest) {
             product.currency
           );
 
+          // Add express checkout types to payment_method_types.
+          // Placed before the length check so express-checkout-only configs work
+          // (e.g. only Link enabled, no custom payment methods selected).
+          //
+          // Link: needed for LinkAuthenticationElement inline autofill
+          if (paymentConfig.enable_link && !enabledMethods.includes('link')) {
+            enabledMethods.push('link');
+          }
+          // Apple Pay & Google Pay are card wallets — they require 'card' in
+          // payment_method_types to appear in ExpressCheckoutElement.
+          if (paymentConfig.enable_express_checkout &&
+              (paymentConfig.enable_apple_pay || paymentConfig.enable_google_pay) &&
+              !enabledMethods.includes('card')) {
+            enabledMethods.push('card');
+          }
+
           if (enabledMethods.length > 0) {
-            // Add 'link' to payment_method_types when enabled in config.
-            // Link needs to be in the types for ExpressCheckoutElement to show the Link button.
-            // To prevent double Link (Express + PaymentElement tab), the frontend sets
-            // wallets: { link: 'never' } on the PaymentElement component.
-            // GPay/ApplePay work in Express Checkout via 'card' type (they're card wallets).
-            if (paymentConfig.enable_link && !enabledMethods.includes('link')) {
-              enabledMethods.push('link');
-            }
             paymentIntentParams.payment_method_types = enabledMethods;
             delete paymentIntentParams.automatic_payment_methods;
             delete paymentIntentParams.payment_method_configuration;
           } else {
-            // Fallback if no methods match currency
+            // Fallback if no methods match currency and no express checkout
             console.warn('[create-payment-intent] No payment methods match currency, falling back to automatic');
             applyAutomaticPaymentMethods(paymentIntentParams);
           }

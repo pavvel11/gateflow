@@ -98,18 +98,16 @@ const UpdatePaymentConfigSchema = z.object({
   }
 ).refine(
   (data) => {
-    // If custom mode, custom_payment_methods must have at least one enabled method
+    // If custom mode, need at least one enabled payment method OR express checkout
     if (data.config_mode === 'custom') {
-      return (
-        data.custom_payment_methods &&
-        data.custom_payment_methods.length > 0 &&
-        data.custom_payment_methods.some((pm) => pm.enabled)
-      );
+      const hasCustomMethods = data.custom_payment_methods?.some((pm) => pm.enabled);
+      const hasExpressMethod = data.enable_express_checkout && (data.enable_link || data.enable_apple_pay || data.enable_google_pay);
+      return hasCustomMethods || hasExpressMethod;
     }
     return true;
   },
   {
-    message: 'At least one payment method must be enabled in custom mode',
+    message: 'At least one payment method or express checkout option must be enabled in custom mode',
     path: ['custom_payment_methods'],
   }
 );
