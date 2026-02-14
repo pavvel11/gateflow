@@ -301,6 +301,11 @@ export async function POST(request: NextRequest) {
           );
 
           if (enabledMethods.length > 0) {
+            // Add Link if enabled in config (Link is a separate payment method type
+            // that must be explicitly listed, unlike GPay/ApplePay which are card wallets)
+            if (paymentConfig.enable_link && !enabledMethods.includes('link')) {
+              enabledMethods.push('link');
+            }
             paymentIntentParams.payment_method_types = enabledMethods;
             delete paymentIntentParams.automatic_payment_methods;
             delete paymentIntentParams.payment_method_configuration;

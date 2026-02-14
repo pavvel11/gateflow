@@ -588,11 +588,11 @@ export default function CustomPaymentForm({
               : product.currency === 'USD'
               ? ['card', 'cashapp', 'affirm']
               : undefined,
-            // Enable wallets and Link for supported currencies (USD, EUR, GBP, etc.)
-            // Link provides 1-click autofill, Apple/Google Pay provide express checkout
+            // Wallets in PaymentElement (Google Pay / Apple Pay tabs inside form)
+            // Must respect admin config - when disabled, hide from PaymentElement too
             wallets: {
-              applePay: 'auto',
-              googlePay: 'auto',
+              applePay: expressCheckoutConfig?.applePay !== false ? 'auto' : 'never',
+              googlePay: expressCheckoutConfig?.googlePay !== false ? 'auto' : 'never',
             },
             // Hide email and name fields since we collect them above
             fields: {
