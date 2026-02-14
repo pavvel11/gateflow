@@ -478,14 +478,11 @@ export async function resetToRecommendedConfig(): Promise<{
 
     const { data, error } = await supabase
       .from('payment_method_config')
-      .upsert(
-        {
-          id: 1,
-          ...RECOMMENDED_CONFIG,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'id' }
-      )
+      .update({
+        ...RECOMMENDED_CONFIG,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', 1)
       .select()
       .single();
 

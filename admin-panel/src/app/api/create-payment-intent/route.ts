@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { checkRateLimit } from '@/lib/rate-limiting';
 import { calculatePricing, toStripeCents, STRIPE_MINIMUM_AMOUNT } from '@/hooks/usePricing';
 import { getStripeServer } from '@/lib/stripe/server';
-import { getPaymentMethodConfig } from '@/lib/actions/payment-config';
 import { getEnabledPaymentMethodsForCurrency } from '@/lib/utils/payment-method-helpers';
+import type { PaymentMethodConfig } from '@/types/payment-config';
 
 /**
  * Apply automatic payment methods configuration to PaymentIntent params.
@@ -264,8 +265,16 @@ export async function POST(request: NextRequest) {
       },
     };
 
-    // Fetch payment method configuration
-    const paymentConfig = await getPaymentMethodConfig();
+    // Fetch payment method configuration using admin client (service_role)
+    // because RLS only allows admin users to SELECT from payment_method_config,
+    // but checkout users can be anonymous or non-admin authenticated users.
+    // createAdminClient() is typed with Database which may not include payment_method_config yet
+    const adminSupabase: any = createAdminClient();
+    const { data: paymentConfig } = await adminSupabase
+      .from('payment_method_config')
+      .select('*')
+      .eq('id', 1)
+      .single() as { data: PaymentMethodConfig | null };
 
     // Apply payment method configuration based on mode
     // SECURITY: Payment method configuration is applied server-side only.
@@ -338,8 +347,9 @@ export async function POST(request: NextRequest) {
     const paymentIntent = await stripe.paymentIntents.create(paymentIntentParams);
 
     // Save pending payment transaction for abandoned cart recovery
+    // Uses admin client because payment_transactions INSERT requires service_role
     try {
-      const { error: insertError } = await supabase
+      const { error: insertError } = await adminSupabase
         .from('payment_transactions')
         .insert({
           session_id: paymentIntent.id, // Use Payment Intent ID as session_id
