@@ -4,37 +4,40 @@
  * GateFlow Performance Benchmark Script
  *
  * Usage:
- *   node scripts/benchmark.js [URL]
+ *   node scripts/benchmark.js [URL] [CONNECTIONS]
  *
  * Examples:
- *   node scripts/benchmark.js                              # Test localhost:3000
- *   node scripts/benchmark.js http://localhost:3000        # Test localhost
- *   node scripts/benchmark.js https://gf.techskills.academy # Test production
+ *   node scripts/benchmark.js                                    # localhost, 50 connections
+ *   node scripts/benchmark.js http://localhost:3000              # localhost, 50 connections
+ *   node scripts/benchmark.js https://gf.techskills.academy     # production, 50 connections
+ *   node scripts/benchmark.js https://gf.techskills.academy 5   # production, 5 connections (small VPS)
  */
 
 const autocannon = require('autocannon');
 
 const TARGET_URL = process.argv[2] || 'http://localhost:3000';
+const CONNECTIONS = parseInt(process.argv[3], 10) || 50;
 
 // Test scenarios - adjust paths based on your actual product slugs
 const scenarios = [
   {
     name: 'Homepage',
     path: '/',
-    connections: 50,
+    connections: CONNECTIONS,
     duration: 10,
   },
   {
     name: 'About Page',
     path: '/about',
-    connections: 50,
+    connections: CONNECTIONS,
     duration: 10,
   },
 ];
 
 console.log('\n🚀 GateFlow Performance Benchmark');
 console.log('================================\n');
-console.log(`Target: ${TARGET_URL}\n`);
+console.log(`Target:      ${TARGET_URL}`);
+console.log(`Connections: ${CONNECTIONS}\n`);
 
 async function runBenchmark(scenario) {
   console.log(`\n📊 Testing: ${scenario.name}`);
