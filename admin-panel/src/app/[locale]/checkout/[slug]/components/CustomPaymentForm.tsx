@@ -487,49 +487,33 @@ export default function CustomPaymentForm({
         </div>
       )}
 
-      {/* Email Input */}
+      {/* Email - LinkAuthenticationElement for all users (inline Link autofill) */}
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-2">
           {t('emailAddress')}
         </label>
-        {email ? (
-          // Logged-in user: disabled input with account info
-          <>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              disabled
-              className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed"
-            />
-            <div className="mt-1 flex items-center justify-between">
-              <p className="text-xs text-green-400">✓ {t('linkedToAccount')}</p>
-              {onChangeAccount && (
-                <button
-                  type="button"
-                  onClick={onChangeAccount}
-                  className="text-blue-400 hover:text-blue-300 text-xs underline transition-colors"
-                >
-                  {t('changeAccount')}
-                </button>
-              )}
-            </div>
-          </>
-        ) : (
-          // Guest: LinkAuthenticationElement for inline Link autofill
-          // Detects Link accounts, shows inline OTP, autofills payment details.
-          // Degrades to regular email input when Link is not available.
-          <>
-            <LinkAuthenticationElement
-              onChange={handleLinkEmailChange}
-              options={{
-                defaultValues: {
-                  email: guestEmail || '',
-                },
-              }}
-            />
-            <p className="mt-1 text-xs text-gray-400">{t('emailHelp')}</p>
-          </>
+        <LinkAuthenticationElement
+          onChange={handleLinkEmailChange}
+          options={{
+            defaultValues: {
+              email: email || guestEmail || '',
+            },
+          }}
+        />
+        {!email && <p className="mt-1 text-xs text-gray-400">{t('emailHelp')}</p>}
+        {email && (
+          <div className="mt-1 flex items-center justify-between">
+            <p className="text-xs text-green-400">✓ {t('linkedToAccount')}</p>
+            {onChangeAccount && (
+              <button
+                type="button"
+                onClick={onChangeAccount}
+                className="text-blue-400 hover:text-blue-300 text-xs underline transition-colors"
+              >
+                {t('changeAccount')}
+              </button>
+            )}
+          </div>
         )}
       </div>
 
