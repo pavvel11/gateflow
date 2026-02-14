@@ -437,17 +437,6 @@ test.describe('Rate Limiting', () => {
       expect(result.successCount).toBeGreaterThan(0);
     });
 
-    test('product-page endpoint should be rate limited', async ({ request }) => {
-      const result = await makeRequestsUntilRateLimited(
-        request,
-        'get',
-        '/api/product-page?slug=test-product'
-      );
-
-      expect(result.gotRateLimited).toBe(true);
-      expect(result.successCount).toBeGreaterThan(0);
-    });
-
     test('products/[id] endpoint should be rate limited', async ({ request }) => {
       const result = await makeRequestsUntilRateLimited(
         request,

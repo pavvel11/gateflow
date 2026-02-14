@@ -166,6 +166,15 @@ See **[FEATURES.md](./FEATURES.md)** for details on all integrations.
 
 ## Deployment
 
+### One-Click Deploy
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fpavvel11%2Fgateflow&root-directory=admin-panel&env=SUPABASE_URL,SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,STRIPE_SECRET_KEY,STRIPE_PUBLISHABLE_KEY,SITE_URL&envDescription=Required%20environment%20variables%20for%20GateFlow.%20See%20.env.example%20for%20all%20options.&envLink=https%3A%2F%2Fgithub.com%2Fpavvel11%2Fgateflow%2Fblob%2Fmain%2Fadmin-panel%2F.env.example&project-name=gateflow&repository-name=gateflow)
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/pavvel11/gateflow&base=admin-panel)
+
+> **Coolify / Docker**: Create a new Application in Coolify, point to this repo, set **Base Directory** to `admin-panel`, and configure env vars from [.env.example](./admin-panel/.env.example).
+
+### Manual Deploy
+
 | Guide | Best For |
 |-------|----------|
 | **[Deployment Guide](./docs/DEPLOYMENT-MIKRUS.md)** | VPS/mikr.us with PM2 (recommended) |
