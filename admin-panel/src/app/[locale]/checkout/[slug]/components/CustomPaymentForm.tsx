@@ -616,7 +616,7 @@ export default function CustomPaymentForm({
       <div className="space-y-3">
         <div>
           <label htmlFor="nip" className="block text-sm font-medium text-gray-300 mb-2">
-            {t('taxIdLabel', { defaultValue: 'Tax ID / NIP / VAT' })} <span className="text-gray-500 text-xs">(opcjonalne)</span>
+            {t('nipLabel')} <span className="text-gray-500 text-xs">({t('optional', { defaultValue: 'optional' })})</span>
           </label>
           <div className="relative">
             <input
