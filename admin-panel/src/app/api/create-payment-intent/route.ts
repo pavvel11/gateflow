@@ -1,9 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { checkRateLimit } from '@/lib/rate-limiting';
 import { calculatePricing, toStripeCents, STRIPE_MINIMUM_AMOUNT } from '@/hooks/usePricing';
 import { getStripeServer } from '@/lib/stripe/server';
+import { getEnabledPaymentMethodsForCurrency } from '@/lib/utils/payment-method-helpers';
+import type { PaymentMethodConfig } from '@/types/payment-config';
+
+/**
+ * Apply automatic payment methods configuration to PaymentIntent params.
+ * Used as fallback when no custom config is set or config is invalid.
+ *
+ * IMPORTANT: Cleans up mutually exclusive fields to prevent Stripe errors.
+ * Stripe rejects requests that combine automatic_payment_methods with
+ * payment_method_types or payment_method_configuration.
+ */
+function applyAutomaticPaymentMethods(params: Stripe.PaymentIntentCreateParams): void {
+  params.automatic_payment_methods = {
+    enabled: true,
+    allow_redirects: 'always',
+  };
+  delete params.payment_method_types;
+  delete params.payment_method_configuration;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -209,18 +229,9 @@ export async function POST(request: NextRequest) {
     const paymentIntentParams: Stripe.PaymentIntentCreateParams = {
       amount: totalAmount,
       currency: product.currency.toLowerCase(),
-      automatic_payment_methods: {
-        enabled: true,
-        allow_redirects: 'always',
-      },
-      // Enable Link for one-click checkout with saved payment methods
-      // 'off_session' = payment method can be reused for future payments (enables one-click checkout)
-      // This allows Link to save customer payment details for faster checkout on return visits
-      payment_method_options: {
-        link: {
-          setup_future_usage: 'off_session',
-        },
-      },
+      // NOTE: automatic_payment_methods is set by the config switch below.
+      // Do NOT set it here - it's mutually exclusive with payment_method_types
+      // and payment_method_configuration.
       metadata: {
         product_id: productId,
         product_name: product.name,
@@ -246,6 +257,99 @@ export async function POST(request: NextRequest) {
       },
     };
 
+    // Fetch payment method configuration using admin client (service_role)
+    // because RLS only allows admin users to SELECT from payment_method_config,
+    // but checkout users can be anonymous or non-admin authenticated users.
+    // createAdminClient() is typed with Database which may not include payment_method_config yet
+    const adminSupabase: any = createAdminClient();
+    const { data: paymentConfig } = await adminSupabase
+      .from('payment_method_config')
+      .select('*')
+      .eq('id', 1)
+      .single() as { data: PaymentMethodConfig | null };
+
+    // Apply payment method configuration based on mode
+    // SECURITY: Payment method configuration is applied server-side only.
+    // Client cannot override which payment methods are available.
+    // FALLBACK STRATEGY: If config is missing/invalid, we fallback to Stripe's
+    // automatic_payment_methods to ensure checkout always works. This is logged
+    // for monitoring but doesn't expose any sensitive information.
+    if (paymentConfig) {
+      switch (paymentConfig.config_mode) {
+        case 'automatic':
+          // Use Stripe's automatic payment methods (default behavior)
+          applyAutomaticPaymentMethods(paymentIntentParams);
+          // Enable Link saved payment methods for one-click checkout
+          paymentIntentParams.payment_method_options = {
+            link: { setup_future_usage: 'off_session' },
+          };
+          break;
+
+        case 'stripe_preset':
+          // Use specific Stripe Payment Method Configuration
+          if (paymentConfig.stripe_pmc_id) {
+            paymentIntentParams.payment_method_configuration = paymentConfig.stripe_pmc_id;
+            delete paymentIntentParams.automatic_payment_methods;
+            delete paymentIntentParams.payment_method_types;
+            // Enable Link saved payment methods for one-click checkout
+            paymentIntentParams.payment_method_options = {
+              link: { setup_future_usage: 'off_session' },
+            };
+          } else {
+            // Fallback to automatic if PMC ID is missing
+            console.warn('[create-payment-intent] stripe_preset mode but no PMC ID, falling back to automatic');
+            applyAutomaticPaymentMethods(paymentIntentParams);
+          }
+          break;
+
+        case 'custom':
+          // Use explicit payment method types with currency filtering
+          const enabledMethods = getEnabledPaymentMethodsForCurrency(
+            paymentConfig,
+            product.currency
+          );
+
+          // Add express checkout types to payment_method_types.
+          // Placed before the length check so express-checkout-only configs work
+          // (e.g. only Link enabled, no custom payment methods selected).
+          //
+          // Link: needed for LinkAuthenticationElement inline autofill
+          if (paymentConfig.enable_link && !enabledMethods.includes('link')) {
+            enabledMethods.push('link');
+          }
+          // Apple Pay & Google Pay are card wallets — they require 'card' in
+          // payment_method_types to appear in ExpressCheckoutElement.
+          if (paymentConfig.enable_express_checkout &&
+              (paymentConfig.enable_apple_pay || paymentConfig.enable_google_pay) &&
+              !enabledMethods.includes('card')) {
+            enabledMethods.push('card');
+          }
+
+          if (enabledMethods.length > 0) {
+            paymentIntentParams.payment_method_types = enabledMethods;
+            delete paymentIntentParams.automatic_payment_methods;
+            delete paymentIntentParams.payment_method_configuration;
+            // Enable Link saved payment methods (same as automatic/stripe_preset modes)
+            if (paymentConfig.enable_link) {
+              paymentIntentParams.payment_method_options = {
+                ...paymentIntentParams.payment_method_options,
+                link: { setup_future_usage: 'off_session' },
+              };
+            }
+          } else {
+            // Fallback if no methods match currency and no express checkout
+            console.warn('[create-payment-intent] No payment methods match currency, falling back to automatic');
+            applyAutomaticPaymentMethods(paymentIntentParams);
+          }
+          break;
+      }
+    } else {
+      // Fallback if config is missing (shouldn't happen due to migration seed)
+      // This ensures checkout always works even if config table is empty/corrupted
+      console.warn('[create-payment-intent] Payment config not found, using automatic mode');
+      applyAutomaticPaymentMethods(paymentIntentParams);
+    }
+
     // Only set receipt_email if we have an email
     if (finalEmail) {
       paymentIntentParams.receipt_email = finalEmail;
@@ -261,8 +365,9 @@ export async function POST(request: NextRequest) {
     const paymentIntent = await stripe.paymentIntents.create(paymentIntentParams);
 
     // Save pending payment transaction for abandoned cart recovery
+    // Uses admin client because payment_transactions INSERT requires service_role
     try {
-      const { error: insertError } = await supabase
+      const { error: insertError } = await adminSupabase
         .from('payment_transactions')
         .insert({
           session_id: paymentIntent.id, // Use Payment Intent ID as session_id

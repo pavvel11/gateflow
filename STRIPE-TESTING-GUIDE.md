@@ -474,4 +474,4 @@ docker compose restart admin-panel
 **Need Help?**
 - Check Stripe documentation: https://stripe.com/docs/keys#limit-access
 - GateFlow issues: [link to repository]
-- Deployment guide: `/DEPLOYMENT.md`
+- Deployment guide: `./docs/DEPLOYMENT-MIKRUS.md`

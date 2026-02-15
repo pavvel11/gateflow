@@ -219,6 +219,6 @@ export function validateTaxId(
  * Legacy function for backward compatibility
  * @deprecated Use validateTaxId() instead
  */
-export function validateNIP(nip: string): TaxIdValidationResult {
+export function validateNIPLegacy(nip: string): TaxIdValidationResult {
   return validateTaxId(nip, true);
 }

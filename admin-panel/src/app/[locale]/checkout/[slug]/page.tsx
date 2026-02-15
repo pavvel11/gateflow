@@ -1,8 +1,12 @@
 import { createPublicClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { cache } from 'react';
 import ProductPurchaseView from './components/ProductPurchaseView';
+import { getEffectivePaymentMethodOrder } from '@/lib/utils/payment-method-helpers';
+import { extractExpressCheckoutConfig } from '@/types/payment-config';
+import type { PaymentMethodConfig } from '@/types/payment-config';
 
 interface PageProps {
   params: Promise<{ slug: string; locale: string }>;
@@ -68,6 +72,27 @@ export default async function CheckoutPage({ params }: PageProps) {
     return notFound();
   }
 
+  // Get payment method configuration using admin client (service_role)
+  // RLS on payment_method_config only allows admin SELECT - checkout users need this config too.
+  // Also avoids cookies() which would break ISR caching on this page.
+  // createAdminClient() is typed with Database which may not include payment_method_config yet
+  const adminSupabase: any = createAdminClient();
+  const { data: paymentConfig } = await adminSupabase
+    .from('payment_method_config')
+    .select('*')
+    .eq('id', 1)
+    .single() as { data: PaymentMethodConfig | null };
+  const paymentMethodOrder = paymentConfig
+    ? getEffectivePaymentMethodOrder(paymentConfig, product.currency)
+    : undefined;
+  const expressCheckoutConfig = extractExpressCheckoutConfig(paymentConfig);
+
   // ProductPurchaseView handles showing either checkout form or waitlist form
-  return <ProductPurchaseView product={product} />;
+  return (
+    <ProductPurchaseView
+      product={product}
+      paymentMethodOrder={paymentMethodOrder}
+      expressCheckoutConfig={expressCheckoutConfig}
+    />
+  );
 }

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { PaymentElement, ExpressCheckoutElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { useState, useEffect } from 'react';
+import { PaymentElement, LinkAuthenticationElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Product } from '@/types';
 import { OrderBumpWithProduct } from '@/types/order-bump';
+import { ExpressCheckoutConfig } from '@/types/payment-config';
 import { formatPrice } from '@/lib/constants';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
@@ -29,6 +30,8 @@ interface CustomPaymentFormProps {
   customAmount?: number; // Pay What You Want - custom price chosen by customer
   customAmountError?: string | null; // Validation error for custom amount
   clientSecret?: string; // Payment Intent client secret for metadata updates
+  paymentMethodOrder?: string[]; // Custom payment method ordering from config
+  expressCheckoutConfig?: ExpressCheckoutConfig; // Express Checkout visibility config
 }
 
 export default function CustomPaymentForm({
@@ -41,7 +44,9 @@ export default function CustomPaymentForm({
   onChangeAccount,
   customAmount,
   customAmountError,
-  clientSecret
+  clientSecret,
+  paymentMethodOrder,
+  expressCheckoutConfig
 }: CustomPaymentFormProps) {
   const t = useTranslations('checkout');
   const stripe = useStripe();
@@ -49,7 +54,12 @@ export default function CustomPaymentForm({
   const router = useRouter();
   const { track } = useTracking();
 
-  const [guestEmail, setGuestEmail] = useState('');
+  // Email from LinkAuthenticationElement onChange
+  const [linkEmail, setLinkEmail] = useState('');
+
+  // Confirm email checkbox — only required when logged-in user uses a different email
+  const [emailConfirmed, setEmailConfirmed] = useState(false);
+  const emailMismatch = !!(email && linkEmail && linkEmail.toLowerCase() !== email.toLowerCase());
 
   // Customer data - single name field
   const [fullName, setFullName] = useState('');
@@ -69,9 +79,6 @@ export default function CustomPaymentForm({
   const [errorMessage, setErrorMessage] = useState('');
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
-
-  // Express Checkout (Link, Apple Pay, Google Pay buttons)
-  const [expressCheckoutVisible, setExpressCheckoutVisible] = useState(false);
 
   // GUS integration state
   interface GUSCompanyData {
@@ -239,65 +246,6 @@ export default function CustomPaymentForm({
     }
   };
 
-  // Express Checkout Element handlers
-  interface ExpressCheckoutReadyEvent {
-    availablePaymentMethods?: {
-      applePay?: boolean;
-      googlePay?: boolean;
-      link?: boolean;
-    };
-  }
-
-  const handleExpressCheckoutReady = useCallback(({ availablePaymentMethods }: ExpressCheckoutReadyEvent) => {
-    // Show Express Checkout only if payment methods are available (Link, Apple Pay, Google Pay)
-    if (availablePaymentMethods) {
-      setExpressCheckoutVisible(true);
-    }
-  }, []);
-
-  const handleExpressCheckoutConfirm = useCallback(async () => {
-    if (!stripe || !elements) {
-      return;
-    }
-
-    setIsProcessing(true);
-    setErrorMessage('');
-
-    try {
-      // Submit all Elements for validation
-      const { error: submitError } = await elements.submit();
-      if (submitError) {
-        setErrorMessage(submitError.message || 'Failed to process payment');
-        setIsProcessing(false);
-        return;
-      }
-
-      // Express Checkout buttons handle their own confirmation
-      // We just need to track and redirect after Stripe handles payment
-      // 'purchase' event will be sent by webhook after payment confirmation
-      track('add_payment_info', {
-        value: totalGross,
-        currency: product.currency,
-        items: [
-          {
-            item_id: product.id,
-            item_name: product.name,
-            price: totalGross,
-            quantity: 1,
-            currency: product.currency,
-          },
-        ],
-      });
-
-      // Stripe will redirect to return_url automatically
-      // Payment confirmation happens on the server via webhook
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
-      setErrorMessage(errorMessage);
-      setIsProcessing(false);
-    }
-  }, [stripe, elements, track, product.id, product.currency, totalGross]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -305,9 +253,14 @@ export default function CustomPaymentForm({
       return;
     }
 
-    const finalEmail = email || guestEmail;
+    const finalEmail = linkEmail || email;
     if (!finalEmail) {
       setErrorMessage(t('emailRequired', { defaultValue: 'Email is required' }));
+      return;
+    }
+
+    if (emailMismatch && !emailConfirmed) {
+      setErrorMessage(t('confirmEmailRequired', { defaultValue: 'Please confirm the product assignment to your account' }));
       return;
     }
 
@@ -437,66 +390,42 @@ export default function CustomPaymentForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Express Checkout Element - Link, Apple Pay, Google Pay (1-click payment) */}
-      <div style={{ display: expressCheckoutVisible ? 'block' : 'none' }}>
-        <div className="relative mb-6">
-          <ExpressCheckoutElement
-            onConfirm={handleExpressCheckoutConfirm}
-            onReady={handleExpressCheckoutReady}
-            options={{
-              buttonType: {
-                googlePay: 'checkout',
-                applePay: 'check-out',
-              },
-              buttonHeight: 48,
-            }}
-          />
-        </div>
-
-        {/* Separator */}
-        <div className="relative mb-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-white/10"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-4 bg-gray-900 text-gray-400">
-              {t('orPayWith', { defaultValue: 'or pay with' })}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Email Input - always visible at top */}
+      {/* Email — LinkAuthenticationElement (handles Link detection + email collection) */}
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-          {t('emailAddress')}
-        </label>
-        <input
-          type="email"
-          id="email"
-          value={email || guestEmail}
-          onChange={(e) => setGuestEmail(e.target.value)}
-          placeholder={t('emailPlaceholder')}
-          required
-          disabled={!!email} // Disabled if user is logged in
-          className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed"
-        />
-        {!email && <p className="mt-1 text-xs text-gray-400">{t('emailHelp')}</p>}
-        {email && (
-          <div className="mt-1 flex items-center justify-between">
-            <p className="text-xs text-green-400">✓ {t('linkedToAccount')}</p>
-            {onChangeAccount && (
-              <button
-                type="button"
-                onClick={onChangeAccount}
-                className="text-blue-400 hover:text-blue-300 text-xs underline transition-colors"
-              >
-                {t('changeAccount')}
-              </button>
-            )}
+        {email && onChangeAccount && (
+          <div className="flex justify-end mb-1">
+            <button
+              type="button"
+              onClick={onChangeAccount}
+              className="text-blue-400 hover:text-blue-300 text-xs underline transition-colors"
+            >
+              {t('changeAccount')}
+            </button>
           </div>
         )}
+        <LinkAuthenticationElement
+          options={{ defaultValues: { email: email || '' } }}
+          onChange={(e) => setLinkEmail(e.value.email)}
+        />
       </div>
+
+      {/* Email mismatch warning — logged-in user purchasing with a different email */}
+      {emailMismatch && (
+        <div className="p-3 bg-yellow-900/20 border border-yellow-600/30 rounded-lg">
+          <div className="flex items-start gap-2">
+            <svg className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            <p className="text-xs text-yellow-300/90">
+              {t('emailMismatchWarning', {
+                accountEmail: email,
+                purchaseEmail: linkEmail,
+                defaultValue: `You are purchasing with ${linkEmail}, but you are logged in as ${email}. The product will be linked to your account.`,
+              })}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Full Name - single field */}
       <div>
@@ -541,46 +470,36 @@ export default function CustomPaymentForm({
         </div>
       )}
 
-      {/* Payment Element */}
+      {/* Payment Element — tabs layout, Apple Pay/Google Pay as wallet tabs */}
       <div>
-        {/*
-          Payment methods must be enabled in Stripe Dashboard:
-          https://dashboard.stripe.com/settings/payment_methods
-
-          For Poland (PLN): Enable BLIK, Przelewy24, Cards
-          For EUR: Enable SEPA Debit, iDEAL, Cards, Klarna
-          For USD: Enable Cards, Cash App, Affirm
-        */}
         <PaymentElement
           options={{
             layout: {
               type: 'tabs',
               defaultCollapsed: false,
             },
-            // Prefill customer data for Link autofill and faster checkout
             defaultValues: {
               billingDetails: {
-                email: email || guestEmail || undefined,
                 name: fullName || undefined,
               },
             },
-            // Set payment method order based on currency
-            // For PLN (Poland): BLIK is most popular (65%+ market share), then Przelewy24, then card
-            // For other currencies: optimize for that region
-            paymentMethodOrder: product.currency === 'PLN'
-              ? ['blik', 'p24', 'card']
-              : product.currency === 'EUR'
-              ? ['sepa_debit', 'ideal', 'card', 'klarna']
-              : product.currency === 'USD'
-              ? ['card', 'cashapp', 'affirm']
-              : undefined, // Let Stripe determine optimal order for other currencies
-            // Enable wallets and Link for supported currencies (USD, EUR, GBP, etc.)
-            // Link provides 1-click autofill, Apple/Google Pay provide express checkout
+            paymentMethodOrder: (() => {
+              const baseOrder = paymentMethodOrder && paymentMethodOrder.length > 0
+                ? paymentMethodOrder
+                : product.currency === 'PLN'
+                ? ['blik', 'p24', 'card']
+                : product.currency === 'EUR'
+                ? ['sepa_debit', 'ideal', 'card', 'klarna']
+                : product.currency === 'USD'
+                ? ['card', 'cashapp', 'affirm']
+                : undefined;
+              // Filter out 'link' — LAE handles Link separately
+              return baseOrder?.filter(m => m !== 'link');
+            })(),
             wallets: {
-              applePay: 'auto',
-              googlePay: 'auto',
+              applePay: expressCheckoutConfig?.applePay !== false ? 'auto' : 'never',
+              googlePay: expressCheckoutConfig?.googlePay !== false ? 'auto' : 'never',
             },
-            // Hide email and name fields since we collect them above
             fields: {
               billingDetails: {
                 email: 'never',
@@ -602,7 +521,7 @@ export default function CustomPaymentForm({
       <div className="space-y-3">
         <div>
           <label htmlFor="nip" className="block text-sm font-medium text-gray-300 mb-2">
-            {t('taxIdLabel', { defaultValue: 'Tax ID / NIP / VAT' })} <span className="text-gray-500 text-xs">(opcjonalne)</span>
+            {t('nipLabel')} <span className="text-gray-500 text-xs">({t('optional', { defaultValue: 'optional' })})</span>
           </label>
           <div className="relative">
             <input
@@ -758,6 +677,23 @@ export default function CustomPaymentForm({
         </div>
       </div>
 
+      {/* Confirm Email Address — only when logged-in user uses a different email */}
+      {emailMismatch && (
+        <div className="py-1">
+          <label className="flex items-start cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={emailConfirmed}
+              onChange={(e) => setEmailConfirmed(e.target.checked)}
+              className="mt-0.5 w-4 h-4 text-blue-500 bg-white/5 border border-white/20 rounded focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-colors"
+            />
+            <span className="ml-3 text-sm text-gray-400">
+              {t('confirmEmailLabel', { accountEmail: email, purchaseEmail: linkEmail, defaultValue: `I confirm the product will be linked to my account (${email}). Receipt will be sent to ${linkEmail}.` })}
+            </span>
+          </label>
+        </div>
+      )}
+
       {/* PWYW Validation Error Warning */}
       {customAmountError && (
         <div className="p-3 bg-red-900/30 border border-red-500/50 rounded-lg mb-4">
@@ -773,7 +709,7 @@ export default function CustomPaymentForm({
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={!stripe || isProcessing || !!customAmountError}
+        disabled={!stripe || isProcessing || !!customAmountError || (emailMismatch && !emailConfirmed)}
         className={`w-full px-6 py-4 text-white font-bold rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] ${
           customAmountError
             ? 'bg-gray-600 cursor-not-allowed'

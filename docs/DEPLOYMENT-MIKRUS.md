@@ -473,10 +473,18 @@ pm2 describe gateflow-admin
 From your local machine:
 
 ```bash
+# Default: 50 concurrent connections
 node scripts/benchmark.js https://yourdomain.com
+
+# Small VPS (1 vCPU / ≤1GB RAM): use 5 connections for realistic results
+node scripts/benchmark.js https://yourdomain.com 5
 ```
 
-**Expected Results:**
+> **Why fewer connections for small VPS?** 50 concurrent connections will saturate a
+> single-core server and produce misleadingly high latency numbers. 5 connections better
+> reflects real-world traffic on a small instance and gives you actionable latency metrics.
+
+**Expected Results (50 connections):**
 
 | Mikrus Plan | Req/sec | Latency |
 |-------------|---------|---------|
@@ -484,6 +492,14 @@ node scripts/benchmark.js https://yourdomain.com
 | **2.0+ (1GB)** | 50-80 | ~300ms |
 | **3.0 (2GB)** | 100-200 | ~200ms |
 | **3.0+ (4GB)** | 200-400+ | <200ms |
+
+**Expected Results (5 connections — small VPS):**
+
+| Mikrus Plan | Req/sec | Latency |
+|-------------|---------|---------|
+| **2.0 (512MB)** | 20-40 | ~150ms |
+| **2.0+ (1GB)** | 30-50 | ~120ms |
+| **3.0 (2GB)** | 50-100 | ~80ms |
 
 ### Setup Upstash Redis (Optional - Performance Boost)
 

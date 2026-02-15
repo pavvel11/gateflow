@@ -6,12 +6,12 @@ import { UserPreferencesProvider } from '@/contexts/UserPreferencesContext';
 import { getDefaultCurrency, getShopConfig } from '@/lib/actions/shop-config';
 
 export default async function Layout({ children }: { children: ReactNode }) {
-  // Server-side auth check (blocking)
-  // If not authorized, it redirects immediately.
-  const user = await verifyAdminAccess();
-
-  // Get shop configuration
-  const shopConfig = await getShopConfig();
+  // Parallel fetch: auth check + shop config
+  // verifyAdminAccess() redirects if not authorized (throws NEXT_REDIRECT)
+  const [user, shopConfig] = await Promise.all([
+    verifyAdminAccess(),
+    getShopConfig(),
+  ]);
   const shopDefaultCurrency = shopConfig?.default_currency || 'USD';
 
   // Extract initial preferences safely

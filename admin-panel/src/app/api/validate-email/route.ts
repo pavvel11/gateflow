@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DisposableEmailService } from '@/lib/services/disposable-email';
+import { checkRateLimit } from '@/lib/rate-limiting';
 
 /**
  * Email Validation API Endpoint
- * 
+ *
  * Validates email addresses and checks for disposable domains
  * using server-side caching for optimal performance.
- * 
+ *
  * @route POST /api/validate-email
  */
 
@@ -30,39 +31,6 @@ interface EmailValidationResponse {
   };
 }
 
-/**
- * Rate limiting using simple in-memory store
- * In production, consider using Redis or proper rate limiting service
- */
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 30; // 30 requests per minute per IP
-
-function getRateLimitKey(request: NextRequest): string {
-  const forwardedFor = request.headers.get('x-forwarded-for');
-  const realIp = request.headers.get('x-real-ip');
-  return forwardedFor?.split(',')[0] || realIp || 'unknown';
-}
-
-function isRateLimited(key: string): boolean {
-  const now = Date.now();
-  const windowStart = now - RATE_LIMIT_WINDOW;
-  
-  const entry = rateLimitMap.get(key);
-  
-  if (!entry || entry.resetTime < windowStart) {
-    rateLimitMap.set(key, { count: 1, resetTime: now });
-    return false;
-  }
-  
-  if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
-    return true;
-  }
-  
-  entry.count++;
-  return false;
-}
-
 function validateEmailFormat(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
@@ -72,9 +40,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<EmailVali
   const startTime = Date.now();
   
   try {
-    // Rate limiting
-    const clientKey = getRateLimitKey(request);
-    if (isRateLimited(clientKey)) {
+    // Rate limiting: 30 requests per minute per IP
+    const rateLimitOk = await checkRateLimit('validate_email', 30, 1);
+    if (!rateLimitOk) {
       return NextResponse.json({
         success: false,
         error: {

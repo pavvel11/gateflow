@@ -7,11 +7,7 @@
 ehthumbs.db
 Thumbs.db
 
-# IDE specific files
-.copilot-codeGeneration-instructions.md
-
-
-# Editor files
+# Editor / IDE files
 .vscode/
 .idea/
 *.swp
@@ -24,7 +20,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Environment variables (IMPORTANT: Don't commit real credentials)
+# Environment variables (NEVER commit real credentials)
 .env
 .env.local
 .env.development.local
@@ -34,12 +30,8 @@ yarn-error.log*
 # Node modules
 node_modules/
 
-# AI Agents Instructions
-CLAUDE.md
-GEMINI.md
-AGENTS.md
-
 # Next.js build outputs
+.next/
 dist/*.map
 build/
 
@@ -47,30 +39,29 @@ build/
 *.tmp
 *.temp
 
-# Package manager lockfiles (optional)
-# package-lock.json
-# yarn.lock
+# Build artifacts
+*.tsbuildinfo
 
-# Personal configuration files with real credentials
-# config.personal.js
+# Personal configuration with real credentials
+config.js
 
-# PM2 and Caddy local configuration
+# PM2 local configuration
 ecosystem.config.js
-Caddyfile
 
 # Gemini temporary files
 .gemini-clipboard/
 
-# Claude AI configuration
+# Claude AI local configuration
 .claude/
-CLAUDE.md
 
 # GateFlow license private key (NEVER commit!)
 scripts/.gateflow-private-key.pem
-SECURITY-AUDIT-REPORT.md
-admin-panel/SECURITY-AUDIT-REPORT.md
 
 # Bruno environments (may contain API keys)
 bruno/environments/local.bru
-MARKET-ANALYSIS.md
-.gemini-clipboard/
+
+# Copilot instructions (IDE-specific)
+.copilot-codeGeneration-instructions.md
+
+# Local dev server config
+Caddyfile

@@ -59,7 +59,11 @@
       "belowMinimum": "Amount must be at least {minimum}",
       "aboveMaximum": "Amount must be no more than {maximum}"
     },
-    "orPayWith": "or pay with"
+    "orPayWith": "or pay with",
+    "optional": "optional",
+    "confirmEmailLabel": "I confirm the product will be linked to my account ({accountEmail}). Receipt will be sent to {purchaseEmail}.",
+    "confirmEmailRequired": "Please confirm the product assignment to your account",
+    "emailMismatchWarning": "You are purchasing with {purchaseEmail}, but you are logged in as {accountEmail}. The product will be linked to your account."
   },
   "waitlist": {
     "joinWaitlist": "Join the Waitlist",
@@ -1863,6 +1867,107 @@
       "howItWorks2": "Valid license removes the \"Secured by GateFlow\" watermark",
       "howItWorks3": "License is bound to a specific domain",
       "howItWorks4": "Purchase licenses at"
+    },
+    "paymentMethods": {
+      "title": "Payment Method Configuration",
+      "subtitle": "Manage payment methods displayed at checkout",
+      "mode": {
+        "label": "Configuration Mode",
+        "automatic": "Automatic",
+        "automaticDescription": "Use Stripe's default payment methods",
+        "stripePreset": "Stripe Preset",
+        "stripePresetDescription": "Select configuration from Stripe Dashboard",
+        "custom": "Custom",
+        "customDescription": "Manual payment method selection and ordering"
+      },
+      "stripeConfig": {
+        "title": "Stripe PMC Configuration",
+        "selectLabel": "Select Stripe Configuration",
+        "selectPlaceholder": "Choose payment method configuration",
+        "refresh": "Refresh List",
+        "refreshing": "Refreshing...",
+        "noConfigs": "No Stripe configurations available",
+        "preview": "Enabled Methods",
+        "noMethodsEnabled": "No payment methods detected in this configuration",
+        "error": "Error loading Stripe configurations"
+      },
+      "customConfig": {
+        "title": "Select Payment Methods",
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All",
+        "noneSelected": "No payment methods selected",
+        "selected": "{count} method(s) selected",
+        "currencyNote": "All currencies",
+        "orderTitle": "Payment Method Order",
+        "orderDescription": "Drag and drop to reorder",
+        "dragToReorder": "Drag to reorder"
+      },
+      "expressCheckout": {
+        "title": "Express Checkout",
+        "enable": "Enable Express Checkout",
+        "enableDescription": "Show quick payment buttons (Apple Pay, Google Pay, Link)",
+        "applePay": "Apple Pay",
+        "googlePay": "Google Pay",
+        "link": "Link",
+        "applePayDescription": "Quick payments for Apple users",
+        "googlePayDescription": "Quick payments for Android users",
+        "linkDescription": "Quick payments with saved details",
+        "linkEnabledDescription": "Link is displayed as part of the email field. Users with a Link account can pay with saved cards."
+      },
+      "currencyOverrides": {
+        "title": "Currency-Specific Configuration",
+        "advanced": "Advanced",
+        "description": "Select and order payment methods for specific currencies. Add or remove methods per currency to optimize checkout for each market.",
+        "addCurrency": "Add Currency",
+        "orderFor": "{currency} Methods",
+        "remove": "Remove",
+        "empty": "No currency-specific configuration. Click a currency above to customize methods for that currency.",
+        "allCurrencies": "All currencies",
+        "excludedMethods": "Available to add:"
+      },
+      "recommended": {
+        "title": "Recommended Configuration",
+        "description": "Optimal configuration for Polish market, based on e-commerce best practices",
+        "reset": "Reset to Recommended",
+        "resetConfirm": "Are you sure you want to reset to recommended configuration? Current settings will be replaced.",
+        "features": "Includes: BLIK, Przelewy24, Card + Express Checkout (Link, Apple Pay, Google Pay)"
+      },
+      "buttons": {
+        "save": "Save Configuration",
+        "saving": "Saving...",
+        "reset": "Reset",
+        "cancel": "Cancel",
+        "loading": "Loading..."
+      },
+      "messages": {
+        "saveSuccess": "Payment method configuration saved successfully",
+        "saveError": "Failed to save configuration",
+        "resetSuccess": "Recommended configuration restored",
+        "refreshSuccess": "Stripe configuration list refreshed",
+        "configReset": "Configuration reset to saved values",
+        "error": "An error occurred"
+      },
+      "validation": {
+        "noMethods": "Select at least one payment method",
+        "noStripePMC": "Select a Stripe PMC configuration",
+        "saveRequired": "Save changes before leaving"
+      },
+      "paymentMethodNames": {
+        "card": "Credit/Debit Card",
+        "blik": "BLIK",
+        "p24": "Przelewy24",
+        "sepa_debit": "SEPA Direct Debit",
+        "ideal": "iDEAL",
+        "bancontact": "Bancontact",
+        "giropay": "Giropay",
+        "eps": "EPS",
+        "sofort": "Sofort",
+        "alipay": "Alipay",
+        "wechat_pay": "WeChat Pay",
+        "affirm": "Affirm",
+        "afterpay_clearpay": "Afterpay / Clearpay",
+        "klarna": "Klarna"
+      }
     }
   },
   "stripe": {

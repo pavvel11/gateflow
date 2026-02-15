@@ -635,8 +635,8 @@ BEGIN
     current_user_id := NULL;
   END IF;
 
-  -- Idempotency check
-  IF EXISTS (SELECT 1 FROM public.payment_transactions WHERE session_id = session_id_param) THEN
+  -- Idempotency check (skip pending transactions — they need to be completed)
+  IF EXISTS (SELECT 1 FROM public.payment_transactions WHERE session_id = session_id_param AND status != 'pending') THEN
     -- Check if this was a guest purchase to return consistent values
     IF EXISTS (SELECT 1 FROM public.guest_purchases WHERE session_id = session_id_param) THEN
       -- Guest purchase - return same values as original guest purchase scenario

@@ -27,14 +27,14 @@ cd admin-panel
 
 # Install dependencies
 echo -e "${YELLOW}📦 Installing dependencies...${NC}"
-npm install || {
-    echo -e "${RED}❌ npm install failed${NC}"
+bun install || {
+    echo -e "${RED}❌ bun install failed${NC}"
     exit 1
 }
 
 # Build application
 echo -e "${YELLOW}🔨 Building application...${NC}"
-npm run build || {
+bun run build || {
     echo -e "${RED}❌ Build failed${NC}"
     exit 1
 }

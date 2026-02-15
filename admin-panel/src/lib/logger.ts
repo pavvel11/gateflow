@@ -1,57 +1,36 @@
-import fs from 'fs';
-import path from 'path';
-
-// Create logs directory if it doesn't exist
-const logsDir = path.join(process.cwd(), 'logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true });
-}
-
 // Type for log data
 type LogData = Record<string, unknown> | string | number | boolean | null | undefined;
 
-// Get current date for log file naming
-const getLogFileName = () => {
-  const date = new Date().toISOString().split('T')[0];
-  return `app-${date}.log`;
-};
-
-// Format log entry
+// Format log entry as structured JSON
 const formatLogEntry = (level: string, message: string, data?: LogData) => {
-  const timestamp = new Date().toISOString();
-  const logEntry = {
-    timestamp,
+  return {
+    timestamp: new Date().toISOString(),
     level,
     message,
-    data: data ? JSON.stringify(data, null, 2) : undefined
+    ...(data !== undefined && { data }),
   };
-  return JSON.stringify(logEntry) + '\n';
-};
-
-// Write to log file
-const writeToLogFile = (entry: string) => {
-  const logFile = path.join(logsDir, getLogFileName());
-  fs.appendFileSync(logFile, entry);
 };
 
 export const logger = {
   info: (message: string, data?: LogData) => {
-    writeToLogFile(formatLogEntry('INFO', message, data));
+    console.log(JSON.stringify(formatLogEntry('INFO', message, data)));
   },
-  
+
   error: (message: string, data?: LogData) => {
-    writeToLogFile(formatLogEntry('ERROR', message, data));
+    console.error(JSON.stringify(formatLogEntry('ERROR', message, data)));
   },
-  
+
   warn: (message: string, data?: LogData) => {
-    writeToLogFile(formatLogEntry('WARN', message, data));
+    console.warn(JSON.stringify(formatLogEntry('WARN', message, data)));
   },
-  
+
   debug: (message: string, data?: LogData) => {
-    writeToLogFile(formatLogEntry('DEBUG', message, data));
+    if (process.env.NODE_ENV === 'development') {
+      console.debug(JSON.stringify(formatLogEntry('DEBUG', message, data)));
+    }
   },
-  
+
   security: (message: string, data?: LogData) => {
-    writeToLogFile(formatLogEntry('SECURITY', message, data));
+    console.error(JSON.stringify(formatLogEntry('SECURITY', message, data)));
   }
 };

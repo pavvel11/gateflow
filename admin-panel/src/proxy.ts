@@ -50,20 +50,42 @@ export async function proxy(request: NextRequest) {
     return addSecurityHeaders(NextResponse.next());
   }
 
+  // Extract locale from pathname early to determine route type
+  const localeMatch = pathname.match(/^\/([a-z]{2})(?:\/|$)/)
+  const locale = localeMatch ? localeMatch[1] : ''
+
+  // Remove locale from pathname to get actual path
+  const actualPath = locale && locales.includes(locale as typeof locales[number])
+    ? pathname.replace(`/${locale}`, '') || '/'
+    : pathname
+
+  // Determine if route needs auth checking
+  const isProtectedRoute =
+    actualPath.startsWith('/dashboard') ||
+    actualPath.startsWith('/my-products') ||
+    actualPath.startsWith('/admin')
+  const isLoginRoute = actualPath === '/login'
+  const needsAuth = isProtectedRoute || isLoginRoute
+
   // Apply internationalization middleware first
   const intlResponse = intlMiddleware(request)
-  
+
   // If intl middleware redirects, return that response with security headers
   if (intlResponse.status === 302 || intlResponse.status === 301) {
     return addSecurityHeaders(intlResponse as NextResponse)
   }
 
-  // Create response based on intl middleware
+  // Public routes (checkout, about, landing, etc.) - skip Supabase overhead
+  if (!needsAuth) {
+    return addSecurityHeaders(intlResponse as NextResponse)
+  }
+
+  // Auth-required routes: create response with cookie support
   const response = new NextResponse(intlResponse.body, {
     status: intlResponse.status,
     headers: intlResponse.headers
   })
-  
+
   // Create Supabase client for authentication
   const supabase = createServerClient(
     process.env.SUPABASE_URL!,
@@ -88,26 +110,6 @@ export async function proxy(request: NextRequest) {
 
   // Get current session
   const { data: { session } } = await supabase.auth.getSession()
-
-  // Extract locale from pathname
-  const localeMatch = pathname.match(/^\/([a-z]{2})(?:\/|$)/)
-  const locale = localeMatch ? localeMatch[1] : ''
-  
-  // Remove locale from pathname to get actual path
-  const actualPath = locale && locales.includes(locale as typeof locales[number]) 
-    ? pathname.replace(`/${locale}`, '') || '/'
-    : pathname
-
-  // Don't redirect root path - allow landing page to be shown
-  // Landing page will handle navigation based on auth state
-  
-  // Protected routes
-  const isProtectedRoute = 
-    actualPath.startsWith('/dashboard') ||
-    actualPath.startsWith('/my-products') ||
-    actualPath.startsWith('/admin')
-
-  const isLoginRoute = actualPath === '/login'
 
   // Auth logic
   if (session && isLoginRoute) {

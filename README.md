@@ -4,13 +4,13 @@
 
 **Self-hosted platform for selling and protecting digital products**
 
-[![Version](https://img.shields.io/badge/version-1.0.0--rc.2-blue?style=flat-square)](https://github.com/pavvel11/gateflow/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0--rc5-blue?style=flat-square)](https://github.com/pavvel11/gateflow/releases)
 [![Tests](https://img.shields.io/badge/tests-981%20passing-brightgreen?style=flat-square)](./admin-panel/tests)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
 
-[Demo](https://demo.gateflow.io) · [Documentation](./FEATURES.md) · [Deployment Guide](./DEPLOYMENT.md)
+[Demo](https://demo.gateflow.io) · [Documentation](./FEATURES.md) · [Deployment Guide](./docs/DEPLOYMENT-MIKRUS.md)
 
 <br />
 
@@ -160,18 +160,25 @@ All integrations can be configured via the admin panel (encrypted storage) or en
 | Google Tag Manager | ✓ | — | Container ID |
 | Facebook Pixel | ✓ | — | Pixel ID + CAPI token |
 
-See **[Integrations Guide](./DEPLOYMENT.md#integrations-configuration)** for details.
+See **[FEATURES.md](./FEATURES.md)** for details on all integrations.
 
 ---
 
 ## Deployment
 
+### One-Click Deploy
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fpavvel11%2Fgateflow&root-directory=admin-panel&env=SUPABASE_URL,SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,STRIPE_SECRET_KEY,STRIPE_PUBLISHABLE_KEY,SITE_URL&envDescription=Required%20environment%20variables%20for%20GateFlow.%20See%20.env.example%20for%20all%20options.&envLink=https%3A%2F%2Fgithub.com%2Fpavvel11%2Fgateflow%2Fblob%2Fmain%2Fadmin-panel%2F.env.example&project-name=gateflow&repository-name=gateflow)
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/pavvel11/gateflow&base=admin-panel)
+
+> **Coolify / Docker**: Create a new Application in Coolify, point to this repo, set **Base Directory** to `admin-panel`, and configure env vars from [.env.example](./admin-panel/.env.example).
+
+### Manual Deploy
+
 | Guide | Best For |
 |-------|----------|
-| **[DEPLOYMENT.md](./DEPLOYMENT.md)** | VPS/mikr.us (~16 zł/month) |
-| **[AI-DEPLOYMENT.md](./AI-DEPLOYMENT.md)** | AI-assisted setup |
-
-Both guides cover Docker deployment with Supabase Cloud and automatic SSL via Caddy.
+| **[Deployment Guide](./docs/DEPLOYMENT-MIKRUS.md)** | VPS/mikr.us with PM2 (recommended) |
+| **[Advanced Options](./deployment/README.md)** | Docker, Full-Stack, PM2 Cluster |
 
 ---
 
@@ -180,7 +187,7 @@ Both guides cover Docker deployment with Supabase Cloud and automatic SSL via Ca
 | File | Description |
 |------|-------------|
 | [FEATURES.md](./FEATURES.md) | Complete feature list with roadmap |
-| [DEPLOYMENT.md](./DEPLOYMENT.md) | Step-by-step deployment guide |
+| [Deployment Guide](./docs/DEPLOYMENT-MIKRUS.md) | Step-by-step deployment guide |
 | [STRIPE-TESTING-GUIDE.md](./STRIPE-TESTING-GUIDE.md) | Testing payments locally |
 | [BACKLOG.md](./BACKLOG.md) | Development roadmap |
 | [mcp-server/README.md](./mcp-server/README.md) | MCP Server setup guide |

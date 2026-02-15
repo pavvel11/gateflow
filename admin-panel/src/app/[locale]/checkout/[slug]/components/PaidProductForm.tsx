@@ -4,6 +4,7 @@ import { useCallback, useState, useEffect, useRef } from 'react';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
 import { Product } from '@/types';
+import { ExpressCheckoutConfig } from '@/types/payment-config';
 import { formatPrice } from '@/lib/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { signOutAndRedirectToCheckout } from '@/lib/actions/checkout';
@@ -20,9 +21,11 @@ import OtoCountdownBanner from '@/components/storefront/OtoCountdownBanner';
 
 interface PaidProductFormProps {
   product: Product;
+  paymentMethodOrder?: string[];
+  expressCheckoutConfig?: ExpressCheckoutConfig;
 }
 
-export default function PaidProductForm({ product }: PaidProductFormProps) {
+export default function PaidProductForm({ product, paymentMethodOrder, expressCheckoutConfig }: PaidProductFormProps) {
   const t = useTranslations('checkout');
   const { user } = useAuth();
   const { addToast } = useToast();
@@ -680,6 +683,8 @@ export default function PaidProductForm({ product }: PaidProductFormProps) {
               customAmount={product.allow_custom_price ? customAmount : undefined}
               customAmountError={product.allow_custom_price ? customAmountError : null}
               clientSecret={clientSecret || undefined}
+              paymentMethodOrder={paymentMethodOrder}
+              expressCheckoutConfig={expressCheckoutConfig}
             />
           </Elements>
         )}

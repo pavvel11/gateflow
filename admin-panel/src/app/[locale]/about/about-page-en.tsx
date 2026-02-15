@@ -731,7 +731,7 @@ export function AboutPageEN() {
 
           <div className="mt-12 text-center">
             <a
-              href="https://github.com/pavvel11/gateflow/blob/main/DEPLOYMENT.md"
+              href="https://github.com/pavvel11/gateflow/blob/main/docs/DEPLOYMENT-MIKRUS.md"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center px-6 py-3 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
@@ -887,7 +887,7 @@ export function AboutPageEN() {
               <h4 className="font-semibold mb-4">Resources</h4>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li><a href="https://github.com/pavvel11/gateflow" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">GitHub</a></li>
-                <li><a href="https://github.com/pavvel11/gateflow/blob/main/DEPLOYMENT.md" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Deploy Guide</a></li>
+                <li><a href="https://github.com/pavvel11/gateflow/blob/main/docs/DEPLOYMENT-MIKRUS.md" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Deploy Guide</a></li>
                 <li><a href="https://github.com/pavvel11/gateflow/issues" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Support</a></li>
               </ul>
             </div>
