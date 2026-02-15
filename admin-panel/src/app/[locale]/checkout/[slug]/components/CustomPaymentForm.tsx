@@ -592,7 +592,7 @@ export default function CustomPaymentForm({
             wallets: {
               applePay: expressCheckoutConfig?.applePay !== false ? 'auto' : 'never',
               googlePay: expressCheckoutConfig?.googlePay !== false ? 'auto' : 'never',
-              link: 'never', // Link is in separate section above (LinkAuthenticationElement)
+              link: 'auto', // Required for LinkAuthenticationElement to work; Link tab won't appear here because LinkAuthenticationElement handles it
             },
             // Hide email and name fields since we collect them above
             fields: {
