@@ -19,6 +19,13 @@
  */
 export type PaymentConfigMode = 'automatic' | 'stripe_preset' | 'custom';
 
+/**
+ * How Stripe Link appears in checkout (both options use PaymentElement)
+ * - above: Link in PaymentElement wallets section (separate row above tabs)
+ * - tab: Link as a regular tab alongside BLIK/P24/Card
+ */
+export type LinkDisplayMode = 'above' | 'tab';
+
 // =============================================================================
 // PAYMENT METHOD METADATA
 // =============================================================================
@@ -113,6 +120,9 @@ export interface PaymentMethodConfig {
 
   /** Enable Stripe Link */
   enable_link: boolean;
+
+  /** How Link appears in checkout: 'express' (button) or 'payment_element' (tab) */
+  link_display_mode: LinkDisplayMode;
 
   // Cache
   /** Cached list of Stripe PMCs (refreshed every 1 hour) */
@@ -210,6 +220,7 @@ export interface UpdatePaymentConfigInput {
   enable_apple_pay?: boolean;
   enable_google_pay?: boolean;
   enable_link?: boolean;
+  link_display_mode?: LinkDisplayMode;
 
   // Metadata
   last_modified_by?: string;
@@ -258,6 +269,9 @@ export interface ExpressCheckoutConfig {
 
   /** Enable Stripe Link */
   link: boolean;
+
+  /** How Link appears: 'express' (button) or 'payment_element' (tab) */
+  linkDisplayMode: LinkDisplayMode;
 }
 
 /**
@@ -273,6 +287,7 @@ export function extractExpressCheckoutConfig(
       applePay: true,
       googlePay: true,
       link: true,
+      linkDisplayMode: 'above',
     };
   }
 
@@ -281,6 +296,7 @@ export function extractExpressCheckoutConfig(
     applePay: config.enable_apple_pay,
     googlePay: config.enable_google_pay,
     link: config.enable_link,
+    linkDisplayMode: config.link_display_mode || 'express',
   };
 }
 
@@ -355,6 +371,7 @@ export interface ProductPaymentConfigOverride {
   enable_apple_pay?: boolean;
   enable_google_pay?: boolean;
   enable_link?: boolean;
+  link_display_mode?: LinkDisplayMode;
 }
 
 /**

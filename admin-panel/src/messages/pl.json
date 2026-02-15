@@ -1925,6 +1925,13 @@
         "googlePayDescription": "Szybkie płatności dla użytkowników Android",
         "linkDescription": "Szybkie płatności z zapisanymi danymi"
       },
+      "linkDisplayMode": {
+        "title": "Tryb wyświetlania Link",
+        "above": "Oddzielna sekcja (nad zakładkami)",
+        "aboveDescription": "Link pojawia się w osobnej sekcji nad zakładkami metod płatności, szybki dostęp jednym klikiem",
+        "tab": "Zakładka obok innych metod",
+        "tabDescription": "Link pojawia się jako zwykła zakładka obok BLIK, Karty, itp."
+      },
       "currencyOverrides": {
         "title": "Konfiguracja per waluta",
         "advanced": "Zaawansowane",

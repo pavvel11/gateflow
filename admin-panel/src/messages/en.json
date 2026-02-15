@@ -1910,6 +1910,13 @@
         "googlePayDescription": "Quick payments for Android users",
         "linkDescription": "Quick payments with saved details"
       },
+      "linkDisplayMode": {
+        "title": "Link display mode",
+        "above": "Separate section (above tabs)",
+        "aboveDescription": "Link appears in its own section above the payment method tabs for quick one-click access",
+        "tab": "Tab alongside other methods",
+        "tabDescription": "Link appears as a regular tab next to BLIK, Card, etc."
+      },
       "currencyOverrides": {
         "title": "Currency-Specific Configuration",
         "advanced": "Advanced",

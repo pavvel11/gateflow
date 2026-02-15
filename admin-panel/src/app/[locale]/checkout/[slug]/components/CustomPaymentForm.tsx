@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { PaymentElement, ExpressCheckoutElement, LinkAuthenticationElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { PaymentElement, ExpressCheckoutElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Product } from '@/types';
 import { OrderBumpWithProduct } from '@/types/order-bump';
 import { ExpressCheckoutConfig } from '@/types/payment-config';
@@ -303,13 +303,6 @@ export default function CustomPaymentForm({
     }
   }, [stripe, elements, track, product.id, product.currency, totalGross]);
 
-  // Sync email from LinkAuthenticationElement (inline Link autofill for guests)
-  const handleLinkEmailChange = useCallback((event: { value: { email: string } }) => {
-    if (event.value?.email) {
-      setGuestEmail(event.value.email);
-    }
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -467,7 +460,7 @@ export default function CustomPaymentForm({
                 paymentMethods: {
                   applePay: expressCheckoutConfig?.applePay !== false ? 'auto' : 'never',
                   googlePay: expressCheckoutConfig?.googlePay !== false ? 'auto' : 'never',
-                  link: 'never', // Link is inline in LinkAuthenticationElement, no redirect needed
+                  link: 'never', // Link is always in PaymentElement, never as Express Checkout redirect
                 },
               }}
             />
@@ -487,28 +480,38 @@ export default function CustomPaymentForm({
         </div>
       )}
 
-      {/* Email - LinkAuthenticationElement (inline Link autofill, own label) */}
+      {/* Email */}
       <div>
-        {email && onChangeAccount && (
-          <div className="flex items-center justify-end mb-1">
-            <button
-              type="button"
-              onClick={onChangeAccount}
-              className="text-blue-400 hover:text-blue-300 text-xs underline transition-colors"
-            >
-              {t('changeAccount')}
-            </button>
+        {email ? (
+          <div className="flex items-center justify-between px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg">
+            <span className="text-sm text-gray-300">{email}</span>
+            {onChangeAccount && (
+              <button
+                type="button"
+                onClick={onChangeAccount}
+                className="text-blue-400 hover:text-blue-300 text-xs underline transition-colors"
+              >
+                {t('changeAccount')}
+              </button>
+            )}
           </div>
+        ) : (
+          <>
+            <label htmlFor="guestEmail" className="block text-sm font-medium text-gray-300 mb-2">
+              {t('emailAddress')}
+            </label>
+            <input
+              type="email"
+              id="guestEmail"
+              value={guestEmail}
+              onChange={(e) => setGuestEmail(e.target.value)}
+              placeholder="your@email.com"
+              required
+              className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <p className="mt-1 text-xs text-gray-400">{t('emailHelp')}</p>
+          </>
         )}
-        <LinkAuthenticationElement
-          onChange={handleLinkEmailChange}
-          options={{
-            defaultValues: {
-              email: email || guestEmail || '',
-            },
-          }}
-        />
-        {!email && <p className="mt-1 text-xs text-gray-400">{t('emailHelp')}</p>}
       </div>
 
       {/* Full Name - single field */}
@@ -578,21 +581,29 @@ export default function CustomPaymentForm({
               },
             },
             // Use payment method order from admin config, fallback to currency-based defaults
-            paymentMethodOrder: paymentMethodOrder && paymentMethodOrder.length > 0
-              ? paymentMethodOrder
-              : product.currency === 'PLN'
-              ? ['blik', 'p24', 'card']
-              : product.currency === 'EUR'
-              ? ['sepa_debit', 'ideal', 'card', 'klarna']
-              : product.currency === 'USD'
-              ? ['card', 'cashapp', 'affirm']
-              : undefined,
-            // Wallets in PaymentElement (Google Pay / Apple Pay tabs inside form)
-            // Must respect admin config - when disabled, hide from PaymentElement too
+            // When linkDisplayMode === 'tab', append 'link' to order so it shows as a regular tab
+            paymentMethodOrder: (() => {
+              const baseOrder = paymentMethodOrder && paymentMethodOrder.length > 0
+                ? paymentMethodOrder
+                : product.currency === 'PLN'
+                ? ['blik', 'p24', 'card']
+                : product.currency === 'EUR'
+                ? ['sepa_debit', 'ideal', 'card', 'klarna']
+                : product.currency === 'USD'
+                ? ['card', 'cashapp', 'affirm']
+                : undefined;
+              if (expressCheckoutConfig?.link !== false && expressCheckoutConfig?.linkDisplayMode === 'tab' && baseOrder) {
+                return baseOrder.includes('link') ? baseOrder : [...baseOrder, 'link'];
+              }
+              return baseOrder;
+            })(),
+            // Wallets in PaymentElement
+            // Link: 'above' mode shows Link in wallet section (separate row above tabs)
+            //        'tab' mode hides Link from wallets (it's in the tabs instead)
             wallets: {
               applePay: expressCheckoutConfig?.applePay !== false ? 'auto' : 'never',
               googlePay: expressCheckoutConfig?.googlePay !== false ? 'auto' : 'never',
-              link: 'auto', // Required for LinkAuthenticationElement to work; Link tab won't appear here because LinkAuthenticationElement handles it
+              link: expressCheckoutConfig?.link !== false && expressCheckoutConfig?.linkDisplayMode === 'above' ? 'auto' : 'never',
             },
             // Hide email and name fields since we collect them above
             fields: {

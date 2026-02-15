@@ -25,6 +25,7 @@ export const RECOMMENDED_CONFIG = {
   enable_apple_pay: true,
   enable_google_pay: true,
   enable_link: true,
+  link_display_mode: 'above' as const,
 };
 
 /**
