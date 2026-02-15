@@ -580,8 +580,8 @@ export default function CustomPaymentForm({
                 name: fullName || undefined,
               },
             },
-            // Use payment method order from admin config, fallback to currency-based defaults
-            // When linkDisplayMode === 'tab', append 'link' to order so it shows as a regular tab
+            // Payment method order from admin config, with Link position based on linkDisplayMode
+            // 'above' = Link first (prominent), 'tab' = Link last (alongside others)
             paymentMethodOrder: (() => {
               const baseOrder = paymentMethodOrder && paymentMethodOrder.length > 0
                 ? paymentMethodOrder
@@ -592,18 +592,19 @@ export default function CustomPaymentForm({
                 : product.currency === 'USD'
                 ? ['card', 'cashapp', 'affirm']
                 : undefined;
-              if (expressCheckoutConfig?.link !== false && expressCheckoutConfig?.linkDisplayMode === 'tab' && baseOrder) {
-                return baseOrder.includes('link') ? baseOrder : [...baseOrder, 'link'];
+              if (expressCheckoutConfig?.link !== false && baseOrder) {
+                const orderWithoutLink = baseOrder.filter(m => m !== 'link');
+                return expressCheckoutConfig?.linkDisplayMode === 'above'
+                  ? ['link', ...orderWithoutLink]
+                  : [...orderWithoutLink, 'link'];
               }
               return baseOrder;
             })(),
-            // Wallets in PaymentElement
-            // Link: 'above' mode shows Link in wallet section (separate row above tabs)
-            //        'tab' mode hides Link from wallets (it's in the tabs instead)
+            // Wallets: never for Link (we show it as a regular tab instead of wallet takeover)
             wallets: {
               applePay: expressCheckoutConfig?.applePay !== false ? 'auto' : 'never',
               googlePay: expressCheckoutConfig?.googlePay !== false ? 'auto' : 'never',
-              link: expressCheckoutConfig?.link !== false && expressCheckoutConfig?.linkDisplayMode === 'above' ? 'auto' : 'never',
+              link: 'never',
             },
             // Hide email and name fields since we collect them above
             fields: {
