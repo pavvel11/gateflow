@@ -39,6 +39,7 @@ function makeConfig(overrides: Partial<PaymentMethodConfig> = {}): PaymentMethod
     enable_apple_pay: true,
     enable_google_pay: true,
     enable_link: true,
+    link_display_mode: 'above',
     available_payment_methods: [],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -113,6 +114,7 @@ describe('extractExpressCheckoutConfig', () => {
       applePay: true,
       googlePay: true,
       link: true,
+      linkDisplayMode: 'above',
     });
   });
 
@@ -123,6 +125,7 @@ describe('extractExpressCheckoutConfig', () => {
       applePay: true,
       googlePay: true,
       link: true,
+      linkDisplayMode: 'above',
     });
   });
 
@@ -140,6 +143,7 @@ describe('extractExpressCheckoutConfig', () => {
       applePay: false,
       googlePay: true,
       link: false,
+      linkDisplayMode: 'above',
     });
   });
 
@@ -169,7 +173,24 @@ describe('extractExpressCheckoutConfig', () => {
       applePay: false,
       googlePay: false,
       link: false,
+      linkDisplayMode: 'above',
     });
+  });
+
+  it('should map link_display_mode to linkDisplayMode', () => {
+    const configAbove = makeConfig({ link_display_mode: 'above' });
+    expect(extractExpressCheckoutConfig(configAbove).linkDisplayMode).toBe('above');
+
+    const configTab = makeConfig({ link_display_mode: 'tab' });
+    expect(extractExpressCheckoutConfig(configTab).linkDisplayMode).toBe('tab');
+  });
+
+  it('should default linkDisplayMode to above when link_display_mode is missing', () => {
+    const config = makeConfig();
+    // Simulate missing field by deleting it
+    delete (config as any).link_display_mode;
+    const result = extractExpressCheckoutConfig(config);
+    expect(result.linkDisplayMode).toBe('above');
   });
 });
 
@@ -632,6 +653,130 @@ describe('Stripe param mutual exclusivity (defensive cleanup)', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Link display mode — paymentMethodOrder construction
+// ---------------------------------------------------------------------------
+
+describe('Link display mode — paymentMethodOrder', () => {
+  /**
+   * Simulates the paymentMethodOrder logic in CustomPaymentForm.tsx
+   * This must match the IIFE in the PaymentElement options.
+   */
+  function buildPaymentMethodOrder(
+    paymentMethodOrder: string[] | undefined,
+    currency: string,
+    expressCheckoutConfig: ExpressCheckoutConfig | undefined,
+  ): string[] | undefined {
+    const baseOrder = paymentMethodOrder && paymentMethodOrder.length > 0
+      ? paymentMethodOrder
+      : currency === 'PLN'
+      ? ['blik', 'p24', 'card']
+      : currency === 'EUR'
+      ? ['sepa_debit', 'ideal', 'card', 'klarna']
+      : currency === 'USD'
+      ? ['card', 'cashapp', 'affirm']
+      : undefined;
+    if (expressCheckoutConfig?.link !== false && baseOrder) {
+      const orderWithoutLink = baseOrder.filter(m => m !== 'link');
+      return expressCheckoutConfig?.linkDisplayMode === 'above'
+        ? ['link', ...orderWithoutLink]
+        : [...orderWithoutLink, 'link'];
+    }
+    return baseOrder;
+  }
+
+  it('"above" mode: Link is first in paymentMethodOrder', () => {
+    const config = makeConfig({
+      config_mode: 'custom',
+      payment_method_order: ['blik', 'p24', 'card'],
+      enable_link: true,
+      link_display_mode: 'above',
+    });
+    const expressConfig = extractExpressCheckoutConfig(config);
+
+    const order = buildPaymentMethodOrder(config.payment_method_order, 'PLN', expressConfig);
+    expect(order).toEqual(['link', 'blik', 'p24', 'card']);
+  });
+
+  it('"tab" mode: Link is last in paymentMethodOrder', () => {
+    const config = makeConfig({
+      config_mode: 'custom',
+      payment_method_order: ['blik', 'p24', 'card'],
+      enable_link: true,
+      link_display_mode: 'tab',
+    });
+    const expressConfig = extractExpressCheckoutConfig(config);
+
+    const order = buildPaymentMethodOrder(config.payment_method_order, 'PLN', expressConfig);
+    expect(order).toEqual(['blik', 'p24', 'card', 'link']);
+  });
+
+  it('Link disabled: Link not added to paymentMethodOrder', () => {
+    const config = makeConfig({
+      config_mode: 'custom',
+      payment_method_order: ['blik', 'p24', 'card'],
+      enable_link: false,
+      link_display_mode: 'above',
+    });
+    const expressConfig = extractExpressCheckoutConfig(config);
+
+    const order = buildPaymentMethodOrder(config.payment_method_order, 'PLN', expressConfig);
+    expect(order).toEqual(['blik', 'p24', 'card']);
+    expect(order).not.toContain('link');
+  });
+
+  it('deduplicates link if already in base order', () => {
+    const config = makeConfig({
+      config_mode: 'custom',
+      payment_method_order: ['blik', 'link', 'card'],
+      enable_link: true,
+      link_display_mode: 'above',
+    });
+    const expressConfig = extractExpressCheckoutConfig(config);
+
+    const order = buildPaymentMethodOrder(config.payment_method_order, 'PLN', expressConfig);
+    // Should have link only once, at the front
+    expect(order).toEqual(['link', 'blik', 'card']);
+    expect(order!.filter(m => m === 'link')).toHaveLength(1);
+  });
+
+  it('uses currency-specific defaults when no order configured', () => {
+    const config = makeConfig({
+      config_mode: 'custom',
+      payment_method_order: [],
+      enable_link: true,
+      link_display_mode: 'tab',
+    });
+    const expressConfig = extractExpressCheckoutConfig(config);
+
+    const orderPLN = buildPaymentMethodOrder(undefined, 'PLN', expressConfig);
+    expect(orderPLN).toEqual(['blik', 'p24', 'card', 'link']);
+
+    const orderEUR = buildPaymentMethodOrder(undefined, 'EUR', expressConfig);
+    expect(orderEUR).toEqual(['sepa_debit', 'ideal', 'card', 'klarna', 'link']);
+
+    const orderUSD = buildPaymentMethodOrder(undefined, 'USD', expressConfig);
+    expect(orderUSD).toEqual(['card', 'cashapp', 'affirm', 'link']);
+  });
+
+  it('wallets.link value matches Link enabled state', () => {
+    // When Link enabled, wallets.link should be 'auto' (hidden LAE prevents takeover)
+    const configEnabled = makeConfig({ enable_link: true });
+    const expressEnabled = extractExpressCheckoutConfig(configEnabled);
+    expect(expressEnabled.link).toBe(true);
+    // In CustomPaymentForm: link: expressCheckoutConfig?.link !== false ? 'auto' : 'never'
+    const walletsLinkEnabled = expressEnabled.link !== false ? 'auto' : 'never';
+    expect(walletsLinkEnabled).toBe('auto');
+
+    // When Link disabled, wallets.link should be 'never'
+    const configDisabled = makeConfig({ enable_link: false });
+    const expressDisabled = extractExpressCheckoutConfig(configDisabled);
+    expect(expressDisabled.link).toBe(false);
+    const walletsLinkDisabled = expressDisabled.link !== false ? 'auto' : 'never';
+    expect(walletsLinkDisabled).toBe('never');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Admin config → Stripe: field mapping validation
 // ---------------------------------------------------------------------------
 
@@ -782,6 +927,15 @@ describe('admin config field mapping to Stripe', () => {
       expect(result.applePay).toBe(combo.apple);
       expect(result.googlePay).toBe(combo.google);
       expect(result.link).toBe(combo.link);
+      expect(result.linkDisplayMode).toBe('above'); // default from makeConfig
+    }
+  });
+
+  it('express checkout config maps linkDisplayMode correctly', () => {
+    for (const mode of ['above', 'tab'] as const) {
+      const config = makeConfig({ link_display_mode: mode });
+      const result = extractExpressCheckoutConfig(config);
+      expect(result.linkDisplayMode).toBe(mode);
     }
   });
 });

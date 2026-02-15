@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { PaymentElement, ExpressCheckoutElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { PaymentElement, ExpressCheckoutElement, LinkAuthenticationElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Product } from '@/types';
 import { OrderBumpWithProduct } from '@/types/order-bump';
 import { ExpressCheckoutConfig } from '@/types/payment-config';
@@ -557,31 +557,45 @@ export default function CustomPaymentForm({
         </div>
       )}
 
+      {/* Hidden LinkAuthenticationElement — must be in DOM for PaymentElement to show Link as tab instead of wallet takeover.
+          Uses sr-only pattern (1x1px + clip) instead of width:0/height:0 so Stripe's iframe initializes properly. */}
+      {expressCheckoutConfig?.link !== false && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            width: 1,
+            height: 1,
+            overflow: 'hidden',
+            clip: 'rect(0, 0, 0, 0)',
+            whiteSpace: 'nowrap',
+            border: 0,
+            padding: 0,
+            margin: -1,
+            pointerEvents: 'none',
+          }}
+        >
+          <LinkAuthenticationElement
+            options={{ defaultValues: { email: email || guestEmail || '' } }}
+          />
+        </div>
+      )}
+
       {/* Payment Element */}
       <div>
-        {/*
-          Payment methods must be enabled in Stripe Dashboard:
-          https://dashboard.stripe.com/settings/payment_methods
-
-          For Poland (PLN): Enable BLIK, Przelewy24, Cards
-          For EUR: Enable SEPA Debit, iDEAL, Cards, Klarna
-          For USD: Enable Cards, Cash App, Affirm
-        */}
         <PaymentElement
           options={{
             layout: {
               type: 'tabs',
               defaultCollapsed: false,
             },
-            // Prefill customer data for Link autofill and faster checkout
             defaultValues: {
               billingDetails: {
                 email: email || guestEmail || undefined,
                 name: fullName || undefined,
               },
             },
-            // Payment method order from admin config, with Link position based on linkDisplayMode
-            // 'above' = Link first (prominent), 'tab' = Link last (alongside others)
+            // Link position: 'above' = first tab, 'tab' = last tab
             paymentMethodOrder: (() => {
               const baseOrder = paymentMethodOrder && paymentMethodOrder.length > 0
                 ? paymentMethodOrder
@@ -600,13 +614,12 @@ export default function CustomPaymentForm({
               }
               return baseOrder;
             })(),
-            // Wallets: never for Link (we show it as a regular tab instead of wallet takeover)
             wallets: {
               applePay: expressCheckoutConfig?.applePay !== false ? 'auto' : 'never',
               googlePay: expressCheckoutConfig?.googlePay !== false ? 'auto' : 'never',
-              link: 'never',
+              // 'auto' + hidden LAE = Link as regular tab (no wallet takeover)
+              link: expressCheckoutConfig?.link !== false ? 'auto' : 'never',
             },
-            // Hide email and name fields since we collect them above
             fields: {
               billingDetails: {
                 email: 'never',

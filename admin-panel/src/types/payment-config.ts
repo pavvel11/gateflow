@@ -296,7 +296,7 @@ export function extractExpressCheckoutConfig(
     applePay: config.enable_apple_pay,
     googlePay: config.enable_google_pay,
     link: config.enable_link,
-    linkDisplayMode: config.link_display_mode || 'express',
+    linkDisplayMode: config.link_display_mode || 'above',
   };
 }
 
