@@ -90,7 +90,11 @@ export default function PaymentMethodSettings() {
         setEnableApplePay(config.enable_apple_pay);
         setEnableGooglePay(config.enable_google_pay);
         setEnableLink(config.enable_link);
-        setLinkDisplayMode(config.link_display_mode || 'express');
+        setLinkDisplayMode(
+          config.link_display_mode === 'above' || config.link_display_mode === 'tab'
+            ? config.link_display_mode
+            : 'above'
+        );
         setCurrencyOverrides(config.currency_overrides || {});
         setShowCurrencyOverrides(Object.keys(config.currency_overrides || {}).length > 0);
 
