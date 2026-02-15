@@ -57,8 +57,9 @@ export default function CustomPaymentForm({
   // Email from LinkAuthenticationElement onChange
   const [linkEmail, setLinkEmail] = useState('');
 
-  // Confirm email checkbox (required before submit)
+  // Confirm email checkbox — only required when logged-in user uses a different email
   const [emailConfirmed, setEmailConfirmed] = useState(false);
+  const emailMismatch = !!(email && linkEmail && linkEmail.toLowerCase() !== email.toLowerCase());
 
   // Customer data - single name field
   const [fullName, setFullName] = useState('');
@@ -258,8 +259,8 @@ export default function CustomPaymentForm({
       return;
     }
 
-    if (!emailConfirmed) {
-      setErrorMessage(t('confirmEmailRequired', { defaultValue: 'Please confirm your email address' }));
+    if (emailMismatch && !emailConfirmed) {
+      setErrorMessage(t('confirmEmailRequired', { defaultValue: 'Please confirm the product assignment to your account' }));
       return;
     }
 
@@ -407,6 +408,24 @@ export default function CustomPaymentForm({
           onChange={(e) => setLinkEmail(e.value.email)}
         />
       </div>
+
+      {/* Email mismatch warning — logged-in user purchasing with a different email */}
+      {emailMismatch && (
+        <div className="p-3 bg-yellow-900/20 border border-yellow-600/30 rounded-lg">
+          <div className="flex items-start gap-2">
+            <svg className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            <p className="text-xs text-yellow-300/90">
+              {t('emailMismatchWarning', {
+                accountEmail: email,
+                purchaseEmail: linkEmail,
+                defaultValue: `You are purchasing with ${linkEmail}, but you are logged in as ${email}. The product will be linked to your account.`,
+              })}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Full Name - single field */}
       <div>
@@ -658,8 +677,8 @@ export default function CustomPaymentForm({
         </div>
       </div>
 
-      {/* Confirm Email Address — required before submit */}
-      {(linkEmail || email) && (
+      {/* Confirm Email Address — only when logged-in user uses a different email */}
+      {emailMismatch && (
         <div className="py-1">
           <label className="flex items-start cursor-pointer group">
             <input
@@ -669,7 +688,7 @@ export default function CustomPaymentForm({
               className="mt-0.5 w-4 h-4 text-blue-500 bg-white/5 border border-white/20 rounded focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-colors"
             />
             <span className="ml-3 text-sm text-gray-400">
-              {t('confirmEmailLabel', { email: linkEmail || email || '', defaultValue: `Confirm email address ${linkEmail || email || ''}` })}
+              {t('confirmEmailLabel', { accountEmail: email, purchaseEmail: linkEmail, defaultValue: `I confirm the product will be linked to my account (${email}). Receipt will be sent to ${linkEmail}.` })}
             </span>
           </label>
         </div>
@@ -690,7 +709,7 @@ export default function CustomPaymentForm({
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={!stripe || isProcessing || !!customAmountError || !emailConfirmed}
+        disabled={!stripe || isProcessing || !!customAmountError || (emailMismatch && !emailConfirmed)}
         className={`w-full px-6 py-4 text-white font-bold rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] ${
           customAmountError
             ? 'bg-gray-600 cursor-not-allowed'

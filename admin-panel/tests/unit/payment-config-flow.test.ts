@@ -39,7 +39,6 @@ function makeConfig(overrides: Partial<PaymentMethodConfig> = {}): PaymentMethod
     enable_apple_pay: true,
     enable_google_pay: true,
     enable_link: true,
-    link_display_mode: 'above',
     available_payment_methods: [],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -114,7 +113,6 @@ describe('extractExpressCheckoutConfig', () => {
       applePay: true,
       googlePay: true,
       link: true,
-      linkDisplayMode: 'above',
     });
   });
 
@@ -125,7 +123,6 @@ describe('extractExpressCheckoutConfig', () => {
       applePay: true,
       googlePay: true,
       link: true,
-      linkDisplayMode: 'above',
     });
   });
 
@@ -143,7 +140,6 @@ describe('extractExpressCheckoutConfig', () => {
       applePay: false,
       googlePay: true,
       link: false,
-      linkDisplayMode: 'above',
     });
   });
 
@@ -173,25 +169,9 @@ describe('extractExpressCheckoutConfig', () => {
       applePay: false,
       googlePay: false,
       link: false,
-      linkDisplayMode: 'above',
     });
   });
 
-  it('should map link_display_mode to linkDisplayMode', () => {
-    const configAbove = makeConfig({ link_display_mode: 'above' });
-    expect(extractExpressCheckoutConfig(configAbove).linkDisplayMode).toBe('above');
-
-    const configTab = makeConfig({ link_display_mode: 'tab' });
-    expect(extractExpressCheckoutConfig(configTab).linkDisplayMode).toBe('tab');
-  });
-
-  it('should default linkDisplayMode to above when link_display_mode is missing', () => {
-    const config = makeConfig();
-    // Simulate missing field by deleting it
-    delete (config as any).link_display_mode;
-    const result = extractExpressCheckoutConfig(config);
-    expect(result.linkDisplayMode).toBe('above');
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -867,15 +847,6 @@ describe('admin config field mapping to Stripe', () => {
       expect(result.applePay).toBe(combo.apple);
       expect(result.googlePay).toBe(combo.google);
       expect(result.link).toBe(combo.link);
-      expect(result.linkDisplayMode).toBe('above'); // default from makeConfig
-    }
-  });
-
-  it('express checkout config maps linkDisplayMode correctly', () => {
-    for (const mode of ['above', 'tab'] as const) {
-      const config = makeConfig({ link_display_mode: mode });
-      const result = extractExpressCheckoutConfig(config);
-      expect(result.linkDisplayMode).toBe(mode);
     }
   });
 });

@@ -4,28 +4,28 @@
  * Test ID: IT-STRIPE-001 to IT-STRIPE-007
  * Coverage: Stripe API integration with mocked responses
  * Focus: Error handling, network failures, API response parsing
+ *
+ * Note: Uses bun:test compatible mocking (no vi.mock/vi.mocked).
+ * Tests verify fetchStripePaymentMethodConfigs/Config function behavior
+ * by mocking the getStripeServer dependency via mock.module().
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import {
-  fetchStripePaymentMethodConfigs,
-  fetchStripePaymentMethodConfig,
-} from '@/lib/stripe/payment-method-configs';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 
-// Mock Stripe server module
-vi.mock('@/lib/stripe/server', () => ({
-  getStripeServer: vi.fn(),
+// Use bun's mock.module to mock the Stripe server module
+const mockGetStripeServer = mock(() => Promise.resolve(null));
+
+mock.module('@/lib/stripe/server', () => ({
+  getStripeServer: mockGetStripeServer,
 }));
 
-import { getStripeServer } from '@/lib/stripe/server';
+// Import AFTER mocking
+const { fetchStripePaymentMethodConfigs, fetchStripePaymentMethodConfig } =
+  await import('@/lib/stripe/payment-method-configs');
 
 describe('Stripe API Integration - Mocked', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
+    mockGetStripeServer.mockReset();
   });
 
   describe('fetchStripePaymentMethodConfigs', () => {
@@ -52,35 +52,25 @@ describe('Stripe API Integration - Mocked', () => {
         },
       ];
 
-      const mockStripe = {
-        paymentMethodConfigurations: {
-          list: vi.fn().mockResolvedValue({
-            data: mockConfigs,
-          }),
-        },
-      };
-
-      vi.mocked(getStripeServer).mockResolvedValue(mockStripe as any);
+      const mockList = mock(() => Promise.resolve({ data: mockConfigs }));
+      mockGetStripeServer.mockResolvedValue({
+        paymentMethodConfigurations: { list: mockList },
+      } as any);
 
       const result = await fetchStripePaymentMethodConfigs();
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockConfigs);
       expect(result.error).toBeUndefined();
-      expect(mockStripe.paymentMethodConfigurations.list).toHaveBeenCalledWith({ limit: 100 });
+      expect(mockList).toHaveBeenCalledWith({ limit: 100 });
     });
 
     // IT-STRIPE-002: Empty list
     it('should return success with empty array when no PMCs exist', async () => {
-      const mockStripe = {
-        paymentMethodConfigurations: {
-          list: vi.fn().mockResolvedValue({
-            data: [],
-          }),
-        },
-      };
-
-      vi.mocked(getStripeServer).mockResolvedValue(mockStripe as any);
+      const mockList = mock(() => Promise.resolve({ data: [] }));
+      mockGetStripeServer.mockResolvedValue({
+        paymentMethodConfigurations: { list: mockList },
+      } as any);
 
       const result = await fetchStripePaymentMethodConfigs();
 
@@ -90,13 +80,10 @@ describe('Stripe API Integration - Mocked', () => {
 
     // IT-STRIPE-003: API error
     it('should return error when Stripe API throws error', async () => {
-      const mockStripe = {
-        paymentMethodConfigurations: {
-          list: vi.fn().mockRejectedValue(new Error('Invalid API key')),
-        },
-      };
-
-      vi.mocked(getStripeServer).mockResolvedValue(mockStripe as any);
+      const mockList = mock(() => Promise.reject(new Error('Invalid API key')));
+      mockGetStripeServer.mockResolvedValue({
+        paymentMethodConfigurations: { list: mockList },
+      } as any);
 
       const result = await fetchStripePaymentMethodConfigs();
 
@@ -107,13 +94,10 @@ describe('Stripe API Integration - Mocked', () => {
 
     // IT-STRIPE-004: Network timeout (simulated)
     it('should return error on network timeout', async () => {
-      const mockStripe = {
-        paymentMethodConfigurations: {
-          list: vi.fn().mockRejectedValue(new Error('Request timeout')),
-        },
-      };
-
-      vi.mocked(getStripeServer).mockResolvedValue(mockStripe as any);
+      const mockList = mock(() => Promise.reject(new Error('Request timeout')));
+      mockGetStripeServer.mockResolvedValue({
+        paymentMethodConfigurations: { list: mockList },
+      } as any);
 
       const result = await fetchStripePaymentMethodConfigs();
 
@@ -123,7 +107,7 @@ describe('Stripe API Integration - Mocked', () => {
 
     // IT-STRIPE-007: Stripe not configured
     it('should return error when Stripe is not configured', async () => {
-      vi.mocked(getStripeServer).mockResolvedValue(null);
+      mockGetStripeServer.mockResolvedValue(null);
 
       const result = await fetchStripePaymentMethodConfigs();
 
@@ -144,30 +128,26 @@ describe('Stripe API Integration - Mocked', () => {
         card: { enabled: true },
       };
 
-      const mockStripe = {
-        paymentMethodConfigurations: {
-          retrieve: vi.fn().mockResolvedValue(mockConfig),
-        },
-      };
-
-      vi.mocked(getStripeServer).mockResolvedValue(mockStripe as any);
+      const mockRetrieve = mock(() => Promise.resolve(mockConfig));
+      mockGetStripeServer.mockResolvedValue({
+        paymentMethodConfigurations: { retrieve: mockRetrieve },
+      } as any);
 
       const result = await fetchStripePaymentMethodConfig('pmc_test123');
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockConfig);
-      expect(mockStripe.paymentMethodConfigurations.retrieve).toHaveBeenCalledWith('pmc_test123');
+      expect(mockRetrieve).toHaveBeenCalledWith('pmc_test123');
     });
 
     // IT-STRIPE-006: Invalid ID (404)
     it('should return error for invalid PMC ID', async () => {
-      const mockStripe = {
-        paymentMethodConfigurations: {
-          retrieve: vi.fn().mockRejectedValue(new Error('No such payment_method_configuration')),
-        },
-      };
-
-      vi.mocked(getStripeServer).mockResolvedValue(mockStripe as any);
+      const mockRetrieve = mock(() =>
+        Promise.reject(new Error('No such payment_method_configuration'))
+      );
+      mockGetStripeServer.mockResolvedValue({
+        paymentMethodConfigurations: { retrieve: mockRetrieve },
+      } as any);
 
       const result = await fetchStripePaymentMethodConfig('pmc_invalid');
 
@@ -177,7 +157,7 @@ describe('Stripe API Integration - Mocked', () => {
 
     // IT-STRIPE-007: Stripe not configured
     it('should return error when Stripe is not configured', async () => {
-      vi.mocked(getStripeServer).mockResolvedValue(null);
+      mockGetStripeServer.mockResolvedValue(null);
 
       const result = await fetchStripePaymentMethodConfig('pmc_test123');
 
@@ -188,13 +168,10 @@ describe('Stripe API Integration - Mocked', () => {
 
   describe('Error handling edge cases', () => {
     it('should handle non-Error exceptions', async () => {
-      const mockStripe = {
-        paymentMethodConfigurations: {
-          list: vi.fn().mockRejectedValue('String error'),
-        },
-      };
-
-      vi.mocked(getStripeServer).mockResolvedValue(mockStripe as any);
+      const mockList = mock(() => Promise.reject('String error'));
+      mockGetStripeServer.mockResolvedValue({
+        paymentMethodConfigurations: { list: mockList },
+      } as any);
 
       const result = await fetchStripePaymentMethodConfigs();
 
@@ -203,13 +180,10 @@ describe('Stripe API Integration - Mocked', () => {
     });
 
     it('should handle undefined/null errors', async () => {
-      const mockStripe = {
-        paymentMethodConfigurations: {
-          list: vi.fn().mockRejectedValue(null),
-        },
-      };
-
-      vi.mocked(getStripeServer).mockResolvedValue(mockStripe as any);
+      const mockList = mock(() => Promise.reject(null));
+      mockGetStripeServer.mockResolvedValue({
+        paymentMethodConfigurations: { list: mockList },
+      } as any);
 
       const result = await fetchStripePaymentMethodConfigs();
 
@@ -221,13 +195,10 @@ describe('Stripe API Integration - Mocked', () => {
       const rateLimitError = new Error('Too many requests');
       (rateLimitError as any).type = 'StripeRateLimitError';
 
-      const mockStripe = {
-        paymentMethodConfigurations: {
-          list: vi.fn().mockRejectedValue(rateLimitError),
-        },
-      };
-
-      vi.mocked(getStripeServer).mockResolvedValue(mockStripe as any);
+      const mockList = mock(() => Promise.reject(rateLimitError));
+      mockGetStripeServer.mockResolvedValue({
+        paymentMethodConfigurations: { list: mockList },
+      } as any);
 
       const result = await fetchStripePaymentMethodConfigs();
 

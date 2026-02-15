@@ -30,7 +30,6 @@ import { getAvailablePaymentMethods, KNOWN_PAYMENT_METHODS } from '@/lib/stripe/
 import type {
   PaymentMethodConfig,
   PaymentConfigMode,
-  LinkDisplayMode,
   PaymentMethodMetadata,
   StripePaymentMethodConfig,
   PaymentMethodInfo,
@@ -56,7 +55,6 @@ export default function PaymentMethodSettings() {
   const [enableApplePay, setEnableApplePay] = useState(true);
   const [enableGooglePay, setEnableGooglePay] = useState(true);
   const [enableLink, setEnableLink] = useState(true);
-  const [linkDisplayMode, setLinkDisplayMode] = useState<LinkDisplayMode>('above');
   const [currencyOverrides, setCurrencyOverrides] = useState<Record<string, string[]>>({});
   const [showCurrencyOverrides, setShowCurrencyOverrides] = useState(false);
 
@@ -90,11 +88,6 @@ export default function PaymentMethodSettings() {
         setEnableApplePay(config.enable_apple_pay);
         setEnableGooglePay(config.enable_google_pay);
         setEnableLink(config.enable_link);
-        setLinkDisplayMode(
-          config.link_display_mode === 'above' || config.link_display_mode === 'tab'
-            ? config.link_display_mode
-            : 'above'
-        );
         setCurrencyOverrides(config.currency_overrides || {});
         setShowCurrencyOverrides(Object.keys(config.currency_overrides || {}).length > 0);
 
@@ -191,7 +184,6 @@ export default function PaymentMethodSettings() {
         enable_apple_pay: enableApplePay,
         enable_google_pay: enableGooglePay,
         enable_link: enableLink,
-        link_display_mode: linkDisplayMode,
       });
 
       if (result.success) {
@@ -705,47 +697,9 @@ export default function PaymentMethodSettings() {
                 <span className="ml-3 text-gray-700 dark:text-gray-300">{t('paymentMethods.expressCheckout.link')}</span>
               </label>
               {enableLink && (
-                <div className="ml-7 mt-2 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg space-y-2">
-                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
-                    {t('paymentMethods.linkDisplayMode.title')}
-                  </p>
-                  <label className="flex items-start cursor-pointer">
-                    <input
-                      type="radio"
-                      name="link_display_mode"
-                      value="above"
-                      checked={linkDisplayMode === 'above'}
-                      onChange={() => setLinkDisplayMode('above')}
-                      className="mt-0.5 h-4 w-4 text-purple-600"
-                    />
-                    <div className="ml-2">
-                      <span className="text-sm text-gray-900 dark:text-white font-medium">
-                        {t('paymentMethods.linkDisplayMode.above')}
-                      </span>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {t('paymentMethods.linkDisplayMode.aboveDescription')}
-                      </p>
-                    </div>
-                  </label>
-                  <label className="flex items-start cursor-pointer">
-                    <input
-                      type="radio"
-                      name="link_display_mode"
-                      value="tab"
-                      checked={linkDisplayMode === 'tab'}
-                      onChange={() => setLinkDisplayMode('tab')}
-                      className="mt-0.5 h-4 w-4 text-purple-600"
-                    />
-                    <div className="ml-2">
-                      <span className="text-sm text-gray-900 dark:text-white font-medium">
-                        {t('paymentMethods.linkDisplayMode.tab')}
-                      </span>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {t('paymentMethods.linkDisplayMode.tabDescription')}
-                      </p>
-                    </div>
-                  </label>
-                </div>
+                <p className="ml-7 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {t('paymentMethods.expressCheckout.linkEnabledDescription', { defaultValue: 'Link is displayed as part of the email field. Users with a Link account can pay with saved cards.' })}
+                </p>
               )}
             </div>
           )}

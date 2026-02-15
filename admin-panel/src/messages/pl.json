@@ -61,8 +61,9 @@
     },
     "orPayWith": "lub zapłać przez",
     "optional": "opcjonalne",
-    "confirmEmailLabel": "Potwierdź adres email  {email}",
-    "confirmEmailRequired": "Proszę potwierdzić adres email",
+    "confirmEmailLabel": "Potwierdzam przypisanie produktu do mojego konta ({accountEmail}). Paragon zostanie wysłany na {purchaseEmail}.",
+    "confirmEmailRequired": "Potwierdź przypisanie produktu do Twojego konta",
+    "emailMismatchWarning": "Kupujesz za pomocą adresu {purchaseEmail}, ale jesteś zalogowany jako {accountEmail}. Produkt zostanie przypisany do Twojego konta.",
     "nipValidation": {
       "invalidChecksum": "Nieprawidłowy numer NIP",
       "mustBe10Digits": "NIP musi mieć 10 cyfr",
@@ -1925,14 +1926,8 @@
         "link": "Link",
         "applePayDescription": "Szybkie płatności dla użytkowników Apple",
         "googlePayDescription": "Szybkie płatności dla użytkowników Android",
-        "linkDescription": "Szybkie płatności z zapisanymi danymi"
-      },
-      "linkDisplayMode": {
-        "title": "Tryb wyświetlania Link",
-        "above": "Oddzielna sekcja (nad zakładkami)",
-        "aboveDescription": "Link pojawia się w osobnej sekcji nad zakładkami metod płatności, szybki dostęp jednym klikiem",
-        "tab": "Zakładka obok innych metod",
-        "tabDescription": "Link pojawia się jako zwykła zakładka obok BLIK, Karty, itp."
+        "linkDescription": "Szybkie płatności z zapisanymi danymi",
+        "linkEnabledDescription": "Link wyświetla się jako część pola email. Użytkownicy z kontem Link mogą płacić zapisanymi kartami."
       },
       "currencyOverrides": {
         "title": "Konfiguracja per waluta",

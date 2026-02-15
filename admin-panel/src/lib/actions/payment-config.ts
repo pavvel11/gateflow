@@ -81,7 +81,6 @@ const UpdatePaymentConfigSchema = z.object({
   enable_apple_pay: z.boolean().optional(),
   enable_google_pay: z.boolean().optional(),
   enable_link: z.boolean().optional(),
-  link_display_mode: z.enum(['above', 'tab']).optional(),
 
   // Metadata
   last_modified_by: z.string().optional(),
@@ -267,10 +266,6 @@ export async function updatePaymentMethodConfig(
     if (validatedInput.enable_link !== undefined) {
       updateData.enable_link = validatedInput.enable_link;
     }
-    if (validatedInput.link_display_mode !== undefined) {
-      updateData.link_display_mode = validatedInput.link_display_mode;
-    }
-
     // Metadata
     if (validatedInput.last_modified_by) {
       updateData.last_modified_by = validatedInput.last_modified_by;

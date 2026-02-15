@@ -54,7 +54,10 @@ export default function MyPurchasesPage() {
 
       if (fetchError) throw fetchError;
 
-      setPurchases(data || []);
+      // Filter out incomplete transactions (pending/abandoned should not show as purchases)
+      setPurchases((data || []).filter((p: UserPurchase) =>
+        p.status !== 'pending' && p.status !== 'abandoned'
+      ));
     } catch (err) {
       const error = err as Error;
       setError(error.message || 'Failed to load purchases.');
@@ -127,6 +130,14 @@ export default function MyPurchasesPage() {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
           {t('statusRefundRejected', { defaultValue: 'Refund Rejected' })}
+        </span>
+      );
+    }
+
+    if (purchase.status === 'disputed') {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
+          {t('statusDisputed', { defaultValue: 'Disputed' })}
         </span>
       );
     }
