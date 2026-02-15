@@ -467,7 +467,7 @@ export default function CustomPaymentForm({
                 paymentMethods: {
                   applePay: expressCheckoutConfig?.applePay !== false ? 'auto' : 'never',
                   googlePay: expressCheckoutConfig?.googlePay !== false ? 'auto' : 'never',
-                  link: expressCheckoutConfig?.link !== false ? 'auto' : 'never',
+                  link: 'never', // Link is inline in LinkAuthenticationElement, no redirect needed
                 },
               }}
             />
@@ -487,11 +487,19 @@ export default function CustomPaymentForm({
         </div>
       )}
 
-      {/* Email - LinkAuthenticationElement for all users (inline Link autofill) */}
+      {/* Email - LinkAuthenticationElement (inline Link autofill, own label) */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          {t('emailAddress')}
-        </label>
+        {email && onChangeAccount && (
+          <div className="flex items-center justify-end mb-1">
+            <button
+              type="button"
+              onClick={onChangeAccount}
+              className="text-blue-400 hover:text-blue-300 text-xs underline transition-colors"
+            >
+              {t('changeAccount')}
+            </button>
+          </div>
+        )}
         <LinkAuthenticationElement
           onChange={handleLinkEmailChange}
           options={{
@@ -501,20 +509,6 @@ export default function CustomPaymentForm({
           }}
         />
         {!email && <p className="mt-1 text-xs text-gray-400">{t('emailHelp')}</p>}
-        {email && (
-          <div className="mt-1 flex items-center justify-between">
-            <p className="text-xs text-green-400">✓ {t('linkedToAccount')}</p>
-            {onChangeAccount && (
-              <button
-                type="button"
-                onClick={onChangeAccount}
-                className="text-blue-400 hover:text-blue-300 text-xs underline transition-colors"
-              >
-                {t('changeAccount')}
-              </button>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Full Name - single field */}
@@ -598,7 +592,7 @@ export default function CustomPaymentForm({
             wallets: {
               applePay: expressCheckoutConfig?.applePay !== false ? 'auto' : 'never',
               googlePay: expressCheckoutConfig?.googlePay !== false ? 'auto' : 'never',
-              link: expressCheckoutConfig?.link !== false ? 'auto' : 'never',
+              link: 'never', // Link is in separate section above (LinkAuthenticationElement)
             },
             // Hide email and name fields since we collect them above
             fields: {
