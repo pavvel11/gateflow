@@ -467,7 +467,7 @@ export default function CustomPaymentForm({
                 paymentMethods: {
                   applePay: expressCheckoutConfig?.applePay !== false ? 'auto' : 'never',
                   googlePay: expressCheckoutConfig?.googlePay !== false ? 'auto' : 'never',
-                  link: 'never', // Replaced by inline LinkAuthenticationElement below
+                  link: expressCheckoutConfig?.link !== false ? 'auto' : 'never',
                 },
               }}
             />

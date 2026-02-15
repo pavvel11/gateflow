@@ -329,6 +329,13 @@ export async function POST(request: NextRequest) {
             paymentIntentParams.payment_method_types = enabledMethods;
             delete paymentIntentParams.automatic_payment_methods;
             delete paymentIntentParams.payment_method_configuration;
+            // Enable Link saved payment methods (same as automatic/stripe_preset modes)
+            if (paymentConfig.enable_link) {
+              paymentIntentParams.payment_method_options = {
+                ...paymentIntentParams.payment_method_options,
+                link: { setup_future_usage: 'off_session' },
+              };
+            }
           } else {
             // Fallback if no methods match currency and no express checkout
             console.warn('[create-payment-intent] No payment methods match currency, falling back to automatic');
