@@ -61,6 +61,8 @@
     },
     "orPayWith": "lub zapłać przez",
     "optional": "opcjonalne",
+    "confirmEmailLabel": "Potwierdź adres email  {email}",
+    "confirmEmailRequired": "Proszę potwierdzić adres email",
     "nipValidation": {
       "invalidChecksum": "Nieprawidłowy numer NIP",
       "mustBe10Digits": "NIP musi mieć 10 cyfr",

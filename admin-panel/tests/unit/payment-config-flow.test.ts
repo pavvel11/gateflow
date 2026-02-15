@@ -656,15 +656,14 @@ describe('Stripe param mutual exclusivity (defensive cleanup)', () => {
 // Link display mode — paymentMethodOrder construction
 // ---------------------------------------------------------------------------
 
-describe('Link display mode — paymentMethodOrder', () => {
+describe('paymentMethodOrder — Link filtered out (LAE handles it)', () => {
   /**
    * Simulates the paymentMethodOrder logic in CustomPaymentForm.tsx
-   * This must match the IIFE in the PaymentElement options.
+   * Link is always filtered out because LAE handles it separately.
    */
   function buildPaymentMethodOrder(
     paymentMethodOrder: string[] | undefined,
     currency: string,
-    expressCheckoutConfig: ExpressCheckoutConfig | undefined,
   ): string[] | undefined {
     const baseOrder = paymentMethodOrder && paymentMethodOrder.length > 0
       ? paymentMethodOrder
@@ -675,104 +674,45 @@ describe('Link display mode — paymentMethodOrder', () => {
       : currency === 'USD'
       ? ['card', 'cashapp', 'affirm']
       : undefined;
-    if (expressCheckoutConfig?.link !== false && baseOrder) {
-      const orderWithoutLink = baseOrder.filter(m => m !== 'link');
-      return expressCheckoutConfig?.linkDisplayMode === 'above'
-        ? ['link', ...orderWithoutLink]
-        : [...orderWithoutLink, 'link'];
-    }
-    return baseOrder;
+    return baseOrder?.filter(m => m !== 'link');
   }
 
-  it('"above" mode: Link is first in paymentMethodOrder', () => {
-    const config = makeConfig({
-      config_mode: 'custom',
-      payment_method_order: ['blik', 'p24', 'card'],
-      enable_link: true,
-      link_display_mode: 'above',
-    });
-    const expressConfig = extractExpressCheckoutConfig(config);
-
-    const order = buildPaymentMethodOrder(config.payment_method_order, 'PLN', expressConfig);
-    expect(order).toEqual(['link', 'blik', 'p24', 'card']);
-  });
-
-  it('"tab" mode: Link is last in paymentMethodOrder', () => {
-    const config = makeConfig({
-      config_mode: 'custom',
-      payment_method_order: ['blik', 'p24', 'card'],
-      enable_link: true,
-      link_display_mode: 'tab',
-    });
-    const expressConfig = extractExpressCheckoutConfig(config);
-
-    const order = buildPaymentMethodOrder(config.payment_method_order, 'PLN', expressConfig);
-    expect(order).toEqual(['blik', 'p24', 'card', 'link']);
-  });
-
-  it('Link disabled: Link not added to paymentMethodOrder', () => {
-    const config = makeConfig({
-      config_mode: 'custom',
-      payment_method_order: ['blik', 'p24', 'card'],
-      enable_link: false,
-      link_display_mode: 'above',
-    });
-    const expressConfig = extractExpressCheckoutConfig(config);
-
-    const order = buildPaymentMethodOrder(config.payment_method_order, 'PLN', expressConfig);
+  it('filters out link from custom order', () => {
+    const order = buildPaymentMethodOrder(['blik', 'p24', 'card'], 'PLN');
     expect(order).toEqual(['blik', 'p24', 'card']);
     expect(order).not.toContain('link');
   });
 
-  it('deduplicates link if already in base order', () => {
-    const config = makeConfig({
-      config_mode: 'custom',
-      payment_method_order: ['blik', 'link', 'card'],
-      enable_link: true,
-      link_display_mode: 'above',
-    });
-    const expressConfig = extractExpressCheckoutConfig(config);
-
-    const order = buildPaymentMethodOrder(config.payment_method_order, 'PLN', expressConfig);
-    // Should have link only once, at the front
-    expect(order).toEqual(['link', 'blik', 'card']);
-    expect(order!.filter(m => m === 'link')).toHaveLength(1);
+  it('removes link if present in base order', () => {
+    const order = buildPaymentMethodOrder(['blik', 'link', 'card'], 'PLN');
+    expect(order).toEqual(['blik', 'card']);
+    expect(order).not.toContain('link');
   });
 
-  it('uses currency-specific defaults when no order configured', () => {
-    const config = makeConfig({
-      config_mode: 'custom',
-      payment_method_order: [],
-      enable_link: true,
-      link_display_mode: 'tab',
-    });
-    const expressConfig = extractExpressCheckoutConfig(config);
+  it('uses currency-specific defaults without link', () => {
+    const orderPLN = buildPaymentMethodOrder(undefined, 'PLN');
+    expect(orderPLN).toEqual(['blik', 'p24', 'card']);
 
-    const orderPLN = buildPaymentMethodOrder(undefined, 'PLN', expressConfig);
-    expect(orderPLN).toEqual(['blik', 'p24', 'card', 'link']);
+    const orderEUR = buildPaymentMethodOrder(undefined, 'EUR');
+    expect(orderEUR).toEqual(['sepa_debit', 'ideal', 'card', 'klarna']);
 
-    const orderEUR = buildPaymentMethodOrder(undefined, 'EUR', expressConfig);
-    expect(orderEUR).toEqual(['sepa_debit', 'ideal', 'card', 'klarna', 'link']);
-
-    const orderUSD = buildPaymentMethodOrder(undefined, 'USD', expressConfig);
-    expect(orderUSD).toEqual(['card', 'cashapp', 'affirm', 'link']);
+    const orderUSD = buildPaymentMethodOrder(undefined, 'USD');
+    expect(orderUSD).toEqual(['card', 'cashapp', 'affirm']);
   });
 
-  it('wallets.link value matches Link enabled state', () => {
-    // When Link enabled, wallets.link should be 'auto' (hidden LAE prevents takeover)
+  it('returns undefined for unknown currency with no custom order', () => {
+    const order = buildPaymentMethodOrder(undefined, 'GBP');
+    expect(order).toBeUndefined();
+  });
+
+  it('extractExpressCheckoutConfig still reports link enabled state', () => {
     const configEnabled = makeConfig({ enable_link: true });
     const expressEnabled = extractExpressCheckoutConfig(configEnabled);
     expect(expressEnabled.link).toBe(true);
-    // In CustomPaymentForm: link: expressCheckoutConfig?.link !== false ? 'auto' : 'never'
-    const walletsLinkEnabled = expressEnabled.link !== false ? 'auto' : 'never';
-    expect(walletsLinkEnabled).toBe('auto');
 
-    // When Link disabled, wallets.link should be 'never'
     const configDisabled = makeConfig({ enable_link: false });
     const expressDisabled = extractExpressCheckoutConfig(configDisabled);
     expect(expressDisabled.link).toBe(false);
-    const walletsLinkDisabled = expressDisabled.link !== false ? 'auto' : 'never';
-    expect(walletsLinkDisabled).toBe('never');
   });
 });
 

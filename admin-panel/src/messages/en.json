@@ -60,7 +60,9 @@
       "aboveMaximum": "Amount must be no more than {maximum}"
     },
     "orPayWith": "or pay with",
-    "optional": "optional"
+    "optional": "optional",
+    "confirmEmailLabel": "Confirm email address  {email}",
+    "confirmEmailRequired": "Please confirm your email address"
   },
   "waitlist": {
     "joinWaitlist": "Join the Waitlist",

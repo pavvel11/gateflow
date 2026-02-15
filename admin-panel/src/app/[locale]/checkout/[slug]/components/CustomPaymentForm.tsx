@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { PaymentElement, ExpressCheckoutElement, LinkAuthenticationElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { useState, useEffect } from 'react';
+import { PaymentElement, LinkAuthenticationElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Product } from '@/types';
 import { OrderBumpWithProduct } from '@/types/order-bump';
 import { ExpressCheckoutConfig } from '@/types/payment-config';
@@ -54,7 +54,11 @@ export default function CustomPaymentForm({
   const router = useRouter();
   const { track } = useTracking();
 
-  const [guestEmail, setGuestEmail] = useState('');
+  // Email from LinkAuthenticationElement onChange
+  const [linkEmail, setLinkEmail] = useState('');
+
+  // Confirm email checkbox (required before submit)
+  const [emailConfirmed, setEmailConfirmed] = useState(false);
 
   // Customer data - single name field
   const [fullName, setFullName] = useState('');
@@ -74,9 +78,6 @@ export default function CustomPaymentForm({
   const [errorMessage, setErrorMessage] = useState('');
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
-
-  // Express Checkout (Link, Apple Pay, Google Pay buttons)
-  const [expressCheckoutVisible, setExpressCheckoutVisible] = useState(false);
 
   // GUS integration state
   interface GUSCompanyData {
@@ -244,65 +245,6 @@ export default function CustomPaymentForm({
     }
   };
 
-  // Express Checkout Element handlers
-  interface ExpressCheckoutReadyEvent {
-    availablePaymentMethods?: {
-      applePay?: boolean;
-      googlePay?: boolean;
-      link?: boolean;
-    };
-  }
-
-  const handleExpressCheckoutReady = useCallback(({ availablePaymentMethods }: ExpressCheckoutReadyEvent) => {
-    // Show Express Checkout only if payment methods are available (Link, Apple Pay, Google Pay)
-    if (availablePaymentMethods) {
-      setExpressCheckoutVisible(true);
-    }
-  }, []);
-
-  const handleExpressCheckoutConfirm = useCallback(async () => {
-    if (!stripe || !elements) {
-      return;
-    }
-
-    setIsProcessing(true);
-    setErrorMessage('');
-
-    try {
-      // Submit all Elements for validation
-      const { error: submitError } = await elements.submit();
-      if (submitError) {
-        setErrorMessage(submitError.message || 'Failed to process payment');
-        setIsProcessing(false);
-        return;
-      }
-
-      // Express Checkout buttons handle their own confirmation
-      // We just need to track and redirect after Stripe handles payment
-      // 'purchase' event will be sent by webhook after payment confirmation
-      track('add_payment_info', {
-        value: totalGross,
-        currency: product.currency,
-        items: [
-          {
-            item_id: product.id,
-            item_name: product.name,
-            price: totalGross,
-            quantity: 1,
-            currency: product.currency,
-          },
-        ],
-      });
-
-      // Stripe will redirect to return_url automatically
-      // Payment confirmation happens on the server via webhook
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
-      setErrorMessage(errorMessage);
-      setIsProcessing(false);
-    }
-  }, [stripe, elements, track, product.id, product.currency, totalGross]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -310,9 +252,14 @@ export default function CustomPaymentForm({
       return;
     }
 
-    const finalEmail = email || guestEmail;
+    const finalEmail = linkEmail || email;
     if (!finalEmail) {
       setErrorMessage(t('emailRequired', { defaultValue: 'Email is required' }));
+      return;
+    }
+
+    if (!emailConfirmed) {
+      setErrorMessage(t('confirmEmailRequired', { defaultValue: 'Please confirm your email address' }));
       return;
     }
 
@@ -442,76 +389,23 @@ export default function CustomPaymentForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Express Checkout Element - Link, Apple Pay, Google Pay (1-click payment) */}
-      {/* Only render if express checkout is enabled in config (default: enabled) */}
-      {(expressCheckoutConfig?.enabled !== false) && (
-        <div style={{ display: expressCheckoutVisible ? 'block' : 'none' }}>
-          <div className="relative mb-6">
-            <ExpressCheckoutElement
-              onConfirm={handleExpressCheckoutConfirm}
-              onReady={handleExpressCheckoutReady}
-              options={{
-                buttonType: {
-                  googlePay: 'checkout',
-                  applePay: 'check-out',
-                },
-                buttonHeight: 48,
-                // Control which payment methods appear based on config
-                paymentMethods: {
-                  applePay: expressCheckoutConfig?.applePay !== false ? 'auto' : 'never',
-                  googlePay: expressCheckoutConfig?.googlePay !== false ? 'auto' : 'never',
-                  link: 'never', // Link is always in PaymentElement, never as Express Checkout redirect
-                },
-              }}
-            />
-          </div>
-
-          {/* Separator */}
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-gray-900 text-gray-400">
-                {t('orPayWith', { defaultValue: 'or pay with' })}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Email */}
+      {/* Email — LinkAuthenticationElement (handles Link detection + email collection) */}
       <div>
-        {email ? (
-          <div className="flex items-center justify-between px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg">
-            <span className="text-sm text-gray-300">{email}</span>
-            {onChangeAccount && (
-              <button
-                type="button"
-                onClick={onChangeAccount}
-                className="text-blue-400 hover:text-blue-300 text-xs underline transition-colors"
-              >
-                {t('changeAccount')}
-              </button>
-            )}
+        {email && onChangeAccount && (
+          <div className="flex justify-end mb-1">
+            <button
+              type="button"
+              onClick={onChangeAccount}
+              className="text-blue-400 hover:text-blue-300 text-xs underline transition-colors"
+            >
+              {t('changeAccount')}
+            </button>
           </div>
-        ) : (
-          <>
-            <label htmlFor="guestEmail" className="block text-sm font-medium text-gray-300 mb-2">
-              {t('emailAddress')}
-            </label>
-            <input
-              type="email"
-              id="guestEmail"
-              value={guestEmail}
-              onChange={(e) => setGuestEmail(e.target.value)}
-              placeholder="your@email.com"
-              required
-              className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <p className="mt-1 text-xs text-gray-400">{t('emailHelp')}</p>
-          </>
         )}
+        <LinkAuthenticationElement
+          options={{ defaultValues: { email: email || '' } }}
+          onChange={(e) => setLinkEmail(e.value.email)}
+        />
       </div>
 
       {/* Full Name - single field */}
@@ -557,31 +451,7 @@ export default function CustomPaymentForm({
         </div>
       )}
 
-      {/* Hidden LinkAuthenticationElement — must be in DOM for PaymentElement to show Link as tab instead of wallet takeover.
-          Uses sr-only pattern (1x1px + clip) instead of width:0/height:0 so Stripe's iframe initializes properly. */}
-      {expressCheckoutConfig?.link !== false && (
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            width: 1,
-            height: 1,
-            overflow: 'hidden',
-            clip: 'rect(0, 0, 0, 0)',
-            whiteSpace: 'nowrap',
-            border: 0,
-            padding: 0,
-            margin: -1,
-            pointerEvents: 'none',
-          }}
-        >
-          <LinkAuthenticationElement
-            options={{ defaultValues: { email: email || guestEmail || '' } }}
-          />
-        </div>
-      )}
-
-      {/* Payment Element */}
+      {/* Payment Element — tabs layout, Apple Pay/Google Pay as wallet tabs */}
       <div>
         <PaymentElement
           options={{
@@ -591,11 +461,9 @@ export default function CustomPaymentForm({
             },
             defaultValues: {
               billingDetails: {
-                email: email || guestEmail || undefined,
                 name: fullName || undefined,
               },
             },
-            // Link position: 'above' = first tab, 'tab' = last tab
             paymentMethodOrder: (() => {
               const baseOrder = paymentMethodOrder && paymentMethodOrder.length > 0
                 ? paymentMethodOrder
@@ -606,19 +474,12 @@ export default function CustomPaymentForm({
                 : product.currency === 'USD'
                 ? ['card', 'cashapp', 'affirm']
                 : undefined;
-              if (expressCheckoutConfig?.link !== false && baseOrder) {
-                const orderWithoutLink = baseOrder.filter(m => m !== 'link');
-                return expressCheckoutConfig?.linkDisplayMode === 'above'
-                  ? ['link', ...orderWithoutLink]
-                  : [...orderWithoutLink, 'link'];
-              }
-              return baseOrder;
+              // Filter out 'link' — LAE handles Link separately
+              return baseOrder?.filter(m => m !== 'link');
             })(),
             wallets: {
               applePay: expressCheckoutConfig?.applePay !== false ? 'auto' : 'never',
               googlePay: expressCheckoutConfig?.googlePay !== false ? 'auto' : 'never',
-              // 'auto' + hidden LAE = Link as regular tab (no wallet takeover)
-              link: expressCheckoutConfig?.link !== false ? 'auto' : 'never',
             },
             fields: {
               billingDetails: {
@@ -797,6 +658,23 @@ export default function CustomPaymentForm({
         </div>
       </div>
 
+      {/* Confirm Email Address — required before submit */}
+      {(linkEmail || email) && (
+        <div className="py-1">
+          <label className="flex items-start cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={emailConfirmed}
+              onChange={(e) => setEmailConfirmed(e.target.checked)}
+              className="mt-0.5 w-4 h-4 text-blue-500 bg-white/5 border border-white/20 rounded focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-colors"
+            />
+            <span className="ml-3 text-sm text-gray-400">
+              {t('confirmEmailLabel', { email: linkEmail || email || '', defaultValue: `Confirm email address ${linkEmail || email || ''}` })}
+            </span>
+          </label>
+        </div>
+      )}
+
       {/* PWYW Validation Error Warning */}
       {customAmountError && (
         <div className="p-3 bg-red-900/30 border border-red-500/50 rounded-lg mb-4">
@@ -812,7 +690,7 @@ export default function CustomPaymentForm({
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={!stripe || isProcessing || !!customAmountError}
+        disabled={!stripe || isProcessing || !!customAmountError || !emailConfirmed}
         className={`w-full px-6 py-4 text-white font-bold rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] ${
           customAmountError
             ? 'bg-gray-600 cursor-not-allowed'
