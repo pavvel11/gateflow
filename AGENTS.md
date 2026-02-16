@@ -395,9 +395,9 @@ To execute SQL queries directly on the local database, use `docker exec` with th
 1. **Find the container name**: `docker ps` (look for `supabase_db_<project_name>`)
 2. **Execute SQL**:
    ```bash
-   docker exec -i supabase_db_gemini-test psql -U postgres -c "SELECT * FROM users;"
+   docker exec -i supabase_db_gateflow psql -U postgres -c "SELECT * FROM users;"
    ```
-   *Replace `supabase_db_gemini-test` with your actual container name if different.*
+   *Replace `supabase_db_gateflow` with your actual container name if different.*
 
 **CRITICAL MANDATES for DB Changes:**
 - **Representative Data**: Always add realistic sample data to `supabase/seed.sql` whenever the schema changes.

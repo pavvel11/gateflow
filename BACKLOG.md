@@ -2,6 +2,30 @@
 
 A comprehensive list of planned features, technical improvements, and ideas for the platform.
 
+## 🟡 Planned: Public Demo Instance
+
+**Status**: 📋 Planned (branch: `feature/demo-mode`)
+**Priority**: 🟡 Medium (po naprawieniu testów i publikacji repo)
+
+**Cel**: Postawić publiczne demo na `demo.gateflow.io`, żeby każdy mógł poklikać bez ryzyka.
+
+**Architektura**:
+1. Osobna instancja (VPS/kontener) z Supabase + admin-panel
+2. **Stripe Test Mode** — klucze `pk_test_`/`sk_test_`, użytkownicy testują checkout kartą `4242 4242 4242 4242`
+3. **Cron reset bazy co 1h** — `supabase db reset` przywraca `seed.sql` (czyste dane demo)
+4. Stałe konto demo: `demo@gateflow.io` / `demo123` (podane w README)
+5. Flaga `DEMO_MODE=true` w middleware — blokuje destrukcyjne akcje (usuwanie produktów, zmiana hasła admina)
+
+**Do zrobienia**:
+- [ ] Middleware `DEMO_MODE` — blokada DELETE/niebezpiecznych mutacji z komunikatem "Disabled in demo"
+- [ ] Seed.sql — rozbudować o realistyczne dane demo (kilka produktów, transakcji, userów)
+- [ ] Cron job — skrypt resetujący bazę co 1h
+- [ ] Deployment config — docker-compose/PM2 config dla instancji demo
+- [ ] README — dodać link do demo + info o test card
+- [ ] Opcjonalnie: banner "This is a demo instance" w UI
+
+---
+
 ## 🔴 Critical Priority (Must Fix Before Production)
 
 #### Refactor: Migrate to Native Next.js Layouts & Server Auth
@@ -28,7 +52,7 @@ A comprehensive list of planned features, technical improvements, and ideas for 
 > Tests performed with 50 concurrent users for 10 seconds.
 - **Local (M1 Max)**: 244 req/sec, ~200ms latency (Excellent)
 - **Small VPS (gateflow.tojest.dev)**: ~11 req/sec, ~3.8s latency (Critical bottleneck)
-- **Large VPS (gf.techskills.academy)**: ~12 req/sec, ~3.5s latency (No significant improvement)
+- **Large VPS (production)**: ~12 req/sec, ~3.5s latency (No significant improvement)
 - **Conclusion**: Throwing more hardware at the problem **did not help**. The bottleneck is architectural (CPU-bound Dynamic Rendering), not resource capacity.
 
 **Benchmarks AFTER Optimization (Jan 15, 2026):**

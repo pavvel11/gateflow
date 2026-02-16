@@ -9,7 +9,7 @@
  * without hitting Stripe or Supabase. Uses manual mocks compatible with bun test.
  */
 
-import { describe, it, expect, mock, beforeEach } from 'bun:test';
+import { describe, it, expect } from 'vitest';
 import type { PaymentMethodConfig } from '@/types/payment-config';
 import {
   getEnabledPaymentMethodsForCurrency,

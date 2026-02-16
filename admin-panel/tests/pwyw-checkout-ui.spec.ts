@@ -229,8 +229,7 @@ test.describe('PWYW Checkout UI', () => {
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1500);
 
-    // Fill email
-    await page.fill('input[type="email"]', 'test@example.com');
+    // Email is in Stripe's LinkAuthenticationElement (iframe) — skip filling it
 
     // Type amount below minimum
     const customInput = page.locator('input[type="number"]').or(page.locator('input[inputmode="decimal"]'));
@@ -504,9 +503,6 @@ test.describe('PWYW Checkout - E2E Payment Flow', () => {
     const preset25 = page.locator('button:not([type="submit"])').filter({ hasText: /25/ }).first();
     await preset25.click();
 
-    // Fill email
-    await page.fill('input[type="email"]', 'pwyw-test@example.com');
-
     // Verify the amount is selected
     const customInput = page.locator('input[type="number"]').or(page.locator('input[inputmode="decimal"]'));
     await expect(customInput.first()).toHaveValue('25');
@@ -521,9 +517,6 @@ test.describe('PWYW Checkout - E2E Payment Flow', () => {
     // Type custom amount
     const customInput = page.locator('input[type="number"]').or(page.locator('input[inputmode="decimal"]'));
     await customInput.first().fill('42');
-
-    // Fill email
-    await page.fill('input[type="email"]', 'pwyw-custom@example.com');
 
     // Verify custom amount is set
     await expect(customInput.first()).toHaveValue('42');

@@ -58,7 +58,8 @@ ecosystem.config.js
 scripts/.gateflow-private-key.pem
 
 # Bruno environments (may contain API keys)
-bruno/environments/local.bru
+bruno/environments/*.bru
+!bruno/environments/*.bru.example
 
 # Copilot instructions (IDE-specific)
 .copilot-codeGeneration-instructions.md

@@ -94,7 +94,7 @@ module.exports = {
       user: "deploy",
       host: ["your-vps.mikr.us"],
       ref: "origin/main",
-      repo: "git@github.com:pavvel11/gateflow.git",
+      repo: "git@github.com:YOUR_USERNAME/gateflow.git",
       path: "/home/deploy/gateflow",
 
       // PRE-DEPLOY HOOKS

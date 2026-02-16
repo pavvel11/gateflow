@@ -12,7 +12,7 @@ if (!SUPABASE_URL || !SERVICE_ROLE_KEY || !ANON_KEY) {
 
 const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-// Test licenses for localhost (generated with /Users/pavvel/workspace/gateflow/scripts/generate-license.js)
+// Test licenses for localhost (generated with scripts/generate-license.js)
 // These licenses are for 'localhost' domain to match NEXT_PUBLIC_SITE_URL=http://localhost:3000
 const TEST_LICENSES = {
   unlimited: 'GF-localhost-UNLIMITED-MEYCIQDmEAvHQyvdCu-BFEm1pXh1GCsm8sUVN6k_0lB5loj-CgIhAKdKPs0tPFtAlRgS4LWLSDFddvAJrmK4EgfbDuCm9fcd',

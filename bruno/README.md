@@ -21,8 +21,7 @@ Kolekcja requestów API dla [Bruno](https://www.usebruno.com/).
 ```
 bruno/
 ├── environments/
-│   ├── local.bru          # localhost:3000
-│   └── production.bru     # app.gateflow.io
+│   └── local.bru          # localhost:3000
 ├── products/
 │   ├── List Products.bru
 │   ├── Get Product.bru

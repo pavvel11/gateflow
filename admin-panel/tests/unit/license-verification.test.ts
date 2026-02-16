@@ -16,7 +16,7 @@ import {
 } from '../../src/lib/license/verify';
 
 describe('License Verification', () => {
-  // Valid test licenses generated with /Users/pavvel/workspace/gateflow/scripts/generate-license.js
+  // Valid test licenses generated with scripts/generate-license.js
   // These are real signatures that should verify correctly
   const VALID_LICENSE_UNLIMITED = 'GF-test.example.com-UNLIMITED-MEUCIFu0eHmjYGTkO2LeOf-H9wbPADxtb2e2y9zwI-UbNs2IAiEA9zLeqLOTNsyeIR8APM0wkZOcKY4RYJw2T_DqPWfjCwQ';
   const VALID_LICENSE_DATED = 'GF-test.example.com-20301231-MEUCIQCs9QVA6-9uwH2wdoNy3UAlR_bzB4IivExlM1KeqUgPiQIgKNkpD5XEFVKMELTu8T3RAhi80hOuRnSWaef0T-JNSFA';

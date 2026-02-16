@@ -1168,9 +1168,10 @@ test.describe('OTO Checkout Page E2E', () => {
 
     await page.waitForLoadState('domcontentloaded');
 
-    // 1. Email should be prefilled
-    const emailInput = page.locator('input[type="email"]');
-    await expect(emailInput).toHaveValue(testEmail, { timeout: 15000 });
+    // 1. Email is passed to Stripe's LinkAuthenticationElement (iframe)
+    // Verify our code passes the correct email via data-test-email attribute
+    const emailWrapper = page.locator('[data-test-email]');
+    await expect(emailWrapper).toHaveAttribute('data-test-email', testEmail, { timeout: 15000 });
 
     // 2. Coupon code should be visible in coupon input
     const couponInput = page.locator('input[placeholder*="code"], input[placeholder*="kod"]');

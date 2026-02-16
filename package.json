@@ -1,7 +1,7 @@
 {
-  "name": "gatekeeper-access-control",
+  "name": "gateflow",
   "version": "1.0.0",
-  "description": "A modern, flexible access control system for product delivery and content protection built on Supabase",
+  "description": "Open-source platform for selling and protecting digital products — built on Next.js, Supabase & Stripe",
   "main": "gatekeeper.js",
   "scripts": {
     "setup": "bun run scripts/setup-supabase.ts",
@@ -11,24 +11,25 @@
     "test": "echo 'No tests configured'"
   },
   "keywords": [
-    "access-control",
+    "digital-products",
     "supabase",
-    "authentication",
-    "product-protection",
-    "content-gating",
-    "javascript",
-    "magic-link"
+    "stripe",
+    "nextjs",
+    "content-protection",
+    "payment-gateway",
+    "self-hosted",
+    "open-source"
   ],
-  "author": "Your Name",
+  "author": "pavvel11",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/gatekeeper-access-control.git"
+    "url": "git+https://github.com/pavvel11/gateflow.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/gatekeeper-access-control/issues"
+    "url": "https://github.com/pavvel11/gateflow/issues"
   },
-  "homepage": "https://github.com/yourusername/gatekeeper-access-control#readme",
+  "homepage": "https://github.com/pavvel11/gateflow#readme",
   "engines": {
     "node": ">=14.0.0"
   },

@@ -10,11 +10,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
 
-[Demo](https://demo.gateflow.io) · [Documentation](./FEATURES.md) · [Deployment Guide](./docs/DEPLOYMENT-MIKRUS.md)
-
-<br />
-
-<img src="./Screenshot 2025-12-10 at 17.53.19.png" alt="GateFlow Dashboard" width="800" />
+[Documentation](./FEATURES.md) · [Deployment Guide](./docs/DEPLOYMENT-MIKRUS.md)
 
 </div>
 

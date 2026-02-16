@@ -9,8 +9,8 @@
  * Examples:
  *   node scripts/benchmark.js                                    # localhost, 50 connections
  *   node scripts/benchmark.js http://localhost:3000              # localhost, 50 connections
- *   node scripts/benchmark.js https://gf.techskills.academy     # production, 50 connections
- *   node scripts/benchmark.js https://gf.techskills.academy 5   # production, 5 connections (small VPS)
+ *   node scripts/benchmark.js https://your-domain.com            # production, 50 connections
+ *   node scripts/benchmark.js https://your-domain.com 5          # production, 5 connections (small VPS)
  */
 
 const autocannon = require('autocannon');

@@ -391,7 +391,7 @@ export default function CustomPaymentForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Email — LinkAuthenticationElement (handles Link detection + email collection) */}
-      <div>
+      <div data-test-email={linkEmail || email || ''}>
         {email && onChangeAccount && (
           <div className="flex justify-end mb-1">
             <button

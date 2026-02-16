@@ -57,7 +57,7 @@ test.describe('GUS Checkout Flow - NIP Validation', () => {
     await page.goto(`/pl/checkout/${testProduct.slug}`);
 
     // Wait for checkout form to load (wait for email or firstName field)
-    await page.waitForSelector('input[type="email"], input#fullName', { timeout: 30000 });
+    await page.waitForSelector('input#fullName', { timeout: 30000 });
 
     // NIP field should be visible (always shown now)
     await expect(page.locator('input#nip')).toBeVisible();
@@ -78,7 +78,7 @@ test.describe('GUS Checkout Flow - NIP Validation', () => {
   test('should validate NIP checksum and show error for invalid NIP', async ({ page }) => {
     // Navigate to checkout
     await page.goto(`/pl/checkout/${testProduct.slug}`);
-    await page.waitForSelector('input[type="email"], input#fullName', { timeout: 30000 });
+    await page.waitForSelector('input#fullName', { timeout: 30000 });
 
     // Fill invalid NIP
     const nipInput = page.locator('input#nip');
@@ -95,7 +95,7 @@ test.describe('GUS Checkout Flow - NIP Validation', () => {
   test('should accept valid NIP format (10 digits)', async ({ page }) => {
     // Navigate to checkout
     await page.goto(`/pl/checkout/${testProduct.slug}`);
-    await page.waitForSelector('input[type="email"], input#fullName', { timeout: 30000 });
+    await page.waitForSelector('input#fullName', { timeout: 30000 });
 
     // Fill valid NIP and wait for value to be set
     const nipInput = page.locator('input#nip');
@@ -108,7 +108,7 @@ test.describe('GUS Checkout Flow - NIP Validation', () => {
   test('should enforce maxLength=20 on NIP input (supports international tax IDs)', async ({ page }) => {
     // Navigate to checkout
     await page.goto(`/pl/checkout/${testProduct.slug}`);
-    await page.waitForSelector('input[type="email"], input#fullName', { timeout: 30000 });
+    await page.waitForSelector('input#fullName', { timeout: 30000 });
 
     // Try to fill more than 20 characters
     const nipInput = page.locator('input#nip');
@@ -177,7 +177,7 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
 
     // Navigate to checkout
     await page.goto(`/pl/checkout/${testProduct.slug}`);
-    await page.waitForSelector('input[type="email"], input#fullName', { timeout: 30000 });
+    await page.waitForSelector('input#fullName', { timeout: 30000 });
 
     // Fill valid NIP
     const nipInput = page.locator('input#nip');
@@ -216,7 +216,7 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
 
     // Navigate to checkout
     await page.goto(`/pl/checkout/${testProduct.slug}`);
-    await page.waitForSelector('input[type="email"], input#fullName', { timeout: 30000 });
+    await page.waitForSelector('input#fullName', { timeout: 30000 });
 
     // Fill valid NIP and blur
     const nipInput = page.locator('input#nip');
@@ -249,7 +249,7 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
 
     // Navigate to checkout
     await page.goto(`/pl/checkout/${testProduct.slug}`);
-    await page.waitForSelector('input[type="email"], input#fullName', { timeout: 30000 });
+    await page.waitForSelector('input#fullName', { timeout: 30000 });
 
     // Fill NIP and blur
     const nipInput = page.locator('input#nip');
@@ -285,7 +285,7 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
 
     // Navigate to checkout
     await page.goto(`/pl/checkout/${testProduct.slug}`);
-    await page.waitForSelector('input[type="email"], input#fullName', { timeout: 30000 });
+    await page.waitForSelector('input#fullName', { timeout: 30000 });
 
     // Fill NIP and blur
     const nipInput = page.locator('input#nip');
@@ -312,7 +312,7 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
 
     // Navigate to checkout
     await page.goto(`/pl/checkout/${testProduct.slug}`);
-    await page.waitForSelector('input[type="email"], input#fullName', { timeout: 30000 });
+    await page.waitForSelector('input#fullName', { timeout: 30000 });
 
     // Fill NIP and blur (will fail)
     const nipInput = page.locator('input#nip');
@@ -358,7 +358,7 @@ test.describe('GUS Checkout Flow - Autofill (Mocked)', () => {
 
     // Navigate to checkout
     await page.goto(`/pl/checkout/${testProduct.slug}`);
-    await page.waitForSelector('input[type="email"], input#fullName', { timeout: 30000 });
+    await page.waitForSelector('input#fullName', { timeout: 30000 });
 
     // Fill NIP and blur
     const nipInput = page.locator('input#nip');

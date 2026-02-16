@@ -328,7 +328,7 @@ GateFlow supports **two equivalent methods** for Stripe configuration. Choose th
 1. Add `STRIPE_SECRET_KEY` to .env
 2. Remove configuration from the database:
    ```bash
-   docker exec supabase_db_gemini-test psql -U postgres -d postgres -c \
+   docker exec supabase_db_gateflow psql -U postgres -d postgres -c \
      "DELETE FROM stripe_configurations WHERE is_active = true;"
    ```
 3. Restart the application
