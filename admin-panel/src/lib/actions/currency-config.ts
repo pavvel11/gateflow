@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { encryptCurrencyKey, decryptCurrencyKey } from '@/lib/services/currency-encryption';
 import { revalidatePath } from 'next/cache';
+import { isDemoMode, DEMO_MODE_ERROR } from '@/lib/demo-guard';
 
 export interface CurrencyConfig {
   enabled: boolean;
@@ -30,6 +31,7 @@ interface ActionResponse<T = unknown> {
  * Saves/updates Currency API configuration in integrations_config
  */
 export async function saveCurrencyConfig(input: SaveCurrencyConfigInput): Promise<ActionResponse<void>> {
+  if (isDemoMode()) return { success: false, error: DEMO_MODE_ERROR, errorCode: 'DEMO_MODE' }
   try {
     const supabase = await createClient();
 
@@ -272,6 +274,7 @@ export async function getDecryptedCurrencyConfig(): Promise<{ provider: string; 
  * Deletes Currency API configuration from integrations_config
  */
 export async function deleteCurrencyConfig(): Promise<ActionResponse<void>> {
+  if (isDemoMode()) return { success: false, error: DEMO_MODE_ERROR, errorCode: 'DEMO_MODE' }
   try {
     const supabase = await createClient();
 

@@ -13,6 +13,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
+import { isDemoMode, DEMO_MODE_ERROR } from '@/lib/demo-guard';
 import {
   fetchStripePaymentMethodConfigs,
   fetchStripePaymentMethodConfig,
@@ -179,6 +180,7 @@ async function checkAdminPermission(): Promise<boolean> {
 export async function updatePaymentMethodConfig(
   input: UpdatePaymentConfigInput
 ): Promise<PaymentConfigActionResult<PaymentMethodConfig>> {
+  if (isDemoMode()) return { success: false, error: DEMO_MODE_ERROR, errorCode: 'DEMO_MODE' }
   try {
     // Check admin permission
     const isAdmin = await checkAdminPermission();
@@ -461,6 +463,7 @@ export async function resetToRecommendedConfig(): Promise<{
   error?: string;
   errorCode?: string;
 }> {
+  if (isDemoMode()) return { success: false, error: DEMO_MODE_ERROR, errorCode: 'DEMO_MODE' }
   try {
     const isAdmin = await checkAdminPermission();
     if (!isAdmin) {

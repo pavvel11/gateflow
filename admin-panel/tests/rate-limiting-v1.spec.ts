@@ -10,10 +10,14 @@ import { createClient } from '@supabase/supabase-js';
  * 1. API Key Rate Limiting (per-key per-minute limit in middleware.ts)
  * 2. Endpoint-specific Rate Limiting (sensitive operations via checkRateLimit)
  *
- * IMPORTANT: To run these tests, you must enable RATE_LIMIT_TEST_MODE:
- *   RATE_LIMIT_TEST_MODE=true npx playwright test --project=rate-limiting-v1
+ * These require RATE_LIMIT_TEST_MODE=true on the dev server.
  *
- * Without this flag, rate limiting is disabled in dev/test mode and tests will be skipped.
+ * Run as part of the full suite:
+ *   bun ttt   (chromium tests first, then rate-limiting with fresh server)
+ *   bun tttt  (same but with DB reset first)
+ *
+ * Run standalone:
+ *   RATE_LIMIT_TEST_MODE=true npx playwright test --project=rate-limiting-v1
  */
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
@@ -51,9 +55,6 @@ async function loginAsAdmin(page: Page, email: string, password: string) {
 test.describe('V1 API Rate Limiting', () => {
   test.describe.configure({ mode: 'serial' });
 
-  // Skip all tests if RATE_LIMIT_TEST_MODE is not enabled
-  const rateLimitEnabled = process.env.RATE_LIMIT_TEST_MODE === 'true';
-
   let adminUserId: string;
   let adminEmail: string;
   const adminPassword = 'TestPassword123!';
@@ -62,12 +63,6 @@ test.describe('V1 API Rate Limiting', () => {
   let testApiKeyId: string;
 
   test.beforeAll(async () => {
-    if (!rateLimitEnabled) {
-      console.log('⚠️  RATE_LIMIT_TEST_MODE not enabled. V1 Rate limiting tests will be skipped.');
-      console.log('   To run: RATE_LIMIT_TEST_MODE=true npx playwright test --project=rate-limiting-v1');
-      return;
-    }
-
     // Create admin user
     const randomStr = Math.random().toString(36).substring(7);
     adminEmail = `rate-limit-v1-test-${randomStr}@example.com`;
@@ -102,8 +97,6 @@ test.describe('V1 API Rate Limiting', () => {
   });
 
   test.afterAll(async () => {
-    if (!rateLimitEnabled) return;
-
     // Cleanup API key
     if (testApiKeyId) {
       await supabaseAdmin.from('api_keys').delete().eq('id', testApiKeyId);
@@ -122,11 +115,12 @@ test.describe('V1 API Rate Limiting', () => {
   });
 
   test.beforeEach(async () => {
-    if (!rateLimitEnabled) {
-      test.skip();
-      return;
-    }
     // Clean up rate limit entries before each test
+    await supabaseAdmin.from('application_rate_limits').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  });
+
+  test.afterEach(async () => {
+    // Clean up rate limit entries after each test so other tests aren't affected
     await supabaseAdmin.from('application_rate_limits').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   });
 
@@ -445,8 +439,6 @@ test.describe('V1 API Rate Limiting', () => {
     let readOnlyApiKeyId: string;
 
     test.beforeAll(async ({ browser }) => {
-      if (!rateLimitEnabled) return;
-
       // Create read-only API key with low rate limit using browser context
       const context = await browser.newContext();
       const page = await context.newPage();

@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { encryptStripeKey, decryptStripeKey } from '@/lib/services/stripe-encryption'
 import Stripe from 'stripe'
+import { isDemoMode, DEMO_MODE_ERROR } from '@/lib/demo-guard'
 import type {
   StripeConfiguration,
   StripeMode,
@@ -396,6 +397,7 @@ export async function validateStripeKey(apiKey: string, expectedMode?: StripeMod
  * Saves a new Stripe configuration to the database (encrypted)
  */
 export async function saveStripeConfig(input: CreateStripeConfigInput): Promise<SaveConfigResponse> {
+  if (isDemoMode()) return { success: false, error: DEMO_MODE_ERROR, errorCode: 'DEMO_MODE' }
   try {
     const supabase = await createClient()
 
@@ -537,6 +539,7 @@ export async function getDecryptedStripeKey(mode: StripeMode): Promise<string | 
  * Deletes a Stripe configuration
  */
 export async function deleteStripeConfig(id: string): Promise<DeleteConfigResponse> {
+  if (isDemoMode()) return { success: false, error: DEMO_MODE_ERROR, errorCode: 'DEMO_MODE' }
   try {
     const supabase = await createClient()
 

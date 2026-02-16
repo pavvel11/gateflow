@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { encryptGUSKey, decryptGUSKey } from '@/lib/services/gus-encryption';
 import { revalidatePath } from 'next/cache';
+import { isDemoMode, DEMO_MODE_ERROR } from '@/lib/demo-guard';
 
 export interface GUSConfig {
   enabled: boolean;
@@ -25,6 +26,7 @@ interface ActionResponse<T = unknown> {
  * Saves/updates GUS API key in shop_config.custom_settings
  */
 export async function saveGUSAPIKey(input: SaveGUSKeyInput): Promise<ActionResponse<void>> {
+  if (isDemoMode()) return { success: false, error: DEMO_MODE_ERROR, errorCode: 'DEMO_MODE' }
   try {
     const supabase = await createClient();
 
@@ -228,6 +230,7 @@ export async function getDecryptedGUSAPIKey(): Promise<string | null> {
  * Deletes GUS API key from integrations_config
  */
 export async function deleteGUSAPIKey(): Promise<ActionResponse<void>> {
+  if (isDemoMode()) return { success: false, error: DEMO_MODE_ERROR, errorCode: 'DEMO_MODE' }
   try {
     const supabase = await createClient();
 

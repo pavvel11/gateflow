@@ -4,6 +4,7 @@ import { createClient, createPublicClient } from '@/lib/supabase/server'
 import { validateIntegrations, validateScript, type IntegrationsInput, type CustomScriptInput } from '@/lib/validations/integrations'
 import { validateLicense, extractDomainFromUrl } from '@/lib/license/verify'
 import { revalidatePath } from 'next/cache'
+import { isDemoMode, DEMO_MODE_ERROR } from '@/lib/demo-guard'
 
 // --- GLOBAL CONFIG ---
 
@@ -18,6 +19,7 @@ export async function getIntegrationsConfig() {
 }
 
 export async function updateIntegrationsConfig(values: IntegrationsInput) {
+  if (isDemoMode()) return { error: DEMO_MODE_ERROR }
   const supabase = await createClient()
   const validation = validateIntegrations(values)
   if (!validation.isValid) return { error: 'Invalid fields', details: validation.errors }
@@ -59,6 +61,7 @@ export async function getScripts() {
 }
 
 export async function addScript(values: CustomScriptInput) {
+  if (isDemoMode()) return { error: DEMO_MODE_ERROR }
   const supabase = await createClient()
   const validation = validateScript(values)
   if (!validation.isValid) return { error: 'Invalid script', details: validation.errors }
@@ -71,6 +74,7 @@ export async function addScript(values: CustomScriptInput) {
 }
 
 export async function deleteScript(id: string) {
+  if (isDemoMode()) return { error: DEMO_MODE_ERROR }
   const supabase = await createClient()
   const { error } = await supabase.from('custom_scripts').delete().eq('id', id)
   if (error) return { error: error.message }
@@ -79,6 +83,7 @@ export async function deleteScript(id: string) {
 }
 
 export async function toggleScript(id: string, is_active: boolean) {
+  if (isDemoMode()) return { error: DEMO_MODE_ERROR }
   const supabase = await createClient()
   const { error } = await supabase.from('custom_scripts').update({ is_active }).eq('id', id)
   if (error) return { error: error.message }

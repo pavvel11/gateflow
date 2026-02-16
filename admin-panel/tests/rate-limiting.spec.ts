@@ -6,11 +6,14 @@ import { getAdminBearerToken } from './helpers/admin-auth';
  * Rate Limiting Tests
  *
  * These tests verify rate limiting functionality across all protected endpoints.
+ * They require RATE_LIMIT_TEST_MODE=true on the dev server.
  *
- * IMPORTANT: To run these tests, you must enable RATE_LIMIT_TEST_MODE:
+ * Run as part of the full suite:
+ *   bun ttt   (chromium tests first, then rate-limiting with fresh server)
+ *   bun tttt  (same but with DB reset first)
+ *
+ * Run standalone:
  *   RATE_LIMIT_TEST_MODE=true npx playwright test --project=rate-limiting
- *
- * Without this flag, rate limiting is disabled in dev/test mode and tests will be skipped.
  */
 
 test.describe('Rate Limiting', () => {
@@ -25,22 +28,13 @@ test.describe('Rate Limiting', () => {
 
   const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-  // Skip all tests if RATE_LIMIT_TEST_MODE is not enabled
-  const rateLimitEnabled = process.env.RATE_LIMIT_TEST_MODE === 'true';
-
-  test.beforeAll(async () => {
-    if (!rateLimitEnabled) {
-      console.log('⚠️  RATE_LIMIT_TEST_MODE not enabled. Rate limiting tests will be skipped.');
-      console.log('   To run: RATE_LIMIT_TEST_MODE=true npx playwright test --project=rate-limiting');
-    }
+  test.beforeEach(async () => {
+    // Clean up rate limit entries before each test
+    await supabaseAdmin.from('application_rate_limits').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   });
 
-  test.beforeEach(async () => {
-    if (!rateLimitEnabled) {
-      test.skip();
-      return;
-    }
-    // Clean up rate limit entries before each test
+  test.afterEach(async () => {
+    // Clean up rate limit entries after each test so other tests aren't affected
     await supabaseAdmin.from('application_rate_limits').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   });
 
@@ -529,8 +523,6 @@ test.describe('Rate Limiting', () => {
     let testProduct: any;
 
     test.beforeAll(async () => {
-      if (!rateLimitEnabled) return;
-
       // Get admin token for API requests
       adminToken = await getAdminBearerToken();
 

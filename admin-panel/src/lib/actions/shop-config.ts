@@ -4,6 +4,7 @@ import { createClient, createPublicClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { cache } from 'react'
 import { cacheGet, cacheSet, cacheDel, CacheKeys, CacheTTL } from '@/lib/redis/cache'
+import { isDemoMode } from '@/lib/demo-guard'
 
 export interface ShopConfig {
   id: string
@@ -81,6 +82,7 @@ export async function getDefaultCurrency(): Promise<string> {
  * Update shop configuration
  */
 export async function updateShopConfig(updates: Partial<Omit<ShopConfig, 'id' | 'created_at' | 'updated_at'>>): Promise<boolean> {
+  if (isDemoMode()) return false
   const supabase = await createClient()
 
   // Get current config first

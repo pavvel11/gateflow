@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import FloatingLanguageSwitcher from './FloatingLanguageSwitcher'
 import type { ShopConfig } from '@/lib/actions/shop-config'
+import DemoBanner from './DemoBanner'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -422,6 +423,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
         </header>
 
         <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 lg:p-8">
+          <DemoBanner />
           <div className="max-w-7xl mx-auto">
             {children}
           </div>

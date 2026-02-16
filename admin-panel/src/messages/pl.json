@@ -2240,5 +2240,12 @@
     "processing": "Przetwarzanie...",
     "confirmApprove": "Zatwierdź i zwróć",
     "confirmReject": "Odrzuć prośbę"
+  },
+  "demo": {
+    "banner": "To jest instancja demo. Dane resetują się co godzinę.",
+    "testCard": "Karta testowa: 4242 4242 4242 4242",
+    "actionBlocked": "Ta akcja jest wyłączona w trybie demo.",
+    "dismiss": "Zamknij",
+    "checkoutBanner": "Tryb demo — użyj karty testowej 4242 4242 4242 4242"
   }
 }

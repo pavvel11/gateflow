@@ -7,8 +7,19 @@ dotenv.config({ path: path.resolve(__dirname, '.env.local') });
 
 /**
  * See https://playwright.dev/docs/test-configuration.
+ *
+ * Rate-limiting tests require RATE_LIMIT_TEST_MODE=true on the dev server.
+ * To avoid breaking other tests (which would hit rate limits), rate-limiting
+ * tests run in a separate Playwright invocation:
+ *
+ *   bun ttt   → runs chromium tests, then rate-limiting tests (two passes)
+ *   bun tttt  → same but with DB reset first
+ *
+ * You can also run them individually:
+ *   npx playwright test --project=chromium
+ *   RATE_LIMIT_TEST_MODE=true npx playwright test --project=rate-limiting
+ *   RATE_LIMIT_TEST_MODE=true npx playwright test --project=rate-limiting-v1
  */
-// Check if rate limiting tests are being run
 const isRateLimitTestMode = process.env.RATE_LIMIT_TEST_MODE === 'true';
 
 export default defineConfig({
@@ -39,31 +50,25 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      // Exclude rate-limiting tests from default run
+      // Rate-limiting tests are excluded here — they run in separate projects
+      // with RATE_LIMIT_TEST_MODE=true (see ttt/tttt scripts in package.json)
       testIgnore: ['**/rate-limiting.spec.ts', '**/rate-limiting-v1.spec.ts'],
     },
     {
       name: 'rate-limiting',
       use: { ...devices['Desktop Chrome'] },
-      // Only run old API rate-limiting tests with RATE_LIMIT_TEST_MODE enabled
       testMatch: '**/rate-limiting.spec.ts',
-      // Note: To run these tests, use:
-      // RATE_LIMIT_TEST_MODE=true npx playwright test --project=rate-limiting
     },
     {
       name: 'rate-limiting-v1',
       use: { ...devices['Desktop Chrome'] },
-      // Only run v1 API rate-limiting tests with RATE_LIMIT_TEST_MODE enabled
       testMatch: '**/rate-limiting-v1.spec.ts',
-      // Note: To run these tests, use:
-      // RATE_LIMIT_TEST_MODE=true npx playwright test --project=rate-limiting-v1
     },
   ],
 
   /* Run your local dev server before starting the tests */
   webServer: [
     {
-      // Pass RATE_LIMIT_TEST_MODE to the dev server when running rate-limit tests
       command: isRateLimitTestMode
         ? 'RATE_LIMIT_TEST_MODE=true bun run dev'
         : 'bun run dev',

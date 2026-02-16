@@ -10,6 +10,48 @@ const intlMiddleware = createMiddleware({
   localePrefix: 'as-needed'
 })
 
+// =============================================================================
+// DEMO MODE — Block mutating API requests when DEMO_MODE=true
+// =============================================================================
+
+// Whitelist-only: mutations are blocked UNLESS explicitly allowed here.
+// New endpoints are blocked by default until added to this list.
+const DEMO_MUTATION_ALLOWED = [
+  '/api/create-payment-intent',
+  '/api/verify-payment',
+  '/api/create-embedded-checkout',
+  '/api/update-payment-metadata',
+  '/api/webhooks/',
+  '/api/auth/',
+  '/api/public/',
+  '/api/coupons/',
+  '/api/order-bumps/',
+  '/api/gus/',
+  '/api/validate-email',
+  '/api/health',
+  '/api/status',
+  '/api/config',
+  '/api/runtime-config',
+  '/api/consent',
+  '/api/tracking/',
+  '/api/waitlist/',
+  '/api/gatekeeper',
+  '/api/gateflow-embed',
+  '/api/oto/',
+  '/api/products/',
+  '/api/access',
+  '/api/profile/',
+  '/api/users/',
+  '/api/refund-requests',
+]
+
+function isDemoBlocked(pathname: string, method: string): boolean {
+  if (process.env.DEMO_MODE !== 'true') return false
+  if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') return false
+  // Block all mutations unless explicitly whitelisted
+  return !DEMO_MUTATION_ALLOWED.some(p => pathname.startsWith(p))
+}
+
 // Add security headers to response
 function addSecurityHeaders(response: NextResponse): NextResponse {
   // Add HSTS header unless disabled (e.g., when behind reverse proxy with SSL termination)
@@ -36,6 +78,14 @@ export async function proxy(request: NextRequest) {
         hint: 'Set ALLOW_DEPRECATED_API=true to temporarily re-enable',
       },
       { status: 503 }
+    ));
+  }
+
+  // Demo mode: block mutating requests on admin/API routes
+  if (isDemoBlocked(pathname, request.method)) {
+    return addSecurityHeaders(NextResponse.json(
+      { error: 'This action is disabled in demo mode' },
+      { status: 403 }
     ));
   }
 

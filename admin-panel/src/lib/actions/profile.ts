@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { validateProfile, type ProfileInput } from '@/lib/validations/profile'
 import { revalidatePath } from 'next/cache'
+import { isDemoMode, DEMO_MODE_ERROR } from '@/lib/demo-guard'
 
 export async function getProfile() {
   const supabase = await createClient()
@@ -25,6 +26,7 @@ export async function getProfile() {
 }
 
 export async function updateProfile(values: ProfileInput) {
+  if (isDemoMode()) return { error: DEMO_MODE_ERROR }
   const supabase = await createClient()
   
   const { data: { user }, error: authError } = await supabase.auth.getUser()

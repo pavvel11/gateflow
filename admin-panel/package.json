@@ -19,8 +19,8 @@
     "test:config": "vitest run --config vitest.config.config.ts",
     "t": "vitest run && playwright test tests/smoke --workers=2",
     "tt": "vitest run",
-    "ttt": "playwright test",
-    "tttt": "cd .. && npx supabase db reset && cd admin-panel && playwright test"
+    "ttt": "playwright test --project=chromium && RATE_LIMIT_TEST_MODE=true playwright test --project=rate-limiting --project=rate-limiting-v1",
+    "tttt": "cd .. && npx supabase db reset && cd admin-panel && playwright test --project=chromium && RATE_LIMIT_TEST_MODE=true playwright test --project=rate-limiting --project=rate-limiting-v1"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.4.0",
