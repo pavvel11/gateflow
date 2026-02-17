@@ -236,7 +236,7 @@ export function AboutPagePL() {
           {/* CTA after Problem Statement */}
           <div className="text-center mt-12">
             <Link
-              href="/login"
+              href="#deployment"
               className="inline-flex items-center px-8 py-4 rounded-xl text-lg font-bold text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 transform hover:scale-105"
             >
               Przestań przepłacać - Wdróż teraz
@@ -277,7 +277,7 @@ export function AboutPagePL() {
             </div>
 
             {/* Stripe - wide */}
-            <div className="md:col-span-2 lg:col-span-2 group p-6 rounded-3xl bg-gradient-to-br from-purple-500 to-pink-500 overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300">
+            <div className="md:col-span-2 lg:col-span-2 group p-6 rounded-3xl bg-gradient-to-br from-purple-500 to-pink-500 overflow-hidden shadow-xl hover:scale-[1.02] transition-all duration-300">
               <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4">
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
