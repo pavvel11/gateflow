@@ -46,10 +46,10 @@ export function AboutPagePL() {
             </Link>
 
             <div className="flex items-center space-x-6">
-              <Link href="/" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+              <Link href="/store" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
                 Start
               </Link>
-              <Link href="/" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+              <Link href="/store" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
                 Produkty
               </Link>
               <a href="https://github.com/pavvel11/gateflow" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
@@ -1046,7 +1046,7 @@ export function AboutPagePL() {
               <ul className="space-y-2 text-sm text-gray-400">
                 <li><Link href="/" className="hover:text-white transition-colors">Funkcje</Link></li>
                 <li><a href="https://github.com/pavvel11/gateflow" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Dokumentacja</a></li>
-                <li><Link href="/" className="hover:text-white transition-colors">Produkty</Link></li>
+                <li><Link href="/store" className="hover:text-white transition-colors">Produkty</Link></li>
               </ul>
             </div>
 
