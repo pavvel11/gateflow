@@ -130,7 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const supabase = await createClient()
       const { data: { session }, error } = await supabase.auth.getSession()
-      
+
       if (!isMountedRef.current) return
 
       if (error) {
@@ -138,7 +138,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false)
         return
       }
-      
+
+      // Verify session is still valid (user exists in DB)
+      // Handles stale sessions after DB reset (e.g. demo mode hourly reset)
+      if (session) {
+        const { error: userError } = await supabase.auth.getUser()
+        if (userError) {
+          // Session is stale — user was deleted from DB
+          await supabase.auth.signOut()
+          if (!isMountedRef.current) return
+          setUser(null)
+          setIsAdmin(false)
+          setLoading(false)
+          return
+        }
+      }
+
       // Use immediate processing for initial session
       await handleAuthStateChange(session, true)
     } catch {

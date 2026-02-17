@@ -54,13 +54,15 @@ export default function CategoryFormModal({ isOpen, onClose, category }: Categor
     setIsLoading(true)
 
     try {
-      if (category) {
-        await updateCategory(category.id, { name, slug, description })
-        addToast(commonT('success'), 'success')
-      } else {
-        await createCategory({ name, slug, description })
-        addToast(commonT('success'), 'success')
+      const result = category
+        ? await updateCategory(category.id, { name, slug, description })
+        : await createCategory({ name, slug, description })
+
+      if (result && !result.success) {
+        addToast(result.error || commonT('error'), 'error')
+        return
       }
+      addToast(commonT('success'), 'success')
       onClose()
     } catch (error) {
       console.error(error)

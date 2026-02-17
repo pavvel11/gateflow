@@ -6,12 +6,16 @@ import { useTranslations } from 'next-intl'
 import { validateEmailAction } from '@/lib/actions/validate-email'
 import TurnstileWidget from './TurnstileWidget'
 import TermsCheckbox from './TermsCheckbox'
+import { useConfig } from '@/components/providers/config-provider'
 
 /**
  * Login form component that handles magic link authentication
+ * In demo mode, switches to email+password login
  */
 export default function LoginForm() {
-  const [email, setEmail] = useState('')
+  const { demoMode } = useConfig()
+  const [email, setEmail] = useState(demoMode ? 'demo@gateflow.io' : '')
+  const [password, setPassword] = useState(demoMode ? 'demo123' : '')
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [sentEmail, setSentEmail] = useState(false)
@@ -33,6 +37,22 @@ export default function LoginForm() {
     setMessage('')
 
     try {
+      // Demo mode: password login (skip captcha & terms)
+      if (demoMode) {
+        const supabase = await createClient()
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+
+        if (error) {
+          setMessage(error.message)
+        }
+        // On success, AuthContext will detect user and redirect
+        setIsLoading(false)
+        return
+      }
+
       // Check if terms are accepted
       if (!termsAccepted) {
         setMessage(t('compliance.pleaseAcceptTerms'))
@@ -50,12 +70,12 @@ export default function LoginForm() {
 
       // Validate email against disposable email list
       const emailValidation = await validateEmailAction(email);
-      
+
       if (emailValidation.isDisposable) {
         setMessage('Disposable email addresses are not allowed. Please use a permanent email address.');
         setSentEmail(false)
         setIsLoading(false)
-        
+
         // Reset captcha after failed validation (token was consumed)
         resetCaptcha()
         return;
@@ -65,7 +85,7 @@ export default function LoginForm() {
         setMessage('Email validation failed. Please try again.');
         setSentEmail(false)
         setIsLoading(false)
-        
+
         // Reset captcha after failed validation (token was consumed)
         resetCaptcha()
         return;
@@ -73,7 +93,7 @@ export default function LoginForm() {
 
       // Dynamic redirect URL for Supabase auth
       const redirectUrl = `${siteUrl}/auth/callback`
-      
+
       const supabase = await createClient()
       const { error } = await supabase.auth.signInWithOtp({
         email,
@@ -86,7 +106,7 @@ export default function LoginForm() {
       if (error) {
         setMessage(error.message)
         setSentEmail(false)
-        
+
         // Reset captcha after ANY error (it was consumed in the failed request)
         resetCaptcha()
       } else {
@@ -122,49 +142,71 @@ export default function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
           required
           className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-          placeholder="admin@example.com"
+          placeholder={demoMode ? 'demo@gateflow.io' : 'admin@example.com'}
         />
       </div>
 
-      {/* Terms and Conditions Checkbox */}
-      <TermsCheckbox
-        checked={termsAccepted}
-        onChange={setTermsAccepted}
-      />
+      {/* Password field - demo mode only */}
+      {demoMode && (
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-gray-200 mb-2">
+            {t('auth.password')}
+          </label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+            placeholder="demo123"
+          />
+        </div>
+      )}
+
+      {/* Terms and Conditions Checkbox - not needed in demo */}
+      {!demoMode && (
+        <TermsCheckbox
+          checked={termsAccepted}
+          onChange={setTermsAccepted}
+        />
+      )}
 
       <button
         type="submit"
-        disabled={isLoading || captchaLoading}
+        disabled={isLoading || (!demoMode && captchaLoading)}
         className="w-full py-3 px-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-xl shadow-lg hover:from-purple-600 hover:to-pink-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isLoading || captchaLoading ? (
+        {isLoading || (!demoMode && captchaLoading) ? (
           <div className="flex items-center justify-center">
             <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            {captchaLoading ? t('security.verifying') : t('productView.sendingMagicLink')}
+            {!demoMode && captchaLoading ? t('security.verifying') : (demoMode ? t('auth.signingIn') : t('productView.sendingMagicLink'))}
           </div>
         ) : (
-          t('auth.sendMagicLink')
+          demoMode ? t('auth.signIn') : t('auth.sendMagicLink')
         )}
       </button>
 
-      {/* Cloudflare Turnstile - positioned after button */}
-      <TurnstileWidget
-        onVerify={(token) => {
-          setCaptchaToken(token);
-          setCaptchaLoading(false); // ✅ FINAL: Captcha completed successfully
-        }}
-        onError={() => {
-          setCaptchaToken(null);
-          setCaptchaLoading(false); // ✅ FINAL: Reset loading on error
-        }}
-        onTimeout={() => {
-          setCaptchaLoading(false); // ✅ FINAL: Stop loading on timeout
-        }}
-        resetTrigger={captchaResetTrigger}
-      />
+      {/* Cloudflare Turnstile - not needed in demo */}
+      {!demoMode && (
+        <TurnstileWidget
+          onVerify={(token) => {
+            setCaptchaToken(token);
+            setCaptchaLoading(false);
+          }}
+          onError={() => {
+            setCaptchaToken(null);
+            setCaptchaLoading(false);
+          }}
+          onTimeout={() => {
+            setCaptchaLoading(false);
+          }}
+          resetTrigger={captchaResetTrigger}
+        />
+      )}
 
       {message && !sentEmail && (
         <div className="p-4 rounded-xl text-sm bg-red-500/10 text-red-400 border border-red-500/20">

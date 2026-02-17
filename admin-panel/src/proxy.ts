@@ -48,7 +48,9 @@ const DEMO_MUTATION_ALLOWED = [
 function isDemoBlocked(pathname: string, method: string): boolean {
   if (process.env.DEMO_MODE !== 'true') return false
   if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') return false
-  // Block all mutations unless explicitly whitelisted
+  // Only block API route mutations; server actions (POST to page URLs)
+  // are handled by demo-guard in individual server actions
+  if (!pathname.startsWith('/api')) return false
   return !DEMO_MUTATION_ALLOWED.some(p => pathname.startsWith(p))
 }
 
@@ -81,10 +83,10 @@ export async function proxy(request: NextRequest) {
     ));
   }
 
-  // Demo mode: block mutating requests on admin/API routes
+  // Demo mode: block mutating requests on API routes
   if (isDemoBlocked(pathname, request.method)) {
     return addSecurityHeaders(NextResponse.json(
-      { error: 'This action is disabled in demo mode' },
+      { error: { code: 'DEMO_MODE', message: 'This action is disabled in demo mode' } },
       { status: 403 }
     ));
   }
@@ -158,16 +160,18 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  // Get current session
-  const { data: { session } } = await supabase.auth.getSession()
+  // Verify user actually exists in DB (not just JWT validity)
+  // getUser() makes a server call, unlike getSession() which only checks JWT locally.
+  // This handles stale sessions after DB reset (e.g. demo mode hourly reset).
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
 
   // Auth logic
-  if (session && isLoginRoute) {
+  if (user && !userError && isLoginRoute) {
     const redirectPath = locale ? `/${locale}/dashboard` : '/dashboard'
     return addSecurityHeaders(NextResponse.redirect(new URL(redirectPath, request.url)))
   }
 
-  if (!session && isProtectedRoute) {
+  if ((!user || userError) && isProtectedRoute) {
     const redirectPath = locale ? `/${locale}/login` : '/login'
     return addSecurityHeaders(NextResponse.redirect(new URL(redirectPath, request.url)))
   }

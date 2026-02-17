@@ -19,7 +19,11 @@ export default function CategoriesPageContent({ initialCategories }: { initialCa
 
   const handleDelete = async (category: Category) => {
     try {
-      await deleteCategory(category.id)
+      const result = await deleteCategory(category.id)
+      if (result && !result.success) {
+        addToast(result.error || commonT('error', { defaultValue: 'Error' }), 'error')
+        return
+      }
       addToast(commonT('success', { defaultValue: 'Success' }), 'success')
       setCategoryToDelete(null)
     } catch (error) {

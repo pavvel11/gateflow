@@ -14,3 +14,16 @@ export function isDemoMode(): boolean {
 }
 
 export const DEMO_MODE_ERROR = 'This action is disabled in demo mode'
+
+/** Check if an error was thrown by the demo guard */
+export function isDemoError(error: unknown): boolean {
+  return error instanceof Error && error.message === DEMO_MODE_ERROR
+}
+
+/** Get user-friendly error message, with demo-aware fallback */
+export function getErrorMessage(error: unknown, fallback = 'An error occurred'): string {
+  if (error instanceof Error && error.message === DEMO_MODE_ERROR) {
+    return DEMO_MODE_ERROR
+  }
+  return fallback
+}

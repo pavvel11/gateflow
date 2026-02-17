@@ -25,7 +25,7 @@ export async function getCategories() {
 }
 
 export async function createCategory(data: { name: string; slug: string; description?: string }) {
-  if (isDemoMode()) throw new Error(DEMO_MODE_ERROR)
+  if (isDemoMode()) return { success: false, error: DEMO_MODE_ERROR }
   const supabase = await createClient()
   
   const { error } = await supabase
@@ -38,7 +38,7 @@ export async function createCategory(data: { name: string; slug: string; descrip
 }
 
 export async function updateCategory(id: string, data: { name: string; slug: string; description?: string }) {
-  if (isDemoMode()) throw new Error(DEMO_MODE_ERROR)
+  if (isDemoMode()) return { success: false, error: DEMO_MODE_ERROR }
   const supabase = await createClient()
   
   const { error } = await supabase
@@ -52,7 +52,7 @@ export async function updateCategory(id: string, data: { name: string; slug: str
 }
 
 export async function deleteCategory(id: string) {
-  if (isDemoMode()) throw new Error(DEMO_MODE_ERROR)
+  if (isDemoMode()) return { success: false, error: DEMO_MODE_ERROR }
   const supabase = await createClient()
   
   const { error } = await supabase
@@ -77,7 +77,7 @@ export async function getProductCategories(productId: string) {
 }
 
 export async function updateProductCategories(productId: string, categoryIds: string[]) {
-  if (isDemoMode()) throw new Error(DEMO_MODE_ERROR)
+  if (isDemoMode()) return { success: false, error: DEMO_MODE_ERROR }
   const supabase = await createClient()
   
   // 1. Delete existing

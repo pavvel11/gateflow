@@ -448,6 +448,7 @@
     "email": "Adres email",
     "password": "Hasło",
     "signIn": "Zaloguj się",
+    "signingIn": "Logowanie...",
     "signUp": "Zarejestruj się",
     "forgotPassword": "Zapomniałeś hasła?",
     "welcomeBack": "Witaj ponownie",

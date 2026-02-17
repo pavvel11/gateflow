@@ -433,6 +433,7 @@
     "email": "Email address",
     "password": "Password",
     "signIn": "Sign In",
+    "signingIn": "Signing in...",
     "signUp": "Sign Up",
     "forgotPassword": "Forgot Password?",
     "welcomeBack": "Welcome Back",

@@ -252,7 +252,7 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
         otoProductSlug: otoInfo.oto_product_slug!,
         customerEmail: customerEmail || undefined,
         couponCode: otoInfo.coupon_code,
-        baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
+        baseUrl: process.env.SITE_URL || process.env.NEXT_PUBLIC_BASE_URL,
         hideBump: hasHideBumpParam(product.success_redirect_url),
         passParams: product.pass_params_to_redirect || false,
         sourceProductId: product.id,
@@ -323,7 +323,7 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
       if (targetUrl) {
         const redirectResult = buildSuccessRedirectUrl({
           targetUrl,
-          baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
+          baseUrl: process.env.SITE_URL || process.env.NEXT_PUBLIC_BASE_URL,
           passParams: product.pass_params_to_redirect || false,
           customerEmail: customerEmail || undefined,
           productId: product.id,

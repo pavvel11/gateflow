@@ -487,6 +487,54 @@ BEGIN
     NOW() - INTERVAL '7 days'
   );
 
+  -- =========================================================
+  -- STEP 12: SEED — VARIANT GROUPS
+  -- =========================================================
+
+  -- Group 1: "Learning Path" — tiered progression from course to masterclass
+  INSERT INTO variant_groups (name, slug) VALUES
+  ('Learning Path', 'learning-path');
+
+  INSERT INTO product_variant_groups (product_id, group_id, variant_name, display_order, is_featured)
+  VALUES
+  (
+    (SELECT id FROM products WHERE slug = 'premium-course'),
+    (SELECT id FROM variant_groups WHERE slug = 'learning-path'),
+    'Course Only', 0, false
+  ),
+  (
+    (SELECT id FROM products WHERE slug = 'pro-toolkit'),
+    (SELECT id FROM variant_groups WHERE slug = 'learning-path'),
+    'Course + Toolkit', 1, true
+  ),
+  (
+    (SELECT id FROM products WHERE slug = 'vip-masterclass'),
+    (SELECT id FROM variant_groups WHERE slug = 'learning-path'),
+    'Full Masterclass', 2, false
+  );
+
+  -- Group 2: "Business Tier" — professional vs enterprise
+  INSERT INTO variant_groups (name, slug) VALUES
+  ('Business Tier', 'business-tier');
+
+  INSERT INTO product_variant_groups (product_id, group_id, variant_name, display_order, is_featured)
+  VALUES
+  (
+    (SELECT id FROM products WHERE slug = 'pro-toolkit'),
+    (SELECT id FROM variant_groups WHERE slug = 'business-tier'),
+    'Professional', 0, false
+  ),
+  (
+    (SELECT id FROM products WHERE slug = 'vip-masterclass'),
+    (SELECT id FROM variant_groups WHERE slug = 'business-tier'),
+    'VIP', 1, true
+  ),
+  (
+    (SELECT id FROM products WHERE slug = 'enterprise-package'),
+    (SELECT id FROM variant_groups WHERE slug = 'business-tier'),
+    'Enterprise', 2, false
+  );
+
 END;
 $func$;
 
