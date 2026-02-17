@@ -79,7 +79,7 @@ BEGIN
     'email', NOW(), NOW(), NOW()
   );
 
-  INSERT INTO admin_users (user_id) VALUES (demo_user_id);
+  INSERT INTO admin_users (user_id) VALUES (demo_user_id) ON CONFLICT DO NOTHING;
 
   -- =========================================================
   -- STEP 3: SEED — SHOP CONFIG
