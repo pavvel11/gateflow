@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import { createPublicClient } from '@/lib/supabase/server';
 import { getShopConfig } from '@/lib/actions/shop-config';
 import SmartLandingClient from '@/components/storefront/SmartLandingClient';
@@ -7,6 +8,11 @@ import { Product } from '@/types';
 export const revalidate = 60;
 
 export default async function SmartLandingPage() {
+  // Demo mode: always show the landing/about page as homepage
+  if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+    redirect('/about');
+  }
+
   // Use public client (no cookies) to enable ISR
   const supabase = createPublicClient();
   const shopConfig = await getShopConfig();
