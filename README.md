@@ -107,6 +107,35 @@ For the complete feature list, see **[FEATURES.md](./FEATURES.md)**.
 
 ---
 
+## Payment Model: Own Stripe Account
+
+GateFlow connects to **your own Stripe account** — you are the seller, payments go directly to you.
+
+<details>
+<summary><strong>How does this compare to Merchant of Record platforms?</strong></summary>
+
+Platforms like Paddle, LemonSqueezy, and Gumroad act as the **Merchant of Record (MoR)** — they process payments on your behalf and handle tax compliance. This comes with trade-offs:
+
+| | MoR (Paddle, LS, Gumroad) | GateFlow + Own Stripe |
+|---|---|---|
+| **Platform fees** | 5–10% of revenue | $0 |
+| **Payment processing** | Included in platform fee | ~2.9% + 30¢ ([Stripe pricing](https://stripe.com/pricing)) |
+| **Customer data** | Held by the MoR platform | Fully yours |
+| **Tax calculation** | Handled by MoR | Optional via [Stripe Tax](https://stripe.com/tax) (+0.5%) |
+| **Tax filing & remittance** | Handled by MoR | Your responsibility |
+| **Vendor lock-in** | Yes — customer and payment data tied to platform | No — self-hosted, fully portable |
+| **Platform risk** | Account freezes, shutdowns possible | None — you control the infrastructure |
+
+**When does tax compliance become relevant?**
+
+For EU-based sellers, the [VAT One Stop Shop (OSS)](https://vat-one-stop-shop.ec.europa.eu/) threshold is **€10,000/year** in cross-border B2C sales. Below this, you only handle VAT in your own country. Above it, you register for OSS (a single EU-wide filing) and can use [Stripe Tax](https://stripe.com/tax/pricing) to automate calculations.
+
+> **Note:** This is general information, not tax advice. Tax obligations depend on your country, business type, and revenue. Consult a qualified tax professional for your specific situation.
+
+</details>
+
+---
+
 ## Quick Start
 
 ```bash

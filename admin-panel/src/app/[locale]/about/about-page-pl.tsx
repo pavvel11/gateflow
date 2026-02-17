@@ -107,12 +107,12 @@ export function AboutPagePL() {
 
             {/* Subtitle */}
             <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed">
-              Platforma klasy enterprise do sprzedaży produktów cyfrowych.
+              Sprzedawaj produkty cyfrowe na własnych zasadach — bez oddawania przychodów platformom.
               <span className="font-semibold text-gray-900 dark:text-white"> Self-hosted</span>,
               <span className="font-semibold text-gray-900 dark:text-white"> bezpieczna</span> i
-              <span className="font-semibold text-gray-900 dark:text-white"> w pełni konfigurowalna</span>.
+              <span className="font-semibold text-gray-900 dark:text-white"> w pełni Twoja</span>.
               <br />
-              Bez opłat miesięcznych. Bez uzależnienia od dostawcy. Pełna kontrola.
+              Bez opłat miesięcznych. Bez pośredników. Pełna kontrola od pierwszego dnia.
             </p>
 
             {/* CTA Buttons */}
@@ -259,7 +259,7 @@ export function AboutPagePL() {
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Dashboard na żywo</h3>
               <p className="text-sm text-blue-50 leading-relaxed">
-                Przychody w czasie rzeczywistym. 20+ walut. Konwersja automatyczna. Cele sprzedażowe.
+                Wiesz dokładnie, co działa — przychody w 20+ walutach, cele sprzedażowe i trendy jednym rzutem oka.
               </p>
             </div>
 
@@ -272,7 +272,7 @@ export function AboutPagePL() {
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Płatności Stripe</h3>
               <p className="text-sm text-purple-50 leading-relaxed">
-                Bez przekierowań. 20+ walut. Płatności dla gości. Bezpieczne API keys (AES-256).
+                Klienci płacą bez opuszczania strony. 20+ walut, zakupy bez konta, klucze zaszyfrowane AES-256.
               </p>
             </div>
 
@@ -284,7 +284,7 @@ export function AboutPagePL() {
                 </svg>
               </div>
               <h3 className="text-lg font-bold text-white mb-2">Order Bumps</h3>
-              <p className="text-sm text-green-50">Zwiększ AOV o 30-50%</p>
+              <p className="text-sm text-green-50">Zarabiaj 30-50% więcej na zamówieniu dzięki dodatkom jednym kliknięciem.</p>
             </div>
 
             {/* Kupony */}
@@ -295,7 +295,7 @@ export function AboutPagePL() {
                 </svg>
               </div>
               <h3 className="text-lg font-bold text-white mb-2">Smart Kupony</h3>
-              <p className="text-sm text-orange-50">Auto-apply. Limity. Targetowanie</p>
+              <p className="text-sm text-orange-50">Celowane promocje, które naliczają się automatycznie. Ustaw limity, zachowaj rentowność.</p>
             </div>
 
             {/* Webhooks - wide */}
@@ -306,7 +306,7 @@ export function AboutPagePL() {
                 </svg>
               </div>
               <h3 className="text-lg font-bold text-white mb-2">Webhooks & Automatyzacja</h3>
-              <p className="text-sm text-indigo-50">Zapier, Make, custom endpoints. HMAC security. Retry logic.</p>
+              <p className="text-sm text-indigo-50">Połącz z Zapier, Make lub własnymi endpointami — bezpieczne dostarczanie i auto-retry.</p>
             </div>
 
             {/* Leady - tall */}
@@ -318,7 +318,7 @@ export function AboutPagePL() {
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Zbieranie Leadów</h3>
               <p className="text-sm text-pink-50 leading-relaxed">
-                Darmowe produkty. Magic links bez haseł. Zbieraj emaile. Buduj listę. Sprzedawaj premium.
+                Buduj listę mailingową za darmo. Dostęp przez magic link, bez haseł. Potem sprzedawaj premium swojej liście.
               </p>
             </div>
 
@@ -330,7 +330,7 @@ export function AboutPagePL() {
                 </svg>
               </div>
               <h3 className="text-lg font-bold text-white mb-2">Dostarczanie Treści</h3>
-              <p className="text-sm text-amber-50">Wideo, pliki, przekierowania. Hostuj LUB linkuj do swojej platformy.</p>
+              <p className="text-sm text-amber-50">Dostarczaj po swojemu — hostuj pliki bezpośrednio lub przekieruj kupujących na swoją platformę.</p>
             </div>
 
             {/* Omnibus */}
@@ -341,7 +341,7 @@ export function AboutPagePL() {
                 </svg>
               </div>
               <h3 className="text-lg font-bold text-white mb-2">Omnibus UE</h3>
-              <p className="text-sm text-blue-50">Historia cen. Dyrektywa 2019/2161</p>
+              <p className="text-sm text-blue-50">Zgodność z prawem UE. Automatyczna historia cen wg Dyrektywy 2019/2161.</p>
             </div>
 
             {/* GUS */}
@@ -352,7 +352,7 @@ export function AboutPagePL() {
                 </svg>
               </div>
               <h3 className="text-lg font-bold text-white mb-2">GUS API (PL)</h3>
-              <p className="text-sm text-emerald-50">NIP → automatycznie. REGON. B2B</p>
+              <p className="text-sm text-emerald-50">Wpisz NIP — GUS API uzupełni dane firmowe automatycznie.</p>
             </div>
 
             {/* Lejki Sprzedażowe - wide */}
@@ -363,7 +363,7 @@ export function AboutPagePL() {
                 </svg>
               </div>
               <h3 className="text-lg font-bold text-white mb-2">Prawdziwe OTO & Lejki</h3>
-              <p className="text-sm text-violet-50">Kupony po zakupie (czasowe, email-bound). Lead magnet → Upsell → Premium. Walidacja server-side.</p>
+              <p className="text-sm text-violet-50">Zamień jednego kupującego w stałego klienta. Oferty po zakupie, kupony czasowe i pełne lejki — walidacja server-side.</p>
             </div>
 
             {/* Limity & Zwroty */}
@@ -374,7 +374,7 @@ export function AboutPagePL() {
                 </svg>
               </div>
               <h3 className="text-lg font-bold text-white mb-2">Limity & Zwroty</h3>
-              <p className="text-sm text-cyan-50">Limity czasowe/ilościowe. System zwrotów z auto-Stripe.</p>
+              <p className="text-sm text-cyan-50">Twórz pilność i obsługuj zwroty bez stresu. Limity + formularz zwrotu z auto-Stripe.</p>
             </div>
 
           </div>
@@ -484,15 +484,34 @@ export function AboutPagePL() {
         </div>
       </section>
 
+      {/* Word Picture CTA */}
+      <section className="py-16 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <p className="text-2xl md:text-3xl text-white/90 leading-relaxed mb-8 italic">
+            Wyobraź sobie: budzisz się rano i widzisz powiadomienie — <span className="font-bold text-white not-italic">&quot;Sprzedaż zrealizowana, gdy spałeś.&quot;</span> Żadna platforma nie pobrała prowizji. Żadna opłata miesięczna nie zjadła zysku. Twój produkt, Twój klient, Twój przychód.
+          </p>
+          <Link
+            href="/login"
+            className="inline-flex items-center px-8 py-4 rounded-xl text-lg font-bold text-purple-700 bg-white hover:bg-gray-100 shadow-2xl transition-all duration-300 transform hover:scale-105"
+          >
+            Zacznij sprzedawać na swoich zasadach
+            <svg className="ml-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </Link>
+        </div>
+      </section>
+
       {/* Tech Stack */}
       <section className="py-24 bg-white dark:bg-gray-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-              Zbudowane na nowoczesnej, sprawdzonej technologii
+              Zbudowane na technologii, której możesz zaufać
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300">
-              Stos korporacyjny dla wydajności, bezpieczeństwa i skalowalności
+              Niezawodne, sprawdzone narzędzia do wydajności, bezpieczeństwa i wzrostu
             </p>
           </div>
 
@@ -650,8 +669,114 @@ export function AboutPagePL() {
         </div>
       </section>
 
-      {/* Deployment Options */}
+      {/* Twoje konto Stripe — Porównanie z MoR */}
       <section className="py-24 bg-white dark:bg-gray-950">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+              Twoje konto Stripe, Twoje pieniądze
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+              Platformy Merchant of Record pobierają 5–10%, a dane Twoich klientów są na ich platformie. Z GateFlow płatności trafiają bezpośrednio na Twoje konto Stripe.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            {/* MoR Card */}
+            <div className="p-8 rounded-2xl bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-red-300 dark:hover:border-red-600 hover:shadow-xl transition-all duration-300">
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Merchant of Record</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Paddle, LemonSqueezy, Gumroad</p>
+                </div>
+                <div className="text-3xl">🏦</div>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <div className="flex justify-between items-center p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500">
+                  <span className="text-gray-700 dark:text-gray-300 font-medium">Opłaty platformy</span>
+                  <span className="text-red-600 font-bold">5–10%</span>
+                </div>
+                <div className="flex items-center p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500">
+                  <span className="text-gray-700 dark:text-gray-300">❌ Dane klientów należą do platformy</span>
+                </div>
+                <div className="flex items-center p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500">
+                  <span className="text-gray-700 dark:text-gray-300">❌ Ryzyko platformy — blokady kont, zamknięcia</span>
+                </div>
+              </div>
+            </div>
+
+            {/* GateFlow + Own Stripe Card */}
+            <div className="p-8 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-2 border-green-300 dark:border-green-700 hover:border-green-400 dark:hover:border-green-600 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">GateFlow + Własny Stripe</h3>
+                  <p className="text-sm text-green-700 dark:text-green-400 font-semibold">Płatności bezpośrednio na Twoje konto</p>
+                </div>
+                <div className="text-3xl">💳</div>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <div className="flex justify-between items-center p-3 rounded-lg bg-green-100 dark:bg-green-900/40 border-l-4 border-green-500">
+                  <span className="text-gray-900 dark:text-white font-medium">Opłaty platformy</span>
+                  <span className="text-green-600 dark:text-green-400 font-bold">0 zł</span>
+                </div>
+                <div className="flex justify-between items-center p-3 rounded-lg bg-green-100 dark:bg-green-900/40 border-l-4 border-green-500">
+                  <span className="text-gray-900 dark:text-white font-medium">Tylko{' '}<a href="https://stripe.com/pricing" target="_blank" rel="noopener noreferrer" className="underline">opłaty Stripe</a></span>
+                  <span className="text-green-600 dark:text-green-400 font-bold">~2,9%</span>
+                </div>
+                <div className="flex items-center p-3 rounded-lg bg-green-100 dark:bg-green-900/40 border-l-4 border-green-500">
+                  <span className="text-gray-900 dark:text-white">✅ Dane klientów należą do Ciebie</span>
+                </div>
+                <div className="flex items-center p-3 rounded-lg bg-green-100 dark:bg-green-900/40 border-l-4 border-green-500">
+                  <span className="text-gray-900 dark:text-white">✅ Korzystasz z własnych progów podatkowych</span>
+                </div>
+                <div className="flex items-center p-3 rounded-lg bg-green-100 dark:bg-green-900/40 border-l-4 border-green-500">
+                  <span className="text-gray-900 dark:text-white">✅ Self-hosted — brak ryzyka platformy</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Ścieżka podatkowa */}
+          <div className="max-w-4xl mx-auto p-8 rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border-2 border-blue-200 dark:border-blue-800">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">Obowiązki podatkowe rosną razem z Twoim biznesem</h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-xl font-bold mb-3">1</div>
+                <h4 className="font-bold text-gray-900 dark:text-white mb-2">Na start</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Poniżej{' '}<a href="https://vat-one-stop-shop.ec.europa.eu/" target="_blank" rel="noopener noreferrer" className="underline text-blue-600 dark:text-blue-400">€10 000 sprzedaży transgranicznej w UE</a>{' '}— rozliczasz VAT tylko w swoim kraju
+                </p>
+              </div>
+
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-xl font-bold mb-3">2</div>
+                <h4 className="font-bold text-gray-900 dark:text-white mb-2">Wzrost</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Powyżej €10 000 — rejestracja w EU OSS (jeden formularz) i włączenie{' '}<a href="https://stripe.com/tax/pricing" target="_blank" rel="noopener noreferrer" className="underline text-blue-600 dark:text-blue-400">Stripe Tax</a>{' '}(+0,5%) do automatycznej kalkulacji VAT
+                </p>
+              </div>
+
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-xl font-bold mb-3">3</div>
+                <h4 className="font-bold text-gray-900 dark:text-white mb-2">Skalowanie</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Opcjonalnie:{' '}<a href="https://stripe.com/managed-payments" target="_blank" rel="noopener noreferrer" className="underline text-blue-600 dark:text-blue-400">Stripe Managed Payments</a>{' '}(Stripe jako MoR) lub biuro rachunkowe do pełnej obsługi
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-6 text-center italic">
+              Powyższe informacje mają charakter ogólny i nie stanowią porady podatkowej ani prawnej. Obowiązki podatkowe zależą od kraju, formy działalności i przychodów. Skonsultuj się z doradcą podatkowym.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Deployment Options */}
+      <section className="py-24 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
@@ -744,7 +869,7 @@ export function AboutPagePL() {
       </section>
 
       {/* FAQ */}
-      <section className="py-24 bg-gray-50 dark:bg-gray-900">
+      <section className="py-24 bg-white dark:bg-gray-950">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
@@ -756,35 +881,43 @@ export function AboutPagePL() {
             {[
               {
                 q: "Czy GateFlow naprawdę jest darmowy?",
-                a: "Tak! GateFlow jest w 100% open source (licencja MIT). Płacisz tylko za hosting (11-56 zł/mies za VPS) i opłaty Stripe za przetwarzanie płatności (2,9% + 1,20 zł). Bez opłat platformy, bez miesięcznych abonamentów, bez uzależnienia od dostawcy."
+                a: "Tak. Oprogramowanie jest darmowe na zawsze (licencja MIT). Płacisz tylko za hosting (11-56 zł/mies) i opłaty Stripe (od 1,5% + 1 zł). Bez opłat platformy, bez abonamentów, bez lock-in."
               },
               {
                 q: "Czym różni się od Gumroad czy Teachable?",
-                a: "Te platformy pobierają 5-10% od każdej sprzedaży PLUS miesięczne opłaty. GateFlow ma zerowe opłaty platformy, ponieważ hostujesz go sam. Jesteś właścicielem kodu, danych i zatrzymujesz 100% przychodów (minus standardowe opłaty Stripe)."
+                a: "Gumroad pobiera 10% od sprzedaży. Teachable kosztuje $39-665/mies. GateFlow nie pobiera nic — hostujesz sam, jesteś właścicielem kodu i danych, zatrzymujesz wszystko minus opłaty Stripe."
               },
               {
                 q: "Czy muszę być programistą?",
-                a: "Przydaje się podstawowa znajomość serwera, ale nasze przewodniki wdrażania sprawiają, że to proste. Jeśli potrafisz postępować zgodnie z instrukcjami krok po kroku i używać SSH, możesz wdrożyć GateFlow. Udostępniamy konfiguracje Docker Compose i szczegółowe tutoriale."
+                a: "Nie do końca. Jeśli potrafisz postępować wg instrukcji krok po kroku i wpisać kilka komend SSH, dasz radę wdrożyć GateFlow. Dajemy konfiguracje Docker i szczegółowe przewodniki."
               },
               {
                 q: "Co z przetwarzaniem płatności?",
-                a: "GateFlow integruje się ze Stripe do płatności. Potrzebujesz konta Stripe (darmowe do utworzenia). Opłaty Stripe są standardowe: 2,9% + 1,20 zł za transakcję - takie same jak te, które Gumroad/Teachable pobierają NA DODATEK do swoich opłat platformy."
+                a: "GateFlow używa Stripe (darmowe konto). Opłaty w Polsce: od 1,5% + 1 zł za karty europejskie. Platformy MoR pobierają 5-10% łącznie — znacznie więcej."
               },
               {
                 q: "Czy mogę usunąć branding?",
-                a: "Oczywiście! GateFlow ma licencję MIT. Możesz dostosować wszystko - branding, kolory, domenę, nawet kod źródłowy. To Twoja platforma."
+                a: "Tak. Licencja MIT — zmień wszystko: branding, kolory, domenę, kod. To w pełni Twoja platforma."
               },
               {
                 q: "Czy jest gotowy do produkcji?",
-                a: "Tak! GateFlow jest zbudowany na technologiach korporacyjnych (Next.js, PostgreSQL, Supabase). Zawiera funkcje bezpieczeństwa takie jak polityki RLS, webhooki zabezpieczone HMAC, zaszyfrowane przechowywanie kluczy i kompleksową walidację danych wejściowych."
+                a: "Tak. Next.js + PostgreSQL + Supabase z politykami RLS, webhookami HMAC, szyfrowaniem kluczy AES-256 i walidacją danych wejściowych od startu."
               },
               {
                 q: "Co jeśli potrzebuję pomocy?",
-                a: "Sprawdź naszą obszerną dokumentację i problemy na GitHub. Ponieważ jest to open source, możesz również zatrudnić dowolnego programistę Next.js, aby dostosował go do Twoich potrzeb."
+                a: "Sprawdź dokumentację i problemy na GitHub. Każdy programista Next.js może go dostosować lub rozbudować dla Ciebie."
               },
               {
                 q: "Czy poradzi sobie z dużym ruchem?",
-                a: "Tak! Zbudowany na Next.js 16 i PostgreSQL, skaluje się horyzontalnie. Możesz wdrożyć na dowolnej infrastrukturze - od VPS za 11 zł do klastrów Kubernetes. Supabase zapewnia pooling połączeń domyślnie."
+                a: "Tak. Next.js 16 + PostgreSQL skalują się horyzontalnie. Wdróż na czymkolwiek — od VPS za 11 zł po Kubernetes. Supabase obsługuje pooling połączeń."
+              },
+              {
+                q: "Czy potrzebuję Merchant of Record do sprzedaży produktów cyfrowych?",
+                a: "Większość małych twórców nie. Platformy MoR obsługują podatki, ale pobierają 5-10% i przywiązują dane klientów do swojej platformy. Poniżej €10 000 sprzedaży transgranicznej w UE rozliczasz VAT w swoim kraju. Własny Stripe = pełna kontrola przy od 1,5% + 1 zł. Dodaj Stripe Tax (+0,5%) gdy urośniesz."
+              },
+              {
+                q: "Jak rozliczać VAT z własnym kontem Stripe?",
+                a: "Poniżej €10 000/rok sprzedaży transgranicznej B2C w UE — VAT w swoim kraju. Powyżej — rejestracja EU OSS (jeden formularz, wszystkie kraje). Stripe Tax automatyzuje kalkulację za 0,5%. Skonsultuj się z doradcą podatkowym."
               }
             ].map((faq, i) => (
               <div key={i} className="p-6 rounded-xl bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600 transition-colors">
