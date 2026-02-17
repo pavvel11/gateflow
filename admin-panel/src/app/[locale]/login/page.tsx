@@ -6,12 +6,14 @@ import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import LoginForm from '@/components/LoginForm'
 import FloatingLanguageSwitcher from '@/components/FloatingLanguageSwitcher'
+import { useConfig } from '@/components/providers/config-provider'
 
 export default function LoginPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const t = useTranslations()
+  const { demoMode } = useConfig()
   const [errorMessage, setErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
 
@@ -97,7 +99,7 @@ export default function LoginPage() {
           <p className="text-gray-300">{t('auth.pleaseSignIn')}</p>
 
           {/* Demo mode credentials */}
-          {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' && (
+          {demoMode && (
             <div className="mt-4 p-4 rounded-xl text-sm bg-amber-500/10 text-amber-300 border border-amber-500/20">
               <div className="font-medium text-amber-200 mb-1">{t('demo.banner')}</div>
               <code className="text-xs font-mono">{t('demo.credentials')}</code>

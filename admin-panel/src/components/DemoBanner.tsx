@@ -2,13 +2,15 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { useConfig } from '@/components/providers/config-provider'
 
 /**
- * Demo Mode Banner — shown in dashboard when NEXT_PUBLIC_DEMO_MODE=true
+ * Demo Mode Banner — shown in dashboard when DEMO_MODE=true (via runtime config)
  *
  * Amber info banner with test card info. Dismissible per session.
  */
 export default function DemoBanner() {
+  const { demoMode } = useConfig()
   const [dismissed, setDismissed] = useState(() => {
     if (typeof window === 'undefined') return false
     return sessionStorage.getItem('demo-banner-dismissed') === 'true'
@@ -16,7 +18,7 @@ export default function DemoBanner() {
 
   const t = useTranslations('demo')
 
-  if (process.env.NEXT_PUBLIC_DEMO_MODE !== 'true' || dismissed) {
+  if (!demoMode || dismissed) {
     return null
   }
 

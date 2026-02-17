@@ -22,6 +22,7 @@ export async function GET() {
     stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY!,
     cloudflareSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY!,
     siteUrl: process.env.SITE_URL!,
+    demoMode: process.env.DEMO_MODE === 'true',
   }
 
   return NextResponse.json(config, {

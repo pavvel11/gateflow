@@ -8,6 +8,7 @@ interface AppConfig {
   stripePublishableKey: string
   cloudflareSiteKey: string
   siteUrl: string
+  demoMode: boolean
 }
 
 const ConfigContext = createContext<AppConfig | null>(null)

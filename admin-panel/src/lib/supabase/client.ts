@@ -6,6 +6,7 @@ interface RuntimeConfig {
   stripePublishableKey: string
   cloudflareSiteKey: string
   siteUrl: string
+  demoMode: boolean
 }
 
 // Shared cache key with ConfigProvider
@@ -66,7 +67,8 @@ async function getRuntimeConfig(): Promise<RuntimeConfig> {
       supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'demo-key',
       stripePublishableKey: '',
       cloudflareSiteKey: '',
-      siteUrl: 'http://localhost:3000'
+      siteUrl: 'http://localhost:3000',
+      demoMode: false,
     }
     cachedConfig = fallbackConfig
     return fallbackConfig

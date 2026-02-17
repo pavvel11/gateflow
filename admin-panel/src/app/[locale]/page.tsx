@@ -9,7 +9,7 @@ export const revalidate = 60;
 
 export default async function SmartLandingPage() {
   // Demo mode: always show the landing/about page as homepage
-  if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+  if (process.env.DEMO_MODE === 'true') {
     redirect('/about');
   }
 
