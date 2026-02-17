@@ -136,6 +136,16 @@ For EU-based sellers, the [VAT One Stop Shop (OSS)](https://vat-one-stop-shop.ec
 
 ---
 
+## Live Demo
+
+Try GateFlow without installing anything: **[gateflow.cytr.us](https://gateflow.cytr.us)**
+
+- Full admin panel access — browse products, dashboard, settings
+- Test checkout with Stripe test cards (`4242 4242 4242 4242`)
+- Data resets every hour
+
+---
+
 ## Quick Start
 
 ```bash
