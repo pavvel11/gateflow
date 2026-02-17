@@ -117,15 +117,15 @@ export function AboutPagePL() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-              <Link
-                href="/login"
+              <a
+                href="#deployment"
                 className="group relative inline-flex items-center px-8 py-4 rounded-xl text-lg font-bold text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 transform hover:scale-105"
               >
                 <span className="relative z-10">Wdróż za 0 zł</span>
                 <svg className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
-              </Link>
+              </a>
 
               <a
                 href="https://gateflow.cytr.us"
@@ -504,15 +504,15 @@ export function AboutPagePL() {
           <p className="text-2xl md:text-3xl text-white/90 leading-relaxed mb-8 italic">
             Wyobraź sobie: budzisz się rano i widzisz powiadomienie — <span className="font-bold text-white not-italic">&quot;Sprzedaż zrealizowana, gdy spałeś.&quot;</span> Żadna platforma nie pobrała prowizji. Żadna opłata miesięczna nie zjadła zysku. Twój produkt, Twój klient, Twój przychód.
           </p>
-          <Link
-            href="/login"
+          <a
+            href="#deployment"
             className="inline-flex items-center px-8 py-4 rounded-xl text-lg font-bold text-purple-700 bg-white hover:bg-gray-100 shadow-2xl transition-all duration-300 transform hover:scale-105"
           >
             Zacznij sprzedawać na swoich zasadach
             <svg className="ml-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
-          </Link>
+          </a>
         </div>
       </section>
 
@@ -789,7 +789,7 @@ export function AboutPagePL() {
       </section>
 
       {/* Deployment Options */}
-      <section className="py-24 bg-gray-50 dark:bg-gray-900">
+      <section id="deployment" className="py-24 bg-gray-50 dark:bg-gray-900 scroll-mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
@@ -888,7 +888,7 @@ export function AboutPagePL() {
 
           <div className="mt-8 text-center">
             <a
-              href="https://github.com/pavvel11/gateflow/blob/main/docs/DEPLOYMENT-MIKRUS.md"
+              href="https://github.com/pavvel11/gateflow#deployment"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center px-6 py-3 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
@@ -975,15 +975,17 @@ export function AboutPagePL() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-            <Link
-              href="/login"
+            <a
+              href="https://github.com/pavvel11/gateflow#deployment"
+              target="_blank"
+              rel="noopener noreferrer"
               className="group inline-flex items-center px-10 py-5 rounded-xl text-xl font-bold text-purple-600 bg-white hover:bg-gray-100 shadow-2xl transition-all duration-300 transform hover:scale-105"
             >
               Wdróż za 0 zł
               <svg className="ml-3 w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
-            </Link>
+            </a>
 
             <a
               href="https://github.com/pavvel11/gateflow"
