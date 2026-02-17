@@ -32,6 +32,10 @@ export default function DemoBanner() {
           <span className="font-medium">{t('banner')}</span>
           {' '}
           <code className="rounded bg-amber-100 px-1.5 py-0.5 font-mono text-xs dark:bg-amber-900/50">
+            {t('credentials')}
+          </code>
+          {' '}
+          <code className="rounded bg-amber-100 px-1.5 py-0.5 font-mono text-xs dark:bg-amber-900/50">
             {t('testCard')}
           </code>
         </p>

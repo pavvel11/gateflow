@@ -2243,6 +2243,7 @@
   },
   "demo": {
     "banner": "To jest instancja demo. Dane resetują się co godzinę.",
+    "credentials": "Login: demo@gateflow.io / demo123",
     "testCard": "Karta testowa: 4242 4242 4242 4242",
     "actionBlocked": "Ta akcja jest wyłączona w trybie demo.",
     "dismiss": "Zamknij",

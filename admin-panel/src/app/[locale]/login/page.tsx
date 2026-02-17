@@ -95,7 +95,15 @@ export default function LoginPage() {
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">GateFlow Admin</h1>
           <p className="text-gray-300">{t('auth.pleaseSignIn')}</p>
-          
+
+          {/* Demo mode credentials */}
+          {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' && (
+            <div className="mt-4 p-4 rounded-xl text-sm bg-amber-500/10 text-amber-300 border border-amber-500/20">
+              <div className="font-medium text-amber-200 mb-1">{t('demo.banner')}</div>
+              <code className="text-xs font-mono">{t('demo.credentials')}</code>
+            </div>
+          )}
+
           {/* Success message for payment completed */}
           {successMessage && (
             <div className="mt-4 p-4 rounded-xl text-sm bg-green-500/10 text-green-400 border border-green-500/20 animate-fade-in-shake">

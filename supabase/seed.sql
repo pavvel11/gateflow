@@ -4,6 +4,50 @@
 -- Enable pgcrypto extension for password hashing
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
+-- =====================================================
+-- DEMO ADMIN USER
+-- =====================================================
+-- Must be inserted FIRST so the handle_new_user_registration() trigger
+-- makes this user admin (first user in admin_users table).
+-- Credentials: demo@gateflow.io / demo123
+
+INSERT INTO auth.users (
+  instance_id, id, aud, role, email, encrypted_password,
+  email_confirmed_at, confirmation_token, recovery_token,
+  email_change_token_new, email_change, email_change_token_current, reauthentication_token,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+) VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  'dddddddd-0000-4000-a000-000000000000',
+  'authenticated',
+  'authenticated',
+  'demo@gateflow.io',
+  extensions.crypt('demo123', extensions.gen_salt('bf')),
+  NOW(),
+  '', '', '', '', '', '',
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  '{"full_name":"Demo Admin"}'::jsonb,
+  NOW(),
+  NOW()
+) ON CONFLICT DO NOTHING;
+
+INSERT INTO auth.identities (
+  provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
+) VALUES (
+  'dddddddd-0000-4000-a000-000000000000',
+  'dddddddd-0000-4000-a000-000000000000',
+  jsonb_build_object('sub', 'dddddddd-0000-4000-a000-000000000000', 'email', 'demo@gateflow.io'),
+  'email',
+  NOW(),
+  NOW(),
+  NOW()
+) ON CONFLICT DO NOTHING;
+
+-- Fallback: explicitly ensure demo user is admin even if trigger didn't fire
+INSERT INTO admin_users (user_id)
+VALUES ('dddddddd-0000-4000-a000-000000000000')
+ON CONFLICT DO NOTHING;
+
 -- Insert shop configuration (singleton)
 INSERT INTO shop_config (
   default_currency,
@@ -452,8 +496,8 @@ BEGIN
   (user3_id, pro_toolkit_id, NOW() - INTERVAL '3 days'),
   (user3_id, vip_masterclass_id, NOW());
 
-  -- Note: john.doe@example.com is automatically made admin by handle_new_user_registration() trigger
-  -- since it's the first user created in the system
+  -- Note: demo@gateflow.io is the admin (inserted first in seed, trigger assigns admin role).
+  -- john.doe@example.com, maria.schmidt@example.com, anna.kowalska@example.com are regular users.
 
 END $$;
 
