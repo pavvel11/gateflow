@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 
 export function AboutPageEN() {
   const [mounted, setMounted] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, isAdmin, loading } = useAuth();
   const t = useTranslations('about');
 
@@ -45,7 +46,8 @@ export function AboutPageEN() {
               </span>
             </Link>
 
-            <div className="flex items-center space-x-6">
+            {/* Desktop nav */}
+            <div className="hidden md:flex items-center space-x-6">
               <Link href="/store" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
                 Home
               </Link>
@@ -72,7 +74,44 @@ export function AboutPageEN() {
               )}
               <FloatingLanguageSwitcher mode="static" variant="compact" />
             </div>
+
+            {/* Mobile hamburger */}
+            <div className="flex items-center gap-2 md:hidden">
+              <FloatingLanguageSwitcher mode="static" variant="compact" />
+              <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {mobileMenuOpen
+                    ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  }
+                </svg>
+              </button>
+            </div>
           </div>
+
+          {/* Mobile menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-gray-200 dark:border-gray-800 py-3 space-y-1">
+              <Link href="/store" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg">
+                Home
+              </Link>
+              <Link href="/store" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg">
+                Products
+              </Link>
+              <a href="https://github.com/pavvel11/gateflow" target="_blank" rel="noopener noreferrer" className="block px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg">
+                GitHub
+              </a>
+              {isLoggedIn ? (
+                <Link href={isAdmin ? "/dashboard" : "/my-products"} onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-sm font-semibold text-purple-600 dark:text-purple-400">
+                  {isAdmin ? "Dashboard" : "My Products"}
+                </Link>
+              ) : (
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 text-sm font-semibold text-purple-600 dark:text-purple-400">
+                  Get Started
+                </Link>
+              )}
+            </div>
+          )}
         </div>
       </nav>
 
