@@ -628,7 +628,7 @@ pm2 logs gateflow-admin --err --lines 50
 
 - **Performance Optimization Details**: [BACKLOG.md](../BACKLOG.md) - Search for "Performance & Scalability"
 - **Upstash Redis Setup**: [UPSTASH-REDIS.md](./UPSTASH-REDIS.md)
-- **PM2 Advanced**: [deployment/advanced/PM2-VPS.md](../deployment/advanced/PM2-VPS.md)
+- **PM2 Advanced**: [PM2-VPS.md](./PM2-VPS.md)
 - **Benchmark Script**: `scripts/benchmark.js`
 
 ---

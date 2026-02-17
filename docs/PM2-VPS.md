@@ -1,7 +1,7 @@
 # Advanced PM2 Deployment - Production-Grade Setup
 
 **This is the ADVANCED guide for PM2 deployment.**
-For basic PM2 setup, see [DEPLOYMENT-MIKRUS.md](../../docs/DEPLOYMENT-MIKRUS.md).
+For basic PM2 setup, see [DEPLOYMENT-MIKRUS.md](./DEPLOYMENT-MIKRUS.md).
 
 ---
 
@@ -20,7 +20,7 @@ Use this guide if you need:
 **Prerequisites:**
 - You're comfortable with Node.js and process management
 - You understand PM2 basics (ecosystem files, pm2 commands)
-- You've read the basic PM2 setup in [DEPLOYMENT-MIKRUS.md](../../docs/DEPLOYMENT-MIKRUS.md)
+- You've read the basic PM2 setup in [DEPLOYMENT-MIKRUS.md](./DEPLOYMENT-MIKRUS.md)
 
 ---
 

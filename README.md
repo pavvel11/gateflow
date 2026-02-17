@@ -213,7 +213,7 @@ See **[FEATURES.md](./FEATURES.md)** for details on all integrations.
 | Guide | Best For |
 |-------|----------|
 | **[Deployment Guide](./docs/DEPLOYMENT-MIKRUS.md)** | VPS/mikr.us with PM2 (recommended) |
-| **[Advanced Options](./deployment/README.md)** | Docker, Full-Stack, PM2 Cluster |
+| **[Advanced Options](./docs/DEPLOYMENT.md)** | Docker, Full-Stack, PM2 Cluster |
 
 ---
 
