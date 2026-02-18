@@ -43,7 +43,7 @@ export default function FloatingLanguageSwitcher({
 
   const handleLanguageChange = (newLocale: string) => {
     startTransition(() => {
-      document.cookie = `locale=${newLocale}; path=/; max-age=31536000; SameSite=Lax`
+      document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`
       
       const segments = pathname.split('/').filter(Boolean)
       const currentLocale = segments[0]

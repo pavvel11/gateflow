@@ -64,6 +64,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const resolved = newTheme === 'system' ? getSystemTheme() : newTheme
     setResolvedTheme(resolved)
     applyTheme(resolved)
+    // Notify listeners (e.g. checkout force-theme tracking)
+    window.dispatchEvent(new CustomEvent('gf-theme-change', { detail: newTheme }))
   }, [])
 
   const cycleTheme = useCallback(() => {

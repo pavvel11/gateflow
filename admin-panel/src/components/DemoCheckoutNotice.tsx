@@ -72,7 +72,7 @@ export function DemoResetCountdown() {
   if (!demoMode || dismissed) return null
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full border border-amber-400/50 bg-amber-50/95 dark:bg-amber-950/95 backdrop-blur-sm px-3 py-1.5 text-xs shadow-lg">
+    <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 rounded-full border border-amber-400/50 bg-amber-50/95 dark:bg-amber-950/95 backdrop-blur-sm px-3 py-1.5 text-xs shadow-lg">
       <span className="text-amber-600 dark:text-amber-400">⏱</span>
       <span className="font-medium text-amber-800 dark:text-amber-200">
         {t('resetCountdown', { time: timeLeft })}

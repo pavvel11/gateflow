@@ -1835,6 +1835,15 @@
       "headingText": "Heading Text",
       "bodyTextPreview": "This is how your body text will look with the {font} font."
     },
+    "checkoutTheme": {
+      "title": "Checkout Theme",
+      "description": "Force a specific theme on checkout pages. 'System' follows the customer's device preference.",
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark",
+      "saveSuccess": "Checkout theme updated.",
+      "saveError": "Failed to save checkout theme."
+    },
     "legal": {
       "title": "Legal Documents",
       "description": "Configure URLs for your legal documents. Visitors will be redirected to these URLs when accessing /terms and /privacy pages.",
@@ -2230,6 +2239,8 @@
   },
   "demo": {
     "banner": "This is a demo instance. Data resets every hour.",
+    "bannerWithCountdown": "This is a demo instance. Data resets in {time}.",
+    "readonlyNotice": "All changes are read-only — edits will not be saved.",
     "credentials": "Login: demo@gateflow.io / demo123",
     "testCard": "Test card: 4242 4242 4242 4242",
     "actionBlocked": "This action is disabled in demo mode.",

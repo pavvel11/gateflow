@@ -1850,6 +1850,15 @@
       "headingText": "Tekst nagłówka",
       "bodyTextPreview": "Tak będzie wyglądał twój tekst z czcionką {font}."
     },
+    "checkoutTheme": {
+      "title": "Motyw koszyka",
+      "description": "Wymuś konkretny motyw na stronach koszyka. 'Systemowy' podąża za preferencjami urządzenia klienta.",
+      "system": "Systemowy",
+      "light": "Jasny",
+      "dark": "Ciemny",
+      "saveSuccess": "Motyw koszyka zaktualizowany.",
+      "saveError": "Nie udało się zapisać motywu koszyka."
+    },
     "legal": {
       "title": "Dokumenty prawne",
       "description": "Skonfiguruj adresy URL dokumentów prawnych. Odwiedzający zostaną przekierowani na te adresy po wejściu na strony /terms i /privacy.",
@@ -2245,6 +2254,8 @@
   },
   "demo": {
     "banner": "To jest instancja demo. Dane resetują się co godzinę.",
+    "bannerWithCountdown": "To jest instancja demo. Reset danych za {time}.",
+    "readonlyNotice": "Wszystkie zmiany są tylko do odczytu — edycje nie zostaną zapisane.",
     "credentials": "Login: demo@gateflow.io / demo123",
     "testCard": "Karta testowa: 4242 4242 4242 4242",
     "actionBlocked": "Ta akcja jest wyłączona w trybie demo.",

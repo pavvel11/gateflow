@@ -1,6 +1,7 @@
 import { verifyAdminAccess } from '@/lib/auth-server';
 import ShopSettings from '@/components/settings/ShopSettings';
 import BrandingSettings from '@/components/settings/BrandingSettings';
+import CheckoutThemeSettings from '@/components/settings/CheckoutThemeSettings';
 import StripeSettings from '@/components/settings/StripeSettings';
 import PaymentMethodSettingsWrapper from '@/components/settings/PaymentMethodSettingsWrapper';
 import OmnibusSettings from '@/components/settings/OmnibusSettings';
@@ -27,6 +28,8 @@ export default async function SettingsPage() {
       <ShopSettings />
 
       <BrandingSettings />
+
+      <CheckoutThemeSettings />
 
       <LegalDocumentsSettings />
 

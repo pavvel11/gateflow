@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Product } from '@/types';
 import { ExpressCheckoutConfig } from '@/types/payment-config';
 import FreeProductForm from './FreeProductForm';
@@ -49,28 +49,52 @@ function getProductUnavailableReason(product: Product): UnavailableReason {
 
 /**
  * Override theme on checkout page based on admin's shop_config.checkout_theme setting.
- * When force is 'light' or 'dark', it overrides the user's preference for this page only.
- * On unmount, the original theme is restored.
+ *
+ * Priority: user manual toggle (sessionStorage) > admin force > system default.
+ * If user clicks the theme toggle on checkout, their choice persists for the session.
+ * On next session (or cleared sessionStorage), admin's default applies again.
  */
-function useForceCheckoutTheme(checkoutTheme?: string) {
-  const { setTheme, theme } = useTheme();
+const CHECKOUT_USER_OVERRIDE_KEY = 'gf_checkout_theme_user';
 
+function useForceCheckoutTheme(checkoutTheme?: string) {
+  const { setTheme } = useTheme();
+  const skipNextEvent = useRef(false);
+
+  // Apply admin's default on mount — only if user hasn't overridden in this session
   useEffect(() => {
     if (!checkoutTheme || checkoutTheme === 'system') return;
 
-    // Save current user theme to restore on unmount
-    const originalTheme = theme;
-
-    if (checkoutTheme === 'light' || checkoutTheme === 'dark') {
-      setTheme(checkoutTheme);
+    const userOverride = sessionStorage.getItem(CHECKOUT_USER_OVERRIDE_KEY);
+    if (userOverride) {
+      // User already toggled manually in this session — respect their choice
+      skipNextEvent.current = true;
+      setTheme(userOverride as 'light' | 'dark' | 'system');
+      return;
     }
 
-    return () => {
-      // Restore user's original theme when leaving checkout
-      setTheme(originalTheme);
-    };
-    // Only run on mount — don't re-trigger when theme changes
+    // Mark next event as "ours" so the listener ignores it
+    skipNextEvent.current = true;
+    setTheme(checkoutTheme as 'light' | 'dark');
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkoutTheme]);
+
+  // Track user manual toggles via custom event from theme-provider
+  useEffect(() => {
+    if (!checkoutTheme || checkoutTheme === 'system') return;
+
+    const handler = (e: Event) => {
+      if (skipNextEvent.current) {
+        skipNextEvent.current = false;
+        return; // This was our forced setTheme, not user action
+      }
+      const newTheme = (e as CustomEvent).detail;
+      if (newTheme) {
+        sessionStorage.setItem(CHECKOUT_USER_OVERRIDE_KEY, newTheme);
+      }
+    };
+
+    window.addEventListener('gf-theme-change', handler);
+    return () => window.removeEventListener('gf-theme-change', handler);
   }, [checkoutTheme]);
 }
 
