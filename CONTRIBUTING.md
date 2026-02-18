@@ -108,6 +108,31 @@ Brief description of the change.
 How to verify this works.
 ```
 
+## Releases & Versioning
+
+We use [release-please](https://github.com/googleapis/release-please) for automated versioning. You don't need to manually bump versions or create tags.
+
+### How it works
+
+1. Commits land on `main` (via merged PRs)
+2. release-please automatically creates/updates a **Release PR** with a changelog and version bump
+3. When the Release PR is merged → tag, GitHub Release, and build artifact are created automatically
+
+### Commit message conventions
+
+Version bumps are determined by [Conventional Commits](https://www.conventionalcommits.org/) prefixes:
+
+| Prefix | Version bump | Example |
+|---|---|---|
+| `fix:` | patch (1.0.1 → 1.0.2) | `fix: prevent stale session after DB reset` |
+| `feat:` | minor (1.0.1 → 1.1.0) | `feat: add variant group support` |
+| `feat!:` | major (1.0.1 → 2.0.0) | `feat!: redesign checkout API` |
+| `chore:`, `docs:`, `ci:`, `refactor:` | no release | `chore: update dependencies` |
+
+### Manual release (emergency)
+
+Use the `workflow_dispatch` trigger on the **Build & Release** workflow in GitHub Actions.
+
 ## Reporting Issues
 
 Use [GitHub Issues](https://github.com/pavvel11/gateflow/issues) to report bugs or request features. Include:
