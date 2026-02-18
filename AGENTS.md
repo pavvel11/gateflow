@@ -623,6 +623,13 @@ Releases are manual. CI builds the `gateflow-build.tar.gz` artifact automaticall
 | `admin-panel/package.json` | `"version"` | `"1.0.2"` |
 | `README.md` | version badge URL | `version-1.0.2-blue` |
 
+**Before creating a release, always run tests:**
+
+```bash
+cd admin-panel
+bun tt              # vitest unit tests — MUST pass before every release
+```
+
 Then commit, push, and create the release:
 
 ```bash
@@ -648,7 +655,7 @@ The tar.gz contains: `.next/` (with `standalone/admin-panel/server.js`), `packag
 
 ### Deploying to server (mikrus-toolbox)
 
-Deploy scripts live in a separate repo: `pavvel11/mikrus-toolbox`.
+Deploy scripts live in a separate repo: `jurczykpawel/mikrus-toolbox`.
 
 ```bash
 # Fresh install

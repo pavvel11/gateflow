@@ -308,7 +308,7 @@ test.describe('Smart Landing Page', () => {
     await expect(subtitle).toBeVisible();
 
     // Should see GitHub link in navigation or CTA section
-    const githubLink = page.locator('a[href*="github.com/pavvel11/gateflow"]');
+    const githubLink = page.locator('a[href*="github.com/jurczykpawel/gateflow"]');
     await expect(githubLink.first()).toBeVisible();
 
     // Should see "Open Source" badge or text

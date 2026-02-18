@@ -15,7 +15,7 @@ Thank you for your interest in contributing to GateFlow! This guide will help yo
 
 ```bash
 # Clone the repository
-git clone https://github.com/pavvel11/gateflow.git
+git clone https://github.com/jurczykpawel/gateflow.git
 cd gateflow
 
 # Start local Supabase
@@ -148,7 +148,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/) prefixes for
 
 ## Reporting Issues
 
-Use [GitHub Issues](https://github.com/pavvel11/gateflow/issues) to report bugs or request features. Include:
+Use [GitHub Issues](https://github.com/jurczykpawel/gateflow/issues) to report bugs or request features. Include:
 
 - Steps to reproduce (for bugs)
 - Expected vs actual behavior
@@ -156,7 +156,7 @@ Use [GitHub Issues](https://github.com/pavvel11/gateflow/issues) to report bugs 
 
 ## Security
 
-For security vulnerabilities, please use [GitHub Security Advisories](https://github.com/pavvel11/gateflow/security/advisories/new) instead of public issues. See [SECURITY.md](./SECURITY.md) for details.
+For security vulnerabilities, please use [GitHub Security Advisories](https://github.com/jurczykpawel/gateflow/security/advisories/new) instead of public issues. See [SECURITY.md](./SECURITY.md) for details.
 
 ## License
 

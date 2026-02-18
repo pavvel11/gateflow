@@ -4,7 +4,7 @@
 
 **Self-hosted platform for selling and protecting digital products**
 
-[![Version](https://img.shields.io/badge/version-1.0.2-blue?style=flat-square)](https://github.com/pavvel11/gateflow/releases)
+[![Version](https://img.shields.io/badge/version-1.0.3-blue?style=flat-square)](https://github.com/jurczykpawel/gateflow/releases)
 [![Tests](https://img.shields.io/badge/tests-2,650%20passing-brightgreen?style=flat-square)](./admin-panel/tests)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
@@ -150,7 +150,7 @@ Try GateFlow without installing anything: **[gateflow.cytr.us](https://gateflow.
 
 ```bash
 # 1. Clone
-git clone https://github.com/pavvel11/gateflow.git
+git clone https://github.com/jurczykpawel/gateflow.git
 cd gateflow
 
 # 2. Start database
@@ -203,8 +203,8 @@ See **[FEATURES.md](./FEATURES.md)** for details on all integrations.
 
 ### One-Click Deploy
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fpavvel11%2Fgateflow&root-directory=admin-panel&env=SUPABASE_URL,SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,STRIPE_SECRET_KEY,STRIPE_PUBLISHABLE_KEY,STRIPE_WEBHOOK_SECRET,SITE_URL&envDescription=Required%20environment%20variables%20for%20GateFlow.%20See%20.env.example%20for%20all%20options.&envLink=https%3A%2F%2Fgithub.com%2Fpavvel11%2Fgateflow%2Fblob%2Fmain%2Fadmin-panel%2F.env.example&project-name=gateflow&repository-name=gateflow)
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/pavvel11/gateflow&base=admin-panel)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fjurczykpawel%2Fgateflow&root-directory=admin-panel&env=SUPABASE_URL,SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,STRIPE_SECRET_KEY,STRIPE_PUBLISHABLE_KEY,STRIPE_WEBHOOK_SECRET,SITE_URL&envDescription=Required%20environment%20variables%20for%20GateFlow.%20See%20.env.example%20for%20all%20options.&envLink=https%3A%2F%2Fgithub.com%2Fjurczykpawel%2Fgateflow%2Fblob%2Fmain%2Fadmin-panel%2F.env.example&project-name=gateflow&repository-name=gateflow)
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/jurczykpawel/gateflow&base=admin-panel)
 
 > **Coolify / Docker**: Create a new Application in Coolify, point to this repo, set **Base Directory** to `admin-panel`, and configure env vars from [.env.example](./admin-panel/.env.example).
 
@@ -264,6 +264,6 @@ MIT License. See [LICENSE](./LICENSE) for details.
 
 <div align="center">
 
-**[Website](https://gateflow.io)** · **[Documentation](./FEATURES.md)** · **[Report Bug](https://github.com/pavvel11/gateflow/issues)**
+**[Website](https://gateflow.io)** · **[Documentation](./FEATURES.md)** · **[Report Bug](https://github.com/jurczykpawel/gateflow/issues)**
 
 </div>

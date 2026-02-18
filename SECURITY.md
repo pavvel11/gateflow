@@ -17,7 +17,7 @@ We take the security of GateFlow seriously. If you believe you have found a secu
 
 ### How to Report
 
-Please report security vulnerabilities using [GitHub Security Advisories](https://github.com/pavvel11/gateflow/security/advisories/new).
+Please report security vulnerabilities using [GitHub Security Advisories](https://github.com/jurczykpawel/gateflow/security/advisories/new).
 
 Include the following information:
 - Type of vulnerability (e.g., XSS, SQL injection, authentication bypass)

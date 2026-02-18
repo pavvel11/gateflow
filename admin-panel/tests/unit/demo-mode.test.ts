@@ -195,34 +195,34 @@ describe('Server action demo guards', () => {
 
   // --- Throw-pattern actions ---
 
-  describe('categories (throw pattern)', () => {
-    it('createCategory throws in demo mode', async () => {
+  describe('categories (result pattern)', () => {
+    it('createCategory returns error in demo mode', async () => {
       // Mock supabase so the action doesn't actually connect
       vi.mock('@/lib/supabase/server', () => ({
         createClient: vi.fn(),
       }));
 
       const { createCategory } = await import('@/lib/actions/categories');
-      await expect(createCategory({ name: 'Test', slug: 'test' }))
-        .rejects.toThrow('This action is disabled in demo mode');
+      const result = await createCategory({ name: 'Test', slug: 'test' });
+      expect(result).toEqual({ success: false, error: 'This action is disabled in demo mode' });
     });
 
-    it('updateCategory throws in demo mode', async () => {
+    it('updateCategory returns error in demo mode', async () => {
       const { updateCategory } = await import('@/lib/actions/categories');
-      await expect(updateCategory('123', { name: 'Test', slug: 'test' }))
-        .rejects.toThrow('This action is disabled in demo mode');
+      const result = await updateCategory('123', { name: 'Test', slug: 'test' });
+      expect(result).toEqual({ success: false, error: 'This action is disabled in demo mode' });
     });
 
-    it('deleteCategory throws in demo mode', async () => {
+    it('deleteCategory returns error in demo mode', async () => {
       const { deleteCategory } = await import('@/lib/actions/categories');
-      await expect(deleteCategory('123'))
-        .rejects.toThrow('This action is disabled in demo mode');
+      const result = await deleteCategory('123');
+      expect(result).toEqual({ success: false, error: 'This action is disabled in demo mode' });
     });
 
-    it('updateProductCategories throws in demo mode', async () => {
+    it('updateProductCategories returns error in demo mode', async () => {
       const { updateProductCategories } = await import('@/lib/actions/categories');
-      await expect(updateProductCategories('prod-1', ['cat-1']))
-        .rejects.toThrow('This action is disabled in demo mode');
+      const result = await updateProductCategories('prod-1', ['cat-1']);
+      expect(result).toEqual({ success: false, error: 'This action is disabled in demo mode' });
     });
   });
 
