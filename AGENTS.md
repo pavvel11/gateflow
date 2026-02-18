@@ -615,7 +615,20 @@ CLOUDFLARE_TURNSTILE_SECRET_KEY=...
 
 Releases are manual. CI builds the `gateflow-build.tar.gz` artifact automatically.
 
+**Before creating a release, bump the version in all these files:**
+
+| File | Field | Example |
+|------|-------|---------|
+| `package.json` (root) | `"version"` | `"1.0.2"` |
+| `admin-panel/package.json` | `"version"` | `"1.0.2"` |
+| `README.md` | version badge URL | `version-1.0.2-blue` |
+
+Then commit, push, and create the release:
+
 ```bash
+git add -A && git commit -m "chore: bump version to 1.0.2"
+git push
+
 # Create release → CI builds tar.gz and attaches to release
 gh release create v1.0.2 --title "GateFlow v1.0.2" --notes "Changelog"
 
