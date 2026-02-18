@@ -69,7 +69,8 @@
       "mustBe10Digits": "NIP musi mieć 10 cyfr",
       "required": "NIP jest wymagany",
       "invalidFormat": "Nieprawidłowy format numeru NIP"
-    }
+    },
+    "checkoutBranding": "Ten koszyk jest open-source →"
   },
   "waitlist": {
     "joinWaitlist": "Dołącz do listy oczekujących",
@@ -98,8 +99,7 @@
     "acceptOffer": "Tak, chcę to!",
     "noThanks": "Nie, dziękuję",
     "goToProduct": "Przejdź do produktu",
-    "getMagicLink": "Wyślij link dostępowy",
-    "checkoutBranding": "Ten koszyk jest open-source →"
+    "getMagicLink": "Wyślij link dostępowy"
   },
   "common": {
     "loading": "Ładowanie...",

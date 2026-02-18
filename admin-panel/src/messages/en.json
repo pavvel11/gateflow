@@ -63,7 +63,8 @@
     "optional": "optional",
     "confirmEmailLabel": "I confirm the product will be linked to my account ({accountEmail}). Receipt will be sent to {purchaseEmail}.",
     "confirmEmailRequired": "Please confirm the product assignment to your account",
-    "emailMismatchWarning": "You are purchasing with {purchaseEmail}, but you are logged in as {accountEmail}. The product will be linked to your account."
+    "emailMismatchWarning": "You are purchasing with {purchaseEmail}, but you are logged in as {accountEmail}. The product will be linked to your account.",
+    "checkoutBranding": "This checkout is open-source →"
   },
   "waitlist": {
     "joinWaitlist": "Join the Waitlist",
@@ -92,8 +93,7 @@
     "acceptOffer": "Yes, I want this!",
     "noThanks": "No thanks",
     "goToProduct": "Go to my product",
-    "getMagicLink": "Send me access link",
-    "checkoutBranding": "This checkout is open-source →"
+    "getMagicLink": "Send me access link"
   },
   "common": {
     "loading": "Loading...",
