@@ -110,28 +110,41 @@ How to verify this works.
 
 ## Releases & Versioning
 
-We use [release-please](https://github.com/googleapis/release-please) for automated versioning. You don't need to manually bump versions or create tags.
+Releases are created manually. The **Build & Release** CI workflow builds the `gateflow-build.tar.gz` artifact automatically.
 
-### How it works
+### How to release
 
-1. Commits land on `main` (via merged PRs)
-2. release-please automatically creates/updates a **Release PR** with a changelog and version bump
-3. When the Release PR is merged → tag, GitHub Release, and build artifact are created automatically
+```bash
+# Create a new release (triggers CI build)
+gh release create v1.0.2 --title "GateFlow v1.0.2" --notes "Changelog here"
+
+# Or trigger build manually (without creating a release tag first)
+gh workflow run build-release.yml -f version=v1.0.2
+```
+
+### Deploying to server
+
+```bash
+# Update existing installation (downloads latest release from GitHub)
+./local/deploy.sh gateflow --ssh=mikrus --update
+
+# Or with a local build file
+./local/deploy.sh gateflow --ssh=mikrus --update --build-file=~/gateflow-build.tar.gz
+
+# Restart only (after .env.local changes)
+./local/deploy.sh gateflow --ssh=mikrus --update --restart
+```
 
 ### Commit message conventions
 
-Version bumps are determined by [Conventional Commits](https://www.conventionalcommits.org/) prefixes:
+We use [Conventional Commits](https://www.conventionalcommits.org/) prefixes for clarity:
 
-| Prefix | Version bump | Example |
-|---|---|---|
-| `fix:` | patch (1.0.1 → 1.0.2) | `fix: prevent stale session after DB reset` |
-| `feat:` | minor (1.0.1 → 1.1.0) | `feat: add variant group support` |
-| `feat!:` | major (1.0.1 → 2.0.0) | `feat!: redesign checkout API` |
-| `chore:`, `docs:`, `ci:`, `refactor:` | no release | `chore: update dependencies` |
-
-### Manual release (emergency)
-
-Use the `workflow_dispatch` trigger on the **Build & Release** workflow in GitHub Actions.
+| Prefix | Example |
+|---|---|
+| `fix:` | `fix: prevent stale session after DB reset` |
+| `feat:` | `feat: add variant group support` |
+| `chore:` | `chore: update dependencies` |
+| `docs:` | `docs: update CONTRIBUTING.md` |
 
 ## Reporting Issues
 

@@ -609,10 +609,54 @@ NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=...
 CLOUDFLARE_TURNSTILE_SECRET_KEY=...
 ```
 
-## CI/CD
+## CI/CD & Release Flow
 
-GitHub Actions (`.github/workflows/build-release.yml`) triggered by `v*` tags:
-`bun install --frozen-lockfile` → `bun run typecheck` → `bun run build` → GitHub Release.
+### Creating a release
+
+Releases are manual. CI builds the `gateflow-build.tar.gz` artifact automatically.
+
+```bash
+# Create release → CI builds tar.gz and attaches to release
+gh release create v1.0.2 --title "GateFlow v1.0.2" --notes "Changelog"
+
+# Or trigger build without release tag
+gh workflow run build-release.yml -f version=v1.0.2
+```
+
+### CI pipeline (`.github/workflows/build-release.yml`)
+
+Triggered by: `release created` event or `workflow_dispatch`.
+
+Steps: `bun install --frozen-lockfile` → `bun run typecheck` → `bun run build` → package tar.gz → upload to GitHub Release.
+
+The tar.gz contains: `.next/` (with `standalone/admin-panel/server.js`), `package.json`, `public/`, `supabase/migrations/`, `supabase/templates/`.
+
+**Important:** The standalone output has a nested `admin-panel/` directory inside `.next/standalone/` because the CI builds from `admin-panel/` with a parent `package.json` at repo root. Next.js file tracing detects the parent and creates this nested structure.
+
+### Deploying to server (mikrus-toolbox)
+
+Deploy scripts live in a separate repo: `pavvel11/mikrus-toolbox`.
+
+```bash
+# Fresh install
+./local/deploy.sh gateflow --ssh=mikrus --domain=example.com
+
+# Update (downloads latest release from GitHub automatically)
+./local/deploy.sh gateflow --ssh=mikrus --update
+
+# Update with local build file (when no release exists yet)
+./local/deploy.sh gateflow --ssh=mikrus --update --build-file=~/gateflow-build.tar.gz
+
+# Restart only (after .env.local changes, no file update)
+./local/deploy.sh gateflow --ssh=mikrus --update --restart
+```
+
+### Server instances
+
+| Instance | Directory | PM2 name | Port |
+|----------|-----------|----------|------|
+| Production | `/scripts/docker-compose/gateflow/` | `gateflow-tsa` | 3333 |
+| Demo | `/opt/stacks/gateflow-gateflow/` | `gateflow-gateflow` | 3334 |
 
 ## Deployment Policy
 
