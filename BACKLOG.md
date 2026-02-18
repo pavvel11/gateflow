@@ -2,27 +2,31 @@
 
 A comprehensive list of planned features, technical improvements, and ideas for the platform.
 
-## 🟡 Planned: Public Demo Instance
+## ✅ Done: Public Demo Instance
 
-**Status**: 📋 Planned (branch: `feature/demo-mode`)
-**Priority**: 🟡 Medium (po naprawieniu testów i publikacji repo)
+**Status**: ✅ Done - 2026-02
+**Live**: https://gateflow.cytr.us
 
-**Cel**: Postawić publiczne demo na `demo.gateflow.io`, żeby każdy mógł poklikać bez ryzyka.
+**Cel**: Publiczne demo żeby każdy mógł poklikać bez ryzyka.
 
 **Architektura**:
-1. Osobna instancja (VPS/kontener) z Supabase + admin-panel
-2. **Stripe Test Mode** — klucze `pk_test_`/`sk_test_`, użytkownicy testują checkout kartą `4242 4242 4242 4242`
-3. **Cron reset bazy co 1h** — `supabase db reset` przywraca `seed.sql` (czyste dane demo)
-4. Stałe konto demo: `demo@gateflow.io` / `demo123` (podane w README)
-5. Flaga `DEMO_MODE=true` w middleware — blokuje destrukcyjne akcje (usuwanie produktów, zmiana hasła admina)
+1. Osobna instancja na Mikrus VPS (PM2 standalone, port 3334)
+2. **Stripe Test Mode** — klucze `pk_test_`/`sk_test_`, karta testowa `4242 4242 4242 4242`
+3. **Cron reset bazy co 1h** — Supabase Edge Function resetuje dane
+4. Stałe konto demo: `demo@gateflow.io` / `demo123`
+5. Flaga `DEMO_MODE=true` — blokuje destrukcyjne akcje w middleware + server actions
 
-**Do zrobienia**:
-- [ ] Middleware `DEMO_MODE` — blokada DELETE/niebezpiecznych mutacji z komunikatem "Disabled in demo"
-- [ ] Seed.sql — rozbudować o realistyczne dane demo (kilka produktów, transakcji, userów)
-- [ ] Cron job — skrypt resetujący bazę co 1h
-- [ ] Deployment config — docker-compose/PM2 config dla instancji demo
-- [ ] README — dodać link do demo + info o test card
-- [ ] Opcjonalnie: banner "This is a demo instance" w UI
+**Zrealizowane**:
+- [x] Middleware `DEMO_MODE` — blokada mutacji na API routes z komunikatem "Disabled in demo"
+- [x] Demo guard w server actions — return `{ success: false, error }` zamiast throw
+- [x] Seed.sql — realistyczne dane demo (produkty, variant groups, transakcje, userzy)
+- [x] Cron job — Supabase Edge Function resetująca bazę co 1h
+- [x] Deployment config — PM2 ecosystem.config.js z `HOSTNAME='::'` (IPv6)
+- [x] README — link do demo + info o test card
+- [x] Demo banner w adminie — countdown do resetu + info readonly + credentials
+- [x] Demo checkout notice — test card info + floating countdown (bottom-left)
+- [x] Demo login — password login z pre-filled credentials (skip captcha & terms)
+- [x] Stale session fix — `getUser()` zamiast `getSession()` (obsługa resetu DB)
 
 ---
 
@@ -346,17 +350,17 @@ export async function rateLimit(
 ### 🛒 Checkout & Payments (Visuals & Logic)
 
 #### Pixel-Perfect Checkout UI & Invoice Handling (EasyCart Style)
-**Status**: 🟢 High Priority (Top)
+**Status**: ✅ Done - 2026-02-18
 **Description**: Comprehensive redesign of the cart and checkout experience to match the polish and usability of EasyCart (mobile & desktop).
-**Requirements**:
-- **Visuals**: Pixel-perfect design for both Desktop and Mobile versions. The cart must look flawless.
-- **Invoice Data (Dane do Faktury)**:
-    - Implement input fields for full invoice data (Company Name, VAT ID/NIP, Address).
-    - **Guest to User Sync**: Logic to capture billing details entered in the Stripe form during a guest checkout and automatically save them to the new User Profile upon account creation.
-- **Configurable Experience Options (Stripe Implementation)**:
-    1.  **Redirect Checkout**: Classic, Stripe-hosted payment process.
-    2.  **Embedded Checkout**: Seamless on-page form (Current Method).
-    3.  **Custom Checkout (Stripe Elements)**: Build a fully custom payment form using individual Elements for maximum layout control, similar to `easycart.pl`.
+**Implemented Features**:
+- ✅ **Custom Payment Form**: Full Stripe Elements integration (CustomPaymentForm.tsx) with card, name, email, address fields
+- ✅ **Invoice Data**: Company Name, NIP/VAT ID, full address with GUS REGON auto-fill
+- ✅ **Guest to User Sync**: Billing details captured during guest checkout and saved to user profile
+- ✅ **EasyCart-style Layout**: Product showcase (left) + payment form (right) on desktop, stacked on mobile
+- ✅ **Free Product Form**: Dedicated form for $0 products with email capture
+- ✅ **Dark/Light Theme Support**: Fully responsive checkout backgrounds and Stripe Elements theme
+- ✅ **Order Bumps**: Integrated bump offers with discount display in checkout
+- ✅ **Responsive Design**: Mobile-first checkout experience with proper spacing and typography
 
 #### Stripe Configuration Wizard (Restricted API Keys)
 **Status**: ✅ Done - 2025-12-27
@@ -508,10 +512,16 @@ export async function rateLimit(
 ### 🔌 Integrations & Automation
 
 #### Model Context Protocol (MCP) Server
-**Status**: 💭 Idea
+**Status**: ✅ Done - 2026-02
 **Priority**: 🟡 Medium
-**Effort**: ~1-2 weeks
-**Description**: Implement MCP server for AI-powered management and automation of GateFlow through Claude and other AI assistants.
+**Description**: MCP server for AI-powered management and automation of GateFlow through Claude and other AI assistants.
+
+**Implemented** (`/mcp-server`):
+- ✅ **7 Tool Modules**: products, analytics, coupons, payments, users, webhooks, system
+- ✅ **Authentication**: API key-based auth via GateFlow API
+- ✅ **Claude Desktop Integration**: Config template in `claude-desktop-config.json`
+- ✅ **Tests**: Vitest test suite for MCP protocol
+- ✅ **Standalone Package**: Independent `/mcp-server` directory with own `package.json`
 
 **Why This Matters**:
 - **AI-Native Management**: Manage entire shop through conversational AI interface
@@ -699,7 +709,7 @@ Claude → list_customers → grant_access (batch) → Done
 ---
 
 #### Outgoing Webhooks (Automation)
-**Status**: 🏗️ Partially Done (v1.5 Implemented)
+**Status**: ✅ Done (v1.5) - 2025-12-19
 **Description**: Trigger external automations when key events occur in GateFlow. Essential for CRM, Mailing, and Marketing Automation.
 
 **v1.5 Implemented (Done 2025-12-19)**:
@@ -1802,6 +1812,30 @@ CREATE TABLE update_settings (
 ---
 
 ## ✅ Completed Features
+
+### 🎨 Theme & Appearance (2026-02-18)
+
+#### Dark/Light Theme Toggle
+**Completed**: 2026-02-18
+- ✅ **Class-based dark mode**: Tailwind v4 `@custom-variant dark` (replaces OS media query)
+- ✅ **ThemeProvider**: localStorage persistence (`gf_theme`), system/light/dark modes
+- ✅ **FloatingToolbar toggle**: Sun/moon icon, cycle system→light→dark
+- ✅ **FOUC prevention**: Inline `<script>` applies `.dark` class before hydration
+- ✅ **Responsive checkout**: All checkout components support light/dark backgrounds, Stripe Elements theme switches dynamically
+
+#### Force Checkout Theme (Admin Setting)
+**Completed**: 2026-02-18
+- ✅ **Admin UI**: CheckoutThemeSettings in Settings page (System/Light/Dark buttons, auto-save)
+- ✅ **DB column**: `shop_config.checkout_theme` (system/light/dark)
+- ✅ **Server-side prop**: Checkout page reads `shop_config`, passes to client
+- ✅ **User override**: Manual toggle on checkout persists per session (sessionStorage), respects user choice over admin default
+
+#### GateFlow Branding Watermark
+**Completed**: 2026-02-18
+- ✅ **Checkout footer**: "This checkout is open-source → GateFlow" link to gateflow.cytr.us
+- ✅ **License-gated**: Hidden when valid GateFlow license (ECDSA P-256, time-limited or unlimited) is active for the domain
+- ✅ **Server-side verification**: License check in checkout page.tsx, no external API call
+- ✅ **i18n**: EN/PL translations
 
 ### 🛒 Checkout & Compliance (2025-12-28 - 2025-12-30)
 
