@@ -66,3 +66,6 @@ bruno/environments/*.bru
 
 # Local dev server config
 Caddyfile
+
+# Internal backlog (not for public repo)
+INTERNAL_BACKLOG.md
