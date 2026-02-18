@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS products (
   ), -- Enhanced ISO 4217 currency codes validation
 
   -- VAT/Tax configuration
-  vat_rate DECIMAL(5,2) DEFAULT 23.00, -- VAT rate percentage (e.g., 23.00 for 23%)
+  vat_rate DECIMAL(5,2) DEFAULT NULL, -- VAT rate percentage (e.g., 23.00 for 23%); NULL = use shop_config.tax_rate
   price_includes_vat BOOLEAN DEFAULT true NOT NULL, -- Whether price already includes VAT
 
   -- Structured features for better product presentation

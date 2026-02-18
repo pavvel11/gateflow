@@ -39,7 +39,7 @@ export default function ShopSettings() {
             default_currency: data.default_currency,
             shop_name: data.shop_name,
             contact_email: data.contact_email || '',
-            tax_rate: data.tax_rate?.toString() || '',
+            tax_rate: data.tax_rate ? Math.round(data.tax_rate * 100).toString() : '',
           });
         }
       } catch (error) {
@@ -60,7 +60,7 @@ export default function ShopSettings() {
         default_currency: formData.default_currency,
         shop_name: formData.shop_name,
         contact_email: formData.contact_email || null,
-        tax_rate: formData.tax_rate ? parseFloat(formData.tax_rate) : null,
+        tax_rate: formData.tax_rate ? parseFloat(formData.tax_rate) / 100 : null,
       };
 
       const success = await updateShopConfig(updates);
@@ -155,19 +155,22 @@ export default function ShopSettings() {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {t('taxRate')}
             <span className="block text-xs text-gray-500 dark:text-gray-400 font-normal mt-1">
-              Enter as decimal (e.g., 0.23 for 23% VAT)
+              {t('taxRateHelp')}
             </span>
           </label>
-          <input
-            type="number"
-            step="0.0001"
-            min="0"
-            max="1"
-            value={formData.tax_rate}
-            onChange={(e) => setFormData({ ...formData, tax_rate: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder={t('taxRatePlaceholder')}
-          />
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              step="1"
+              min="0"
+              max="100"
+              value={formData.tax_rate}
+              onChange={(e) => setFormData({ ...formData, tax_rate: e.target.value })}
+              className="w-32 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder={t('taxRatePlaceholder')}
+            />
+            <span className="text-sm text-gray-500 dark:text-gray-400">%</span>
+          </div>
         </div>
 
         {/* Save Button */}

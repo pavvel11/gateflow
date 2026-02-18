@@ -50,6 +50,9 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
   // Omnibus Directive global setting
   const [omnibusEnabled, setOmnibusEnabled] = useState<boolean>(true);
 
+  // Shop-level default VAT rate (from shop_config.tax_rate, stored as decimal e.g. 0.23)
+  const [shopDefaultVatRate, setShopDefaultVatRate] = useState<number | null>(null);
+
   // OTO (One-Time Offer) state
   const [oto, setOto] = useState<OtoState>(initialOtoState);
 
@@ -89,10 +92,12 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
         });
       }
 
-      // Fetch Omnibus Directive global setting
+      // Fetch Omnibus Directive global setting + default VAT rate
       getShopConfig().then(config => {
         if (config) {
           setOmnibusEnabled(config.omnibus_enabled);
+          // tax_rate is stored as decimal (0.23 = 23%)
+          setShopDefaultVatRate(config.tax_rate ?? null);
         }
       }).catch(err => {
         console.error('Failed to fetch shop config', err);
@@ -145,6 +150,9 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
         refund_period_days: (product as Product & { refund_period_days?: number | null }).refund_period_days || null,
         // Waitlist settings
         enable_waitlist: product.enable_waitlist || false,
+        // VAT/Tax
+        vat_rate: product.vat_rate ?? null,
+        price_includes_vat: product.price_includes_vat ?? true,
         // Pay What You Want / Custom Pricing
         allow_custom_price: product.allow_custom_price || false,
         custom_price_min: product.custom_price_min || 5.00,
@@ -181,11 +189,12 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
       setSalePriceDisplayValue(product.sale_price ? product.sale_price.toString().replace('.', ',') : '');
       setSlugModified(true);
     } else {
-      // For new products
+      // For new products — copy shop default VAT rate so it's explicit per product
       setFormData({
         ...initialFormData,
         currency: defaultCurrency,
         icon: getIconEmoji('rocket'),
+        vat_rate: shopDefaultVatRate != null ? Math.round(shopDefaultVatRate * 100) : null,
       });
       setPriceDisplayValue('');
       setSalePriceDisplayValue('');
@@ -200,6 +209,16 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
       }, 100);
     }
   }, [product, isOpen, defaultCurrency]);
+
+  // When shop default VAT rate loads, apply it to new products (if user hasn't set one yet)
+  useEffect(() => {
+    if (!product && isOpen && shopDefaultVatRate != null) {
+      setFormData(prev => {
+        if (prev.vat_rate != null) return prev; // user already set a value
+        return { ...prev, vat_rate: Math.round(shopDefaultVatRate * 100) };
+      });
+    }
+  }, [product, isOpen, shopDefaultVatRate]);
 
   // Fetch products for OTO dropdown using v1 API
   useEffect(() => {
@@ -524,6 +543,7 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
     // Settings
     defaultCurrency,
     omnibusEnabled,
+    shopDefaultVatRate,
 
     // OTO
     oto,

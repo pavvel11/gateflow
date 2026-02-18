@@ -256,7 +256,7 @@ export function AboutPagePL() {
             Zmęczony płaceniem abonamentu ZANIM cokolwiek sprzedasz?
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
-            EasyCart pobiera <span className="font-bold text-red-600">100 zł/miesiąc</span> nawet jeśli tylko zbierasz leady darmowymi produktami.
+            EasyCart pobiera <span className="font-bold text-red-600">100 zł/miesiąc</span> nawet jeśli dopiero budujesz listę mailingową darmowymi produktami.
             <span className="block mt-4 text-2xl font-bold text-gray-900 dark:text-white">
               To 1,200 zł/rok ryzyko PRZED pierwszym przychodem! 💸
             </span>
@@ -264,7 +264,7 @@ export function AboutPagePL() {
           <div className="grid md:grid-cols-2 gap-4 max-w-3xl mx-auto">
             <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800">
               <div className="text-red-600 dark:text-red-400 font-bold mb-2">❌ EasyCart</div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">Płać 100 zł/mies żeby zbierać leady</div>
+              <div className="text-sm text-gray-700 dark:text-gray-300">Płać 100 zł/mies. nawet za zbieranie leadów</div>
             </div>
             <div className="p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border-2 border-green-300 dark:border-green-700">
               <div className="text-green-600 dark:text-green-400 font-bold mb-2">✅ GateFlow</div>
@@ -426,7 +426,7 @@ export function AboutPagePL() {
                 </svg>
               </div>
               <h3 className="text-lg font-bold text-white mb-2">Limity & Zwroty</h3>
-              <p className="text-sm text-cyan-50">Twórz pilność i obsługuj zwroty bez stresu. Limity + formularz zwrotu z auto-Stripe.</p>
+              <p className="text-sm text-cyan-50">Buduj poczucie pilności limitami czasowymi i ilościowymi. Formularz zwrotu z automatycznym procesowaniem przez Stripe.</p>
             </div>
 
           </div>
@@ -607,7 +607,7 @@ export function AboutPagePL() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-              Przestań płacić miesięczne opłaty na zawsze
+              Koniec z miesięcznymi opłatami
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300">
               Zobacz ile oszczędzasz vs alternatywy SaaS
@@ -620,7 +620,7 @@ export function AboutPagePL() {
               <div className="flex items-start justify-between mb-6">
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">EasyCart</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Wybierz swoją pułapkę</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Pułapka cenowa — wybierz plan</p>
                 </div>
                 <div className="text-3xl">😢</div>
               </div>
@@ -700,7 +700,7 @@ export function AboutPagePL() {
 
           <div className="mt-12 text-center">
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
-              * Łącznie z opłatami Stripe. EasyCart pobiera abonament + prowizję platformy + opłaty Stripe. GateFlow pobiera tylko opłaty Stripe.
+              * Łącznie z opłatami Stripe. EasyCart pobiera abonament + prowizję platformy + opłaty Stripe. GateFlow jest darmowy — płacisz wyłącznie opłaty procesora płatności (Stripe).
             </p>
 
             {/* CTA after Pricing - Most Important */}
@@ -958,7 +958,7 @@ export function AboutPagePL() {
               },
               {
                 q: "Czym różni się od Gumroad czy Teachable?",
-                a: "Gumroad pobiera 10% od sprzedaży. Teachable kosztuje $39-665/mies. GateFlow nie pobiera nic — hostujesz sam, jesteś właścicielem kodu i danych, zatrzymujesz wszystko minus opłaty Stripe."
+                a: "Gumroad pobiera 10% od sprzedaży. Teachable kosztuje $39-665/mies. GateFlow jest darmowy — hostujesz sam, jesteś właścicielem kodu i danych. Jedyne opłaty to prowizja Stripe za przetwarzanie płatności."
               },
               {
                 q: "Czy muszę być programistą?",

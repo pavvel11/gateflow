@@ -1554,10 +1554,10 @@ CREATE TABLE update_settings (
 - ✅ **E2E Tests**: 11 comprehensive Playwright tests covering all branding features
 
 **Next Steps** (Future Enhancement):
-- 📋 **Custom CSS Injection**: Allow advanced users to inject custom CSS for ultimate control
+- 📋 **Custom CSS Injection**: Allow advanced users to inject custom CSS for ultimate control (→ Pro License feature)
 - 📋 **Favicon Upload**: Separate favicon configuration
 - 📋 **Theme Presets**: Pre-configured color schemes (e.g., "Dark Mode", "Pastel", "Bold")
-- 📋 **Custom Domain Branding**: Hide "Powered by GateFlow" when using custom domain
+- 📋 **Full Whitelabel**: Remove all GateFlow branding (→ patrz sekcja [Monetization & Business Model](#-monetization--business-model), Pro License)
 
 #### Smart Landing Page (Dynamic Storefront)
 **Status**: ✅ Done - 2025-12-27
@@ -1645,6 +1645,83 @@ CREATE TABLE update_settings (
 - Added to main navigation in `DashboardLayout.tsx`
 - Route: `/[locale]/about`
 - Accessible to both authenticated and guest users
+
+---
+
+## 💰 Monetization & Business Model
+
+**Status**: 📋 Planned
+**Priority**: 🟢 High — kluczowe dla sustainability projektu
+
+GateFlow jest open-source (MIT), ale potrzebuje modelu monetyzacji. Poniżej opcje i plan.
+
+### Model: Open Core + Managed Hosting
+
+#### Tier 1: Community (Free, Self-Hosted)
+- Pełny kod źródłowy (MIT)
+- Wszystkie core features (produkty, checkout, Stripe, analytics, webhooks)
+- Self-hosted na własnym VPS/Docker
+- "Powered by GateFlow" watermark na checkout
+- Community support (GitHub Issues/Discussions)
+
+#### Tier 2: Pro License (~$29-49/mo lub jednorazowo ~$199)
+- **Remove "Powered by GateFlow" watermark** (license key per domain, ECDSA P-256 — mechanizm już zaimplementowany)
+- **Custom Domain Branding** — pełny whitelabel bez śladu GateFlow
+- **Priority support** (email/Discord)
+- **Early access** do nowych features
+- Self-hosted — ten sam kod, license key odblokowuje premium features
+
+#### Tier 3: Managed Cloud (~$49-99/mo)
+- Hosted instance — zero DevOps, auto-updates, backups
+- Custom domain + SSL
+- Wszystko z Pro License
+- Auto-scaling, monitoring, CDN
+- SLA (99.9% uptime)
+
+### Już zaimplementowane (fundamenty monetyzacji)
+
+| Element | Status | Opis |
+|---------|--------|------|
+| GateFlow Branding Watermark | ✅ Done | Checkout footer z linkiem, widoczny domyślnie |
+| License Verification | ✅ Done | ECDSA P-256, server-side check w checkout page.tsx |
+| License-Gated Watermark | ✅ Done | Watermark ukryty gdy valid license key |
+| Branding & Whitelabel MVP | ✅ Done | Logo, kolory, fonty — działa bez licencji |
+| Demo Instance | ✅ Done | gateflow.cytr.us — showcase dla potencjalnych klientów |
+
+### Do zrobienia
+
+#### 1. License Key Infrastructure
+**Priority**: 🟢 High
+- [ ] Panel do generowania license keys (admin dashboard lub osobna aplikacja)
+- [ ] License key validation endpoint (API do sprawdzania ważności)
+- [ ] License key activation flow w admin panelu klienta (wklej key → walidacja → aktywacja)
+- [ ] Dashboard: status licencji, data wygaśnięcia, przypisana domena
+- [ ] Stripe integration — automatyczne generowanie key po zakupie
+
+#### 2. Paywall dla Premium Features
+**Priority**: 🟡 Medium
+- [ ] Rozszerzenie license check na więcej feature'ów (nie tylko watermark):
+  - Custom CSS Injection (pro)
+  - Priority webhook delivery (pro)
+  - Advanced analytics / export (pro)
+  - White-label email templates (pro)
+- [ ] Graceful degradation — feature działa, ale z ograniczeniami (np. export max 100 rows)
+- [ ] In-app upgrade prompts — delikatne CTA "Unlock with Pro"
+
+#### 3. Managed Cloud Platform
+**Priority**: 🔵 Low (po walidacji Pro License)
+- [ ] Multi-tenant architecture (shared Supabase lub per-tenant instances)
+- [ ] Provisioning API — auto-create instance po zakupie
+- [ ] Billing integration (Stripe Subscriptions)
+- [ ] Admin super-panel do zarządzania tenantami
+- [ ] Auto-updates, monitoring, alerting
+
+#### 4. Marketing & Sales
+**Priority**: 🟡 Medium
+- [ ] Landing page gateflow.cytr.us → pricing page z tier comparison
+- [ ] "Upgrade" CTA w admin panelu (widoczny na free tier)
+- [ ] Testimonials / case studies z demo users
+- [ ] Porównanie z konkurencją (EasyCart, Gumroad, Paddle)
 
 ---
 
@@ -1984,5 +2061,5 @@ CREATE TABLE update_settings (
 
 ---
 
-**Last Updated**: 2026-01-06
-**Version**: 2.2
+**Last Updated**: 2026-02-18
+**Version**: 2.3

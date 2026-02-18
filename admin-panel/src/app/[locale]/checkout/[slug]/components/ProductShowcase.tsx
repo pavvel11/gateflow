@@ -31,9 +31,9 @@ export default function ProductShowcase({ product }: ProductShowcaseProps) {
   const effectivePrice = isSaleActive ? product.sale_price! : product.price;
 
   // Calculate net price if VAT is included
-  const vatRate = product.vat_rate || 23;
+  const vatRate = product.vat_rate || 0;
   const grossPrice = effectivePrice;
-  const netPrice = product.price_includes_vat
+  const netPrice = product.price_includes_vat && vatRate > 0
     ? grossPrice / (1 + vatRate / 100)
     : grossPrice;
   const vatAmount = grossPrice - netPrice;

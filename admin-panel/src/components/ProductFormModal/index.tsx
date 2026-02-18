@@ -59,6 +59,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
     allCategories,
     loadingCategories,
     omnibusEnabled,
+    shopDefaultVatRate,
     oto,
     setOto,
     urlValidation,
@@ -133,6 +134,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             priceDisplayValue={priceDisplayValue}
             setPriceDisplayValue={setPriceDisplayValue}
             onIconSelect={handleIconSelect}
+            shopDefaultVatRate={shopDefaultVatRate}
           />
 
           {/* Sale Price */}

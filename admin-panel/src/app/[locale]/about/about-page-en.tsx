@@ -609,7 +609,7 @@ export function AboutPageEN() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-              Stop paying monthly fees forever
+              No more monthly fees. Ever.
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300">
               See how much you save vs SaaS alternatives
@@ -622,7 +622,7 @@ export function AboutPageEN() {
               <div className="flex items-start justify-between mb-6">
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">EasyCart</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Choose your trap</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Pricing trap — pick a plan</p>
                 </div>
                 <div className="text-3xl">😢</div>
               </div>
@@ -702,7 +702,7 @@ export function AboutPageEN() {
 
           <div className="mt-12 text-center">
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
-              * Including Stripe payment processing. EasyCart charges subscription + platform fees + Stripe fees. GateFlow charges only Stripe fees.
+              * Including Stripe payment processing. EasyCart charges subscription + platform fees + Stripe fees. GateFlow is free — you only pay Stripe processing fees.
             </p>
 
             {/* CTA after Pricing - Most Important */}
@@ -960,7 +960,7 @@ export function AboutPageEN() {
               },
               {
                 q: "How is it different from Gumroad or Teachable?",
-                a: "Gumroad takes 10% per sale. Teachable charges $39-665/mo. GateFlow charges nothing — you self-host it, own the code and data, and keep everything minus Stripe fees."
+                a: "Gumroad takes 10% per sale. Teachable charges $39-665/mo. GateFlow is free — you self-host it, own the code and data. The only cost is Stripe's processing fee."
               },
               {
                 q: "Do I need to be a developer?",

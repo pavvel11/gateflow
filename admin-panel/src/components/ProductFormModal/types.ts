@@ -49,6 +49,9 @@ export interface ProductFormData {
   refund_period_days?: number | null;
   // Waitlist settings (for inactive products)
   enable_waitlist: boolean;
+  // VAT/Tax configuration
+  vat_rate?: number | null;
+  price_includes_vat: boolean;
   // Pay What You Want / Custom Pricing
   allow_custom_price: boolean;
   custom_price_min: number;
@@ -183,6 +186,9 @@ export const initialFormData: ProductFormData = {
   refund_period_days: null,
   // Waitlist settings
   enable_waitlist: false,
+  // VAT/Tax
+  vat_rate: null,
+  price_includes_vat: true,
   // Pay What You Want / Custom Pricing
   allow_custom_price: false,
   custom_price_min: 5.00,

@@ -184,12 +184,12 @@ export default function LicenseSettings() {
             <li>
               {t('howItWorks4')}{' '}
               <a
-                href="https://gateflow.pl/pricing"
+                href="https://gateflow.cytr.us"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-purple-600 hover:underline dark:text-purple-400"
               >
-                gateflow.pl/pricing
+                gateflow.cytr.us
               </a>
             </li>
           </ul>

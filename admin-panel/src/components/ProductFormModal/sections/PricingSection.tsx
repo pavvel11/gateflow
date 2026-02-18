@@ -9,6 +9,7 @@ import { Info } from 'lucide-react';
 
 interface ExtendedPricingSectionProps extends PricingSectionProps {
   onIconSelect: (icon: string) => void;
+  shopDefaultVatRate?: number | null;
 }
 
 export function PricingSection({
@@ -18,6 +19,7 @@ export function PricingSection({
   priceDisplayValue,
   setPriceDisplayValue,
   onIconSelect,
+  shopDefaultVatRate,
 }: ExtendedPricingSectionProps) {
 
   const handleCurrencyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -294,6 +296,53 @@ export function PricingSection({
           )}
         </div>
       )}
+
+      {/* VAT / Tax Configuration */}
+      <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg space-y-4">
+        <div className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            id="price_includes_vat"
+            checked={formData.price_includes_vat}
+            onChange={(e) => setFormData(prev => ({ ...prev, price_includes_vat: e.target.checked }))}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <div className="flex-1">
+            <label htmlFor="price_includes_vat" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+              {t('vatIncluded')}
+            </label>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {t('vatIncludedHelp')}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="vat_rate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            {t('vatRate')}
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              id="vat_rate"
+              value={formData.vat_rate ?? ''}
+              onChange={(e) => setFormData(prev => ({
+                ...prev,
+                vat_rate: e.target.value === '' ? null : parseFloat(e.target.value)
+              }))}
+              min="0"
+              max="100"
+              step="1"
+              placeholder={shopDefaultVatRate != null ? `${Math.round(shopDefaultVatRate * 100)}` : '23'}
+              className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            />
+            <span className="text-sm text-gray-500 dark:text-gray-400">%</span>
+          </div>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            {t('vatRateHelp', { defaultRate: shopDefaultVatRate != null ? `${Math.round(shopDefaultVatRate * 100)}%` : '—' })}
+          </p>
+        </div>
+      </div>
 
       {/* Product Image URL */}
       <div className="mt-6">
