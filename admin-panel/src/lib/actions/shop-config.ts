@@ -20,6 +20,9 @@ export interface ShopConfig {
   accent_color?: string | null
   font_family?: 'system' | 'inter' | 'roboto' | 'montserrat' | 'poppins' | 'playfair' | null
 
+  // Checkout appearance
+  checkout_theme?: 'system' | 'light' | 'dark' | null
+
   // EU Omnibus Directive (2019/2161)
   omnibus_enabled: boolean
 

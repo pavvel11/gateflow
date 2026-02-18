@@ -373,6 +373,9 @@ CREATE TABLE IF NOT EXISTS public.shop_config (
   accent_color TEXT DEFAULT '#8b5cf6', -- violet-500
   font_family TEXT DEFAULT 'system' CHECK (font_family IN ('system', 'inter', 'roboto', 'montserrat', 'poppins', 'playfair')),
 
+  -- Checkout appearance
+  checkout_theme TEXT DEFAULT 'system' CHECK (checkout_theme IN ('system', 'light', 'dark')),
+
   -- Legal Documents
   terms_of_service_url TEXT,
   privacy_policy_url TEXT,

@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Class-based dark mode (controlled by ThemeProvider via .dark on <html>) */
+@custom-variant dark (&:where(.dark *));
+
 /* Modal animations */
 @keyframes modalIn {
   from {
@@ -83,28 +86,26 @@
 }
 
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --card: #0a0a0a;
-    --card-foreground: #ededed;
-    --popover: #0a0a0a;
-    --popover-foreground: #ededed;
-    --primary: #ededed;
-    --primary-foreground: #0a0a0a;
-    --secondary: #1a1a1a;
-    --secondary-foreground: #ededed;
-    --muted: #1a1a1a;
-    --muted-foreground: #a3a3a3;
-    --accent: #1a1a1a;
-    --accent-foreground: #ededed;
-    --destructive: #ef4444;
-    --destructive-foreground: #ffffff;
-    --border: #262626;
-    --input: #262626;
-    --ring: #ededed;
-  }
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --card: #0a0a0a;
+  --card-foreground: #ededed;
+  --popover: #0a0a0a;
+  --popover-foreground: #ededed;
+  --primary: #ededed;
+  --primary-foreground: #0a0a0a;
+  --secondary: #1a1a1a;
+  --secondary-foreground: #ededed;
+  --muted: #1a1a1a;
+  --muted-foreground: #a3a3a3;
+  --accent: #1a1a1a;
+  --accent-foreground: #ededed;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #262626;
+  --input: #262626;
+  --ring: #ededed;
 }
 
 body {
@@ -166,7 +167,7 @@ body {
 /* Custom styles for datetime-local and date inputs */
 input[type="datetime-local"],
 input[type="date"] {
-  color-scheme: dark;
+  color-scheme: light;
   position: relative;
 }
 

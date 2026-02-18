@@ -98,7 +98,8 @@
     "acceptOffer": "Tak, chcę to!",
     "noThanks": "Nie, dziękuję",
     "goToProduct": "Przejdź do produktu",
-    "getMagicLink": "Wyślij link dostępowy"
+    "getMagicLink": "Wyślij link dostępowy",
+    "checkoutBranding": "Ten koszyk jest open-source →"
   },
   "common": {
     "loading": "Ładowanie...",
@@ -2248,6 +2249,12 @@
     "testCard": "Karta testowa: 4242 4242 4242 4242",
     "actionBlocked": "Ta akcja jest wyłączona w trybie demo.",
     "dismiss": "Zamknij",
-    "checkoutBanner": "Tryb demo — użyj karty testowej 4242 4242 4242 4242"
+    "checkoutBanner": "Tryb Demo",
+    "checkoutBannerDesc": "Żadne prawdziwe transakcje nie są przetwarzane. Użyj testowej karty Stripe lub kliknij przycisk autouzupełniania w formularzu płatności.",
+    "checkoutTestCard": "4242 4242 4242 4242",
+    "checkoutTestCardLabel": "Karta testowa",
+    "checkoutTestCardDetails": "dowolna przyszła data, dowolne CVC",
+    "resetCountdown": "Reset danych za {time}",
+    "resetImminent": "Reset danych za chwilę"
   }
 }

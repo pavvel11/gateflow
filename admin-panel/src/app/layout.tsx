@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ConfigProvider } from "@/components/providers/config-provider";
+import { ThemeProvider, ThemeScript } from "@/components/providers/theme-provider";
 import { TrackingConfigProvider } from "@/components/providers/tracking-config-provider";
 import { getPublicIntegrationsConfig } from "@/lib/actions/integrations";
 import TrackingProvider from "@/components/TrackingProvider";
@@ -30,7 +31,10 @@ export default async function RootLayout({
   const config = await getPublicIntegrationsConfig().catch(() => null);
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <ThemeScript />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
@@ -38,12 +42,14 @@ export default async function RootLayout({
         <Suspense fallback={null}>
           <TrackingProvider config={config} />
         </Suspense>
-        
-        <TrackingConfigProvider config={config}>
-          <ConfigProvider>
-            {children}
-          </ConfigProvider>
-        </TrackingConfigProvider>
+
+        <ThemeProvider>
+          <TrackingConfigProvider config={config}>
+            <ConfigProvider>
+              {children}
+            </ConfigProvider>
+          </TrackingConfigProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

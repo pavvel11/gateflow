@@ -92,7 +92,8 @@
     "acceptOffer": "Yes, I want this!",
     "noThanks": "No thanks",
     "goToProduct": "Go to my product",
-    "getMagicLink": "Send me access link"
+    "getMagicLink": "Send me access link",
+    "checkoutBranding": "This checkout is open-source →"
   },
   "common": {
     "loading": "Loading...",
@@ -2233,6 +2234,12 @@
     "testCard": "Test card: 4242 4242 4242 4242",
     "actionBlocked": "This action is disabled in demo mode.",
     "dismiss": "Dismiss",
-    "checkoutBanner": "Demo mode — use test card 4242 4242 4242 4242"
+    "checkoutBanner": "Demo Mode",
+    "checkoutBannerDesc": "No real transactions are processed. Use Stripe's test card or click the autofill button in the payment form.",
+    "checkoutTestCard": "4242 4242 4242 4242",
+    "checkoutTestCardLabel": "Test card",
+    "checkoutTestCardDetails": "any future date, any CVC",
+    "resetCountdown": "Data resets in {time}",
+    "resetImminent": "Data resetting soon"
   }
 }
