@@ -4,7 +4,7 @@
 
 **Self-hosted platform for selling and protecting digital products**
 
-[![Version](https://img.shields.io/badge/version-1.0.1-blue?style=flat-square)](https://github.com/pavvel11/gateflow/releases)
+[![Version](https://img.shields.io/badge/version-1.0.2-blue?style=flat-square)](https://github.com/pavvel11/gateflow/releases)
 [![Tests](https://img.shields.io/badge/tests-2,650%20passing-brightgreen?style=flat-square)](./admin-panel/tests)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
