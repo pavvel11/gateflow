@@ -51,6 +51,7 @@ const ProductsPageContent: React.FC = () => {
     deleteProduct,
     toggleStatus,
     toggleFeatured,
+    toggleListed,
   } = useProducts({
     page: currentPage,
     limit,
@@ -239,6 +240,19 @@ const ProductsPageContent: React.FC = () => {
     }
   };
 
+  const handleToggleListed = async (productId: string, currentListed: boolean) => {
+    try {
+      await toggleListed(productId, currentListed);
+      await fetchProducts();
+      addToast(
+        !currentListed ? t('listedEnabled') : t('listedDisabled'),
+        'success'
+      );
+    } catch (err) {
+      addToast(t('listedToggleError'), 'error');
+    }
+  };
+
   const handleAddNewProduct = () => {
     setEditingProduct(null);
     setShowProductForm(true);
@@ -297,6 +311,7 @@ const ProductsPageContent: React.FC = () => {
         onGenerateCode={handleGenerateCode}
         onToggleStatus={handleToggleStatus}
         onToggleFeatured={handleToggleFeatured}
+        onToggleListed={handleToggleListed}
         currentPage={pagination.currentPage}
         totalPages={pagination.totalPages}
         totalItems={pagination.totalItems}

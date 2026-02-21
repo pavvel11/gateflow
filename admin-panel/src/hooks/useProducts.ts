@@ -35,6 +35,7 @@ interface UseProductsResult {
   deleteProduct: (id: string) => Promise<void>;
   toggleStatus: (id: string, currentStatus: boolean) => Promise<void>;
   toggleFeatured: (id: string, currentFeatured: boolean) => Promise<void>;
+  toggleListed: (id: string, currentListed: boolean) => Promise<void>;
 }
 
 interface ProductCreateData {
@@ -45,6 +46,7 @@ interface ProductCreateData {
   currency?: string;
   is_active?: boolean;
   is_featured?: boolean;
+  is_listed?: boolean;
   icon?: string | null;
   content_delivery_type?: string;
   content_config?: Record<string, unknown>;
@@ -212,6 +214,13 @@ export function useProducts(params: UseProductsParams = {}): UseProductsResult {
     await api.update<Product>('products', id, { is_featured: !currentFeatured });
   }, []);
 
+  /**
+   * Toggle product listed status (visible on store page)
+   */
+  const toggleListed = useCallback(async (id: string, currentListed: boolean): Promise<void> => {
+    await api.update<Product>('products', id, { is_listed: !currentListed });
+  }, []);
+
   return {
     products,
     loading,
@@ -223,6 +232,7 @@ export function useProducts(params: UseProductsParams = {}): UseProductsResult {
     deleteProduct,
     toggleStatus,
     toggleFeatured,
+    toggleListed,
   };
 }
 

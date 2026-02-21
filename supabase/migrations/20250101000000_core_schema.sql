@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS products (
 
   is_active BOOLEAN NOT NULL DEFAULT true, -- Product availability toggle
   is_featured BOOLEAN NOT NULL DEFAULT false, -- Featured product flag
+  is_listed BOOLEAN NOT NULL DEFAULT true, -- Visible on store page (false = purchasable via direct link only)
   -- Temporal availability fields
   available_from TIMESTAMPTZ, -- Product becomes available from this date/time
   available_until TIMESTAMPTZ, -- Product is available until this date/time
@@ -812,6 +813,7 @@ CREATE TABLE IF NOT EXISTS rate_limits (
 CREATE INDEX IF NOT EXISTS idx_products_slug ON products(slug);
 CREATE INDEX IF NOT EXISTS idx_products_is_active ON products(is_active);
 CREATE INDEX IF NOT EXISTS idx_products_is_featured ON products(is_featured);
+CREATE INDEX IF NOT EXISTS idx_products_is_listed ON products(is_listed);
 CREATE INDEX IF NOT EXISTS idx_products_price ON products(price);
 CREATE INDEX IF NOT EXISTS idx_products_created_at ON products(created_at);
 CREATE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug);

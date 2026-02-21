@@ -3,6 +3,7 @@ import ShopSettings from '@/components/settings/ShopSettings';
 import BrandingSettings from '@/components/settings/BrandingSettings';
 import CheckoutThemeSettings from '@/components/settings/CheckoutThemeSettings';
 import StripeSettings from '@/components/settings/StripeSettings';
+import StripeTaxSettings from '@/components/settings/StripeTaxSettings';
 import PaymentMethodSettingsWrapper from '@/components/settings/PaymentMethodSettingsWrapper';
 import OmnibusSettings from '@/components/settings/OmnibusSettings';
 import LegalDocumentsSettings from '@/components/settings/LegalDocumentsSettings';
@@ -36,6 +37,8 @@ export default async function SettingsPage() {
       <OmnibusSettings />
 
       <StripeSettings />
+
+      <StripeTaxSettings />
 
       <PaymentMethodSettingsWrapper />
 

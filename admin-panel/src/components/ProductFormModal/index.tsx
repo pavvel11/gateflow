@@ -84,9 +84,11 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         icon={
           <span className="text-2xl">{formData.icon}</span>
         }
-        badge={formData.is_active ?
-          { text: t('active'), variant: 'success' } :
-          { text: t('inactive'), variant: 'neutral' }
+        badge={!formData.is_active
+          ? { text: t('inactive'), variant: 'neutral' }
+          : !formData.is_listed
+            ? { text: t('active'), variant: 'warning' }
+            : { text: t('active'), variant: 'success' }
         }
       />
 

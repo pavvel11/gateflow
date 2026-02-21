@@ -997,6 +997,11 @@
       "removeFeatured": "Remove from featured",
       "waitlistEnabled": "Waitlist enabled for this product",
       "waitlistDisabled": "No waitlist - product is completely unavailable",
+      "unlisted": "Unlisted",
+      "unlistedTooltip": "Not shown on store page, available via direct link",
+      "listedEnabled": "Product is now listed on store",
+      "listedDisabled": "Product is now unlisted from store",
+      "listedToggleError": "Failed to toggle listed status",
       "noRedirectUrl": "This product does not have a redirect URL.",
       "noProductsToExport": "No products to export",
       "exportSuccess": "{count} products exported successfully",
@@ -1121,6 +1126,8 @@
         "addContentItem": "Add Content Item",
         "advancedSettings": "Advanced Settings",
         "productActive": "Product is active and visible to users",
+        "productListed": "Listed on store page",
+        "productListedHelp": "Unlisted products can still be purchased via direct checkout link",
         "featuredProduct": "Featured product (highlighted in listings)",
         "omnibusExempt": "Exempt from Omnibus Directive",
         "omnibusExemptHelp": "(perishable goods, new products <30 days)",
@@ -1810,6 +1817,28 @@
         "method1": "Method 1 (.env): Set STRIPE_SECRET_KEY - recommended for developers, Docker, CI/CD",
         "method2": "Method 2 (Database wizard): Use the wizard above - recommended for non-technical users, includes visual guides and validation",
         "footer": "Both methods are equally supported. Choose what works best for you."
+      }
+    },
+    "stripeTax": {
+      "title": "Stripe Tax",
+      "subtitle": "Automatic tax calculation status and registrations",
+      "status": {
+        "active": "Stripe Tax is active",
+        "activeDescription": "Taxes are being automatically calculated for your transactions.",
+        "pending": "Stripe Tax: Setup pending",
+        "pendingDescription": "Tax settings need to be completed in Stripe Dashboard.",
+        "noPermission": "Cannot check tax status",
+        "noPermissionDescription": "Your Stripe API key doesn't have permission to read tax settings.",
+        "stripeNotConfigured": "Stripe not configured",
+        "stripeNotConfiguredDescription": "Configure Stripe API keys first to check tax status."
+      },
+      "registrations": "Tax Registrations",
+      "noRegistrations": "No active tax registrations",
+      "headOffice": "Head office",
+      "links": {
+        "taxSettings": "Tax Settings",
+        "taxRegistrations": "Registrations",
+        "taxReports": "Tax Reports"
       }
     },
     "branding": {

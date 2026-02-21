@@ -131,6 +131,7 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
         currency: product.currency || 'USD',
         is_active: product.is_active,
         is_featured: product.is_featured || false,
+        is_listed: product.is_listed !== false,
         icon: product.icon || getIconEmoji('rocket'),
         image_url: product.image_url || null,
         available_from: product.available_from || '',

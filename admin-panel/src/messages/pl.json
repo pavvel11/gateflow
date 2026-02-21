@@ -1012,6 +1012,11 @@
       "removeFeatured": "Usuń z wyróżnionych",
       "waitlistEnabled": "Lista oczekujących włączona dla tego produktu",
       "waitlistDisabled": "Brak listy oczekujących - produkt całkowicie niedostępny",
+      "unlisted": "Ukryty",
+      "unlistedTooltip": "Nie wyświetlany na stronie sklepu, dostępny przez bezpośredni link",
+      "listedEnabled": "Produkt jest teraz widoczny w sklepie",
+      "listedDisabled": "Produkt jest teraz ukryty ze sklepu",
+      "listedToggleError": "Nie udało się zmienić widoczności produktu",
       "noRedirectUrl": "Ten produkt nie ma adresu URL przekierowania.",
       "noProductsToExport": "Brak produktów do eksportu",
       "exportSuccess": "{count} produktów wyeksportowano pomyślnie",
@@ -1136,6 +1141,8 @@
         "addContentItem": "Dodaj element treści",
         "advancedSettings": "Ustawienia zaawansowane",
         "productActive": "Produkt jest aktywny i widoczny dla użytkowników",
+        "productListed": "Widoczny na stronie sklepu",
+        "productListedHelp": "Ukryte produkty można nadal kupić przez bezpośredni link",
         "featuredProduct": "Produkt wyróżniony (podświetlany w listach)",
         "omnibusExempt": "Zwolniony z dyrektywy Omnibus",
         "omnibusExemptHelp": "(towary łatwo psujące się, nowe produkty <30 dni)",
@@ -1825,6 +1832,28 @@
         "method1": "Metoda 1 (.env): Ustaw STRIPE_SECRET_KEY - zalecane dla deweloperów, Docker, CI/CD",
         "method2": "Metoda 2 (Kreator bazy danych): Użyj kreatora powyżej - zalecane dla użytkowników nietechnicznych, zawiera wizualne przewodniki i walidację",
         "footer": "Obie metody są w pełni wspierane. Wybierz tę, która najlepiej Ci odpowiada."
+      }
+    },
+    "stripeTax": {
+      "title": "Stripe Tax",
+      "subtitle": "Status automatycznego naliczania podatków i rejestracje",
+      "status": {
+        "active": "Stripe Tax jest aktywny",
+        "activeDescription": "Podatki są automatycznie naliczane dla Twoich transakcji.",
+        "pending": "Stripe Tax: Konfiguracja w toku",
+        "pendingDescription": "Ustawienia podatkowe muszą zostać ukończone w panelu Stripe.",
+        "noPermission": "Nie można sprawdzić statusu podatków",
+        "noPermissionDescription": "Twój klucz API Stripe nie ma uprawnień do odczytu ustawień podatkowych.",
+        "stripeNotConfigured": "Stripe nie skonfigurowany",
+        "stripeNotConfiguredDescription": "Najpierw skonfiguruj klucze API Stripe, aby sprawdzić status podatków."
+      },
+      "registrations": "Rejestracje podatkowe",
+      "noRegistrations": "Brak aktywnych rejestracji podatkowych",
+      "headOffice": "Siedziba firmy",
+      "links": {
+        "taxSettings": "Ustawienia podatkowe",
+        "taxRegistrations": "Rejestracje",
+        "taxReports": "Raporty podatkowe"
       }
     },
     "branding": {

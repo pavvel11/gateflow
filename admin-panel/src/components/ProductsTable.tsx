@@ -22,6 +22,7 @@ interface ProductsTableProps {
   onGenerateCode: (product: Product) => void;
   onToggleStatus: (productId: string, currentStatus: boolean) => void;
   onToggleFeatured: (productId: string, currentFeatured: boolean) => void;
+  onToggleListed: (productId: string, currentListed: boolean) => void;
   currentPage: number;
   totalPages: number;
   totalItems: number;
@@ -44,6 +45,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
   onGenerateCode,
   onToggleStatus,
   onToggleFeatured,
+  onToggleListed,
   currentPage,
   totalPages,
   totalItems,
@@ -146,6 +148,14 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                                 ⭐
                               </span>
                             )}
+                            {product.is_listed === false && (
+                              <span
+                                className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 flex-shrink-0"
+                                title={t('unlistedTooltip')}
+                              >
+                                {t('unlisted')}
+                              </span>
+                            )}
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="text-xs text-gray-500 dark:text-gray-400 truncate">{product.slug}</span>
@@ -239,6 +249,26 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                     </td>
                     <td className="px-3 py-4 text-right text-sm font-medium whitespace-nowrap">
                       <div className="flex items-center justify-end space-x-1">
+                        <button
+                          onClick={() => onToggleListed(product.id, product.is_listed !== false)}
+                          className={`p-1 transition-colors rounded ${
+                            product.is_listed !== false
+                              ? 'text-gray-400 hover:text-orange-500'
+                              : 'text-orange-500 hover:text-orange-600'
+                          }`}
+                          title={product.is_listed !== false ? t('unlistedTooltip') : t('listedEnabled')}
+                        >
+                          {product.is_listed !== false ? (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                            </svg>
+                          )}
+                        </button>
                         <button
                           onClick={() => onToggleFeatured(product.id, product.is_featured)}
                           className={`p-1 transition-colors rounded ${

@@ -19,7 +19,7 @@ export function AdvancedSection({
   };
 
   return (
-    <ModalSection title={t('advancedSettings')} collapsible defaultExpanded={!formData.is_active || formData.is_featured || formData.omnibus_exempt}>
+    <ModalSection title={t('advancedSettings')} collapsible defaultExpanded={!formData.is_active || !formData.is_listed || formData.is_featured || formData.omnibus_exempt}>
       <div className="space-y-4">
         <div className="flex items-center">
           <input
@@ -33,6 +33,23 @@ export function AdvancedSection({
           <label htmlFor="is_active" className="ml-3 block text-sm font-medium text-gray-900 dark:text-gray-100">
             {t('productActive')}
           </label>
+        </div>
+
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="is_listed"
+            name="is_listed"
+            checked={formData.is_listed}
+            onChange={handleCheckboxChange}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <label htmlFor="is_listed" className="ml-3 block text-sm font-medium text-gray-900 dark:text-gray-100">
+            {t('productListed')}
+          </label>
+          <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+            {t('productListedHelp')}
+          </span>
         </div>
 
         <div className="flex items-center">
