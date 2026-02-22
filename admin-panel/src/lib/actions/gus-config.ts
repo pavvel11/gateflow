@@ -180,20 +180,14 @@ export async function getGUSConfig(): Promise<ActionResponse<GUSConfig>> {
  * Gets decrypted GUS API key (server-side only)
  *
  * Method priority:
- * 1. GUS_API_KEY from .env (METHOD 1 - recommended for developers)
- * 2. Encrypted key from database (METHOD 2 - recommended for non-technical users)
+ * 1. Encrypted key from database (DB takes priority — set via admin panel)
+ * 2. GUS_API_KEY from .env (fallback for developers)
  *
  * Returns null if not configured or if GUS is disabled
  */
 export async function getDecryptedGUSAPIKey(): Promise<string | null> {
   try {
-    // METHOD 1: Check if GUS_API_KEY is set in environment
-    const envKey = process.env.GUS_API_KEY;
-    if (envKey && envKey.trim().length > 0) {
-      return envKey.trim();
-    }
-
-    // METHOD 2: Fallback to encrypted key from database
+    // METHOD 1: Check database first (priority)
     const supabase = await createClient();
 
     const { data: config } = await supabase
@@ -202,24 +196,23 @@ export async function getDecryptedGUSAPIKey(): Promise<string | null> {
       .eq('id', 1)
       .single();
 
-    // Check if GUS is enabled
-    if (config?.gus_api_enabled !== true) {
-      return null;
+    // If DB has an encrypted key and GUS is enabled, use it
+    if (config?.gus_api_enabled === true && config?.gus_api_key_encrypted) {
+      const decrypted = await decryptGUSKey({
+        encrypted_key: config.gus_api_key_encrypted,
+        encryption_iv: config.gus_api_key_iv,
+        encryption_tag: config.gus_api_key_tag,
+      });
+      return decrypted;
     }
 
-    // Check if key exists
-    if (!config?.gus_api_key_encrypted) {
-      return null;
+    // METHOD 2: Fallback to environment variable
+    const envKey = process.env.GUS_API_KEY;
+    if (envKey && envKey.trim().length > 0) {
+      return envKey.trim();
     }
 
-    // Decrypt and return
-    const decrypted = await decryptGUSKey({
-      encrypted_key: config.gus_api_key_encrypted,
-      encryption_iv: config.gus_api_key_iv,
-      encryption_tag: config.gus_api_key_tag,
-    });
-
-    return decrypted;
+    return null;
   } catch (error) {
     console.error('Error decrypting GUS API key:', error);
     return null;
