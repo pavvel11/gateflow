@@ -420,16 +420,8 @@ test.describe('Rate Limiting', () => {
       expect(result.successCount).toBeGreaterThan(0);
     });
 
-    test('runtime-config endpoint should be rate limited', async ({ request }) => {
-      const result = await makeRequestsUntilRateLimited(
-        request,
-        'get',
-        '/api/runtime-config'
-      );
-
-      expect(result.gotRateLimited).toBe(true);
-      expect(result.successCount).toBeGreaterThan(0);
-    });
+    // NOTE: /api/runtime-config intentionally has NO rate limiting
+    // (public, read-only, heavily cached endpoint) — no test needed
 
     test('products/[id] endpoint should be rate limited', async ({ request }) => {
       const result = await makeRequestsUntilRateLimited(

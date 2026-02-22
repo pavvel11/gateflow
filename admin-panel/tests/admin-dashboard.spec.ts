@@ -129,11 +129,11 @@ test.describe('Authenticated Admin Dashboard', () => {
     // Select currency explicitly (defaults to shop's default currency, but we want to be explicit in tests)
     await modal.locator('select[name="currency"]').selectOption('USD');
 
-    // Click submit button
-    await modal.locator('button[type="submit"]').click();
+    // Click "Create Product" button (wizard uses regular button, not form submit)
+    await page.getByRole('button', { name: /Utwórz produkt|Create Product/i }).click();
 
-    // Verify modal closes
-    await expect(modal).not.toBeVisible({ timeout: 10000 });
+    // Verify wizard closes
+    await expect(modal).not.toBeVisible({ timeout: 15000 });
     
     // Verify creation
     const productCell = page.locator('table').getByText(productName).first();

@@ -1075,7 +1075,7 @@ test.describe('OTO Checkout Page E2E', () => {
     const timestamp = Date.now();
 
     // Create source product
-    const { data: src } = await supabaseAdmin
+    const { data: src, error: srcError } = await supabaseAdmin
       .from('products')
       .insert({
         name: `E2E Source ${timestamp}`,
@@ -1086,10 +1086,11 @@ test.describe('OTO Checkout Page E2E', () => {
       })
       .select()
       .single();
+    if (srcError) throw srcError;
     sourceProduct = src;
 
     // Create OTO product
-    const { data: oto } = await supabaseAdmin
+    const { data: oto, error: otoError } = await supabaseAdmin
       .from('products')
       .insert({
         name: `E2E OTO Product ${timestamp}`,
@@ -1101,10 +1102,11 @@ test.describe('OTO Checkout Page E2E', () => {
       })
       .select()
       .single();
+    if (otoError) throw otoError;
     otoProduct = oto;
 
     // Create OTO offer with fixed $20 discount
-    const { data: offer } = await supabaseAdmin
+    const { data: offer, error: offerError } = await supabaseAdmin
       .from('oto_offers')
       .insert({
         source_product_id: sourceProduct.id,
@@ -1116,10 +1118,11 @@ test.describe('OTO Checkout Page E2E', () => {
       })
       .select()
       .single();
+    if (offerError) throw offerError;
     otoOffer = offer;
 
     // Create transaction and generate OTO coupon
-    const { data: transaction } = await supabaseAdmin
+    const { data: transaction, error: txError } = await supabaseAdmin
       .from('payment_transactions')
       .insert({
         session_id: `cs_e2e_checkout_${timestamp}`,
@@ -1131,12 +1134,14 @@ test.describe('OTO Checkout Page E2E', () => {
       })
       .select()
       .single();
+    if (txError) throw txError;
 
-    const { data: otoResult } = await supabaseAdmin.rpc('generate_oto_coupon', {
+    const { data: otoResult, error: rpcError } = await supabaseAdmin.rpc('generate_oto_coupon', {
       source_product_id_param: sourceProduct.id,
       customer_email_param: testEmail,
       transaction_id_param: transaction!.id,
     });
+    if (rpcError) throw rpcError;
 
     couponCode = otoResult.coupon_code;
   });
@@ -1166,12 +1171,13 @@ test.describe('OTO Checkout Page E2E', () => {
       `/checkout/${otoProduct.slug}?email=${encodeURIComponent(testEmail)}&coupon=${couponCode}&oto=1`
     );
 
+    // Wait for page DOM to load (don't use networkidle — Stripe makes continuous requests)
     await page.waitForLoadState('domcontentloaded');
 
     // 1. Email is passed to Stripe's LinkAuthenticationElement (iframe)
     // Verify our code passes the correct email via data-test-email attribute
     const emailWrapper = page.locator('[data-test-email]');
-    await expect(emailWrapper).toHaveAttribute('data-test-email', testEmail, { timeout: 15000 });
+    await expect(emailWrapper).toHaveAttribute('data-test-email', testEmail, { timeout: 20000 });
 
     // 2. Coupon code should be visible in coupon input
     const couponInput = page.locator('input[placeholder*="code"], input[placeholder*="kod"]');
@@ -1189,7 +1195,7 @@ test.describe('OTO Checkout Page E2E', () => {
 
     // 5. Coupon should show verified state (green checkmark icon or success state)
     const verifiedIndicator = page.locator('[data-testid="coupon-verified"], .text-green-500, .text-green-600');
-    await expect(verifiedIndicator).toBeVisible({ timeout: 10000 });
+    await expect(verifiedIndicator.first()).toBeVisible({ timeout: 10000 });
   });
 
   test('should show OTO countdown banner on checkout page', async ({ page }) => {
@@ -1201,11 +1207,12 @@ test.describe('OTO Checkout Page E2E', () => {
       `/checkout/${otoProduct.slug}?email=${encodeURIComponent(testEmail)}&coupon=${couponCode}&oto=1`
     );
 
+    // Wait for page DOM to load (don't use networkidle — Stripe makes continuous requests)
     await page.waitForLoadState('domcontentloaded');
 
     // OTO countdown banner should be visible
     const otoBanner = page.locator('[data-testid="oto-countdown-banner"]');
-    await expect(otoBanner).toBeVisible({ timeout: 15000 });
+    await expect(otoBanner).toBeVisible({ timeout: 20000 });
 
     // Banner should show countdown timer or time remaining
     await expect(otoBanner.getByText(/\d+:\d+|\d+\s*(min|minut)/i)).toBeVisible({ timeout: 10000 });

@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { acceptAllCookies } from './helpers/consent';
 
 // Enforce single worker for admin tests
 test.describe.configure({ mode: 'serial' });
@@ -22,6 +23,8 @@ test.describe('Product Duplication', () => {
 
   // Helper to login as admin
   const loginAsAdmin = async (page: Page) => {
+    await acceptAllCookies(page);
+
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
@@ -125,7 +128,7 @@ test.describe('Product Duplication', () => {
     await expect(duplicateButton).toBeVisible({ timeout: 5000 });
   });
 
-  test('should open product form with duplicated data when clicking duplicate', async ({ page }) => {
+  test('should open wizard with duplicated data when clicking duplicate', async ({ page }) => {
     await loginAsAdmin(page);
     await page.goto('/pl/dashboard/products');
     await page.waitForLoadState('networkidle');
@@ -135,23 +138,30 @@ test.describe('Product Duplication', () => {
     const duplicateButton = productRow.getByRole('button', { name: /Duplikuj Original Product|Duplicate Original Product/i });
     await duplicateButton.click();
 
-    // Wait for modal to open
+    // Wait for wizard to open (step 1)
     await page.waitForTimeout(500);
 
-    // Check that modal opened with correct data
+    // Check that wizard opened with correct data on step 1 (Essentials)
     const nameInput = page.locator('input[name="name"]');
     await expect(nameInput).toBeVisible();
 
     const nameValue = await nameInput.inputValue();
     expect(nameValue).toBe('[COPY] Original Product');
 
-    // Check that description is copied
+    // Check that description is copied (step 1)
     const descInput = page.locator('textarea[name="description"]');
     const descValue = await descInput.inputValue();
     expect(descValue).toBe('Product to be duplicated');
 
-    // Check that sale_price is copied
+    // Navigate to step 3 to check sale_price (Sales & Settings)
+    await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+    await page.waitForTimeout(1000);
+    await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+    await page.waitForTimeout(1000);
+
+    // Check that sale_price is copied on step 3
     const salePriceInput = page.locator('input#sale_price');
+    await expect(salePriceInput).toBeVisible({ timeout: 5000 });
     const salePriceValue = await salePriceInput.inputValue();
     expect(salePriceValue).toContain('60'); // May have comma formatting
   });
@@ -168,13 +178,13 @@ test.describe('Product Duplication', () => {
 
     await page.waitForTimeout(500);
 
-    // Check that save button says "Create" not "Update"
-    const createButton = page.locator('button[type="submit"]').filter({ hasText: /Utwórz|Create/i });
+    // Wizard shows "Create Product" button (not a form submit, but a regular button)
+    const createButton = page.getByRole('button', { name: /Utwórz produkt|Create Product/i });
     await expect(createButton).toBeVisible({ timeout: 5000 });
 
-    // Check that modal title says "Create"
-    const modalTitle = page.locator('h3').filter({ hasText: /Utwórz nowy produkt|Create New Product/i });
-    await expect(modalTitle).toBeVisible();
+    // Check that wizard title says "Create"
+    const wizardTitle = page.locator('h3').filter({ hasText: /Utwórz nowy produkt|Create New Product/i });
+    await expect(wizardTitle).toBeVisible();
   });
 
   test('should preserve all product fields when duplicating via API', async ({ request }) => {

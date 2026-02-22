@@ -191,7 +191,7 @@ test.describe('PWYW Checkout UI', () => {
     await customInput.first().blur();
 
     // Should show error message (look for red error text)
-    await expect(page.locator('.text-red-400, .text-red-300').filter({ hasText: /co najmniej|at least/i }).first()).toBeVisible();
+    await expect(page.locator('.text-red-600, .text-red-400, .text-red-300').filter({ hasText: /co najmniej|at least/i }).first()).toBeVisible({ timeout: 5000 });
   });
 
   test('should not show error when amount is at minimum', async ({ page }) => {

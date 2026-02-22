@@ -245,27 +245,35 @@ test.describe('Currency Conversion Feature', () => {
     await loginAsAdmin(page);
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(3000);
 
     // First set to converted mode (USD)
     let currencyButton = page.locator('button', { hasText: /Grouped|Convert/i }).first();
+    await expect(currencyButton).toBeVisible({ timeout: 10000 });
     await currencyButton.click();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(500);
 
     const usdOption = page.locator('button', { hasText: 'USD' }).first();
+    await expect(usdOption).toBeVisible({ timeout: 5000 });
     await usdOption.click();
-    await page.waitForTimeout(1000);
+
+    // Wait for conversion to complete
+    await expect(page.locator('button', { hasText: /Convert to USD/i }).first()).toBeVisible({ timeout: 10000 });
 
     // Now switch back to grouped
     currencyButton = page.locator('button', { hasText: /Convert/i }).first();
     await currencyButton.click();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(500);
 
     const groupedOption = page.locator('button', { hasText: /Grouped by Currency|Pogrupowane według Waluty/i }).first();
+    await expect(groupedOption).toBeVisible({ timeout: 5000 });
     await groupedOption.click();
-    await page.waitForTimeout(1000);
+
+    // Wait for grouped mode to take effect
+    await page.waitForTimeout(2000);
 
     // Should show grouped mode
-    await expect(page.locator('button', { hasText: /Grouped by Currency|Pogrupowane według Waluty/i }).first()).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('button', { hasText: /Grouped by Currency|Pogrupowane według Waluty/i }).first()).toBeVisible({ timeout: 10000 });
 
     // Revenue should show multiple currencies again
     const revenueCard = page.getByTestId('stat-card-total-revenue');

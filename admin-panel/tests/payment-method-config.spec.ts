@@ -37,7 +37,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
 
   test('Admin can view payment method configuration settings', async ({ page }) => {
     // Navigate to settings page
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Verify Payment Method Configuration section exists
@@ -51,7 +51,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('Admin can select automatic mode', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Select automatic mode
@@ -74,7 +74,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('Admin can select stripe preset mode', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Select Stripe preset mode
@@ -92,7 +92,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('Admin can select custom mode and enable payment methods', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Select custom mode
@@ -123,7 +123,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('E2E-ADMIN-003: Complete custom mode setup with drag & drop', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Select custom mode
@@ -170,7 +170,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('E2E-ADMIN-004: Refresh Stripe PMCs', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Select Stripe preset mode
@@ -191,7 +191,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('E2E-ADMIN-005: Express Checkout configuration', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Find Express Checkout section
@@ -236,7 +236,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('E2E-ADMIN-006: Mode transition automatic → custom', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Start with automatic mode
@@ -276,7 +276,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('E2E-ADMIN-007: Mode transition custom → automatic', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Start with custom mode
@@ -314,7 +314,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('E2E-ADMIN-008: Reset configuration', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Make some changes without saving
@@ -334,7 +334,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('E2E-ADMIN-009: Validation error - Custom no methods', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Select custom mode
@@ -366,7 +366,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('E2E-ADMIN-010: Validation error - Stripe no PMC', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Select Stripe preset mode
@@ -395,7 +395,7 @@ test.describe('Payment Method Configuration - Security', () => {
     // Don't call setupAdminAuth - simulate non-admin or unauthenticated user
 
     // Try to access settings page directly
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
 
     // Wait for redirect or page load (shorter timeout, don't require networkidle)
     await page.waitForLoadState('domcontentloaded');

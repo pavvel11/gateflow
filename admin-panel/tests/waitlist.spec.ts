@@ -169,17 +169,24 @@ test.describe('Waitlist Feature', () => {
       await loginAsAdmin(page, adminEmail, adminPassword);
       await page.goto('/pl/dashboard/products');
 
-      // Click add product button
+      // Click add product button — opens wizard (step 1)
       await page.getByRole('button', { name: /Dodaj produkt|Add Product/i }).click();
 
-      // Wait for modal
+      // Wait for wizard
       await page.waitForSelector('[role="dialog"]');
 
-      // Look for "Availability & Waitlist" section and expand it
-      const availabilitySection = page.locator('button, div').filter({ hasText: /Availability.*Waitlist|Dostępność.*Lista/i }).first();
-      await availabilitySection.click();
+      // Fill step 1 minimum required fields to enable navigation
+      await page.fill('input#name', 'Waitlist Test Temp');
+      await page.fill('textarea#description', 'Temp description');
 
-      // Look for waitlist checkbox label
+      // Navigate to step 3 (Availability is on step 3: Sales & Settings)
+      await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+      await page.waitForTimeout(1000);
+      await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+      await page.waitForTimeout(1000);
+
+      // AvailabilitySection renders with defaultExpanded={true}, so content should be visible
+      // Look for waitlist checkbox label (no need to click section header — already expanded)
       const waitlistLabel = page.locator('label').filter({ hasText: /Enable Waitlist|Włącz zapis na listę/i });
       await expect(waitlistLabel).toBeVisible({ timeout: 5000 });
     });
@@ -447,6 +454,24 @@ test.describe('Waitlist Feature', () => {
     });
 
     /**
+     * Helper to navigate wizard from step 1 to step 3 (Sales & Settings)
+     * Fills minimum required fields on step 1 so "Continue Setup" works
+     */
+    async function navigateWizardToStep3(page: import('@playwright/test').Page): Promise<void> {
+      // Fill step 1 minimum required fields
+      await page.fill('input#name', 'Waitlist Temp Product');
+      await page.fill('textarea#description', 'Temp description');
+
+      // Step 1 → Step 2
+      await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+      await page.waitForTimeout(1000);
+
+      // Step 2 → Step 3
+      await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+      await page.waitForTimeout(1000);
+    }
+
+    /**
      * Helper to ensure Availability & Waitlist section is expanded
      * Checks if section content is visible, clicks to expand if needed
      */
@@ -475,9 +500,12 @@ test.describe('Waitlist Feature', () => {
       await loginAsAdmin(page, adminEmail, adminPassword);
       await page.goto('/pl/dashboard/products');
 
-      // Click add product button
+      // Click add product button — opens wizard (step 1)
       await page.getByRole('button', { name: /Dodaj produkt|Add Product/i }).click();
       await page.waitForSelector('[role="dialog"]');
+
+      // Navigate wizard to step 3 where Availability section lives
+      await navigateWizardToStep3(page);
 
       // Ensure section is expanded (checks and clicks if needed)
       await ensureAvailabilitySectionExpanded(page);
@@ -498,9 +526,12 @@ test.describe('Waitlist Feature', () => {
       await loginAsAdmin(page, adminEmail, adminPassword);
       await page.goto('/pl/dashboard/products');
 
-      // Click add product button
+      // Click add product button — opens wizard (step 1)
       await page.getByRole('button', { name: /Dodaj produkt|Add Product/i }).click();
       await page.waitForSelector('[role="dialog"]');
+
+      // Navigate wizard to step 3 where Availability section lives
+      await navigateWizardToStep3(page);
 
       // Ensure section is expanded (checks and clicks if needed)
       await ensureAvailabilitySectionExpanded(page);
@@ -519,9 +550,12 @@ test.describe('Waitlist Feature', () => {
         await loginAsAdmin(page, adminEmail, adminPassword);
         await page.goto('/pl/dashboard/products');
 
-        // Click add product button
+        // Click add product button — opens wizard (step 1)
         await page.getByRole('button', { name: /Dodaj produkt|Add Product/i }).click();
         await page.waitForSelector('[role="dialog"]');
+
+        // Navigate wizard to step 3 where Availability section lives
+        await navigateWizardToStep3(page);
 
         // Ensure section is expanded (checks and clicks if needed)
         await ensureAvailabilitySectionExpanded(page);
@@ -548,9 +582,12 @@ test.describe('Waitlist Feature', () => {
         await loginAsAdmin(page, adminEmail, adminPassword);
         await page.goto('/pl/dashboard/products');
 
-        // Click add product button
+        // Click add product button — opens wizard (step 1)
         await page.getByRole('button', { name: /Dodaj produkt|Add Product/i }).click();
         await page.waitForSelector('[role="dialog"]');
+
+        // Navigate wizard to step 3 where Availability section lives
+        await navigateWizardToStep3(page);
 
         // Ensure section is expanded (checks and clicks if needed)
         await ensureAvailabilitySectionExpanded(page);

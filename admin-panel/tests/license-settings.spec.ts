@@ -102,12 +102,12 @@ test.describe('License Settings', () => {
 
   test('Admin can access license settings on settings page', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    // Should see GateFlow License section
-    const licenseHeading = page.locator('h2', { hasText: /GateFlow License/i });
+    // Should see GateFlow License section (matches both EN and PL)
+    const licenseHeading = page.locator('h2', { hasText: /GateFlow License|Licencja GateFlow/i });
     await expect(licenseHeading).toBeVisible({ timeout: 10000 });
 
     // Should see license key input
@@ -121,7 +121,7 @@ test.describe('License Settings', () => {
 
   test('Can enter unlimited license and see parsed details', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -146,7 +146,7 @@ test.describe('License Settings', () => {
 
   test('Can enter time-limited license and see formatted expiry date', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -167,7 +167,7 @@ test.describe('License Settings', () => {
 
   test('Invalid license format shows error message', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -184,7 +184,7 @@ test.describe('License Settings', () => {
 
   test('License with wrong prefix shows error', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -201,7 +201,7 @@ test.describe('License Settings', () => {
 
   test('Too short license shows error', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -218,7 +218,7 @@ test.describe('License Settings', () => {
 
   test('Can save license successfully', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -253,7 +253,7 @@ test.describe('License Settings', () => {
       .eq('id', 1);
 
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -277,7 +277,7 @@ test.describe('License Settings', () => {
 
   test('Expired license still displays correctly (expiry shown)', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -304,7 +304,7 @@ test.describe('License Settings', () => {
       .eq('id', 1);
 
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -333,7 +333,7 @@ test.describe('License Settings', () => {
 
   test('Signature is partially displayed (truncated)', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 

@@ -436,29 +436,30 @@ test.describe('PWYW Admin - Create New Product', () => {
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1500);
 
-    // Click add product button
+    // Click add product button — opens wizard (step 1: Essentials)
     const addButton = page.getByRole('button', { name: /Dodaj produkt|Add product/i });
     await addButton.click();
 
     const modal = page.locator('div.fixed').filter({ hasText: /Cancel|Anuluj/i });
     await expect(modal).toBeVisible({ timeout: 5000 });
 
-    // Fill basic info
+    // Fill basic info (step 1 — Essentials: BasicInfo + Pricing)
     await modal.locator('input[name="name"]').fill(`New PWYW Product ${Date.now()}`);
-    await modal.locator('input[name="slug"]').fill(`new-pwyw-${Date.now()}`);
     await modal.locator('textarea[name="description"]').fill('New PWYW product description');
+    await modal.locator('input[name="price"]').fill('10');
 
-    // Enable PWYW
+    // Enable PWYW (PricingSection is on step 1)
     await modal.locator('#allow_custom_price').check();
+    await page.waitForTimeout(300);
 
     // Set minimum price
     await modal.locator('#custom_price_min').fill('5');
 
-    // Save
-    const saveButton = modal.locator('button[type="submit"]');
-    await saveButton.click();
+    // Save — wizard uses a regular button, not form submit
+    const createButton = page.getByRole('button', { name: /Utwórz produkt|Create Product/i });
+    await createButton.click();
 
-    // Wait for save and modal to close
+    // Wait for save and wizard to close
     await page.waitForTimeout(3000);
 
     // Verify product was created with PWYW

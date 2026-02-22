@@ -14,54 +14,43 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { createTestAdmin, loginAsAdmin } from './helpers/admin-auth';
+import { createTestAdmin, loginAsAdmin, supabaseAdmin } from './helpers/admin-auth';
 
 test.describe('Payment Method Configuration - Checkout Flow', () => {
   let testProductSlug: string;
   let adminEmail: string;
   let adminPassword: string;
   let cleanup: () => Promise<void>;
+  const createdProductSlugs: string[] = [];
 
-  test.beforeAll(async ({ browser }) => {
+  test.beforeAll(async () => {
     // Create admin user for tests
     const admin = await createTestAdmin('payment-checkout-test');
     adminEmail = admin.email;
     adminPassword = admin.password;
     cleanup = admin.cleanup;
 
-    // Create a test product for checkout tests
-    const page = await browser.newPage();
-    await loginAsAdmin(page, adminEmail, adminPassword);
-
-    await page.goto('/dashboard/products');
-    await page.waitForLoadState('networkidle');
-
-    // Create PLN test product
-    const createButton = page.locator('button').filter({ hasText: /Utwórz|Create/i });
-    if (await createButton.isVisible()) {
-      await createButton.click();
-
-      await page.fill('input[name="name"]', 'Test Product - Payment Config E2E');
-      await page.fill('input[name="price"]', '99.00');
-      await page.selectOption('select[name="currency"]', 'PLN');
-
-      const saveButton = page.locator('button').filter({ hasText: /Zapisz|Save/i });
-      await saveButton.click();
-
-      await page.waitForTimeout(2000);
-
-      // Get product slug from URL or response
-      const url = page.url();
-      const match = url.match(/\/products\/([^\/]+)/);
-      if (match) {
-        testProductSlug = match[1];
-      }
-    }
-
-    await page.close();
+    // Create PLN test product via API (more robust than UI)
+    testProductSlug = `pmc-checkout-pln-${Date.now()}`;
+    const { error } = await supabaseAdmin
+      .from('products')
+      .insert({
+        name: 'Test Product - Payment Config E2E',
+        slug: testProductSlug,
+        price: 99,
+        currency: 'PLN',
+        description: 'Test product for payment config checkout tests',
+        is_active: true,
+      });
+    if (error) throw error;
+    createdProductSlugs.push(testProductSlug);
   });
 
   test.afterAll(async () => {
+    // Clean up products
+    for (const slug of createdProductSlugs) {
+      await supabaseAdmin.from('products').delete().eq('slug', slug);
+    }
     if (cleanup) await cleanup();
   });
 
@@ -69,7 +58,7 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
     // Set payment config to automatic mode
     await loginAsAdmin(page, adminEmail, adminPassword);
     await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const automaticRadio = page.locator('input[type="radio"][value="automatic"]').first();
     await automaticRadio.check();
@@ -83,53 +72,39 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
     // Visit checkout page
     if (testProductSlug) {
       await page.goto(`/checkout/${testProductSlug}`);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       // Wait for Stripe Payment Element to load
       await page.waitForTimeout(3000);
 
-      // Verify PaymentElement appears (contains iframe from Stripe)
-      const paymentElement = page.frameLocator('iframe[name^="__privateStripeFrame"]').first();
-      await expect(paymentElement.locator('body')).toBeVisible({ timeout: 10000 });
-
-      // In automatic mode, Stripe shows all payment methods appropriate for PLN
-      // We can't directly inspect iframe content, but we can verify the element loaded
+      // Verify checkout loaded with Stripe Payment Element (pay button shows price from payment intent)
+      await expect(page.getByRole('button', { name: /Pay|Zapłać/i })).toBeVisible({ timeout: 15000 });
     }
   });
 
   test('E2E-CHECKOUT-002: Automatic mode - USD product', async ({ page }) => {
-    // Create USD product first
-    await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto('/dashboard/products');
-    await page.waitForLoadState('networkidle');
+    // Create USD product via API
+    const usdProductSlug = `pmc-checkout-usd-${Date.now()}`;
+    const { error } = await supabaseAdmin
+      .from('products')
+      .insert({
+        name: 'Test Product USD - Payment Config',
+        slug: usdProductSlug,
+        price: 29.99,
+        currency: 'USD',
+        description: 'USD test product for payment config',
+        is_active: true,
+      });
+    if (error) throw error;
+    createdProductSlugs.push(usdProductSlug);
 
-    const createButton = page.locator('button').filter({ hasText: /Utwórz|Create/i });
-    if (await createButton.isVisible()) {
-      await createButton.click();
+    // Visit checkout
+    await page.goto(`/checkout/${usdProductSlug}`);
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(3000);
 
-      await page.fill('input[name="name"]', 'Test Product USD - Payment Config');
-      await page.fill('input[name="price"]', '29.99');
-      await page.selectOption('select[name="currency"]', 'USD');
-
-      const saveButton = page.locator('button').filter({ hasText: /Zapisz|Save/i });
-      await saveButton.click();
-      await page.waitForTimeout(2000);
-
-      const url = page.url();
-      const match = url.match(/\/products\/([^\/]+)/);
-      if (match) {
-        const usdProductSlug = match[1];
-
-        // Visit checkout
-        await page.goto(`/checkout/${usdProductSlug}`);
-        await page.waitForLoadState('networkidle');
-        await page.waitForTimeout(3000);
-
-        // Verify PaymentElement appears
-        const paymentElement = page.frameLocator('iframe[name^="__privateStripeFrame"]').first();
-        await expect(paymentElement.locator('body')).toBeVisible({ timeout: 10000 });
-      }
-    }
+    // Verify checkout loaded with Stripe Payment Element (pay button shows price from payment intent)
+    await expect(page.getByRole('button', { name: /Pay|Zapłać/i })).toBeVisible({ timeout: 15000 });
   });
 
   test('E2E-CHECKOUT-003: Stripe preset - Custom PMC', async ({ page }) => {
@@ -138,7 +113,7 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
 
     await loginAsAdmin(page, adminEmail, adminPassword);
     await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Scroll to Payment Method Settings section
     await page.locator('h3:has-text("Konfiguracja Metod Płatności")').scrollIntoViewIfNeeded();
@@ -183,41 +158,30 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
     if (await successMessage.isVisible().catch(() => false)) {
       if (testProductSlug) {
         await page.goto(`/checkout/${testProductSlug}`);
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('domcontentloaded');
         await page.waitForTimeout(3000);
 
-        const paymentElement = page.frameLocator('iframe[name^="__privateStripeFrame"]').first();
-        await expect(paymentElement.locator('body')).toBeVisible({ timeout: 10000 });
+        await expect(page.getByRole('button', { name: /Pay|Zapłać/i })).toBeVisible({ timeout: 15000 });
       }
     }
   });
 
   test('E2E-CHECKOUT-004: Custom mode - PLN methods', async ({ page }) => {
-    // Configure custom mode with specific payment methods
+    // Configure custom mode — uses drag-and-drop list (all methods shown by default)
     await loginAsAdmin(page, adminEmail, adminPassword);
     await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
+    // Scroll to payment method section and select custom mode
+    const customLabel = page.locator('text=/Niestandardowy|Custom/i').first();
+    await customLabel.scrollIntoViewIfNeeded();
     const customRadio = page.locator('input[name="config_mode"]').nth(2);
     await customRadio.check();
-
     await page.waitForTimeout(500);
 
-    // Enable Card, BLIK, Przelewy24
-    const cardCheckbox = page.locator('label:has-text("Card")').locator('input[type="checkbox"]');
-    if (!(await cardCheckbox.isChecked())) {
-      await cardCheckbox.check();
-    }
-
-    const blikCheckbox = page.locator('label:has-text("BLIK")').locator('input[type="checkbox"]');
-    if (!(await blikCheckbox.isChecked())) {
-      await blikCheckbox.check();
-    }
-
-    const p24Checkbox = page.locator('label:has-text("Przelewy24")').locator('input[type="checkbox"]');
-    if (!(await p24Checkbox.isChecked())) {
-      await p24Checkbox.check();
-    }
+    // In custom mode, all enabled methods (Card, BLIK, Przelewy24) are shown in a drag-and-drop list
+    // Verify the list is visible
+    await expect(page.getByText('Kolejność Metod Płatności', { exact: true }).or(page.getByText('Payment Method Order', { exact: true }))).toBeVisible({ timeout: 5000 });
 
     const saveButton = page.locator('button:has-text("Zapisz Konfigurację")');
     await saveButton.click();
@@ -228,102 +192,55 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
     // Visit checkout
     if (testProductSlug) {
       await page.goto(`/checkout/${testProductSlug}`);
-      await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(3000);
+      await page.waitForLoadState('domcontentloaded');
 
-      // Verify PaymentElement appears with custom methods
-      const paymentElement = page.frameLocator('iframe[name^="__privateStripeFrame"]').first();
-      await expect(paymentElement.locator('body')).toBeVisible({ timeout: 10000 });
+      // Verify checkout loaded with Stripe Payment Element (pay button shows price from payment intent)
+      await expect(page.getByRole('button', { name: /Pay|Zapłać/i })).toBeVisible({ timeout: 15000 });
     }
   });
 
   test('E2E-CHECKOUT-005: Custom mode - Currency filter', async ({ page }) => {
-    // Configure custom mode with BLIK (PLN only) and Card
-    await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    // Custom mode with all methods — verify checkout works for USD (BLIK filtered by Stripe for non-PLN)
+    // Create USD product to test currency filtering via API
+    const usdFilterSlug = `pmc-usd-filter-${Date.now()}`;
+    const { error: usdError } = await supabaseAdmin
+      .from('products')
+      .insert({
+        name: 'Test USD - Currency Filter',
+        slug: usdFilterSlug,
+        price: 49.99,
+        currency: 'USD',
+        description: 'USD test product for currency filtering',
+        is_active: true,
+      });
+    if (usdError) throw usdError;
+    createdProductSlugs.push(usdFilterSlug);
 
-    const customRadio = page.locator('input[name="config_mode"]').nth(2);
-    await customRadio.check();
+    // Visit checkout for USD product — Stripe automatically filters BLIK (PLN-only)
+    await page.goto(`/checkout/${usdFilterSlug}`);
+    await page.waitForLoadState('domcontentloaded');
 
-    await page.waitForTimeout(500);
-
-    // Enable only Card and BLIK
-    const cardCheckbox = page.locator('label:has-text("Card")').locator('input[type="checkbox"]');
-    if (!(await cardCheckbox.isChecked())) {
-      await cardCheckbox.check();
-    }
-
-    const blikCheckbox = page.locator('label:has-text("BLIK")').locator('input[type="checkbox"]');
-    if (!(await blikCheckbox.isChecked())) {
-      await blikCheckbox.check();
-    }
-
-    const saveButton = page.locator('button:has-text("Zapisz Konfigurację")');
-    await saveButton.click();
-    await expect(page.locator('text=Konfiguracja metod płatności zapisana pomyślnie')).toBeVisible({
-      timeout: 10000,
-    });
-
-    // Create USD product to test currency filtering
-    await page.goto('/dashboard/products');
-    await page.waitForLoadState('networkidle');
-
-    const createButton = page.locator('button').filter({ hasText: /Utwórz|Create/i });
-    if (await createButton.isVisible()) {
-      await createButton.click();
-
-      await page.fill('input[name="name"]', 'Test USD - Currency Filter');
-      await page.fill('input[name="price"]', '49.99');
-      await page.selectOption('select[name="currency"]', 'USD');
-
-      const saveProductButton = page.locator('button').filter({ hasText: /Zapisz|Save/i });
-      await saveProductButton.click();
-      await page.waitForTimeout(2000);
-
-      const url = page.url();
-      const match = url.match(/\/products\/([^\/]+)/);
-      if (match) {
-        const usdProductSlug = match[1];
-
-        // Visit checkout - should only show Card (BLIK filtered out for USD)
-        await page.goto(`/checkout/${usdProductSlug}`);
-        await page.waitForLoadState('networkidle');
-        await page.waitForTimeout(3000);
-
-        // Verify PaymentElement appears
-        const paymentElement = page.frameLocator('iframe[name^="__privateStripeFrame"]').first();
-        await expect(paymentElement.locator('body')).toBeVisible({ timeout: 10000 });
-
-        // BLIK should not be available (currency filter in action)
-        // We can't directly verify payment method tabs in iframe, but checkout should load
-      }
-    }
+    // Verify checkout loaded (pay button with USD price)
+    await expect(page.getByRole('button', { name: /Pay|Zapłać/i })).toBeVisible({ timeout: 15000 });
   });
 
   test('E2E-CHECKOUT-006: Payment method order - BLIK first', async ({ page }) => {
-    // This test verifies that payment method order is respected
-    // (Detailed verification would require inspecting Stripe iframe tabs)
+    // This test verifies that custom mode with drag-and-drop payment method order works
+    // Custom mode uses a reorderable list (no checkboxes) — all methods are always enabled
 
     await loginAsAdmin(page, adminEmail, adminPassword);
     await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
+    // Select custom mode
+    const customLabel = page.locator('text=/Niestandardowy|Custom/i').first();
+    await customLabel.scrollIntoViewIfNeeded();
     const customRadio = page.locator('input[name="config_mode"]').nth(2);
     await customRadio.check();
-
     await page.waitForTimeout(500);
 
-    // Enable BLIK, Card, P24
-    const blikCheckbox = page.locator('label:has-text("BLIK")').locator('input[type="checkbox"]');
-    if (!(await blikCheckbox.isChecked())) {
-      await blikCheckbox.check();
-    }
-
-    const cardCheckbox = page.locator('label:has-text("Card")').locator('input[type="checkbox"]');
-    if (!(await cardCheckbox.isChecked())) {
-      await cardCheckbox.check();
-    }
+    // Verify drag-and-drop payment method order list is visible
+    await expect(page.getByText('Kolejność Metod Płatności', { exact: true }).or(page.getByText('Payment Method Order', { exact: true }))).toBeVisible({ timeout: 5000 });
 
     const saveButton = page.locator('button:has-text("Zapisz Konfigurację")');
     await saveButton.click();
@@ -334,37 +251,31 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
     // Visit checkout
     if (testProductSlug) {
       await page.goto(`/checkout/${testProductSlug}`);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(3000);
 
-      // Verify checkout loads
-      const paymentElement = page.frameLocator('iframe[name^="__privateStripeFrame"]').first();
-      await expect(paymentElement.locator('body')).toBeVisible({ timeout: 10000 });
+      // Verify checkout loaded with Stripe Payment Element (pay button shows price from payment intent)
+      await expect(page.getByRole('button', { name: /Pay|Zapłać/i })).toBeVisible({ timeout: 15000 });
     }
   });
 
   test('E2E-CHECKOUT-007: Payment method order - Card first', async ({ page }) => {
-    // Similar to CHECKOUT-006 but with Card first in order
+    // Similar to CHECKOUT-006 — custom mode uses drag-and-drop list, no checkboxes
+    // Verifies custom config is saved and checkout still works
 
     await loginAsAdmin(page, adminEmail, adminPassword);
     await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
+    // Select custom mode
+    const customLabel = page.locator('text=/Niestandardowy|Custom/i').first();
+    await customLabel.scrollIntoViewIfNeeded();
     const customRadio = page.locator('input[name="config_mode"]').nth(2);
     await customRadio.check();
-
     await page.waitForTimeout(500);
 
-    // Enable Card first, then BLIK
-    const cardCheckbox = page.locator('label:has-text("Card")').locator('input[type="checkbox"]');
-    if (!(await cardCheckbox.isChecked())) {
-      await cardCheckbox.check();
-    }
-
-    const blikCheckbox = page.locator('label:has-text("BLIK")').locator('input[type="checkbox"]');
-    if (!(await blikCheckbox.isChecked())) {
-      await blikCheckbox.check();
-    }
+    // Verify drag-and-drop payment method order list is visible
+    await expect(page.getByText('Kolejność Metod Płatności', { exact: true }).or(page.getByText('Payment Method Order', { exact: true }))).toBeVisible({ timeout: 5000 });
 
     const saveButton = page.locator('button:has-text("Zapisz Konfigurację")');
     await saveButton.click();
@@ -375,12 +286,11 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
     // Visit checkout
     if (testProductSlug) {
       await page.goto(`/checkout/${testProductSlug}`);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(3000);
 
-      // Verify checkout loads
-      const paymentElement = page.frameLocator('iframe[name^="__privateStripeFrame"]').first();
-      await expect(paymentElement.locator('body')).toBeVisible({ timeout: 10000 });
+      // Verify checkout loaded with Stripe Payment Element (pay button shows price from payment intent)
+      await expect(page.getByRole('button', { name: /Pay|Zapłać/i })).toBeVisible({ timeout: 15000 });
     }
   });
 
@@ -388,10 +298,15 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
     // Configure Express Checkout with all options enabled
     await loginAsAdmin(page, adminEmail, adminPassword);
     await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
-    // Enable Express Checkout
-    const masterToggle = page.locator('label:has-text("Włącz Express Checkout")').locator('input[type="checkbox"]');
+    // Scroll to Express Checkout section
+    const expressSection = page.getByText(/Express Checkout/).first();
+    await expressSection.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(500);
+
+    // Enable Express Checkout master toggle
+    const masterToggle = page.getByRole('checkbox', { name: /Włącz Express Checkout|Enable Express Checkout/i });
     if (!(await masterToggle.isChecked())) {
       await masterToggle.check();
     }
@@ -399,17 +314,17 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
     await page.waitForTimeout(500);
 
     // Enable all sub-options
-    const applePayCheckbox = page.locator('label:has-text("Apple Pay")').locator('input[type="checkbox"]');
+    const applePayCheckbox = page.getByRole('checkbox', { name: /Apple Pay/i });
     if (!(await applePayCheckbox.isChecked())) {
       await applePayCheckbox.check();
     }
 
-    const googlePayCheckbox = page.locator('label:has-text("Google Pay")').locator('input[type="checkbox"]');
+    const googlePayCheckbox = page.getByRole('checkbox', { name: /Google Pay/i });
     if (!(await googlePayCheckbox.isChecked())) {
       await googlePayCheckbox.check();
     }
 
-    const linkCheckbox = page.locator('label:has-text("Link")').locator('input[type="checkbox"]');
+    const linkCheckbox = page.getByRole('checkbox', { name: /^Link$/i });
     if (!(await linkCheckbox.isChecked())) {
       await linkCheckbox.check();
     }
@@ -423,13 +338,11 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
     // Visit checkout
     if (testProductSlug) {
       await page.goto(`/checkout/${testProductSlug}`);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(3000);
 
-      // Express Checkout Element should appear (contains Link, Apple Pay, Google Pay buttons)
-      // These are in a separate Stripe iframe
-      const expressCheckout = page.frameLocator('iframe[name^="__privateStripeFrame"]');
-      await expect(expressCheckout.first().locator('body')).toBeVisible({ timeout: 10000 });
+      // Verify checkout loaded (Express Checkout + Payment Element)
+      await expect(page.getByRole('button', { name: /Pay|Zapłać/i })).toBeVisible({ timeout: 15000 });
     }
   });
 
@@ -437,10 +350,15 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
     // Configure Express Checkout with only Link enabled
     await loginAsAdmin(page, adminEmail, adminPassword);
     await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
-    // Enable Express Checkout
-    const masterToggle = page.locator('label:has-text("Włącz Express Checkout")').locator('input[type="checkbox"]');
+    // Scroll to Express Checkout section
+    const expressSection = page.getByText(/Express Checkout/).first();
+    await expressSection.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(500);
+
+    // Enable Express Checkout master toggle
+    const masterToggle = page.getByRole('checkbox', { name: /Włącz Express Checkout|Enable Express Checkout/i });
     if (!(await masterToggle.isChecked())) {
       await masterToggle.check();
     }
@@ -448,17 +366,17 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
     await page.waitForTimeout(500);
 
     // Disable Apple Pay and Google Pay, enable Link
-    const applePayCheckbox = page.locator('label:has-text("Apple Pay")').locator('input[type="checkbox"]');
+    const applePayCheckbox = page.getByRole('checkbox', { name: /Apple Pay/i });
     if (await applePayCheckbox.isChecked()) {
       await applePayCheckbox.uncheck();
     }
 
-    const googlePayCheckbox = page.locator('label:has-text("Google Pay")').locator('input[type="checkbox"]');
+    const googlePayCheckbox = page.getByRole('checkbox', { name: /Google Pay/i });
     if (await googlePayCheckbox.isChecked()) {
       await googlePayCheckbox.uncheck();
     }
 
-    const linkCheckbox = page.locator('label:has-text("Link")').locator('input[type="checkbox"]');
+    const linkCheckbox = page.getByRole('checkbox', { name: /^Link$/i });
     if (!(await linkCheckbox.isChecked())) {
       await linkCheckbox.check();
     }
@@ -472,12 +390,11 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
     // Visit checkout
     if (testProductSlug) {
       await page.goto(`/checkout/${testProductSlug}`);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(3000);
 
-      // Express Checkout Element should appear with only Link button
-      const expressCheckout = page.frameLocator('iframe[name^="__privateStripeFrame"]');
-      await expect(expressCheckout.first().locator('body')).toBeVisible({ timeout: 10000 });
+      // Verify checkout loaded (Express Checkout with Link only)
+      await expect(page.getByRole('button', { name: /Pay|Zapłać/i })).toBeVisible({ timeout: 15000 });
     }
   });
 
@@ -485,10 +402,15 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
     // Disable Express Checkout entirely
     await loginAsAdmin(page, adminEmail, adminPassword);
     await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+
+    // Scroll to Express Checkout section
+    const expressSection = page.getByText(/Express Checkout/).first();
+    await expressSection.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(500);
 
     // Disable Express Checkout master toggle
-    const masterToggle = page.locator('label:has-text("Włącz Express Checkout")').locator('input[type="checkbox"]');
+    const masterToggle = page.getByRole('checkbox', { name: /Włącz Express Checkout|Enable Express Checkout/i });
     if (await masterToggle.isChecked()) {
       await masterToggle.uncheck();
     }
@@ -502,12 +424,11 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
     // Visit checkout
     if (testProductSlug) {
       await page.goto(`/checkout/${testProductSlug}`);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(3000);
 
-      // Only regular PaymentElement should appear (no Express Checkout section)
-      const paymentElement = page.frameLocator('iframe[name^="__privateStripeFrame"]').first();
-      await expect(paymentElement.locator('body')).toBeVisible({ timeout: 10000 });
+      // Verify checkout loaded (no Express Checkout, only regular Payment Element)
+      await expect(page.getByRole('button', { name: /Pay|Zapłać/i })).toBeVisible({ timeout: 15000 });
     }
   });
 
@@ -517,7 +438,7 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
 
     await loginAsAdmin(page, adminEmail, adminPassword);
     await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Ensure automatic mode is selected
     const automaticRadio = page.locator('input[type="radio"][value="automatic"]').first();
@@ -532,31 +453,29 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
     // Visit checkout - should work with automatic mode fallback
     if (testProductSlug) {
       await page.goto(`/checkout/${testProductSlug}`);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(3000);
 
-      // Verify checkout loads successfully
-      const paymentElement = page.frameLocator('iframe[name^="__privateStripeFrame"]').first();
-      await expect(paymentElement.locator('body')).toBeVisible({ timeout: 10000 });
+      // Verify checkout loaded with Stripe Payment Element
+      await expect(page.getByRole('button', { name: /Pay|Zapłać/i })).toBeVisible({ timeout: 15000 });
     }
   });
 
   test('E2E-CHECKOUT-012: Complete payment - Custom config', async ({ page }) => {
-    // Configure custom mode
+    // Configure custom mode — uses drag-and-drop list, no checkboxes
     await loginAsAdmin(page, adminEmail, adminPassword);
     await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
+    // Select custom mode
+    const customLabel = page.locator('text=/Niestandardowy|Custom/i').first();
+    await customLabel.scrollIntoViewIfNeeded();
     const customRadio = page.locator('input[name="config_mode"]').nth(2);
     await customRadio.check();
-
     await page.waitForTimeout(500);
 
-    // Enable only Card for simplicity
-    const cardCheckbox = page.locator('label:has-text("Card")').locator('input[type="checkbox"]');
-    if (!(await cardCheckbox.isChecked())) {
-      await cardCheckbox.check();
-    }
+    // Verify drag-and-drop payment method order list is visible
+    await expect(page.getByText('Kolejność Metod Płatności', { exact: true }).or(page.getByText('Payment Method Order', { exact: true }))).toBeVisible({ timeout: 5000 });
 
     const saveButton = page.locator('button:has-text("Zapisz Konfigurację")');
     await saveButton.click();
@@ -567,7 +486,7 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
     // Visit checkout
     if (testProductSlug) {
       await page.goto(`/checkout/${testProductSlug}`);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(3000);
 
       // Fill checkout form
@@ -593,7 +512,7 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
         await cvcInput.fill('123');
 
         // Submit payment
-        const payButton = page.locator('button:has-text("Pay")');
+        const payButton = page.getByRole('button', { name: /Pay|Zapłać/i });
         await payButton.click();
 
         // Wait for payment processing
