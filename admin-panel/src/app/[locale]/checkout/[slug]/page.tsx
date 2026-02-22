@@ -7,7 +7,6 @@ import ProductPurchaseView from './components/ProductPurchaseView';
 import { getEffectivePaymentMethodOrder } from '@/lib/utils/payment-method-helpers';
 import { extractExpressCheckoutConfig } from '@/types/payment-config';
 import type { PaymentMethodConfig } from '@/types/payment-config';
-import { getShopConfig } from '@/lib/actions/shop-config';
 import { validateLicense, extractDomainFromUrl } from '@/lib/license/verify';
 
 interface PageProps {
@@ -89,10 +88,6 @@ export default async function CheckoutPage({ params }: PageProps) {
     : undefined;
   const expressCheckoutConfig = extractExpressCheckoutConfig(paymentConfig);
 
-  // Get checkout theme override from shop config
-  const shopConfig = await getShopConfig();
-  const checkoutTheme = shopConfig?.checkout_theme || 'system';
-
   // Check GateFlow license validity (controls "Powered by" branding)
   const { data: integrationsConfig } = await adminSupabase
     .from('integrations_config')
@@ -110,7 +105,6 @@ export default async function CheckoutPage({ params }: PageProps) {
       product={product}
       paymentMethodOrder={paymentMethodOrder}
       expressCheckoutConfig={expressCheckoutConfig}
-      checkoutTheme={checkoutTheme}
       licenseValid={licenseValid}
     />
   );

@@ -5,6 +5,7 @@ import { ConfigProvider } from "@/components/providers/config-provider";
 import { ThemeProvider, ThemeScript } from "@/components/providers/theme-provider";
 import { TrackingConfigProvider } from "@/components/providers/tracking-config-provider";
 import { getPublicIntegrationsConfig } from "@/lib/actions/integrations";
+import { getShopConfig } from "@/lib/actions/shop-config";
 import TrackingProvider from "@/components/TrackingProvider";
 import { Suspense } from "react";
 
@@ -28,12 +29,16 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const config = await getPublicIntegrationsConfig().catch(() => null);
+  const [config, shopConfig] = await Promise.all([
+    getPublicIntegrationsConfig().catch(() => null),
+    getShopConfig().catch(() => null),
+  ]);
+  const adminTheme = shopConfig?.checkout_theme || undefined;
 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <ThemeScript />
+        <ThemeScript adminTheme={adminTheme} />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -43,7 +48,7 @@ export default async function RootLayout({
           <TrackingProvider config={config} />
         </Suspense>
 
-        <ThemeProvider>
+        <ThemeProvider adminTheme={adminTheme}>
           <TrackingConfigProvider config={config}>
             <ConfigProvider>
               {children}

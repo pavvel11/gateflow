@@ -29,20 +29,35 @@ function applyTheme(resolved: 'light' | 'dark') {
   }
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+interface ThemeProviderProps {
+  children: React.ReactNode
+  adminTheme?: string
+}
+
+export function ThemeProvider({ children, adminTheme }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>('system')
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark')
 
-  // Initialize from localStorage
+  // Initialize from localStorage, falling back to admin theme from shop config
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY) as Theme | null
-    const initial = stored && ['light', 'dark', 'system'].includes(stored) ? stored : 'system'
+    const hasUserPreference = stored && ['light', 'dark', 'system'].includes(stored)
+
+    let initial: Theme
+    if (hasUserPreference) {
+      initial = stored
+    } else if (adminTheme && ['light', 'dark', 'system'].includes(adminTheme)) {
+      initial = adminTheme as Theme
+    } else {
+      initial = 'system'
+    }
+
     setThemeState(initial)
 
     const resolved = initial === 'system' ? getSystemTheme() : initial
     setResolvedTheme(resolved)
     applyTheme(resolved)
-  }, [])
+  }, [adminTheme])
 
   // Listen for OS theme changes when in system mode
   useEffect(() => {
@@ -64,7 +79,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const resolved = newTheme === 'system' ? getSystemTheme() : newTheme
     setResolvedTheme(resolved)
     applyTheme(resolved)
-    // Notify listeners (e.g. checkout force-theme tracking)
     window.dispatchEvent(new CustomEvent('gf-theme-change', { detail: newTheme }))
   }, [])
 
@@ -90,14 +104,21 @@ export function useTheme() {
 /**
  * Inline script to prevent FOUC — inject into <head> before React hydration.
  * Reads localStorage and applies .dark class immediately.
+ * Falls back to adminTheme from shop config when no user preference exists.
  */
-export function ThemeScript() {
+export function ThemeScript({ adminTheme }: { adminTheme?: string }) {
   const script = `
     (function() {
       try {
         var t = localStorage.getItem('${STORAGE_KEY}');
-        var dark = t === 'dark' || (t !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        if (dark) document.documentElement.classList.add('dark');
+        var admin = ${JSON.stringify(adminTheme || null)};
+        if (t === 'dark' || t === 'light') {
+          if (t === 'dark') document.documentElement.classList.add('dark');
+        } else if (admin === 'dark' || admin === 'light') {
+          if (admin === 'dark') document.documentElement.classList.add('dark');
+        } else {
+          if (window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
+        }
       } catch(e) {}
     })();
   `
