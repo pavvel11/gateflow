@@ -1205,7 +1205,24 @@
           "showPresetsHelp": "Display suggested amounts as quick-select buttons on checkout",
           "presetAmount": "Amount"
         },
-        "enabled": "Enabled"
+        "enabled": "Enabled",
+        "wizard": {
+          "title": "Create New Product",
+          "subtitle": "Set up your product in a few quick steps",
+          "step1": "Essentials",
+          "step2": "Content & Details",
+          "step3": "Sales & Settings",
+          "stepOf": "Step {current} of {total}",
+          "createProduct": "Create Product",
+          "continueSetup": "Continue Setup",
+          "back": "Back",
+          "cancel": "Cancel",
+          "earlyCreateHint": "You can create your product now with just the essentials, or continue to configure content delivery, pricing promotions, and more.",
+          "exitTitle": "Discard changes?",
+          "exitMessage": "You have unsaved product data. Close without creating?",
+          "exitDiscard": "Discard",
+          "exitKeepEditing": "Keep Editing"
+        }
       }
     },
     "categories": {
@@ -1835,6 +1852,26 @@
       "registrations": "Tax Registrations",
       "noRegistrations": "No active tax registrations",
       "headOffice": "Head office",
+      "toggles": {
+        "automaticTax": "Automatic Tax Calculation",
+        "automaticTaxDescription": "Automatically calculate and apply taxes to checkout sessions.",
+        "taxIdCollection": "Tax ID Collection",
+        "taxIdCollectionDescription": "Allow customers to provide their tax ID (e.g., VAT number) during checkout.",
+        "billingAddress": "Billing Address",
+        "billingAddressDescription": "Whether billing address is optional or required during checkout.",
+        "billingAuto": "Auto",
+        "billingRequired": "Required",
+        "expiresHours": "Session Expiry",
+        "expiresHoursDescription": "How many hours a checkout session remains valid (1\u2013168).",
+        "expiresHoursSuffix": "hours",
+        "collectTerms": "Terms of Service Consent",
+        "collectTermsDescription": "Require customers to accept Terms of Service during checkout.",
+        "sourceDb": "DB",
+        "sourceEnv": "ENV",
+        "sourceDefault": "Default"
+      },
+      "saveSuccess": "Tax settings saved",
+      "saveError": "Failed to save tax settings",
       "links": {
         "taxSettings": "Tax Settings",
         "taxRegistrations": "Registrations",
@@ -1870,13 +1907,13 @@
       "bodyTextPreview": "This is how your body text will look with the {font} font."
     },
     "checkoutTheme": {
-      "title": "Checkout Theme",
-      "description": "Force a specific theme on checkout pages. 'System' follows the customer's device preference.",
+      "title": "Site Theme",
+      "description": "Force a specific theme across the entire site. 'System' follows the visitor's device preference.",
       "system": "System",
       "light": "Light",
       "dark": "Dark",
-      "saveSuccess": "Checkout theme updated.",
-      "saveError": "Failed to save checkout theme."
+      "saveSuccess": "Site theme updated.",
+      "saveError": "Failed to save site theme."
     },
     "legal": {
       "title": "Legal Documents",

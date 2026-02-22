@@ -1220,7 +1220,24 @@
           "showPresetsHelp": "Wyświetl sugerowane kwoty jako przyciski szybkiego wyboru na stronie checkout",
           "presetAmount": "Kwota"
         },
-        "enabled": "Włączone"
+        "enabled": "Włączone",
+        "wizard": {
+          "title": "Utwórz nowy produkt",
+          "subtitle": "Skonfiguruj produkt w kilku prostych krokach",
+          "step1": "Podstawy",
+          "step2": "Treść i szczegóły",
+          "step3": "Sprzedaż i ustawienia",
+          "stepOf": "Krok {current} z {total}",
+          "createProduct": "Utwórz produkt",
+          "continueSetup": "Dalej",
+          "back": "Wstecz",
+          "cancel": "Anuluj",
+          "earlyCreateHint": "Możesz utworzyć produkt teraz z samymi podstawami lub kontynuować konfigurację dostawy treści, promocji cenowych i więcej.",
+          "exitTitle": "Odrzucić zmiany?",
+          "exitMessage": "Masz niezapisane dane produktu. Zamknąć bez tworzenia?",
+          "exitDiscard": "Odrzuć",
+          "exitKeepEditing": "Kontynuuj edycję"
+        }
       }
     },
     "categories": {
@@ -1850,6 +1867,26 @@
       "registrations": "Rejestracje podatkowe",
       "noRegistrations": "Brak aktywnych rejestracji podatkowych",
       "headOffice": "Siedziba firmy",
+      "toggles": {
+        "automaticTax": "Automatyczne naliczanie podatków",
+        "automaticTaxDescription": "Automatycznie obliczaj i naliczaj podatki w sesjach checkout.",
+        "taxIdCollection": "Zbieranie numeru NIP",
+        "taxIdCollectionDescription": "Pozwól klientom podać numer NIP (np. VAT) podczas checkout.",
+        "billingAddress": "Adres rozliczeniowy",
+        "billingAddressDescription": "Czy adres rozliczeniowy jest opcjonalny czy wymagany podczas checkout.",
+        "billingAuto": "Auto",
+        "billingRequired": "Wymagany",
+        "expiresHours": "Ważność sesji",
+        "expiresHoursDescription": "Ile godzin sesja checkout pozostaje aktywna (1\u2013168).",
+        "expiresHoursSuffix": "godz.",
+        "collectTerms": "Zgoda na regulamin",
+        "collectTermsDescription": "Wymagaj od klientów akceptacji regulaminu podczas checkout.",
+        "sourceDb": "DB",
+        "sourceEnv": "ENV",
+        "sourceDefault": "Domyślnie"
+      },
+      "saveSuccess": "Ustawienia podatkowe zapisane",
+      "saveError": "Nie udało się zapisać ustawień podatkowych",
       "links": {
         "taxSettings": "Ustawienia podatkowe",
         "taxRegistrations": "Rejestracje",
@@ -1885,13 +1922,13 @@
       "bodyTextPreview": "Tak będzie wyglądał twój tekst z czcionką {font}."
     },
     "checkoutTheme": {
-      "title": "Motyw koszyka",
-      "description": "Wymuś konkretny motyw na stronach koszyka. 'Systemowy' podąża za preferencjami urządzenia klienta.",
+      "title": "Motyw strony",
+      "description": "Wymuś konkretny motyw na całej stronie. 'Systemowy' podąża za preferencjami urządzenia odwiedzającego.",
       "system": "Systemowy",
       "light": "Jasny",
       "dark": "Ciemny",
-      "saveSuccess": "Motyw koszyka zaktualizowany.",
-      "saveError": "Nie udało się zapisać motywu koszyka."
+      "saveSuccess": "Motyw strony zaktualizowany.",
+      "saveError": "Nie udało się zapisać motywu strony."
     },
     "legal": {
       "title": "Dokumenty prawne",
