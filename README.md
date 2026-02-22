@@ -4,13 +4,17 @@
 
 **Self-hosted platform for selling and protecting digital products**
 
-[![Version](https://img.shields.io/badge/version-1.0.3-blue?style=flat-square)](https://github.com/jurczykpawel/gateflow/releases)
-[![Tests](https://img.shields.io/badge/tests-2,650%20passing-brightgreen?style=flat-square)](./admin-panel/tests)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
-[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
+**An alternative to** Gumroad, LemonSqueezy, Paddle — with zero platform fees
 
-[Documentation](./FEATURES.md) · [Deployment Guide](./docs/DEPLOYMENT-MIKRUS.md)
+![Version](https://img.shields.io/badge/version-1.0.3-blue)
+![Tests](https://img.shields.io/badge/tests-2,650%20passing-brightgreen)
+![Status](https://img.shields.io/badge/Status-Production--Ready-brightgreen)
+![Open Source](https://img.shields.io/badge/Open%20Source-100%25-brightgreen)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
+![License](https://img.shields.io/badge/License-MIT-green)
+
+[Documentation](./FEATURES.md) · [Deployment Guide](./docs/DEPLOYMENT-MIKRUS.md) · [Contributing](./CONTRIBUTING.md) · [Issues](https://github.com/jurczykpawel/gateflow/issues)
 
 </div>
 
@@ -148,6 +152,14 @@ Try GateFlow without installing anything: **[gateflow.cytr.us](https://gateflow.
 
 ## Quick Start
 
+### Prerequisites
+
+- [Bun](https://bun.sh/) v1.1+ (runtime & package manager)
+- [Docker](https://www.docker.com/) (for local Supabase)
+- [Supabase CLI](https://supabase.com/docs/guides/cli) v2.45+
+
+### Run Locally
+
 ```bash
 # 1. Clone
 git clone https://github.com/jurczykpawel/gateflow.git
@@ -167,6 +179,14 @@ bun run dev
 
 Open **http://localhost:3000** — the first registered user becomes admin.
 
+### Build for Production
+
+```bash
+cd admin-panel
+bun run build
+bun start
+```
+
 ---
 
 ## Tech Stack
@@ -180,6 +200,28 @@ Open **http://localhost:3000** — the first registered user becomes admin.
 | Payments | Stripe (Elements, Checkout, Webhooks) |
 | Testing | Playwright (1,127 E2E) + Vitest (1,523 unit) |
 | i18n | next-intl (EN, PL) |
+
+---
+
+## Architecture
+
+```
+gateflow/
+├── admin-panel/       # Next.js app (main codebase)
+│   ├── src/
+│   │   ├── app/       # App Router (pages, API routes)
+│   │   ├── components/# React components (admin, checkout, UI)
+│   │   ├── lib/       # Services, utils, Stripe, Supabase
+│   │   ├── messages/  # i18n (EN, PL)
+│   │   └── types/     # TypeScript definitions
+│   └── tests/         # Playwright E2E + Vitest unit
+├── mcp-server/        # MCP server for Claude Desktop
+├── supabase/          # Migrations, seed data, RPC functions
+├── bruno/             # API collection (Bruno client)
+├── templates/         # HTML templates for content protection
+├── scripts/           # Utility scripts
+└── docs/              # Deployment guides
+```
 
 ---
 
@@ -230,6 +272,21 @@ See **[FEATURES.md](./FEATURES.md)** for details on all integrations.
 
 ---
 
+## Roadmap
+
+- [x] Dark/Light theme with admin control
+- [x] REST API v1 with OpenAPI 3.1 + Swagger UI
+- [x] MCP Server for Claude Desktop
+- [ ] **In Progress**: Simple Funnel System (OTO chaining)
+- [ ] Zero-Config Setup Wizard (no .env needed)
+- [ ] Transactional Emails & Logs
+- [ ] Invoicing Integration (Fakturownia, KSeF)
+- [ ] Stripe Subscriptions (recurring payments)
+
+Full roadmap → [BACKLOG.md](./BACKLOG.md)
+
+---
+
 ## Project Stats
 
 ```
@@ -246,13 +303,25 @@ See **[FEATURES.md](./FEATURES.md)** for details on all integrations.
 
 ## Contributing
 
-Contributions are welcome. Please read the contribution guidelines before submitting a pull request.
+Contributions are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup and guidelines.
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes
-4. Push to the branch
-5. Open a Pull Request
+Ways to contribute:
+- Report bugs via [Issues](https://github.com/jurczykpawel/gateflow/issues)
+- Submit feature requests
+- Open Pull Requests
+- Improve documentation or translations
+
+---
+
+## Security
+
+See [SECURITY.md](./SECURITY.md) for reporting vulnerabilities.
+
+---
+
+## Acknowledgments
+
+Built with [Next.js](https://nextjs.org/), [Supabase](https://supabase.com/), [Stripe](https://stripe.com/), [Tailwind CSS](https://tailwindcss.com/), [Playwright](https://playwright.dev/), [Vitest](https://vitest.dev/), and [next-intl](https://next-intl.dev/).
 
 ---
 
