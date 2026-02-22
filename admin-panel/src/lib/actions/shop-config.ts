@@ -23,6 +23,15 @@ export interface ShopConfig {
   // Checkout appearance
   checkout_theme?: 'system' | 'light' | 'dark' | null
 
+  // Stripe Tax toggles (null = use env var)
+  automatic_tax_enabled?: boolean | null
+  tax_id_collection_enabled?: boolean | null
+
+  // Checkout session settings (null = use env var)
+  checkout_billing_address?: 'auto' | 'required' | null
+  checkout_expires_hours?: number | null
+  checkout_collect_terms?: boolean | null
+
   // EU Omnibus Directive (2019/2161)
   omnibus_enabled: boolean
 

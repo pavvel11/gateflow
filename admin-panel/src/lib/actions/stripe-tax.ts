@@ -1,6 +1,7 @@
 'use server'
 
 import { getStripeServer } from '@/lib/stripe/server'
+import { getCheckoutConfig, type CheckoutConfig } from '@/lib/stripe/checkout-config'
 import Stripe from 'stripe'
 
 export type TaxStatusValue =
@@ -88,6 +89,24 @@ export async function getStripeTaxStatus(): Promise<StripeTaxStatusResponse> {
       success: false,
       error:
         error instanceof Error ? error.message : 'Failed to retrieve tax status',
+    }
+  }
+}
+
+export type CheckoutConfigResponse = {
+  success: boolean
+  data?: CheckoutConfig
+  error?: string
+}
+
+export async function getCheckoutConfigAction(): Promise<CheckoutConfigResponse> {
+  try {
+    const config = await getCheckoutConfig()
+    return { success: true, data: config }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to resolve checkout config',
     }
   }
 }

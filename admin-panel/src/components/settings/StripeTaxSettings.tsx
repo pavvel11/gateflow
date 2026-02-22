@@ -8,8 +8,11 @@ import {
   AlertCircle,
   Info,
 } from 'lucide-react'
-import { getStripeTaxStatus } from '@/lib/actions/stripe-tax'
+import { getStripeTaxStatus, getCheckoutConfigAction } from '@/lib/actions/stripe-tax'
 import type { StripeTaxStatus } from '@/lib/actions/stripe-tax'
+import type { ConfigSource } from '@/lib/stripe/checkout-config'
+import { getShopConfig, updateShopConfig } from '@/lib/actions/shop-config'
+import { useToast } from '@/contexts/ToastContext'
 import { useTranslations } from 'next-intl'
 
 const COUNTRY_NAMES: Record<string, string> = {
@@ -42,21 +45,104 @@ const DASHBOARD_LINKS = [
   { key: 'taxReports', url: 'https://dashboard.stripe.com/tax/reporting' },
 ] as const
 
+function SourceBadge({ source }: { source: ConfigSource }) {
+  const t = useTranslations('settings.stripeTax.toggles')
+  const styles: Record<ConfigSource, string> = {
+    db: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
+    env: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+    default: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400',
+  }
+  const labels: Record<ConfigSource, string> = {
+    db: t('sourceDb'),
+    env: t('sourceEnv'),
+    default: t('sourceDefault'),
+  }
+  return (
+    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${styles[source]}`}>
+      {labels[source]}
+    </span>
+  )
+}
+
+function Toggle({
+  enabled,
+  onChange,
+  disabled,
+}: {
+  enabled: boolean
+  onChange: (value: boolean) => void
+  disabled: boolean
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={enabled}
+      onClick={() => onChange(!enabled)}
+      disabled={disabled}
+      className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
+        disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+      } ${enabled ? 'bg-purple-600' : 'bg-gray-200 dark:bg-gray-600'}`}
+    >
+      <span
+        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+          enabled ? 'translate-x-5' : 'translate-x-0'
+        }`}
+      />
+    </button>
+  )
+}
+
 export default function StripeTaxSettings() {
   const t = useTranslations('settings.stripeTax')
+  const { addToast } = useToast()
   const [loading, setLoading] = useState(true)
   const [taxStatus, setTaxStatus] = useState<StripeTaxStatus | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  // Toggle state
+  const [automaticTax, setAutomaticTax] = useState(true)
+  const [taxIdCollection, setTaxIdCollection] = useState(true)
+  const [billingAddress, setBillingAddress] = useState<'auto' | 'required'>('auto')
+  const [expiresHours, setExpiresHours] = useState(24)
+  const [collectTerms, setCollectTerms] = useState(false)
+  const [sources, setSources] = useState({
+    automatic_tax: 'default' as ConfigSource,
+    tax_id_collection: 'default' as ConfigSource,
+    billing_address_collection: 'default' as ConfigSource,
+    expires_hours: 'default' as ConfigSource,
+    collect_terms: 'default' as ConfigSource,
+  })
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     const load = async () => {
       setLoading(true)
       try {
-        const result = await getStripeTaxStatus()
-        if (result.success && result.data) {
-          setTaxStatus(result.data)
+        const [statusResult, configResult] = await Promise.all([
+          getStripeTaxStatus(),
+          getCheckoutConfigAction(),
+        ])
+
+        if (statusResult.success && statusResult.data) {
+          setTaxStatus(statusResult.data)
         } else {
-          setError(result.error || 'Unknown error')
+          setError(statusResult.error || 'Unknown error')
+        }
+
+        if (configResult.success && configResult.data) {
+          setAutomaticTax(configResult.data.automatic_tax.enabled)
+          setTaxIdCollection(configResult.data.tax_id_collection.enabled)
+          setBillingAddress(configResult.data.billing_address_collection)
+          setExpiresHours(configResult.data.expires_hours)
+          setCollectTerms(configResult.data.collect_terms_of_service)
+          setSources({
+            automatic_tax: configResult.data.sources.automatic_tax,
+            tax_id_collection: configResult.data.sources.tax_id_collection,
+            billing_address_collection: configResult.data.sources.billing_address_collection,
+            expires_hours: configResult.data.sources.expires_hours,
+            collect_terms: configResult.data.sources.collect_terms,
+          })
         }
       } catch (err) {
         setError('Failed to load tax status')
@@ -66,6 +152,72 @@ export default function StripeTaxSettings() {
     }
     load()
   }, [])
+
+  const handleToggle = async (
+    field: 'automatic_tax_enabled' | 'tax_id_collection_enabled' | 'checkout_collect_terms',
+    value: boolean,
+  ) => {
+    setSaving(true)
+    try {
+      const success = await updateShopConfig({ [field]: value })
+      if (success) {
+        if (field === 'automatic_tax_enabled') {
+          setAutomaticTax(value)
+          setSources((s) => ({ ...s, automatic_tax: 'db' }))
+        } else if (field === 'tax_id_collection_enabled') {
+          setTaxIdCollection(value)
+          setSources((s) => ({ ...s, tax_id_collection: 'db' }))
+        } else {
+          setCollectTerms(value)
+          setSources((s) => ({ ...s, collect_terms: 'db' }))
+        }
+        addToast(t('saveSuccess'), 'success')
+      } else {
+        addToast(t('saveError'), 'error')
+      }
+    } catch {
+      addToast(t('saveError'), 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleBillingAddress = async (value: 'auto' | 'required') => {
+    setSaving(true)
+    try {
+      const success = await updateShopConfig({ checkout_billing_address: value })
+      if (success) {
+        setBillingAddress(value)
+        setSources((s) => ({ ...s, billing_address_collection: 'db' }))
+        addToast(t('saveSuccess'), 'success')
+      } else {
+        addToast(t('saveError'), 'error')
+      }
+    } catch {
+      addToast(t('saveError'), 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleExpiresHours = async (value: number) => {
+    const clamped = Math.min(168, Math.max(1, value))
+    setSaving(true)
+    try {
+      const success = await updateShopConfig({ checkout_expires_hours: clamped })
+      if (success) {
+        setExpiresHours(clamped)
+        setSources((s) => ({ ...s, expires_hours: 'db' }))
+        addToast(t('saveSuccess'), 'success')
+      } else {
+        addToast(t('saveError'), 'error')
+      }
+    } catch {
+      addToast(t('saveError'), 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -209,6 +361,132 @@ export default function StripeTaxSettings() {
             )}
         </>
       )}
+
+      {/* Checkout Settings Toggles */}
+      <div className="mb-6 space-y-0">
+        {/* Automatic Tax */}
+        <div className="flex items-center justify-between py-3 border-t border-gray-100 dark:border-gray-700">
+          <div className="flex-1 min-w-0 mr-4">
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                {t('toggles.automaticTax')}
+              </p>
+              <SourceBadge source={sources.automatic_tax} />
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {t('toggles.automaticTaxDescription')}
+            </p>
+          </div>
+          <Toggle
+            enabled={automaticTax}
+            onChange={(v) => handleToggle('automatic_tax_enabled', v)}
+            disabled={saving}
+          />
+        </div>
+
+        {/* Tax ID Collection */}
+        <div className="flex items-center justify-between py-3 border-t border-gray-100 dark:border-gray-700">
+          <div className="flex-1 min-w-0 mr-4">
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                {t('toggles.taxIdCollection')}
+              </p>
+              <SourceBadge source={sources.tax_id_collection} />
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {t('toggles.taxIdCollectionDescription')}
+            </p>
+          </div>
+          <Toggle
+            enabled={taxIdCollection}
+            onChange={(v) => handleToggle('tax_id_collection_enabled', v)}
+            disabled={saving}
+          />
+        </div>
+
+        {/* Billing Address */}
+        <div className="flex items-center justify-between py-3 border-t border-gray-100 dark:border-gray-700">
+          <div className="flex-1 min-w-0 mr-4">
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                {t('toggles.billingAddress')}
+              </p>
+              <SourceBadge source={sources.billing_address_collection} />
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {t('toggles.billingAddressDescription')}
+            </p>
+          </div>
+          <div className="flex gap-1">
+            {(['auto', 'required'] as const).map((value) => (
+              <button
+                key={value}
+                onClick={() => handleBillingAddress(value)}
+                disabled={saving}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  billingAddress === value
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                } ${saving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              >
+                {t(`toggles.billing${value.charAt(0).toUpperCase() + value.slice(1)}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Session Expires Hours */}
+        <div className="flex items-center justify-between py-3 border-t border-gray-100 dark:border-gray-700">
+          <div className="flex-1 min-w-0 mr-4">
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                {t('toggles.expiresHours')}
+              </p>
+              <SourceBadge source={sources.expires_hours} />
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {t('toggles.expiresHoursDescription')}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={1}
+              max={168}
+              value={expiresHours}
+              onChange={(e) => setExpiresHours(Number(e.target.value))}
+              onBlur={() => handleExpiresHours(expiresHours)}
+              disabled={saving}
+              className={`w-20 px-2 py-1.5 text-sm text-right rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                saving ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            />
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {t('toggles.expiresHoursSuffix')}
+            </span>
+          </div>
+        </div>
+
+        {/* Terms of Service Collection */}
+        <div className="flex items-center justify-between py-3 border-t border-gray-100 dark:border-gray-700">
+          <div className="flex-1 min-w-0 mr-4">
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                {t('toggles.collectTerms')}
+              </p>
+              <SourceBadge source={sources.collect_terms} />
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {t('toggles.collectTermsDescription')}
+            </p>
+          </div>
+          <Toggle
+            enabled={collectTerms}
+            onChange={(v) => handleToggle('checkout_collect_terms', v)}
+            disabled={saving}
+          />
+        </div>
+      </div>
 
       {/* Dashboard Links */}
       <div className="flex flex-wrap gap-3">

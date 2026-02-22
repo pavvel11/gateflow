@@ -62,8 +62,6 @@ export const STRIPE_CONFIG = {
   
   // Session settings
   session: {
-    ui_mode: getEnv('STRIPE_SESSION_UI_MODE', 'embedded') as 'embedded' | 'hosted',
-    payment_mode: getEnv('STRIPE_SESSION_PAYMENT_MODE', 'payment') as 'payment' | 'setup' | 'subscription',
     expires_hours: toNumber(getEnv('STRIPE_SESSION_EXPIRES_HOURS', '24')),
     billing_address_collection: getEnv('STRIPE_SESSION_BILLING_ADDRESS_COLLECTION', 'auto') as 'auto' | 'required',
     automatic_tax: { 

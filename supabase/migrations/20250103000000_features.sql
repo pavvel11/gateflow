@@ -376,6 +376,15 @@ CREATE TABLE IF NOT EXISTS public.shop_config (
   -- Checkout appearance
   checkout_theme TEXT DEFAULT 'system' CHECK (checkout_theme IN ('system', 'light', 'dark')),
 
+  -- Stripe Tax toggles (NULL = use env var)
+  automatic_tax_enabled BOOLEAN DEFAULT NULL,
+  tax_id_collection_enabled BOOLEAN DEFAULT NULL,
+
+  -- Checkout session settings (NULL = use env var)
+  checkout_billing_address TEXT DEFAULT NULL CHECK (checkout_billing_address IN ('auto', 'required')),
+  checkout_expires_hours INTEGER DEFAULT NULL CHECK (checkout_expires_hours BETWEEN 1 AND 168),
+  checkout_collect_terms BOOLEAN DEFAULT NULL,
+
   -- Legal Documents
   terms_of_service_url TEXT,
   privacy_policy_url TEXT,

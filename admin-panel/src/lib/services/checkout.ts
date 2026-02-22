@@ -8,6 +8,7 @@ import {
   CreateCheckoutRequest 
 } from '@/types/checkout';
 import { STRIPE_CONFIG, CHECKOUT_ERRORS, HTTP_STATUS } from '@/lib/stripe/config';
+import { getCheckoutConfig } from '@/lib/stripe/checkout-config';
 
 // Remove the local ProductForCheckout interface since we now use ValidatedProduct
 type ProductForCheckout = ValidatedProduct;
@@ -206,12 +207,14 @@ export class CheckoutService {
         });
       }
 
+      // Resolve checkout config: DB > env var > default
+      const checkoutConfig = await getCheckoutConfig();
+
       // Prepare session configuration
       const sessionConfig: Record<string, unknown> = {
-        ui_mode: STRIPE_CONFIG.session.ui_mode,
-        payment_method_types: [...STRIPE_CONFIG.payment_method_types],
+        ui_mode: 'embedded' as const,
         line_items: lineItems,
-        mode: STRIPE_CONFIG.session.payment_mode,
+        mode: 'payment' as const,
         return_url: options.returnUrl,
         // Set redirect_on_completion to 'always' for proper server-side verification
         redirect_on_completion: 'always',
@@ -236,11 +239,20 @@ export class CheckoutService {
             is_pwyw: 'true'
           }),
         },
-        expires_at: Math.floor(Date.now() / 1000) + (STRIPE_CONFIG.session.expires_hours * 60 * 60),
-        automatic_tax: STRIPE_CONFIG.session.automatic_tax,
-        tax_id_collection: STRIPE_CONFIG.session.tax_id_collection,
-        billing_address_collection: 'auto',
+        expires_at: Math.floor(Date.now() / 1000) + (checkoutConfig.expires_hours * 60 * 60),
+        automatic_tax: checkoutConfig.automatic_tax,
+        tax_id_collection: checkoutConfig.tax_id_collection,
+        billing_address_collection: checkoutConfig.billing_address_collection,
       };
+
+      // Apply payment method config based on mode
+      if (checkoutConfig.paymentMethodMode === 'automatic') {
+        sessionConfig.automatic_payment_methods = { enabled: true };
+      } else if (checkoutConfig.paymentMethodMode === 'stripe_preset' && checkoutConfig.stripePresetId) {
+        sessionConfig.payment_method_configuration = checkoutConfig.stripePresetId;
+      } else {
+        sessionConfig.payment_method_types = [...checkoutConfig.payment_method_types];
+      }
 
       // Only add customer_email if it's a valid email
       if (options.email && options.email.trim() !== '') {
@@ -250,9 +262,8 @@ export class CheckoutService {
         console.log('📧 No customer_email available for Stripe session');
       }
 
-      // Add terms of service collection if enabled
-      const collectTermsOfService = process.env.STRIPE_COLLECT_TERMS_OF_SERVICE === 'true' || process.env.STRIPE_COLLECT_TERMS_OF_SERVICE === '1';
-      if (collectTermsOfService) {
+      // Add terms of service collection if enabled (resolved via DB > env > default)
+      if (checkoutConfig.collect_terms_of_service) {
         sessionConfig.consent_collection = {
           terms_of_service: 'required',
         };
