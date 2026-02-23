@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 
-const techs = ['nextjs', 'react', 'supabase', 'stripe', 'tailwind', 'typescript', 'docker', 'postgresql', 'bunny'] as const;
+const techs = ['nextjs', 'supabase', 'stripe', 'tailwind', 'typescript', 'docker', 'postgresql', 'bunny'] as const;
 
 export async function TechStackGrid() {
   const t = await getTranslations('landing');

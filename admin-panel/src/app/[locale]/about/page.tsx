@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const t = await getTranslations({ locale, namespace: 'landing' });
   return {
     title: `GateFlow — ${t('hero.headlineTop')} ${t('hero.headlineBottom')}`,
-    description: t('hero.subtitle'),
+    description: t('hero.metaDescription'),
   };
 }
 

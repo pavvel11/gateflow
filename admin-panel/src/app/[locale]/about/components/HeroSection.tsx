@@ -3,11 +3,9 @@
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { ArrowRight, Play, Github, CheckCircle } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
 
 export function HeroSection() {
   const t = useTranslations('landing')
-  useAuth()
 
   const trustItems = [
     t('hero.trustNoFees'),

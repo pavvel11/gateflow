@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
 
 type Theme = 'light' | 'dark' | 'system'
 
@@ -20,6 +20,18 @@ function getSystemTheme(): 'light' | 'dark' {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
+function readInitialTheme(adminTheme?: string): Theme {
+  if (typeof window === 'undefined') return 'system'
+  const stored = localStorage.getItem(STORAGE_KEY) as Theme | null
+  if (stored && ['light', 'dark', 'system'].includes(stored)) return stored
+  if (adminTheme && ['light', 'dark', 'system'].includes(adminTheme)) return adminTheme as Theme
+  return 'system'
+}
+
+function resolveTheme(theme: Theme): 'light' | 'dark' {
+  return theme === 'system' ? getSystemTheme() : theme
+}
+
 function applyTheme(resolved: 'light' | 'dark') {
   const root = document.documentElement
   if (resolved === 'dark') {
@@ -35,29 +47,17 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ children, adminTheme }: ThemeProviderProps) {
-  const [theme, setThemeState] = useState<Theme>('system')
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark')
+  // Lazy initializers read localStorage on client — avoids useEffect → setState re-render.
+  // On server they return static defaults; ThemeScript handles FOUC prevention.
+  const [theme, setThemeState] = useState<Theme>(() => readInitialTheme(adminTheme))
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(
+    () => resolveTheme(readInitialTheme(adminTheme))
+  )
 
-  // Initialize from localStorage, falling back to admin theme from shop config
+  // Apply theme class on mount (ThemeScript already did this, but ensures consistency)
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null
-    const hasUserPreference = stored && ['light', 'dark', 'system'].includes(stored)
-
-    let initial: Theme
-    if (hasUserPreference) {
-      initial = stored
-    } else if (adminTheme && ['light', 'dark', 'system'].includes(adminTheme)) {
-      initial = adminTheme as Theme
-    } else {
-      initial = 'system'
-    }
-
-    setThemeState(initial)
-
-    const resolved = initial === 'system' ? getSystemTheme() : initial
-    setResolvedTheme(resolved)
-    applyTheme(resolved)
-  }, [adminTheme])
+    applyTheme(resolvedTheme)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Listen for OS theme changes when in system mode
   useEffect(() => {
@@ -88,8 +88,13 @@ export function ThemeProvider({ children, adminTheme }: ThemeProviderProps) {
     setTheme(next)
   }, [theme, setTheme])
 
+  const value = useMemo(
+    () => ({ theme, resolvedTheme, setTheme, cycleTheme }),
+    [theme, resolvedTheme, setTheme, cycleTheme]
+  )
+
   return (
-    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme, cycleTheme }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   )
