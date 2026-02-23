@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { ArrowRight, Play, Github, CheckCircle } from 'lucide-react'
+import { motion } from 'motion/react'
+import { TextReveal } from './motion/TextReveal'
 
 export function HeroSection() {
   const t = useTranslations('landing')
@@ -16,66 +18,101 @@ export function HeroSection() {
 
   return (
     <section className="relative pt-32 pb-20 md:pb-32 overflow-hidden">
-      {/* Animated gradient mesh background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-sky-50 via-blue-50 to-cyan-50 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-sky-300 dark:bg-sky-800 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-3xl opacity-30 animate-blob" />
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-cyan-300 dark:bg-cyan-800 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-3xl opacity-30 animate-blob animation-delay-2000" />
-        <div className="absolute -bottom-32 left-1/3 w-96 h-96 bg-blue-300 dark:bg-blue-800 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-3xl opacity-30 animate-blob animation-delay-4000" />
+      {/* Mesh gradient background */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: [
+            'radial-gradient(ellipse at 20% 50%, var(--gf-accent-glow) 0%, transparent 60%)',
+            'radial-gradient(ellipse at 80% 20%, rgba(0,170,255,0.10) 0%, transparent 50%)',
+            'radial-gradient(ellipse at 50% 100%, rgba(0,170,255,0.06) 0%, transparent 40%)',
+            'var(--gf-bg-deep)',
+          ].join(', '),
+        }}
+      />
+
+      {/* Floating orbs — parallax depth */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-16 left-[15%] w-[28rem] h-[28rem] rounded-full bg-gf-accent/[0.06] blur-[100px] animate-blob" />
+        <div className="absolute top-32 right-[10%] w-[24rem] h-[24rem] rounded-full bg-gf-accent/[0.04] blur-[120px] animate-blob animation-delay-2000" />
+        <div className="absolute -bottom-20 left-[40%] w-[32rem] h-[32rem] rounded-full bg-gf-accent/[0.05] blur-[100px] animate-blob animation-delay-4000" />
       </div>
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-sky-200 dark:border-sky-800 px-4 py-2 mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="inline-flex items-center gap-2 rounded-full bg-gf-raised/60 backdrop-blur-md border border-gf-border px-4 py-2 mb-8"
+        >
           <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gf-success opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-gf-success" />
           </span>
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <span className="text-sm font-medium text-gf-body">
             {t('hero.badge')}
           </span>
-        </div>
+        </motion.div>
 
-        {/* Headline */}
-        <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-gray-900 dark:text-white mb-8">
-          {t('hero.headlineTop')}
-          <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00AAFF] to-blue-600 animate-gradient">
-            {t('hero.headlineBottom')}
-          </span>
+        {/* Headline — Instrument Serif for premium feel */}
+        <h1 className="mb-8">
+          <TextReveal
+            text={t('hero.headlineTop')}
+            className="block text-5xl md:text-7xl lg:text-8xl tracking-[-0.03em] text-gf-heading"
+            wordClassName="font-[var(--font-instrument-serif)] italic"
+            delay={0.2}
+          />
+          <TextReveal
+            text={t('hero.headlineBottom')}
+            className="block text-5xl md:text-7xl lg:text-8xl tracking-[-0.03em]"
+            wordClassName="font-[var(--font-instrument-serif)] italic text-gf-accent"
+            delay={0.5}
+          />
         </h1>
 
         {/* Subtitle */}
-        <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed mb-12">
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="text-xl md:text-2xl text-gf-body max-w-4xl mx-auto leading-relaxed mb-12"
+        >
           {t.rich('hero.subtitle', {
             selfHosted: (chunks) => (
-              <span className="font-semibold text-gray-900 dark:text-white">{chunks}</span>
+              <span className="font-semibold text-gf-heading">{chunks}</span>
             ),
             secure: (chunks) => (
-              <span className="font-semibold text-gray-900 dark:text-white">{chunks}</span>
+              <span className="font-semibold text-gf-heading">{chunks}</span>
             ),
             yours: (chunks) => (
-              <span className="font-semibold text-gray-900 dark:text-white">{chunks}</span>
+              <span className="font-semibold text-gf-heading">{chunks}</span>
             ),
           })}
           <br />
           {t('hero.subtitleBottom')}
-        </p>
+        </motion.p>
 
-        {/* CTA buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+        {/* CTA buttons — staggered */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.0, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
+        >
           <Link
             href="#deployment"
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-[#00AAFF] to-blue-600 hover:from-[#0088CC] hover:to-blue-700 text-white shadow-2xl hover:shadow-sky-500/50 rounded-xl px-8 py-4 text-lg font-bold transition-all duration-200"
+            className="group inline-flex items-center gap-2 bg-gf-accent hover:bg-gf-accent-hover text-white rounded-xl px-8 py-4 text-lg font-bold transition-[background-color,transform,box-shadow] duration-200 shadow-[var(--gf-shadow-accent)] hover:shadow-[0_6px_40px_-4px_var(--gf-accent-glow)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
           >
             {t('hero.ctaDeploy')}
-            <ArrowRight className="h-5 w-5" />
+            <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-0.5" />
           </Link>
 
           <a
             href="https://gateflow.cytr.us/login"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-[#00AAFF]/20 border-2 border-sky-400 dark:border-sky-500 hover:bg-[#00AAFF]/30 text-white rounded-xl px-8 py-4 text-lg font-bold transition-all duration-200"
+            className="inline-flex items-center gap-2 bg-gf-accent-soft border border-gf-border-accent hover:bg-gf-accent-med text-gf-heading rounded-xl px-8 py-4 text-lg font-bold transition-[background-color,border-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
           >
             <Play className="h-5 w-5" />
             {t('hero.ctaDemo')}
@@ -85,25 +122,30 @@ export function HeroSection() {
             href="https://github.com/jurczykpawel/gateflow"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-sky-300 dark:hover:border-sky-600 text-gray-900 dark:text-white rounded-xl px-8 py-4 text-lg font-bold transition-all duration-200"
+            className="inline-flex items-center gap-2 bg-gf-raised/60 backdrop-blur-sm border border-gf-border hover:border-gf-border-accent text-gf-heading rounded-xl px-8 py-4 text-lg font-bold transition-[border-color,background-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
           >
             <Github className="h-5 w-5" />
             {t('hero.ctaGithub')}
-            <span className="ml-1 rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300">
+            <span className="ml-1 rounded-full bg-gf-float px-2 py-0.5 text-xs font-medium text-gf-muted">
               MIT
             </span>
           </a>
-        </div>
+        </motion.div>
 
         {/* Trust indicators */}
-        <div className="flex flex-wrap justify-center items-center gap-8 text-sm text-gray-600 dark:text-gray-400">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.3, duration: 0.6 }}
+          className="flex flex-wrap justify-center items-center gap-8 text-sm text-gf-muted"
+        >
           {trustItems.map((item) => (
             <div key={item} className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-500" />
+              <CheckCircle className="h-4 w-4 text-gf-success" />
               <span>{item}</span>
             </div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   )

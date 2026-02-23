@@ -3,6 +3,116 @@
 /* Class-based dark mode (controlled by ThemeProvider via .dark on <html>) */
 @custom-variant dark (&:where(.dark *));
 
+/* ===== GateFlow Brand Design Tokens ===== */
+
+/* Dark mode (default — dark-first) */
+:root {
+  --gf-bg-deep: #06080D;
+  --gf-bg-base: #0B1120;
+  --gf-bg-raised: #111B2E;
+  --gf-bg-float: #162236;
+
+  --gf-accent: #00AAFF;
+  --gf-accent-soft: rgba(0,170,255,0.08);
+  --gf-accent-med: rgba(0,170,255,0.20);
+  --gf-accent-hover: #33BBFF;
+  --gf-accent-glow: rgba(0,170,255,0.35);
+
+  --gf-text-heading: #F0F4FA;
+  --gf-text-body: #94A3B8;
+  --gf-text-muted: #6B7E94;
+
+  --gf-border: rgba(255,255,255,0.06);
+  --gf-border-accent: rgba(0,170,255,0.15);
+
+  --gf-success: #10B981;
+  --gf-success-soft: rgba(16,185,129,0.10);
+  --gf-warning: #F59E0B;
+  --gf-warning-soft: rgba(245,158,11,0.10);
+  --gf-danger: #EF4444;
+  --gf-danger-soft: rgba(239,68,68,0.10);
+
+  --gf-shadow: 0 4px 24px -4px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  --gf-shadow-accent: 0 4px 30px -4px rgba(0,170,255,0.25);
+}
+
+/* Light mode overrides — when .dark is NOT on <html>, landing uses these */
+:root:not(.dark) {
+  --gf-bg-deep: #F8FAFC;
+  --gf-bg-base: #FFFFFF;
+  --gf-bg-raised: #F1F5F9;
+  --gf-bg-float: #FFFFFF;
+
+  --gf-accent: #0088CC;
+  --gf-accent-soft: rgba(0,136,204,0.06);
+  --gf-accent-med: rgba(0,136,204,0.12);
+  --gf-accent-hover: #006AAA;
+  --gf-accent-glow: rgba(0,136,204,0.15);
+
+  --gf-text-heading: #0B1120;
+  --gf-text-body: #3E5068;
+  --gf-text-muted: #6B7E94;
+
+  --gf-border: rgba(0,0,0,0.06);
+  --gf-border-accent: rgba(0,136,204,0.12);
+
+  --gf-success: #059669;
+  --gf-success-soft: rgba(5,150,105,0.08);
+  --gf-warning: #D97706;
+  --gf-warning-soft: rgba(217,119,6,0.08);
+  --gf-danger: #DC2626;
+  --gf-danger-soft: rgba(220,38,38,0.08);
+
+  --gf-shadow: 0 4px 24px -4px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+  --gf-shadow-accent: 0 4px 30px -4px rgba(0,136,204,0.12);
+}
+
+/* Tailwind v4 theme tokens — enables bg-gf-deep, text-gf-accent, etc. */
+@theme {
+  --color-gf-deep: var(--gf-bg-deep);
+  --color-gf-base: var(--gf-bg-base);
+  --color-gf-raised: var(--gf-bg-raised);
+  --color-gf-float: var(--gf-bg-float);
+  --color-gf-accent: var(--gf-accent);
+  --color-gf-accent-hover: var(--gf-accent-hover);
+  --color-gf-accent-soft: var(--gf-accent-soft);
+  --color-gf-accent-med: var(--gf-accent-med);
+  --color-gf-accent-glow: var(--gf-accent-glow);
+  --color-gf-heading: var(--gf-text-heading);
+  --color-gf-body: var(--gf-text-body);
+  --color-gf-muted: var(--gf-text-muted);
+  --color-gf-border: var(--gf-border);
+  --color-gf-border-accent: var(--gf-border-accent);
+  --color-gf-success: var(--gf-success);
+  --color-gf-success-soft: var(--gf-success-soft);
+  --color-gf-warning: var(--gf-warning);
+  --color-gf-warning-soft: var(--gf-warning-soft);
+  --color-gf-danger: var(--gf-danger);
+  --color-gf-danger-soft: var(--gf-danger-soft);
+}
+
+/* Grain noise overlay — apply to landing page container */
+.grain-overlay::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grain-overlay::after {
+    display: none;
+  }
+  .animate-blob {
+    animation: none !important;
+  }
+}
+
 /* Modal animations */
 @keyframes modalIn {
   from {

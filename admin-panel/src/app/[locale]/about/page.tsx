@@ -26,21 +26,30 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 overflow-hidden">
+    <div className="grain-overlay min-h-screen bg-gf-deep overflow-hidden">
+      {/* Skip to main content — a11y */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-gf-accent focus:text-white focus:outline-none"
+      >
+        Skip to main content
+      </a>
       <LandingNav />
-      <HeroSection />
-      <SocialProofBar />
-      <FeeComparisonSection />
-      <FeatureGrid />
-      <HowItWorks />
-      <DemoSection />
-      <TaxSection />
-      <SelfHostedComparison />
-      <TechStackGrid />
-      <UseCases />
-      <DonateSection />
-      <FAQSection />
-      <FinalCTA />
+      <main id="main-content">
+        <HeroSection />
+        <SocialProofBar />
+        <FeeComparisonSection />
+        <FeatureGrid />
+        <HowItWorks />
+        <DemoSection />
+        <TaxSection />
+        <SelfHostedComparison />
+        <TechStackGrid />
+        <UseCases />
+        <DonateSection />
+        <FAQSection />
+        <FinalCTA />
+      </main>
       <LandingFooter />
     </div>
   );

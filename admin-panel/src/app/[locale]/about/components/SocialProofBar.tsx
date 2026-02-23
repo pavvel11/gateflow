@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { NumberCounter } from './motion/NumberCounter';
 
 export async function SocialProofBar() {
   const t = await getTranslations('landing');
@@ -11,17 +12,27 @@ export async function SocialProofBar() {
   ];
 
   return (
-    <section className="py-12 bg-gradient-to-r from-[#00AAFF] via-sky-500 to-blue-600 relative overflow-hidden">
-      <div className="absolute inset-0 bg-black/10" />
+    <section className="relative py-12 overflow-hidden">
+      <div
+        className="absolute inset-0"
+        style={{
+          background: [
+            'radial-gradient(ellipse at 30% 50%, var(--gf-accent-glow) 0%, transparent 70%)',
+            'radial-gradient(ellipse at 70% 50%, rgba(0,170,255,0.08) 0%, transparent 60%)',
+            'var(--gf-bg-base)',
+          ].join(', '),
+        }}
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {stats.map((stat) => (
             <div key={stat.value}>
-              <div className="text-4xl md:text-5xl font-black text-white mb-2">
-                {stat.value}
-              </div>
-              <div className="text-sm md:text-base font-medium text-sky-100">
+              <NumberCounter
+                value={stat.value}
+                className="block text-4xl md:text-5xl font-black text-gf-heading mb-2"
+              />
+              <div className="text-sm md:text-base font-medium text-gf-muted">
                 {stat.label}
               </div>
             </div>

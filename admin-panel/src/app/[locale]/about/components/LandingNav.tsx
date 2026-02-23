@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { Menu, X, Lock } from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
 import { useAuth } from '@/contexts/AuthContext'
 import FloatingLanguageSwitcher from '@/components/FloatingLanguageSwitcher'
 
@@ -33,18 +34,21 @@ export function LandingNav() {
   })()
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-gf-raised/60 backdrop-blur-xl border-b border-gf-border">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/store" className="flex items-center gap-2">
-            <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-[#00AAFF]">
+          <Link
+            href="/store"
+            className="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent rounded-lg"
+          >
+            <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-gf-accent">
               <Lock className="h-4 w-4 text-white" />
-              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-gray-900 bg-green-500">
-                <span className="absolute inset-0 animate-ping rounded-full bg-green-400 opacity-75" />
+              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-gf-raised bg-gf-success">
+                <span className="absolute inset-0 animate-ping rounded-full bg-gf-success opacity-75" />
               </span>
             </div>
-            <span className="text-lg font-bold bg-gradient-to-r from-[#00AAFF] to-[#0088CC] bg-clip-text text-transparent">
+            <span className="text-lg font-bold text-gf-accent">
               GateFlow
             </span>
           </Link>
@@ -58,7 +62,7 @@ export function LandingNav() {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-[#00AAFF] transition-colors"
+                  className="text-sm font-medium text-gf-body hover:text-gf-heading transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent rounded"
                 >
                   {link.label}
                 </a>
@@ -66,7 +70,7 @@ export function LandingNav() {
                 <Link
                   key={link.href + link.label}
                   href={link.href}
-                  className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-[#00AAFF] transition-colors"
+                  className="text-sm font-medium text-gf-body hover:text-gf-heading transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent rounded"
                 >
                   {link.label}
                 </Link>
@@ -75,7 +79,7 @@ export function LandingNav() {
 
             <Link
               href={ctaLink.href}
-              className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[#00AAFF] hover:bg-[#0088CC] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-gf-accent hover:bg-gf-accent-hover transition-[background-color,box-shadow] duration-200 shadow-[var(--gf-shadow-accent)] hover:shadow-[0_6px_30px_-4px_var(--gf-accent-glow)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
             >
               {ctaLink.label}
             </Link>
@@ -89,8 +93,9 @@ export function LandingNav() {
             <button
               type="button"
               onClick={() => setMobileOpen((prev) => !prev)}
-              className="text-gray-700 dark:text-gray-300 hover:text-[#00AAFF] transition-colors"
+              className="text-gf-body hover:text-gf-heading transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent rounded-lg p-1"
               aria-label="Toggle menu"
+              aria-expanded={mobileOpen}
             >
               {mobileOpen ? (
                 <X className="h-6 w-6" />
@@ -103,43 +108,51 @@ export function LandingNav() {
       </div>
 
       {/* Mobile menu */}
-      {mobileOpen && (
-        <div className="md:hidden border-t border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl">
-          <div className="space-y-1 px-4 py-3">
-            {navLinks.map((link) =>
-              link.external ? (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-[#00AAFF] hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {link.label}
-                </a>
-              ) : (
-                <Link
-                  key={link.href + link.label}
-                  href={link.href}
-                  className="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-[#00AAFF] hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {link.label}
-                </Link>
-              )
-            )}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="md:hidden border-t border-gf-border bg-gf-raised/95 backdrop-blur-xl overflow-hidden"
+          >
+            <div className="space-y-1 px-4 py-3">
+              {navLinks.map((link) =>
+                link.external ? (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block rounded-lg px-3 py-2 text-sm font-medium text-gf-body hover:text-gf-heading hover:bg-gf-accent-soft transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={link.href + link.label}
+                    href={link.href}
+                    className="block rounded-lg px-3 py-2 text-sm font-medium text-gf-body hover:text-gf-heading hover:bg-gf-accent-soft transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                )
+              )}
 
-            <Link
-              href={ctaLink.href}
-              className="mt-2 block rounded-lg px-4 py-2 text-center text-sm font-semibold text-white bg-[#00AAFF] hover:bg-[#0088CC] transition-all duration-200 shadow-lg"
-              onClick={() => setMobileOpen(false)}
-            >
-              {ctaLink.label}
-            </Link>
-          </div>
-        </div>
-      )}
+              <Link
+                href={ctaLink.href}
+                className="mt-2 block rounded-xl px-4 py-2 text-center text-sm font-semibold text-white bg-gf-accent hover:bg-gf-accent-hover transition-[background-color,box-shadow] duration-200 shadow-[var(--gf-shadow-accent)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
+                onClick={() => setMobileOpen(false)}
+              >
+                {ctaLink.label}
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   )
 }

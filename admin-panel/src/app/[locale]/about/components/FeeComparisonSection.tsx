@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { motion } from 'motion/react';
 
 interface PlatformFee {
   key: string;
@@ -21,10 +22,10 @@ function calculateFees(revenue: number): PlatformFee[] {
   const lemonFee = revenue * 0.05 + revenue * 0.035 + 0.30 * transactionCount;
 
   return [
-    { key: 'gateflow', label: '', feeNote: '', fee: gateflowFee, barColor: 'bg-emerald-500' },
-    { key: 'gumroad', label: '', feeNote: '', fee: gumroadFee, barColor: 'bg-red-500' },
-    { key: 'paddle', label: '', feeNote: '', fee: paddleFee, barColor: 'bg-orange-500' },
-    { key: 'lemon', label: '', feeNote: '', fee: lemonFee, barColor: 'bg-orange-500' },
+    { key: 'gateflow', label: '', feeNote: '', fee: gateflowFee, barColor: 'bg-gf-success' },
+    { key: 'gumroad', label: '', feeNote: '', fee: gumroadFee, barColor: 'bg-gf-danger' },
+    { key: 'paddle', label: '', feeNote: '', fee: paddleFee, barColor: 'bg-gf-warning' },
+    { key: 'lemon', label: '', feeNote: '', fee: lemonFee, barColor: 'bg-gf-warning' },
   ];
 }
 
@@ -61,19 +62,32 @@ export function FeeComparisonSection() {
   const annualSavings = monthlySavings * 12;
 
   return (
-    <section className="py-24 md:py-32 bg-gray-50 dark:bg-gray-900">
+    <section className="py-24 md:py-32 bg-gf-base">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 text-center">
-          {t('feeComparison.title')}
-        </h2>
-        <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto text-center mb-12">
-          {t('feeComparison.subtitle')}
-        </p>
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+        >
+          <h2 className="text-4xl md:text-5xl font-bold text-gf-heading mb-4 text-center">
+            {t('feeComparison.title')}
+          </h2>
+          <p className="text-xl text-gf-body max-w-3xl mx-auto text-center mb-12">
+            {t('feeComparison.subtitle')}
+          </p>
+        </motion.div>
 
         {/* Revenue slider */}
-        <div className="mb-12">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 text-center">
-            {t('feeComparison.monthlyRevenue')}: <span className="text-lg font-bold text-[#00AAFF]">{revenueFmt.format(revenue)}</span>
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ type: 'spring', stiffness: 100, damping: 20, delay: 0.1 }}
+          className="mb-12"
+        >
+          <label className="block text-sm font-medium text-gf-body mb-3 text-center">
+            {t('feeComparison.monthlyRevenue')}: <span className="text-lg font-bold text-gf-accent">{revenueFmt.format(revenue)}</span>
           </label>
           <input
             type="range"
@@ -82,57 +96,69 @@ export function FeeComparisonSection() {
             step={1000}
             value={revenue}
             onChange={(e) => setRevenue(Number(e.target.value))}
-            className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-[#00AAFF]"
+            className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-gf-accent bg-gf-raised"
           />
-          <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <div className="flex justify-between text-xs text-gf-muted mt-1">
             <span>$1,000</span>
             <span>$100,000</span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Fee comparison bars */}
         <div className="space-y-6">
-          {platforms.map((platform) => {
+          {platforms.map((platform, i) => {
             const { label, feeNote } = labelMap[platform.key];
             const barWidth = maxFee > 0 ? Math.max((platform.fee / maxFee) * 100, 5) : 5;
             const youKeep = revenue - platform.fee;
 
             return (
-              <div key={platform.key}>
+              <motion.div
+                key={platform.key}
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ type: 'spring', stiffness: 100, damping: 20, delay: 0.15 + i * 0.08 }}
+              >
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{label}</span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">{feeNote}</span>
+                    <span className="text-sm font-semibold text-gf-heading">{label}</span>
+                    <span className="text-xs text-gf-muted ml-2">{feeNote}</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <span className="text-sm font-medium text-gf-body">
                       {t('feeComparison.platformFees')}: {fmt.format(platform.fee)}
                     </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 ml-3">
+                    <span className="text-xs text-gf-muted ml-3">
                       {t('feeComparison.youKeep')}: {fmt.format(youKeep)}
                     </span>
                   </div>
                 </div>
-                <div className="bg-gray-200 dark:bg-gray-700 rounded-full h-4">
+                <div className="bg-gf-raised rounded-full h-4">
                   <div
-                    className={`${platform.barColor} rounded-full h-4 transition-all duration-500`}
+                    className={`${platform.barColor} rounded-full h-4 transition-[width] duration-500`}
                     style={{ width: `${barWidth}%` }}
                   />
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
 
         {/* Savings highlight */}
-        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-6 text-center mt-8">
-          <p className="text-lg font-semibold text-emerald-800 dark:text-emerald-300">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ type: 'spring', stiffness: 100, damping: 20, delay: 0.4 }}
+          className="bg-gf-success-soft border border-gf-success/20 rounded-xl p-6 text-center mt-8"
+        >
+          <p className="text-lg font-semibold text-gf-success">
             {t('feeComparison.youSave', { amount: fmt.format(monthlySavings) })} {t('feeComparison.perMonth')}
           </p>
-          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">
+          <p className="text-2xl font-bold text-gf-success mt-2">
             {t('feeComparison.annualSavings', { amount: fmt.format(annualSavings) })}
           </p>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
