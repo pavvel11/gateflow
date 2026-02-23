@@ -47,9 +47,9 @@ export async function FinalCTA() {
 
           <a
             href="#"
-            className="inline-flex items-center px-8 py-4 rounded-xl text-lg font-bold text-gf-heading border-2 border-pink-500/30 hover:border-pink-500/60 bg-pink-500/10 hover:bg-pink-500/15 transition-[border-color,background-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-500 gap-3"
+            className="inline-flex items-center px-8 py-4 rounded-xl text-lg font-bold text-gf-heading border-2 border-gf-border-accent hover:border-gf-accent bg-gf-accent-soft hover:bg-gf-accent-soft transition-[border-color,background-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent gap-3"
           >
-            <Heart className="h-5 w-5 text-pink-400" />
+            <Heart className="h-5 w-5 text-gf-accent" />
             {t('donate.title')}
           </a>
         </div>

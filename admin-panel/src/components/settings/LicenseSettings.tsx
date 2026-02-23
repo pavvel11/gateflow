@@ -87,18 +87,18 @@ export default function LicenseSettings() {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-      <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 px-6 py-4 border-b border-purple-200 dark:border-purple-800">
+      <div className="bg-gf-accent-soft px-6 py-4 border-b border-gf-border-accent">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-gf-accent flex items-center justify-center">
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
             </svg>
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-purple-900 dark:text-purple-100">
+            <h2 className="text-lg font-semibold text-gf-heading">
               {t('title')}
             </h2>
-            <p className="text-sm text-purple-700 dark:text-purple-300">
+            <p className="text-sm text-gf-accent">
               {t('subtitle')}
             </p>
           </div>
@@ -115,7 +115,7 @@ export default function LicenseSettings() {
             placeholder="GF-yourdomain.com-UNLIMITED-xxxxxxxxxxxx"
             value={license}
             onChange={(e) => setLicense(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-3 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-purple-500 outline-none font-mono text-sm"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-3 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-gf-accent outline-none font-mono text-sm"
           />
           <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
             {t('formatHint')}
@@ -167,7 +167,7 @@ export default function LicenseSettings() {
           <button
             type="submit"
             disabled={saving}
-            className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
+            className="px-6 py-2 bg-gf-accent hover:bg-gf-accent-hover text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
           >
             {saving ? t('saving') : t('saveLicense')}
           </button>
@@ -187,7 +187,7 @@ export default function LicenseSettings() {
                 href="https://gateflow.cytr.us"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-purple-600 hover:underline dark:text-purple-400"
+                className="text-gf-accent hover:underline"
               >
                 gateflow.cytr.us
               </a>

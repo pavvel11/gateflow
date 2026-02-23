@@ -126,7 +126,7 @@ const UsersTable: React.FC<UsersTableProps> = ({
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold">
+                          <div className="h-10 w-10 rounded-full bg-gf-accent flex items-center justify-center text-white font-bold">
                             {user.email.charAt(0).toUpperCase()}
                           </div>
                         </div>

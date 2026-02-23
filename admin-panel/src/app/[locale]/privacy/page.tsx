@@ -33,7 +33,7 @@ export default async function PrivacyPage() {
 
   // Fallback content if no URL is configured
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-12">
+    <div className="min-h-screen bg-wl-deep py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20">
           <div className="text-center mb-8">
@@ -48,9 +48,9 @@ export default async function PrivacyPage() {
                 To display Privacy Policy, configure the URL in one of these ways:
               </p>
 
-              <div className="mt-4 p-4 bg-purple-900/30 border border-purple-500/30 rounded-lg">
-                <p className="text-purple-200 font-medium">Option 1: Admin Panel (Recommended)</p>
-                <p className="text-purple-300 text-sm mt-2">
+              <div className="mt-4 p-4 bg-wl-accent-soft border border-wl-border-accent rounded-lg">
+                <p className="text-wl-accent font-medium">Option 1: Admin Panel (Recommended)</p>
+                <p className="text-wl-accent text-sm mt-2">
                   Go to <strong>Settings → Legal Documents</strong> and enter your Privacy Policy URL.
                 </p>
               </div>

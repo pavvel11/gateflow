@@ -79,7 +79,7 @@ export function LandingNav() {
 
             <a
               href="#"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-pink-400 hover:text-pink-300 transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-500 rounded"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-gf-accent hover:text-gf-accent transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent rounded"
             >
               <Heart className="h-3.5 w-3.5" />
               {t('donate.title')}
@@ -152,7 +152,7 @@ export function LandingNav() {
 
               <a
                 href="#"
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-pink-400 hover:text-pink-300 hover:bg-pink-500/10 transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-500"
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gf-accent hover:text-gf-accent hover:bg-gf-accent-soft transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
                 onClick={() => setMobileOpen(false)}
               >
                 <Heart className="h-3.5 w-3.5" />

@@ -140,7 +140,7 @@ export default function MyProductsPage() {
             <p className="text-gray-300 mb-6">{error}</p>
             <button 
               onClick={fetchProductsData} 
-              className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+              className="px-6 py-3 bg-wl-accent hover:bg-wl-accent-hover text-white rounded-lg transition-colors"
             >
               {t('tryAgain')}
             </button>
@@ -159,7 +159,7 @@ export default function MyProductsPage() {
             <p className="text-gray-300 mb-6">{t('pleaseLoginToSeeProducts')}</p>
             <Link
               href="/login"
-              className="inline-flex items-center px-6 py-3 border border-transparent rounded-lg text-base font-medium text-white bg-purple-600 hover:bg-purple-700"
+              className="inline-flex items-center px-6 py-3 border border-transparent rounded-lg text-base font-medium text-white bg-wl-accent hover:bg-wl-accent-hover"
             >
               {t('login')}
             </Link>
@@ -200,16 +200,16 @@ export default function MyProductsPage() {
       <div className="flex items-center mb-4">
         <div className="text-4xl mr-4">{product.icon}</div>
         <div className="flex-1">
-          <h3 className={`text-xl font-semibold text-white transition-colors ${accessible ? 'group-hover:text-green-300' : 'group-hover:text-purple-300'}`}>
+          <h3 className={`text-xl font-semibold text-white transition-colors ${accessible ? 'group-hover:text-green-300' : 'group-hover:text-wl-accent'}`}>
             {product.name}
           </h3>
           <div className="flex items-center mt-1">
             {product.price > 0 ? (
-               <div className="flex items-center px-2 py-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-gf-accent/30 rounded-full">
-                <svg className="w-3 h-3 text-purple-400 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <div className="flex items-center px-2 py-1 bg-wl-accent-soft border border-wl-border-accent rounded-full">
+                <svg className="w-3 h-3 text-wl-accent mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                 </svg>
-                <span className="text-xs font-medium text-purple-300">{t('premium')}</span>
+                <span className="text-xs font-medium text-wl-accent">{t('premium')}</span>
               </div>
             ) : (
               <span className="inline-flex items-center px-2 py-1 bg-green-500/20 border border-green-500/30 rounded text-xs font-medium text-green-300">
@@ -225,14 +225,14 @@ export default function MyProductsPage() {
       </p>
       
       <div className="flex items-center justify-between mb-4">
-        <div className="text-2xl font-bold text-purple-400">
+        <div className="text-2xl font-bold text-wl-accent">
           {formatPrice(product.price, product.currency)}
         </div>
       </div>
 
       <Link
         href={`/p/${product.slug}`}
-        className={`block w-full text-center font-semibold py-3 px-4 rounded-lg transition-all duration-200 hover:shadow-lg ${accessible ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'}`}
+        className={`block w-full text-center font-semibold py-3 px-4 rounded-lg transition-all duration-200 hover:shadow-lg ${accessible ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-wl-accent hover:bg-wl-accent-hover text-white'}`}
       >
         {accessible ? t('launchProduct') : t('viewProduct')}
       </Link>
@@ -248,7 +248,7 @@ export default function MyProductsPage() {
         {/* Header */}
         <header className="relative pt-20 pb-16 text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
+            <span className="text-wl-accent">
               {t('title')}
             </span>
           </h1>
@@ -284,7 +284,7 @@ export default function MyProductsPage() {
 
             {paidProducts.length > 0 && (
               <div>
-                <h3 className="text-2xl font-semibold text-purple-300 mb-6">{t('premiumSolutions')}</h3>
+                <h3 className="text-2xl font-semibold text-wl-accent mb-6">{t('premiumSolutions')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {paidProducts.map((product) => renderProductCard(product, false))}
                 </div>

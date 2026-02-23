@@ -23,9 +23,9 @@ export default function BrandingSettings() {
 
   const [formData, setFormData] = useState({
     logo_url: '',
-    primary_color: '#9333ea',
-    secondary_color: '#ec4899',
-    accent_color: '#8b5cf6',
+    primary_color: '#00AAFF',
+    secondary_color: '#33BBFF',
+    accent_color: '#00AAFF',
     font_family: 'system' as const,
   });
 
@@ -37,9 +37,9 @@ export default function BrandingSettings() {
           setConfig(data);
           setFormData({
             logo_url: data.logo_url || '',
-            primary_color: data.primary_color || '#9333ea',
-            secondary_color: data.secondary_color || '#ec4899',
-            accent_color: data.accent_color || '#8b5cf6',
+            primary_color: data.primary_color || '#00AAFF',
+            secondary_color: data.secondary_color || '#33BBFF',
+            accent_color: data.accent_color || '#00AAFF',
             font_family: (data.font_family as any) || 'system',
           });
         }
@@ -85,9 +85,9 @@ export default function BrandingSettings() {
   const handleReset = () => {
     setFormData({
       logo_url: '',
-      primary_color: '#9333ea',
-      secondary_color: '#ec4899',
-      accent_color: '#8b5cf6',
+      primary_color: '#00AAFF',
+      secondary_color: '#33BBFF',
+      accent_color: '#00AAFF',
       font_family: 'system',
     });
   };
@@ -131,12 +131,12 @@ export default function BrandingSettings() {
               type="url"
               value={formData.logo_url}
               onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-gf-accent focus:border-transparent"
               placeholder="https://i.ibb.co/..."
             />
             <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
               {t('logoUrlHelpPrefix')}{' '}
-              <a href="https://imgbb.com" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-700 dark:text-purple-400 underline">
+              <a href="https://imgbb.com" target="_blank" rel="noopener noreferrer" className="text-gf-accent hover:text-gf-accent-hover underline">
                 {t('imgbb')}
               </a>{' '}
               {t('logoUrlHelpSuffix')}
@@ -165,7 +165,7 @@ export default function BrandingSettings() {
                     value={formData.primary_color}
                     onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
                     className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    placeholder="#9333ea"
+                    placeholder="#00AAFF"
                   />
                 </div>
               </div>
@@ -187,7 +187,7 @@ export default function BrandingSettings() {
                     value={formData.secondary_color}
                     onChange={(e) => setFormData({ ...formData, secondary_color: e.target.value })}
                     className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    placeholder="#ec4899"
+                    placeholder="#33BBFF"
                   />
                 </div>
               </div>
@@ -209,7 +209,7 @@ export default function BrandingSettings() {
                     value={formData.accent_color}
                     onChange={(e) => setFormData({ ...formData, accent_color: e.target.value })}
                     className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    placeholder="#8b5cf6"
+                    placeholder="#00AAFF"
                   />
                 </div>
               </div>
@@ -224,7 +224,7 @@ export default function BrandingSettings() {
             <select
               value={formData.font_family}
               onChange={(e) => setFormData({ ...formData, font_family: e.target.value as any })}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-gf-accent focus:border-transparent"
             >
               {FONTS.map((font) => (
                 <option key={font.value} value={font.value}>
@@ -242,7 +242,7 @@ export default function BrandingSettings() {
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
+              className="px-6 py-2 bg-gf-accent hover:bg-gf-accent-hover text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
             >
               {saving ? t('saving') : t('saveBranding')}
             </button>

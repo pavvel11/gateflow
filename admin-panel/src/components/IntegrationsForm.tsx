@@ -137,7 +137,7 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
             {/* Step 2 - Marketing */}
             <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-2 mb-2">
-                <span className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400 text-xs font-bold flex items-center justify-center">2</span>
+                <span className="w-6 h-6 rounded-full bg-gf-accent-soft text-gf-accent text-xs font-bold flex items-center justify-center">2</span>
                 <h4 className="font-medium text-gray-900 dark:text-white text-sm">{t('guide.quickStart.marketing.title')}</h4>
               </div>
               <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{t('guide.quickStart.marketing.desc')}</p>
@@ -241,7 +241,7 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
 
                         {/* Scenario 4 - Full tracking */}
                         <div className="p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
-                          <div className="font-medium text-purple-700 dark:text-purple-400 mb-2">4. {t('guide.gtm.scenario4.title')}</div>
+                          <div className="font-medium text-gf-accent mb-2">4. {t('guide.gtm.scenario4.title')}</div>
                           <div className="text-xs space-y-1 mb-2">
                             <div className="text-gray-600 dark:text-gray-400">{t('guide.gtm.scenario4.gtm')}</div>
                             <div className="text-gray-600 dark:text-gray-400">{t('guide.gtm.scenario4.gtmServer')}</div>
@@ -321,8 +321,8 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
             {activeTab === 'marketing' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-top-2">
                 {/* Facebook CAPI Setup Guide */}
-                <details className="group border border-purple-200 dark:border-purple-800 rounded-lg bg-purple-50 dark:bg-purple-900/20">
-                  <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between text-sm font-medium text-purple-800 dark:text-purple-200 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg transition-colors">
+                <details className="group border border-gf-border-accent rounded-lg bg-gf-accent-soft">
+                  <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between text-sm font-medium text-gf-accent hover:bg-gf-accent-soft rounded-lg transition-colors">
                     <span className="flex items-center gap-2">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                       {t('guide.facebook.title')}
@@ -331,7 +331,7 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
                   </summary>
                   <div className="px-4 pb-4 text-sm text-gray-700 dark:text-gray-300 space-y-4">
                     {/* Quick Start - highlighted section */}
-                    <div className="border-t border-purple-200 dark:border-purple-800 pt-4">
+                    <div className="border-t border-gf-border-accent pt-4">
                       <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                         <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2 flex items-center gap-2">
                           <span className="text-lg">🚀</span> {t('guide.facebook.quickStart')}
@@ -637,7 +637,7 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
                                         <td className="px-4 py-3">
                                             <span className={`px-2 py-1 rounded text-xs ${
                                                 script.category === 'essential' ? 'bg-gray-100 text-gray-800' :
-                                                script.category === 'marketing' ? 'bg-purple-100 text-purple-800' :
+                                                script.category === 'marketing' ? 'bg-gf-accent-soft text-gf-accent' :
                                                 'bg-blue-100 text-blue-800'
                                             }`}>
                                                 {t(`scripts.categories.${script.category}`)}

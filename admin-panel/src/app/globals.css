@@ -67,8 +67,39 @@
   --gf-shadow-accent: 0 4px 30px -4px rgba(0,136,204,0.12);
 }
 
-/* Tailwind v4 theme tokens — enables bg-gf-deep, text-gf-accent, etc. */
+/* ===== Whitelabel Tokens — default to GateFlow brand, overridden by theme ===== */
+:root {
+  --wl-accent: var(--gf-accent);
+  --wl-accent-hover: var(--gf-accent-hover);
+  --wl-accent-soft: var(--gf-accent-soft);
+  --wl-accent-med: var(--gf-accent-med);
+  --wl-accent-glow: var(--gf-accent-glow);
+  --wl-bg-deep: var(--gf-bg-deep);
+  --wl-bg-base: var(--gf-bg-base);
+  --wl-bg-raised: var(--gf-bg-raised);
+  --wl-bg-float: var(--gf-bg-float);
+  --wl-text-heading: var(--gf-text-heading);
+  --wl-text-body: var(--gf-text-body);
+  --wl-text-muted: var(--gf-text-muted);
+  --wl-border: var(--gf-border);
+  --wl-border-accent: var(--gf-border-accent);
+  --wl-success: var(--gf-success);
+  --wl-warning: var(--gf-warning);
+  --wl-danger: var(--gf-danger);
+  --wl-shadow: var(--gf-shadow);
+  --wl-shadow-accent: var(--gf-shadow-accent);
+  --wl-font-family: inherit;
+  --wl-font-heading-weight: 700;
+  --wl-font-body-weight: 400;
+  --wl-radius-sm: 6px;
+  --wl-radius-md: 12px;
+  --wl-radius-lg: 16px;
+  --wl-radius-full: 9999px;
+}
+
+/* Tailwind v4 theme tokens — enables bg-gf-deep, text-gf-accent, bg-wl-accent, etc. */
 @theme {
+  /* GateFlow brand tokens (admin panel) */
   --color-gf-deep: var(--gf-bg-deep);
   --color-gf-base: var(--gf-bg-base);
   --color-gf-raised: var(--gf-bg-raised);
@@ -90,6 +121,28 @@
   --color-gf-danger: var(--gf-danger);
   --color-gf-danger-soft: var(--gf-danger-soft);
 
+  /* Whitelabel tokens (public pages — customizable via theme) */
+  --color-wl-accent: var(--wl-accent);
+  --color-wl-accent-hover: var(--wl-accent-hover);
+  --color-wl-accent-soft: var(--wl-accent-soft);
+  --color-wl-accent-med: var(--wl-accent-med);
+  --color-wl-accent-glow: var(--wl-accent-glow);
+  --color-wl-deep: var(--wl-bg-deep);
+  --color-wl-base: var(--wl-bg-base);
+  --color-wl-raised: var(--wl-bg-raised);
+  --color-wl-float: var(--wl-bg-float);
+  --color-wl-heading: var(--wl-text-heading);
+  --color-wl-body: var(--wl-text-body);
+  --color-wl-muted: var(--wl-text-muted);
+  --color-wl-border: var(--wl-border);
+  --color-wl-border-accent: var(--wl-border-accent);
+  --color-wl-success: var(--wl-success);
+  --color-wl-warning: var(--wl-warning);
+  --color-wl-danger: var(--wl-danger);
+  --radius-wl-sm: var(--wl-radius-sm);
+  --radius-wl-md: var(--wl-radius-md);
+  --radius-wl-lg: var(--wl-radius-lg);
+  --radius-wl-full: var(--wl-radius-full);
 }
 
 /* Grain noise overlay — static background image, no compositing overhead */

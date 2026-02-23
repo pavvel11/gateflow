@@ -286,7 +286,7 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
                 placeholder={t('groupNamePlaceholder')}
                 value={groupName}
                 onChange={(e) => handleNameChange(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-gf-accent dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-gf-accent focus:border-gf-accent dark:bg-gray-700 dark:text-white"
               />
             </div>
             <div>
@@ -301,14 +301,14 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
                     placeholder={t('slugPlaceholder', { defaultValue: 'e.g., subscription-plans' })}
                     value={groupSlug}
                     onChange={(e) => handleSlugChange(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-gf-accent dark:bg-gray-700 dark:text-white font-mono text-sm"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-gf-accent focus:border-gf-accent dark:bg-gray-700 dark:text-white font-mono text-sm"
                   />
                 </div>
                 {slugManuallyEdited && groupName && (
                   <button
                     type="button"
                     onClick={regenerateSlug}
-                    className="px-3 py-2 text-sm text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
+                    className="px-3 py-2 text-sm text-gf-accent hover:bg-gf-accent-soft rounded-lg transition-colors"
                     title={t('regenerateSlug', { defaultValue: 'Regenerate from name' })}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -332,7 +332,7 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
                   placeholder={t('searchProducts')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-gf-accent dark:bg-gray-700 dark:text-white"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-gf-accent focus:border-gf-accent dark:bg-gray-700 dark:text-white"
                 />
               </div>
 
@@ -472,7 +472,7 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
                           placeholder={t('variantNamePlaceholder')}
                           value={product.variant_name}
                           onChange={(e) => updateVariantName(product.product_id, e.target.value)}
-                          className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-purple-500 focus:border-gf-accent dark:bg-gray-700 dark:text-white"
+                          className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-gf-accent focus:border-gf-accent dark:bg-gray-700 dark:text-white"
                         />
                       </div>
                     </div>
@@ -502,7 +502,7 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
               <button
                 type="submit"
                 disabled={submitting || selectedProducts.length < 2}
-                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 shadow-sm"
+                className="px-6 py-2 bg-gf-accent text-white rounded-lg hover:bg-gf-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 shadow-sm"
               >
                 {submitting ? (
                   <>

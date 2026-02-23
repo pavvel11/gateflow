@@ -16,7 +16,7 @@ type ViewMode = 'daily' | 'hourly';
 const CURRENCY_COLORS: { [key: string]: string } = {
   'USD': '#3B82F6', // blue
   'EUR': '#10B981', // green
-  'GBP': '#8B5CF6', // purple
+  'GBP': '#00AAFF', // gf-accent
   'PLN': '#F59E0B', // amber
   'CAD': '#EF4444', // red
   'AUD': '#14B8A6', // teal

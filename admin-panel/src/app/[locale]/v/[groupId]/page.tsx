@@ -88,7 +88,7 @@ export default function VariantSelectorPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+      <div className="min-h-screen bg-wl-deep flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gf-accent"></div>
       </div>
     );
@@ -96,7 +96,7 @@ export default function VariantSelectorPage() {
 
   if (error || variants.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+      <div className="min-h-screen bg-wl-deep flex items-center justify-center">
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 max-w-md mx-4">
           <div className="text-center">
             <div className="text-6xl mb-4">😕</div>
@@ -116,7 +116,7 @@ export default function VariantSelectorPage() {
   const productName = variants[0]?.name || 'Product';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-12 px-4">
+    <div className="min-h-screen bg-wl-deep py-12 px-4">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="text-center mb-10">
@@ -138,15 +138,15 @@ export default function VariantSelectorPage() {
                 relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl
                 transition-all duration-300 cursor-pointer border-2
                 ${variant.is_featured
-                  ? 'border-gf-accent ring-2 ring-purple-500/20'
-                  : 'border-transparent hover:border-purple-300 dark:hover:border-purple-700'
+                  ? 'border-gf-accent ring-2 ring-wl-accent-soft'
+                  : 'border-transparent hover:border-wl-border-accent'
                 }
               `}
             >
               {/* Featured badge */}
               {variant.is_featured && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider shadow-lg">
+                  <span className="bg-wl-accent text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider shadow-lg">
                     {t('popular', { defaultValue: 'Most Popular' })}
                   </span>
                 </div>
@@ -185,7 +185,7 @@ export default function VariantSelectorPage() {
                     className={`
                       px-6 py-2.5 rounded-xl font-semibold transition-all duration-200
                       ${variant.is_featured
-                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 shadow-lg hover:shadow-xl'
+                        ? 'bg-wl-accent text-white hover:bg-wl-accent-hover shadow-lg hover:shadow-xl'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
                       }
                     `}

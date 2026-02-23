@@ -132,8 +132,8 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
   // Extract branding from shop config
   const shopName = shopConfig?.shop_name || 'GateFlow'
   const logoUrl = shopConfig?.logo_url
-  const primaryColor = shopConfig?.primary_color || '#9333ea'
-  const secondaryColor = shopConfig?.secondary_color || '#ec4899'
+  const primaryColor = shopConfig?.primary_color || '#00AAFF'
+  const secondaryColor = shopConfig?.secondary_color || '#33BBFF'
 
   const handleSignOut = async () => {
     await signOut()
@@ -217,7 +217,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
               {showGateFlowCTA && (
                 <Link
                   href="/about"
-                  className="hidden sm:inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold hover:shadow-lg transition-all transform hover:scale-105"
+                  className="hidden sm:inline-flex items-center px-4 py-2 rounded-full bg-gf-accent text-white text-xs font-bold hover:bg-gf-accent-hover hover:shadow-lg transition-all transform hover:scale-105"
                 >
                   <span className="mr-1.5">🚀</span>
                   {t('getGateflow', { defaultValue: 'Get GateFlow' })}
@@ -301,7 +301,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
 
         <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
           <div className="flex items-center w-full">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold mr-3 shadow-sm">
+            <div className="w-8 h-8 rounded-full bg-gf-accent flex items-center justify-center text-white text-xs font-bold mr-3 shadow-sm">
               {user.email?.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
@@ -376,7 +376,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
             <div className="p-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold mr-3">
+                  <div className="w-8 h-8 rounded-full bg-gf-accent flex items-center justify-center text-white text-xs font-bold mr-3">
                     {user?.email?.charAt(0).toUpperCase()}
                   </div>
                   <div className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[120px]">
@@ -410,7 +410,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
             {showGateFlowCTA && (
               <Link
                 href="/about"
-                className="hidden sm:inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold hover:shadow-lg transition-all transform hover:scale-105"
+                className="hidden sm:inline-flex items-center px-4 py-2 rounded-full bg-gf-accent text-white text-xs font-bold hover:bg-gf-accent-hover hover:shadow-lg transition-all transform hover:scale-105"
               >
                 <span className="mr-1.5">🚀</span>
                 {t('getGateflow', { defaultValue: 'Get GateFlow' })}

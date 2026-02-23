@@ -80,14 +80,14 @@ export default function CheckoutThemeSettings() {
             disabled={saving}
             className={`flex-1 flex flex-col items-center gap-2 px-4 py-4 rounded-lg border-2 transition-all ${
               theme === option.value
-                ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/30'
+                ? 'border-gf-border-accent bg-gf-accent-soft'
                 : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
             } ${saving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
           >
             <span className="text-2xl">{option.icon}</span>
             <span className={`text-sm font-medium ${
               theme === option.value
-                ? 'text-purple-700 dark:text-purple-300'
+                ? 'text-gf-accent'
                 : 'text-gray-700 dark:text-gray-300'
             }`}>
               {t(option.value)}

@@ -191,7 +191,7 @@ const VariantsPageContent: React.FC = () => {
               setEditingGroup(null);
               setShowFormModal(true);
             }}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2 shadow-sm"
+            className="px-4 py-2 bg-gf-accent text-white rounded-lg hover:bg-gf-accent-hover transition-colors flex items-center space-x-2 shadow-sm"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -211,8 +211,8 @@ const VariantsPageContent: React.FC = () => {
                 {groups.length}
               </p>
             </div>
-            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-gf-accent-soft rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-gf-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
@@ -283,7 +283,7 @@ const VariantsPageContent: React.FC = () => {
                   setEditingGroup(null);
                   setShowFormModal(true);
                 }}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm"
+                className="px-4 py-2 bg-gf-accent text-white rounded-lg hover:bg-gf-accent-hover transition-colors shadow-sm"
               >
                 {t('createGroup')}
               </button>
@@ -298,8 +298,8 @@ const VariantsPageContent: React.FC = () => {
               {/* Group Header */}
               <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-10 h-10 bg-gf-accent-soft rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-gf-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                   </div>
@@ -326,7 +326,7 @@ const VariantsPageContent: React.FC = () => {
                   </a>
                   <button
                     onClick={() => copyVariantLink(group)}
-                    className="p-2 text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400 transition-colors"
+                    className="p-2 text-gray-500 hover:text-gf-accent dark:text-gray-400 transition-colors"
                     title={t('copyLink')}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -377,7 +377,7 @@ const VariantsPageContent: React.FC = () => {
                             href={`/p/${item.product.slug}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-medium text-gray-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                            className="font-medium text-gray-900 dark:text-white hover:text-gf-accent transition-colors"
                           >
                             {item.variant_name || item.product.name}
                           </a>

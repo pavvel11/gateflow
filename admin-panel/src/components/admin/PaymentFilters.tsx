@@ -168,11 +168,11 @@ export default function PaymentFilters({
             </span>
           )}
           {filters.searchTerm && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100">
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gf-accent-soft text-gf-accent">
               Search: {filters.searchTerm}
               <button
                 onClick={() => handleFilterChange('searchTerm', '')}
-                className="ml-1 text-purple-600 hover:text-purple-800 dark:text-purple-300 dark:hover:text-purple-100"
+                className="ml-1 text-gf-accent hover:text-gf-accent"
               >
                 ×
               </button>

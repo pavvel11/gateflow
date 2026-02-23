@@ -48,7 +48,7 @@ const DASHBOARD_LINKS = [
 function SourceBadge({ source }: { source: ConfigSource }) {
   const t = useTranslations('settings.stripeTax.toggles')
   const styles: Record<ConfigSource, string> = {
-    db: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
+    db: 'bg-gf-accent-soft text-gf-accent',
     env: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
     default: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400',
   }
@@ -80,9 +80,9 @@ function Toggle({
       aria-checked={enabled}
       onClick={() => onChange(!enabled)}
       disabled={disabled}
-      className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
+      className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gf-accent focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
         disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-      } ${enabled ? 'bg-purple-600' : 'bg-gray-200 dark:bg-gray-600'}`}
+      } ${enabled ? 'bg-gf-accent' : 'bg-gray-200 dark:bg-gray-600'}`}
     >
       <span
         className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
@@ -425,7 +425,7 @@ export default function StripeTaxSettings() {
                 disabled={saving}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                   billingAddress === value
-                    ? 'bg-purple-600 text-white'
+                    ? 'bg-gf-accent text-white'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 } ${saving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               >
@@ -457,7 +457,7 @@ export default function StripeTaxSettings() {
               onChange={(e) => setExpiresHours(Number(e.target.value))}
               onBlur={() => handleExpiresHours(expiresHours)}
               disabled={saving}
-              className={`w-20 px-2 py-1.5 text-sm text-right rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+              className={`w-20 px-2 py-1.5 text-sm text-right rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-gf-accent focus:border-transparent ${
                 saving ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             />

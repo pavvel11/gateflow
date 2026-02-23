@@ -365,7 +365,7 @@ const CouponsPageContent: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{coupon.code}</span>
                           {isOto && (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-gf-accent-soft text-gf-accent">
                               OTO
                             </span>
                           )}

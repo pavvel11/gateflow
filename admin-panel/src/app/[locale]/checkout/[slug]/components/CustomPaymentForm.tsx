@@ -715,7 +715,7 @@ export default function CustomPaymentForm({
         className={`w-full px-6 py-4 text-white font-bold rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] ${
           customAmountError
             ? 'bg-gray-600 cursor-not-allowed'
-            : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:shadow-xl'
+            : 'bg-wl-accent hover:bg-wl-accent-hover hover:shadow-xl'
         }`}
       >
         {isProcessing ? (

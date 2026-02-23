@@ -201,7 +201,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                         {!product.is_active && (
                           product.enable_waitlist ? (
                             <span
-                              className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"
+                              className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gf-accent-soft text-gf-accent"
                               title={t('waitlistEnabled')}
                             >
                               📋
@@ -305,7 +305,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                         </button>
                         <button
                           onClick={() => onPreviewRedirect(product)}
-                          className="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300 transition-colors p-1 hidden sm:block"
+                          className="text-gf-accent hover:text-gf-accent transition-colors p-1 hidden sm:block"
                           aria-label={t('previewRedirectLabel', { name: product.name })}
                           title={t('previewRedirect')}
                         >

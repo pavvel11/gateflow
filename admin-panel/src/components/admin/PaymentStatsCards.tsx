@@ -53,7 +53,7 @@ export default function PaymentStatsCards({ stats }: PaymentStatsCardsProps) {
       title: t('todayRevenue'),
       value: formatCurrency(stats.todayRevenue),
       icon: '📈',
-      color: 'bg-purple-500',
+      color: 'bg-gf-accent',
       change: '+15.3%',
       changeType: 'positive' as const,
     },

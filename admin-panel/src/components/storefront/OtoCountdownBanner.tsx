@@ -100,7 +100,7 @@ export default function OtoCountdownBanner({
           ? 'bg-red-50 dark:bg-red-900/20 border-red-500 animate-pulse'
           : isWarning
             ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-500'
-            : 'bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-500'
+            : 'bg-wl-accent-soft border-wl-border-accent'
         }
       `}
     >
@@ -112,7 +112,7 @@ export default function OtoCountdownBanner({
         <div className="flex items-center gap-3">
           <div className={`
             flex items-center justify-center w-12 h-12 rounded-full
-            ${isUrgent ? 'bg-red-500' : isWarning ? 'bg-orange-500' : 'bg-purple-500'}
+            ${isUrgent ? 'bg-red-500' : isWarning ? 'bg-orange-500' : 'bg-wl-accent'}
             text-white font-bold text-lg
           `}>
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,7 +121,7 @@ export default function OtoCountdownBanner({
           </div>
           <div>
             <p className="text-sm text-gray-600 dark:text-gray-400">{t('exclusiveOffer')}</p>
-            <p className={`text-lg font-bold ${isUrgent ? 'text-red-600' : isWarning ? 'text-orange-600' : 'text-purple-600'}`}>
+            <p className={`text-lg font-bold ${isUrgent ? 'text-red-600' : isWarning ? 'text-orange-600' : 'text-wl-accent'}`}>
               {t('saveAmount', { amount: formatDiscount(discountType, discountValue, currency) })}
             </p>
           </div>
@@ -136,7 +136,7 @@ export default function OtoCountdownBanner({
               ? 'bg-red-500 text-white'
               : isWarning
                 ? 'bg-orange-500 text-white'
-                : 'bg-purple-600 text-white'
+                : 'bg-wl-accent text-white'
             }
           `}>
             {formatTime(secondsRemaining)}

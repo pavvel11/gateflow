@@ -53,7 +53,7 @@ export default function ProductShowcase({ product }: ProductShowcaseProps) {
         </div>
       ) : (
         /* Placeholder when no image */
-        <div className="relative w-full aspect-video mb-6 rounded-2xl overflow-hidden bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-blue-500/10 flex items-center justify-center border border-gray-200 dark:border-white/10">
+        <div className="relative w-full aspect-video mb-6 rounded-2xl overflow-hidden bg-wl-accent-soft flex items-center justify-center border border-gray-200 dark:border-white/10">
           <span className="text-9xl opacity-50">{product.icon}</span>
         </div>
       )}
@@ -198,7 +198,7 @@ export default function ProductShowcase({ product }: ProductShowcaseProps) {
                 </pre>
               ),
               blockquote: ({ children }) => (
-                <blockquote className="border-l-4 border-purple-500 pl-4 italic text-gray-600 dark:text-gray-300 my-4">
+                <blockquote className="border-l-4 border-wl-border-accent pl-4 italic text-gray-600 dark:text-gray-300 my-4">
                   {children}
                 </blockquote>
               ),

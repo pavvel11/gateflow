@@ -19,14 +19,14 @@ export default function AdminOnboardingCTA({ shopName, shopEmail }: AdminOnboard
   ];
 
   return (
-    <div data-testid="admin-onboarding" className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 flex items-center justify-center px-4 py-12">
+    <div data-testid="admin-onboarding" className="min-h-screen bg-wl-deep flex items-center justify-center px-4 py-12">
       <div className="max-w-4xl w-full">
         {/* Hero Section */}
         <div className="text-center mb-12">
           {/* Welcome Badge */}
           <div className="mb-6 inline-block">
-            <div className="px-6 py-2 bg-gradient-to-r from-purple-500/10 to-blue-500/10 backdrop-blur-sm rounded-full border border-purple-200 dark:border-purple-700 shadow-lg">
-              <span className="text-sm font-medium text-purple-600 dark:text-purple-400">
+            <div className="px-6 py-2 bg-wl-accent-soft backdrop-blur-sm rounded-full border border-wl-border-accent shadow-lg">
+              <span className="text-sm font-medium text-wl-accent">
                 Admin Panel
               </span>
             </div>
@@ -45,7 +45,7 @@ export default function AdminOnboardingCTA({ shopName, shopEmail }: AdminOnboard
           {/* Main CTA Button */}
           <Link
             href="/dashboard/products?open=new"
-            className="inline-flex items-center px-8 py-4 border border-transparent rounded-xl text-lg font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+            className="inline-flex items-center px-8 py-4 border border-transparent rounded-xl text-lg font-medium text-white bg-wl-accent hover:bg-wl-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wl-accent transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
           >
             <svg className="-ml-1 mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -57,11 +57,11 @@ export default function AdminOnboardingCTA({ shopName, shopEmail }: AdminOnboard
         {/* Setup Progress Card */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           {/* Card Header */}
-          <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-6">
+          <div className="bg-wl-accent px-8 py-6">
             <h2 className="text-2xl font-bold text-white">
               Setup Progress
             </h2>
-            <p className="text-purple-100 mt-1">
+            <p className="text-white/80 mt-1">
               Complete these steps to launch your store
             </p>
           </div>
@@ -104,8 +104,8 @@ export default function AdminOnboardingCTA({ shopName, shopEmail }: AdminOnboard
           <div className="bg-gray-50 dark:bg-gray-900/50 px-8 py-6 border-t border-gray-200 dark:border-gray-700">
             <div className="flex flex-wrap justify-center gap-6 text-center">
               <div className="flex items-center">
-                <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mr-3">
-                  <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-10 h-10 bg-wl-accent-soft rounded-lg flex items-center justify-center mr-3">
+                  <svg className="w-5 h-5 text-wl-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                 </div>
@@ -146,9 +146,9 @@ export default function AdminOnboardingCTA({ shopName, shopEmail }: AdminOnboard
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
           <Link
             href="/dashboard/products"
-            className="group p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600"
+            className="group p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700 hover:border-wl-border-accent"
           >
-            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+            <div className="w-12 h-12 bg-wl-accent rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
@@ -198,9 +198,9 @@ export default function AdminOnboardingCTA({ shopName, shopEmail }: AdminOnboard
 
         {/* Decorative Background */}
         <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-200 dark:bg-purple-800 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-xl opacity-30 animate-blob"></div>
-          <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-blue-200 dark:bg-blue-800 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
-          <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-pink-200 dark:bg-pink-800 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-xl opacity-30 animate-blob animation-delay-4000"></div>
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-wl-accent-soft rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
+          <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-wl-accent-soft rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-wl-accent-soft rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000"></div>
         </div>
       </div>
 

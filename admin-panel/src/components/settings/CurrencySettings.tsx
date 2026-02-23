@@ -204,7 +204,7 @@ export default function CurrencySettings() {
         {config && (
           <div className={`mb-6 rounded-lg p-4 border ${
             config.configuredIn === 'both'
-              ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800'
+              ? 'bg-gf-accent-soft border-gf-border-accent'
               : config.configuredIn === 'database'
               ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
               : config.configuredIn === 'env'
@@ -213,7 +213,7 @@ export default function CurrencySettings() {
           }`}>
             <div className="flex items-start gap-3">
               {config.configuredIn === 'both' ? (
-                <CheckCircle2 className="w-5 h-5 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
+                <CheckCircle2 className="w-5 h-5 text-gf-accent mt-0.5 flex-shrink-0" />
               ) : config.configuredIn === 'database' ? (
                 <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
               ) : config.configuredIn === 'env' ? (

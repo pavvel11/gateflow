@@ -222,7 +222,7 @@ export default function MyPurchasesPage() {
         {/* Header */}
         <header className="relative pt-10 pb-8 text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
+            <span className="text-wl-accent">
               {t('title', { defaultValue: 'My Purchases' })}
             </span>
           </h1>
@@ -266,7 +266,7 @@ export default function MyPurchasesPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-lg font-bold text-purple-400">
+                      <div className="text-lg font-bold text-wl-accent">
                         {formatPrice(purchase.amount / 100, purchase.currency)}
                       </div>
                       {purchase.refunded_amount > 0 && purchase.status !== 'refunded' && (
@@ -317,7 +317,7 @@ export default function MyPurchasesPage() {
                   value={refundReason}
                   onChange={(e) => setRefundReason(e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-wl-accent"
                   placeholder={t('refundReasonPlaceholder', { defaultValue: 'Tell us why you want a refund...' })}
                 />
               </div>

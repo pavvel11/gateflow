@@ -200,10 +200,10 @@ export function PostPurchaseSection({
         {canShowOtoOption && (
           <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
             {/* OTO Toggle */}
-            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg border border-purple-200 dark:border-purple-700">
+            <div className="flex items-center justify-between p-4 bg-gf-accent-soft rounded-lg border border-gf-border-accent">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/50 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-10 h-10 bg-gf-accent-soft rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-gf-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
@@ -229,7 +229,7 @@ export function PostPurchaseSection({
                   }}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600"></div>
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gf-accent rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-gf-accent"></div>
               </label>
             </div>
 
@@ -245,7 +245,7 @@ export function PostPurchaseSection({
                     <select
                       value={oto.discountType}
                       onChange={(e) => setOto(prev => ({ ...prev, discountType: e.target.value as 'percentage' | 'fixed' }))}
-                      className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent dark:bg-gray-700 dark:text-white"
                     >
                       <option value="percentage">{t('oto.percentage', { defaultValue: 'Percentage (%)' })}</option>
                       <option value="fixed">{t('oto.fixed', { defaultValue: 'Fixed Amount' })}</option>
@@ -262,7 +262,7 @@ export function PostPurchaseSection({
                         onChange={(e) => setOto(prev => ({ ...prev, discountValue: Math.max(0, Number(e.target.value)) }))}
                         min="0"
                         max={oto.discountType === 'percentage' ? 100 : undefined}
-                        className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white pr-10"
+                        className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent dark:bg-gray-700 dark:text-white pr-10"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
                         {oto.discountType === 'percentage' ? '%' : formData.currency}
@@ -283,7 +283,7 @@ export function PostPurchaseSection({
                       onChange={(e) => setOto(prev => ({ ...prev, durationMinutes: Math.max(1, Math.min(1440, Number(e.target.value))) }))}
                       min="1"
                       max="1440"
-                      className="w-24 px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      className="w-24 px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent dark:bg-gray-700 dark:text-white"
                     />
                     <span className="text-sm text-gray-600 dark:text-gray-400">
                       {t('oto.minutes', { defaultValue: 'minutes' })}
@@ -295,7 +295,7 @@ export function PostPurchaseSection({
                           type="button"
                           onClick={() => setOto(prev => ({ ...prev, durationMinutes: mins }))}
                           className={`px-2 py-1 text-xs rounded ${oto.durationMinutes === mins
-                            ? 'bg-purple-600 text-white'
+                            ? 'bg-gf-accent text-white'
                             : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                           }`}
                         >
@@ -307,8 +307,8 @@ export function PostPurchaseSection({
                 </div>
 
                 {/* Preview Box */}
-                <div className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg border border-purple-200 dark:border-purple-700">
-                  <p className="text-sm text-purple-800 dark:text-purple-200">
+                <div className="p-3 bg-gf-accent-soft rounded-lg border border-gf-border-accent">
+                  <p className="text-sm text-gf-accent">
                     <span className="font-medium">{t('oto.preview', { defaultValue: 'Preview:' })}</span>{' '}
                     {t('oto.previewText', {
                       defaultValue: 'After purchasing this product, customer will see a {discount} discount on "{product}" for {duration} minutes.',
