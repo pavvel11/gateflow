@@ -354,21 +354,25 @@ test.describe('Omnibus Frontend - Admin Side', () => {
     await loginAsAdmin(page, adminEmail, adminPassword);
     await page.goto('/dashboard/settings');
 
-    // Wait for OmnibusSettings component to load
+    // Wait for OmnibusSettings component to load (heading appears after loading)
     await page.waitForSelector('text=/Dyrektywa Omnibus|EU Omnibus Directive/i', { timeout: 10000 });
 
-    // Find the toggle switch
-    const toggleSwitch = page.locator('button[role="switch"]').filter({ hasText: '' }); // Toggle has no text, just switch
-    const toggleContainer = page.locator('div', { hasText: /Włącz śledzenie|Enable Omnibus/i });
-    const actualToggle = toggleContainer.locator('button[role="switch"]').first();
+    // Target the specific Omnibus card by its unique heading
+    const omnibusCard = page.locator('div.rounded-xl', {
+      has: page.locator('h2', { hasText: /Dyrektywa Omnibus|EU Omnibus Directive/i }),
+    });
+    const toggle = omnibusCard.locator('button[role="switch"]');
 
     // Get initial state
-    const initialState = await actualToggle.getAttribute('aria-checked');
+    const initialState = await toggle.getAttribute('aria-checked');
     const wasEnabled = initialState === 'true';
 
-    // Toggle it
-    await actualToggle.click();
-    await page.waitForTimeout(2000); // Wait for save
+    // Toggle and wait for the server action to persist
+    await toggle.click();
+    await page.waitForTimeout(3000);
+
+    // Verify toggle didn't revert (server action succeeded)
+    await expect(toggle).toHaveAttribute('aria-checked', wasEnabled ? 'false' : 'true');
 
     // Verify in database
     const { data: shopConfig1 } = await supabaseAdmin
@@ -378,13 +382,21 @@ test.describe('Omnibus Frontend - Admin Side', () => {
 
     expect(shopConfig1!.omnibus_enabled).toBe(!wasEnabled);
 
-    // Re-find toggle after state change
-    const toggleContainer2 = page.locator('div', { hasText: /Włącz śledzenie|Enable Omnibus/i });
-    const actualToggle2 = toggleContainer2.locator('button[role="switch"]').first();
+    // Reload page to get fresh session after revalidatePath
+    await page.reload();
+    await page.waitForSelector('text=/Dyrektywa Omnibus|EU Omnibus Directive/i', { timeout: 10000 });
 
-    // Toggle back
-    await actualToggle2.click();
-    await page.waitForTimeout(2000); // Wait for save
+    // Re-target toggle after reload
+    const omnibusCard2 = page.locator('div.rounded-xl', {
+      has: page.locator('h2', { hasText: /Dyrektywa Omnibus|EU Omnibus Directive/i }),
+    });
+    const toggle2 = omnibusCard2.locator('button[role="switch"]');
+
+    // Toggle back and wait for server action to persist
+    await toggle2.click();
+    await page.waitForTimeout(3000);
+
+    await expect(toggle2).toHaveAttribute('aria-checked', wasEnabled ? 'true' : 'false');
 
     // Verify restored
     const { data: shopConfig2 } = await supabaseAdmin

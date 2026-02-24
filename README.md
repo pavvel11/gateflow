@@ -95,6 +95,18 @@ GateFlow gives you **complete control** over your digital product business. No m
 </details>
 
 <details>
+<summary><strong>Whitelabel & Theming</strong></summary>
+
+- 5 built-in theme presets (Midnight Forge, Sunset, Ocean, Forest, Minimal Light)
+- Visual Theme Editor with live preview
+- Import/export themes as JSON
+- Dark/Light/System mode (site-wide)
+- Two-layer design tokens: admin branding (gf-*) + public pages (wl-*)
+- Custom colors, typography, and border radius
+
+</details>
+
+<details>
 <summary><strong>Compliance & Security</strong></summary>
 
 - EU Omnibus Directive (30-day price history)
@@ -113,26 +125,42 @@ For the complete feature list, see **[FEATURES.md](./FEATURES.md)**.
 
 ## Payment Model: Own Stripe Account
 
-GateFlow connects to **your own Stripe account** — you are the seller, payments go directly to you.
+GateFlow connects to **your own Stripe account** — you are the seller, payments go directly to you. No middleman, no revenue sharing.
+
+### Cost Comparison at $10,000/month Revenue
+
+| Platform | Fees | Monthly Cost | You Keep |
+|----------|------|:------------:|:--------:|
+| **GateFlow + Stripe** | ~3.4% (Stripe only) | ~$340 | **$9,660** |
+| **Paddle** | 5% + 3.5% + $0.30 | ~$880 | $9,120 |
+| **LemonSqueezy** | 5% + 3.5% + $0.30 | ~$880 | $9,120 |
+| **Gumroad** | 10% + 2.9% + $0.30 | ~$1,290 | $8,710 |
+
+That's **$950/month saved** vs Gumroad — **$11,400/year** back in your pocket.
 
 <details>
-<summary><strong>How does this compare to Merchant of Record platforms?</strong></summary>
+<summary><strong>What about taxes? (MoR vs Own Stripe)</strong></summary>
 
-Platforms like Paddle, LemonSqueezy, and Gumroad act as the **Merchant of Record (MoR)** — they process payments on your behalf and handle tax compliance. This comes with trade-offs:
+Platforms like Paddle, LemonSqueezy, and Gumroad act as the **Merchant of Record (MoR)** — they process payments on your behalf and handle tax compliance. GateFlow takes a different approach:
 
 | | MoR (Paddle, LS, Gumroad) | GateFlow + Own Stripe |
 |---|---|---|
-| **Platform fees** | 5–10% of revenue | $0 |
+| **Platform fees** | 5–10% of revenue | **$0** |
 | **Payment processing** | Included in platform fee | ~2.9% + 30¢ ([Stripe pricing](https://stripe.com/pricing)) |
-| **Customer data** | Held by the MoR platform | Fully yours |
 | **Tax calculation** | Handled by MoR | Optional via [Stripe Tax](https://stripe.com/tax) (+0.5%) |
 | **Tax filing & remittance** | Handled by MoR | Your responsibility |
-| **Vendor lock-in** | Yes — customer and payment data tied to platform | No — self-hosted, fully portable |
-| **Platform risk** | Account freezes, shutdowns possible | None — you control the infrastructure |
+| **Customer data** | Held by the MoR platform | **Fully yours** |
+| **Vendor lock-in** | Customer and payment data tied to platform | **No — self-hosted, fully portable** |
+| **Platform risk** | Account freezes, shutdowns possible | **None — you control everything** |
 
 **When does tax compliance become relevant?**
 
 For EU-based sellers, the [VAT One Stop Shop (OSS)](https://vat-one-stop-shop.ec.europa.eu/) threshold is **€10,000/year** in cross-border B2C sales. Below this, you only handle VAT in your own country. Above it, you register for OSS (a single EU-wide filing) and can use [Stripe Tax](https://stripe.com/tax/pricing) to automate calculations.
+
+**Growth path:**
+1. **Starting out** — sell in your country, handle VAT normally
+2. **Growing (>€10K cross-border)** — enable [Stripe Tax](https://stripe.com/tax) in GateFlow admin panel (+0.5% per transaction), register for EU OSS
+3. **Scaling** — consider [Stripe Managed Payments](https://docs.stripe.com/connect/managed-payments) (Stripe as MoR) or a tax accountant
 
 > **Note:** This is general information, not tax advice. Tax obligations depend on your country, business type, and revenue. Consult a qualified tax professional for your specific situation.
 
@@ -275,6 +303,7 @@ See **[FEATURES.md](./FEATURES.md)** for details on all integrations.
 ## Roadmap
 
 - [x] Dark/Light theme with admin control
+- [x] Whitelabel Theme System (presets, editor, import/export)
 - [x] REST API v1 with OpenAPI 3.1 + Swagger UI
 - [x] MCP Server for Claude Desktop
 - [ ] **In Progress**: Simple Funnel System (OTO chaining)
