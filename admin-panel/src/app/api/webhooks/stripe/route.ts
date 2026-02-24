@@ -19,6 +19,7 @@ import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import { verifyWebhookSignature, getStripeServer } from '@/lib/stripe/server';
 import { WebhookService } from '@/lib/services/webhook-service';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limiting';
 
 // Supabase service client for database operations
 const getServiceClient = () => {
@@ -91,7 +92,7 @@ async function handleCheckoutSessionCompleted(
 
   if (error) {
     console.error('[Stripe Webhook] Payment processing error:', error);
-    return { processed: false, message: `Database error: ${error.message}` };
+    return { processed: false, message: 'Payment processing failed' };
   }
 
   if (!result?.success) {
@@ -204,7 +205,7 @@ async function handlePaymentIntentSucceeded(
 
   if (error) {
     console.error('[Stripe Webhook] Payment intent processing error:', error);
-    return { processed: false, message: `Database error: ${error.message}` };
+    return { processed: false, message: 'Payment processing failed' };
   }
 
   if (!result?.success) {
@@ -430,6 +431,14 @@ async function handleChargeDisputeCreated(
  * Main webhook handler
  */
 export async function POST(request: NextRequest) {
+  // Rate limit to prevent webhook endpoint flooding
+  const { maxRequests, windowMinutes, actionType } = RATE_LIMITS.STRIPE_WEBHOOK;
+  const allowed = await checkRateLimit(actionType, maxRequests, windowMinutes);
+  if (!allowed) {
+    // 429 tells Stripe to retry with exponential backoff
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   let event: Stripe.Event;
 
   // SECURITY: Get raw body for signature verification
@@ -544,7 +553,7 @@ export async function POST(request: NextRequest) {
       event_id: event.id,
       event_type: event.type,
       processed: false,
-      error: message,
+      error: 'Internal processing error',
     });
   }
 }

@@ -5,42 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Product } from '@/types';
 import DigitalContentRenderer from '@/components/DigitalContentRenderer';
 import Confetti from 'react-confetti';
-
-/**
- * SECURITY FIX (V7): Validate return URL to prevent open redirect attacks.
- * Only allows relative paths starting with / (not //).
- * Rejects: external URLs, protocol-relative URLs (//evil.com), javascript: URLs
- */
-function validateReturnUrl(url: string | null): string | null {
-  if (!url) return null;
-
-  try {
-    const decoded = decodeURIComponent(url).trim();
-
-    // Must start with exactly one / (not //)
-    if (!decoded.startsWith('/') || decoded.startsWith('//')) {
-      return null;
-    }
-
-    // Reject javascript:, data:, vbscript: URLs (case insensitive)
-    const lowerDecoded = decoded.toLowerCase();
-    if (lowerDecoded.includes('javascript:') ||
-        lowerDecoded.includes('data:') ||
-        lowerDecoded.includes('vbscript:')) {
-      return null;
-    }
-
-    // Reject URLs with protocol indicators
-    if (decoded.includes('://')) {
-      return null;
-    }
-
-    return decoded;
-  } catch {
-    // If decoding fails, reject the URL
-    return null;
-  }
-}
+import { isSafeRedirectUrl } from '@/lib/validations/redirect';
 
 interface ProductAccessViewProps {
   product: Product;
@@ -108,12 +73,19 @@ export default function ProductAccessView({ product }: ProductAccessViewProps) {
     }
   }, [product.slug, showConfetti]);
 
-  // Handle redirect type products
+  // Handle redirect type products.
+  // Note: redirect_url is admin-configured and intentionally allows cross-origin URLs
+  // (e.g. external course platforms, membership sites). Protocol validation prevents
+  // javascript:/data: injection if the DB value is compromised.
   useEffect(() => {
     if (secureData?.product.content_delivery_type === 'redirect') {
       const redirectUrl = secureData.product.content_config.redirect_url;
       if (redirectUrl) {
-        window.location.href = redirectUrl;
+        const isRelative = redirectUrl.startsWith('/') && !redirectUrl.startsWith('//');
+        const isHttp = redirectUrl.startsWith('https://') || redirectUrl.startsWith('http://');
+        if (isRelative || isHttp) {
+          window.location.href = redirectUrl;
+        }
       }
     }
   }, [secureData]);
@@ -158,13 +130,12 @@ export default function ProductAccessView({ product }: ProductAccessViewProps) {
       
       return () => clearTimeout(timer);
     } else if (showConfetti && countdown === 0) {
-      // Check for return URL - SECURITY FIX (V7): Validate URL to prevent open redirect
+      // Check for return URL — uses shared isSafeRedirectUrl validation
       const urlParams = new URLSearchParams(window.location.search);
       const rawReturnUrl = urlParams.get('return_url');
-      const safeReturnUrl = validateReturnUrl(rawReturnUrl);
 
-      if (safeReturnUrl) {
-        window.location.href = safeReturnUrl;
+      if (rawReturnUrl && isSafeRedirectUrl(rawReturnUrl)) {
+        window.location.href = rawReturnUrl;
         return;
       }
       // No valid return URL, stop confetti and show content

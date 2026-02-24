@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Facebook API request failed',
-          details: fbResult.error?.message || 'Unknown error',
+          details: 'Request to external API failed',
         },
         { status: 500 }
       );

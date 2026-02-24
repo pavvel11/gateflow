@@ -222,7 +222,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to fetch company data',
+        error: 'Failed to fetch company data',
         code: 'UNKNOWN_ERROR'
       },
       { status: 500 }

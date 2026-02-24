@@ -28,7 +28,12 @@ export default async function PrivacyPage() {
   const privacyUrl = config?.privacy_policy_url || process.env.PRIVACY_POLICY_URL
 
   if (privacyUrl) {
-    redirect(privacyUrl)
+    // Validate: only allow http/https URLs or relative paths
+    const isRelative = privacyUrl.startsWith('/') && !privacyUrl.startsWith('//')
+    const isHttps = privacyUrl.startsWith('https://') || privacyUrl.startsWith('http://')
+    if (isRelative || isHttps) {
+      redirect(privacyUrl)
+    }
   }
 
   // Fallback content if no URL is configured

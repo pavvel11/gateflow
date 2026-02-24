@@ -15,6 +15,7 @@ import {
 } from '@/lib/api';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { parseLimit, applyCursorToQuery, createPaginationResponse, validateCursor } from '@/lib/api/pagination';
+import { escapeIlikePattern } from '@/lib/validations/product';
 
 export async function OPTIONS(request: NextRequest) {
   return handleCorsPreFlight(request);
@@ -90,9 +91,10 @@ export async function GET(request: NextRequest) {
       query = query.eq('product_id', productId);
     }
 
-    // Filter by email
+    // Filter by email (escape ILIKE wildcards to prevent pattern injection)
     if (email) {
-      query = query.ilike('customer_email', `%${email}%`);
+      const escapedEmail = escapeIlikePattern(email);
+      query = query.ilike('customer_email', `%${escapedEmail}%`);
     }
 
     // Filter by date range

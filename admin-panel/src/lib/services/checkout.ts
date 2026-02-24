@@ -1,14 +1,15 @@
 import { createClient } from '@/lib/supabase/server';
 import { getStripeServer } from '@/lib/stripe/server';
 import { ProductValidationService, type ValidatedProduct } from '@/lib/services/product-validation';
-import { 
-  CheckoutError, 
-  CheckoutErrorType, 
+import {
+  CheckoutError,
+  CheckoutErrorType,
   CheckoutSessionOptions,
-  CreateCheckoutRequest 
+  CreateCheckoutRequest
 } from '@/types/checkout';
 import { STRIPE_CONFIG, CHECKOUT_ERRORS, HTTP_STATUS } from '@/lib/stripe/config';
 import { getCheckoutConfig } from '@/lib/stripe/checkout-config';
+import { sanitizeForLog } from '@/lib/logger';
 
 // Remove the local ProductForCheckout interface since we now use ValidatedProduct
 type ProductForCheckout = ValidatedProduct;
@@ -44,11 +45,12 @@ export class CheckoutService {
 
     // Enhanced email validation with disposable domain checking
     if (request.email) {
-      console.log(`🔍 Validating email: ${request.email}`);
+      const safeEmail = sanitizeForLog(request.email);
+      console.log(`🔍 Validating email: ${safeEmail}`);
       const isValidEmail = await ProductValidationService.validateEmail(request.email);
-      console.log(`✅ Email validation result for ${request.email}: ${isValidEmail}`);
+      console.log(`✅ Email validation result for ${safeEmail}: ${isValidEmail}`);
       if (!isValidEmail) {
-        console.log(`❌ Blocking disposable email: ${request.email}`);
+        console.log(`❌ Blocking disposable email: ${safeEmail}`);
         throw new CheckoutError(
           CheckoutErrorType.VALIDATION_ERROR,
           'Invalid or disposable email address not allowed',
@@ -256,7 +258,7 @@ export class CheckoutService {
 
       // Only add customer_email if it's a valid email
       if (options.email && options.email.trim() !== '') {
-        console.log(`📧 Passing customer_email to Stripe: ${options.email}`);
+        console.log(`📧 Passing customer_email to Stripe: ${sanitizeForLog(options.email)}`);
         sessionConfig.customer_email = options.email;
       } else {
         console.log('📧 No customer_email available for Stripe session');
@@ -358,7 +360,7 @@ export class CheckoutService {
     // Handle coupon verification
     let couponInfo: any = undefined;
     if (request.couponCode) {
-      console.log(`🎟 Verifying coupon: ${request.couponCode} for email: ${request.email}`);
+      console.log(`🎟 Verifying coupon: ${sanitizeForLog(request.couponCode)} for email: ${sanitizeForLog(request.email || '')}`);
       try {
         const { data: vResult } = await this.supabase.rpc('verify_coupon', {
           code_param: request.couponCode.toUpperCase(),

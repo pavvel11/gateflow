@@ -176,17 +176,18 @@ describe('CORS/CSRF Security', () => {
 
     // Security concern: wildcard fallback
     describe('Wildcard Origin Handling', () => {
-      it('should fall back to * when no origin provided', () => {
-        // This is a potential security concern - documents it
+      it('should fall back to site URL when no origin provided', () => {
+        // When no origin header is present, fall back to SITE_URL
+        // instead of '*' (which is invalid with credentials anyway)
         const request = createMockRequest({
           origin: null,
         });
 
         const headers = getCrossOriginHeaders(request);
 
-        // Note: This combination (* with credentials) is actually
-        // blocked by browsers, so this is safe in practice
-        expect(headers['Access-Control-Allow-Origin']).toBe('*');
+        // Should use NEXT_PUBLIC_SITE_URL or SITE_URL, not '*'
+        expect(headers['Access-Control-Allow-Origin']).not.toBe('*');
+        expect(headers['Access-Control-Allow-Origin']).toBeTruthy();
       });
 
       it('should not expose sensitive data via wildcard', () => {
@@ -335,6 +336,45 @@ describe('CORS/CSRF Security', () => {
 
       // Access-Control-Max-Age allows caching of preflight response
       expect(headers['Access-Control-Max-Age']).toBeDefined();
+    });
+
+    it('should include Vary: Origin for correct caching', () => {
+      const request = createMockRequest({ origin: 'https://app.com' });
+      const headers = getCrossOriginHeaders(request);
+
+      expect(headers['Vary']).toBe('Origin');
+    });
+  });
+
+  describe('ALLOWED_ORIGINS strict mode', () => {
+    it('should reflect origin when it is in the whitelist', () => {
+      process.env.ALLOWED_ORIGINS = 'https://app1.com, https://app2.com';
+      const request = createMockRequest({ origin: 'https://app1.com' });
+      const headers = getCrossOriginHeaders(request);
+
+      expect(headers['Access-Control-Allow-Origin']).toBe('https://app1.com');
+      delete process.env.ALLOWED_ORIGINS;
+    });
+
+    it('should reject origin not in the whitelist', () => {
+      process.env.ALLOWED_ORIGINS = 'https://app1.com, https://app2.com';
+      const request = createMockRequest({ origin: 'https://evil.com' });
+      const headers = getCrossOriginHeaders(request);
+
+      expect(headers['Access-Control-Allow-Origin']).not.toBe('https://evil.com');
+      delete process.env.ALLOWED_ORIGINS;
+    });
+
+    it('should fall back to siteUrl when origin not whitelisted', () => {
+      const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+      process.env.NEXT_PUBLIC_SITE_URL = 'https://mysite.com';
+      process.env.ALLOWED_ORIGINS = 'https://app1.com';
+      const request = createMockRequest({ origin: 'https://evil.com' });
+      const headers = getCrossOriginHeaders(request);
+
+      expect(headers['Access-Control-Allow-Origin']).toBe('https://mysite.com');
+      delete process.env.ALLOWED_ORIGINS;
+      process.env.NEXT_PUBLIC_SITE_URL = originalSiteUrl;
     });
   });
 });

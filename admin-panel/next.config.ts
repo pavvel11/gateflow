@@ -129,6 +129,20 @@ const nextConfig: NextConfig = {
           },
           // HSTS is now handled by middleware.ts for runtime control
           // Set DISABLE_HSTS=true to disable (e.g., when behind reverse proxy)
+          {
+            key: 'Content-Security-Policy-Report-Only',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' js.stripe.com challenges.cloudflare.com",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: blob: i.ibb.co *.stripe.com",
+              "font-src 'self' data:",
+              "frame-src js.stripe.com challenges.cloudflare.com *.youtube.com player.vimeo.com iframe.mediadelivery.net *.loom.com fast.wistia.net *.dailymotion.com player.twitch.tv",
+              "connect-src 'self' *.supabase.co *.stripe.com challenges.cloudflare.com",
+              "object-src 'none'",
+              "base-uri 'self'",
+            ].join('; '),
+          },
         ],
       },
       {

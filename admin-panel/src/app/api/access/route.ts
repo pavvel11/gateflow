@@ -76,7 +76,7 @@ export async function POST(request: Request) {
       // Actual auth error with partial data - log and return error
       logger.error('User check error:', userError.message);
       return NextResponse.json(
-        { hasAccess: false, error: userError.message },
+        { hasAccess: false, error: 'Authentication error' },
         { status: 200, headers: corsHeaders }
       )
     }

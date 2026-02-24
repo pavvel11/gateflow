@@ -47,16 +47,35 @@ export function validateCrossOriginRequest(request: Request): NextResponse | nul
 /**
  * Get CORS headers for cross-origin access endpoints.
  * Only use this for endpoints in CROSS_ORIGIN_ALLOWED_PATHS.
+ *
+ * SECURITY: When ALLOWED_ORIGINS env var is set (comma-separated list),
+ * only those origins are reflected (strict mode). When unset, any origin
+ * is reflected (permissive mode) — required for cross-domain gatekeeper feature.
+ * Vary: Origin is always set for correct caching behavior.
  */
 export function getCrossOriginHeaders(request: Request): Record<string, string> {
-  const origin = request.headers.get('origin') || '*'
+  const origin = request.headers.get('origin')
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL
+  const allowedOriginsEnv = process.env.ALLOWED_ORIGINS
+
+  let effectiveOrigin: string
+
+  if (allowedOriginsEnv) {
+    // Strict mode: only reflect origins from the whitelist
+    const allowedOrigins = allowedOriginsEnv.split(',').map(o => o.trim())
+    effectiveOrigin = (origin && allowedOrigins.includes(origin)) ? origin : (siteUrl || 'null')
+  } else {
+    // Permissive mode (cross-domain gatekeeper feature): reflect origin
+    effectiveOrigin = origin || siteUrl || 'null'
+  }
 
   return {
-    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Origin': effectiveOrigin,
     'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, X-GateFlow-Origin, X-GateFlow-Version',
     'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin',
   }
 }
 

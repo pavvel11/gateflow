@@ -1891,6 +1891,7 @@
       "importTheme": "Import",
       "exportTheme": "Export",
       "invalidThemeFile": "Invalid theme file. Please upload a valid JSON theme.",
+      "fileTooLarge": "Theme file is too large. Maximum size: 100KB.",
       "themeImported": "Theme imported successfully. Save to apply.",
       "themeName": "Theme Name",
       "darkModeColors": "Dark Mode Colors",

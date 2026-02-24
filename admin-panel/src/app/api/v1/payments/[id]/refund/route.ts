@@ -261,7 +261,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return apiError(
         request,
         'INVALID_INPUT',
-        `Stripe error: ${error.message}`
+        'Refund processing failed'
       );
     }
     return handleApiError(error, request);

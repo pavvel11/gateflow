@@ -239,6 +239,12 @@ export default function BrandingSettings() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const MAX_THEME_FILE_SIZE = 100 * 1024; // 100KB
+    if (file.size > MAX_THEME_FILE_SIZE) {
+      addToast(t('fileTooLarge'), 'error');
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
       try {

@@ -3,6 +3,7 @@
 
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
+import { isSafeRedirectUrl } from '@/lib/validations/redirect';
 
 interface PaymentSuccessPageProps {
   searchParams: Promise<{
@@ -28,8 +29,8 @@ async function PaymentSuccessContent({ searchParams }: PaymentSuccessPageProps) 
   const sessionId = params.session_id;
   const productSlug = params.product;
 
-  // If we have success_url from OTO/funnel, redirect there
-  if (successUrl && redirectStatus === 'succeeded') {
+  // If we have success_url from OTO/funnel, redirect there (with open redirect protection)
+  if (successUrl && redirectStatus === 'succeeded' && isSafeRedirectUrl(successUrl)) {
     redirect(successUrl);
   }
 

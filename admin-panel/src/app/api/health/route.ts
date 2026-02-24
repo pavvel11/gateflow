@@ -18,7 +18,7 @@ export async function OPTIONS(request: Request) {
   });
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     // Rate limiting: 60 requests per minute
     const rateLimitOk = await checkRateLimit('health', 60, 60);
@@ -41,7 +41,7 @@ export async function GET() {
     return NextResponse.json(health, { 
       status: 200,
       headers: {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || '*',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       }
@@ -56,7 +56,7 @@ export async function GET() {
       { 
         status: 500,
         headers: {
-          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Origin': request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || '*',
           'Access-Control-Allow-Methods': 'GET, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         }

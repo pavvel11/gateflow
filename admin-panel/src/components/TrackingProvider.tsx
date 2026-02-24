@@ -3,6 +3,31 @@
 import { useEffect } from 'react'
 import Script from 'next/script'
 
+/** Validate GTM container ID format (GTM-XXXXXXX) */
+function isValidGtmId(id: string): boolean {
+  return /^GTM-[A-Z0-9]{1,10}$/i.test(id)
+}
+
+/** Validate Facebook Pixel ID format (numeric) */
+function isValidFbPixelId(id: string): boolean {
+  return /^\d{10,20}$/.test(id)
+}
+
+/** Validate Umami website ID format (UUID) */
+function isValidUmamiId(id: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+}
+
+/** Validate URL for script sources */
+function isValidScriptUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 interface CustomScript {
   id: string
   name: string
@@ -31,18 +56,24 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
   if (!config) return null
 
   const {
-    gtm_container_id,
-    gtm_server_container_url,
-    facebook_pixel_id,
-    umami_website_id,
-    umami_script_url = 'https://cloud.umami.is/script.js',
+    gtm_container_id: rawGtmId,
+    gtm_server_container_url: rawGtmServerUrl,
+    facebook_pixel_id: rawFbPixelId,
+    umami_website_id: rawUmamiId,
+    umami_script_url: rawUmamiScriptUrl = 'https://cloud.umami.is/script.js',
     cookie_consent_enabled,
     scripts = []
   } = config
 
+  // Validate integration IDs to prevent script injection via DB config
+  const gtm_container_id = rawGtmId && isValidGtmId(rawGtmId) ? rawGtmId : null
+  const facebook_pixel_id = rawFbPixelId && isValidFbPixelId(rawFbPixelId) ? rawFbPixelId : null
+  const umami_website_id = rawUmamiId && isValidUmamiId(rawUmamiId) ? rawUmamiId : null
+  const umami_script_url = rawUmamiScriptUrl && isValidScriptUrl(rawUmamiScriptUrl) ? rawUmamiScriptUrl : 'https://cloud.umami.is/script.js'
+
   // GTM base URL - use server container if configured, otherwise default Google URL
-  const gtmBaseUrl = gtm_server_container_url
-    ? gtm_server_container_url.replace(/\/$/, '') // Remove trailing slash
+  const gtmBaseUrl = rawGtmServerUrl && isValidScriptUrl(rawGtmServerUrl)
+    ? rawGtmServerUrl.replace(/\/$/, '')
     : 'https://www.googletagmanager.com'
 
   // --- GOOGLE CONSENT MODE V2 DEFAULTS ---

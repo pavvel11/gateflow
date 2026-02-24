@@ -260,4 +260,34 @@ describe('Video Utilities', () => {
       expect(getEmbedUrl('https://unknown-platform.com/video/123')).toBe(null);
     });
   });
+
+  describe('domain spoofing prevention', () => {
+    it('should reject hostname that contains trusted domain as substring', () => {
+      expect(isTrustedVideoPlatform('https://notyoutube.com/watch?v=abc')).toBe(false);
+      expect(isTrustedVideoPlatform('https://notvimeo.com/12345')).toBe(false);
+      expect(isTrustedVideoPlatform('https://notloom.com/share/abc')).toBe(false);
+      expect(isTrustedVideoPlatform('https://nottwitch.tv/videos/123')).toBe(false);
+    });
+
+    it('should reject trusted domain used as subdomain of attacker', () => {
+      expect(isTrustedVideoPlatform('https://youtube.com.evil.com/watch?v=abc')).toBe(false);
+      expect(isTrustedVideoPlatform('https://vimeo.com.attacker.com/12345')).toBe(false);
+    });
+
+    it('should accept legitimate subdomains', () => {
+      expect(isTrustedVideoPlatform('https://www.youtube.com/watch?v=abc')).toBe(true);
+      expect(isTrustedVideoPlatform('https://m.youtube.com/watch?v=abc')).toBe(true);
+      expect(isTrustedVideoPlatform('https://player.vimeo.com/video/12345')).toBe(true);
+    });
+
+    it('should reject embed URL from attacker domain with path spoofing', () => {
+      const result = parseVideoUrl('https://evil.com/youtube.com/embed/malicious');
+      expect(result.isValid).toBe(false);
+    });
+
+    it('should reject embed URL from spoofed hostname', () => {
+      const result = parseVideoUrl('https://notyoutube.com/embed/abc123');
+      expect(result.isValid).toBe(false);
+    });
+  });
 });

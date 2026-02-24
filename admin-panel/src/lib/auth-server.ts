@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { sanitizeForLog } from '@/lib/logger';
 import { SupabaseClient, User } from '@supabase/supabase-js';
 
 /**
@@ -25,7 +26,7 @@ export async function verifyAdminAccess(): Promise<User> {
 
   if (adminError || !adminNode) {
     // User is logged in but not an admin
-    console.warn(`Unauthorized access attempt by ${user.email}`);
+    console.warn(`Unauthorized access attempt by ${sanitizeForLog(user.email || 'unknown')}`);
     redirect('/'); 
   }
 
@@ -40,6 +41,7 @@ export async function requireAdminApi(supabase: SupabaseClient) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {
+    console.warn(`[requireAdminApi] Unauthenticated API request at ${new Date().toISOString()}`);
     throw new Error('Unauthorized');
   }
 
@@ -50,6 +52,7 @@ export async function requireAdminApi(supabase: SupabaseClient) {
     .single();
 
   if (adminError || !admin) {
+    console.warn(`[requireAdminApi] Non-admin access attempt by ${sanitizeForLog(user.email || 'unknown')} (${user.id}) at ${new Date().toISOString()}`);
     throw new Error('Forbidden');
   }
 

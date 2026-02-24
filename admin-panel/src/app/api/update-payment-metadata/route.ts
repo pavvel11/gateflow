@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to update payment metadata',
+        error: 'Failed to update payment metadata',
       },
       { status: 500 }
     );

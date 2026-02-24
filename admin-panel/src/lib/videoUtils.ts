@@ -5,6 +5,11 @@
  * into proper embed URLs.
  */
 
+/** Check if hostname matches domain exactly or is a subdomain */
+function isHostnameMatch(hostname: string, domain: string): boolean {
+  return hostname === domain || hostname.endsWith('.' + domain);
+}
+
 export interface ParsedVideoUrl {
   platform: 'youtube' | 'vimeo' | 'loom' | 'wistia' | 'dailymotion' | 'twitch' | 'bunny' | 'unknown';
   videoId: string | null;
@@ -27,7 +32,7 @@ export function extractYouTubeVideoId(url: string): string | null {
     const urlObj = new URL(url);
 
     // youtube.com/watch?v=VIDEO_ID
-    if (urlObj.hostname.includes('youtube.com') && urlObj.searchParams.has('v')) {
+    if (isHostnameMatch(urlObj.hostname, 'youtube.com') && urlObj.searchParams.has('v')) {
       return urlObj.searchParams.get('v');
     }
 
@@ -37,7 +42,7 @@ export function extractYouTubeVideoId(url: string): string | null {
     }
 
     // youtube.com/embed/VIDEO_ID or youtube.com/v/VIDEO_ID
-    if (urlObj.hostname.includes('youtube.com')) {
+    if (isHostnameMatch(urlObj.hostname, 'youtube.com')) {
       const match = urlObj.pathname.match(/\/(embed|v)\/([^/?]+)/);
       if (match) {
         return match[2];
@@ -128,7 +133,7 @@ export function parseVideoUrl(url: string): ParsedVideoUrl {
     const hostname = urlObj.hostname.toLowerCase();
 
     // YouTube
-    if (hostname.includes('youtube.com') || hostname === 'youtu.be') {
+    if (isHostnameMatch(hostname, 'youtube.com') || hostname === 'youtu.be') {
       const videoId = extractYouTubeVideoId(url);
       if (videoId) {
         return {
@@ -141,7 +146,7 @@ export function parseVideoUrl(url: string): ParsedVideoUrl {
     }
 
     // Vimeo
-    if (hostname.includes('vimeo.com')) {
+    if (isHostnameMatch(hostname, 'vimeo.com')) {
       const videoId = extractVimeoVideoId(url);
       if (videoId) {
         return {
@@ -167,7 +172,7 @@ export function parseVideoUrl(url: string): ParsedVideoUrl {
     }
 
     // Loom
-    if (hostname.includes('loom.com')) {
+    if (isHostnameMatch(hostname, 'loom.com')) {
       const match = urlObj.pathname.match(/\/share\/([a-zA-Z0-9]+)/);
       if (match) {
         const videoId = match[1];
@@ -181,7 +186,7 @@ export function parseVideoUrl(url: string): ParsedVideoUrl {
     }
 
     // Wistia
-    if (hostname.includes('wistia.com') || hostname.includes('wistia.net')) {
+    if (isHostnameMatch(hostname, 'wistia.com') || isHostnameMatch(hostname, 'wistia.net')) {
       // Check if already embed URL
       if (urlObj.pathname.includes('/embed/iframe/')) {
         const match = urlObj.pathname.match(/\/embed\/iframe\/([a-zA-Z0-9]+)/);
@@ -221,7 +226,7 @@ export function parseVideoUrl(url: string): ParsedVideoUrl {
     }
 
     // DailyMotion
-    if (hostname.includes('dailymotion.com')) {
+    if (isHostnameMatch(hostname, 'dailymotion.com')) {
       const match = urlObj.pathname.match(/\/video\/([a-zA-Z0-9]+)/);
       if (match) {
         const videoId = match[1];
@@ -235,7 +240,7 @@ export function parseVideoUrl(url: string): ParsedVideoUrl {
     }
 
     // Twitch
-    if (hostname.includes('twitch.tv')) {
+    if (isHostnameMatch(hostname, 'twitch.tv')) {
       const match = urlObj.pathname.match(/\/videos\/(\d+)/);
       if (match) {
         const videoId = match[1];
@@ -248,19 +253,21 @@ export function parseVideoUrl(url: string): ParsedVideoUrl {
       }
     }
 
-    // If URL starts with allowed domains but we couldn't parse it,
+    // If URL matches allowed embed domains but we couldn't parse a video ID,
     // assume it's already a valid embed URL
-    const allowedEmbedDomains = [
-      'youtube.com/embed',
-      'player.vimeo.com',
-      'iframe.mediadelivery.net',
-      'loom.com/embed',
-      'fast.wistia.com',
-      'dailymotion.com/embed',
-      'player.twitch.tv'
+    const allowedEmbedPatterns = [
+      { domain: 'youtube.com', pathPrefix: '/embed' },
+      { domain: 'player.vimeo.com', pathPrefix: '' },
+      { domain: 'iframe.mediadelivery.net', pathPrefix: '' },
+      { domain: 'loom.com', pathPrefix: '/embed' },
+      { domain: 'fast.wistia.com', pathPrefix: '' },
+      { domain: 'dailymotion.com', pathPrefix: '/embed' },
+      { domain: 'player.twitch.tv', pathPrefix: '' },
     ];
 
-    if (allowedEmbedDomains.some(domain => url.includes(domain))) {
+    if (allowedEmbedPatterns.some(({ domain, pathPrefix }) =>
+      isHostnameMatch(hostname, domain) && (!pathPrefix || urlObj.pathname.startsWith(pathPrefix))
+    )) {
       return {
         platform: 'unknown',
         videoId: null,
@@ -302,7 +309,7 @@ export function isTrustedVideoPlatform(url: string): boolean {
 
   try {
     const urlObj = new URL(url);
-    return trustedDomains.some(domain => urlObj.hostname.includes(domain));
+    return trustedDomains.some(domain => isHostnameMatch(urlObj.hostname, domain));
   } catch {
     return false;
   }
@@ -340,7 +347,7 @@ export function addEmbedOptions(embedUrl: string, options: VideoEmbedOptions = {
     }
 
     // YouTube parameters
-    else if (hostname.includes('youtube.com')) {
+    else if (isHostnameMatch(hostname, 'youtube.com')) {
       if (options.autoplay) url.searchParams.set('autoplay', '1');
       if (options.loop) url.searchParams.set('loop', '1');
       if (options.muted) url.searchParams.set('mute', '1');
@@ -348,7 +355,7 @@ export function addEmbedOptions(embedUrl: string, options: VideoEmbedOptions = {
     }
 
     // Vimeo parameters
-    else if (hostname.includes('vimeo.com')) {
+    else if (isHostnameMatch(hostname, 'vimeo.com')) {
       if (options.autoplay) url.searchParams.set('autoplay', '1');
       if (options.loop) url.searchParams.set('loop', '1');
       if (options.muted) url.searchParams.set('muted', '1');
@@ -356,14 +363,14 @@ export function addEmbedOptions(embedUrl: string, options: VideoEmbedOptions = {
     }
 
     // Wistia parameters
-    else if (hostname.includes('wistia.')) {
+    else if (isHostnameMatch(hostname, 'wistia.com') || isHostnameMatch(hostname, 'wistia.net')) {
       if (options.autoplay) url.searchParams.set('autoPlay', 'true');
       if (options.muted) url.searchParams.set('muted', 'true');
       if (options.controls === false) url.searchParams.set('controlsVisibleOnLoad', 'false');
     }
 
     // DailyMotion parameters
-    else if (hostname.includes('dailymotion.com')) {
+    else if (isHostnameMatch(hostname, 'dailymotion.com')) {
       if (options.autoplay) url.searchParams.set('autoplay', '1');
       if (options.muted) url.searchParams.set('mute', '1');
       if (options.controls === false) url.searchParams.set('controls', 'false');

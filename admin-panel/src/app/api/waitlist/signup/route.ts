@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { WebhookService } from '@/lib/services/webhook-service';
 import { checkRateLimit } from '@/lib/rate-limiting';
+import { sanitizeForLog } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
@@ -103,7 +104,7 @@ export async function POST(request: Request) {
     });
 
     // Log the signup for debugging (can be removed in production)
-    console.log(`[Waitlist] New signup: ${email} for product ${product.name} (${product.id})`);
+    console.log(`[Waitlist] New signup: ${sanitizeForLog(email)} for product ${sanitizeForLog(product.name)} (${product.id})`);
 
     return NextResponse.json({
       success: true,

@@ -1,3 +1,12 @@
+/**
+ * Strip control characters and newlines from user-supplied values before logging.
+ * Prevents log injection / log forging attacks via crafted emails, headers, etc.
+ */
+export function sanitizeForLog(value: string): string {
+  // eslint-disable-next-line no-control-regex
+  return value.replace(/[\x00-\x1f\x7f]/g, '');
+}
+
 // Type for log data
 type LogData = Record<string, unknown> | string | number | boolean | null | undefined;
 

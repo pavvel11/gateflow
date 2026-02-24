@@ -28,7 +28,12 @@ export default async function TermsPage() {
   const termsUrl = config?.terms_of_service_url || process.env.TERMS_OF_SERVICE_URL
 
   if (termsUrl) {
-    redirect(termsUrl)
+    // Validate: only allow http/https URLs or relative paths
+    const isRelative = termsUrl.startsWith('/') && !termsUrl.startsWith('//')
+    const isHttps = termsUrl.startsWith('https://') || termsUrl.startsWith('http://')
+    if (isRelative || isHttps) {
+      redirect(termsUrl)
+    }
   }
 
   // Fallback content if no URL is configured

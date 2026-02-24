@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     try {
       await requireAdminApi(supabase);
     } catch (authError: any) {
-      return NextResponse.json({ error: authError.message || 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Use Admin Client (Service Role) to bypass RLS on sensitive views
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
 
     if (statsError) {
       console.error('Error fetching user stats:', statsError);
-      return NextResponse.json({ error: 'Failed to fetch users', details: statsError.message }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
     }
 
     // Get detailed product access for all users
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
     try {
       await requireAdminApi(supabase);
     } catch (authError: any) {
-      return NextResponse.json({ error: authError.message || 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();

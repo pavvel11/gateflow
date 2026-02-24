@@ -3,6 +3,8 @@
  * Builds redirect URLs for OTO and regular success redirects after payment
  */
 
+import { isSafeRedirectUrl } from '@/lib/validations/redirect';
+
 // ============================================
 // OTO Redirect
 // ============================================
@@ -215,10 +217,10 @@ export function buildSuccessRedirectUrl(params: SuccessRedirectParams): SuccessR
       hasHideBump
     };
   } catch {
-    // Fallback to raw URL if parsing fails
+    // Fallback: use isSafeRedirectUrl for consistent validation across the app
     console.error('Error parsing redirect URL:', targetUrl);
     return {
-      url: targetUrl,
+      url: isSafeRedirectUrl(targetUrl) ? targetUrl : '/',
       hasHideBump
     };
   }

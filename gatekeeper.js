@@ -246,7 +246,7 @@ class I18n {
 
         // Simple parameter interpolation: {name} -> value
         Object.entries(params).forEach(([k, v]) => {
-            text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+            text = text.split(`{${k}}`).join(String(v));
         });
 
         return text;
@@ -984,6 +984,17 @@ class AccessControl {
  * Modern UI template system
  */
 class UITemplates {
+    /** Escape HTML special characters to prevent XSS in template interpolation */
+    static escapeHtml(str) {
+        if (typeof str !== 'string') return '';
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     static getTheme() {
         return window.gatekeeperConfig?.theme || 'default';
     }
@@ -1059,11 +1070,11 @@ class UITemplates {
                 <div style="font-size: 72px; margin-bottom: 24px; animation: shake 0.5s ease-in-out;">⚠️</div>
                 <div style="font-size: 24px; color: #ff6b6b; margin-bottom: 16px; font-weight: 600;">${I18n.t('something_wrong')}</div>
                 <div style="font-size: 16px; color: ${theme.textColor}; opacity: 0.8; margin-bottom: 24px; line-height: 1.5;">
-                    ${isDev ? error : I18n.t('temporary_issue')}
+                    ${isDev ? this.escapeHtml(error) : I18n.t('temporary_issue')}
                 </div>
                 ${isDev ? `
                 <div style="font-size: 12px; color: #666; margin-bottom: 24px; padding: 16px; background: rgba(0,0,0,0.3); border-radius: 8px; font-family: monospace; text-align: left; word-break: break-word;">
-                    <strong>${I18n.t('debug_info')}:</strong><br>${error}
+                    <strong>${I18n.t('debug_info')}:</strong><br>${this.escapeHtml(error)}
                 </div>
                 ` : ''}
                 <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px;">
@@ -1071,7 +1082,7 @@ class UITemplates {
                         🔄 ${I18n.t('try_again')}
                     </button>
                     ${productSlug ? `
-                    <a href="/?product=${productSlug}" style="background: #28a745; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; display: inline-block; transition: all 0.3s ease;">
+                    <a href="/?product=${encodeURIComponent(productSlug)}" style="background: #28a745; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; display: inline-block; transition: all 0.3s ease;">
                         🛒 ${I18n.t('product_page')}
                     </a>
                     ` : ''}
@@ -1121,7 +1132,7 @@ class UITemplates {
                         <p style="color: ${theme.textColor}; opacity: 0.6; margin: 0 0 16px 0; font-size: 14px;">
                             ${I18n.t('no_access_yet')}
                         </p>
-                        <a href="/?product=${productSlug}" style="display: inline-block; padding: 10px 20px; background: rgba(255,255,255,0.1); color: ${theme.textColor}; text-decoration: none; border-radius: 6px; font-size: 14px; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.2);">
+                        <a href="/?product=${encodeURIComponent(productSlug)}" style="display: inline-block; padding: 10px 20px; background: rgba(255,255,255,0.1); color: ${theme.textColor}; text-decoration: none; border-radius: 6px; font-size: 14px; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.2);">
                             🛒 ${I18n.t('get_access_now')}
                         </a>
                     </div>
