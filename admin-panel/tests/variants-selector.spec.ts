@@ -205,9 +205,9 @@ test.describe('Variant Selector Page', () => {
     await page.goto(`/pl/v/${variantGroup.id}`);
     await page.waitForLoadState('networkidle');
 
-    // Featured variant should have purple border
+    // Featured variant should have accent border (gf-accent / wl-accent tokens)
     const basicVariant = page.locator('[class*="cursor-pointer"]').filter({ hasText: 'Basic' }).first();
-    await expect(basicVariant).toHaveClass(/border-purple-500|ring-purple/);
+    await expect(basicVariant).toHaveClass(/border-gf-accent|ring-wl-accent/);
   });
 
   test('should show loading spinner initially', async ({ page }) => {

@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
 import { acceptAllCookies } from './helpers/consent';
-import { loginAsAdmin } from './helpers/admin-auth';
+import { createTestAdmin, loginAsAdmin } from './helpers/admin-auth';
 
 /**
  * Color Migration Verification
  * Ensures no hardcoded purple/pink Tailwind classes remain in the rendered DOM.
  * Allowed exception: Yahoo email provider brand color in LoginForm.
- * @see lib/themes/index.ts for the gf-*/wl-* token system
+ * @see lib/themes/index.ts for the gf-* / wl-* token system
  */
 
 // Regex to match hardcoded purple/pink Tailwind classes in HTML class attributes
@@ -90,6 +90,21 @@ async function checkPageForViolations(
 test.describe('Color Migration — No Hardcoded Purple/Pink', () => {
   test.describe.configure({ mode: 'serial' });
 
+  let adminEmail: string;
+  let adminPassword: string;
+  let cleanup: () => Promise<void>;
+
+  test.beforeAll(async () => {
+    const admin = await createTestAdmin('color-migration');
+    adminEmail = admin.email;
+    adminPassword = admin.password;
+    cleanup = admin.cleanup;
+  });
+
+  test.afterAll(async () => {
+    await cleanup();
+  });
+
   test('public pages have no purple/pink classes', async ({ page }) => {
     await acceptAllCookies(page);
 
@@ -104,7 +119,7 @@ test.describe('Color Migration — No Hardcoded Purple/Pink', () => {
 
   test('admin pages have no purple/pink classes', async ({ page }) => {
     await acceptAllCookies(page);
-    await loginAsAdmin(page);
+    await loginAsAdmin(page, adminEmail, adminPassword);
 
     for (const url of ADMIN_PAGES) {
       const violations = await checkPageForViolations(page, url);

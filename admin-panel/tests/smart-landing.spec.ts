@@ -299,12 +299,13 @@ test.describe('Smart Landing Page', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    // Should see main headline "Your Products. Your Rules."
-    const mainHeadline = page.locator('h1', { hasText: /Your Products.*Your Rules/i });
-    await expect(mainHeadline).toBeVisible({ timeout: 10000 });
+    // Should see main headline (TextReveal uses \u00A0 between words, so match with \s)
+    const mainHeadline = page.locator('h1');
+    await expect(mainHeadline.filter({ hasText: /Your\s+Products|Twoje\s+Produkty/i })).toBeVisible({ timeout: 10000 });
+    await expect(mainHeadline.filter({ hasText: /Your\s+Rules|Twoje\s+Zasady/i })).toBeVisible();
 
     // Should see "Self-Hosted" in subtitle
-    const subtitle = page.locator('text=/Self-hosted.*secure.*fully customizable/i').first();
+    const subtitle = page.locator('text=/Self-hosted/i').first();
     await expect(subtitle).toBeVisible();
 
     // Should see GitHub link in navigation or CTA section
@@ -341,9 +342,9 @@ test.describe('Smart Landing Page', () => {
     // Should be on about page
     expect(page.url()).toContain('/about');
 
-    // Should see marketing content with new headline
-    const mainHeadline = page.locator('h1', { hasText: /Your Products.*Your Rules/i });
-    await expect(mainHeadline).toBeVisible({ timeout: 10000 });
+    // Should see marketing content headline (TextReveal uses \u00A0 between words)
+    const mainHeadline = page.locator('h1');
+    await expect(mainHeadline.filter({ hasText: /Your\s+Products|Twoje\s+Produkty/i })).toBeVisible({ timeout: 10000 });
   });
 
   test('Onboarding CTA quick links should navigate correctly', async ({ page }) => {

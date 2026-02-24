@@ -1,426 +1,324 @@
 import { test, expect, Page } from '@playwright/test';
-import { createClient } from '@supabase/supabase-js';
 import { acceptAllCookies } from './helpers/consent';
+import { createTestAdmin, loginAsAdmin, supabaseAdmin } from './helpers/admin-auth';
 
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+/**
+ * Theme Editor (BrandingSettings) E2E Tests.
+ * Tests the redesigned Theme Editor with preset selector, tabbed editor,
+ * import/export, and license-gated save.
+ * @see components/settings/BrandingSettings.tsx
+ * @see lib/actions/theme.ts
+ */
 
-if (!SUPABASE_URL || !SERVICE_ROLE_KEY || !ANON_KEY) {
-  throw new Error('Missing Supabase env variables for testing');
-}
-
-const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-
-test.describe('Branding Settings', () => {
+test.describe('Theme Editor (Branding Settings)', () => {
   test.describe.configure({ mode: 'serial' });
 
   let adminEmail: string;
-  const password = 'password123';
-  let shopConfigId: string;
-
-  const loginAsAdmin = async (page: Page) => {
-    await acceptAllCookies(page);
-
-    await page.addInitScript(() => {
-      const addStyle = () => {
-        if (document.head) {
-          const style = document.createElement('style');
-          style.innerHTML = '#klaro { display: none !important; }';
-          document.head.appendChild(style);
-        } else {
-          setTimeout(addStyle, 10);
-        }
-      };
-      addStyle();
-    });
-
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
-
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email: adminEmail,
-      password: password,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
-
-    await page.waitForTimeout(1000);
-  };
+  let adminPassword: string;
+  let cleanup: () => Promise<void>;
 
   test.beforeAll(async () => {
-    const randomStr = Math.random().toString(36).substring(7);
-    adminEmail = `test-branding-admin-${Date.now()}-${randomStr}@example.com`;
-
-    // Create admin user
-    const { data: { user: adminUser }, error: adminError } = await supabaseAdmin.auth.admin.createUser({
-      email: adminEmail,
-      password: password,
-      email_confirm: true,
-    });
-    if (adminError) throw adminError;
-
-    await supabaseAdmin
-      .from('admin_users')
-      .insert({ user_id: adminUser!.id });
-
-    // Get shop_config ID
-    const { data: shopConfig } = await supabaseAdmin
-      .from('shop_config')
-      .select('id')
-      .single();
-
-    if (shopConfig) {
-      shopConfigId = shopConfig.id;
-    }
+    const admin = await createTestAdmin('branding');
+    adminEmail = admin.email;
+    adminPassword = admin.password;
+    cleanup = admin.cleanup;
   });
 
   test.afterAll(async () => {
-    // Cleanup - restore default branding
-    if (shopConfigId) {
-      await supabaseAdmin
-        .from('shop_config')
-        .update({
-          logo_url: null,
-          primary_color: '#9333ea',
-          secondary_color: '#ec4899',
-          accent_color: '#8b5cf6',
-          font_family: 'system',
-          shop_name: 'GateFlow Demo Shop'
-        })
-        .eq('id', shopConfigId);
-    }
-
-    // Delete test user
-    const { data: users } = await supabaseAdmin.auth.admin.listUsers();
-    const testUser = users.users.find(u => u.email === adminEmail);
-    if (testUser) {
-      await supabaseAdmin.auth.admin.deleteUser(testUser.id);
-    }
+    await cleanup();
   });
 
-  test('Admin can access branding settings page', async ({ page }) => {
-    await loginAsAdmin(page);
+  async function navigateToSettings(page: Page) {
+    await loginAsAdmin(page, adminEmail, adminPassword);
     await page.goto('/dashboard/settings');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
+  }
 
-    // Should see "Branding & Whitelabel" heading
-    const brandingHeading = page.locator('h2', { hasText: /Branding.*Whitelabel/i });
-    await expect(brandingHeading).toBeVisible({ timeout: 10000 });
+  test('Theme Editor UI loads with all sections', async ({ page }) => {
+    await navigateToSettings(page);
 
-    // Should see logo URL input
-    const logoInput = page.locator('input[type="url"]').first();
-    await expect(logoInput).toBeVisible();
+    // Should see "Theme Presets" heading
+    const presetsHeading = page.locator('h2', { hasText: /Theme Presets|Gotowe motywy/i });
+    await expect(presetsHeading).toBeVisible({ timeout: 10000 });
 
-    // Should see color pickers
-    const colorPickers = page.locator('input[type="color"]');
-    const count = await colorPickers.count();
-    expect(count).toBeGreaterThanOrEqual(3); // Primary, secondary, accent
+    // Should see preset cards (at least 5 built-in)
+    const presetButtons = page.locator('button').filter({ has: page.locator('p') }).filter({
+      hasText: /Midnight Forge|Sunset|Ocean|Forest|Minimal Light/i,
+    });
+    const presetCount = await presetButtons.count();
+    expect(presetCount).toBeGreaterThanOrEqual(5);
 
-    // Should see font selector
-    const fontSelect = page.locator('select').filter({ hasText: /System Default|Inter|Roboto/i });
-    await expect(fontSelect).toBeVisible();
+    // Should see editor tabs (Colors, Typography, Shapes)
+    const colorsTab = page.locator('button', { hasText: /Colors|Kolory/i });
+    const typographyTab = page.locator('button', { hasText: /Typography|Typografia/i });
+    const shapesTab = page.locator('button', { hasText: /Shapes|Kształty/i });
+    await expect(colorsTab).toBeVisible();
+    await expect(typographyTab).toBeVisible();
+    await expect(shapesTab).toBeVisible();
 
-    // Should see live preview section
-    const livePreview = page.locator('h3', { hasText: /Live Preview/i });
-    await expect(livePreview).toBeVisible();
+    // Should see theme name input
+    const themeNameInput = page.locator('input[placeholder="My Custom Theme"]');
+    await expect(themeNameInput).toBeVisible();
+
+    // Should see Live Preview section
+    const previewHeading = page.locator('h3', { hasText: /Live Preview|Podgląd/i });
+    await expect(previewHeading).toBeVisible();
+
+    // Should see Import/Export buttons
+    const importBtn = page.locator('button', { hasText: /Import/i });
+    const exportBtn = page.locator('button', { hasText: /Export|Eksportuj/i });
+    await expect(importBtn).toBeVisible();
+    await expect(exportBtn).toBeVisible();
+
+    // Should see license warning (no license in test env)
+    const licenseWarning = page.locator('text=/License Required|Wymagana licencja/i');
+    await expect(licenseWarning).toBeVisible();
   });
 
-  test('Can update logo URL and see preview', async ({ page }) => {
-    await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+  test('Clicking a preset updates theme name and preview colors', async ({ page }) => {
+    await navigateToSettings(page);
 
-    // Enter test logo URL
-    const testLogoUrl = 'https://i.ibb.co/test-logo.png';
-    const logoInput = page.locator('input[type="url"]').first();
-    await logoInput.fill(testLogoUrl);
-
-    // Check live preview shows the logo
-    const previewLogo = page.locator('img[alt*="GateFlow"]').or(page.locator('img[alt*="Demo"]'));
-    await page.waitForTimeout(500); // Wait for preview update
-
-    // Verify logo src in preview (might be visible)
-    const logoSrcInPreview = await page.locator('div:has-text("Live Preview") img').first().getAttribute('src');
-    if (logoSrcInPreview) {
-      expect(logoSrcInPreview).toBe(testLogoUrl);
-    }
-  });
-
-  test('Can update brand colors and see preview', async ({ page }) => {
-    await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-
-    // Update primary color
-    const primaryColorPicker = page.locator('input[type="color"]').first();
-    await primaryColorPicker.fill('#ff0000'); // Red
-
-    // Update secondary color
-    const secondaryColorPicker = page.locator('input[type="color"]').nth(1);
-    await secondaryColorPicker.fill('#0000ff'); // Blue
-
-    // Update accent color
-    const accentColorPicker = page.locator('input[type="color"]').nth(2);
-    await accentColorPicker.fill('#00ff00'); // Green
-
+    // Click "Sunset" preset
+    const sunsetPreset = page.locator('button').filter({ hasText: 'Sunset' });
+    await sunsetPreset.click();
     await page.waitForTimeout(500);
 
-    // Verify color swatches in preview
-    const primarySwatch = page.locator('div[style*="background-color: rgb(255, 0, 0)"]').or(
-      page.locator('div[style*="background-color: #ff0000"]')
-    );
-    // Color preview should exist (might be visible)
-    const swatchCount = await page.locator('div:has-text("Color Palette")').count();
-    expect(swatchCount).toBeGreaterThan(0);
+    // Theme name input should reflect "Sunset"
+    const themeNameInput = page.locator('input[placeholder="My Custom Theme"]');
+    const value = await themeNameInput.inputValue();
+    expect(value).toBe('Sunset');
+
+    // Accent color input should reflect Sunset's accent (#FF6B35)
+    const accentTextInput = page
+      .locator('label', { hasText: 'Accent' })
+      .first()
+      .locator('..')
+      .locator('input[type="text"]');
+    const accentValue = await accentTextInput.inputValue();
+    expect(accentValue).toBe('#FF6B35');
+
+    // Unsaved changes indicator should appear
+    const unsaved = page.locator('text=/unsaved|niezapisane/i');
+    await expect(unsaved).toBeVisible();
   });
 
-  test('Can change font family and see preview', async ({ page }) => {
-    await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+  test('Tab switching shows different editor fields', async ({ page }) => {
+    await navigateToSettings(page);
 
-    // Select a different font
-    const fontSelect = page.locator('select').filter({ hasText: /System Default|Inter/i });
-    await fontSelect.selectOption('montserrat');
+    // Colors tab should show color fields by default
+    const accentLabel = page.locator('label', { hasText: 'Accent' }).first();
+    await expect(accentLabel).toBeVisible();
 
-    await page.waitForTimeout(500);
+    // Switch to Typography tab
+    const typographyTab = page.locator('button', { hasText: /Typography|Typografia/i });
+    await typographyTab.click();
+    await page.waitForTimeout(300);
 
-    // Verify typography preview shows the font
-    const typographyPreview = page.locator('text=/Typography/i');
-    await expect(typographyPreview).toBeVisible();
+    // Accent label should be hidden, font family should be visible
+    await expect(accentLabel).toBeHidden();
+    const fontFamilyLabel = page.locator('label', { hasText: /Font Family|Rodzina czcionek/i });
+    await expect(fontFamilyLabel).toBeVisible();
+
+    // Should show heading weight selector
+    const headingWeight = page.locator('label', { hasText: /Heading Weight|Grubość nagłówków/i });
+    await expect(headingWeight).toBeVisible();
+
+    // Switch to Shapes tab
+    const shapesTab = page.locator('button', { hasText: /Shapes|Kształty/i });
+    await shapesTab.click();
+    await page.waitForTimeout(300);
+
+    // Font family should be hidden, radius should be visible
+    await expect(fontFamilyLabel).toBeHidden();
+    const radiusLabel = page.locator('label', { hasText: /Small Radius|Mały zaokrąglenie/i });
+    await expect(radiusLabel).toBeVisible();
   });
 
-  test('Can save branding settings successfully', async ({ page }) => {
-    await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+  test('Editing a color field triggers unsaved changes', async ({ page }) => {
+    await navigateToSettings(page);
 
-    // Set test values
-    const testLogoUrl = 'https://i.ibb.co/saved-logo.png';
-    const logoInput = page.locator('input[type="url"]').first();
-    await logoInput.fill(testLogoUrl);
+    // Find the Accent text input (text input next to the color picker)
+    const accentTextInput = page
+      .locator('label', { hasText: 'Accent' })
+      .first()
+      .locator('..')
+      .locator('input[type="text"]');
+    await expect(accentTextInput).toBeVisible();
 
-    const primaryColorPicker = page.locator('input[type="color"]').first();
-    await primaryColorPicker.fill('#ff6600');
+    // Clear and type a new color value
+    await accentTextInput.fill('#FF0000');
+    await page.waitForTimeout(300);
 
-    const fontSelect = page.locator('select').filter({ hasText: /System Default|Inter/i });
-    await fontSelect.selectOption('poppins');
+    // Should show unsaved changes
+    const unsaved = page.locator('text=/unsaved|niezapisane/i');
+    await expect(unsaved).toBeVisible();
 
-    // Click save button
-    const saveButton = page.locator('button', { hasText: /Save Branding/i });
-    await saveButton.click();
+    // The value should be what we typed
+    const newValue = await accentTextInput.inputValue();
+    expect(newValue).toBe('#FF0000');
+  });
 
-    // Wait for success message
-    const successMessage = page.locator('text=/updated successfully|saved successfully/i');
-    await expect(successMessage).toBeVisible({ timeout: 10000 });
+  test('Import valid theme JSON updates editor', async ({ page }) => {
+    await navigateToSettings(page);
 
-    // Verify values were saved in database
+    const testTheme = JSON.stringify({
+      name: 'Test Import Theme',
+      version: '1.0',
+      colors: {
+        accent: '#FF0000',
+        'accent-hover': '#CC0000',
+        'accent-soft': 'rgba(255,0,0,0.08)',
+        'bg-deep': '#111111',
+        'text-heading': '#FFFFFF',
+      },
+    });
+
+    // Set up file chooser for import
+    const fileInput = page.locator('input[type="file"][accept=".json"]');
+    await fileInput.setInputFiles({
+      name: 'test-theme.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(testTheme),
+    });
+
     await page.waitForTimeout(1000);
-    const { data: savedConfig } = await supabaseAdmin
-      .from('shop_config')
-      .select('logo_url, primary_color, font_family')
-      .eq('id', shopConfigId)
-      .single();
 
-    expect(savedConfig?.logo_url).toBe(testLogoUrl);
-    expect(savedConfig?.primary_color).toBe('#ff6600');
-    expect(savedConfig?.font_family).toBe('poppins');
+    // Theme name should update to imported name
+    const themeNameInput = page.locator('input[placeholder="My Custom Theme"]');
+    const value = await themeNameInput.inputValue();
+    expect(value).toBe('Test Import Theme');
+
+    // Should show success toast
+    const toast = page.locator('text=/imported|zaimportowany/i');
+    await expect(toast).toBeVisible({ timeout: 5000 });
   });
 
-  test('Saved branding appears in sidebar after page refresh', async ({ page }) => {
-    // First, set branding via API
-    await supabaseAdmin
-      .from('shop_config')
-      .update({
-        shop_name: 'Test Brand',
-        primary_color: '#aa00ff',
-        secondary_color: '#ff00aa',
-        font_family: 'roboto'
-      })
-      .eq('id', shopConfigId);
+  test('Import invalid JSON shows error', async ({ page }) => {
+    await navigateToSettings(page);
 
-    await loginAsAdmin(page);
-    await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    const invalidJson = 'this is not valid json {{{';
 
-    // Check sidebar shows "Test Brand" instead of "GateFlow"
-    const brandName = page.locator('aside').locator('text=Test Brand');
-    await expect(brandName).toBeVisible({ timeout: 10000 });
+    const fileInput = page.locator('input[type="file"][accept=".json"]');
+    await fileInput.setInputFiles({
+      name: 'bad-theme.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(invalidJson),
+    });
+
+    await page.waitForTimeout(1000);
+
+    // Should show error toast
+    const toast = page.locator('text=/Invalid|Nieprawidłowy/i');
+    await expect(toast).toBeVisible({ timeout: 5000 });
   });
 
-  test('Reset to defaults button works', async ({ page }) => {
-    // First, set custom values
-    await supabaseAdmin
-      .from('shop_config')
-      .update({
-        logo_url: 'https://custom-logo.png',
-        primary_color: '#123456',
-        secondary_color: '#654321',
-        accent_color: '#abcdef',
-        font_family: 'playfair'
-      })
-      .eq('id', shopConfigId);
+  test('Import valid JSON with wrong schema shows error', async ({ page }) => {
+    await navigateToSettings(page);
 
-    await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    // Valid JSON but missing required fields (name, colors.accent, etc.)
+    const wrongSchema = JSON.stringify({ foo: 'bar', notATheme: true });
 
-    // Click reset button
-    const resetButton = page.locator('button', { hasText: /Reset to defaults/i });
-    await resetButton.click();
+    const fileInput = page.locator('input[type="file"][accept=".json"]');
+    await fileInput.setInputFiles({
+      name: 'wrong-schema.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(wrongSchema),
+    });
 
+    await page.waitForTimeout(1000);
+
+    // Should show error toast (same "Invalid" message from Zod validation failure)
+    const toast = page.locator('text=/Invalid|Nieprawidłowy/i');
+    await expect(toast).toBeVisible({ timeout: 5000 });
+  });
+
+  test('Export downloads a valid JSON file', async ({ page }) => {
+    await navigateToSettings(page);
+
+    // Select a known preset first so we know expected content
+    const sunsetPreset = page.locator('button').filter({ hasText: 'Sunset' });
+    await sunsetPreset.click();
     await page.waitForTimeout(500);
 
-    // Verify fields are reset to defaults
-    const logoInput = page.locator('input[type="url"]').first();
-    const logoValue = await logoInput.inputValue();
-    expect(logoValue).toBe('');
+    // Set up download listener
+    const downloadPromise = page.waitForEvent('download', { timeout: 5000 });
 
-    const primaryColorText = page.locator('input[type="text"]').filter({ hasValue: /#9333ea/i });
-    await expect(primaryColorText.first()).toBeVisible();
+    const exportBtn = page.locator('button', { hasText: /Export|Eksportuj/i });
+    await exportBtn.click();
+
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toMatch(/\.json$/);
+    expect(download.suggestedFilename()).toContain('sunset');
+
+    // Read and validate the downloaded content
+    const filePath = await download.path();
+    if (filePath) {
+      const fs = await import('fs');
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const parsed = JSON.parse(content);
+      expect(parsed.name).toBe('Sunset');
+      expect(parsed.colors).toBeDefined();
+      expect(parsed.colors.accent).toBe('#FF6B35');
+    }
   });
 
-  test('Non-admin users cannot access branding settings', async ({ page }) => {
-    // Create regular user
+  test('Save button is disabled without license', async ({ page }) => {
+    await navigateToSettings(page);
+
+    // Select a preset to create "unsaved changes"
+    const sunsetPreset = page.locator('button').filter({ hasText: 'Sunset' });
+    await sunsetPreset.click();
+    await page.waitForTimeout(500);
+
+    // Save button should be disabled (no license in test env)
+    const saveButton = page.locator('button', { hasText: /Save Theme|Zapisz motyw/i });
+    await expect(saveButton).toBeDisabled();
+  });
+
+  test('Non-admin users cannot access settings', async ({ page }) => {
+    // Create regular (non-admin) user
     const regularEmail = `test-regular-${Date.now()}@example.com`;
-    const { data: { user: regularUser } } = await supabaseAdmin.auth.admin.createUser({
-      email: regularEmail,
-      password: password,
-      email_confirm: true,
-    });
+    const regularPassword = 'password123';
+    let regularUserId: string | undefined;
 
-    await acceptAllCookies(page);
-    await page.goto('/');
+    try {
+      const { data: { user: regularUser } } = await supabaseAdmin.auth.admin.createUser({
+        email: regularEmail,
+        password: regularPassword,
+        email_confirm: true,
+      });
+      regularUserId = regularUser?.id;
 
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email: regularEmail,
-      password: password,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
+      await acceptAllCookies(page);
+      await page.goto('/');
 
-    await page.waitForTimeout(1000);
+      await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
+        // @ts-ignore
+        const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
+        const supabase = createBrowserClient(supabaseUrl, anonKey);
+        await supabase.auth.signInWithPassword({ email, password });
+      }, {
+        email: regularEmail,
+        password: regularPassword,
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321',
+        anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
+      });
 
-    // Try to access settings - should redirect or show error
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-
-    // Should NOT see branding settings OR should be redirected away
-    const url = page.url();
-    const hasBrandingSection = await page.locator('text=/Branding.*Whitelabel/i').count();
-
-    // Either redirected away from settings OR no branding section visible
-    expect(url.includes('/dashboard/settings') ? hasBrandingSection === 0 : true).toBeTruthy();
-
-    // Cleanup
-    if (regularUser) {
-      await supabaseAdmin.auth.admin.deleteUser(regularUser.id);
-    }
-  });
-
-  test('Branding persists across sessions', async ({ page }) => {
-    // Set branding
-    await supabaseAdmin
-      .from('shop_config')
-      .update({
-        shop_name: 'Persistent Shop',
-        primary_color: '#ff9900'
-      })
-      .eq('id', shopConfigId);
-
-    // Login and verify
-    await loginAsAdmin(page);
-    await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-
-    const persistentName = page.locator('aside').locator('text=Persistent Shop');
-    await expect(persistentName).toBeVisible();
-
-    // Logout
-    const logoutButton = page.locator('button', { hasText: /logout|sign out/i }).first();
-    if (await logoutButton.isVisible()) {
-      await logoutButton.click();
       await page.waitForTimeout(1000);
+      await page.goto('/dashboard/settings');
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(2000);
+
+      // Should NOT see theme presets OR should be redirected
+      const url = page.url();
+      const hasThemeSection = await page.locator('text=/Theme Presets|Gotowe motywy/i').count();
+      expect(url.includes('/dashboard/settings') ? hasThemeSection === 0 : true).toBeTruthy();
+    } finally {
+      // Cleanup always runs, even on test failure
+      if (regularUserId) {
+        await supabaseAdmin.auth.admin.deleteUser(regularUserId);
+      }
     }
-
-    // Login again in new session
-    await loginAsAdmin(page);
-    await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-
-    // Branding should still be there
-    const stillPersistent = page.locator('aside').locator('text=Persistent Shop');
-    await expect(stillPersistent).toBeVisible();
-  });
-
-  test('Empty logo URL falls back to gradient icon', async ({ page }) => {
-    // Set logo_url to null
-    await supabaseAdmin
-      .from('shop_config')
-      .update({
-        logo_url: null,
-        primary_color: '#cc00cc',
-        secondary_color: '#00cccc'
-      })
-      .eq('id', shopConfigId);
-
-    await loginAsAdmin(page);
-    await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-
-    // Should see gradient icon (SVG with lightning bolt)
-    const gradientIcon = page.locator('aside svg').filter({ hasText: '' }).first();
-
-    // Check if icon exists (lightning bolt path)
-    const svgPath = await page.locator('aside svg path[d*="M13 10V3L4 14h7v7l9-11h-7z"]').count();
-    expect(svgPath).toBeGreaterThan(0);
-  });
-
-  test('Invalid color values are rejected', async ({ page }) => {
-    await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-
-    // Try to enter invalid hex color in text input
-    const primaryColorText = page.locator('input[type="text"]').first();
-    await primaryColorText.fill('invalid-color');
-
-    // Save button
-    const saveButton = page.locator('button', { hasText: /Save Branding/i });
-    await saveButton.click();
-
-    await page.waitForTimeout(1000);
-
-    // Should either show error or not save (value should revert)
-    // We'll check that the success message doesn't appear or value wasn't saved
-    const { data: config } = await supabaseAdmin
-      .from('shop_config')
-      .select('primary_color')
-      .eq('id', shopConfigId)
-      .single();
-
-    // Color should not be 'invalid-color'
-    expect(config?.primary_color).not.toBe('invalid-color');
   });
 });

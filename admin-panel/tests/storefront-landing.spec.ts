@@ -112,9 +112,9 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     await expect(page.getByText('Ready to Start Learning?')).toBeVisible();
     await expect(page.getByText('Access all our free resources and join a community of learners')).toBeVisible();
 
-    // Verify animated gradient background exists
-    const bgGradient = page.locator('.bg-gradient-to-br.from-slate-950.via-purple-950.to-slate-950');
-    await expect(bgGradient).toBeVisible();
+    // Verify gradient background exists (radial-gradient with gf-accent-glow)
+    const bgGradient = page.locator('[style*="radial-gradient"]');
+    await expect(bgGradient.first()).toBeVisible();
   });
 
   test('PAID-ONLY shop: Should show premium-focused hero and only premium section', async ({ page }) => {
@@ -592,16 +592,12 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    // Verify animated gradient background exists
-    const gradientBg = page.locator('.bg-gradient-to-br.from-slate-950.via-purple-950.to-slate-950');
-    await expect(gradientBg).toBeVisible({ timeout: 15000 });
+    // Verify gradient background exists (radial-gradient with gf-accent-glow)
+    const gradientBg = page.locator('[style*="radial-gradient"]');
+    await expect(gradientBg.first()).toBeVisible({ timeout: 15000 });
 
-    // Verify blob animations exist
-    const blobs = page.locator('.animate-blob');
-    await expect(blobs).toHaveCount(3); // Should have 3 blob elements
-
-    // Verify shop name badge has glow effect
-    const shopBadge = page.locator('.bg-slate-900\\/90.backdrop-blur-xl').first();
+    // Verify shop name badge exists (bg-gf-raised with backdrop-blur)
+    const shopBadge = page.locator('.backdrop-blur-xl').first();
     await expect(shopBadge).toBeVisible();
 
     // Verify gradient mesh styling exists (should be at least 1)
@@ -696,10 +692,10 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     await expect(freeCTA).toBeVisible({ timeout: 15000 });
     await expect(freeCTA).toHaveClass(/from-green-600.*to-emerald-600/);
 
-    // Verify premium product CTA has purple/pink gradient
+    // Verify premium product CTA has accent color
     const paidCTA = page.locator(`a[href="/p/${paidProduct.slug}"]`).first();
     await expect(paidCTA).toBeVisible();
-    await expect(paidCTA).toHaveClass(/from-purple-600.*to-pink-600/);
+    await expect(paidCTA).toHaveClass(/bg-gf-accent/);
 
     // Verify "Browse All Products" button at bottom (smooth scroll to #products)
     const browseAllButton = page.locator('a[href="#products"]').filter({ hasText: /Browse All Products/i });
@@ -732,16 +728,13 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     await acceptAllCookies(page);
     await page.goto('/', { waitUntil: 'commit' });
 
-    // Loading spinner should appear briefly
-    // Note: This may be too fast to catch reliably, but we can check the bg exists
-    const loadingBg = page.locator('.bg-gradient-to-br.from-slate-950.via-purple-950.to-slate-950');
-
-    // Wait for full load
+    // Wait for full load and verify content eventually appears
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    // Verify content eventually appears
-    await expect(loadingBg).toBeVisible({ timeout: 15000 });
+    // Verify gradient background renders (radial-gradient with gf-accent-glow)
+    const gradientBg = page.locator('[style*="radial-gradient"]');
+    await expect(gradientBg.first()).toBeVisible({ timeout: 15000 });
   });
 
   test('PRODUCT COUNT BADGE: Should show correct count and singular/plural text', async ({ page }) => {
