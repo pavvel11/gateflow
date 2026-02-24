@@ -148,11 +148,12 @@ test.describe('Product Creation Wizard', () => {
     await goToProducts(page);
     await openWizard(page);
 
-    const slug = `wizard-full-${Date.now()}`;
-    createdProductSlugs.push(slug);
+    const uniqueSuffix = Date.now();
+    const productName = `Wizard Full ${uniqueSuffix}`;
+    createdProductSlugs.push(`wizard-full-${uniqueSuffix}`);
 
     // Step 1: Essentials
-    await page.fill('input#name', 'Wizard Full Product');
+    await page.fill('input#name', productName);
     await page.fill('textarea#description', 'Product created through all 3 steps');
     await page.fill('input#price', '99');
 
@@ -168,12 +169,11 @@ test.describe('Product Creation Wizard', () => {
     await expect(page.getByRole('button', { name: /Sprzedaż i ustawienia|Sales & Settings/i })).toBeVisible();
     await page.getByRole('button', { name: /Utwórz produkt/i }).click();
 
-    // Wait for modal to close
+    // Wait for modal to close after creation
     await expect(page.getByText('Utwórz nowy produkt')).not.toBeVisible({ timeout: 15000 });
 
     // Product should appear in list
-    await page.waitForTimeout(1000);
-    await expect(page.locator('table td').getByText('Wizard Full Product').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('table td').getByText(productName).first()).toBeVisible({ timeout: 10000 });
   });
 
   test('should not advance from step 1 without required fields', async ({ page }) => {
