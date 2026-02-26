@@ -46,7 +46,7 @@ BEGIN
     WHERE slug = clean_slug
       AND is_active = true
       AND allow_custom_price = true
-      AND (custom_price_min = 0 OR custom_price_min IS NULL);
+      AND custom_price_min = 0;
 
     IF NOT FOUND THEN
         RETURN FALSE;

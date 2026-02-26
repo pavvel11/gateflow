@@ -409,6 +409,123 @@ test.describe('PWYW Free Option — Checkout UI', () => {
     const getForFreeText = page.getByText(/Odbierz za darmo/i);
     await expect(getForFreeText).toBeVisible();
   });
+
+  // --- Security: ToS + Turnstile ---
+
+  test('anonymous $0 should show terms checkbox and Turnstile widget', async ({ page }) => {
+    await page.goto(`/pl/checkout/${pwywFreeProduct.slug}`);
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.getByText('Wybierz kwotę')).toBeVisible({ timeout: 15000 });
+
+    // Select free preset
+    const freePreset = page.locator('button').filter({ hasText: /Za darmo/i });
+    await freePreset.first().click();
+
+    // Green card should be visible
+    const freeCard = page.locator('.bg-green-50').first();
+    await expect(freeCard).toBeVisible({ timeout: 5000 });
+
+    // Should show terms checkbox ("Zgadzam się z Regulaminem")
+    const termsCheckbox = freeCard.locator('#terms-checkbox');
+    await expect(termsCheckbox).toBeVisible({ timeout: 3000 });
+
+    const termsLabel = freeCard.getByText(/Zgadzam się z/i);
+    await expect(termsLabel).toBeVisible();
+
+    // Should show Turnstile widget container (iframe or placeholder)
+    const turnstileContainer = freeCard.locator('[class*="cf-turnstile"], iframe[src*="turnstile"]');
+    // In dev mode Turnstile may render as a placeholder — just verify the widget area exists
+    const turnstileArea = freeCard.locator('div.mt-3').last();
+    await expect(turnstileArea).toBeVisible();
+  });
+
+  test('anonymous $0 magic link button should be disabled without terms accepted', async ({ page }) => {
+    await page.goto(`/pl/checkout/${pwywFreeProduct.slug}`);
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.getByText('Wybierz kwotę')).toBeVisible({ timeout: 15000 });
+
+    // Select free preset
+    const freePreset = page.locator('button').filter({ hasText: /Za darmo/i });
+    await freePreset.first().click();
+
+    const freeCard = page.locator('.bg-green-50').first();
+    await expect(freeCard).toBeVisible({ timeout: 5000 });
+
+    // Fill email but leave terms unchecked
+    const emailInput = freeCard.locator('input[type="email"]');
+    await emailInput.fill('test@example.com');
+
+    // Button should be disabled (terms not accepted)
+    const sendButton = freeCard.locator('button').filter({ hasText: /Wyślij magiczny link/i });
+    await expect(sendButton).toBeDisabled();
+
+    // Now check the terms checkbox
+    const termsCheckbox = freeCard.locator('#terms-checkbox');
+    await termsCheckbox.check({ force: true });
+
+    // Button should now be enabled (in dev mode captcha is not required)
+    await expect(sendButton).toBeEnabled();
+  });
+
+  test('anonymous $0 magic link button should be disabled without email', async ({ page }) => {
+    await page.goto(`/pl/checkout/${pwywFreeProduct.slug}`);
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.getByText('Wybierz kwotę')).toBeVisible({ timeout: 15000 });
+
+    // Select free preset
+    const freePreset = page.locator('button').filter({ hasText: /Za darmo/i });
+    await freePreset.first().click();
+
+    const freeCard = page.locator('.bg-green-50').first();
+    await expect(freeCard).toBeVisible({ timeout: 5000 });
+
+    // Accept terms but don't fill email
+    const termsCheckbox = freeCard.locator('#terms-checkbox');
+    await termsCheckbox.check({ force: true });
+
+    // Button should be disabled (no email)
+    const sendButton = freeCard.locator('button').filter({ hasText: /Wyślij magiczny link/i });
+    await expect(sendButton).toBeDisabled();
+  });
+
+  test('logged-in $0 should NOT show terms checkbox or Turnstile', async ({ page }) => {
+    await loginAsAdmin(page, adminEmail, adminPassword);
+    await blockStripeOnPage(page);
+
+    // Clean up any existing access so we get the free UI
+    await supabaseAdminClient
+      .from('user_product_access')
+      .delete()
+      .eq('product_id', pwywFreeProduct.id);
+
+    await page.goto(`/pl/checkout/${pwywFreeProduct.slug}`);
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.getByText('Wybierz kwotę')).toBeVisible({ timeout: 15000 });
+
+    // Select free preset
+    const freePreset = page.locator('button').filter({ hasText: /Za darmo/i });
+    await freePreset.first().click();
+
+    const freeCard = page.locator('.bg-green-50').first();
+    await expect(freeCard).toBeVisible({ timeout: 5000 });
+
+    // Should show "Odbierz za darmo" button
+    const getForFreeBtn = freeCard.locator('button').filter({ hasText: /Odbierz za darmo/i });
+    await expect(getForFreeBtn).toBeVisible();
+    await expect(getForFreeBtn).toBeEnabled();
+
+    // Should NOT show terms checkbox
+    const termsCheckbox = freeCard.locator('#terms-checkbox');
+    await expect(termsCheckbox).not.toBeVisible();
+
+    // Should NOT show email input
+    const emailInput = freeCard.locator('input[type="email"]');
+    await expect(emailInput).not.toBeVisible();
+
+    // Should NOT show Turnstile
+    const turnstileIframe = freeCard.locator('iframe[src*="turnstile"]');
+    await expect(turnstileIframe).not.toBeVisible();
+  });
 });
 
 // ===== GRANT ACCESS API TESTS =====

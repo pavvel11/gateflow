@@ -206,6 +206,7 @@ export function PriceVatInline({
         <label className="flex flex-wrap items-center gap-x-2 gap-y-0.5 cursor-pointer select-none">
           <input
             type="checkbox"
+            id="allow_custom_price"
             checked={formData.allow_custom_price}
             onChange={(e) => handleCustomPriceToggle(e.target.checked)}
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
@@ -228,6 +229,7 @@ export function PriceVatInline({
               <span className="text-xs text-gray-600 dark:text-gray-400">{t('customPricing.minimumPrice')}</span>
               <input
                 type="number"
+                id="custom_price_min"
                 value={formData.custom_price_min}
                 onChange={handleMinPriceChange}
                 min="0"
@@ -245,6 +247,7 @@ export function PriceVatInline({
               <label className="flex items-center gap-1.5 cursor-pointer select-none">
                 <input
                   type="checkbox"
+                  id="show_price_presets"
                   checked={formData.show_price_presets}
                   onChange={(e) => setFormData(prev => ({ ...prev, show_price_presets: e.target.checked }))}
                   className="h-3.5 w-3.5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"

@@ -82,7 +82,8 @@ export async function GET(request: Request) {
       }
 
       // Check if product qualifies for free access grant
-      const isPwywFree = product.allow_custom_price && (product.custom_price_min === 0 || product.custom_price_min === null);
+      // SECURITY: Only explicit 0 qualifies — null is NOT treated as free (fail-closed)
+      const isPwywFree = product.allow_custom_price && product.custom_price_min === 0;
       const isFreeEligible = product.price === 0 || isPwywFree;
 
       if (isFreeEligible) {

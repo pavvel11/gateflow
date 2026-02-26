@@ -19,6 +19,8 @@ import { useTracking } from '@/hooks/useTracking';
 import ProductShowcase from './ProductShowcase';
 import CustomPaymentForm from './CustomPaymentForm';
 import OtoCountdownBanner from '@/components/storefront/OtoCountdownBanner';
+import TurnstileWidget from '@/components/TurnstileWidget';
+import TermsCheckbox from '@/components/TermsCheckbox';
 import { createClient } from '@/lib/supabase/client';
 import { validateEmailAction } from '@/lib/actions/validate-email';
 
@@ -30,6 +32,8 @@ interface PaidProductFormProps {
 
 export default function PaidProductForm({ product, paymentMethodOrder, expressCheckoutConfig }: PaidProductFormProps) {
   const t = useTranslations('checkout');
+  const tSecurity = useTranslations('security');
+  const tCompliance = useTranslations('compliance');
   const { user } = useAuth();
   const { addToast } = useToast();
   const router = useRouter();
@@ -385,21 +389,46 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
 
   // PWYW Free — magic link for unauthenticated users
   const [pwywFreeEmail, setPwywFreeEmail] = useState('');
+  const [pwywFreeTermsAccepted, setPwywFreeTermsAccepted] = useState(false);
+  const [pwywFreeCaptchaToken, setPwywFreeCaptchaToken] = useState<string | null>(null);
+  const [pwywFreeCaptchaResetTrigger, setPwywFreeCaptchaResetTrigger] = useState(0);
+  const [pwywFreeCaptchaLoading, setPwywFreeCaptchaLoading] = useState(false);
   const [pwywFreeMessage, setPwywFreeMessage] = useState<{ type: 'info' | 'success' | 'error'; text: string } | null>(null);
+
+  const resetPwywFreeCaptcha = useCallback(() => {
+    setPwywFreeCaptchaToken(null);
+    setPwywFreeCaptchaLoading(true);
+    setPwywFreeCaptchaResetTrigger(prev => prev + 1);
+  }, []);
 
   const handlePwywFreeMagicLink = useCallback(async () => {
     if (!pwywFreeEmail) {
       setPwywFreeMessage({ type: 'error', text: t('enterEmail') });
+      resetPwywFreeCaptcha();
       return;
     }
+
+    if (!pwywFreeTermsAccepted) {
+      setPwywFreeMessage({ type: 'error', text: tCompliance('pleaseAcceptTerms') });
+      resetPwywFreeCaptcha();
+      return;
+    }
+
+    if (!pwywFreeCaptchaToken) {
+      setPwywFreeMessage({ type: 'error', text: tCompliance('securityVerificationRequired') });
+      return;
+    }
+
     try {
       const emailValidation = await validateEmailAction(pwywFreeEmail);
       if (!emailValidation.isValid) {
         setPwywFreeMessage({ type: 'error', text: emailValidation.error || 'Invalid email' });
+        resetPwywFreeCaptcha();
         return;
       }
     } catch {
       setPwywFreeMessage({ type: 'error', text: 'Invalid email' });
+      resetPwywFreeCaptcha();
       return;
     }
 
@@ -413,10 +442,15 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
 
       const { error: authError } = await supabase.auth.signInWithOtp({
         email: pwywFreeEmail,
-        options: { shouldCreateUser: true, emailRedirectTo: redirectUrl },
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo: redirectUrl,
+          captchaToken: pwywFreeCaptchaToken || undefined,
+        },
       });
       if (authError) {
         setPwywFreeMessage({ type: 'error', text: authError.message });
+        resetPwywFreeCaptcha();
         return;
       }
       await track('generate_lead', {
@@ -431,7 +465,7 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
     } finally {
       setPwywFreeLoading(false);
     }
-  }, [pwywFreeEmail, product, searchParams, t, track]);
+  }, [pwywFreeEmail, pwywFreeTermsAccepted, pwywFreeCaptchaToken, product, searchParams, t, tCompliance, track, resetPwywFreeCaptcha]);
 
   const renderCheckoutForm = () => (
     <div className="w-full lg:w-1/2 lg:pl-8">
@@ -550,14 +584,48 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
                 placeholder={t('emailAddress')}
                 className="w-full px-4 py-3 border border-gray-300 dark:border-white/20 rounded-lg bg-white dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
+              <TermsCheckbox
+                checked={pwywFreeTermsAccepted}
+                onChange={setPwywFreeTermsAccepted}
+                termsUrl="/terms"
+                privacyUrl="/privacy"
+              />
               <button
                 type="button"
                 onClick={handlePwywFreeMagicLink}
-                disabled={pwywFreeLoading || !pwywFreeEmail}
+                disabled={
+                  pwywFreeLoading ||
+                  pwywFreeCaptchaLoading ||
+                  !pwywFreeEmail ||
+                  !pwywFreeTermsAccepted ||
+                  (process.env.NODE_ENV === 'production' && !pwywFreeCaptchaToken)
+                }
                 className="w-full py-3 px-6 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold rounded-xl transition-all"
               >
-                {pwywFreeLoading ? '...' : t('sendMagicLink')}
+                {pwywFreeLoading || pwywFreeCaptchaLoading ? (
+                  <span className="flex items-center justify-center">
+                    <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2" />
+                    {pwywFreeCaptchaLoading ? tSecurity('verifying') : t('sendingMagicLink')}
+                  </span>
+                ) : t('sendMagicLink')}
               </button>
+              <div className="mt-3">
+                <TurnstileWidget
+                  onVerify={(token) => {
+                    setPwywFreeCaptchaToken(token);
+                    setPwywFreeCaptchaLoading(false);
+                  }}
+                  onError={() => {
+                    setPwywFreeCaptchaToken(null);
+                    setPwywFreeCaptchaLoading(false);
+                  }}
+                  onTimeout={() => {
+                    setPwywFreeCaptchaLoading(false);
+                  }}
+                  resetTrigger={pwywFreeCaptchaResetTrigger}
+                  compact={true}
+                />
+              </div>
               {pwywFreeMessage && (
                 <p className={`text-sm ${pwywFreeMessage.type === 'error' ? 'text-red-500' : pwywFreeMessage.type === 'success' ? 'text-green-600' : 'text-gray-500'}`}>
                   {pwywFreeMessage.text}
@@ -719,11 +787,13 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
         </div>
       )}
 
+      {/* Hide checkout card when PWYW-free — "Odbierz za darmo" replaces it; keep for error/access states */}
+      {!(isPwywFree && !error && !hasAccess) && (
       <div className="bg-gray-50 dark:bg-white/10 dark:backdrop-blur-md rounded-lg p-6 border border-gray-200 dark:border-white/20 shadow-lg dark:shadow-xl relative overflow-hidden">
         {isVerifyingCoupon && (
           <div className="absolute top-0 left-0 h-0.5 bg-blue-500 animate-pulse w-full" />
         )}
-        
+
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">{t('title')}</h2>
         
         {/* Missing Config Alert */}
@@ -829,6 +899,7 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
           </Elements>
         )}
       </div>
+      )}
     </div>
   );
 

@@ -52,7 +52,8 @@ export async function POST(
     }
 
     // Check if this is a PWYW product with free option (custom_price_min = 0)
-    const isPwywFree = product.allow_custom_price && (product.custom_price_min === 0 || product.custom_price_min === null);
+    // SECURITY: Only explicit 0 qualifies — null is NOT treated as free (fail-closed)
+    const isPwywFree = product.allow_custom_price && product.custom_price_min === 0;
 
     // Only allow free products or PWYW-free products
     if (product.price > 0 && !isPwywFree) {
