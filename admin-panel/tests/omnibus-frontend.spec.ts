@@ -293,18 +293,26 @@ test.describe('Omnibus Frontend - Admin Side', () => {
 
     // Find and edit the product
     const row = page.locator('tr', { hasText: 'Omnibus Admin Test Product' }).first();
-    await row.locator('button[aria-label*="Edit"]').first().click();
+    await row.locator('button[title*="Edit"], button[title*="Edytuj"]').first().click();
 
     // Wait for modal
-    const modal = page.locator('div.fixed').filter({ hasText: /Cancel|Anuluj/i });
+    const modal = page.locator('[role="dialog"]').first();
     await expect(modal).toBeVisible({ timeout: 5000 });
+
+    // Navigate to step 3 (Sales & Settings) where Advanced Settings lives
+    await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+    await page.waitForTimeout(500);
+    await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+    await page.waitForTimeout(500);
 
     // Expand Advanced Settings section (omnibus_exempt is inside)
     const advancedSettingsButton = modal.locator('button', { hasText: /Advanced Settings|Zaawansowane/i });
+    await advancedSettingsButton.scrollIntoViewIfNeeded();
     await advancedSettingsButton.click();
 
     // Find omnibus_exempt checkbox
     const omnibusCheckbox = modal.locator('input[name="omnibus_exempt"]');
+    await omnibusCheckbox.scrollIntoViewIfNeeded();
     await expect(omnibusCheckbox).toBeVisible();
 
     // Initially should be unchecked (false)
@@ -315,7 +323,7 @@ test.describe('Omnibus Frontend - Admin Side', () => {
     await expect(omnibusCheckbox).toBeChecked();
 
     // Save
-    await modal.locator('button[type="submit"]').click();
+    await page.getByRole('button', { name: /Aktualizuj produkt|Update product/i }).click();
     await expect(modal).not.toBeVisible({ timeout: 5000 });
 
     // Verify in database
@@ -328,16 +336,26 @@ test.describe('Omnibus Frontend - Admin Side', () => {
     expect(updatedProduct!.omnibus_exempt).toBe(true);
 
     // Reopen modal and verify checkbox is still checked
-    await row.locator('button[aria-label*="Edit"]').first().click();
+    await row.locator('button[title*="Edit"], button[title*="Edytuj"]').first().click();
     await expect(modal).toBeVisible({ timeout: 5000 });
 
-    // Expand Advanced Settings section again
-    await modal.locator('button', { hasText: /Advanced Settings|Zaawansowane/i }).click();
-    await expect(modal.locator('input[name="omnibus_exempt"]')).toBeChecked();
+    // Navigate to step 3 again
+    await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+    await page.waitForTimeout(500);
+    await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+    await page.waitForTimeout(500);
+
+    // Advanced Settings may already be expanded (defaultExpanded depends on omnibus_exempt=true)
+    const omnibusCheckbox2 = modal.locator('input[name="omnibus_exempt"]');
+    if (!(await omnibusCheckbox2.isVisible())) {
+      await modal.locator('button', { hasText: /Advanced Settings|Zaawansowane/i }).click();
+    }
+    await omnibusCheckbox2.scrollIntoViewIfNeeded();
+    await expect(omnibusCheckbox2).toBeChecked();
 
     // Uncheck and save
-    await modal.locator('input[name="omnibus_exempt"]').uncheck();
-    await modal.locator('button[type="submit"]').click();
+    await omnibusCheckbox2.uncheck();
+    await page.getByRole('button', { name: /Aktualizuj produkt|Update product/i }).click();
     await expect(modal).not.toBeVisible({ timeout: 5000 });
 
     // Verify unchecked in database
@@ -421,17 +439,17 @@ test.describe('Omnibus Frontend - Admin Side', () => {
 
     // Edit product and change price
     const row = page.locator('tr', { hasText: 'Omnibus Admin Test Product' }).first();
-    await row.locator('button[aria-label*="Edit"]').first().click();
+    await row.locator('button[title*="Edit"], button[title*="Edytuj"]').first().click();
 
-    const modal = page.locator('div.fixed').filter({ hasText: /Cancel|Anuluj/i });
+    const modal = page.locator('[role="dialog"]').first();
     await expect(modal).toBeVisible({ timeout: 5000 });
 
-    // Change price
+    // Change price (price input is on step 1)
     const priceInput = modal.locator('input[name="price"]');
     await priceInput.fill('75.50');
 
     // Save
-    await modal.locator('button[type="submit"]').click();
+    await page.getByRole('button', { name: /Aktualizuj produkt|Update product/i }).click();
     await expect(modal).not.toBeVisible({ timeout: 5000 });
 
     // Wait for trigger to execute

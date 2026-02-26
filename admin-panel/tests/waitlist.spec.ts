@@ -178,6 +178,7 @@ test.describe('Waitlist Feature', () => {
       // Fill step 1 minimum required fields to enable navigation
       await page.fill('input#name', 'Waitlist Test Temp');
       await page.fill('textarea#description', 'Temp description');
+      await page.fill('input#price', '10');
 
       // Navigate to step 3 (Availability is on step 3: Sales & Settings)
       await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
@@ -461,6 +462,7 @@ test.describe('Waitlist Feature', () => {
       // Fill step 1 minimum required fields
       await page.fill('input#name', 'Waitlist Temp Product');
       await page.fill('textarea#description', 'Temp description');
+      await page.fill('input#price', '10');
 
       // Step 1 → Step 2
       await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();

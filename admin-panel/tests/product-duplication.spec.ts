@@ -153,6 +153,12 @@ test.describe('Product Duplication', () => {
     const descValue = await descInput.inputValue();
     expect(descValue).toBe('Product to be duplicated');
 
+    // Slug is blank in duplicate mode — fill it so step 1 validation passes
+    const slugInput = page.locator('input[name="slug"]');
+    if (!(await slugInput.inputValue())) {
+      await slugInput.fill('copy-original-product');
+    }
+
     // Navigate to step 3 to check sale_price (Sales & Settings)
     await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
     await page.waitForTimeout(1000);

@@ -121,7 +121,7 @@ test.describe('Authenticated Admin Dashboard', () => {
     const productName = `CRUD-Prod-${Date.now()}`;
     const productSlug = `crud-${Date.now()}`;
     
-    const modal = page.locator('div.fixed').filter({ hasText: /Cancel|Anuluj/i });
+    const modal = page.locator('[role="dialog"], dialog').filter({ hasText: /Cancel|Anuluj/i });
     await modal.locator('input[name="name"]').fill(productName);
     await modal.locator('input[name="slug"]').fill(productSlug);
     await modal.locator('textarea[name="description"]').fill('Description');
@@ -134,20 +134,21 @@ test.describe('Authenticated Admin Dashboard', () => {
 
     // Verify wizard closes
     await expect(modal).not.toBeVisible({ timeout: 15000 });
-    
+
     // Verify creation
     const productCell = page.locator('table').getByText(productName).first();
     await expect(productCell).toBeVisible({ timeout: 15000 });
 
     // 2. Edit
     const row = page.locator('tr', { hasText: productName }).first();
-    await row.locator('button[aria-label*="Edit"]').first().click();
+    await row.locator('button[title*="Edit"], button[title*="Edytuj"]').first().click();
     await modal.locator('input[name="price"]').fill('99');
-    await modal.locator('button[type="submit"]').click();
+    await page.getByRole('button', { name: /Aktualizuj produkt|Update product/i }).click();
+    await expect(modal).not.toBeVisible({ timeout: 10000 });
     await expect(row).toContainText('99');
 
     // 3. Delete
-    await row.locator('button[aria-label*="Delete"]').first().click();
+    await row.locator('button[title*="Delete"], button[title*="Usuń"]').first().click();
     const confirmModal = page.locator('div.fixed').filter({ hasText: /Delete|Usuń|Confirm/i });
     await confirmModal.getByRole('button', { name: /Delete|Confirm|Usuń/i }).click();
     
@@ -160,11 +161,11 @@ test.describe('Authenticated Admin Dashboard', () => {
     await page.goto('/dashboard/webhooks');
 
     await page.getByRole('button', { name: /Add|Create/i }).first().click();
-    const modal = page.locator('div.fixed').filter({ hasText: /Cancel|Anuluj/i });
+    const wModal = page.locator('[role="dialog"], dialog').filter({ hasText: /Cancel|Anuluj/i });
     const webhookUrl = `https://example.com/crud-${Date.now()}`;
-    await modal.locator('input[type="url"]').fill(webhookUrl);
-    await modal.locator('input[type="checkbox"]').first().check();
-    await modal.locator('button[type="submit"]').click();
+    await wModal.locator('input[type="url"]').fill(webhookUrl);
+    await wModal.locator('input[type="checkbox"]').first().check();
+    await wModal.locator('button[type="submit"]').click();
 
     // Verify
     await expect(page.locator('table').getByText(webhookUrl).first()).toBeVisible({ timeout: 10000 });
@@ -172,7 +173,7 @@ test.describe('Authenticated Admin Dashboard', () => {
     // 2. Delete
     const row = page.locator('tr', { hasText: webhookUrl }).first();
     await row.getByRole('button', { name: /Delete|Usuń/i }).click();
-    const confirmModal = page.locator('div.fixed').filter({ hasText: /Delete|Usuń/i });
+    const confirmModal = page.locator('[role="dialog"], dialog').filter({ hasText: /Delete|Usuń/i });
     await confirmModal.getByRole('button', { name: /Delete|Usuń/i }).click();
 
     await expect(page.locator('table').getByText(webhookUrl).first()).not.toBeVisible({ timeout: 10000 });
