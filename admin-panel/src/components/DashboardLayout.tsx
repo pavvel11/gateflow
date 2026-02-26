@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import FloatingLanguageSwitcher from './FloatingLanguageSwitcher'
+import ThemeToggleButton from './ThemeToggleButton'
 import type { ShopConfig } from '@/lib/actions/shop-config'
 import DemoBanner from './DemoBanner'
 
@@ -223,7 +224,8 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
                   {t('getGateflow', { defaultValue: 'Get GateFlow' })}
                 </Link>
               )}
-              <div className="flex items-center h-full">
+              <div className="flex items-center h-full gap-1">
+                <ThemeToggleButton size="sm" />
                 <FloatingLanguageSwitcher mode="static" variant="compact" />
               </div>
               <div className="h-8 w-px bg-gray-200 dark:bg-gray-700 mx-2 hidden sm:block"></div>
@@ -385,7 +387,8 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
                 </div>
                 <button onClick={handleSignOut} className="text-gray-500">{Icons.logout}</button>
               </div>
-              <div className="flex justify-center">
+              <div className="flex justify-center gap-2">
+                <ThemeToggleButton size="sm" />
                 <FloatingLanguageSwitcher mode="static" variant="compact" />
               </div>
             </div>
@@ -416,7 +419,8 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
                 {t('getGateflow', { defaultValue: 'Get GateFlow' })}
               </Link>
             )}
-            <div className="hidden md:block">
+            <div className="hidden md:flex md:items-center md:gap-1">
+              <ThemeToggleButton size="sm" />
               <FloatingLanguageSwitcher mode="static" variant="compact" />
             </div>
           </div>

@@ -7,6 +7,7 @@ import { Menu, X, Lock, Heart } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { useAuth } from '@/contexts/AuthContext'
 import FloatingLanguageSwitcher from '@/components/FloatingLanguageSwitcher'
+import ThemeToggleButton from '@/components/ThemeToggleButton'
 
 export function LandingNav() {
   const t = useTranslations('landing')
@@ -92,11 +93,13 @@ export function LandingNav() {
               {ctaLink.label}
             </Link>
 
+            <ThemeToggleButton size="sm" />
             <FloatingLanguageSwitcher mode="static" variant="compact" />
           </div>
 
           {/* Mobile: language switcher + hamburger */}
           <div className="flex items-center gap-3 md:hidden">
+            <ThemeToggleButton size="sm" />
             <FloatingLanguageSwitcher mode="static" variant="compact" />
             <button
               type="button"

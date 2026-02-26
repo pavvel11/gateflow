@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import LoginForm from '@/components/LoginForm'
 import FloatingLanguageSwitcher from '@/components/FloatingLanguageSwitcher'
+import ThemeToggleButton from '@/components/ThemeToggleButton'
 import { useConfig } from '@/components/providers/config-provider'
 
 export default function LoginPage() {
@@ -83,8 +84,11 @@ export default function LoginPage() {
         }
       `}</style>
       
-      {/* Floating Language Switcher */}
-      <FloatingLanguageSwitcher position="top-right" variant="discrete" />
+      {/* Floating: language + theme (no auth link — we're already on login) */}
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+        <ThemeToggleButton size="sm" />
+        <FloatingLanguageSwitcher mode="static" variant="compact" />
+      </div>
       
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
       
