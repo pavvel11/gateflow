@@ -487,8 +487,9 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
     // Fill Stripe test card (4242 4242 4242 4242)
     // Stripe Elements may not load in test env without valid keys — skip if unavailable
     const stripeFrame = page.locator('iframe[name^="__privateStripeFrame"]').first();
-    const stripeVisible = await stripeFrame.isVisible({ timeout: 10000 }).catch(() => false);
-    if (!stripeVisible) {
+    try {
+      await stripeFrame.waitFor({ state: 'visible', timeout: 10000 });
+    } catch {
       test.skip(true, 'Stripe iframe not available in test environment');
       return;
     }

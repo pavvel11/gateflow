@@ -8,7 +8,7 @@
 import { createHash, randomBytes, timingSafeEqual as cryptoTimingSafeEqual } from 'crypto';
 
 // Key format: gf_{env}_{random}
-// Example: gf_live_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
+// Example: sf_live_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
 const KEY_PREFIX_LIVE = 'sf_live_';
 const KEY_PREFIX_TEST = 'sf_test_';
 const KEY_RANDOM_LENGTH = 32; // 32 bytes = 64 hex characters
@@ -85,7 +85,7 @@ export type ScopePreset = keyof typeof SCOPE_PRESETS;
 export interface GeneratedApiKey {
   /** The full key - ONLY returned once at creation time */
   plaintext: string;
-  /** First 12 characters for display (e.g., "gf_live_a1b2") */
+  /** First 12 characters for display (e.g., "sf_live_a1b2") */
   prefix: string;
   /** SHA-256 hash of the key for storage */
   hash: string;
@@ -94,7 +94,7 @@ export interface GeneratedApiKey {
 /**
  * Generate a new API key
  *
- * @param isTest - If true, generates a test key (gf_test_), otherwise live (gf_live_)
+ * @param isTest - If true, generates a test key (sf_test_), otherwise live (sf_live_)
  * @returns The generated key with plaintext (only returned once), prefix, and hash
  */
 export function generateApiKey(isTest: boolean = false): GeneratedApiKey {
@@ -104,7 +104,7 @@ export function generateApiKey(isTest: boolean = false): GeneratedApiKey {
 
   return {
     plaintext,
-    prefix: plaintext.substring(0, 12), // "gf_live_a1b2" or "gf_test_a1b2"
+    prefix: plaintext.substring(0, 12), // "sf_live_a1b2" or "sf_test_a1b2"
     hash: hashApiKey(plaintext),
   };
 }
@@ -193,8 +193,8 @@ export function hasAnyScope(keyScopes: string[], requiredScopes: ApiScope[]): bo
  * Parse API key from Authorization header
  *
  * Supports formats:
- * - "Bearer gf_live_xxx..."
- * - "gf_live_xxx..." (without Bearer prefix)
+ * - "Bearer sf_live_xxx..."
+ * - "sf_live_xxx..." (without Bearer prefix)
  *
  * @param authHeader - The Authorization header value
  * @returns The extracted key or null if invalid
@@ -227,7 +227,7 @@ export function parseApiKeyFromHeader(authHeader: string | null): string | null 
  * Shows prefix and last 4 characters
  *
  * @param key - The full API key
- * @returns Masked key like "gf_live_a1b2...p6q7"
+ * @returns Masked key like "sf_live_a1b2...p6q7"
  */
 export function maskApiKey(key: string): string {
   if (key.length < 16) {

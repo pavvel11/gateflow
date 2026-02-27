@@ -5,7 +5,7 @@
  * Starts the MCP server with stdio transport for Claude Desktop integration.
  *
  * Environment variables:
- *   SELLF_API_KEY - Required: API key for Sellf v1 API (gf_live_xxx or gf_test_xxx)
+ *   SELLF_API_KEY - Required: API key for Sellf v1 API (sf_live_xxx or sf_test_xxx)
  *   SELLF_API_URL - Required: Base URL for Sellf API (e.g., https://demo.sellf.app)
  */
 

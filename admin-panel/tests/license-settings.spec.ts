@@ -110,7 +110,7 @@ test.describe('License Settings', () => {
     const licenseHeading = page.locator('h2', { hasText: /Sellf License|Licencja Sellf/i });
     await expect(licenseHeading).toBeVisible({ timeout: 10000 });
 
-    // Should see license key input (placeholder contains "GF-" prefix)
+    // Should see license key input (placeholder contains "SF-" prefix)
     const licenseInput = page.locator('input[placeholder*="SF-"]');
     await expect(licenseInput).toBeVisible();
 

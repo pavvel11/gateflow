@@ -1130,8 +1130,8 @@ All endpoints require authentication using an API key. You can create API keys i
 ### Using API Key
 
 Include your API key in either:
-- Header: \`X-API-Key: gf_live_xxx...\`
-- Bearer token: \`Authorization: Bearer gf_live_xxx...\`
+- Header: \`X-API-Key: sf_live_xxx...\`
+- Bearer token: \`Authorization: Bearer sf_live_xxx...\`
 
 ### Scopes
 
