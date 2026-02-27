@@ -25,6 +25,14 @@ export interface CheckoutConfig {
     collect_terms: ConfigSource
     payment_methods: ConfigSource
   }
+  envExists: {
+    automatic_tax: boolean
+    tax_id_collection: boolean
+    billing_address_collection: boolean
+    expires_hours: boolean
+    collect_terms: boolean
+    payment_methods: boolean
+  }
 }
 
 /** Backwards-compatible alias */
@@ -37,14 +45,15 @@ function resolveNullable<T>(
   envVar: string | undefined,
   envParsed: T,
   defaultValue: T,
-): { value: T; source: ConfigSource } {
+): { value: T; source: ConfigSource; envExists: boolean } {
+  const envExists = !!envVar
   if (dbValue !== null && dbValue !== undefined) {
-    return { value: dbValue, source: 'db' }
+    return { value: dbValue, source: 'db', envExists }
   }
   if (envVar) {
-    return { value: envParsed, source: 'env' }
+    return { value: envParsed, source: 'env', envExists }
   }
-  return { value: defaultValue, source: 'default' }
+  return { value: defaultValue, source: 'default', envExists }
 }
 
 /**
@@ -100,7 +109,8 @@ export async function getCheckoutConfig(): Promise<CheckoutConfig> {
   let paymentMethodMode: PaymentConfigMode = 'custom'
   let paymentMethodTypes: string[] = [...STRIPE_CONFIG.payment_method_types]
   let stripePresetId: string | null | undefined = undefined
-  let pmSource: ConfigSource = process.env.STRIPE_PAYMENT_METHODS ? 'env' : 'default'
+  const pmEnvExists = !!process.env.STRIPE_PAYMENT_METHODS
+  let pmSource: ConfigSource = pmEnvExists ? 'env' : 'default'
 
   if (pmConfig) {
     paymentMethodMode = pmConfig.config_mode
@@ -136,6 +146,14 @@ export async function getCheckoutConfig(): Promise<CheckoutConfig> {
       expires_hours: expires.source,
       collect_terms: collectTerms.source,
       payment_methods: pmSource,
+    },
+    envExists: {
+      automatic_tax: autoTax.envExists,
+      tax_id_collection: taxId.envExists,
+      billing_address_collection: billing.envExists,
+      expires_hours: expires.envExists,
+      collect_terms: collectTerms.envExists,
+      payment_methods: pmEnvExists,
     },
   }
 }

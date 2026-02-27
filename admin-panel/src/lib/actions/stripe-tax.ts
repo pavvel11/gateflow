@@ -1,7 +1,7 @@
 'use server'
 
 import { getStripeServer } from '@/lib/stripe/server'
-import { getCheckoutConfig, type CheckoutConfig } from '@/lib/stripe/checkout-config'
+import { getCheckoutConfig, type CheckoutConfig, type ConfigSource } from '@/lib/stripe/checkout-config'
 import Stripe from 'stripe'
 
 export type TaxStatusValue =
@@ -107,6 +107,30 @@ export async function getCheckoutConfigAction(): Promise<CheckoutConfigResponse>
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to resolve checkout config',
+    }
+  }
+}
+
+export type PaymentMethodSourceResponse = {
+  success: boolean
+  data?: { source: ConfigSource; envExists: boolean }
+  error?: string
+}
+
+export async function getPaymentMethodSourceAction(): Promise<PaymentMethodSourceResponse> {
+  try {
+    const config = await getCheckoutConfig()
+    return {
+      success: true,
+      data: {
+        source: config.sources.payment_methods,
+        envExists: config.envExists.payment_methods,
+      },
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to resolve payment method source',
     }
   }
 }

@@ -14,6 +14,7 @@ import type { ConfigSource } from '@/lib/stripe/checkout-config'
 import { getShopConfig, updateShopConfig } from '@/lib/actions/shop-config'
 import { useToast } from '@/contexts/ToastContext'
 import { useTranslations } from 'next-intl'
+import SourceBadge from '@/components/ui/SourceBadge'
 
 const COUNTRY_NAMES: Record<string, string> = {
   US: 'United States', GB: 'United Kingdom', DE: 'Germany', FR: 'France',
@@ -44,25 +45,6 @@ const DASHBOARD_LINKS = [
   { key: 'taxRegistrations', url: 'https://dashboard.stripe.com/tax/registrations' },
   { key: 'taxReports', url: 'https://dashboard.stripe.com/tax/reporting' },
 ] as const
-
-function SourceBadge({ source }: { source: ConfigSource }) {
-  const t = useTranslations('settings.stripeTax.toggles')
-  const styles: Record<ConfigSource, string> = {
-    db: 'bg-gf-accent-soft text-gf-accent',
-    env: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-    default: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400',
-  }
-  const labels: Record<ConfigSource, string> = {
-    db: t('sourceDb'),
-    env: t('sourceEnv'),
-    default: t('sourceDefault'),
-  }
-  return (
-    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${styles[source]}`}>
-      {labels[source]}
-    </span>
-  )
-}
 
 function Toggle({
   enabled,
@@ -113,6 +95,13 @@ export default function StripeTaxSettings() {
     expires_hours: 'default' as ConfigSource,
     collect_terms: 'default' as ConfigSource,
   })
+  const [envExists, setEnvExists] = useState({
+    automatic_tax: false,
+    tax_id_collection: false,
+    billing_address_collection: false,
+    expires_hours: false,
+    collect_terms: false,
+  })
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -127,7 +116,7 @@ export default function StripeTaxSettings() {
         if (statusResult.success && statusResult.data) {
           setTaxStatus(statusResult.data)
         } else {
-          setError(statusResult.error || 'Unknown error')
+          setError(statusResult.error || t('unknownError'))
         }
 
         if (configResult.success && configResult.data) {
@@ -142,6 +131,13 @@ export default function StripeTaxSettings() {
             billing_address_collection: configResult.data.sources.billing_address_collection,
             expires_hours: configResult.data.sources.expires_hours,
             collect_terms: configResult.data.sources.collect_terms,
+          })
+          setEnvExists({
+            automatic_tax: configResult.data.envExists.automatic_tax,
+            tax_id_collection: configResult.data.envExists.tax_id_collection,
+            billing_address_collection: configResult.data.envExists.billing_address_collection,
+            expires_hours: configResult.data.envExists.expires_hours,
+            collect_terms: configResult.data.envExists.collect_terms,
           })
         }
       } catch (err) {
@@ -371,7 +367,7 @@ export default function StripeTaxSettings() {
               <p className="text-sm font-medium text-gray-900 dark:text-white">
                 {t('toggles.automaticTax')}
               </p>
-              <SourceBadge source={sources.automatic_tax} />
+              <SourceBadge source={sources.automatic_tax} envAlsoSet={envExists.automatic_tax} />
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400">
               {t('toggles.automaticTaxDescription')}
@@ -391,7 +387,7 @@ export default function StripeTaxSettings() {
               <p className="text-sm font-medium text-gray-900 dark:text-white">
                 {t('toggles.taxIdCollection')}
               </p>
-              <SourceBadge source={sources.tax_id_collection} />
+              <SourceBadge source={sources.tax_id_collection} envAlsoSet={envExists.tax_id_collection} />
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400">
               {t('toggles.taxIdCollectionDescription')}
@@ -411,7 +407,7 @@ export default function StripeTaxSettings() {
               <p className="text-sm font-medium text-gray-900 dark:text-white">
                 {t('toggles.billingAddress')}
               </p>
-              <SourceBadge source={sources.billing_address_collection} />
+              <SourceBadge source={sources.billing_address_collection} envAlsoSet={envExists.billing_address_collection} />
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400">
               {t('toggles.billingAddressDescription')}
@@ -442,7 +438,7 @@ export default function StripeTaxSettings() {
               <p className="text-sm font-medium text-gray-900 dark:text-white">
                 {t('toggles.expiresHours')}
               </p>
-              <SourceBadge source={sources.expires_hours} />
+              <SourceBadge source={sources.expires_hours} envAlsoSet={envExists.expires_hours} />
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400">
               {t('toggles.expiresHoursDescription')}
@@ -474,7 +470,7 @@ export default function StripeTaxSettings() {
               <p className="text-sm font-medium text-gray-900 dark:text-white">
                 {t('toggles.collectTerms')}
               </p>
-              <SourceBadge source={sources.collect_terms} />
+              <SourceBadge source={sources.collect_terms} envAlsoSet={envExists.collect_terms} />
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400">
               {t('toggles.collectTermsDescription')}

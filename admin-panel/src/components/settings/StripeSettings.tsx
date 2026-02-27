@@ -1,32 +1,34 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Shield, ExternalLink, Settings, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Shield, ExternalLink, Settings, CheckCircle2, AlertCircle, Info } from 'lucide-react'
 import { StripeConfigWizard } from '@/components/stripe/StripeConfigWizard'
 import { listStripeConfigs } from '@/lib/actions/stripe-config'
-import { isUsingEnvConfig } from '@/lib/stripe/server'
+import { getStripeKeySource } from '@/lib/stripe/server'
+import type { StripeKeySource } from '@/lib/stripe/server'
 import type { StripeConfiguration } from '@/types/stripe-config'
 import { useTranslations } from 'next-intl'
+import SourceBadge from '@/components/ui/SourceBadge'
 
 export default function StripeSettings() {
   const t = useTranslations('settings.stripe')
   const [isWizardOpen, setIsWizardOpen] = useState(false)
   const [configs, setConfigs] = useState<StripeConfiguration[]>([])
-  const [usingEnv, setUsingEnv] = useState(false)
+  const [keySource, setKeySource] = useState<StripeKeySource>({ activeSource: 'none', dbConfigured: false, envConfigured: false })
   const [loading, setLoading] = useState(true)
 
   const loadConfigs = async () => {
     setLoading(true)
     try {
-      const [configsResult, envConfigStatus] = await Promise.all([
+      const [configsResult, sourceResult] = await Promise.all([
         listStripeConfigs(),
-        isUsingEnvConfig(),
+        getStripeKeySource(),
       ])
 
       if (configsResult.success && configsResult.data) {
         setConfigs(configsResult.data)
       }
-      setUsingEnv(envConfigStatus)
+      setKeySource(sourceResult)
     } catch (error) {
       console.error('Failed to load Stripe configs:', error)
     } finally {
@@ -56,9 +58,15 @@ export default function StripeSettings() {
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              {t('title')}
-            </h2>
+            <div className="flex items-center gap-2 mb-2">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                {t('title')}
+              </h2>
+              <SourceBadge
+                source={keySource.activeSource === 'none' ? 'default' : keySource.activeSource}
+                envAlsoSet={keySource.activeSource === 'db' && keySource.envConfigured}
+              />
+            </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {t('subtitle')}
             </p>
@@ -67,7 +75,23 @@ export default function StripeSettings() {
         </div>
 
         {/* Configuration Method Info Banner */}
-        {usingEnv ? (
+        {keySource.activeSource === 'none' && (
+          <div className="mb-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <Info className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                  {t('currentMethod.notConfigured.title')}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  {t('currentMethod.notConfigured.description')}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {keySource.activeSource === 'env' && (
           <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
@@ -84,7 +108,9 @@ export default function StripeSettings() {
               </div>
             </div>
           </div>
-        ) : activeConfigs.length > 0 ? (
+        )}
+
+        {keySource.activeSource === 'db' && activeConfigs.length > 0 && (
           <div className="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
             <div className="flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
@@ -95,25 +121,45 @@ export default function StripeSettings() {
                 <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
                   {t('currentMethod.database.description')}
                 </p>
-                <div className="space-y-2">
+                <div className="space-y-3 mt-3">
                   {activeConfigs.map((config) => (
                     <div
                       key={config.id}
-                      className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400"
+                      className="bg-white/50 dark:bg-gray-800/50 rounded-md p-3 border border-green-200/50 dark:border-green-800/50"
                     >
-                      <span
-                        className={`px-2 py-0.5 rounded-full font-medium ${
-                          config.mode === 'test'
-                            ? 'bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-200'
-                            : 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200'
-                        }`}
-                      >
-                        {config.mode === 'test' ? '🧪 Test' : '🚀 Live'}
-                      </span>
-                      <span className="font-mono">{config.key_prefix}****{config.key_last_4}</span>
-                      {config.permissions_verified && (
-                        <span className="text-green-600 dark:text-green-400">✓ Verified</span>
-                      )}
+                      <div className="flex items-center gap-3 mb-1">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            config.mode === 'test'
+                              ? 'bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-200'
+                              : 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200'
+                          }`}
+                        >
+                          {t(`mode.${config.mode}`)}
+                        </span>
+                        <span className="font-mono text-xs text-gray-700 dark:text-gray-300">{config.key_prefix}****{config.key_last_4}</span>
+                        {config.permissions_verified && (
+                          <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" />
+                            {t('verified')}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {config.account_id && <span>{t('account')}: {config.account_id}</span>}
+                        {config.account_id && ' · '}
+                        {t('created')}: {new Date(config.created_at).toLocaleDateString()}
+                        {config.expires_at && (
+                          <span>
+                            {' · '}{t('rotationReminder')}: {new Date(config.expires_at).toLocaleDateString()}
+                            {new Date(config.expires_at) < new Date() && (
+                              <span className="ml-1 text-amber-600 dark:text-amber-400 font-medium">
+                                ({t('rotationOverdue', { defaultValue: 'overdue' })})
+                              </span>
+                            )}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -122,60 +168,6 @@ export default function StripeSettings() {
                 </p>
               </div>
             </div>
-          </div>
-        ) : null}
-
-        {/* Active Configurations */}
-        {activeConfigs.length > 0 && (
-          <div className="mb-6 space-y-3">
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {t('activeConfigs')}
-            </h3>
-            {activeConfigs.map((config) => (
-              <div
-                key={config.id}
-                className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span
-                        className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                          config.mode === 'test'
-                            ? 'bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-200'
-                            : 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200'
-                        }`}
-                      >
-                        {t(`mode.${config.mode}`)}
-                      </span>
-                      {config.permissions_verified && (
-                        <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          {t('verified')}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm font-mono text-gray-700 dark:text-gray-300">
-                      {config.key_prefix}****{config.key_last_4}
-                    </p>
-                    {config.account_id && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {t('account')}: {config.account_id}
-                      </p>
-                    )}
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {t('created')}: {new Date(config.created_at).toLocaleDateString()}
-                      {config.expires_at && (
-                        <span className="ml-2">
-                          • {t('rotationReminder')}:{' '}
-                          {new Date(config.expires_at).toLocaleDateString()}
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
           </div>
         )}
 

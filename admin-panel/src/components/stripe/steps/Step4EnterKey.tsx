@@ -195,13 +195,13 @@ export function Step4EnterKey() {
               <li>
                 <strong>Restricted Key (rk_*):</strong>{' '}
                 {t('keyTypeInfo.restricted', {
-                  defaultValue: 'More secure, limited permissions. Recommended for production. Requires STRIPE_SECRET_KEY in .env for full functionality.',
+                  defaultValue: 'More secure — only grants permissions GateFlow needs. Recommended for production.',
                 })}
               </li>
               <li>
                 <strong>Secret Key (sk_*):</strong>{' '}
                 {t('keyTypeInfo.secret', {
-                  defaultValue: 'Full access, single key setup. Easier to configure but less secure if leaked. Use for development or if you prefer single-key setup.',
+                  defaultValue: 'Full API access. Easier to set up, but less secure if leaked. Fine for development.',
                 })}
               </li>
             </ul>
@@ -349,7 +349,7 @@ export function Step4EnterKey() {
                   })
                 ) : keyType === 'restricted' ? (
                   t('success.descriptionRestricted', {
-                    defaultValue: 'Your Restricted Key has been verified. Remember to set STRIPE_SECRET_KEY in .env for full payment functionality.',
+                    defaultValue: 'Your Restricted Key has been verified with all required permissions.',
                   })
                 ) : (
                   t('success.description', {

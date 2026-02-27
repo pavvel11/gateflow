@@ -26,7 +26,9 @@ import {
   refreshStripePaymentMethodConfigs,
   resetToRecommendedConfig,
 } from '@/lib/actions/payment-config';
+import { getPaymentMethodSourceAction } from '@/lib/actions/stripe-tax';
 import { getAvailablePaymentMethods, KNOWN_PAYMENT_METHODS } from '@/lib/stripe/payment-method-configs';
+import SourceBadge from '@/components/ui/SourceBadge';
 import type {
   PaymentMethodConfig,
   PaymentConfigMode,
@@ -34,6 +36,7 @@ import type {
   StripePaymentMethodConfig,
   PaymentMethodInfo,
 } from '@/types/payment-config';
+import type { ConfigSource } from '@/lib/stripe/checkout-config';
 import { RefreshCw, AlertTriangle, Check, GripVertical, RotateCcw, ChevronDown, ChevronRight, Plus, Trash2, X } from 'lucide-react';
 
 export default function PaymentMethodSettings() {
@@ -57,6 +60,8 @@ export default function PaymentMethodSettings() {
   const [enableLink, setEnableLink] = useState(true);
   const [currencyOverrides, setCurrencyOverrides] = useState<Record<string, string[]>>({});
   const [showCurrencyOverrides, setShowCurrencyOverrides] = useState(false);
+  const [pmSource, setPmSource] = useState<ConfigSource>('default');
+  const [pmEnvExists, setPmEnvExists] = useState(false);
 
   // Stripe PMCs
   const [stripePmcs, setStripePmcs] = useState<StripePaymentMethodConfig[]>([]);
@@ -76,7 +81,15 @@ export default function PaymentMethodSettings() {
   async function loadConfig() {
     try {
       setLoading(true);
-      const config = await getPaymentMethodConfig();
+      const [config, sourceResult] = await Promise.all([
+        getPaymentMethodConfig(),
+        getPaymentMethodSourceAction(),
+      ]);
+
+      if (sourceResult.success && sourceResult.data) {
+        setPmSource(sourceResult.data.source);
+        setPmEnvExists(sourceResult.data.envExists);
+      }
 
       if (config) {
         setConfigMode(config.config_mode);
@@ -88,8 +101,13 @@ export default function PaymentMethodSettings() {
         setEnableApplePay(config.enable_apple_pay);
         setEnableGooglePay(config.enable_google_pay);
         setEnableLink(config.enable_link);
-        setCurrencyOverrides(config.currency_overrides || {});
-        setShowCurrencyOverrides(Object.keys(config.currency_overrides || {}).length > 0);
+        const rawOverrides = config.currency_overrides || {};
+        const safeOverrides: Record<string, string[]> = {};
+        for (const [k, v] of Object.entries(rawOverrides)) {
+          if (Array.isArray(v)) safeOverrides[k] = v;
+        }
+        setCurrencyOverrides(safeOverrides);
+        setShowCurrencyOverrides(Object.keys(safeOverrides).length > 0);
 
         // Initialize custom payment methods if empty
         if (config.config_mode === 'custom' && config.custom_payment_methods.length === 0) {
@@ -187,6 +205,7 @@ export default function PaymentMethodSettings() {
       });
 
       if (result.success) {
+        setPmSource('db');
         addToast(t('paymentMethods.messages.saveSuccess'), 'success');
       } else {
         addToast(result.error || t('paymentMethods.messages.saveError'), 'error');
@@ -427,8 +446,9 @@ export default function PaymentMethodSettings() {
 
       {/* Configuration Mode Selector */}
       <div className="mb-8">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
           {t('paymentMethods.mode.label')}
+          <SourceBadge source={pmSource} envAlsoSet={pmEnvExists} />
         </label>
         <div className="space-y-3">
           {/* Automatic Mode */}
@@ -748,7 +768,7 @@ export default function PaymentMethodSettings() {
             </div>
 
             {/* Currency Override Cards */}
-            {Object.entries(currencyOverrides).map(([currency, order]) => (
+            {Object.entries(currencyOverrides).filter(([, order]) => Array.isArray(order)).map(([currency, order]) => (
               <div key={currency} className="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg">
                 <div className="flex items-center justify-between mb-3">
                   <span className="font-medium text-gray-900 dark:text-white flex items-center gap-2">

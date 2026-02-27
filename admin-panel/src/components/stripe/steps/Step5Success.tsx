@@ -87,12 +87,12 @@ export function Step5Success({ onComplete }: Step5SuccessProps) {
             <RotateCcw className="w-5 h-5 text-gray-600 dark:text-gray-400 mt-0.5 flex-shrink-0" />
             <div className="text-left">
               <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
-                {t('rotation.title', { defaultValue: 'Rotation Reminder Set' })}
+                {t('rotation.title', { defaultValue: 'Key Rotation' })}
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 {t('rotation.description', {
                   defaultValue:
-                    "You'll receive a reminder in 90 days to rotate your API key as a security best practice.",
+                    'We recommend rotating your API key every 90 days as a security best practice. You can do this anytime from Settings.',
                 })}
               </p>
             </div>
@@ -165,24 +165,14 @@ export function Step5Success({ onComplete }: Step5SuccessProps) {
         </div>
       )}
 
-      {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+      {/* Action Button */}
+      <div className="flex justify-center">
         <button
           onClick={onComplete}
           className="px-8 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
         >
           {t('doneButton', { defaultValue: 'Done' })}
         </button>
-
-        <a
-          href="https://dashboard.stripe.com/settings/billing"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-2 px-8 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-        >
-          {t('stripeButton', { defaultValue: 'Open Stripe Dashboard' })}
-          <ExternalLink className="w-4 h-4" />
-        </a>
       </div>
 
       {/* Fine Print */}

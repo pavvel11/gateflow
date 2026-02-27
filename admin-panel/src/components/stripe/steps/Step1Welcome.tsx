@@ -106,12 +106,12 @@ export function Step1Welcome() {
           <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
           <div>
             <p className="text-sm font-medium text-gray-900 dark:text-white">
-              {t('benefits.rotation.title', { defaultValue: 'Key Rotation Reminders' })}
+              {t('benefits.rotation.title', { defaultValue: 'Key Rotation Tracking' })}
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {t('benefits.rotation.description', {
                 defaultValue:
-                  'Get reminded every 90 days to rotate your keys for security best practices.',
+                  'Tracks when your key was created so you know when to rotate it (recommended every 90 days).',
               })}
             </p>
           </div>
