@@ -78,9 +78,9 @@ CREATE TABLE IF NOT EXISTS products (
   CONSTRAINT check_availability_dates CHECK (available_from IS NULL OR available_until IS NULL OR available_from < available_until) -- Available from must be before available until
 );
 
-COMMENT ON TABLE products IS 'Products catalog with gatekeeper integration support';
-COMMENT ON COLUMN products.slug IS 'URL-safe unique identifier for gatekeeper system';
-COMMENT ON COLUMN products.content_config IS 'JSON configuration for content delivery and gatekeeper integration';
+COMMENT ON TABLE products IS 'Products catalog with sellf integration support';
+COMMENT ON COLUMN products.slug IS 'URL-safe unique identifier for sellf system';
+COMMENT ON COLUMN products.content_config IS 'JSON configuration for content delivery and sellf integration';
 COMMENT ON COLUMN products.tenant_id IS 'Multi-tenant support - allows product isolation by tenant';
 
 -- Create variant_groups table to store variant group metadata

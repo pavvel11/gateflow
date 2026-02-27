@@ -136,7 +136,7 @@ export function FeeComparisonSection() {
         <Reveal animation="scale" delay={200}>
           <div className="bg-gf-success-soft border border-gf-success/20 rounded-xl p-6 text-center mt-8">
             <p className="text-lg font-semibold text-gf-success">
-              {t('feeComparison.youSave', { amount: fmt.format(monthlySavings) })} {t('feeComparison.perMonth')}
+              {t('feeComparison.youSave', { amount: fmt.format(monthlySavings) })}
             </p>
             <p className="text-2xl font-bold text-gf-success mt-2">
               {t('feeComparison.annualSavings', { amount: fmt.format(annualSavings) })}

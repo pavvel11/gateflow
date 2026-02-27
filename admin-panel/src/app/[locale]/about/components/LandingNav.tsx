@@ -55,7 +55,7 @@ export function LandingNav() {
           </Link>
 
           {/* Desktop nav */}
-          <div className="hidden md:flex md:items-center md:gap-6">
+          <div className="hidden lg:flex lg:items-center lg:gap-6">
             {navLinks.map((link) =>
               link.external ? (
                 <a
@@ -98,7 +98,7 @@ export function LandingNav() {
           </div>
 
           {/* Mobile: language switcher + hamburger */}
-          <div className="flex items-center gap-3 md:hidden">
+          <div className="flex items-center gap-3 lg:hidden">
             <ThemeToggleButton size="sm" />
             <FloatingLanguageSwitcher mode="static" variant="compact" />
             <button
@@ -126,7 +126,7 @@ export function LandingNav() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="md:hidden border-t border-gf-border bg-gf-raised/95 backdrop-blur-xl overflow-hidden"
+            className="lg:hidden border-t border-gf-border bg-gf-raised/95 backdrop-blur-xl overflow-hidden"
           >
             <div className="space-y-1 px-4 py-3">
               {navLinks.map((link) =>
