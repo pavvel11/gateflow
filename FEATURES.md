@@ -236,7 +236,7 @@
 - **Graceful degradation** - Functioning during API errors
 
 ### JavaScript SDK
-- **gatekeeper.js** - Dynamic script for protection
+- **sellf.js** - Dynamic script for protection
 - **License validation** - Sellf license verification
 - **Auto-detection** - Automatic detection of protected elements
 

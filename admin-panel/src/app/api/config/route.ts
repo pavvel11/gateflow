@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
       customDomain
     });
 
-    // CORS headers — config.js is loaded cross-origin by gatekeeper but without credentials
+    // CORS headers — config.js is loaded cross-origin by sellf but without credentials
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL;
     const requestOrigin = request.headers.get('origin');
     const corsHeaders = {

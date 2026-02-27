@@ -342,7 +342,7 @@ test.describe('Comprehensive Gatekeeper Protection Tests', () => {
       await expect(page.locator('[data-testid="public-section"]')).toBeVisible();
       await expect(page.locator('[data-testid="public-text"]')).toContainText('visible to everyone');
 
-      // Wait for gatekeeper to process
+      // Wait for sellf to process
       await page.waitForTimeout(3000);
 
       // Protected content should be hidden, fallback should be visible
@@ -370,7 +370,7 @@ test.describe('Comprehensive Gatekeeper Protection Tests', () => {
       // Public content always visible
       await expect(page.locator('[data-testid="public-section"]')).toBeVisible();
 
-      // Wait for gatekeeper to process
+      // Wait for sellf to process
       await page.waitForTimeout(3000);
 
       // Protected content should be VISIBLE, fallback should be HIDDEN
@@ -438,8 +438,8 @@ test.describe('Comprehensive Gatekeeper Protection Tests', () => {
       // Verify both sections got their respective product slugs
       const section1 = page.locator('#protected-section');
       const section2 = page.locator('#protected-section-2');
-      await expect(section1).toHaveAttribute('data-gatekeeper-product', paidProduct.slug);
-      await expect(section2).toHaveAttribute('data-gatekeeper-product', vipProduct.slug);
+      await expect(section1).toHaveAttribute('data-sellf-product', paidProduct.slug);
+      await expect(section2).toHaveAttribute('data-sellf-product', vipProduct.slug);
 
       // Section 1 (paid): user HAS access → has-access-content should be visible or present
       const paidHasAccess = page.locator('[data-testid="has-access-content"]');
@@ -451,10 +451,10 @@ test.describe('Comprehensive Gatekeeper Protection Tests', () => {
       expect(await section1.count()).toBe(1);
       expect(await section2.count()).toBe(1);
 
-      // If gatekeeper processed: paid content visible, vip content hidden
-      // If gatekeeper didn't load: both sections present in default (unprocessed) state
-      const gatekeeperLoaded = await section1.evaluate(el => el.classList.contains('gatekeeper-processed')).catch(() => false);
-      if (gatekeeperLoaded) {
+      // If sellf processed: paid content visible, vip content hidden
+      // If sellf did not load: both sections present in default (unprocessed) state
+      const sellfLoaded = await section1.evaluate(el => el.classList.contains('sellf-processed')).catch(() => false);
+      if (sellfLoaded) {
         await expect(paidHasAccess).toBeVisible();
         await expect(vipHasAccess).toBeHidden();
       } else {
@@ -482,8 +482,8 @@ test.describe('Comprehensive Gatekeeper Protection Tests', () => {
       // Verify both sections got their respective product slugs
       const section1 = page.locator('#protected-section');
       const section2 = page.locator('#protected-section-2');
-      await expect(section1).toHaveAttribute('data-gatekeeper-product', paidProduct.slug);
-      await expect(section2).toHaveAttribute('data-gatekeeper-product', vipProduct.slug);
+      await expect(section1).toHaveAttribute('data-sellf-product', paidProduct.slug);
+      await expect(section2).toHaveAttribute('data-sellf-product', vipProduct.slug);
 
       // Section 1 (paid): user does NOT have access
       const paidHasAccess = page.locator('[data-testid="has-access-content"]');
@@ -495,9 +495,9 @@ test.describe('Comprehensive Gatekeeper Protection Tests', () => {
       expect(await section1.count()).toBe(1);
       expect(await section2.count()).toBe(1);
 
-      // If gatekeeper processed: vip content visible, paid content hidden
-      const gatekeeperLoaded = await section2.evaluate(el => el.classList.contains('gatekeeper-processed')).catch(() => false);
-      if (gatekeeperLoaded) {
+      // If sellf processed: vip content visible, paid content hidden
+      const sellfLoaded = await section2.evaluate(el => el.classList.contains('sellf-processed')).catch(() => false);
+      if (sellfLoaded) {
         await expect(paidHasAccess).toBeHidden();
         await expect(vipHasAccess).toBeVisible();
       } else {
@@ -625,14 +625,14 @@ test.describe('Comprehensive Gatekeeper Protection Tests', () => {
       expect(response?.status()).toBeLessThan(500);
     });
 
-    test('Element protection with no data-gatekeeper-product elements does nothing', async ({ page }) => {
+    test('Element protection with no data-sellf-product elements does nothing', async ({ page }) => {
       // Create a simple page without protected elements
       await page.setContent(`
         <!DOCTYPE html>
         <html>
         <body>
           <div id="public-content">Public content</div>
-          <script src="${NEXT_JS_URL}/api/gatekeeper"></script>
+          <script src="${NEXT_JS_URL}/api/sellf"></script>
         </body>
         </html>
       `);

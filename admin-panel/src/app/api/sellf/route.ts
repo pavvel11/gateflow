@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { GatekeeperGenerator } from '@/lib/gatekeeper-generator'
+import { SellfGenerator } from '@/lib/sellf-generator'
 import { createClient } from '@supabase/supabase-js'
 import { MemoryCache, handleConditionalRequest, createScriptResponse } from '@/lib/script-cache'
 import { validateLicense as verifyLicense, extractDomainFromUrl } from '@/lib/license/verify'
@@ -89,11 +89,11 @@ export async function OPTIONS(request: Request) {
 }
 
 /**
- * Serve the gatekeeper.js file with dynamic Supabase configuration
+ * Serve the sellf.js file with dynamic Supabase configuration
  *
  * Performance optimizations:
  * - License check cached for 5 minutes (avoids DB query on every request)
- * - Script generation cached for 1 hour (in GatekeeperGenerator)
+ * - Script generation cached for 1 hour (in SellfGenerator)
  * - HTTP caching with ETag support (304 Not Modified responses)
  * - Stale-while-revalidate for better UX
  */
@@ -127,7 +127,7 @@ export async function GET(request: Request) {
 
     // Clear cache if requested
     if (clearCache) {
-      GatekeeperGenerator.clearCache();
+      SellfGenerator.clearCache();
       clearLicenseCache();
     }
 
@@ -145,7 +145,7 @@ export async function GET(request: Request) {
     const mainDomain = process.env.MAIN_DOMAIN ||
                       (process.env.NODE_ENV === 'development' ? 'localhost:3000' : request.headers.get('host') || 'localhost:3000');
 
-    // Generate the gatekeeper script using the new generator
+    // Generate the sellf script using the new generator
     const config = {
       supabaseUrl,
       supabaseAnonKey,
@@ -159,7 +159,7 @@ export async function GET(request: Request) {
       debugMode: process.env.NODE_ENV === 'development',
     };
 
-    const generatedResult = await GatekeeperGenerator.generateScript(config);
+    const generatedResult = await SellfGenerator.generateScript(config);
 
     // CORS headers
     const corsHeaders = {
@@ -181,9 +181,9 @@ export async function GET(request: Request) {
       'X-License-Cached': licenseCache.size > 0 ? 'true' : 'false',
     })
   } catch (error) {
-    console.error('Error serving gatekeeper.js:', error)
+    console.error('Error serving sellf.js:', error)
     return NextResponse.json(
-      { error: 'Failed to serve gatekeeper.js' },
+      { error: 'Failed to serve sellf.js' },
       {
         status: 500,
         headers: {

@@ -11,7 +11,7 @@
  * • Robust error handling and security measures
  * 
  * 📋 USAGE:
- * Served dynamically via /api/gatekeeper endpoint
+ * Served dynamically via /api/sellf endpoint
  * Configuration automatically injected by GatekeeperGenerator
  * 
  * 📄 LICENSE: Freemium - Free with watermark, $49/domain/year for removal
@@ -282,35 +282,35 @@ class I18n {
     style.id = 'sellf-critical-css';
     style.textContent = `
         /* Hide protected content until processed */
-        [data-gatekeeper-product] {
+        [data-sellf-product] {
             visibility: hidden !important;
             opacity: 0 !important;
         }
-        [data-gatekeeper-product].gatekeeper-processed {
+        [data-sellf-product].sellf-processed {
             visibility: visible !important;
             opacity: 1 !important;
             transition: opacity 0.3s ease;
         }
         /* Hide has-access content by default (show only after check) */
-        [data-gatekeeper-product] [data-has-access] {
+        [data-sellf-product] [data-has-access] {
             display: none !important;
         }
         /* Show no-access content by default */
-        [data-gatekeeper-product] [data-no-access] {
+        [data-sellf-product] [data-no-access] {
             display: block !important;
         }
         /* After processing - flip visibility for users WITH access */
-        [data-gatekeeper-product].gatekeeper-has-access [data-has-access] {
+        [data-sellf-product].sellf-has-access [data-has-access] {
             display: block !important;
         }
-        [data-gatekeeper-product].gatekeeper-has-access [data-no-access] {
+        [data-sellf-product].sellf-has-access [data-no-access] {
             display: none !important;
         }
         /* After processing - keep no-access visible for users WITHOUT access */
-        [data-gatekeeper-product].gatekeeper-no-access [data-has-access] {
+        [data-sellf-product].sellf-no-access [data-has-access] {
             display: none !important;
         }
-        [data-gatekeeper-product].gatekeeper-no-access [data-no-access] {
+        [data-sellf-product].sellf-no-access [data-no-access] {
             display: block !important;
         }
     `;
@@ -513,7 +513,7 @@ class Analytics {
     }
     
     static getConfig() {
-        return window.gatekeeperConfig || {};
+        return window.sellfConfig || {};
     }
 }
 
@@ -535,7 +535,7 @@ class LicenseManager {
      * Verify license and update status
      */
     static async checkLicense() {
-        const config = window.gatekeeperConfig || {};
+        const config = window.sellfConfig || {};
         const licenseKey = config.sellfLicense;
 
         if (!licenseKey) {
@@ -996,7 +996,7 @@ class UITemplates {
     }
 
     static getTheme() {
-        return window.gatekeeperConfig?.theme || 'default';
+        return window.sellfConfig?.theme || 'default';
     }
     
     static getThemeColors(theme = 'default') {
@@ -1061,7 +1061,7 @@ class UITemplates {
     
     static getErrorTemplate(error, productSlug = '') {
         const theme = this.getThemeColors(this.getTheme());
-        const config = window.gatekeeperConfig || {};
+        const config = window.sellfConfig || {};
         const isDev = config.development || window.location.hostname === 'localhost';
 
         return `
@@ -1109,7 +1109,7 @@ class UITemplates {
         <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px;">
             <div style="width: 100%; max-width: 400px; background: ${theme.background}; border-radius: 20px; border: ${theme.border}; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); overflow: hidden;">
                 <div style="padding: 40px;">
-                    <div id="gatekeeper-message-area" style="margin-bottom: 20px;"></div>
+                    <div id="sellf-message-area" style="margin-bottom: 20px;"></div>
 
                     <div style="text-align: center; margin-bottom: 32px;">
                         <div style="font-size: 64px; margin-bottom: 16px;">🔐</div>
@@ -1117,10 +1117,10 @@ class UITemplates {
                         <p style="color: ${theme.textColor}; opacity: 0.7; margin: 0; font-size: 16px;">${I18n.t('sign_in_to_access')}</p>
                     </div>
 
-                    <form id="gatekeeper-magic-link-form" style="margin-bottom: 24px;">
+                    <form id="sellf-magic-link-form" style="margin-bottom: 24px;">
                         <div style="margin-bottom: 20px;">
-                            <label for="gatekeeper-email" style="display: block; color: ${theme.textColor}; font-weight: 500; margin-bottom: 8px; font-size: 14px;">${I18n.t('email_address')}</label>
-                            <input type="email" id="gatekeeper-email" placeholder="${I18n.t('email_placeholder')}" required
+                            <label for="sellf-email" style="display: block; color: ${theme.textColor}; font-weight: 500; margin-bottom: 8px; font-size: 14px;">${I18n.t('email_address')}</label>
+                            <input type="email" id="sellf-email" placeholder="${I18n.t('email_placeholder')}" required
                                    style="width: 100%; padding: 12px 16px; border: 2px solid rgba(255,255,255,0.2); border-radius: 8px; background: rgba(255,255,255,0.1); color: ${theme.textColor}; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box;">
                         </div>
                         <button type="submit" style="width: 100%; padding: 14px; background: linear-gradient(135deg, ${theme.accentColor}, ${theme.accentColor}dd); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
@@ -1152,7 +1152,7 @@ class UITemplates {
  */
 class ErrorHandler {
     static handleError(error, context, productSlug = '') {
-        const config = window.gatekeeperConfig || {};
+        const config = window.sellfConfig || {};
         const fallbackMode = config.fallbackMode || CONSTANTS.FALLBACK_MODES.HIDE_ALL;
         const isDev = config.development || window.location.hostname === 'localhost';
         
@@ -1184,7 +1184,7 @@ class ErrorHandler {
     
     static showFreeContentOnly() {
         // Remove protected elements but keep data-no-access content
-        document.querySelectorAll('[data-gatekeeper-product]').forEach(el => {
+        document.querySelectorAll('[data-sellf-product]').forEach(el => {
             const noAccessElements = el.querySelectorAll('[data-no-access]');
             
             if (noAccessElements.length > 0) {
@@ -1194,7 +1194,7 @@ class ErrorHandler {
                     noAccessEl.removeAttribute('data-no-access');
                     el.appendChild(noAccessEl);
                 });
-                el.removeAttribute('data-gatekeeper-product');
+                el.removeAttribute('data-sellf-product');
             } else {
                 // No data-no-access elements found - remove the entire element
                 el.remove();
@@ -1204,7 +1204,7 @@ class ErrorHandler {
     
     static hideAllContent() {
         // Remove all protected content completely
-        document.querySelectorAll('[data-gatekeeper-product]').forEach(el => {
+        document.querySelectorAll('[data-sellf-product]').forEach(el => {
             el.remove();
         });
     }
@@ -1325,7 +1325,7 @@ class Sellf {
     
     async initializeComponents() {
         // Load configuration
-        this.config = window.gatekeeperConfig || {};
+        this.config = window.sellfConfig || {};
         
         // Load Supabase
         await this.loadSupabase();
@@ -1383,9 +1383,9 @@ class Sellf {
     }
     
     createSupabaseClient() {
-        // Try to get config from injected GATEKEEPER_CONFIG or fallback to window.gatekeeperConfig
+        // Try to get config from injected GATEKEEPER_CONFIG or fallback to window.sellfConfig
         const injectedConfig = typeof GATEKEEPER_CONFIG !== 'undefined' ? GATEKEEPER_CONFIG : {};
-        const windowConfig = window.gatekeeperConfig || {};
+        const windowConfig = window.sellfConfig || {};
         const config = { ...windowConfig, ...injectedConfig };
         
         // Check for Supabase configuration (injected by generator)
@@ -1433,7 +1433,7 @@ class Sellf {
         }
 
         // Check DOM for protected elements (CSS already hides them)
-        const protectedElements = document.querySelectorAll('[data-gatekeeper-product]');
+        const protectedElements = document.querySelectorAll('[data-sellf-product]');
 
         // Always use element protection if protected elements exist
         if (protectedElements.length > 0) {
@@ -1502,7 +1502,7 @@ class Sellf {
         if (hasAccess) {
             // User has access - show page content
             document.body.style.visibility = 'visible';
-            document.body.classList.add('gatekeeper-ready');
+            document.body.classList.add('sellf-ready');
 
             Analytics.track(CONSTANTS.EVENTS.ACCESS_GRANTED, {
                 product_slug: productSlug
@@ -1529,7 +1529,7 @@ class Sellf {
     }
 
     async protectElements() {
-        const protectedElements = document.querySelectorAll('[data-gatekeeper-product]');
+        const protectedElements = document.querySelectorAll('[data-sellf-product]');
 
         if (protectedElements.length === 0) {
             return;
@@ -1537,7 +1537,7 @@ class Sellf {
 
         // Get unique product slugs
         const productSlugs = [...new Set(
-            Array.from(protectedElements).map(el => el.dataset.gatekeeperProduct)
+            Array.from(protectedElements).map(el => el.dataset.sellfProduct)
         )];
 
         // Check access directly - server determines user from cookies
@@ -1551,13 +1551,13 @@ class Sellf {
 
         // Process each element - CSS hides initially, then we remove wrong content from DOM
         protectedElements.forEach(element => {
-            const productSlug = element.dataset.gatekeeperProduct;
+            const productSlug = element.dataset.sellfProduct;
             const hasAccess = accessResults[productSlug] || false;
 
             if (hasAccess) {
                 // User has access - remove no-access content from DOM entirely
                 element.querySelectorAll('[data-no-access]').forEach(el => el.remove());
-                element.classList.add('gatekeeper-has-access', 'gatekeeper-processed');
+                element.classList.add('sellf-has-access', 'sellf-processed');
                 Analytics.track(CONSTANTS.EVENTS.ELEMENT_ACCESSED, {
                     product_slug: productSlug,
                     element_tag: element.tagName.toLowerCase()
@@ -1565,7 +1565,7 @@ class Sellf {
             } else {
                 // User doesn't have access - remove has-access content from DOM entirely
                 element.querySelectorAll('[data-has-access]').forEach(el => el.remove());
-                element.classList.add('gatekeeper-no-access', 'gatekeeper-processed');
+                element.classList.add('sellf-no-access', 'sellf-processed');
                 Analytics.track(CONSTANTS.EVENTS.ELEMENT_PROTECTED, {
                     product_slug: productSlug,
                     element_tag: element.tagName.toLowerCase()
@@ -1661,16 +1661,16 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         sellf.initialize().catch(error => {
             // Fallback: show all protected elements with no-access state
-            document.querySelectorAll('[data-gatekeeper-product]').forEach(el => {
-                el.classList.add('gatekeeper-no-access', 'gatekeeper-processed');
+            document.querySelectorAll('[data-sellf-product]').forEach(el => {
+                el.classList.add('sellf-no-access', 'sellf-processed');
             });
         });
     });
 } else {
     sellf.initialize().catch(error => {
         // Fallback: show all protected elements with no-access state
-        document.querySelectorAll('[data-gatekeeper-product]').forEach(el => {
-            el.classList.add('gatekeeper-no-access', 'gatekeeper-processed');
+        document.querySelectorAll('[data-sellf-product]').forEach(el => {
+            el.classList.add('sellf-no-access', 'sellf-processed');
         });
     });
 }
@@ -1687,7 +1687,7 @@ window.addEventListener('beforeunload', () => {
 
 // Enhanced error handling for uncaught errors
 window.addEventListener('error', (event) => {
-    if (event.error?.stack?.includes('sellf') || event.error?.stack?.includes('gatekeeper')) {
+    if (event.error?.stack?.includes('sellf') || event.error?.stack?.includes('sellf')) {
         Analytics.track(CONSTANTS.EVENTS.ERROR, {
             error: event.error.message,
             context: 'global_error_handler',

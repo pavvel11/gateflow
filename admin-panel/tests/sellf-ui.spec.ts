@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 /**
  * Gatekeeper UI Protection Tests
  *
- * Tests the UI behavior of the gatekeeper protection system.
+ * Tests the UI behavior of the sellf protection system.
  *
  * Static server for test pages (examples/test-pages/) is started automatically
  * via playwright.config.ts webServer configuration on port 3002.
@@ -63,7 +63,7 @@ test.describe('Gatekeeper UI Protection Tests', () => {
         slug: `gk-ui-test-paid-${timestamp}`,
         price: 49.99,
         currency: 'USD',
-        description: 'Paid product for gatekeeper UI testing',
+        description: 'Paid product for sellf UI testing',
         is_active: true
       })
       .select()
@@ -80,7 +80,7 @@ test.describe('Gatekeeper UI Protection Tests', () => {
         slug: `gk-ui-test-free-${timestamp}`,
         price: 0,
         currency: 'USD',
-        description: 'Free product for gatekeeper UI testing',
+        description: 'Free product for sellf UI testing',
         is_active: true
       })
       .select()
@@ -147,7 +147,7 @@ test.describe('Gatekeeper UI Protection Tests', () => {
 
       await page.goto(testPageUrl);
 
-      // Wait for full redirect chain: gatekeeper -> /p/{slug} -> /checkout/{slug}
+      // Wait for full redirect chain: sellf -> /p/{slug} -> /checkout/{slug}
       // The useProductAccess hook redirects users without access to checkout
       await page.waitForURL(url =>
         url.hostname === 'localhost' &&
@@ -192,7 +192,7 @@ test.describe('Gatekeeper UI Protection Tests', () => {
       await expect(page.locator('[data-testid="public-section"]')).toBeVisible();
       await expect(page.locator('[data-testid="public-text"]')).toContainText('visible to everyone');
 
-      // Wait for gatekeeper to process elements
+      // Wait for sellf to process elements
       await page.waitForTimeout(3000);
 
       // For user WITHOUT access: fallback visible, premium content hidden/removed
@@ -235,7 +235,7 @@ test.describe('Gatekeeper UI Protection Tests', () => {
       // Public section always visible
       await expect(page.locator('[data-testid="public-section"]')).toBeVisible();
 
-      // Wait for gatekeeper to process elements
+      // Wait for sellf to process elements
       await page.waitForTimeout(3000);
 
       // For user WITH access: premium content visible, fallback hidden/removed
@@ -281,7 +281,7 @@ test.describe('Gatekeeper UI Protection Tests', () => {
       // Public section always visible
       await expect(page.locator('[data-testid="public-section"]')).toBeVisible();
 
-      // Wait for gatekeeper to process elements
+      // Wait for sellf to process elements
       await page.waitForTimeout(3000);
 
       // For user WITHOUT access: fallback visible, premium content hidden/removed
@@ -339,7 +339,7 @@ test.describe('Gatekeeper UI Protection Tests', () => {
     test('Gatekeeper script is loaded from Next.js server', async ({ page }) => {
       const scriptRequests: string[] = [];
       page.on('request', (request) => {
-        if (request.url().includes('/api/gatekeeper')) {
+        if (request.url().includes('/api/sellf')) {
           scriptRequests.push(request.url());
         }
       });
@@ -352,9 +352,9 @@ test.describe('Gatekeeper UI Protection Tests', () => {
       // Wait for the script request to be made
       await page.waitForTimeout(2000);
 
-      // Should have made request to gatekeeper API on Next.js server
+      // Should have made request to sellf API on Next.js server
       expect(scriptRequests.length).toBeGreaterThan(0);
-      expect(scriptRequests[0]).toContain('localhost:3000/api/gatekeeper');
+      expect(scriptRequests[0]).toContain('localhost:3000/api/sellf');
     });
   });
 
@@ -365,7 +365,7 @@ test.describe('Gatekeeper UI Protection Tests', () => {
   test.describe('Cross-Origin Behavior', () => {
 
     test('CORS headers allow cross-origin requests', async ({ request }) => {
-      const response = await request.get(`${NEXT_JS_URL}/api/gatekeeper`, {
+      const response = await request.get(`${NEXT_JS_URL}/api/sellf`, {
         headers: {
           'Origin': 'https://external-site.com'
         }
@@ -458,7 +458,7 @@ test.describe('Gatekeeper UI Protection Tests', () => {
   test.describe('Gatekeeper Script Behavior', () => {
 
     test('Gatekeeper script is valid and contains expected structure', async ({ request }) => {
-      const response = await request.get(`${NEXT_JS_URL}/api/gatekeeper`);
+      const response = await request.get(`${NEXT_JS_URL}/api/sellf`);
 
       expect(response.ok()).toBeTruthy();
 
@@ -478,7 +478,7 @@ test.describe('Gatekeeper UI Protection Tests', () => {
     });
 
     test('Gatekeeper script with productSlug includes slug', async ({ request }) => {
-      const response = await request.get(`${NEXT_JS_URL}/api/gatekeeper?productSlug=${paidProduct.slug}`);
+      const response = await request.get(`${NEXT_JS_URL}/api/sellf?productSlug=${paidProduct.slug}`);
 
       expect(response.ok()).toBeTruthy();
 

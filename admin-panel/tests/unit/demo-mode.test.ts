@@ -188,7 +188,7 @@ describe('Proxy demo blocking (whitelist verified against source)', () => {
     expect(whitelist).toContain('/api/health');
     expect(whitelist).toContain('/api/status');
     expect(whitelist).toContain('/api/runtime-config');
-    expect(whitelist).toContain('/api/gatekeeper');
+    expect(whitelist).toContain('/api/sellf');
     expect(whitelist).toContain('/api/sellf-embed');
   });
 

@@ -65,6 +65,9 @@ export function FeeComparisonSection() {
     <section className="py-24 md:py-32 bg-gf-base">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
+          <p className="text-sm font-medium text-gf-muted tracking-[0.08em] uppercase mb-3 text-center">
+            {t('feeComparison.categoryLabel')}
+          </p>
           <h2 className="text-4xl md:text-5xl font-bold text-gf-heading mb-4 text-center">
             {t('feeComparison.title')}
           </h2>

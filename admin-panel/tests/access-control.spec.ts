@@ -527,7 +527,7 @@ test.describe('Element Protection - data-has-access / data-no-access visibility'
       <html>
       <head><title>Element Protection Test</title></head>
       <body>
-        <div data-gatekeeper-product="${testProduct.slug}" data-testid="protected-section">
+        <div data-sellf-product="${testProduct.slug}" data-testid="protected-section">
           <div data-has-access data-testid="has-access-content">
             <h2>Premium Content - You have access!</h2>
           </div>
@@ -535,7 +535,7 @@ test.describe('Element Protection - data-has-access / data-no-access visibility'
             <h2>You need access to see this content</h2>
           </div>
         </div>
-        <script src="/api/gatekeeper"></script>
+        <script src="/api/sellf"></script>
       </body>
       </html>
     `;
@@ -543,7 +543,7 @@ test.describe('Element Protection - data-has-access / data-no-access visibility'
     // Navigate to test page served by http-server
     await page.goto(`http://localhost:3002/element-protection.html?testProduct=${testProduct.slug}&apiUrl=http://localhost:3000`);
 
-    // Wait for gatekeeper to process
+    // Wait for sellf to process
     await page.waitForTimeout(3000);
 
     // User WITH access should see data-has-access content
@@ -563,7 +563,7 @@ test.describe('Element Protection - data-has-access / data-no-access visibility'
     // Navigate to test page
     await page.goto(`http://localhost:3002/element-protection.html?testProduct=${testProduct.slug}&apiUrl=http://localhost:3000`);
 
-    // Wait for gatekeeper to process
+    // Wait for sellf to process
     await page.waitForTimeout(3000);
 
     const hasAccessContent = page.locator('[data-testid="has-access-content"]');
@@ -581,7 +581,7 @@ test.describe('Element Protection - data-has-access / data-no-access visibility'
 
     await page.goto(`http://localhost:3002/element-protection.html?testProduct=${testProduct.slug}&apiUrl=http://localhost:3000`);
 
-    // Wait for gatekeeper to process
+    // Wait for sellf to process
     await page.waitForTimeout(3000);
 
     const hasAccessContent = page.locator('[data-testid="has-access-content"]');

@@ -182,7 +182,7 @@ function main() {
         console.log('=== PRIVATE KEY (keep secret!) ===');
         console.log(`Saved to: ${privateKeyPath}`);
         console.log('');
-        console.log('=== PUBLIC KEY (embed in gatekeeper.js) ===');
+        console.log('=== PUBLIC KEY (embed in sellf.js) ===');
         console.log(publicKey);
         console.log(`Saved to: ${publicKeyPath}`);
         console.log('');
@@ -250,9 +250,9 @@ function main() {
         console.log(`Domain: ${domain}`);
         console.log(`Expiry: ${expiry}${expiry !== 'UNLIMITED' ? ` (${parseExpiryDate(expiry).toDateString()})` : ''}`);
         console.log('\n=== Usage ===');
-        console.log('Add to your gatekeeper configuration:');
+        console.log('Add to your sellf configuration:');
         console.log(`
-window.gatekeeperConfig = {
+window.sellfConfig = {
     sellfLicense: '${license}',
     // ... other config
 };

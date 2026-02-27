@@ -13,7 +13,7 @@ import { NextResponse } from 'next/server'
  */
 export const CROSS_ORIGIN_ALLOWED_PATHS = [
   '/api/access',      // Returns only true/false for product access (reads user from cookies)
-  '/api/gatekeeper',  // Serves the JS script (public, no auth needed)
+  '/api/sellf',  // Serves the JS script (public, no auth needed)
 ]
 
 /**
@@ -50,7 +50,7 @@ export function validateCrossOriginRequest(request: Request): NextResponse | nul
  *
  * SECURITY: When ALLOWED_ORIGINS env var is set (comma-separated list),
  * only those origins are reflected (strict mode). When unset, any origin
- * is reflected (permissive mode) — required for cross-domain gatekeeper feature.
+ * is reflected (permissive mode) — required for cross-domain sellf feature.
  * Vary: Origin is always set for correct caching behavior.
  */
 export function getCrossOriginHeaders(request: Request): Record<string, string> {
@@ -65,7 +65,7 @@ export function getCrossOriginHeaders(request: Request): Record<string, string> 
     const allowedOrigins = allowedOriginsEnv.split(',').map(o => o.trim())
     effectiveOrigin = (origin && allowedOrigins.includes(origin)) ? origin : (siteUrl || 'null')
   } else {
-    // Permissive mode (cross-domain gatekeeper feature): reflect origin
+    // Permissive mode (cross-domain sellf feature): reflect origin
     effectiveOrigin = origin || siteUrl || 'null'
   }
 

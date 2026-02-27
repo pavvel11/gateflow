@@ -75,7 +75,7 @@ Look for `<!-- EDIT: -->` comments throughout the HTML files. These mark all the
 1. Replace `'yourdomain.com'` with your actual domain:
 
 ```html
-<script src="/api/gatekeeper?domain=yourdomain.com"></script>
+<script src="/api/sellf?domain=yourdomain.com"></script>
 ```
 
 ### Step 4: Upload and Test

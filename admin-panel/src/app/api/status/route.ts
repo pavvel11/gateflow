@@ -60,7 +60,7 @@ export async function GET() {
       },
       api: {
         health: '/api/health',
-        gatekeeper: '/api/gatekeeper',
+        sellf: '/api/sellf',
         config: '/api/config',
         status: '/api/status'
       },

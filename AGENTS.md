@@ -6,7 +6,7 @@ This file provides comprehensive guidance for AI coding agents (Claude Code, Gem
 
 Sellf is a professional content access control and monetization platform built on Next.js, Supabase, and Stripe. It consists of three main components:
 
-1. **Client-side SDK** (`gatekeeper.js`): JavaScript library for content protection
+1. **Client-side SDK** (`sellf.js`): JavaScript library for content protection
 2. **Admin Panel** (`admin-panel/`): Next.js 16 dashboard for product/user management
 3. **Database Layer** (`supabase/`): PostgreSQL with Row Level Security (RLS)
 
@@ -122,9 +122,9 @@ bun run tttt       # = cd .. && npx supabase db reset && cd admin-panel && playw
 
 ### Three-Tier Architecture
 
-**1. Client SDK (gatekeeper.js)**
+**1. Client SDK (sellf.js)**
 - ~1700 lines of vanilla JavaScript
-- Dynamically loaded via `/api/gatekeeper?domain=...`
+- Dynamically loaded via `/api/sellf?domain=...`
 - Key classes: `CacheManager`, `LicenseManager`, `SessionManager`, `AccessControl`, `Sellf`
 - Implements three protection modes: page, element, hybrid
 - Features: caching (5min TTL), batch access checking, cross-domain sessions, license verification
@@ -136,7 +136,7 @@ bun run tttt       # = cd .. && npx supabase db reset && cd admin-panel && playw
   - Public: `/`, `/p/[slug]` (product pages), `/login`, `/terms`, `/privacy`
   - Protected: `/dashboard`, `/my-products`
   - Admin: `/admin/products`, `/admin/users`, `/admin/payments`, `/admin/analytics`
-- API endpoints: `/api/gatekeeper`, `/api/access`, `/api/runtime-config`, `/api/create-embedded-checkout`, `/api/verify-payment`
+- API endpoints: `/api/sellf`, `/api/access`, `/api/runtime-config`, `/api/create-embedded-checkout`, `/api/verify-payment`
 
 **3. Database (PostgreSQL + Supabase)**
 - Core tables: `products`, `user_product_access`, `payment_transactions`, `guest_purchases`, `rate_limits`, `audit_log`
@@ -156,7 +156,7 @@ bun run tttt       # = cd .. && npx supabase db reset && cd admin-panel && playw
 6. User redirected with `session_id` → `/api/verify-payment` confirms access
 
 **Access Check Flow:**
-1. `gatekeeper.js` loads → detects protection mode
+1. `sellf.js` loads → detects protection mode
 2. Gets Supabase session → batch checks access via `/api/access`
 3. API calls `batch_check_user_product_access()` with RLS enforcement
 4. Results cached (5min TTL) → DOM modified based on access
@@ -174,7 +174,7 @@ bun run tttt       # = cd .. && npx supabase db reset && cd admin-panel && playw
 Sellf supports protecting content across multiple domains:
 
 - **Main Domain** (`MAIN_DOMAIN` env var): Hosts admin panel and API
-- **Protected Domains**: Load `gatekeeper.js` and make credentialed requests to main domain
+- **Protected Domains**: Load `sellf.js` and make credentialed requests to main domain
 - **Session Sharing**: Auth shared via CORS + `credentials: 'include'` on API endpoints
 - **Security**: X-Requested-With and X-Sellf-Origin headers for verification
 
@@ -407,8 +407,8 @@ To execute SQL queries directly on the local database, use `docker exec` with th
 
 ### Dynamic Configuration System
 
-**GatekeeperGenerator** (`admin-panel/src/lib/gatekeeper-generator.ts`):
-- Reads `gatekeeper.js` and injects configuration at runtime
+**SellfGenerator** (`admin-panel/src/lib/sellf-generator.ts`):
+- Reads `sellf.js` and injects configuration at runtime
 - Template replacement: `{{SUPABASE_URL}}`, `{{SUPABASE_ANON_KEY}}`, etc.
 - Hash-based caching with 5-minute TTL
 - Production: minification + optional obfuscation
@@ -438,7 +438,7 @@ This pattern allows purchasing before account creation, critical for conversion 
 
 ### Original Content Preservation
 
-Before modifying DOM, `gatekeeper.js` stores:
+Before modifying DOM, `sellf.js` stores:
 ```javascript
 document.body.setAttribute('data-original-content', document.body.innerHTML)
 ```
@@ -490,7 +490,7 @@ To maintain Realtime functionality, the following "Golden Stack" of dependencies
 - Check browser console for auth errors
 
 ### Access Control Not Working
-- Open browser DevTools → Console for gatekeeper.js logs
+- Open browser DevTools → Console for sellf.js logs
 - Verify product slug matches database
 - Check RLS policies in Supabase Studio
 - Confirm user has active session
@@ -509,7 +509,7 @@ To maintain Realtime functionality, the following "Golden Stack" of dependencies
 
 ```
 sellf/
-├── gatekeeper.js                  # Core SDK (dynamically served by /api/gatekeeper)
+├── sellf.js                  # Core SDK (dynamically served by /api/sellf)
 ├── index.html                     # Main landing page
 ├── templates/                     # 12+ pre-built HTML product pages
 ├── themes/                        # CSS themes (dark.css, light.css)
@@ -538,7 +538,7 @@ sellf/
         │   │   ├── login/         # Magic link auth
         │   │   └── auth/          # Auth callback handling
         │   └── api/
-        │       ├── gatekeeper/route.ts       # Dynamic SDK generation
+        │       ├── sellf/route.ts       # Dynamic SDK generation
         │       ├── access/route.ts           # Access verification
         │       ├── runtime-config/route.ts   # Client config
         │       ├── create-embedded-checkout/route.ts
@@ -563,7 +563,7 @@ sellf/
         │   │   ├── server.ts      # Server component client
         │   │   └── middleware.ts  # Middleware client
         │   ├── validations/       # Input validation schemas
-        │   ├── gatekeeper-generator.ts
+        │   ├── sellf-generator.ts
         │   ├── config-generator.ts
         │   ├── js-processor.ts    # Minification/obfuscation
         │   ├── rate-limiting.ts

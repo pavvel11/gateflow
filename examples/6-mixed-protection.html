@@ -208,9 +208,9 @@
             
             <div class="info-box">
                 <strong>🔧 How it works:</strong>
-                <br>1. Script URL: <code>/api/gatekeeper?productSlug=free-tutorial</code> protects the entire page
-                <br>2. Elements with <code>data-gatekeeper-product="premium-course"</code> require premium access
-                <br>3. Elements with <code>data-gatekeeper-product="vip-masterclass"</code> require VIP access
+                <br>1. Script URL: <code>/api/sellf?productSlug=free-tutorial</code> protects the entire page
+                <br>2. Elements with <code>data-sellf-product="premium-course"</code> require premium access
+                <br>3. Elements with <code>data-sellf-product="vip-masterclass"</code> require VIP access
                 <br>4. Elements with <code>data-no-access</code> show fallback content inside protected sections
             </div>
         </div>
@@ -238,7 +238,7 @@
         </div>
 
         <!-- This section requires premium-course access -->
-        <div class="premium-content" data-gatekeeper-product="premium-course">
+        <div class="premium-content" data-sellf-product="premium-course">
             <h2>⭐ YOU SEE THIS SECTION BECAUSE YOU HAVE ACCESS TO PREMIUM-COURSE</h2>
             <p>Congratulations! You have access to the <strong>premium-course</strong> product and can view this advanced JavaScript course content.</p>
             
@@ -275,7 +275,7 @@
         </div>
 
         <!-- This section requires vip-masterclass access -->
-        <div class="vip-content" data-gatekeeper-product="vip-masterclass">
+        <div class="vip-content" data-sellf-product="vip-masterclass">
             <h2>👑 YOU SEE THIS SECTION BECAUSE YOU HAVE ACCESS TO VIP-MASTERCLASS</h2>
             <p>Congratulations! You have access to the <strong>vip-masterclass</strong> product and can view this exclusive VIP content.</p>
             
@@ -324,10 +324,10 @@
             <div class="code-block">
 <span style="color: #68d391;">// Page protection via script URL parameter</span>
 <span style="color: #68d391;">// This ensures the entire page requires at least "free-tutorial" access</span>
-<span style="color: #f6ad55;">&lt;script</span> <span style="color: #63b3ed;">src</span>=<span style="color: #68d391;">"/api/gatekeeper?productSlug=free-tutorial"</span><span style="color: #f6ad55;">&gt;&lt;/script&gt;</span>
+<span style="color: #f6ad55;">&lt;script</span> <span style="color: #63b3ed;">src</span>=<span style="color: #68d391;">"/api/sellf?productSlug=free-tutorial"</span><span style="color: #f6ad55;">&gt;&lt;/script&gt;</span>
 
 <span style="color: #68d391;">// Element protection for premium content</span>
-<span style="color: #f6ad55;">&lt;div</span> <span style="color: #63b3ed;">data-gatekeeper-product</span>=<span style="color: #68d391;">"premium-course"</span><span style="color: #f6ad55;">&gt;</span>
+<span style="color: #f6ad55;">&lt;div</span> <span style="color: #63b3ed;">data-sellf-product</span>=<span style="color: #68d391;">"premium-course"</span><span style="color: #f6ad55;">&gt;</span>
     Premium course content here
     
     <span style="color: #68d391;">// Fallback content INSIDE the protected element</span>
@@ -337,7 +337,7 @@
 <span style="color: #f6ad55;">&lt;/div&gt;</span>
 
 <span style="color: #68d391;">// Element protection for VIP content</span>
-<span style="color: #f6ad55;">&lt;div</span> <span style="color: #63b3ed;">data-gatekeeper-product</span>=<span style="color: #68d391;">"vip-masterclass"</span><span style="color: #f6ad55;">&gt;</span>
+<span style="color: #f6ad55;">&lt;div</span> <span style="color: #63b3ed;">data-sellf-product</span>=<span style="color: #68d391;">"vip-masterclass"</span><span style="color: #f6ad55;">&gt;</span>
     VIP masterclass content here
     
     <span style="color: #68d391;">// Fallback content INSIDE the protected element</span>
@@ -360,6 +360,6 @@
     </div>
 
     <!-- Sellf Script with Page Protection for free-tutorial -->
-    <script src="http://localhost:3000/api/gatekeeper?productSlug=free-tutorial"></script>
+    <script src="http://localhost:3000/api/sellf?productSlug=free-tutorial"></script>
 </body>
 </html>

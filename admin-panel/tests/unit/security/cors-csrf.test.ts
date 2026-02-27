@@ -43,7 +43,7 @@ describe('CORS/CSRF Security', () => {
       // 1. Do not modify data (read-only)
       // 2. Return non-sensitive information
       expect(CROSS_ORIGIN_ALLOWED_PATHS).toContain('/api/access');
-      expect(CROSS_ORIGIN_ALLOWED_PATHS).toContain('/api/gatekeeper');
+      expect(CROSS_ORIGIN_ALLOWED_PATHS).toContain('/api/sellf');
 
       // Should NOT contain admin endpoints
       expect(CROSS_ORIGIN_ALLOWED_PATHS).not.toContain('/api/admin/products');
@@ -183,7 +183,7 @@ describe('CORS/CSRF Security', () => {
         // Verify that endpoints using getCrossOriginHeaders
         // are read-only and non-sensitive
         // This is a documentation/awareness test
-        const nonSensitiveEndpoints = ['/api/access', '/api/gatekeeper'];
+        const nonSensitiveEndpoints = ['/api/access', '/api/sellf'];
 
         expect(CROSS_ORIGIN_ALLOWED_PATHS.length).toBeGreaterThan(0);
         for (const endpoint of CROSS_ORIGIN_ALLOWED_PATHS) {

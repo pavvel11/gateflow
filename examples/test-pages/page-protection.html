@@ -58,9 +58,9 @@
         if (productSlug) {
             document.getElementById('product-slug').textContent = productSlug;
 
-            // Dynamically inject gatekeeper script with productSlug
+            // Dynamically inject sellf script with productSlug
             const script = document.createElement('script');
-            script.src = `${apiBaseUrl}/api/gatekeeper?productSlug=${encodeURIComponent(productSlug)}`;
+            script.src = `${apiBaseUrl}/api/sellf?productSlug=${encodeURIComponent(productSlug)}`;
             script.setAttribute('data-api-url', apiBaseUrl);
             document.head.appendChild(script);
         } else {

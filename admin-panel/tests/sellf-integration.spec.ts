@@ -5,12 +5,12 @@ import { acceptAllCookies } from './helpers/consent';
 /**
  * Gatekeeper Integration Tests
  *
- * These tests verify the actual behavior of the gatekeeper protection system:
- * - API /api/gatekeeper script serving
+ * These tests verify the actual behavior of the sellf protection system:
+ * - API /api/sellf script serving
  * - API /api/access endpoint behavior
- * - Product page access control (which uses gatekeeper internally)
+ * - Product page access control (which uses sellf internally)
  *
- * NOTE: Testing gatekeeper on external HTML pages is not feasible within
+ * NOTE: Testing sellf on external HTML pages is not feasible within
  * the Next.js environment due to App Router intercepting all routes.
  * Instead, we test the underlying APIs and the product page behavior.
  */
@@ -80,10 +80,10 @@ test.describe('Gatekeeper Integration Tests', () => {
       .from('products')
       .insert({
         name: `Gatekeeper Test Paid ${timestamp}`,
-        slug: `gatekeeper-test-paid-${timestamp}`,
+        slug: `sellf-test-paid-${timestamp}`,
         price: 49.99,
         currency: 'USD',
-        description: 'Paid product for gatekeeper integration testing',
+        description: 'Paid product for sellf integration testing',
         is_active: true
       })
       .select()
@@ -97,10 +97,10 @@ test.describe('Gatekeeper Integration Tests', () => {
       .from('products')
       .insert({
         name: `Gatekeeper Test Free ${timestamp}`,
-        slug: `gatekeeper-test-free-${timestamp}`,
+        slug: `sellf-test-free-${timestamp}`,
         price: 0,
         currency: 'USD',
-        description: 'Free product for gatekeeper integration testing',
+        description: 'Free product for sellf integration testing',
         is_active: true
       })
       .select()
@@ -162,10 +162,10 @@ test.describe('Gatekeeper Integration Tests', () => {
   // Gatekeeper Script Generation Tests
   // ============================================================================
 
-  test.describe('Gatekeeper Script (/api/gatekeeper)', () => {
+  test.describe('Gatekeeper Script (/api/sellf)', () => {
 
     test('Script is valid JavaScript', async ({ request }) => {
-      const response = await request.get('/api/gatekeeper');
+      const response = await request.get('/api/sellf');
 
       expect(response.ok()).toBeTruthy();
 
@@ -186,22 +186,22 @@ test.describe('Gatekeeper Integration Tests', () => {
     });
 
     test('Script contains Sellf class or initialization', async ({ request }) => {
-      const response = await request.get('/api/gatekeeper');
+      const response = await request.get('/api/sellf');
       const script = await response.text();
 
-      // Should contain sellf/gatekeeper related code
+      // Should contain sellf related code
       const hasSellfCode = script.includes('Sellf') ||
-                              script.includes('gatekeeper') ||
+                              script.includes('sellf') ||
                               script.includes('checkAccess') ||
                               script.includes('productSlug');
 
       if (!hasSellfCode) {
-        expect.fail('Expected script to contain Sellf, gatekeeper, checkAccess, or productSlug but found none');
+        expect.fail('Expected script to contain Sellf, sellf, checkAccess, or productSlug but found none');
       }
     });
 
     test('Script with productSlug includes page protection mode', async ({ request }) => {
-      const response = await request.get(`/api/gatekeeper?productSlug=${paidProduct.slug}`);
+      const response = await request.get(`/api/sellf?productSlug=${paidProduct.slug}`);
       const script = await response.text();
 
       expect(response.ok()).toBeTruthy();
@@ -214,7 +214,7 @@ test.describe('Gatekeeper Integration Tests', () => {
     });
 
     test('Script without productSlug is for element protection mode', async ({ request }) => {
-      const response = await request.get('/api/gatekeeper');
+      const response = await request.get('/api/sellf');
       const script = await response.text();
 
       expect(response.ok()).toBeTruthy();
@@ -224,7 +224,7 @@ test.describe('Gatekeeper Integration Tests', () => {
     });
 
     test('Script includes Supabase configuration', async ({ request }) => {
-      const response = await request.get('/api/gatekeeper');
+      const response = await request.get('/api/sellf');
       const script = await response.text();
 
       // Should contain Supabase-related initialization
@@ -238,7 +238,7 @@ test.describe('Gatekeeper Integration Tests', () => {
     });
 
     test('CORS allows cross-origin requests', async ({ request }) => {
-      const response = await request.get('/api/gatekeeper', {
+      const response = await request.get('/api/sellf', {
         headers: {
           'Origin': 'https://external-site.com'
         }
@@ -251,7 +251,7 @@ test.describe('Gatekeeper Integration Tests', () => {
     });
 
     test('Caching headers are set correctly', async ({ request }) => {
-      const response = await request.get('/api/gatekeeper');
+      const response = await request.get('/api/sellf');
 
       const headers = response.headers();
 
@@ -262,7 +262,7 @@ test.describe('Gatekeeper Integration Tests', () => {
   });
 
   // ============================================================================
-  // Access API Tests (what gatekeeper.js calls)
+  // Access API Tests (what sellf.js calls)
   // ============================================================================
 
   test.describe('Access API (/api/access)', () => {
@@ -546,19 +546,19 @@ test.describe('Gatekeeper Integration Tests', () => {
 
     test('Embed form widget functionality exists in codebase', async ({ request }) => {
       // Instead of testing HTTP access (blocked by Next.js), we verify the
-      // embed functionality exists by checking the gatekeeper script includes
+      // embed functionality exists by checking the sellf script includes
       // embed-related capabilities
-      const response = await request.get('/api/gatekeeper');
+      const response = await request.get('/api/sellf');
       const script = await response.text();
 
-      // The gatekeeper system should support embeddable widgets
+      // The sellf system should support embeddable widgets
       const hasEmbedSupport = script.includes('Sellf') ||
                               script.includes('sellf') ||
                               script.includes('embed') ||
                               script.includes('widget');
 
       if (!hasEmbedSupport) {
-        expect.fail('Expected gatekeeper script to contain Sellf, sellf, embed, or widget but found none');
+        expect.fail('Expected sellf script to contain Sellf, embed, or widget but found none');
       }
     });
   });

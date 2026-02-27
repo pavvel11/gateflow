@@ -88,7 +88,7 @@ export function LandingNav() {
 
             <Link
               href={ctaLink.href}
-              className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-gf-accent hover:bg-gf-accent-hover transition-[background-color,box-shadow] duration-200 shadow-[var(--gf-shadow-accent)] hover:shadow-[0_6px_30px_-4px_var(--gf-accent-glow)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
+              className="px-4 py-2 rounded-full text-sm font-semibold text-white bg-gf-accent hover:bg-gf-accent-hover transition-[background-color,box-shadow] duration-200 shadow-[var(--gf-shadow-accent)] hover:shadow-[0_6px_30px_-4px_var(--gf-accent-glow)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
             >
               {ctaLink.label}
             </Link>
@@ -164,7 +164,7 @@ export function LandingNav() {
 
               <Link
                 href={ctaLink.href}
-                className="mt-2 block rounded-xl px-4 py-2 text-center text-sm font-semibold text-white bg-gf-accent hover:bg-gf-accent-hover transition-[background-color,box-shadow] duration-200 shadow-[var(--gf-shadow-accent)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
+                className="mt-2 block rounded-full px-4 py-2 text-center text-sm font-semibold text-white bg-gf-accent hover:bg-gf-accent-hover transition-[background-color,box-shadow] duration-200 shadow-[var(--gf-shadow-accent)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
                 onClick={() => setMobileOpen(false)}
               >
                 {ctaLink.label}

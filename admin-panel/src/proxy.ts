@@ -35,7 +35,7 @@ const DEMO_MUTATION_ALLOWED = [
   '/api/consent',
   '/api/tracking/',
   '/api/waitlist/',
-  '/api/gatekeeper',
+  '/api/sellf',
   '/api/sellf-embed',
   '/api/oto/',
   '/api/products/',

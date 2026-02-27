@@ -26,7 +26,7 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
     const domain = window.location.origin;
 
     if (options.mode === 'page') {
-      return `<script src="${domain}/api/gatekeeper?productSlug=${product.slug}"></script><noscript><meta http-equiv="refresh" content="0;url=${domain}/p/${product.slug}"></noscript>`;
+      return `<script src="${domain}/api/sellf?productSlug=${product.slug}"></script><noscript><meta http-equiv="refresh" content="0;url=${domain}/p/${product.slug}"></noscript>`;
     } else if (options.mode === 'embed') {
       // Embed widget mode - only for free products
       return `<!-- Sellf Free Product Embed -->
@@ -45,10 +45,10 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
 -->`;
     } else {
       return `<!-- Add this to your page head -->
-<script src="${domain}/api/gatekeeper"></script><noscript><meta http-equiv="refresh" content="0;url=${domain}/p/${product.slug}"></noscript>
+<script src="${domain}/api/sellf"></script><noscript><meta http-equiv="refresh" content="0;url=${domain}/p/${product.slug}"></noscript>
 
 <!-- Then mark elements you want to protect -->
-<div data-gatekeeper-product="${product.slug}">
+<div data-sellf-product="${product.slug}">
   <h2>Protected Content</h2>
   <p>This content is only visible to users with access to ${product.name}.</p>
 

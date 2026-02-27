@@ -51,12 +51,12 @@
             border-radius: 4px;
             font-family: monospace;
         }
-        /* Initially hide protected content until gatekeeper processes */
-        [data-gatekeeper-product] {
+        /* Initially hide protected content until sellf processes */
+        [data-sellf-product] {
             opacity: 0;
             transition: opacity 0.3s ease;
         }
-        [data-gatekeeper-product].gatekeeper-processed {
+        [data-sellf-product].sellf-processed {
             opacity: 1;
         }
     </style>
@@ -77,7 +77,7 @@
         </ul>
     </div>
 
-    <!-- Protected content - gatekeeper controlled -->
+    <!-- Protected content - sellf controlled -->
     <div id="protected-section" class="content-section protected-content" data-testid="protected-section">
         <h2>Premium Content</h2>
 
@@ -113,7 +113,7 @@
     </div>
 
     <script>
-        // Get product slug from URL parameter (use 'testProduct' to avoid gatekeeper page-level check)
+        // Get product slug from URL parameter (use 'testProduct' to avoid sellf page-level check)
         const urlParams = new URLSearchParams(window.location.search);
         const productSlug = urlParams.get('testProduct');
         // Optional second product for multi-product tests
@@ -124,17 +124,17 @@
         if (productSlug) {
             document.getElementById('product-slug').textContent = productSlug + (productSlug2 ? ` + ${productSlug2}` : '');
 
-            // Set data-gatekeeper-product on protected sections
-            document.getElementById('protected-section').setAttribute('data-gatekeeper-product', productSlug);
+            // Set data-sellf-product on protected sections
+            document.getElementById('protected-section').setAttribute('data-sellf-product', productSlug);
             // Second section uses testProduct2 if provided, otherwise same as testProduct
-            document.getElementById('protected-section-2').setAttribute('data-gatekeeper-product', productSlug2 || productSlug);
+            document.getElementById('protected-section-2').setAttribute('data-sellf-product', productSlug2 || productSlug);
 
             // Set upgrade link
             document.getElementById('upgrade-link').href = `${apiBaseUrl}/p/${productSlug}`;
 
-            // Load gatekeeper script (element protection mode - no productSlug in URL)
+            // Load sellf script (element protection mode - no productSlug in URL)
             const script = document.createElement('script');
-            script.src = `${apiBaseUrl}/api/gatekeeper`;
+            script.src = `${apiBaseUrl}/api/sellf`;
             script.setAttribute('data-api-url', apiBaseUrl);
             document.body.appendChild(script);
         } else {

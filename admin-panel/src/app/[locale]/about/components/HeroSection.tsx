@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
-import { ArrowRight, Play, Github, CheckCircle } from 'lucide-react'
+import { ArrowRight, Play, CheckCircle } from 'lucide-react'
 import { motion } from 'motion/react'
 import { TextReveal } from './motion/TextReveal'
 
@@ -99,7 +99,7 @@ export function HeroSection() {
         >
           <Link
             href="#deployment"
-            className="group inline-flex items-center gap-2 bg-gf-accent hover:bg-gf-accent-hover text-white rounded-xl px-8 py-4 text-lg font-bold transition-[background-color,transform,box-shadow] duration-200 shadow-[var(--gf-shadow-accent)] hover:shadow-[0_6px_40px_-4px_var(--gf-accent-glow)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
+            className="group inline-flex items-center gap-2 bg-gf-accent hover:bg-gf-accent-hover text-white rounded-full px-8 py-4 text-lg font-bold transition-[background-color,transform,box-shadow] duration-200 shadow-[var(--gf-shadow-accent)] hover:shadow-[0_6px_40px_-4px_var(--gf-accent-glow)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
           >
             {t('hero.ctaDeploy')}
             <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-0.5" />
@@ -109,23 +109,10 @@ export function HeroSection() {
             href="https://demo.sellf.app/login"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-gf-accent-soft border border-gf-border-accent hover:bg-gf-accent-med text-gf-heading rounded-xl px-8 py-4 text-lg font-bold transition-[background-color,border-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
+            className="inline-flex items-center gap-2 bg-gf-accent-soft border border-gf-border-accent hover:bg-gf-accent-med text-gf-heading rounded-full px-8 py-4 text-lg font-bold transition-[background-color,border-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
           >
             <Play className="h-5 w-5" />
             {t('hero.ctaDemo')}
-          </a>
-
-          <a
-            href="https://github.com/jurczykpawel/sellf"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-gf-raised/60 backdrop-blur-sm border border-gf-border hover:border-gf-border-accent text-gf-heading rounded-xl px-8 py-4 text-lg font-bold transition-[border-color,background-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
-          >
-            <Github className="h-5 w-5" />
-            {t('hero.ctaGithub')}
-            <span className="ml-1 rounded-full bg-gf-float px-2 py-0.5 text-xs font-medium text-gf-muted">
-              MIT
-            </span>
           </a>
         </motion.div>
 

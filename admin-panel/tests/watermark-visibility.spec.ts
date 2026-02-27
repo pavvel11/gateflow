@@ -20,7 +20,7 @@ const TEST_LICENSES = {
 };
 
 // Test page URL - served by http-server on port 3002 (configured in playwright.config.ts)
-// Requires ?testProduct param and optionally ?apiUrl for gatekeeper source
+// Requires ?testProduct param and optionally ?apiUrl for sellf source
 const TEST_PAGE_URL = 'http://localhost:3002/element-protection.html?testProduct=test-product&apiUrl=http://localhost:3000';
 
 test.describe('Watermark Visibility Based on License', () => {
@@ -34,7 +34,7 @@ test.describe('Watermark Visibility Based on License', () => {
 
   const clearGeneratorCache = async (page: typeof import('@playwright/test').Page.prototype) => {
     // Clear the generator cache to force re-generation with new license
-    const response = await page.goto('/api/gatekeeper?clearCache=true');
+    const response = await page.goto('/api/sellf?clearCache=true');
     expect(response).not.toBeNull();
     expect(response!.status()).toBeLessThan(500);
   };
@@ -49,7 +49,7 @@ test.describe('Watermark Visibility Based on License', () => {
     await setLicense(TEST_LICENSES.unlimited);
 
     // Clear cache and get the script directly
-    const response = await page.goto('/api/gatekeeper?clearCache=true');
+    const response = await page.goto('/api/sellf?clearCache=true');
     expect(response).not.toBeNull();
     const scriptContent = await response!.text();
 
@@ -62,7 +62,7 @@ test.describe('Watermark Visibility Based on License', () => {
     await setLicense(TEST_LICENSES.future);
 
     // Clear cache and get the script directly
-    const response = await page.goto('/api/gatekeeper?clearCache=true');
+    const response = await page.goto('/api/sellf?clearCache=true');
     expect(response).not.toBeNull();
     const scriptContent = await response!.text();
 
@@ -75,7 +75,7 @@ test.describe('Watermark Visibility Based on License', () => {
     await setLicense(null);
 
     // Clear cache and get the script directly
-    const response = await page.goto('/api/gatekeeper?clearCache=true');
+    const response = await page.goto('/api/sellf?clearCache=true');
     expect(response).not.toBeNull();
     const scriptContent = await response!.text();
 
@@ -88,7 +88,7 @@ test.describe('Watermark Visibility Based on License', () => {
     await setLicense(TEST_LICENSES.expired);
 
     // Clear cache and get the script directly
-    const response = await page.goto('/api/gatekeeper?clearCache=true');
+    const response = await page.goto('/api/sellf?clearCache=true');
     expect(response).not.toBeNull();
     const scriptContent = await response!.text();
 
@@ -101,7 +101,7 @@ test.describe('Watermark Visibility Based on License', () => {
     await setLicense(TEST_LICENSES.invalid);
 
     // Clear cache and get the script directly
-    const response = await page.goto('/api/gatekeeper?clearCache=true');
+    const response = await page.goto('/api/sellf?clearCache=true');
     expect(response).not.toBeNull();
     const scriptContent = await response!.text();
 
@@ -116,7 +116,7 @@ test.describe('Watermark Visibility Based on License', () => {
     // Clear cache first
     await clearGeneratorCache(page);
 
-    // Load test page from http-server (uses gatekeeper from localhost:3000)
+    // Load test page from http-server (uses sellf from localhost:3000)
     await page.goto(TEST_PAGE_URL);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);

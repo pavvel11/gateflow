@@ -635,7 +635,7 @@
     },
     "elementInstructions": {
       "step1": "1. Add the script tag to your page &lt;head&gt;",
-      "step2": "2. Wrap content you want to protect with data-gatekeeper-product=\"{slug}\"",
+      "step2": "2. Wrap content you want to protect with data-sellf-product=\"{slug}\"",
       "step3": "3. Add fallback content with data-no-access for users without access",
       "step4": "4. The script will automatically show/hide content based on user access"
     },
@@ -647,7 +647,7 @@
     "selectiveDisplay": "Selective Content Display",
     "selectiveDisplayDescription": "This method allows you to show or hide specific sections of a page based on user access. It's particularly useful for sales pages where you want to display different content to paying customers versus prospects.",
     "implementation": "Implementation",
-    "implementationDescription": "Add data-gatekeeper-product=\"{slug}\" to content that should be visible to users with access, and data-no-access=\"true\" to fallback content for users without access. The script will automatically manage visibility.",
+    "implementationDescription": "Add data-sellf-product=\"{slug}\" to content that should be visible to users with access, and data-no-access=\"true\" to fallback content for users without access. The script will automatically manage visibility.",
     "commonUseCase": "Common Use Case",
     "elementModeUseCase": "Replace \"Buy Now\" buttons with \"Access Product\" buttons for existing customers, or show premium content sections only to subscribers.",
     "embedMode": "Embed Widget",
@@ -2682,8 +2682,8 @@
       "badge": "Open Source · Self-Hosted · Enterprise-Ready",
       "headlineTop": "Your Products.",
       "headlineBottom": "Your Rules.",
-      "metaDescription": "Sell digital products on your own terms — self-hosted, secure, and fully yours. No monthly fees, no middlemen.",
-      "subtitle": "Sell digital products on your own terms — without giving away revenue to platforms. <selfHosted>Self-hosted</selfHosted>, <secure>secure</secure>, and <yours>fully yours</yours>.",
+      "metaDescription": "Sell digital products on your own terms. Self-hosted, secure, and fully yours. No monthly fees, no middlemen.",
+      "subtitle": "Sell digital products on your own terms - without giving away revenue to platforms. <selfHosted>Self-hosted</selfHosted>, <secure>secure</secure>, and <yours>fully yours</yours>.",
       "subtitleSelfHosted": "Self-hosted",
       "subtitleSecure": "secure",
       "subtitleYours": "fully yours",
@@ -2718,91 +2718,94 @@
       "lemonLabel": "LemonSqueezy",
       "lemonFeeNote": "5% + 3.5% + $0.30",
       "perMonth": "/month",
-      "annualSavings": "Annual savings vs Gumroad: {amount}"
+      "annualSavings": "Annual savings vs Gumroad: {amount}",
+      "categoryLabel": "PRICING"
     },
     "features": {
       "title": "Everything you need to sell digital products",
-      "subtitle": "Built-in features that usually cost $100s/month in SaaS subscriptions",
+      "subtitle": "Built-in features that other platforms charge hundreds per month for",
       "dashboard": {
-        "title": "Live Dashboard",
-        "desc": "See exactly what's working — revenue in 20+ currencies, sales goals, and trends at a glance."
+        "title": "See your revenue at a glance",
+        "desc": "Revenue, sales, and trends in one dashboard. 20+ currencies, sales goals, and performance at your fingertips."
       },
       "payments": {
-        "title": "Stripe Payments",
-        "desc": "Customers pay without leaving your page. 20+ currencies, guest checkout, keys encrypted with AES-256."
+        "title": "Accept payments everywhere",
+        "desc": "Customers pay without leaving your page. 20+ currencies, guest checkout, bank-level encryption."
       },
       "orderBumps": {
-        "title": "Order Bumps",
-        "desc": "Earn 30-50% more per order with one-click add-ons."
+        "title": "Earn 30% more per order",
+        "desc": "Show an extra offer at checkout. Buyer clicks 'Add' and the order value grows 30-50%."
       },
       "coupons": {
-        "title": "Smart Coupons",
-        "desc": "Targeted promos that apply automatically. Set limits, stay profitable."
+        "title": "Run promos that sell",
+        "desc": "Create discount codes and automatic promos. Set usage limits and expiry dates to protect your margins."
       },
       "webhooks": {
-        "title": "Webhooks & Automation",
-        "desc": "Connect to Zapier, Make, or your own endpoints — with secure delivery and auto-retries."
+        "title": "Connect with your tools",
+        "desc": "Connect Sellf to Zapier, Make, or any tool. Automatic notifications after every sale, with retries on failure."
       },
       "leads": {
-        "title": "Lead Collection",
-        "desc": "Grow your email list for free. Magic-link access, no passwords. Then sell premium to your audience."
+        "title": "Build your audience for free",
+        "desc": "Offer a free product and collect emails. Buyers log in with one click from email, no passwords. Then sell them premium content."
       },
       "delivery": {
-        "title": "Content Delivery",
-        "desc": "Deliver your way — host files directly or redirect buyers to your platform."
+        "title": "Deliver content your way",
+        "desc": "Serve files for download directly from Sellf, or redirect buyers to your course platform."
       },
       "omnibus": {
-        "title": "EU Omnibus",
-        "desc": "Stay EU-compliant. Automatic price history per Directive 2019/2161."
+        "title": "Stay EU-compliant automatically",
+        "desc": "Sellf automatically tracks price history as required by the Omnibus Directive. Zero manual work."
       },
       "saleLimits": {
-        "title": "Sale Limits",
-        "desc": "Create real urgency with time or quantity limits and live counters."
+        "title": "Create real urgency",
+        "desc": "Set time or quantity limits. Live countdowns motivate faster purchases."
       },
       "funnels": {
-        "title": "True OTO & Funnels",
-        "desc": "Turn one buyer into a repeat customer. Post-purchase offers, time-limited coupons, and full funnels — validated server-side."
+        "title": "Turn buyers into repeat customers",
+        "desc": "After purchase, offer the next product or a return coupon. Build a path from first-time buyer to loyal customer."
       },
       "refunds": {
-        "title": "Refund System",
-        "desc": "Handle refunds without headaches. Per-product policies, customer form, one-click Stripe refunds."
+        "title": "Handle refunds without headaches",
+        "desc": "Set refund rules separately for each product. Customer fills a form, you approve with one click."
       },
       "gus": {
-        "title": "GUS API (PL)",
-        "desc": "Enter NIP — GUS API auto-fills company data."
-      }
+        "title": "Auto-fill company data",
+        "desc": "Enter NIP. GUS API auto-fills company data."
+      },
+      "categoryLabel": "FEATURES"
     },
     "howItWorks": {
       "title": "Up and running in 3 steps",
       "subtitle": "From zero to selling in under 10 minutes",
       "step1": {
         "title": "Deploy",
-        "desc": "Clone the repo and deploy to any VPS or cloud provider. Docker or PM2 — your choice."
+        "desc": "Clone the repo and deploy to any VPS or cloud provider. Docker or PM2, your choice."
       },
       "step2": {
         "title": "Connect Stripe",
-        "desc": "Add your Stripe API keys. Payments go directly to your account — no middlemen."
+        "desc": "Add your Stripe API keys. Payments go directly to your account. No middlemen."
       },
       "step3": {
         "title": "Start Selling",
         "desc": "Create products, set prices, share links. Your store is live."
-      }
+      },
+      "categoryLabel": "QUICK START"
     },
     "demo": {
       "title": "See it in action",
-      "subtitle": "Explore the full admin panel, test checkout with Stripe test cards, and browse sample products — no setup required.",
+      "subtitle": "Explore the full admin panel, test checkout with Stripe test cards, and browse sample products. No setup required.",
       "cta": "Try Live Demo",
-      "stripeTestMode": "Stripe test mode — no real charges"
+      "stripeTestMode": "Stripe test mode, no real charges"
     },
     "tax": {
       "title": "Your Stripe account, your money",
-      "subtitle": "Merchant of Record platforms charge 5–10% and your customer data lives on their platform. With Sellf, payments go directly to your Stripe account.",
+      "subtitle": "Merchant of Record platforms charge 5-10% and your customer data lives on their platform. With Sellf, payments go directly to your Stripe account.",
       "morTitle": "Merchant of Record",
       "morSubtitle": "Paddle, LemonSqueezy, Gumroad",
       "morPlatformFees": "Platform fees",
       "morFeeAmount": "5–10%",
       "morDataOwnership": "Customer data belongs to the platform",
-      "morPlatformRisk": "Platform risk — account freezes, shutdowns",
+      "morPlatformRisk": "Platform risk: account freezes, shutdowns",
       "sellfTitle": "Sellf + Own Stripe",
       "sellfSubtitle": "Direct payments to your account",
       "sellfPlatformFees": "Platform fees",
@@ -2811,16 +2814,17 @@
       "sellfStripeAmount": "~2.9%",
       "sellfDataOwnership": "You own all customer data",
       "sellfTaxThresholds": "You use your own tax thresholds",
-      "sellfSelfHosted": "Self-hosted — no platform risk",
+      "sellfSelfHosted": "Self-hosted. No platform risk",
       "taxGrowthTitle": "Tax compliance grows with your business",
       "taxStep1Title": "Starting out",
-      "taxStep1Desc": "Below €10,000 EU cross-border sales — handle VAT in your own country only",
+      "taxStep1Desc": "Below €10,000 EU cross-border sales. Handle VAT in your own country only",
       "taxStep2Title": "Growing",
-      "taxStep2Desc": "Above €10,000 — register for EU OSS (one form) and add Stripe Tax (+0.5%) for automatic VAT calculation",
+      "taxStep2Desc": "Above €10,000. Register for EU OSS (one form) and add Stripe Tax (+0.5%) for automatic VAT calculation",
       "taxStep3Title": "Scaling",
       "taxStep3Desc": "Optional: Stripe Managed Payments (Stripe as MoR) or a tax accountant for full compliance",
       "taxDisclaimer": "This is general information, not tax or legal advice. Tax obligations vary by country and business type. Consult a qualified tax professional for your specific situation.",
-      "recommended": "Recommended"
+      "recommended": "Recommended",
+      "categoryLabel": "PAYMENTS"
     },
     "selfHosted": {
       "title": "Deploy anywhere, your way",
@@ -2845,9 +2849,10 @@
         "specs": "2-core CPU, 8GB RAM, 100GB NVMe"
       },
       "demoPrompt": "Want to see it in action first?",
-      "demoPromptSubtitle": "Explore the full admin panel, test checkout with Stripe test cards, and browse sample products — no setup required.",
+      "demoPromptSubtitle": "Explore the full admin panel, test checkout with Stripe test cards, and browse sample products. No setup required.",
       "demoCta": "Try Live Demo",
-      "guideCta": "View deployment guides"
+      "guideCta": "View deployment guides",
+      "categoryLabel": "DEPLOYMENT"
     },
     "techStack": {
       "title": "Built on technology you can trust",
@@ -2884,7 +2889,8 @@
         "name": "Bunny.net",
         "desc": "CDN & Video hosting"
       },
-      "viewStack": "View full tech stack on GitHub"
+      "viewStack": "View full tech stack on GitHub",
+      "categoryLabel": "TECHNOLOGY"
     },
     "useCases": {
       "title": "Built for creators, developers, and entrepreneurs",
@@ -2909,7 +2915,8 @@
         "feature1": "Free products for lead collection",
         "feature2": "No forms, no passwords needed",
         "feature3": "All in one database"
-      }
+      },
+      "categoryLabel": "USE CASES"
     },
     "donate": {
       "title": "Support Open Source",
@@ -2921,44 +2928,44 @@
       "title": "Frequently Asked Questions",
       "items": [
         {
-          "q": "Is Sellf really free?",
+          "q": "Is it really free? What's the catch?",
           "a": "Yes. The software is free forever (MIT license). You pay only for hosting ($3-14/mo) and Stripe processing (~2.9%). No platform fees, no subscriptions, no lock-in."
         },
         {
-          "q": "How is it different from Gumroad or Teachable?",
-          "a": "Gumroad takes 10% per sale. Teachable charges $39-665/mo. Sellf is free — you self-host it, own the code and data. The only cost is Stripe's processing fee."
+          "q": "I already use Gumroad. Why should I switch?",
+          "a": "Gumroad takes 10% per sale. Teachable charges $39-665/mo. Sellf is free - you self-host it, own the code and data. The only cost is Stripe's processing fee."
         },
         {
-          "q": "Do I need to be a developer?",
-          "a": "Not really. If you can follow step-by-step instructions and type a few SSH commands, you can deploy Sellf. We provide Docker configs and detailed guides."
+          "q": "I'm not a developer. Can I still set this up?",
+          "a": "Yes. If you can follow step-by-step instructions and type a few SSH commands, you can deploy Sellf. We provide Docker configs and detailed guides."
         },
         {
-          "q": "What about payment processing?",
-          "a": "Sellf uses Stripe (free to set up). Standard fees: ~2.9% + 30¢ per transaction. MoR platforms charge 5-10% total — significantly more."
+          "q": "How much will I actually pay per sale?",
+          "a": "Only Stripe's processing fee: ~2.9% + 30¢ per transaction. No platform fees on top. MoR platforms charge 5-10% total - significantly more."
         },
         {
-          "q": "Can I white-label it?",
-          "a": "Yes. MIT license — change everything: branding, colors, domain, code. It's fully your platform."
+          "q": "Can I customize it to match my brand?",
+          "a": "Yes. MIT license - change everything: branding, colors, domain, code. It's fully your platform."
         },
         {
-          "q": "Is it production-ready?",
+          "q": "Is it secure enough for real customers?",
           "a": "Yes. Next.js + PostgreSQL + Supabase with RLS policies, HMAC webhooks, AES-256 key encryption, and input validation out of the box."
         },
         {
-          "q": "What if I need help?",
+          "q": "What if I get stuck during setup?",
           "a": "Check the docs and GitHub issues. Any Next.js developer can customize or extend it for you."
         },
         {
-          "q": "Can it handle high traffic?",
+          "q": "Will it handle my traffic if I scale?",
           "a": "Yes. Next.js 16 + PostgreSQL scale horizontally. Deploy on anything from a $3 VPS to Kubernetes. Supabase handles connection pooling."
         },
         {
-          "q": "Do I need a Merchant of Record to sell digital products?",
+          "q": "Do I need a Merchant of Record?",
           "a": "Most small creators don't. MoR platforms handle taxes but take 5-10% and tie your customer data to their platform. Below €10,000 EU cross-border, you handle VAT only in your country. Own Stripe = full control at ~2.9%. Add Stripe Tax (+0.5%) when you grow."
         },
         {
-          "q": "How do I handle VAT/taxes with my own Stripe account?",
-          "a": "Below €10,000/year EU cross-border B2C — handle VAT in your country only. Above that — register EU OSS (one form, all countries). Stripe Tax automates calculation for 0.5%. Consult a tax professional for your case."
+          "q": "How do I handle VAT and taxes?",
+          "a": "Below €10,000/year EU cross-border B2C - handle VAT in your country only. Above that - register EU OSS (one form, all countries). Stripe Tax automates calculation for 0.5%. Consult a tax professional for your case."
         }
       ],
       "githubIssues": "GitHub Issues →"

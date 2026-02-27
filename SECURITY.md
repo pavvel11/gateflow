@@ -78,7 +78,7 @@ This security policy applies to:
 - Sellf Admin Panel (`admin-panel/`)
 - MCP Server (`mcp-server/`)
 - Database migrations (`supabase/migrations/`)
-- Gatekeeper SDK (`gatekeeper.js`)
+- Gatekeeper SDK (`sellf.js`)
 
 ---
 

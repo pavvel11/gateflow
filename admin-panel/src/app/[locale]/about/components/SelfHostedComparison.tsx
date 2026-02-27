@@ -9,6 +9,9 @@ export async function SelfHostedComparison() {
     <section id="deployment" className="py-24 md:py-32 bg-gf-base">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal className="text-center mb-16">
+          <p className="text-sm font-medium text-gf-muted tracking-[0.08em] uppercase mb-3">
+            {t('selfHosted.categoryLabel')}
+          </p>
           <h2 className="text-4xl md:text-5xl font-bold text-gf-heading mb-4">
             {t('selfHosted.title')}
           </h2>
@@ -81,7 +84,7 @@ export async function SelfHostedComparison() {
               href="https://demo.sellf.app/login"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-gf-accent hover:bg-gf-accent-hover text-white shadow-[var(--gf-shadow-accent)] hover:shadow-[0_6px_40px_-4px_var(--gf-accent-glow)] rounded-xl px-8 py-4 text-lg font-bold transition-[background-color,box-shadow] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
+              className="inline-flex items-center gap-2 bg-gf-accent hover:bg-gf-accent-hover text-white shadow-[var(--gf-shadow-accent)] hover:shadow-[0_6px_40px_-4px_var(--gf-accent-glow)] rounded-full px-8 py-4 text-lg font-bold transition-[background-color,box-shadow] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
             >
               {t('selfHosted.demoCta')}
               <ExternalLink className="h-5 w-5" />
@@ -90,7 +93,7 @@ export async function SelfHostedComparison() {
               href="https://github.com/jurczykpawel/sellf#deployment"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-gf-raised/80 border-2 border-gf-border hover:border-gf-border-accent text-gf-heading rounded-xl px-8 py-4 text-lg font-bold transition-[border-color,background-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
+              className="inline-flex items-center gap-2 bg-gf-raised/80 border-2 border-gf-border hover:border-gf-border-accent text-gf-heading rounded-full px-8 py-4 text-lg font-bold transition-[border-color,background-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
             >
               {t('selfHosted.guideCta')}
               <ArrowRight className="h-5 w-5" />

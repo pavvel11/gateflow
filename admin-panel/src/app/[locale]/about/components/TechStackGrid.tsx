@@ -11,6 +11,9 @@ export async function TechStackGrid() {
     <section className="py-20 md:py-24 bg-gf-deep">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal className="text-center mb-12">
+          <p className="text-sm font-medium text-gf-muted tracking-[0.08em] uppercase mb-3">
+            {t('techStack.categoryLabel')}
+          </p>
           <h3 className="text-3xl md:text-4xl font-bold text-gf-heading mb-3">
             {t('techStack.title')}
           </h3>

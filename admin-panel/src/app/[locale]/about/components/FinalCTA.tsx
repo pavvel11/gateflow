@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { ArrowRight, Github, Clock, Code, Scale, Heart } from 'lucide-react';
+import { ArrowRight, Github, Clock, Code, Scale } from 'lucide-react';
 import { Reveal } from './motion/Reveal';
 
 export async function FinalCTA() {
@@ -29,7 +29,7 @@ export async function FinalCTA() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
             href="#deployment"
-            className="inline-flex items-center px-8 py-4 rounded-xl text-lg font-bold text-white bg-gf-accent hover:bg-gf-accent-hover shadow-[var(--gf-shadow-accent)] hover:shadow-[0_6px_40px_-4px_var(--gf-accent-glow)] transition-[background-color,box-shadow] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent gap-3"
+            className="inline-flex items-center px-8 py-4 rounded-full text-lg font-bold text-white bg-gf-accent hover:bg-gf-accent-hover shadow-[var(--gf-shadow-accent)] hover:shadow-[0_6px_40px_-4px_var(--gf-accent-glow)] transition-[background-color,box-shadow] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent gap-3"
           >
             {t('finalCta.ctaDeploy')}
             <ArrowRight className="h-5 w-5" />
@@ -39,19 +39,12 @@ export async function FinalCTA() {
             href="https://github.com/jurczykpawel/sellf"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center px-8 py-4 rounded-xl text-lg font-bold text-gf-heading border-2 border-gf-border hover:border-gf-border-accent bg-gf-raised/80 transition-[border-color,background-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent gap-3"
+            className="inline-flex items-center px-8 py-4 rounded-full text-lg font-bold text-gf-heading border-2 border-gf-border hover:border-gf-border-accent bg-gf-raised/80 transition-[border-color,background-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent gap-3"
           >
             <Github className="h-5 w-5" />
             {t('finalCta.ctaGithub')}
           </a>
 
-          <a
-            href="#"
-            className="inline-flex items-center px-8 py-4 rounded-xl text-lg font-bold text-gf-heading border-2 border-gf-border-accent hover:border-gf-accent bg-gf-accent-soft hover:bg-gf-accent-soft transition-[border-color,background-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent gap-3"
-          >
-            <Heart className="h-5 w-5 text-gf-accent" />
-            {t('donate.title')}
-          </a>
         </div>
 
         <div className="flex flex-wrap justify-center items-center gap-8 mt-10 text-sm text-gf-muted">

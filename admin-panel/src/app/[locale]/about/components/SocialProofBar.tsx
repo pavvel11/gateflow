@@ -47,7 +47,7 @@ export async function SocialProofBar() {
             href="https://demo.sellf.app/login"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-gf-accent-soft border border-gf-border-accent hover:bg-gf-accent-med text-gf-heading rounded-xl px-6 py-3 text-sm font-bold transition-[background-color,border-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
+            className="inline-flex items-center gap-2 bg-gf-accent-soft border border-gf-border-accent hover:bg-gf-accent-med text-gf-heading rounded-full px-6 py-3 text-sm font-bold transition-[background-color,border-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
           >
             {t('demo.cta')}
             <ExternalLink className="h-4 w-4" />

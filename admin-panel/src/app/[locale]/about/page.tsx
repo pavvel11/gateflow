@@ -36,16 +36,16 @@ export default function AboutPage() {
       <main id="main-content">
         <HeroSection />
         <SocialProofBar />
-        <FeeComparisonSection />
-        <div className="section-divider" />
         <FeatureGrid />
-        <HowItWorks />
+        <UseCases />
         <div className="section-divider" />
+        <FeeComparisonSection />
         <TaxSection />
+        <div className="section-divider" />
+        <HowItWorks />
         <SelfHostedComparison />
         <TechStackGrid />
         <div className="section-divider" />
-        <UseCases />
         <FAQSection />
         <FinalCTA />
       </main>
