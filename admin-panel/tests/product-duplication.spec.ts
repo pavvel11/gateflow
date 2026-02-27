@@ -162,9 +162,9 @@ test.describe('Product Duplication', () => {
     }
 
     // Navigate to step 3 to check sale_price (Sales & Settings)
-    await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+    await page.getByRole('dialog').getByRole('button', { name: /Dalej|Continue Setup/i }).click();
     await page.waitForTimeout(1000);
-    await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+    await page.getByRole('dialog').getByRole('button', { name: /Dalej|Continue Setup/i }).click();
     await page.waitForTimeout(1000);
 
     // Check that sale_price is copied on step 3

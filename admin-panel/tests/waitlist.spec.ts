@@ -181,9 +181,9 @@ test.describe('Waitlist Feature', () => {
       await page.fill('input#price', '10');
 
       // Navigate to step 3 (Availability is on step 3: Sales & Settings)
-      await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+      await page.getByRole('dialog').getByRole('button', { name: /Dalej|Continue Setup/i }).click();
       await page.waitForTimeout(1000);
-      await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+      await page.getByRole('dialog').getByRole('button', { name: /Dalej|Continue Setup/i }).click();
       await page.waitForTimeout(1000);
 
       // AvailabilitySection renders with defaultExpanded={true}, so content should be visible
@@ -451,11 +451,11 @@ test.describe('Waitlist Feature', () => {
       await page.fill('input#price', '10');
 
       // Step 1 → Step 2
-      await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+      await page.getByRole('dialog').getByRole('button', { name: /Dalej|Continue Setup/i }).click();
       await page.waitForTimeout(1000);
 
       // Step 2 → Step 3
-      await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+      await page.getByRole('dialog').getByRole('button', { name: /Dalej|Continue Setup/i }).click();
       await page.waitForTimeout(1000);
     }
 

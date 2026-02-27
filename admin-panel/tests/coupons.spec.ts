@@ -60,12 +60,12 @@ test.describe('Smart Coupons System', () => {
     await page.goto(`/pl/checkout/${productSlug}?coupon=${couponCode}&show_promo=true`);
 
     // 4. Verify Coupon is Applied in UI
-    const couponInput = page.locator('input[placeholder="Enter code"]');
+    const couponInput = page.locator('input[placeholder="Wpisz kod"]');
     await expect(couponInput).toBeVisible();
     await expect(couponInput).toHaveValue(couponCode);
 
-    // Wait for verification to finish and success message to appear
-    await expect(page.getByText(/discount applied/i)).toBeVisible({ timeout: 15000 });
+    // Wait for verification to finish and success message to appear (PL locale)
+    await expect(page.getByText(/zniżkę|discount applied/i)).toBeVisible({ timeout: 15000 });
 
     // Check if applied state is active (green border)
     await expect(page.locator('.border-green-500\\\/50')).toBeVisible(); 

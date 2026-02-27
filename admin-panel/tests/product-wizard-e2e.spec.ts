@@ -60,7 +60,7 @@ test.describe('Product Creation Wizard', () => {
 
     // Create Product and Continue Setup buttons should be visible
     await expect(page.getByRole('button', { name: /Utwórz produkt/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Dalej/i })).toBeVisible();
+    await expect(page.getByRole('dialog').getByRole('button', { name: /Dalej/i })).toBeVisible();
 
     // Cancel button on step 1
     await expect(page.getByRole('button', { name: /Anuluj/i })).toBeVisible();
@@ -105,7 +105,7 @@ test.describe('Product Creation Wizard', () => {
     await page.fill('input#price', '10');
 
     // Click Continue Setup → Step 2
-    await page.getByRole('button', { name: /Dalej/i }).click();
+    await page.getByRole('dialog').getByRole('button', { name: /Dalej/i }).click();
 
     // Should be on step 2 — step indicator highlights step 2
     await expect(page.getByRole('button', { name: /Treść i szczegóły|Content & Details/i })).toBeVisible();
@@ -114,13 +114,13 @@ test.describe('Product Creation Wizard', () => {
     await expect(page.getByRole('button', { name: /Wstecz/i })).toBeVisible();
 
     // Click Continue Setup → Step 3
-    await page.getByRole('button', { name: /Dalej/i }).click();
+    await page.getByRole('dialog').getByRole('button', { name: /Dalej/i }).click();
 
     // Should be on step 3 — step indicator highlights step 3
     await expect(page.getByRole('button', { name: /Sprzedaż i ustawienia|Sales & Settings/i })).toBeVisible();
 
     // No Continue Setup on last step
-    await expect(page.getByRole('button', { name: /Dalej/i })).not.toBeVisible();
+    await expect(page.getByRole('dialog').getByRole('button', { name: /Dalej/i })).not.toBeVisible();
 
     // Back and Create Product should be visible
     await expect(page.getByRole('button', { name: /Wstecz/i })).toBeVisible();
@@ -155,11 +155,11 @@ test.describe('Product Creation Wizard', () => {
     await page.fill('input#price', '99');
 
     // Continue to step 2
-    await page.getByRole('button', { name: /Dalej/i }).click();
+    await page.getByRole('dialog').getByRole('button', { name: /Dalej/i }).click();
     await page.waitForTimeout(500);
 
     // Step 2: Content & Details — just pass through
-    await page.getByRole('button', { name: /Dalej/i }).click();
+    await page.getByRole('dialog').getByRole('button', { name: /Dalej/i }).click();
     await page.waitForTimeout(500);
 
     // Step 3: Sales & Settings — create from last step
@@ -178,7 +178,7 @@ test.describe('Product Creation Wizard', () => {
     await openWizard(page);
 
     // Try to continue without filling anything
-    await page.getByRole('button', { name: /Dalej/i }).click();
+    await page.getByRole('dialog').getByRole('button', { name: /Dalej/i }).click();
 
     // Should still be on step 1
     await expect(page.getByRole('button', { name: /Podstawy/i })).toBeVisible();
@@ -311,11 +311,11 @@ test.describe('Edit mode uses wizard', () => {
     await expect(page.getByText('Edytuj produkt')).toBeVisible({ timeout: 5000 });
 
     // Navigate to step 2
-    await page.getByRole('button', { name: /Dalej/i }).click();
+    await page.getByRole('dialog').getByRole('button', { name: /Dalej/i }).click();
     await expect(page.getByRole('button', { name: /Treść i szczegóły|Content & Details/i })).toBeVisible();
 
     // Navigate to step 3
-    await page.getByRole('button', { name: /Dalej/i }).click();
+    await page.getByRole('dialog').getByRole('button', { name: /Dalej/i }).click();
     await expect(page.getByRole('button', { name: /Sprzedaż i ustawienia|Sales & Settings/i })).toBeVisible();
 
     // "Update product" button should be visible on all steps
