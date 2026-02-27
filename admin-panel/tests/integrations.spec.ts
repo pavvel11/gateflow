@@ -546,4 +546,142 @@ test.describe('Integrations - Field Persistence & Validation', () => {
 
     expect(remaining?.length ?? 0).toBe(0);
   });
+
+  test('should show GTM SS toggle only when server container URL is filled', async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.goto('/dashboard/integrations');
+    await page.waitForLoadState('networkidle');
+
+    // Analytics tab — GTM section
+    await page.getByRole('button', { name: 'Analytics' }).click();
+    await page.waitForTimeout(500);
+
+    const serverUrlInput = page.locator('input[placeholder="https://gtm.yourdomain.com"]');
+    const ssCheckbox = page.getByText(/Enable server-to-server|Włącz wysyłkę eventów/i);
+
+    // 1. With empty URL — checkbox must NOT be visible
+    await serverUrlInput.fill('');
+    await page.waitForTimeout(300);
+    await expect(ssCheckbox).not.toBeVisible();
+
+    // 2. Fill URL — checkbox must appear
+    await serverUrlInput.fill('https://gtm.example.com');
+    await page.waitForTimeout(300);
+    await expect(ssCheckbox).toBeVisible();
+
+    // 3. Clear URL — checkbox must disappear again
+    await serverUrlInput.fill('');
+    await page.waitForTimeout(300);
+    await expect(ssCheckbox).not.toBeVisible();
+  });
+
+  test('should save GTM SS config and persist in DB', async ({ page }) => {
+    const serverUrl = 'https://gtm-ss-test.example.com';
+
+    await loginAsAdmin(page);
+    await page.goto('/dashboard/integrations');
+    await page.waitForLoadState('networkidle');
+
+    await page.getByRole('button', { name: 'Analytics' }).click();
+    await page.waitForTimeout(500);
+
+    // Fill GTM Server Container URL
+    const serverUrlInput = page.locator('input[placeholder="https://gtm.yourdomain.com"]');
+    await serverUrlInput.fill(serverUrl);
+    await page.waitForTimeout(300);
+
+    // Enable GTM SS checkbox (should now be visible)
+    const ssCheckbox = page.locator('input[type="checkbox"]').locator('near(:text("Enable server-to-server"), :text("Włącz wysyłkę eventów"))');
+    // Find the checkbox by its sibling label text
+    const ssLabel = page.getByText(/Enable server-to-server|Włącz wysyłkę eventów/i);
+    const ssCheckboxInput = ssLabel.locator('xpath=preceding-sibling::input | ancestor::label//input[type="checkbox"]');
+
+    await expect(ssLabel).toBeVisible();
+    // The checkbox is inside the same <label> — click the label to toggle
+    await ssLabel.click();
+    await page.waitForTimeout(300);
+
+    // Save
+    await page.locator('button[type="submit"]').click();
+    await page.waitForTimeout(3000);
+
+    // Verify in DB
+    const { data: config } = await supabaseAdmin
+      .from('integrations_config')
+      .select('gtm_server_container_url, gtm_ss_enabled')
+      .single();
+
+    expect(config?.gtm_server_container_url).toBe(serverUrl);
+    expect(config?.gtm_ss_enabled).toBe(true);
+  });
+
+  test('should persist GTM SS config after page reload', async ({ page }) => {
+    // Pre-seed config in DB (upsert to handle existing row from previous test)
+    const { data: existing } = await supabaseAdmin
+      .from('integrations_config')
+      .select('id')
+      .maybeSingle();
+
+    if (existing) {
+      await supabaseAdmin
+        .from('integrations_config')
+        .update({
+          gtm_server_container_url: 'https://gtm-reload-test.example.com',
+          gtm_ss_enabled: true,
+        })
+        .eq('id', existing.id);
+    } else {
+      await supabaseAdmin
+        .from('integrations_config')
+        .insert({
+          gtm_server_container_url: 'https://gtm-reload-test.example.com',
+          gtm_ss_enabled: true,
+        });
+    }
+
+    await loginAsAdmin(page);
+    await page.goto('/dashboard/integrations');
+    await page.waitForLoadState('networkidle');
+
+    await page.getByRole('button', { name: 'Analytics' }).click();
+    await page.waitForTimeout(500);
+
+    // Verify URL is pre-filled
+    const serverUrlInput = page.locator('input[placeholder="https://gtm.yourdomain.com"]');
+    await expect(serverUrlInput).toHaveValue('https://gtm-reload-test.example.com');
+
+    // Verify SS checkbox is visible AND checked
+    const ssLabel = page.getByText(/Enable server-to-server|Włącz wysyłkę eventów/i);
+    await expect(ssLabel).toBeVisible();
+
+    // Find the actual checkbox input within the label's parent
+    const checkboxContainer = ssLabel.locator('..');
+    const checkbox = checkboxContainer.locator('input[type="checkbox"]');
+    await expect(checkbox).toBeChecked();
+  });
+
+  test('should reject invalid GTM Server Container URL (non-HTTPS)', async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.goto('/dashboard/integrations');
+    await page.waitForLoadState('networkidle');
+
+    await page.getByRole('button', { name: 'Analytics' }).click();
+    await page.waitForTimeout(500);
+
+    // Fill invalid URL (HTTP, not HTTPS)
+    const serverUrlInput = page.locator('input[placeholder="https://gtm.yourdomain.com"]');
+    await serverUrlInput.fill('http://not-https.example.com');
+
+    // Save
+    await page.locator('button[type="submit"]').click();
+    await page.waitForTimeout(3000);
+
+    // Verify DB does NOT have the invalid value
+    const { data: config } = await supabaseAdmin
+      .from('integrations_config')
+      .select('gtm_server_container_url')
+      .maybeSingle();
+
+    expect(config?.gtm_server_container_url).not.toBe('http://not-https.example.com');
+  });
 });
