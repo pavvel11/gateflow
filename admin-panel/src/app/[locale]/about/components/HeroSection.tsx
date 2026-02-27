@@ -106,7 +106,7 @@ export function HeroSection() {
           </Link>
 
           <a
-            href="https://gateflow.cytr.us/login"
+            href="https://demo.sellf.app/login"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-gf-accent-soft border border-gf-border-accent hover:bg-gf-accent-med text-gf-heading rounded-xl px-8 py-4 text-lg font-bold transition-[background-color,border-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
@@ -116,7 +116,7 @@ export function HeroSection() {
           </a>
 
           <a
-            href="https://github.com/jurczykpawel/gateflow"
+            href="https://github.com/jurczykpawel/sellf"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-gf-raised/60 backdrop-blur-sm border border-gf-border hover:border-gf-border-accent text-gf-heading rounded-xl px-8 py-4 text-lg font-bold transition-[border-color,background-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"

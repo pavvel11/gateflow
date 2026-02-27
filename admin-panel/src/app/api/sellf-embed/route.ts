@@ -99,7 +99,7 @@ function detectLanguage(acceptLanguage: string | null): string {
 }
 
 /**
- * Serve GateFlow Embed Widget script with injected configuration
+ * Serve Sellf Embed Widget script with injected configuration
  *
  * This endpoint serves the embed widget JS with:
  * - API_BASE_URL automatically set to the serving domain
@@ -162,7 +162,7 @@ function generateEmbedScript(
   t: Record<string, string>
 ): string {
   return `/**
- * GateFlow Embed Widget v1.1
+ * Sellf Embed Widget v1.1
  * Auto-configured for: ${apiBaseUrl}
  */
 (function(){
@@ -185,39 +185,39 @@ function injectCSS(){
   if(cssInjected)return;
   cssInjected=true;
   const style=document.createElement('style');
-  style.id='gateflow-embed-styles';
+  style.id='sellf-embed-styles';
   style.textContent=\`
-    .gateflow-widget{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:500px;margin:0 auto;padding:2rem;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.2)}
-    .gateflow-widget *{box-sizing:border-box}
-    .gateflow-widget h3{color:#fff;margin:0 0 .5rem;font-size:1.5rem;font-weight:600}
-    .gateflow-widget p{color:rgba(255,255,255,.9);margin:0 0 1.5rem;font-size:.95rem}
-    .gateflow-form{display:flex;flex-direction:column;gap:1rem}
-    .gateflow-input{padding:.75rem 1rem;border:2px solid rgba(255,255,255,.2);border-radius:8px;font-size:1rem;background:rgba(255,255,255,.1);color:#fff;transition:all .3s}
-    .gateflow-input::placeholder{color:rgba(255,255,255,.6)}
-    .gateflow-input:focus{outline:none;border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.15)}
-    .gateflow-input.gateflow-input-error{border-color:rgba(239,68,68,.8)}
-    .gateflow-button{padding:.75rem 2rem;border:none;border-radius:8px;font-size:1rem;font-weight:600;background:#fff;color:#667eea;cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:.5rem}
-    .gateflow-button:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 5px 20px rgba(0,0,0,.2)}
-    .gateflow-button:disabled{opacity:.6;cursor:not-allowed}
-    .gateflow-spinner{border:2px solid rgba(102,126,234,.3);border-top-color:#667eea;border-radius:50%;width:18px;height:18px;animation:gateflow-spin .8s linear infinite;display:inline-block}
-    @keyframes gateflow-spin{to{transform:rotate(360deg)}}
-    .gateflow-message{padding:.75rem 1rem;border-radius:8px;font-size:.9rem;margin-top:1rem}
-    .gateflow-message:empty{display:none}
-    .gateflow-message-success{background:rgba(16,185,129,.2);border:1px solid rgba(16,185,129,.5);color:#fff}
-    .gateflow-message-error{background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.5);color:#fff}
-    .gateflow-terms{color:rgba(255,255,255,.8);font-size:.85rem;margin-top:1rem;text-align:center}
-    .gateflow-terms a{color:#fff;text-decoration:underline}
-    .gateflow-turnstile{margin-top:1rem;display:flex;justify-content:center}
+    .sellf-widget{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:500px;margin:0 auto;padding:2rem;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.2)}
+    .sellf-widget *{box-sizing:border-box}
+    .sellf-widget h3{color:#fff;margin:0 0 .5rem;font-size:1.5rem;font-weight:600}
+    .sellf-widget p{color:rgba(255,255,255,.9);margin:0 0 1.5rem;font-size:.95rem}
+    .sellf-form{display:flex;flex-direction:column;gap:1rem}
+    .sellf-input{padding:.75rem 1rem;border:2px solid rgba(255,255,255,.2);border-radius:8px;font-size:1rem;background:rgba(255,255,255,.1);color:#fff;transition:all .3s}
+    .sellf-input::placeholder{color:rgba(255,255,255,.6)}
+    .sellf-input:focus{outline:none;border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.15)}
+    .sellf-input.sellf-input-error{border-color:rgba(239,68,68,.8)}
+    .sellf-button{padding:.75rem 2rem;border:none;border-radius:8px;font-size:1rem;font-weight:600;background:#fff;color:#667eea;cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:.5rem}
+    .sellf-button:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 5px 20px rgba(0,0,0,.2)}
+    .sellf-button:disabled{opacity:.6;cursor:not-allowed}
+    .sellf-spinner{border:2px solid rgba(102,126,234,.3);border-top-color:#667eea;border-radius:50%;width:18px;height:18px;animation:sellf-spin .8s linear infinite;display:inline-block}
+    @keyframes sellf-spin{to{transform:rotate(360deg)}}
+    .sellf-message{padding:.75rem 1rem;border-radius:8px;font-size:.9rem;margin-top:1rem}
+    .sellf-message:empty{display:none}
+    .sellf-message-success{background:rgba(16,185,129,.2);border:1px solid rgba(16,185,129,.5);color:#fff}
+    .sellf-message-error{background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.5);color:#fff}
+    .sellf-terms{color:rgba(255,255,255,.8);font-size:.85rem;margin-top:1rem;text-align:center}
+    .sellf-terms a{color:#fff;text-decoration:underline}
+    .sellf-turnstile{margin-top:1rem;display:flex;justify-content:center}
   \`;
   document.head.appendChild(style);
 }
 
 function init(){
   injectCSS();
-  document.querySelectorAll('[data-gateflow-product]').forEach(widget=>{
-    if(widget.hasAttribute('data-gateflow-initialized'))return;
-    widget.setAttribute('data-gateflow-initialized','true');
-    const productSlug=widget.getAttribute('data-gateflow-product');
+  document.querySelectorAll('[data-sellf-product]').forEach(widget=>{
+    if(widget.hasAttribute('data-sellf-initialized'))return;
+    widget.setAttribute('data-sellf-initialized','true');
+    const productSlug=widget.getAttribute('data-sellf-product');
     if(productSlug)renderWidget(widget,productSlug);
   });
 }
@@ -234,18 +234,18 @@ function renderWidget(container,productSlug){
   });
 
   container.innerHTML=\`
-    <div id="\${widgetId}" class="gateflow-widget">
+    <div id="\${widgetId}" class="sellf-widget">
       <h3>\${T.title}</h3>
       <p>\${T.subtitle}</p>
-      <form class="gateflow-form" id="\${widgetId}-form">
-        <input type="email" class="gateflow-input" id="\${widgetId}-email" placeholder="\${T.placeholder}" required autocomplete="email"/>
-        <button type="submit" class="gateflow-button" id="\${widgetId}-button">
+      <form class="sellf-form" id="\${widgetId}-form">
+        <input type="email" class="sellf-input" id="\${widgetId}-email" placeholder="\${T.placeholder}" required autocomplete="email"/>
+        <button type="submit" class="sellf-button" id="\${widgetId}-button">
           <span id="\${widgetId}-button-text">\${T.button}</span>
         </button>
-        <div class="gateflow-turnstile" id="\${widgetId}-turnstile"></div>
-        <div class="gateflow-terms">\${T.terms}</div>
+        <div class="sellf-turnstile" id="\${widgetId}-turnstile"></div>
+        <div class="sellf-terms">\${T.terms}</div>
       </form>
-      <div class="gateflow-message" id="\${widgetId}-message"></div>
+      <div class="sellf-message" id="\${widgetId}-message"></div>
     </div>
   \`;
 
@@ -263,7 +263,7 @@ function loadTurnstile(widgetId){
   script.src='https://challenges.cloudflare.com/turnstile/v0/api.js';
   script.async=true;
   script.onload=()=>{turnstileLoading=false;turnstileCallbacks.forEach(cb=>cb());turnstileCallbacks=[]};
-  script.onerror=()=>{turnstileLoading=false;console.error('GateFlow: Failed to load Turnstile')};
+  script.onerror=()=>{turnstileLoading=false;console.error('Sellf: Failed to load Turnstile')};
   document.head.appendChild(script);
 }
 
@@ -282,7 +282,7 @@ function updateEmail(widgetId,email){
   const state=widgetState.get(widgetId);
   if(state)state.email=email.trim();
   const input=document.getElementById(widgetId+'-email');
-  if(input)input.classList.remove('gateflow-input-error');
+  if(input)input.classList.remove('sellf-input-error');
 }
 
 async function handleSubmit(event,widgetId){
@@ -295,7 +295,7 @@ async function handleSubmit(event,widgetId){
 
   if(!email||!isValidEmail(email)){
     showMessage(widgetId,T.errorEmail,'error');
-    emailInput?.classList.add('gateflow-input-error');
+    emailInput?.classList.add('sellf-input-error');
     return;
   }
 
@@ -321,7 +321,7 @@ async function handleSubmit(event,widgetId){
       state.email='';
 
       // Dispatch success event
-      const successEvent=new CustomEvent('gateflow:success',{
+      const successEvent=new CustomEvent('sellf:success',{
         bubbles:true,
         detail:{productSlug,email,widgetId}
       });
@@ -336,7 +336,7 @@ async function handleSubmit(event,widgetId){
       showMessage(widgetId,data.error||T.errorGeneric,'error');
     }
   }catch(error){
-    console.error('GateFlow Embed Error:',error);
+    console.error('Sellf Embed Error:',error);
     showMessage(widgetId,T.errorNetwork,'error');
   }finally{
     setLoading(widgetId,false);
@@ -354,7 +354,7 @@ function setLoading(widgetId,loading){
   if(!button||!buttonText)return;
   if(loading){
     button.disabled=true;
-    buttonText.innerHTML='<span class="gateflow-spinner"></span> '+T.sending;
+    buttonText.innerHTML='<span class="sellf-spinner"></span> '+T.sending;
   }else{
     button.disabled=false;
     buttonText.textContent=T.button;
@@ -363,15 +363,15 @@ function setLoading(widgetId,loading){
 
 function showMessage(widgetId,message,type){
   const el=document.getElementById(widgetId+'-message');
-  if(el){el.className='gateflow-message gateflow-message-'+type;el.textContent=message}
+  if(el){el.className='sellf-message sellf-message-'+type;el.textContent=message}
 }
 
 function clearMessage(widgetId){
   const el=document.getElementById(widgetId+'-message');
-  if(el){el.className='gateflow-message';el.textContent=''}
+  if(el){el.className='sellf-message';el.textContent=''}
 }
 
-window.GateFlowEmbed={init};
+window.SellfEmbed={init};
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init)}else{init()}
 })();`;
 }

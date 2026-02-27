@@ -112,7 +112,7 @@ jobs:
 
           # Create .env.example for reference
           cat > ../release/.env.example << 'EOF'
-          # GateFlow Environment Variables
+          # Sellf Environment Variables
           # Copy this file to .env.local and fill in your values
 
           # Supabase
@@ -152,7 +152,7 @@ jobs:
 
           # Create tarball
           cd ../release
-          tar -czvf ../gateflow-build.tar.gz .
+          tar -czvf ../sellf-build.tar.gz .
 
       - name: Get version
         id: version
@@ -165,7 +165,7 @@ jobs:
 
       - name: Upload artifact to release
         if: github.event_name == 'release'
-        run: gh release upload "${{ steps.version.outputs.VERSION }}" gateflow-build.tar.gz --clobber
+        run: gh release upload "${{ steps.version.outputs.VERSION }}" sellf-build.tar.gz --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -174,21 +174,21 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.VERSION }}
-          name: GateFlow ${{ steps.version.outputs.VERSION }}
+          name: Sellf ${{ steps.version.outputs.VERSION }}
           draft: false
           prerelease: ${{ contains(steps.version.outputs.VERSION, '-') }}
-          files: gateflow-build.tar.gz
+          files: sellf-build.tar.gz
           body: |
-            ## GateFlow ${{ steps.version.outputs.VERSION }}
+            ## Sellf ${{ steps.version.outputs.VERSION }}
 
             ### Installation
 
             ```bash
             # Download and extract
-            curl -L https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/gateflow-build.tar.gz | tar -xz -C ~/gateflow-admin
+            curl -L https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/sellf-build.tar.gz | tar -xz -C ~/sellf-admin
 
             # Configure environment
-            cd ~/gateflow-admin
+            cd ~/sellf-admin
             cp .env.example .env.local
             nano .env.local  # Fill in your values
 
@@ -196,7 +196,7 @@ jobs:
             bun install --production
 
             # Start with PM2
-            pm2 start ./start.sh --name gateflow-admin
+            pm2 start ./start.sh --name sellf-admin
             pm2 save
             ```
 

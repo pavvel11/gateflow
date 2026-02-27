@@ -1,7 +1,7 @@
--- Create initial database structure for GateFlow Admin Panel
+-- Create initial database structure for Sellf Admin Panel
 -- Migration: 20250709160000_initial_schema
 -- Updated: Consolidated all admin functionality into single migration
--- Based on existing gateflow_setup.sql and user_product_access_setup.sql
+-- Based on existing sellf_setup.sql and user_product_access_setup.sql
 
 -- Suppress NOTICE messages during migration (e.g., "relation already exists, skipping")
 SET client_min_messages = warning;

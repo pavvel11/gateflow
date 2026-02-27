@@ -104,7 +104,7 @@ export class WebhookService {
       throw new Error('Endpoint not found');
     }
 
-    const options = { headers: { 'X-GateFlow-Retry': 'true' } };
+    const options = { headers: { 'X-Sellf-Retry': 'true' } };
     const result = await this.dispatchWebhook(endpoint, log.event_type, log.payload, options);
 
     // If dispatch executed (even if it failed HTTP-wise, we logged a new attempt),
@@ -148,9 +148,9 @@ export class WebhookService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-GateFlow-Event': event,
-          'X-GateFlow-Signature': signature,
-          'X-GateFlow-Timestamp': timestamp,
+          'X-Sellf-Event': event,
+          'X-Sellf-Signature': signature,
+          'X-Sellf-Timestamp': timestamp,
           ...extraOptions.headers
         },
         body: payloadString,

@@ -29,14 +29,14 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
       return `<script src="${domain}/api/gatekeeper?productSlug=${product.slug}"></script><noscript><meta http-equiv="refresh" content="0;url=${domain}/p/${product.slug}"></noscript>`;
     } else if (options.mode === 'embed') {
       // Embed widget mode - only for free products
-      return `<!-- GateFlow Free Product Embed -->
-<div data-gateflow-product="${product.slug}"></div>
-<script src="${domain}/api/gateflow-embed"></script>
+      return `<!-- Sellf Free Product Embed -->
+<div data-sellf-product="${product.slug}"></div>
+<script src="${domain}/api/sellf-embed"></script>
 
 <!-- Optional: Listen for success events -->
 <!--
 <script>
-  document.addEventListener('gateflow:success', function(e) {
+  document.addEventListener('sellf:success', function(e) {
     console.log('Claimed:', e.detail.productSlug, 'Email:', e.detail.email);
     // Reload page to show protected content
     location.reload();

@@ -123,7 +123,7 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
     embedded: false,
     groupByPurpose: true,
     storageMethod: 'cookie',
-    cookieName: 'gateflow_consent',
+    cookieName: 'sellf_consent',
     cookieExpiresAfterDays: 365,
     default: false,
     mustConsent: false,

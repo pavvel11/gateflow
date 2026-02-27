@@ -13,7 +13,7 @@ test.describe('Magic Link Authentication (Mailpit)', () => {
     // 1. Navigate to login page
     await acceptAllCookies(page);
     await page.goto('/login');
-    await expect(page.locator('h1').filter({ hasText: /GateFlow/i })).toBeVisible();
+    await expect(page.locator('h1').filter({ hasText: /Sellf/i })).toBeVisible();
 
     // 2. Fill email
     const emailInput = page.locator('input[type="email"]');

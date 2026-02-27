@@ -1,5 +1,5 @@
 /**
- * GateFlow - Professional Content Access Control System
+ * Sellf - Professional Content Access Control System
  * Version 1.0.0 - Complete Refactor
  * 
  * 🎯 FEATURES:
@@ -15,7 +15,7 @@
  * Configuration automatically injected by GatekeeperGenerator
  * 
  * 📄 LICENSE: Freemium - Free with watermark, $49/domain/year for removal
- * 🌐 Website: https://gateflow.pl | 📧 Support: support@gateflow.pl
+ * 🌐 Website: https://sellf.app | 📧 Support: support@sellf.app
  */
 
 // ============================================================================
@@ -35,7 +35,7 @@ const CONSTANTS = {
     DUPLICATE_KEY_ERROR: '23505',
     
     // License public key for offline verification (ECDSA P-256)
-    // Only the private key holder (GateFlow) can generate valid licenses
+    // Only the private key holder (Sellf) can generate valid licenses
     LICENSE_PUBLIC_KEY: `-----BEGIN PUBLIC KEY-----
 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIENJbqxv7nmfxKjGCu98LTpekvLW
 bBv/FwWkjy1pnLiuFZDGNITxN6YC1L4628tXv1cPey6WcQqEC3jTWz2ZsQ==
@@ -43,18 +43,18 @@ bBv/FwWkjy1pnLiuFZDGNITxN6YC1L4628tXv1cPey6WcQqEC3jTWz2ZsQ==
     
     // Event names
     EVENTS: {
-        ACCESS_GRANTED: 'gateflow_access_granted',
-        ACCESS_DENIED: 'gateflow_access_denied',
-        LOGIN_SHOWN: 'gateflow_login_shown',
-        MAGIC_LINK_SENT: 'gateflow_magic_link_sent',
-        FREE_ACCESS_GRANTED: 'gateflow_free_access_granted',
-        ELEMENT_PROTECTED: 'gateflow_element_protected',
-        ELEMENT_ACCESSED: 'gateflow_element_accessed',
-        BATCH_CHECK: 'gateflow_batch_check',
-        ERROR: 'gateflow_error',
-        PERFORMANCE: 'gateflow_performance',
-        LICENSE_VALID: 'gateflow_license_valid',
-        LICENSE_INVALID: 'gateflow_license_invalid'
+        ACCESS_GRANTED: 'sellf_access_granted',
+        ACCESS_DENIED: 'sellf_access_denied',
+        LOGIN_SHOWN: 'sellf_login_shown',
+        MAGIC_LINK_SENT: 'sellf_magic_link_sent',
+        FREE_ACCESS_GRANTED: 'sellf_free_access_granted',
+        ELEMENT_PROTECTED: 'sellf_element_protected',
+        ELEMENT_ACCESSED: 'sellf_element_accessed',
+        BATCH_CHECK: 'sellf_batch_check',
+        ERROR: 'sellf_error',
+        PERFORMANCE: 'sellf_performance',
+        LICENSE_VALID: 'sellf_license_valid',
+        LICENSE_INVALID: 'sellf_license_invalid'
     },
     
     // Fallback modes
@@ -77,7 +77,7 @@ const TRANSLATIONS = {
         // Loading & status
         checking_access: 'Checking access...',
         please_wait: 'Please wait while we verify your access',
-        powered_by: 'Powered by GateFlow',
+        powered_by: 'Powered by Sellf',
         secured_by: 'Secured by',
 
         // Errors
@@ -110,7 +110,7 @@ const TRANSLATIONS = {
         // Loading & status
         checking_access: 'Sprawdzanie dostępu...',
         please_wait: 'Proszę czekać, weryfikujemy Twój dostęp',
-        powered_by: 'Powered by GateFlow',
+        powered_by: 'Powered by Sellf',
         secured_by: 'Zabezpieczone przez',
 
         // Errors
@@ -142,7 +142,7 @@ const TRANSLATIONS = {
     de: {
         checking_access: 'Zugriff wird überprüft...',
         please_wait: 'Bitte warten Sie, während wir Ihren Zugriff überprüfen',
-        powered_by: 'Powered by GateFlow',
+        powered_by: 'Powered by Sellf',
         secured_by: 'Gesichert durch',
         something_wrong: 'Etwas ist schief gelaufen',
         temporary_issue: 'Ein vorübergehendes Problem ist aufgetreten. Bitte versuchen Sie es erneut.',
@@ -166,7 +166,7 @@ const TRANSLATIONS = {
     fr: {
         checking_access: 'Vérification de l\'accès...',
         please_wait: 'Veuillez patienter pendant la vérification de votre accès',
-        powered_by: 'Powered by GateFlow',
+        powered_by: 'Powered by Sellf',
         secured_by: 'Sécurisé par',
         something_wrong: 'Une erreur s\'est produite',
         temporary_issue: 'Un problème temporaire s\'est produit. Veuillez réessayer.',
@@ -190,7 +190,7 @@ const TRANSLATIONS = {
     es: {
         checking_access: 'Verificando acceso...',
         please_wait: 'Por favor espere mientras verificamos su acceso',
-        powered_by: 'Powered by GateFlow',
+        powered_by: 'Powered by Sellf',
         secured_by: 'Protegido por',
         something_wrong: 'Algo salió mal',
         temporary_issue: 'Ocurrió un problema temporal. Por favor, inténtelo de nuevo.',
@@ -276,10 +276,10 @@ class I18n {
  * This prevents content flash and doesn't require data-original-content storage
  */
 (function injectCriticalCSS() {
-    if (document.getElementById('gateflow-critical-css')) return;
+    if (document.getElementById('sellf-critical-css')) return;
 
     const style = document.createElement('style');
-    style.id = 'gateflow-critical-css';
+    style.id = 'sellf-critical-css';
     style.textContent = `
         /* Hide protected content until processed */
         [data-gatekeeper-product] {
@@ -341,7 +341,7 @@ class Logger {
 
     static error(context, error) {
         if (this.isDev()) {
-            console.error(`[GateFlow] ${context}:`, error);
+            console.error(`[Sellf] ${context}:`, error);
         }
         // Always track errors for analytics (even in production)
         Analytics.track(CONSTANTS.EVENTS.ERROR, {
@@ -352,22 +352,22 @@ class Logger {
 
     static warn(message) {
         if (this.isDev()) {
-            console.warn(`[GateFlow] ${message}`);
+            console.warn(`[Sellf] ${message}`);
         }
     }
 
     static info(message) {
         if (this.isDev()) {
-            console.log(`[GateFlow] ${message}`);
+            console.log(`[Sellf] ${message}`);
         }
     }
 
     static debug(message, data = null) {
         if (this.isDev()) {
             if (data) {
-                console.log(`[GateFlow] ${message}`, data);
+                console.log(`[Sellf] ${message}`, data);
             } else {
-                console.log(`[GateFlow] ${message}`);
+                console.log(`[Sellf] ${message}`);
             }
         }
     }
@@ -449,7 +449,7 @@ class Analytics {
                 timestamp: new Date().toISOString(),
                 url: window.location.href,
                 userAgent: navigator.userAgent,
-                gateflow_version: CONSTANTS.VERSION,
+                sellf_version: CONSTANTS.VERSION,
                 license_status: LicenseManager.getStatus().valid ? 'licensed' : 'unlicensed',
                 viewport: {
                     width: window.innerWidth,
@@ -520,12 +520,12 @@ class Analytics {
 /**
  * License verification using ECDSA digital signatures
  *
- * License format: GF-{domain}-{expiry}-{base64_signature}
+ * License format: SF-{domain}-{expiry}-{base64_signature}
  * - domain: hostname the license is valid for
  * - expiry: YYYYMMDD or "UNLIMITED" for perpetual licenses
  * - signature: ECDSA-SHA256 signature (base64url encoded)
  *
- * Only GateFlow (holder of private key) can generate valid licenses.
+ * Only Sellf (holder of private key) can generate valid licenses.
  * Public key verification is completely offline - no server needed.
  */
 class LicenseManager {
@@ -536,7 +536,7 @@ class LicenseManager {
      */
     static async checkLicense() {
         const config = window.gatekeeperConfig || {};
-        const licenseKey = config.gateflowLicense;
+        const licenseKey = config.sellfLicense;
 
         if (!licenseKey) {
             this.status = { valid: false, showWatermark: true, reason: 'no_license' };
@@ -584,11 +584,11 @@ class LicenseManager {
      * Verify license offline using ECDSA public key
      */
     static async verifyLicenseOffline(licenseKey) {
-        // Parse license: GF-domain.com-20261231-base64signature
-        // or: GF-domain.com-UNLIMITED-base64signature
+        // Parse license: SF-domain.com-20261231-base64signature
+        // or: SF-domain.com-UNLIMITED-base64signature
         const parts = licenseKey.split('-');
 
-        if (parts.length < 4 || parts[0] !== 'GF') {
+        if (parts.length < 4 || parts[0] !== 'SF') {
             return { valid: false, reason: 'invalid_format' };
         }
 
@@ -665,7 +665,7 @@ class LicenseManager {
                 dataBuffer
             );
         } catch (error) {
-            console.error('[GateFlow] Signature verification error:', error);
+            console.error('[Sellf] Signature verification error:', error);
             return false;
         }
     }
@@ -718,10 +718,10 @@ class LicenseManager {
         }
         // Fallback to client-side status (for backwards compatibility)
         if (this.status.valid) return;
-        if (document.getElementById('gateflow-watermark')) return;
+        if (document.getElementById('sellf-watermark')) return;
 
         const watermark = document.createElement('div');
-        watermark.id = 'gateflow-watermark';
+        watermark.id = 'sellf-watermark';
         watermark.innerHTML = `
             <div style="
                 position: fixed;
@@ -743,9 +743,9 @@ class LicenseManager {
                 user-select: none;
             " onmouseover="this.style.transform='scale(1.05)'"
                onmouseout="this.style.transform='scale(1)'"
-               onclick="window.open('https://gateflow.pl/pricing', '_blank')">
+               onclick="window.open('https://sellf.app/pricing', '_blank')">
                 <span style="margin-right: 8px;">🔐</span>
-                ${I18n.t('secured_by')} <strong>GateFlow</strong> v${CONSTANTS.VERSION}
+                ${I18n.t('secured_by')} <strong>Sellf</strong> v${CONSTANTS.VERSION}
                 <div style="font-size: 10px; opacity: 0.8; margin-top: 2px;">
                     ${I18n.t('get_license')}
                 </div>
@@ -932,8 +932,8 @@ class AccessControl {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-GateFlow-Origin': window.location.origin,
-                    'X-GateFlow-Version': CONSTANTS.VERSION
+                    'X-Sellf-Origin': window.location.origin,
+                    'X-Sellf-Version': CONSTANTS.VERSION
                 },
                 body: JSON.stringify({ productSlug })
             });
@@ -963,8 +963,8 @@ class AccessControl {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-GateFlow-Origin': window.location.origin,
-                    'X-GateFlow-Version': CONSTANTS.VERSION
+                    'X-Sellf-Origin': window.location.origin,
+                    'X-Sellf-Version': CONSTANTS.VERSION
                 },
                 body: JSON.stringify({ productSlugs })
             });
@@ -1088,7 +1088,7 @@ class UITemplates {
                     ` : ''}
                 </div>
                 <div style="font-size: 12px; color: ${theme.textColor}; opacity: 0.4;">
-                    ${I18n.t('error_at')} ${new Date().toLocaleString()} • GateFlow v${CONSTANTS.VERSION}
+                    ${I18n.t('error_at')} ${new Date().toLocaleString()} • Sellf v${CONSTANTS.VERSION}
                 </div>
             </div>
             <style>
@@ -1138,7 +1138,7 @@ class UITemplates {
                     </div>
 
                     <div style="margin-top: 24px; text-align: center; font-size: 12px; color: ${theme.textColor}; opacity: 0.4;">
-                        ${I18n.t('secured_by')} GateFlow v${CONSTANTS.VERSION}
+                        ${I18n.t('secured_by')} Sellf v${CONSTANTS.VERSION}
                     </div>
                 </div>
             </div>
@@ -1249,9 +1249,9 @@ class PerformanceMonitor {
 // ============================================================================
 
 /**
- * Main GateFlow system orchestrator
+ * Main Sellf system orchestrator
  */
-class GateFlow {
+class Sellf {
     constructor() {
         this.initialized = false;
         this.config = null;
@@ -1297,10 +1297,10 @@ class GateFlow {
     }
 
     showLoadingOverlay() {
-        if (document.getElementById('gateflow-loading-overlay')) return;
+        if (document.getElementById('sellf-loading-overlay')) return;
 
         const overlay = document.createElement('div');
-        overlay.id = 'gateflow-loading-overlay';
+        overlay.id = 'sellf-loading-overlay';
         overlay.innerHTML = UITemplates.getLoadingTemplate();
         overlay.style.cssText = `
             position: fixed;
@@ -1315,7 +1315,7 @@ class GateFlow {
     }
 
     hideLoadingOverlay() {
-        const overlay = document.getElementById('gateflow-loading-overlay');
+        const overlay = document.getElementById('sellf-loading-overlay');
         if (overlay) {
             overlay.style.opacity = '0';
             overlay.style.transition = 'opacity 0.3s ease';
@@ -1393,7 +1393,7 @@ class GateFlow {
         const supabaseAnonKey = config.SUPABASE_ANON_KEY || config.supabaseAnonKey;
 
         if (!supabaseUrl || !supabaseAnonKey) {
-            console.warn('[GateFlow] Missing Supabase configuration - using mock client');
+            console.warn('[Sellf] Missing Supabase configuration - using mock client');
             // Create a mock client when config is missing
             // Create a mock client for development
             SessionManager.supabaseClient = {
@@ -1654,12 +1654,12 @@ class GateFlow {
 
 // Global instances
 const cache = new CacheManager();
-const gateflow = new GateFlow();
+const sellf = new Sellf();
 
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        gateflow.initialize().catch(error => {
+        sellf.initialize().catch(error => {
             // Fallback: show all protected elements with no-access state
             document.querySelectorAll('[data-gatekeeper-product]').forEach(el => {
                 el.classList.add('gatekeeper-no-access', 'gatekeeper-processed');
@@ -1667,7 +1667,7 @@ if (document.readyState === 'loading') {
         });
     });
 } else {
-    gateflow.initialize().catch(error => {
+    sellf.initialize().catch(error => {
         // Fallback: show all protected elements with no-access state
         document.querySelectorAll('[data-gatekeeper-product]').forEach(el => {
             el.classList.add('gatekeeper-no-access', 'gatekeeper-processed');
@@ -1676,8 +1676,8 @@ if (document.readyState === 'loading') {
 }
 
 // Expose public API
-window.GateFlow = GateFlow;
-window.gateflow = gateflow;
+window.Sellf = Sellf;
+window.sellf = sellf;
 window.cache = cache;
 
 // Cleanup on page unload
@@ -1687,7 +1687,7 @@ window.addEventListener('beforeunload', () => {
 
 // Enhanced error handling for uncaught errors
 window.addEventListener('error', (event) => {
-    if (event.error?.stack?.includes('gateflow') || event.error?.stack?.includes('gatekeeper')) {
+    if (event.error?.stack?.includes('sellf') || event.error?.stack?.includes('gatekeeper')) {
         Analytics.track(CONSTANTS.EVENTS.ERROR, {
             error: event.error.message,
             context: 'global_error_handler',
@@ -1712,5 +1712,5 @@ window.CacheManager = CacheManager;
 window.Analytics = Analytics;
 window.ErrorHandler = ErrorHandler;
 window.UITemplates = UITemplates;
-window.GateFlow = GateFlow;
+window.Sellf = Sellf;
 

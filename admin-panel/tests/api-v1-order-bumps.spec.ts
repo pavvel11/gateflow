@@ -795,7 +795,7 @@ test.describe('Order Bumps API v1 - IDOR Tests', () => {
   });
 
   test('both admins can view order bumps (shared resource)', async ({ page }) => {
-    // In GateFlow, order bumps are global admin resources, not per-user
+    // In Sellf, order bumps are global admin resources, not per-user
     // Both admins should be able to view them
     await loginAsAdmin(page, adminUser1.email, password);
 

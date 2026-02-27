@@ -128,7 +128,7 @@ export interface WizardState {
 }
 
 /**
- * Required permissions for GateFlow Stripe integration
+ * Required permissions for Sellf Stripe integration
  */
 export const REQUIRED_PERMISSIONS: readonly PermissionStatus[] = [
   {

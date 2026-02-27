@@ -1,5 +1,5 @@
 /**
- * CORS utilities for GateFlow API endpoints
+ * CORS utilities for Sellf API endpoints
  *
  * SECURITY: Only specific endpoints should allow cross-origin requests with credentials.
  * These are READ-ONLY endpoints that return non-sensitive data (access: true/false).
@@ -73,7 +73,7 @@ export function getCrossOriginHeaders(request: Request): Record<string, string> 
     'Access-Control-Allow-Origin': effectiveOrigin,
     'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, X-GateFlow-Origin, X-GateFlow-Version',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, X-Sellf-Origin, X-Sellf-Version',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin',
   }

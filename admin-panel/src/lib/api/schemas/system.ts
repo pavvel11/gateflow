@@ -14,7 +14,7 @@ export const SystemStatusSchema = z.object({
   timestamp: DateTimeSchema,
   version: z.object({
     api: z.string().openapi({ example: 'v1' }),
-    service: z.string().openapi({ example: 'gateflow-admin' }),
+    service: z.string().openapi({ example: 'sellf-admin' }),
     build: z.string().openapi({ example: 'abc1234' }),
   }),
   environment: z.string().openapi({ example: 'production' }),

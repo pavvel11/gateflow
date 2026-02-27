@@ -37,7 +37,7 @@ export async function TechStackGrid() {
 
         <div className="text-center mt-8">
           <a
-            href="https://github.com/jurczykpawel/gateflow"
+            href="https://github.com/jurczykpawel/sellf"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm font-medium text-gf-accent hover:text-gf-accent-hover transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent rounded"

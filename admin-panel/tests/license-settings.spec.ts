@@ -15,12 +15,12 @@ const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 // Test licenses for localhost (generated with scripts/generate-license.js)
 // These licenses are for 'localhost' domain to match NEXT_PUBLIC_SITE_URL=http://localhost:3000
 const TEST_LICENSES = {
-  unlimited: 'GF-localhost-UNLIMITED-MEYCIQDmEAvHQyvdCu-BFEm1pXh1GCsm8sUVN6k_0lB5loj-CgIhAKdKPs0tPFtAlRgS4LWLSDFddvAJrmK4EgfbDuCm9fcd',
-  expired: 'GF-localhost-20251231-MEUCIQDWCdAQqEooBjrY-NcDSCd6ULjXuv-FfF54wNPoNbdOzgIgcDcMfPZaACiniDg_Ph0qvZE91Qy8K1fJqZ5rwBRHNKQ',
-  future: 'GF-localhost-20301231-MEYCIQCOLJqPK06fqDwAxJyuGiUfMaWZYmRjqkN8U4VzfwRJLQIhAPMZN5P5BqaEhUXa3TmafNtg2gW3ghwI4YeEvhruMXSK',
+  unlimited: 'SF-localhost-UNLIMITED-MEYCIQDmEAvHQyvdCu-BFEm1pXh1GCsm8sUVN6k_0lB5loj-CgIhAKdKPs0tPFtAlRgS4LWLSDFddvAJrmK4EgfbDuCm9fcd',
+  expired: 'SF-localhost-20251231-MEUCIQDWCdAQqEooBjrY-NcDSCd6ULjXuv-FfF54wNPoNbdOzgIgcDcMfPZaACiniDg_Ph0qvZE91Qy8K1fJqZ5rwBRHNKQ',
+  future: 'SF-localhost-20301231-MEYCIQCOLJqPK06fqDwAxJyuGiUfMaWZYmRjqkN8U4VzfwRJLQIhAPMZN5P5BqaEhUXa3TmafNtg2gW3ghwI4YeEvhruMXSK',
   invalid: 'INVALID-LICENSE-FORMAT',
   wrongPrefix: 'XX-localhost-UNLIMITED-signature',
-  tooShort: 'GF-test',
+  tooShort: 'SF-test',
 };
 
 test.describe('License Settings', () => {
@@ -81,7 +81,7 @@ test.describe('License Settings', () => {
     // Clear any existing license
     await supabaseAdmin
       .from('integrations_config')
-      .update({ gateflow_license: null })
+      .update({ sellf_license: null })
       .eq('id', 1);
   });
 
@@ -89,7 +89,7 @@ test.describe('License Settings', () => {
     // Clear license
     await supabaseAdmin
       .from('integrations_config')
-      .update({ gateflow_license: null })
+      .update({ sellf_license: null })
       .eq('id', 1);
 
     // Delete test user
@@ -106,12 +106,12 @@ test.describe('License Settings', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    // Should see GateFlow License section (matches both EN and PL)
-    const licenseHeading = page.locator('h2', { hasText: /GateFlow License|Licencja GateFlow/i });
+    // Should see Sellf License section (matches both EN and PL)
+    const licenseHeading = page.locator('h2', { hasText: /Sellf License|Licencja Sellf/i });
     await expect(licenseHeading).toBeVisible({ timeout: 10000 });
 
     // Should see license key input
-    const licenseInput = page.locator('input[placeholder*="GF-"]');
+    const licenseInput = page.locator('input[placeholder*="SF-"]');
     await expect(licenseInput).toBeVisible();
 
     // Should see "How licensing works" section
@@ -126,7 +126,7 @@ test.describe('License Settings', () => {
     await page.waitForTimeout(2000);
 
     // Enter unlimited license
-    const licenseInput = page.locator('input[placeholder*="GF-"]');
+    const licenseInput = page.locator('input[placeholder*="SF-"]');
     await licenseInput.fill(TEST_LICENSES.unlimited);
 
     await page.waitForTimeout(500);
@@ -151,7 +151,7 @@ test.describe('License Settings', () => {
     await page.waitForTimeout(2000);
 
     // Enter future license (2030-12-31)
-    const licenseInput = page.locator('input[placeholder*="GF-"]');
+    const licenseInput = page.locator('input[placeholder*="SF-"]');
     await licenseInput.fill(TEST_LICENSES.future);
 
     await page.waitForTimeout(500);
@@ -172,7 +172,7 @@ test.describe('License Settings', () => {
     await page.waitForTimeout(2000);
 
     // Enter invalid license
-    const licenseInput = page.locator('input[placeholder*="GF-"]');
+    const licenseInput = page.locator('input[placeholder*="SF-"]');
     await licenseInput.fill(TEST_LICENSES.invalid);
 
     await page.waitForTimeout(500);
@@ -189,7 +189,7 @@ test.describe('License Settings', () => {
     await page.waitForTimeout(2000);
 
     // Enter license with wrong prefix
-    const licenseInput = page.locator('input[placeholder*="GF-"]');
+    const licenseInput = page.locator('input[placeholder*="SF-"]');
     await licenseInput.fill(TEST_LICENSES.wrongPrefix);
 
     await page.waitForTimeout(500);
@@ -206,7 +206,7 @@ test.describe('License Settings', () => {
     await page.waitForTimeout(2000);
 
     // Enter too short license
-    const licenseInput = page.locator('input[placeholder*="GF-"]');
+    const licenseInput = page.locator('input[placeholder*="SF-"]');
     await licenseInput.fill(TEST_LICENSES.tooShort);
 
     await page.waitForTimeout(500);
@@ -223,7 +223,7 @@ test.describe('License Settings', () => {
     await page.waitForTimeout(2000);
 
     // Enter valid license
-    const licenseInput = page.locator('input[placeholder*="GF-"]');
+    const licenseInput = page.locator('input[placeholder*="SF-"]');
     await licenseInput.fill(TEST_LICENSES.unlimited);
 
     // Click save button
@@ -238,18 +238,18 @@ test.describe('License Settings', () => {
     await page.waitForTimeout(1000);
     const { data: config } = await supabaseAdmin
       .from('integrations_config')
-      .select('gateflow_license')
+      .select('sellf_license')
       .eq('id', 1)
       .single();
 
-    expect(config?.gateflow_license).toBe(TEST_LICENSES.unlimited);
+    expect(config?.sellf_license).toBe(TEST_LICENSES.unlimited);
   });
 
   test('Saved license persists after page refresh', async ({ page }) => {
     // First save a license
     await supabaseAdmin
       .from('integrations_config')
-      .update({ gateflow_license: TEST_LICENSES.future })
+      .update({ sellf_license: TEST_LICENSES.future })
       .eq('id', 1);
 
     await loginAsAdmin(page);
@@ -282,7 +282,7 @@ test.describe('License Settings', () => {
     await page.waitForTimeout(2000);
 
     // Enter expired license (2025-12-31)
-    const licenseInput = page.locator('input[placeholder*="GF-"]');
+    const licenseInput = page.locator('input[placeholder*="SF-"]');
     await licenseInput.fill(TEST_LICENSES.expired);
 
     await page.waitForTimeout(500);
@@ -300,7 +300,7 @@ test.describe('License Settings', () => {
     // First set a license
     await supabaseAdmin
       .from('integrations_config')
-      .update({ gateflow_license: TEST_LICENSES.unlimited })
+      .update({ sellf_license: TEST_LICENSES.unlimited })
       .eq('id', 1);
 
     await loginAsAdmin(page);
@@ -309,7 +309,7 @@ test.describe('License Settings', () => {
     await page.waitForTimeout(2000);
 
     // Clear the license input
-    const licenseInput = page.locator('input[placeholder*="GF-"]');
+    const licenseInput = page.locator('input[placeholder*="SF-"]');
     await licenseInput.clear();
 
     // Click save button
@@ -324,11 +324,11 @@ test.describe('License Settings', () => {
     await page.waitForTimeout(1000);
     const { data: config } = await supabaseAdmin
       .from('integrations_config')
-      .select('gateflow_license')
+      .select('sellf_license')
       .eq('id', 1)
       .single();
 
-    expect(config?.gateflow_license).toBeNull();
+    expect(config?.sellf_license).toBeNull();
   });
 
   test('Signature is partially displayed (truncated)', async ({ page }) => {
@@ -338,7 +338,7 @@ test.describe('License Settings', () => {
     await page.waitForTimeout(2000);
 
     // Enter valid license
-    const licenseInput = page.locator('input[placeholder*="GF-"]');
+    const licenseInput = page.locator('input[placeholder*="SF-"]');
     await licenseInput.fill(TEST_LICENSES.unlimited);
 
     await page.waitForTimeout(500);

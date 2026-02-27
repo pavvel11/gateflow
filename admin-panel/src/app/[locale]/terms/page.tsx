@@ -5,8 +5,8 @@ import { createPublicClient } from '@/lib/supabase/server'
 import { unstable_noStore as noStore } from 'next/cache'
 
 export const metadata: Metadata = {
-  title: 'Terms of Service - GateFlow',
-  description: 'Terms of Service for GateFlow platform',
+  title: 'Terms of Service - Sellf',
+  description: 'Terms of Service for Sellf platform',
   robots: 'index, follow'
 }
 

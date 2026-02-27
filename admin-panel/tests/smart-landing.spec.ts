@@ -293,7 +293,7 @@ test.describe('Smart Landing Page', () => {
     await expect(setupProgress).not.toBeVisible();
   });
 
-  test('About page should display GateFlow marketing content', async ({ page }) => {
+  test('About page should display Sellf marketing content', async ({ page }) => {
     await acceptAllCookies(page);
     await page.goto('/about');
     await page.waitForLoadState('networkidle');
@@ -309,16 +309,16 @@ test.describe('Smart Landing Page', () => {
     await expect(subtitle).toBeVisible();
 
     // Should see GitHub link in navigation or CTA section
-    const githubLink = page.locator('a[href*="github.com/jurczykpawel/gateflow"]');
+    const githubLink = page.locator('a[href*="github.com/jurczykpawel/sellf"]');
     await expect(githubLink.first()).toBeVisible();
 
     // Should see "Open Source" badge or text
     const openSourceBadge = page.locator('text=/Open Source/i').first();
     await expect(openSourceBadge).toBeVisible();
 
-    // Should see GateFlow branding in navigation
-    const gateflowBrand = page.locator('text=GateFlow').first();
-    await expect(gateflowBrand).toBeVisible();
+    // Should see Sellf branding in navigation
+    const sellfBrand = page.locator('text=Sellf').first();
+    await expect(sellfBrand).toBeVisible();
 
     // Should see "Start Free Demo" or similar CTA
     const ctaButton = page.locator('a', { hasText: /Start Free Demo|Get Started/i }).first();

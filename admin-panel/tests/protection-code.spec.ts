@@ -383,7 +383,7 @@ test.describe('Protection Code (Generate Protection Code)', () => {
       expect(generatedCode).toContain('data-no-access');
     });
 
-    test('Embed mode generates gateflow-embed.js script', async ({ page }) => {
+    test('Embed mode generates sellf-embed.js script', async ({ page }) => {
       await loginAsAdmin(page);
       await page.goto('/dashboard/products');
       await page.waitForLoadState('domcontentloaded');
@@ -414,9 +414,9 @@ test.describe('Protection Code (Generate Protection Code)', () => {
       const codeBlock = page.locator('pre').first();
       const generatedCode = await codeBlock.textContent();
 
-      // Should contain gateflow-embed script reference
-      expect(generatedCode).toContain('gateflow-embed');
-      expect(generatedCode).toContain('data-gateflow-product');
+      // Should contain sellf-embed script reference
+      expect(generatedCode).toContain('sellf-embed');
+      expect(generatedCode).toContain('data-sellf-product');
       expect(generatedCode).toContain(freeProduct.slug);
     });
 
@@ -500,7 +500,7 @@ test.describe('Protection Code (Generate Protection Code)', () => {
 
       // Should contain Supabase URL and anon key initialization
       expect(script).toContain('supabase');
-      // Script should be minified or contain GateFlow class
+      // Script should be minified or contain Sellf class
       expect(script.length).toBeGreaterThan(1000);
     });
 

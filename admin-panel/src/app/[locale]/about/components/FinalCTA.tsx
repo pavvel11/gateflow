@@ -36,7 +36,7 @@ export async function FinalCTA() {
           </a>
 
           <a
-            href="https://github.com/jurczykpawel/gateflow"
+            href="https://github.com/jurczykpawel/sellf"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center px-8 py-4 rounded-xl text-lg font-bold text-gf-heading border-2 border-gf-border hover:border-gf-border-accent bg-gf-raised/80 transition-[border-color,background-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent gap-3"

@@ -14,7 +14,7 @@ import { useConfig } from '@/components/providers/config-provider'
  */
 export default function LoginForm() {
   const { demoMode } = useConfig()
-  const [email, setEmail] = useState(demoMode ? 'demo@gateflow.io' : '')
+  const [email, setEmail] = useState(demoMode ? 'demo@sellf.app' : '')
   const [password, setPassword] = useState(demoMode ? 'demo123' : '')
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -142,7 +142,7 @@ export default function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
           required
           className="w-full px-4 py-3 bg-gf-float border border-gf-border rounded-xl text-gf-heading placeholder-gf-muted focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent transition-all"
-          placeholder={demoMode ? 'demo@gateflow.io' : t('auth.emailPlaceholder')}
+          placeholder={demoMode ? 'demo@sellf.app' : t('auth.emailPlaceholder')}
         />
       </div>
 

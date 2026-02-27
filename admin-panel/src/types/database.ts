@@ -635,7 +635,6 @@ export type Database = {
           facebook_pixel_id: string | null
           facebook_test_event_code: string | null
           fb_capi_enabled: boolean | null
-          gateflow_license: string | null
           google_ads_conversion_id: string | null
           google_ads_conversion_label: string | null
           gtm_container_id: string | null
@@ -646,6 +645,7 @@ export type Database = {
           gus_api_key_iv: string | null
           gus_api_key_tag: string | null
           id: number
+          sellf_license: string | null
           send_conversions_without_consent: boolean | null
           umami_script_url: string | null
           umami_website_id: string | null
@@ -664,7 +664,6 @@ export type Database = {
           facebook_pixel_id?: string | null
           facebook_test_event_code?: string | null
           fb_capi_enabled?: boolean | null
-          gateflow_license?: string | null
           google_ads_conversion_id?: string | null
           google_ads_conversion_label?: string | null
           gtm_container_id?: string | null
@@ -675,6 +674,7 @@ export type Database = {
           gus_api_key_iv?: string | null
           gus_api_key_tag?: string | null
           id?: number
+          sellf_license?: string | null
           send_conversions_without_consent?: boolean | null
           umami_script_url?: string | null
           umami_website_id?: string | null
@@ -693,7 +693,6 @@ export type Database = {
           facebook_pixel_id?: string | null
           facebook_test_event_code?: string | null
           fb_capi_enabled?: boolean | null
-          gateflow_license?: string | null
           google_ads_conversion_id?: string | null
           google_ads_conversion_label?: string | null
           gtm_container_id?: string | null
@@ -704,6 +703,7 @@ export type Database = {
           gus_api_key_iv?: string | null
           gus_api_key_tag?: string | null
           id?: number
+          sellf_license?: string | null
           send_conversions_without_consent?: boolean | null
           umami_script_url?: string | null
           umami_website_id?: string | null

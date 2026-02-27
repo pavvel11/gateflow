@@ -373,7 +373,7 @@ export async function POST(request: NextRequest) {
           session_id: paymentIntent.id, // Use Payment Intent ID as session_id
           user_id: user?.id || null,
           product_id: productId,
-          customer_email: finalEmail || 'pending@gateflow.app', // Fallback for guests without email
+          customer_email: finalEmail || 'pending@sellf.app', // Fallback for guests without email
           amount: totalAmount,
           currency: product.currency,
           stripe_payment_intent_id: paymentIntent.id,

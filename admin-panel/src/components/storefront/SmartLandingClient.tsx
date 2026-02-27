@@ -30,7 +30,7 @@ export default function SmartLandingClient({
     );
   }
 
-  const shopName = shopConfig?.shop_name || 'GateFlow';
+  const shopName = shopConfig?.shop_name || 'Sellf';
   const contactEmail = shopConfig?.contact_email || null;
 
   // SCENARIO 1: No products + Admin user → Show onboarding
@@ -48,7 +48,7 @@ export default function SmartLandingClient({
       <DashboardLayout 
         user={user ? { email: user.email || '', id: user.id || '' } : null} 
         shopConfig={shopConfig}
-        showGateFlowCTA={true}
+        showSellfCTA={true}
       >
         <ComingSoonEmptyState shopName={shopName} contactEmail={contactEmail} />
       </DashboardLayout>

@@ -55,7 +55,7 @@ export class JSProcessor {
       },
       mangle: {
         toplevel: true,
-        reserved: ['GateFlow', 'GATEKEEPER_CONFIG'] // Preserve important names
+        reserved: ['Sellf', 'GATEKEEPER_CONFIG'] // Preserve important names
       },
       format: {
         comments: false,
@@ -103,7 +103,7 @@ export class JSProcessor {
       unicodeEscapeSequence: false,
       // Preserve important global variables
       reservedNames: [
-        'GateFlow',
+        'Sellf',
         'GATEKEEPER_CONFIG',
         'window',
         'document',

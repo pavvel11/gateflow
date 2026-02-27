@@ -13,9 +13,9 @@ const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 // Test licenses for localhost (generated with scripts/generate-license.js)
 // These licenses are for 'localhost' domain to match NEXT_PUBLIC_SITE_URL=http://localhost:3000
 const TEST_LICENSES = {
-  unlimited: 'GF-localhost-UNLIMITED-MEYCIQDmEAvHQyvdCu-BFEm1pXh1GCsm8sUVN6k_0lB5loj-CgIhAKdKPs0tPFtAlRgS4LWLSDFddvAJrmK4EgfbDuCm9fcd',
-  expired: 'GF-localhost-20251231-MEUCIQDWCdAQqEooBjrY-NcDSCd6ULjXuv-FfF54wNPoNbdOzgIgcDcMfPZaACiniDg_Ph0qvZE91Qy8K1fJqZ5rwBRHNKQ',
-  future: 'GF-localhost-20301231-MEYCIQCOLJqPK06fqDwAxJyuGiUfMaWZYmRjqkN8U4VzfwRJLQIhAPMZN5P5BqaEhUXa3TmafNtg2gW3ghwI4YeEvhruMXSK',
+  unlimited: 'SF-localhost-UNLIMITED-MEYCIQDmEAvHQyvdCu-BFEm1pXh1GCsm8sUVN6k_0lB5loj-CgIhAKdKPs0tPFtAlRgS4LWLSDFddvAJrmK4EgfbDuCm9fcd',
+  expired: 'SF-localhost-20251231-MEUCIQDWCdAQqEooBjrY-NcDSCd6ULjXuv-FfF54wNPoNbdOzgIgcDcMfPZaACiniDg_Ph0qvZE91Qy8K1fJqZ5rwBRHNKQ',
+  future: 'SF-localhost-20301231-MEYCIQCOLJqPK06fqDwAxJyuGiUfMaWZYmRjqkN8U4VzfwRJLQIhAPMZN5P5BqaEhUXa3TmafNtg2gW3ghwI4YeEvhruMXSK',
   invalid: 'INVALID-LICENSE-FORMAT',
 };
 
@@ -29,7 +29,7 @@ test.describe('Watermark Visibility Based on License', () => {
   const setLicense = async (license: string | null) => {
     await supabaseAdmin
       .from('integrations_config')
-      .upsert({ id: 1, gateflow_license: license });
+      .upsert({ id: 1, sellf_license: license });
   };
 
   const clearGeneratorCache = async (page: typeof import('@playwright/test').Page.prototype) => {
@@ -122,7 +122,7 @@ test.describe('Watermark Visibility Based on License', () => {
     await page.waitForTimeout(2000);
 
     // Watermark container should NOT exist (check inner visible element)
-    const watermark = page.locator('#gateflow-watermark > div');
+    const watermark = page.locator('#sellf-watermark > div');
     await expect(watermark).toHaveCount(0);
   });
 
@@ -139,10 +139,10 @@ test.describe('Watermark Visibility Based on License', () => {
     await page.waitForTimeout(2000);
 
     // Watermark inner div SHOULD be visible (position: fixed element)
-    const watermark = page.locator('#gateflow-watermark > div');
+    const watermark = page.locator('#sellf-watermark > div');
     await expect(watermark).toBeVisible();
 
-    // Should contain GateFlow branding
-    await expect(watermark).toContainText('GateFlow');
+    // Should contain Sellf branding
+    await expect(watermark).toContainText('Sellf');
   });
 });

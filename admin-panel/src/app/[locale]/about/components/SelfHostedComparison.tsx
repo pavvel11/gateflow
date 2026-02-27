@@ -78,7 +78,7 @@ export async function SelfHostedComparison() {
           <p className="text-sm text-gf-body max-w-2xl mx-auto mb-6">{t('selfHosted.demoPromptSubtitle')}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
             <a
-              href="https://gateflow.cytr.us/login"
+              href="https://demo.sellf.app/login"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-gf-accent hover:bg-gf-accent-hover text-white shadow-[var(--gf-shadow-accent)] hover:shadow-[0_6px_40px_-4px_var(--gf-accent-glow)] rounded-xl px-8 py-4 text-lg font-bold transition-[background-color,box-shadow] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"
@@ -87,7 +87,7 @@ export async function SelfHostedComparison() {
               <ExternalLink className="h-5 w-5" />
             </a>
             <a
-              href="https://github.com/jurczykpawel/gateflow#deployment"
+              href="https://github.com/jurczykpawel/sellf#deployment"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-gf-raised/80 border-2 border-gf-border hover:border-gf-border-accent text-gf-heading rounded-xl px-8 py-4 text-lg font-bold transition-[border-color,background-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent"

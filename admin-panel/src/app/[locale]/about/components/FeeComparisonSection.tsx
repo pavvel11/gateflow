@@ -16,13 +16,13 @@ function calculateFees(revenue: number): PlatformFee[] {
   const avgOrderValue = 50;
   const transactionCount = revenue / avgOrderValue;
 
-  const gateflowFee = revenue * 0.034;
+  const sellfFee = revenue * 0.034;
   const gumroadFee = revenue * 0.10 + revenue * 0.029 + 0.30 * transactionCount;
   const paddleFee = revenue * 0.05 + revenue * 0.035 + 0.30 * transactionCount;
   const lemonFee = revenue * 0.05 + revenue * 0.035 + 0.30 * transactionCount;
 
   return [
-    { key: 'gateflow', label: '', feeNote: '', fee: gateflowFee, barColor: 'bg-gf-success' },
+    { key: 'sellf', label: '', feeNote: '', fee: sellfFee, barColor: 'bg-gf-success' },
     { key: 'gumroad', label: '', feeNote: '', fee: gumroadFee, barColor: 'bg-gf-danger' },
     { key: 'paddle', label: '', feeNote: '', fee: paddleFee, barColor: 'bg-gf-warning' },
     { key: 'lemon', label: '', feeNote: '', fee: lemonFee, barColor: 'bg-gf-warning' },
@@ -50,15 +50,15 @@ export function FeeComparisonSection() {
   const maxFee = Math.max(...platforms.map((p) => p.fee));
 
   const labelMap: Record<string, { label: string; feeNote: string }> = {
-    gateflow: { label: t('feeComparison.gateflowLabel'), feeNote: t('feeComparison.gateflowFeeNote') },
+    sellf: { label: t('feeComparison.sellfLabel'), feeNote: t('feeComparison.sellfFeeNote') },
     gumroad: { label: t('feeComparison.gumroadLabel'), feeNote: t('feeComparison.gumroadFeeNote') },
     paddle: { label: t('feeComparison.paddleLabel'), feeNote: t('feeComparison.paddleFeeNote') },
     lemon: { label: t('feeComparison.lemonLabel'), feeNote: t('feeComparison.lemonFeeNote') },
   };
 
-  const gateflowFee = platforms[0].fee;
+  const sellfFee = platforms[0].fee;
   const gumroadFee = platforms[1].fee;
-  const monthlySavings = gumroadFee - gateflowFee;
+  const monthlySavings = gumroadFee - sellfFee;
   const annualSavings = monthlySavings * 12;
 
   return (

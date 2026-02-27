@@ -67,31 +67,31 @@ export async function TaxSection() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gf-success">
-                    {t('tax.gateflowTitle')}
+                    {t('tax.sellfTitle')}
                   </h3>
-                  <p className="text-sm text-gf-muted">{t('tax.gateflowSubtitle')}</p>
+                  <p className="text-sm text-gf-muted">{t('tax.sellfSubtitle')}</p>
                 </div>
               </div>
               <ul className="space-y-4 mt-6">
                 <li className="flex items-start gap-3">
                   <span className="mt-1.5 h-2 w-2 rounded-full bg-gf-success shrink-0" />
                   <span className="text-gf-body">
-                    {t('tax.gateflowPlatformFees')}: <span className="font-semibold text-gf-success">{t('tax.gateflowFeeAmount')}</span>
+                    {t('tax.sellfPlatformFees')}: <span className="font-semibold text-gf-success">{t('tax.sellfFeeAmount')}</span>
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="mt-1.5 h-2 w-2 rounded-full bg-gf-success shrink-0" />
                   <span className="text-gf-body">
-                    {t('tax.gateflowStripeFees')}: <span className="font-semibold text-gf-success">{t('tax.gateflowStripeAmount')}</span>
+                    {t('tax.sellfStripeFees')}: <span className="font-semibold text-gf-success">{t('tax.sellfStripeAmount')}</span>
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="mt-1.5 h-2 w-2 rounded-full bg-gf-success shrink-0" />
-                  <span className="text-gf-success font-medium">{t('tax.gateflowDataOwnership')}</span>
+                  <span className="text-gf-success font-medium">{t('tax.sellfDataOwnership')}</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="mt-1.5 h-2 w-2 rounded-full bg-gf-success shrink-0" />
-                  <span className="text-gf-success font-medium">{t('tax.gateflowSelfHosted')}</span>
+                  <span className="text-gf-success font-medium">{t('tax.sellfSelfHosted')}</span>
                 </li>
               </ul>
             </div>

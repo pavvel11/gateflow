@@ -31,11 +31,11 @@ async function getCachedLicenseValid(
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     const { data: integrationsConfig } = await supabaseAdmin
       .from('integrations_config')
-      .select('gateflow_license')
+      .select('sellf_license')
       .eq('id', 1)
       .single();
 
-    const isValid = validateLicense(integrationsConfig?.gateflow_license || null, siteUrl);
+    const isValid = validateLicense(integrationsConfig?.sellf_license || null, siteUrl);
 
     // Cache the result
     licenseCache.set(cacheKey, isValid);

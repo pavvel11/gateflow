@@ -185,18 +185,18 @@ test.describe('Gatekeeper Integration Tests', () => {
       expect(script).toContain('class');
     });
 
-    test('Script contains GateFlow class or initialization', async ({ request }) => {
+    test('Script contains Sellf class or initialization', async ({ request }) => {
       const response = await request.get('/api/gatekeeper');
       const script = await response.text();
 
-      // Should contain gateflow/gatekeeper related code
-      const hasGateFlowCode = script.includes('GateFlow') ||
+      // Should contain sellf/gatekeeper related code
+      const hasSellfCode = script.includes('Sellf') ||
                               script.includes('gatekeeper') ||
                               script.includes('checkAccess') ||
                               script.includes('productSlug');
 
-      if (!hasGateFlowCode) {
-        expect.fail('Expected script to contain GateFlow, gatekeeper, checkAccess, or productSlug but found none');
+      if (!hasSellfCode) {
+        expect.fail('Expected script to contain Sellf, gatekeeper, checkAccess, or productSlug but found none');
       }
     });
 
@@ -510,7 +510,7 @@ test.describe('Gatekeeper Integration Tests', () => {
   });
 
   // ============================================================================
-  // Embed Widget Tests (gateflow-embed.js)
+  // Embed Widget Tests (sellf-embed.js)
   // NOTE: Next.js App Router intercepts static file routes, so these tests
   // check availability conditionally. In production with proper static file
   // serving (nginx, etc.), these would work directly.
@@ -518,9 +518,9 @@ test.describe('Gatekeeper Integration Tests', () => {
 
   test.describe('Embed Widget Script', () => {
 
-    test('gateflow-embed.js is available (via API or static)', async ({ request }) => {
+    test('sellf-embed.js is available (via API or static)', async ({ request }) => {
       // Try the API endpoint which serves the embed script
-      const response = await request.get('/api/gateflow-embed');
+      const response = await request.get('/api/sellf-embed');
 
       // Check if the endpoint returns JavaScript
       if (!response.ok()) {
@@ -552,13 +552,13 @@ test.describe('Gatekeeper Integration Tests', () => {
       const script = await response.text();
 
       // The gatekeeper system should support embeddable widgets
-      const hasEmbedSupport = script.includes('GateFlow') ||
-                              script.includes('gateflow') ||
+      const hasEmbedSupport = script.includes('Sellf') ||
+                              script.includes('sellf') ||
                               script.includes('embed') ||
                               script.includes('widget');
 
       if (!hasEmbedSupport) {
-        expect.fail('Expected gatekeeper script to contain GateFlow, gateflow, embed, or widget but found none');
+        expect.fail('Expected gatekeeper script to contain Sellf, sellf, embed, or widget but found none');
       }
     });
   });

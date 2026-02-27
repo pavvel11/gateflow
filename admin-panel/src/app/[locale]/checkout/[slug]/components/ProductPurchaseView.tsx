@@ -7,7 +7,7 @@ import PaidProductForm from './PaidProductForm';
 import WaitlistForm from '@/components/WaitlistForm';
 import FloatingToolbar from '@/components/FloatingToolbar';
 import { DemoResetCountdown } from '@/components/DemoCheckoutNotice';
-import GateFlowBranding from '@/components/GateFlowBranding';
+import SellfBranding from '@/components/SellfBranding';
 
 interface ProductPurchaseViewProps {
   product: Product;
@@ -64,8 +64,8 @@ export default function ProductPurchaseView({ product, paymentMethodOrder, expre
         <PaidProductForm product={product} paymentMethodOrder={paymentMethodOrder} expressCheckoutConfig={expressCheckoutConfig} />
       )}
 
-      {/* GateFlow branding — hidden when a valid license is active */}
-      {!licenseValid && <GateFlowBranding />}
+      {/* Sellf branding — hidden when a valid license is active */}
+      {!licenseValid && <SellfBranding />}
     </div>
   );
 }

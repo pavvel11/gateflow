@@ -3,7 +3,7 @@
 /**
  * Theme Editor — manage whitelabel themes for public pages.
  * Themes are JSON files stored on disk (data/active-theme.json).
- * All theme customization requires a valid GateFlow Pro license.
+ * All theme customization requires a valid Sellf Pro license.
  * @see lib/themes/index.ts for types and presets
  * @see lib/actions/theme.ts for server actions
  * @see components/providers/whitelabel-provider.tsx for CSS injection

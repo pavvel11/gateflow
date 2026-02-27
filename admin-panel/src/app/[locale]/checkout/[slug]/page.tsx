@@ -88,15 +88,15 @@ export default async function CheckoutPage({ params }: PageProps) {
     : undefined;
   const expressCheckoutConfig = extractExpressCheckoutConfig(paymentConfig);
 
-  // Check GateFlow license validity (controls "Powered by" branding)
+  // Check Sellf license validity (controls "Powered by" branding)
   const { data: integrationsConfig } = await adminSupabase
     .from('integrations_config')
-    .select('gateflow_license')
+    .select('sellf_license')
     .eq('id', 1)
-    .single() as { data: { gateflow_license: string | null } | null };
+    .single() as { data: { sellf_license: string | null } | null };
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL;
   const currentDomain = siteUrl ? extractDomainFromUrl(siteUrl) : null;
-  const licenseResult = validateLicense(integrationsConfig?.gateflow_license || '', currentDomain || undefined);
+  const licenseResult = validateLicense(integrationsConfig?.sellf_license || '', currentDomain || undefined);
   const licenseValid = licenseResult.valid;
 
   // ProductPurchaseView handles showing either checkout form or waitlist form

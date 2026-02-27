@@ -1,5 +1,5 @@
 {
-  "name": "gateflow",
+  "name": "sellf",
   "version": "1.0.3",
   "description": "Open-source platform for selling and protecting digital products — built on Next.js, Supabase & Stripe",
   "main": "gatekeeper.js",
@@ -24,12 +24,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jurczykpawel/gateflow.git"
+    "url": "git+https://github.com/jurczykpawel/sellf.git"
   },
   "bugs": {
-    "url": "https://github.com/jurczykpawel/gateflow/issues"
+    "url": "https://github.com/jurczykpawel/sellf/issues"
   },
-  "homepage": "https://github.com/jurczykpawel/gateflow#readme",
+  "homepage": "https://github.com/jurczykpawel/sellf#readme",
   "engines": {
     "node": ">=14.0.0"
   },

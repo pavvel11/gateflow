@@ -33,7 +33,7 @@ export async function GET(request: Request) {
     const health = {
       status: 'ok',
       timestamp: new Date().toISOString(),
-      service: 'gateflow-admin',
+      service: 'sellf-admin',
       version: '1.0.0',
       environment: process.env.NODE_ENV || 'development'
     }

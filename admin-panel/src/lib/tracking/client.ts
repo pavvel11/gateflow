@@ -22,7 +22,7 @@ const GA4_TO_FB: Record<GA4EventName, FBEventName> = {
 /**
  * Check if user has given consent for a specific service via Klaro
  *
- * Klaro stores consent in a cookie named 'gateflow_consent' as JSON
+ * Klaro stores consent in a cookie named 'sellf_consent' as JSON
  * Format: { "facebook-pixel": true, "google-tag-manager": true, ... }
  */
 function getKlaroConsent(serviceName: string): boolean {
@@ -31,7 +31,7 @@ function getKlaroConsent(serviceName: string): boolean {
   try {
     // Get Klaro consent cookie
     const cookies = document.cookie.split(';');
-    const klaroCookie = cookies.find(c => c.trim().startsWith('gateflow_consent='));
+    const klaroCookie = cookies.find(c => c.trim().startsWith('sellf_consent='));
 
     if (!klaroCookie) {
       // No consent cookie = no consent given yet

@@ -18,7 +18,7 @@ interface DashboardLayoutProps {
   } | null
   isAdmin?: boolean
   shopConfig?: ShopConfig | null
-  showGateFlowCTA?: boolean
+  showSellfCTA?: boolean
 }
 
 // Icons
@@ -121,7 +121,7 @@ const Icons = {
   )
 };
 
-export default function DashboardLayout({ children, user, isAdmin: isAdminProp, shopConfig, showGateFlowCTA }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, user, isAdmin: isAdminProp, shopConfig, showSellfCTA }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const { signOut, isAdmin: isAdminContext } = useAuth()
   const t = useTranslations('navigation')
@@ -131,7 +131,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
   const isAdmin = isAdminProp !== undefined ? isAdminProp : isAdminContext
 
   // Extract branding from shop config
-  const shopName = shopConfig?.shop_name || 'GateFlow'
+  const shopName = shopConfig?.shop_name || 'Sellf'
   const logoUrl = shopConfig?.logo_url
   const primaryColor = shopConfig?.primary_color || '#00AAFF'
   const secondaryColor = shopConfig?.secondary_color || '#33BBFF'
@@ -215,13 +215,13 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
               </Link>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
-              {showGateFlowCTA && (
+              {showSellfCTA && (
                 <Link
                   href="/about"
                   className="hidden sm:inline-flex items-center px-4 py-2 rounded-full bg-gf-accent text-white text-xs font-bold hover:bg-gf-accent-hover hover:shadow-lg transition-all transform hover:scale-105"
                 >
                   <span className="mr-1.5">🚀</span>
-                  {t('getGateflow', { defaultValue: 'Get GateFlow' })}
+                  {t('getGateflow', { defaultValue: 'Get Sellf' })}
                 </Link>
               )}
               <div className="flex items-center h-full gap-1">
@@ -410,13 +410,13 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
           </button>
 
           <div className="flex-1 flex justify-end items-center space-x-4">
-            {showGateFlowCTA && (
+            {showSellfCTA && (
               <Link
                 href="/about"
                 className="hidden sm:inline-flex items-center px-4 py-2 rounded-full bg-gf-accent text-white text-xs font-bold hover:bg-gf-accent-hover hover:shadow-lg transition-all transform hover:scale-105"
               >
                 <span className="mr-1.5">🚀</span>
-                {t('getGateflow', { defaultValue: 'Get GateFlow' })}
+                {t('getGateflow', { defaultValue: 'Get Sellf' })}
               </Link>
             )}
             <div className="hidden md:flex md:items-center md:gap-1">

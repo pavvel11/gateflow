@@ -49,12 +49,12 @@ export async function POST(request: Request) {
       return validationError;
     }
 
-    // Log GateFlow request details
-    const gateflowOrigin = request.headers.get('X-GateFlow-Origin');
-    const gateflowVersion = request.headers.get('X-GateFlow-Version');
-    logger.security('GateFlow access request:', {
-      origin: gateflowOrigin,
-      version: gateflowVersion,
+    // Log Sellf request details
+    const sellfOrigin = request.headers.get('X-Sellf-Origin');
+    const sellfVersion = request.headers.get('X-Sellf-Version');
+    logger.security('Sellf access request:', {
+      origin: sellfOrigin,
+      version: sellfVersion,
       userAgent: request.headers.get('user-agent')?.slice(0, 100),
       timestamp: new Date().toISOString()
     });

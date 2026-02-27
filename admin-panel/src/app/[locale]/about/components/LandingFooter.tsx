@@ -11,12 +11,12 @@ export async function LandingFooter() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
           {/* Brand */}
           <div>
-            <p className="text-lg font-bold text-gf-heading mb-4">GateFlow</p>
+            <p className="text-lg font-bold text-gf-heading mb-4">Sellf</p>
             <p className="text-sm text-gf-muted mb-4">
               {t('footer.description')}
             </p>
             <a
-              href="https://github.com/jurczykpawel/gateflow"
+              href="https://github.com/jurczykpawel/sellf"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex text-gf-muted hover:text-gf-heading transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent rounded"
@@ -38,7 +38,7 @@ export async function LandingFooter() {
                 {t('footer.features')}
               </a>
               <a
-                href="https://github.com/jurczykpawel/gateflow#readme"
+                href="https://github.com/jurczykpawel/sellf#readme"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block text-sm text-gf-muted hover:text-gf-heading transition-colors duration-200 py-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent rounded"
@@ -61,7 +61,7 @@ export async function LandingFooter() {
             </p>
             <nav className="space-y-1">
               <a
-                href="https://github.com/jurczykpawel/gateflow"
+                href="https://github.com/jurczykpawel/sellf"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block text-sm text-gf-muted hover:text-gf-heading transition-colors duration-200 py-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent rounded"
@@ -69,7 +69,7 @@ export async function LandingFooter() {
                 {t('footer.github')}
               </a>
               <a
-                href="https://github.com/jurczykpawel/gateflow#deployment"
+                href="https://github.com/jurczykpawel/sellf#deployment"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block text-sm text-gf-muted hover:text-gf-heading transition-colors duration-200 py-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent rounded"
@@ -77,7 +77,7 @@ export async function LandingFooter() {
                 {t('footer.deployGuide')}
               </a>
               <a
-                href="https://github.com/jurczykpawel/gateflow/issues"
+                href="https://github.com/jurczykpawel/sellf/issues"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block text-sm text-gf-muted hover:text-gf-heading transition-colors duration-200 py-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent rounded"
@@ -94,7 +94,7 @@ export async function LandingFooter() {
             </p>
             <nav className="space-y-1">
               <a
-                href="https://github.com/jurczykpawel/gateflow/blob/main/LICENSE"
+                href="https://github.com/jurczykpawel/sellf/blob/main/LICENSE"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block text-sm text-gf-muted hover:text-gf-heading transition-colors duration-200 py-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent rounded"

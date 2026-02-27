@@ -78,7 +78,7 @@ export const WEBHOOK_MOCK_PAYLOADS: Record<string, any> = {
     reason: 'requested_by_customer'
   },
   'test.event': {
-    message: 'This is a test event from GateFlow',
+    message: 'This is a test event from Sellf',
     system: { version: '1.0.0', environment: 'production' }
   }
 };

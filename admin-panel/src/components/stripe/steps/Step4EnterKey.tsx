@@ -195,7 +195,7 @@ export function Step4EnterKey() {
               <li>
                 <strong>Restricted Key (rk_*):</strong>{' '}
                 {t('keyTypeInfo.restricted', {
-                  defaultValue: 'More secure — only grants permissions GateFlow needs. Recommended for production.',
+                  defaultValue: 'More secure — only grants permissions Sellf needs. Recommended for production.',
                 })}
               </li>
               <li>

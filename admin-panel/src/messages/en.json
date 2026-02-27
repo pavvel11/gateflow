@@ -189,8 +189,8 @@
     "myPurchases": "My Purchases",
     "refundRequests": "Refund Requests",
     "store": "Store",
-    "about": "About GateFlow",
-    "getGateflow": "Get GateFlow",
+    "about": "About Sellf",
+    "getGateflow": "Get Sellf",
     "adminSection": "Admin",
     "userSection": "User",
     "roleAdmin": "Administrator",
@@ -202,7 +202,7 @@
     "userMenu": "User menu"
   },
   "about": {
-    "title": "About GateFlow",
+    "title": "About Sellf",
     "backToStore": "Back to Store"
   },
   "integrations": {
@@ -522,7 +522,7 @@
     "clickLinkToSignIn": "Click the link to sign in automatically.",
     "openEmailProvider": "Open {provider}",
     "backToLogin": "Back to Login",
-    "title": "GateFlow Admin",
+    "title": "Sellf Admin",
     "disposableEmailBlocked": "Registration blocked: Disposable email addresses are not allowed. Please use a permanent email address.",
     "emailValidationFailed": "Email validation failed. Please try again.",
     "emailPlaceholder": "your@email.com",
@@ -572,7 +572,7 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "welcome": "Welcome to GateFlow Admin",
+    "welcome": "Welcome to Sellf Admin",
     "overview": "Overview",
     "currency": {
       "dashboardInfo": "Exchange rates are used for approximate dashboard calculations only."
@@ -696,7 +696,7 @@
     "unableToLoad": "Unable to Load Products",
     "tryAgain": "Try Again",
     "navigation": {
-      "gateflow": "GateFlow",
+      "sellf": "Sellf",
       "myProducts": "My Products",
       "adminPanel": "Admin Panel",
       "login": "Login",
@@ -723,7 +723,7 @@
       "title": "We're Setting Up Shop!",
       "subtitle": "Our store is being prepared with amazing products. Check back soon!",
       "contactUs": "Have questions? Reach out at {email}",
-      "learnMore": "Build your own digital empire with GateFlow"
+      "learnMore": "Build your own digital empire with Sellf"
     },
     "hero": {
       "title": "Discover Our",
@@ -833,7 +833,7 @@
       "poweredBy": "{count, plural, one {# product} other {# products}} available • Powered by {shopName}"
     },
     "footer": {
-      "copyright": "© 2025 Powered by GateFlow • Secure Product Access Management"
+      "copyright": "© 2025 Powered by Sellf • Secure Product Access Management"
     }
   },
   "productView": {
@@ -898,7 +898,7 @@
       "continueToPayment": "Continue to Payment",
       "cancel": "Cancel"
     },
-    "securedBy": "Secured by GateFlow",
+    "securedBy": "Secured by Sellf",
     "accessGrantedOn": "Access granted on:",
     "expires": "Expires:",
     "contentReady": "Your Content is Ready!",
@@ -932,7 +932,7 @@
     "accessExpiresStatus": "Expires {date}",
     "legacyAccess": "Legacy Access",
     "productDescription": "Product Description",
-    "securedByGateFlow": "Secured by GateFlow",
+    "securedBySellf": "Secured by Sellf",
     "notAvailableToNew": "This product is no longer available to new customers",
     "accessGrantedStatus": "Access Granted",
     "accessExpiredStatusLabel": "Access Expired",
@@ -1061,7 +1061,7 @@
   "admin": {
     "dashboard": {
       "title": "Dashboard",
-      "welcome": "Welcome to GateFlow Admin",
+      "welcome": "Welcome to Sellf Admin",
       "overview": "Overview",
       "stats": {
         "totalRevenue": "Total Revenue",
@@ -1608,7 +1608,7 @@
       "subtitle": "Manage API keys for external integrations and MCP server access",
       "createKey": "Create API Key",
       "createKeyTitle": "Create New API Key",
-      "createKeySubtitle": "API keys allow external applications to access your GateFlow data",
+      "createKeySubtitle": "API keys allow external applications to access your Sellf data",
       "keyName": "Key Name",
       "keyNamePlaceholder": "e.g., Production API Key, MCP Server",
       "quickPresets": "Quick Presets",
@@ -2226,8 +2226,8 @@
       "activeTheme": "Active theme",
       "removeTheme": "Remove theme",
       "themeRemoved": "Theme removed. Default styling restored.",
-      "licenseRequired": "A valid GateFlow Pro license is required to save themes.",
-      "licenseRequiredTitle": "GateFlow Pro License Required",
+      "licenseRequired": "A valid Sellf Pro license is required to save themes.",
+      "licenseRequiredTitle": "Sellf Pro License Required",
       "licenseRequiredDesc": "Theme customization requires a valid license. You can preview and configure themes, but saving is disabled.",
       "previewHeading": "Product Title",
       "previewBody": "This is how your store will look with this theme applied.",
@@ -2263,8 +2263,8 @@
       "privacyPlaceholder": "https://example.com/privacy-policy.pdf"
     },
     "license": {
-      "title": "GateFlow License",
-      "subtitle": "Remove GateFlow branding from checkout and other pages",
+      "title": "Sellf License",
+      "subtitle": "Remove Sellf branding from checkout and other pages",
       "licenseKey": "License Key",
       "formatHint": "Format: GF-domain-expiry-signature (e.g., GF-example.com-20271231-MEUCIQDx... or GF-example.com-UNLIMITED-MEUCIQDx...)",
       "licenseDetails": "License Details",
@@ -2279,7 +2279,7 @@
       "saveError": "Failed to save license",
       "howItWorks": "How licensing works",
       "howItWorks1": "The license key is cryptographically signed and verified offline",
-      "howItWorks2": "Valid license removes GateFlow branding from checkout page",
+      "howItWorks2": "Valid license removes Sellf branding from checkout page",
       "howItWorks3": "License is bound to a specific domain",
       "howItWorks4": "Get a license at",
       "keyPlaceholder": "GF-yourdomain.com-UNLIMITED-xxxxxxxxxxxx"
@@ -2403,7 +2403,7 @@
         "subtitle": "Configure your Stripe API keys using Restricted API Keys (RAK) for maximum security",
         "whatIsRAK": {
           "title": "What are Restricted API Keys?",
-          "description": "Restricted API Keys (RAK) allow you to grant specific permissions to your application, following the principle of least privilege. Instead of using full access keys, you only grant the permissions GateFlow actually needs.",
+          "description": "Restricted API Keys (RAK) allow you to grant specific permissions to your application, following the principle of least privilege. Instead of using full access keys, you only grant the permissions Sellf actually needs.",
           "recommended": "Recommended by Stripe",
           "recommendedText": "for self-hosted integrations and production environments."
         },
@@ -2481,9 +2481,9 @@
         },
         "step4": {
           "title": "Set Required Permissions",
-          "description": "Configure the following permissions for GateFlow to work properly:",
+          "description": "Configure the following permissions for Sellf to work properly:",
           "important": "Important",
-          "importantText": "Required permissions are marked with ⚠️. Without these, GateFlow will not function properly."
+          "importantText": "Required permissions are marked with ⚠️. Without these, Sellf will not function properly."
         },
         "step5": {
           "title": "Create & Copy the Key",
@@ -2500,7 +2500,7 @@
         "subtitle": "Enter your Stripe API Key (Restricted or Secret Key)",
         "keyTypeInfo": {
           "title": "Choose Your Key Type",
-          "restricted": "More secure — only grants permissions GateFlow needs. Recommended for production.",
+          "restricted": "More secure — only grants permissions Sellf needs. Recommended for production.",
           "secret": "Full API access. Easier to set up, but less secure if leaked. Fine for development."
         },
         "input": {
@@ -2656,7 +2656,7 @@
     "banner": "This is a demo instance. Data resets every hour.",
     "bannerWithCountdown": "This is a demo instance. Data resets in {time}.",
     "readonlyNotice": "All changes are read-only — edits will not be saved.",
-    "credentials": "Login: demo@gateflow.io / demo123",
+    "credentials": "Login: demo@sellf.app / demo123",
     "testCard": "Test card: 4242 4242 4242 4242",
     "actionBlocked": "This action is disabled in demo mode.",
     "dismiss": "Dismiss",
@@ -2709,8 +2709,8 @@
       "platformFees": "Platform Fees",
       "youKeep": "You Keep",
       "youSave": "You save {amount}/month vs Gumroad",
-      "gateflowLabel": "GateFlow + Stripe",
-      "gateflowFeeNote": "~3.4% (Stripe only)",
+      "sellfLabel": "Sellf + Stripe",
+      "sellfFeeNote": "~3.4% (Stripe only)",
       "gumroadLabel": "Gumroad",
       "gumroadFeeNote": "10% + 2.9% + $0.30",
       "paddleLabel": "Paddle",
@@ -2796,22 +2796,22 @@
     },
     "tax": {
       "title": "Your Stripe account, your money",
-      "subtitle": "Merchant of Record platforms charge 5–10% and your customer data lives on their platform. With GateFlow, payments go directly to your Stripe account.",
+      "subtitle": "Merchant of Record platforms charge 5–10% and your customer data lives on their platform. With Sellf, payments go directly to your Stripe account.",
       "morTitle": "Merchant of Record",
       "morSubtitle": "Paddle, LemonSqueezy, Gumroad",
       "morPlatformFees": "Platform fees",
       "morFeeAmount": "5–10%",
       "morDataOwnership": "Customer data belongs to the platform",
       "morPlatformRisk": "Platform risk — account freezes, shutdowns",
-      "gateflowTitle": "GateFlow + Own Stripe",
-      "gateflowSubtitle": "Direct payments to your account",
-      "gateflowPlatformFees": "Platform fees",
-      "gateflowFeeAmount": "$0",
-      "gateflowStripeFees": "Only Stripe fees",
-      "gateflowStripeAmount": "~2.9%",
-      "gateflowDataOwnership": "You own all customer data",
-      "gateflowTaxThresholds": "You use your own tax thresholds",
-      "gateflowSelfHosted": "Self-hosted — no platform risk",
+      "sellfTitle": "Sellf + Own Stripe",
+      "sellfSubtitle": "Direct payments to your account",
+      "sellfPlatformFees": "Platform fees",
+      "sellfFeeAmount": "$0",
+      "sellfStripeFees": "Only Stripe fees",
+      "sellfStripeAmount": "~2.9%",
+      "sellfDataOwnership": "You own all customer data",
+      "sellfTaxThresholds": "You use your own tax thresholds",
+      "sellfSelfHosted": "Self-hosted — no platform risk",
       "taxGrowthTitle": "Tax compliance grows with your business",
       "taxStep1Title": "Starting out",
       "taxStep1Desc": "Below €10,000 EU cross-border sales — handle VAT in your own country only",
@@ -2888,7 +2888,7 @@
     },
     "useCases": {
       "title": "Built for creators, developers, and entrepreneurs",
-      "subtitle": "Whatever you sell, GateFlow handles it",
+      "subtitle": "Whatever you sell, Sellf handles it",
       "courses": {
         "title": "Online Courses",
         "desc": "Host video courses with temporal access control. Simple and effective content delivery.",
@@ -2913,7 +2913,7 @@
     },
     "donate": {
       "title": "Support Open Source",
-      "subtitle": "GateFlow is free and always will be. If it saves you money, consider supporting development.",
+      "subtitle": "Sellf is free and always will be. If it saves you money, consider supporting development.",
       "cta": "Buy Us a Coffee",
       "note": "Every contribution helps us ship new features faster."
     },
@@ -2921,20 +2921,20 @@
       "title": "Frequently Asked Questions",
       "items": [
         {
-          "q": "Is GateFlow really free?",
+          "q": "Is Sellf really free?",
           "a": "Yes. The software is free forever (MIT license). You pay only for hosting ($3-14/mo) and Stripe processing (~2.9%). No platform fees, no subscriptions, no lock-in."
         },
         {
           "q": "How is it different from Gumroad or Teachable?",
-          "a": "Gumroad takes 10% per sale. Teachable charges $39-665/mo. GateFlow is free — you self-host it, own the code and data. The only cost is Stripe's processing fee."
+          "a": "Gumroad takes 10% per sale. Teachable charges $39-665/mo. Sellf is free — you self-host it, own the code and data. The only cost is Stripe's processing fee."
         },
         {
           "q": "Do I need to be a developer?",
-          "a": "Not really. If you can follow step-by-step instructions and type a few SSH commands, you can deploy GateFlow. We provide Docker configs and detailed guides."
+          "a": "Not really. If you can follow step-by-step instructions and type a few SSH commands, you can deploy Sellf. We provide Docker configs and detailed guides."
         },
         {
           "q": "What about payment processing?",
-          "a": "GateFlow uses Stripe (free to set up). Standard fees: ~2.9% + 30¢ per transaction. MoR platforms charge 5-10% total — significantly more."
+          "a": "Sellf uses Stripe (free to set up). Standard fees: ~2.9% + 30¢ per transaction. MoR platforms charge 5-10% total — significantly more."
         },
         {
           "q": "Can I white-label it?",
@@ -2965,7 +2965,7 @@
     },
     "finalCta": {
       "title": "Ready to Start?",
-      "subtitle": "Deploy GateFlow in 10 minutes. Start selling without monthly fees.",
+      "subtitle": "Deploy Sellf in 10 minutes. Start selling without monthly fees.",
       "ctaDeploy": "Deploy for Free",
       "ctaGithub": "View on GitHub",
       "trust10min": "10-minute deployment",
@@ -2986,7 +2986,7 @@
       "licenseMIT": "License (MIT)",
       "privacy": "Privacy",
       "terms": "Terms",
-      "copyright": "© {year} GateFlow. Open source and self-hosted"
+      "copyright": "© {year} Sellf. Open source and self-hosted"
     }
   },
   "notFound": {

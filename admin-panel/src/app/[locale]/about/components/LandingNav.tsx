@@ -19,7 +19,7 @@ export function LandingNav() {
     { label: t('nav.products'), href: '/store' },
     {
       label: t('nav.github'),
-      href: 'https://github.com/jurczykpawel/gateflow',
+      href: 'https://github.com/jurczykpawel/sellf',
       external: true,
     },
   ]
@@ -50,7 +50,7 @@ export function LandingNav() {
               </span>
             </div>
             <span className="text-lg font-bold text-gf-accent">
-              GateFlow
+              Sellf
             </span>
           </Link>
 

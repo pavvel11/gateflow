@@ -367,7 +367,7 @@ export default function ProductAccessView({ product }: ProductAccessViewProps) {
         />
         
         <div className="text-center mt-8 text-sm text-gray-500">
-          {t('securedByGateFlow')} • {new Date().toLocaleDateString()}
+          {t('securedBySellf')} • {new Date().toLocaleDateString()}
           {!secureProduct.is_active && (
             <div className="mt-2 text-xs text-yellow-400">
               {t('notAvailableToNew')}

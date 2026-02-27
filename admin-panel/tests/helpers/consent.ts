@@ -16,7 +16,7 @@ const ALL_CONSENT_SERVICES = {
 export async function acceptAllCookies(page: Page) {
   await page.context().addCookies([
     {
-      name: 'gateflow_consent',
+      name: 'sellf_consent',
       value: JSON.stringify(ALL_CONSENT_SERVICES),
       domain: 'localhost',
       path: '/',
@@ -32,7 +32,7 @@ export async function acceptAllCookies(page: Page) {
 export async function setConsentPreferences(page: Page, consents: Record<string, boolean>) {
   await page.context().addCookies([
     {
-      name: 'gateflow_consent',
+      name: 'sellf_consent',
       value: JSON.stringify(consents),
       domain: 'localhost',
       path: '/',
@@ -44,5 +44,5 @@ export async function setConsentPreferences(page: Page, consents: Record<string,
  * Clears consent cookie to simulate no consent given.
  */
 export async function clearConsent(page: Page) {
-  await page.context().clearCookies({ name: 'gateflow_consent' });
+  await page.context().clearCookies({ name: 'sellf_consent' });
 }

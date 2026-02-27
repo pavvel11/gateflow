@@ -20,8 +20,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GateFlow Admin Panel",
-  description: "Modern admin panel for GateFlow content protection system",
+  title: "Sellf Admin Panel",
+  description: "Modern admin panel for Sellf content protection system",
 };
 
 export default async function RootLayout({

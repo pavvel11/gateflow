@@ -23,19 +23,19 @@ import {
 
 describe('License Verification', () => {
   // Fixtures: real ECDSA P-256 signatures generated with the private key
-  const VALID_LICENSE_UNLIMITED = 'GF-test.example.com-UNLIMITED-MEUCIFu0eHmjYGTkO2LeOf-H9wbPADxtb2e2y9zwI-UbNs2IAiEA9zLeqLOTNsyeIR8APM0wkZOcKY4RYJw2T_DqPWfjCwQ';
-  const VALID_LICENSE_DATED = 'GF-test.example.com-20301231-MEUCIQCs9QVA6-9uwH2wdoNy3UAlR_bzB4IivExlM1KeqUgPiQIgKNkpD5XEFVKMELTu8T3RAhi80hOuRnSWaef0T-JNSFA';
-  const EXPIRED_LICENSE = 'GF-test.example.com-20201231-MEUCIGHfTwXx0_VbMaS1iK4uZ9yx72FzyDJ0iu4_1wMjz4mAAiEAwHCJIx1owoyCTg4xDqaSnVhHKxCtl4pdJkyrZ3p7pAo';
+  const VALID_LICENSE_UNLIMITED = 'SF-test.example.com-UNLIMITED-MEUCIFu0eHmjYGTkO2LeOf-H9wbPADxtb2e2y9zwI-UbNs2IAiEA9zLeqLOTNsyeIR8APM0wkZOcKY4RYJw2T_DqPWfjCwQ';
+  const VALID_LICENSE_DATED = 'SF-test.example.com-20301231-MEUCIQCs9QVA6-9uwH2wdoNy3UAlR_bzB4IivExlM1KeqUgPiQIgKNkpD5XEFVKMELTu8T3RAhi80hOuRnSWaef0T-JNSFA';
+  const EXPIRED_LICENSE = 'SF-test.example.com-20201231-MEUCIGHfTwXx0_VbMaS1iK4uZ9yx72FzyDJ0iu4_1wMjz4mAAiEAwHCJIx1owoyCTg4xDqaSnVhHKxCtl4pdJkyrZ3p7pAo';
 
   // Invalid: tampered / fabricated signatures
-  const INVALID_LICENSE = 'GF-test.example.com-UNLIMITED-INVALID_SIGNATURE_HERE';
+  const INVALID_LICENSE = 'SF-test.example.com-UNLIMITED-INVALID_SIGNATURE_HERE';
   const MALFORMED_LICENSE = 'not-a-valid-license';
 
   describe('parseLicense', () => {
     it('should parse valid unlimited license', () => {
       const result = parseLicense(VALID_LICENSE_UNLIMITED);
       expect(result).not.toBeNull();
-      expect(result?.prefix).toBe('GF');
+      expect(result?.prefix).toBe('SF');
       expect(result?.domain).toBe('test.example.com');
       expect(result?.expiry).toBe('UNLIMITED');
       expect(result?.signature).toBeTruthy();
@@ -44,7 +44,7 @@ describe('License Verification', () => {
     it('should parse valid dated license', () => {
       const result = parseLicense(VALID_LICENSE_DATED);
       expect(result).not.toBeNull();
-      expect(result?.prefix).toBe('GF');
+      expect(result?.prefix).toBe('SF');
       expect(result?.domain).toBe('test.example.com');
       expect(result?.expiry).toBe('20301231');
     });
@@ -97,7 +97,7 @@ describe('License Verification', () => {
 
     it('should reject a completely fabricated base64 signature', () => {
       // Random base64 that is NOT a valid ECDSA signature for this data
-      const fabricated = 'GF-test.example.com-UNLIMITED-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+      const fabricated = 'SF-test.example.com-UNLIMITED-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
       expect(verifyLicenseSignature(fabricated)).toBe(false);
     });
 
@@ -105,7 +105,7 @@ describe('License Verification', () => {
       // Take only the first half of the valid signature
       const parts = VALID_LICENSE_UNLIMITED.split('-');
       const sig = parts.slice(3).join('-');
-      const truncated = `GF-test.example.com-UNLIMITED-${sig.substring(0, sig.length / 2)}`;
+      const truncated = `SF-test.example.com-UNLIMITED-${sig.substring(0, sig.length / 2)}`;
       expect(verifyLicenseSignature(truncated)).toBe(false);
     });
 
@@ -113,17 +113,17 @@ describe('License Verification', () => {
       // Use the signature from VALID_LICENSE_UNLIMITED but pair it with a different domain
       const parts = VALID_LICENSE_UNLIMITED.split('-');
       const sig = parts.slice(3).join('-');
-      const swapped = `GF-evil.example.com-UNLIMITED-${sig}`;
+      const swapped = `SF-evil.example.com-UNLIMITED-${sig}`;
       expect(verifyLicenseSignature(swapped)).toBe(false);
     });
 
     it('should reject empty signature part', () => {
-      expect(verifyLicenseSignature('GF-test.example.com-UNLIMITED-')).toBe(false);
+      expect(verifyLicenseSignature('SF-test.example.com-UNLIMITED-')).toBe(false);
     });
 
     it('should reject license with valid format but garbage binary signature', () => {
       // Valid base64url encoding but meaningless bytes
-      const garbage = 'GF-test.example.com-UNLIMITED-dGhpcyBpcyBub3QgYSByZWFsIHNpZ25hdHVyZQ';
+      const garbage = 'SF-test.example.com-UNLIMITED-dGhpcyBpcyBub3QgYSByZWFsIHNpZ25hdHVyZQ';
       expect(verifyLicenseSignature(garbage)).toBe(false);
     });
   });
@@ -293,14 +293,14 @@ describe('License Verification', () => {
 
   describe('isValidLicenseFormat', () => {
     it('should accept valid format', () => {
-      expect(isValidLicenseFormat('GF-example.com-UNLIMITED-abc123')).toBe(true);
-      expect(isValidLicenseFormat('GF-example.com-20301231-abc123_XYZ')).toBe(true);
-      expect(isValidLicenseFormat('GF-*.example.com-UNLIMITED-sig')).toBe(true);
+      expect(isValidLicenseFormat('SF-example.com-UNLIMITED-abc123')).toBe(true);
+      expect(isValidLicenseFormat('SF-example.com-20301231-abc123_XYZ')).toBe(true);
+      expect(isValidLicenseFormat('SF-*.example.com-UNLIMITED-sig')).toBe(true);
     });
 
     it('should reject invalid format', () => {
       expect(isValidLicenseFormat('invalid')).toBe(false);
-      expect(isValidLicenseFormat('GF-domain')).toBe(false);
+      expect(isValidLicenseFormat('SF-domain')).toBe(false);
       expect(isValidLicenseFormat('XX-domain-UNLIMITED-sig')).toBe(false);
     });
   });

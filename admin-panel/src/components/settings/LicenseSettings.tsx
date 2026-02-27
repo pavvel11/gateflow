@@ -16,8 +16,8 @@ export default function LicenseSettings() {
     async function loadLicense() {
       try {
         const config = await getIntegrationsConfig();
-        if (config?.gateflow_license) {
-          setLicense(config.gateflow_license);
+        if (config?.sellf_license) {
+          setLicense(config.sellf_license);
         }
       } catch (error) {
         console.error('Failed to load license:', error);
@@ -36,11 +36,11 @@ export default function LicenseSettings() {
     setValidationError(null);
 
     try {
-      const result = await updateIntegrationsConfig({ gateflow_license: license || null });
+      const result = await updateIntegrationsConfig({ sellf_license: license || null });
 
       if (result.error) {
         // Extract specific error message for license
-        const licenseError = result.details?.gateflow_license?.[0];
+        const licenseError = result.details?.sellf_license?.[0];
         if (licenseError) {
           setValidationError(licenseError);
           addToast(licenseError, 'error');
@@ -184,12 +184,12 @@ export default function LicenseSettings() {
             <li>
               {t('howItWorks4')}{' '}
               <a
-                href="https://gateflow.cytr.us"
+                href="https://demo.sellf.app"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gf-accent hover:underline"
               >
-                gateflow.cytr.us
+                demo.sellf.app
               </a>
             </li>
           </ul>

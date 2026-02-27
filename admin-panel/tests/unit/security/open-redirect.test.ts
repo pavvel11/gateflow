@@ -17,7 +17,7 @@ import { isSafeRedirectUrl } from '@/lib/validations/redirect';
  */
 
 describe('Open Redirect Prevention', () => {
-  const SITE_URL = 'https://gateflow.com';
+  const SITE_URL = 'https://sellf.com';
 
   describe('Relative Paths', () => {
     it('should allow simple relative paths', () => {
@@ -45,12 +45,12 @@ describe('Open Redirect Prevention', () => {
 
   describe('Absolute URLs - Same Origin', () => {
     it('should allow same-origin HTTPS URLs', () => {
-      expect(isSafeRedirectUrl('https://gateflow.com/dashboard', SITE_URL)).toBe(true);
-      expect(isSafeRedirectUrl('https://gateflow.com/p/product', SITE_URL)).toBe(true);
+      expect(isSafeRedirectUrl('https://sellf.com/dashboard', SITE_URL)).toBe(true);
+      expect(isSafeRedirectUrl('https://sellf.com/p/product', SITE_URL)).toBe(true);
     });
 
     it('should allow same-origin with path and query', () => {
-      expect(isSafeRedirectUrl('https://gateflow.com/dashboard?tab=1', SITE_URL)).toBe(true);
+      expect(isSafeRedirectUrl('https://sellf.com/dashboard?tab=1', SITE_URL)).toBe(true);
     });
   });
 
@@ -58,20 +58,20 @@ describe('Open Redirect Prevention', () => {
     it('should BLOCK external domains', () => {
       expect(isSafeRedirectUrl('https://evil.com', SITE_URL)).toBe(false);
       expect(isSafeRedirectUrl('https://attacker.com/phishing', SITE_URL)).toBe(false);
-      expect(isSafeRedirectUrl('https://gateflow.com.evil.com', SITE_URL)).toBe(false);
+      expect(isSafeRedirectUrl('https://sellf.com.evil.com', SITE_URL)).toBe(false);
     });
 
     it('should BLOCK different subdomains', () => {
-      expect(isSafeRedirectUrl('https://admin.gateflow.com', SITE_URL)).toBe(false);
-      expect(isSafeRedirectUrl('https://api.gateflow.com', SITE_URL)).toBe(false);
+      expect(isSafeRedirectUrl('https://admin.sellf.com', SITE_URL)).toBe(false);
+      expect(isSafeRedirectUrl('https://api.sellf.com', SITE_URL)).toBe(false);
     });
 
     it('should BLOCK different protocols', () => {
-      expect(isSafeRedirectUrl('http://gateflow.com/dashboard', SITE_URL)).toBe(false);
+      expect(isSafeRedirectUrl('http://sellf.com/dashboard', SITE_URL)).toBe(false);
     });
 
     it('should BLOCK different ports', () => {
-      expect(isSafeRedirectUrl('https://gateflow.com:8080/dashboard', SITE_URL)).toBe(false);
+      expect(isSafeRedirectUrl('https://sellf.com:8080/dashboard', SITE_URL)).toBe(false);
     });
   });
 
@@ -81,8 +81,8 @@ describe('Open Redirect Prevention', () => {
         'https://evil.com',
         '//evil.com',
         '///evil.com',
-        'https://gateflow.com@evil.com',
-        'https://evil.com?gateflow.com',
+        'https://sellf.com@evil.com',
+        'https://evil.com?sellf.com',
         'javascript:alert(1)',
         'data:text/html,<script>alert(1)</script>',
         '//evil.com/%2f..',
@@ -124,8 +124,8 @@ describe('Open Redirect Prevention', () => {
     });
 
     it('should handle SITE_URL with trailing slash', () => {
-      const siteWithSlash = 'https://gateflow.com/';
-      expect(isSafeRedirectUrl('https://gateflow.com/dashboard', siteWithSlash)).toBe(true);
+      const siteWithSlash = 'https://sellf.com/';
+      expect(isSafeRedirectUrl('https://sellf.com/dashboard', siteWithSlash)).toBe(true);
     });
 
     it('should handle localhost in development', () => {

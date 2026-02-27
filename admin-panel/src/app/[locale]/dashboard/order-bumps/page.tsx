@@ -2,7 +2,7 @@ import OrderBumpsPageContent from '@/components/OrderBumpsPageContent';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Order Bumps - GateFlow Admin',
+  title: 'Order Bumps - Sellf Admin',
 };
 
 export default function OrderBumpsPage() {

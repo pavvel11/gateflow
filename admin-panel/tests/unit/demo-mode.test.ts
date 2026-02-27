@@ -189,7 +189,7 @@ describe('Proxy demo blocking (whitelist verified against source)', () => {
     expect(whitelist).toContain('/api/status');
     expect(whitelist).toContain('/api/runtime-config');
     expect(whitelist).toContain('/api/gatekeeper');
-    expect(whitelist).toContain('/api/gateflow-embed');
+    expect(whitelist).toContain('/api/sellf-embed');
   });
 
   it('whitelist does NOT include /api/admin (blocked by default)', () => {

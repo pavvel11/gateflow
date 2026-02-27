@@ -309,7 +309,7 @@ test.describe('Gatekeeper UI Protection Tests', () => {
     test('Embed widget: page loads and requests embed script for free product', async ({ page }) => {
       const scriptRequests: string[] = [];
       page.on('request', (request) => {
-        if (request.url().includes('gateflow-embed')) {
+        if (request.url().includes('sellf-embed')) {
           scriptRequests.push(request.url());
         }
       });
@@ -327,13 +327,13 @@ test.describe('Gatekeeper UI Protection Tests', () => {
       const productSlugElement = page.locator('#product-slug');
       await expect(productSlugElement).toContainText(freeProduct.slug, { timeout: 5000 });
 
-      // GateFlow widget element should have the product attribute set
-      const gateflowWidget = page.locator('[data-testid="gateflow-widget"]');
-      await expect(gateflowWidget).toHaveAttribute('data-gateflow-product', freeProduct.slug);
+      // Sellf widget element should have the product attribute set
+      const sellfWidget = page.locator('[data-testid="sellf-widget"]');
+      await expect(sellfWidget).toHaveAttribute('data-sellf-product', freeProduct.slug);
 
       // Should have requested the embed script from Next.js server
       expect(scriptRequests.length).toBeGreaterThan(0);
-      expect(scriptRequests[0]).toContain('localhost:3000/gateflow-embed.js');
+      expect(scriptRequests[0]).toContain('localhost:3000/sellf-embed.js');
     });
 
     test('Gatekeeper script is loaded from Next.js server', async ({ page }) => {
@@ -469,7 +469,7 @@ test.describe('Gatekeeper UI Protection Tests', () => {
 
       // Should contain core components
       expect(script).toContain('GATEKEEPER_CONFIG');
-      expect(script).toContain('GateFlow');
+      expect(script).toContain('Sellf');
       expect(script).toContain('class');
 
       // Should not contain syntax errors

@@ -21,7 +21,7 @@ export function Step3CreateKey() {
     setTimeout(() => setCopiedStep(null), 2000)
   }
 
-  // Required permissions for GateFlow
+  // Required permissions for Sellf
   const requiredPermissions = [
     { resource: 'Charges', access: 'Write', required: true },
     { resource: 'Customers', access: 'Write', required: true },
@@ -134,10 +134,10 @@ export function Step3CreateKey() {
               </p>
               <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3 font-mono text-sm flex items-center justify-between">
                 <span className="text-gray-900 dark:text-white">
-                  GateFlow {isTestMode ? t('test') : t('live')}
+                  Sellf {isTestMode ? t('test') : t('live')}
                 </span>
                 <button
-                  onClick={() => copyToClipboard(`GateFlow ${isTestMode ? 'Test' : 'Live'}`, 3)}
+                  onClick={() => copyToClipboard(`Sellf ${isTestMode ? 'Test' : 'Live'}`, 3)}
                   className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
                 >
                   {copiedStep === 3 ? (
@@ -164,7 +164,7 @@ export function Step3CreateKey() {
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 {t('step4.description', {
                   defaultValue:
-                    'Configure the following permissions for GateFlow to work properly:',
+                    'Configure the following permissions for Sellf to work properly:',
                 })}
               </p>
 
@@ -178,7 +178,7 @@ export function Step3CreateKey() {
                     <p className="text-gray-600 dark:text-gray-300">
                       {t('step4.importantText', {
                         defaultValue:
-                          'Required permissions are marked with ⚠️. Without these, GateFlow will not function properly.',
+                          'Required permissions are marked with ⚠️. Without these, Sellf will not function properly.',
                       })}
                     </p>
                   </div>

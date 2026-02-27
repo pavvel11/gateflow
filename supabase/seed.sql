@@ -1,5 +1,5 @@
--- Seed data for GateFlow Admin Panel
--- Sample products for testing different GateFlow protection modes
+-- Seed data for Sellf Admin Panel
+-- Sample products for testing different Sellf protection modes
 
 -- Enable pgcrypto extension for password hashing
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -9,7 +9,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- =====================================================
 -- Must be inserted FIRST so the handle_new_user_registration() trigger
 -- makes this user admin (first user in admin_users table).
--- Credentials: demo@gateflow.io / demo123
+-- Credentials: demo@sellf.app / demo123
 
 INSERT INTO auth.users (
   instance_id, id, aud, role, email, encrypted_password,
@@ -21,7 +21,7 @@ INSERT INTO auth.users (
   'dddddddd-0000-4000-a000-000000000000',
   'authenticated',
   'authenticated',
-  'demo@gateflow.io',
+  'demo@sellf.app',
   extensions.crypt('demo123', extensions.gen_salt('bf')),
   NOW(),
   '', '', '', '', '', '',
@@ -36,7 +36,7 @@ INSERT INTO auth.identities (
 ) VALUES (
   'dddddddd-0000-4000-a000-000000000000',
   'dddddddd-0000-4000-a000-000000000000',
-  jsonb_build_object('sub', 'dddddddd-0000-4000-a000-000000000000', 'email', 'demo@gateflow.io'),
+  jsonb_build_object('sub', 'dddddddd-0000-4000-a000-000000000000', 'email', 'demo@sellf.app'),
   'email',
   NOW(),
   NOW(),
@@ -61,7 +61,7 @@ INSERT INTO shop_config (
   custom_settings
 ) VALUES (
   'USD',
-  'GateFlow Demo Shop',
+  'Sellf Demo Shop',
   0.23, -- 23% VAT (Polish default)
   NULL, -- Upload logo to imgbb.com
   '#9333ea', -- purple-600
@@ -323,7 +323,7 @@ VALUES ('COURSE20', 'Course Special 20%', 'percentage', 20, (SELECT jsonb_build_
 INSERT INTO webhook_endpoints (id, url, events, description, is_active, secret)
 VALUES (
   '88888888-8888-4888-a888-888888888888',
-  'https://webhook.site/gateflow-test-endpoint',
+  'https://webhook.site/sellf-test-endpoint',
   ARRAY['purchase.completed', 'lead.captured'],
   'Zapier CRM Integration',
   true,
@@ -557,7 +557,7 @@ BEGIN
   (user3_id, pro_toolkit_id, NOW() - INTERVAL '3 days'),
   (user3_id, vip_masterclass_id, NOW());
 
-  -- Note: demo@gateflow.io is the admin (inserted first in seed, trigger assigns admin role).
+  -- Note: demo@sellf.app is the admin (inserted first in seed, trigger assigns admin role).
   -- john.doe@example.com, maria.schmidt@example.com, anna.kowalska@example.com are regular users.
 
 END $$;

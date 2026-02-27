@@ -39,7 +39,7 @@ export function Step1Welcome() {
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
               {t('whatIsRAK.description', {
                 defaultValue:
-                  'Restricted API Keys (RAK) allow you to grant specific permissions to your application, following the principle of least privilege. Instead of using full access keys, you only grant the permissions GateFlow actually needs.',
+                  'Restricted API Keys (RAK) allow you to grant specific permissions to your application, following the principle of least privilege. Instead of using full access keys, you only grant the permissions Sellf actually needs.',
               })}
             </p>
             <div className="text-sm text-gray-600 dark:text-gray-300">
