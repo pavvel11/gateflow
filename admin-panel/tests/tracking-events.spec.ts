@@ -559,9 +559,12 @@ test.describe('Tracking Events - Consent Mode Integration', () => {
 
     // Verify consent was updated to 'granted'
     const postConsentEvents = await getDataLayerEvents(page);
-    const consentUpdate = postConsentEvents.find(
+    // Klaro fires callbacks per-service, so multiple consent updates are pushed.
+    // The LAST update has the final accumulated state with all consents granted.
+    const consentUpdates = postConsentEvents.filter(
       (e: any) => Array.isArray(e) && e[0] === 'consent' && e[1] === 'update'
     );
+    const consentUpdate = consentUpdates.length > 0 ? consentUpdates[consentUpdates.length - 1] : undefined;
     expect(consentUpdate).toBeDefined();
     if (consentUpdate) {
       expect(consentUpdate[2]).toMatchObject({

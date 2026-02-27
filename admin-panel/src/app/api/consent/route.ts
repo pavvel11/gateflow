@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { NextRequest, NextResponse } from 'next/server'
 import { checkRateLimit } from '@/lib/rate-limiting'
 
@@ -13,7 +13,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient()
     const body = await request.json()
 
     const {
@@ -41,6 +40,10 @@ export async function POST(request: NextRequest) {
     const ip_address = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
     const user_agent = (request.headers.get('user-agent') || 'unknown').substring(0, 500)
 
+    // Use admin client — this endpoint is public (called by Klaro consent callback
+    // for anonymous visitors), so the anon-scoped client can't read integrations_config
+    const supabase = createAdminClient()
+
     // Check if consent logging is enabled first
     const { data: config } = await supabase
       .from('integrations_config')
@@ -63,13 +66,13 @@ export async function POST(request: NextRequest) {
       })
 
     if (error) {
-      console.error('Failed to log consent:', error)
+      console.error('[consent] Failed to log consent:', error)
       return NextResponse.json({ error: 'Failed to log consent' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Consent API error:', error)
+    console.error('[consent] API error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
