@@ -196,7 +196,7 @@
     "refundRequests": "Wnioski o zwrot",
     "store": "Sklep",
     "about": "O Sellf",
-    "getGateflow": "Pobierz Sellf",
+    "getSellf": "Pobierz Sellf",
     "adminSection": "Admin",
     "userSection": "Użytkownik",
     "roleAdmin": "Administrator",

@@ -1,7 +1,7 @@
 version: '3.8'
 
 # =============================================================================
-# GateFlow - Full Stack Self-Hosted Deployment
+# Sellf - Full Stack Self-Hosted Deployment
 # =============================================================================
 # Pełny stack z własnym Supabase (PostgreSQL + wszystkie usługi)
 # Dla enterprise, compliance, lub gdy potrzebujesz pełnej kontroli
@@ -19,7 +19,7 @@ services:
   # PostgreSQL Database
   db:
     image: supabase/postgres:15.1.0.147
-    container_name: gateflow-db
+    container_name: sellf-db
     restart: unless-stopped
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
@@ -35,12 +35,12 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - gateflow-network
+      - sellf-network
 
   # Supabase Kong API Gateway
   kong:
     image: kong:2.8.1
-    container_name: gateflow-kong
+    container_name: sellf-kong
     restart: unless-stopped
     ports:
       - "${KONG_HTTP_PORT:-8000}:8000"
@@ -55,12 +55,12 @@ services:
     depends_on:
       - db
     networks:
-      - gateflow-network
+      - sellf-network
 
   # Supabase Auth
   auth:
     image: supabase/gotrue:v2.99.0
-    container_name: gateflow-auth
+    container_name: sellf-auth
     restart: unless-stopped
     environment:
       GOTRUE_API_HOST: 0.0.0.0
@@ -92,12 +92,12 @@ services:
       db:
         condition: service_healthy
     networks:
-      - gateflow-network
+      - sellf-network
 
   # Supabase REST API
   rest:
     image: postgrest/postgrest:v11.2.2
-    container_name: gateflow-rest
+    container_name: sellf-rest
     restart: unless-stopped
     environment:
       PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/postgres
@@ -109,12 +109,12 @@ services:
       db:
         condition: service_healthy
     networks:
-      - gateflow-network
+      - sellf-network
 
   # Supabase Realtime
   realtime:
     image: supabase/realtime:v2.25.35
-    container_name: gateflow-realtime
+    container_name: sellf-realtime
     restart: unless-stopped
     environment:
       PORT: 4000
@@ -136,12 +136,12 @@ services:
       db:
         condition: service_healthy
     networks:
-      - gateflow-network
+      - sellf-network
 
   # Supabase Storage
   storage:
     image: supabase/storage-api:v0.43.11
-    container_name: gateflow-storage
+    container_name: sellf-storage
     restart: unless-stopped
     environment:
       ANON_KEY: ${ANON_KEY}
@@ -163,12 +163,12 @@ services:
       db:
         condition: service_healthy
     networks:
-      - gateflow-network
+      - sellf-network
 
   # Image Proxy for Storage
   imgproxy:
     image: darthsim/imgproxy:v3.8.0
-    container_name: gateflow-imgproxy
+    container_name: sellf-imgproxy
     restart: unless-stopped
     environment:
       IMGPROXY_BIND: ":5001"
@@ -178,12 +178,12 @@ services:
     volumes:
       - storage_data:/var/lib/storage
     networks:
-      - gateflow-network
+      - sellf-network
 
   # Supabase Meta (Studio Backend)
   meta:
     image: supabase/postgres-meta:v0.68.0
-    container_name: gateflow-meta
+    container_name: sellf-meta
     restart: unless-stopped
     environment:
       PG_META_PORT: 8080
@@ -196,7 +196,7 @@ services:
       db:
         condition: service_healthy
     networks:
-      - gateflow-network
+      - sellf-network
 
   # Admin Panel (Next.js)
   admin-panel:
@@ -210,7 +210,7 @@ services:
         NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL}
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
         NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY}
-    container_name: gateflow-admin-fullstack
+    container_name: sellf-admin-fullstack
     restart: unless-stopped
     ports:
       - "${ADMIN_PORT:-3000}:3000"
@@ -232,13 +232,13 @@ services:
       - auth
       - rest
     networks:
-      - gateflow-network
+      - sellf-network
 
   # Nginx for serving static content (templates, examples, themes)
   # OPCJONALNE: Możesz usunąć ten serwis jeśli nie potrzebujesz publicznie dostępnych examples
   nginx:
     image: nginx:alpine
-    container_name: gateflow-nginx
+    container_name: sellf-nginx
     restart: unless-stopped
     ports:
       - "${NGINX_PORT:-8080}:80"
@@ -250,7 +250,7 @@ services:
       - ./index.html:/usr/share/nginx/html/index.html:ro
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     networks:
-      - gateflow-network
+      - sellf-network
 
 volumes:
   postgres_data:
@@ -259,5 +259,5 @@ volumes:
     driver: local
 
 networks:
-  gateflow-network:
+  sellf-network:
     driver: bridge

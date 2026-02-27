@@ -3,7 +3,7 @@
 /* Class-based dark mode (controlled by ThemeProvider via .dark on <html>) */
 @custom-variant dark (&:where(.dark *));
 
-/* ===== GateFlow Brand Design Tokens ===== */
+/* ===== Sellf Brand Design Tokens ===== */
 
 /* Dark mode (default — dark-first) */
 :root {
@@ -67,7 +67,7 @@
   --gf-shadow-accent: 0 4px 30px -4px rgba(0,136,204,0.12);
 }
 
-/* ===== Whitelabel Tokens — default to GateFlow brand, overridden by theme ===== */
+/* ===== Whitelabel Tokens — default to Sellf brand, overridden by theme ===== */
 :root {
   --wl-accent: var(--gf-accent);
   --wl-accent-hover: var(--gf-accent-hover);
@@ -99,7 +99,7 @@
 
 /* Tailwind v4 theme tokens — enables bg-gf-deep, text-gf-accent, bg-wl-accent, etc. */
 @theme {
-  /* GateFlow brand tokens (admin panel) */
+  /* Sellf brand tokens (admin panel) */
   --color-gf-deep: var(--gf-bg-deep);
   --color-gf-base: var(--gf-bg-base);
   --color-gf-raised: var(--gf-bg-raised);

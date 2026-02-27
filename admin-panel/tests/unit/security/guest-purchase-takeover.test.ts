@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 
 /**
  * ============================================================================
- * SECURITY TEST: Guest Purchase Session Takeover (CVE-GATEFLOW-001)
+ * SECURITY TEST: Guest Purchase Session Takeover (CVE-SELLF-001)
  * ============================================================================
  *
  * VULNERABILITY: A logged-in attacker can steal access to products purchased

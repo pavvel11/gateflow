@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Deploying GateFlow..."
+echo "🚀 Deploying Sellf..."
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -43,7 +43,7 @@ bun run build || {
 cd ..
 
 # Check if PM2 is already running
-if pm2 list | grep -q "gateflow-admin"; then
+if pm2 list | grep -q "sellf-admin"; then
     echo -e "${YELLOW}🔄 Reloading PM2 (zero-downtime)...${NC}"
     pm2 reload ecosystem.config.js || {
         echo -e "${RED}❌ PM2 reload failed${NC}"

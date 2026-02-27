@@ -221,7 +221,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
                   className="hidden sm:inline-flex items-center px-4 py-2 rounded-full bg-gf-accent text-white text-xs font-bold hover:bg-gf-accent-hover hover:shadow-lg transition-all transform hover:scale-105"
                 >
                   <span className="mr-1.5">🚀</span>
-                  {t('getGateflow', { defaultValue: 'Get Sellf' })}
+                  {t('getSellf', { defaultValue: 'Get Sellf' })}
                 </Link>
               )}
               <div className="flex items-center h-full gap-1">
@@ -416,7 +416,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
                 className="hidden sm:inline-flex items-center px-4 py-2 rounded-full bg-gf-accent text-white text-xs font-bold hover:bg-gf-accent-hover hover:shadow-lg transition-all transform hover:scale-105"
               >
                 <span className="mr-1.5">🚀</span>
-                {t('getGateflow', { defaultValue: 'Get Sellf' })}
+                {t('getSellf', { defaultValue: 'Get Sellf' })}
               </Link>
             )}
             <div className="hidden md:flex md:items-center md:gap-1">
