@@ -3,8 +3,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Product } from '@/types';
 import { checkProductAccess } from '@/lib/api/product-access';
+import { FetchTimeoutError } from '@/lib/fetch-with-timeout';
 
-interface AccessResponse {
+export interface AccessResponse {
   hasAccess: boolean;
   reason?: 'no_access' | 'expired' | 'inactive' | 'temporal';
   userAccess?: {
@@ -20,6 +21,7 @@ export function useProductAccess(product: Product) {
   const searchParams = useSearchParams();
   const [accessData, setAccessData] = useState<AccessResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<'timeout' | 'error' | null>(null);
 
   // Build checkout URL preserving OTO params
   const buildCheckoutUrl = (slug: string) => {
@@ -37,6 +39,8 @@ export function useProductAccess(product: Product) {
   };
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const checkUserAccess = async () => {
       // Don't do anything while auth is still loading
       if (authLoading) {
@@ -49,9 +53,8 @@ export function useProductAccess(product: Product) {
         const availableFrom = product.available_from ? new Date(product.available_from) : null;
         const availableUntil = product.available_until ? new Date(product.available_until) : null;
         const isTemporallyAvailable = (!availableFrom || availableFrom <= now) && (!availableUntil || availableUntil > now);
-        
+
         if (!product.is_active) {
-          // Product is inactive - set access data to show appropriate message
           setAccessData({
             hasAccess: false,
             reason: 'inactive'
@@ -59,9 +62,8 @@ export function useProductAccess(product: Product) {
           setLoading(false);
           return;
         }
-        
+
         if (!isTemporallyAvailable) {
-          // Product is not temporally available - set access data to show appropriate message
           setAccessData({
             hasAccess: false,
             reason: 'temporal'
@@ -69,7 +71,7 @@ export function useProductAccess(product: Product) {
           setLoading(false);
           return;
         }
-        
+
         // Product is available - redirect to checkout (preserving OTO params)
         setLoading(false);
         router.push(buildCheckoutUrl(product.slug));
@@ -78,11 +80,15 @@ export function useProductAccess(product: Product) {
 
       // Reset loading when user becomes available
       setLoading(true);
+      setError(null);
 
       try {
-        const data = await checkProductAccess(product.slug);
+        const data = await checkProductAccess(product.slug, { signal: controller.signal });
+
+        if (controller.signal.aborted) return;
+
         setAccessData(data);
-        
+
         // If user doesn't have access, check the reason before redirecting
         if (!data.hasAccess) {
           // Only redirect to checkout if the product is available for new purchases
@@ -93,20 +99,36 @@ export function useProductAccess(product: Product) {
           // For other reasons (inactive, temporal, expired), show appropriate message
           // Component will handle this in the render logic
         }
-      } catch (error) {
-        console.error('Error checking product access:', error);
-        // Handle any errors silently - component will show fallback
+      } catch (err) {
+        if (controller.signal.aborted) return;
+
+        setAccessData(null);
+
+        if (err instanceof FetchTimeoutError) {
+          console.error('[useProductAccess] Access check timed out:', err.message);
+          setError('timeout');
+        } else {
+          console.error('[useProductAccess] Error checking product access:', err);
+          setError('error');
+        }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
     };
 
     checkUserAccess();
+
+    return () => {
+      controller.abort();
+    };
   }, [user, product.slug, product.is_active, product.available_from, product.available_until, router, authLoading]);
 
   return {
     accessData,
     loading: authLoading || loading,
+    error,
     user
   };
 }
