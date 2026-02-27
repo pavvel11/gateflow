@@ -101,6 +101,15 @@ export default defineConfig({
       outputDir: './screenshots/tablet',
     },
     {
+      name: 'visual-laptop',
+      use: {
+        viewport: { width: 1366, height: 768 },
+        screenshot: 'on',
+      },
+      testMatch: VISUAL_TESTS,
+      outputDir: './screenshots/laptop',
+    },
+    {
       name: 'visual-wide',
       use: {
         viewport: { width: 1920, height: 1080 },
@@ -108,6 +117,24 @@ export default defineConfig({
       },
       testMatch: VISUAL_TESTS,
       outputDir: './screenshots/wide',
+    },
+    {
+      name: 'visual-qhd',
+      use: {
+        viewport: { width: 2560, height: 1440 },
+        screenshot: 'on',
+      },
+      testMatch: VISUAL_TESTS,
+      outputDir: './screenshots/qhd',
+    },
+    {
+      name: 'visual-4k',
+      use: {
+        viewport: { width: 3840, height: 2160 },
+        screenshot: 'on',
+      },
+      testMatch: VISUAL_TESTS,
+      outputDir: './screenshots/4k',
     },
   ],
 
