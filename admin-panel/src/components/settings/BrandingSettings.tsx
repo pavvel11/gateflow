@@ -420,7 +420,7 @@ export default function BrandingSettings() {
                     setSelectedPresetId('custom');
                   }}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-                  placeholder="My Custom Theme"
+                  placeholder={t('themeNamePlaceholder')}
                 />
               </div>
 
@@ -473,7 +473,7 @@ export default function BrandingSettings() {
                       value={typo['font-family'] || 'inherit'}
                       onChange={(e) => updateTypography('font-family', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-                      placeholder="Montserrat, system-ui, sans-serif"
+                      placeholder={t('fontFamilyPlaceholder')}
                     />
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('fontFamilyHelp')}</p>
                   </div>
@@ -515,7 +515,7 @@ export default function BrandingSettings() {
                       value={typo['letter-spacing-heading'] || '-0.02em'}
                       onChange={(e) => updateTypography('letter-spacing-heading', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-                      placeholder="-0.02em"
+                      placeholder={t('letterSpacingPlaceholder')}
                     />
                   </div>
                 </div>

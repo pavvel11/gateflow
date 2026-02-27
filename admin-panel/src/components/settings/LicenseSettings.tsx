@@ -112,7 +112,7 @@ export default function LicenseSettings() {
           </label>
           <input
             type="text"
-            placeholder="GF-yourdomain.com-UNLIMITED-xxxxxxxxxxxx"
+            placeholder={t('keyPlaceholder')}
             value={license}
             onChange={(e) => setLicense(e.target.value)}
             className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-3 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-gf-accent outline-none font-mono text-sm"

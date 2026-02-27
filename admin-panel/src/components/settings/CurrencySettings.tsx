@@ -120,10 +120,10 @@ export default function CurrencySettings() {
           setRates(result);
           setRatesFetchedAt(Date.now()); // Zapisz kiedy faktycznie pobrano dane
         } else {
-          setRatesError('Failed to load rates');
+          setRatesError(t('exchangeRates.error'));
         }
       } catch (error) {
-        setRatesError('Failed to load rates');
+        setRatesError(t('exchangeRates.error'));
       } finally {
         setLoadingRates(false);
       }

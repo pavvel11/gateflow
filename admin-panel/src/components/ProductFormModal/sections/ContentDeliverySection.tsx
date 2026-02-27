@@ -183,12 +183,12 @@ export function ContentDeliverySection({
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">Supported Video Platforms</h4>
+                    <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">{t('supportedVideoPlatforms')}</h4>
                     <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                      Paste any URL format - we&apos;ll convert it to the proper embed URL automatically!
+                      {t('supportedVideoPlatformsDesc')}
                     </p>
                     <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
-                      📺 YouTube • 🎬 Vimeo • 🐰 Bunny.net • 🎥 Loom • 📹 Wistia • 🎞️ DailyMotion • 🎮 Twitch
+                      {t('supportedVideoPlatformsList')}
                     </div>
                   </div>
                 </div>
@@ -205,15 +205,15 @@ export function ContentDeliverySection({
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <h4 className="text-sm font-medium text-green-800 dark:text-green-200">Trusted Storage Providers for Downloads</h4>
+                    <h4 className="text-sm font-medium text-green-800 dark:text-green-200">{t('trustedStorageProviders')}</h4>
                     <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                      Download URLs must use HTTPS and be from trusted storage providers for security.
+                      {t('trustedStorageProvidersDesc')}
                     </p>
                     <div className="mt-2 text-xs text-green-600 dark:text-green-400 leading-relaxed">
-                      <div>☁️ Cloud: AWS S3, Google Cloud Storage, Supabase Storage</div>
-                      <div>📁 Personal: Google Drive, Dropbox, OneDrive, Box, SharePoint</div>
-                      <div>🌐 CDN: Bunny CDN, Cloudinary, Imgix, Fastly</div>
-                      <div>📤 File Sharing: Mega, MediaFire, WeTransfer, SendSpace</div>
+                      <div>{t('storageCloudProviders')}</div>
+                      <div>{t('storagePersonalProviders')}</div>
+                      <div>{t('storageCdnProviders')}</div>
+                      <div>{t('storageFileSharingProviders')}</div>
                     </div>
                   </div>
                 </div>
@@ -298,7 +298,7 @@ export function ContentDeliverySection({
                   {/* Video Embed Options */}
                   {item.type === 'video_embed' && (
                     <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                      <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Video Options</div>
+                      <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">{t('videoOptions')}</div>
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                         {['autoplay', 'loop', 'muted', 'preload'].map(option => (
                           <label key={option} className="flex items-center space-x-1 text-xs cursor-pointer">
@@ -308,7 +308,7 @@ export function ContentDeliverySection({
                               onChange={(e) => handleVideoOptionChange(index, option, e.target.checked)}
                               className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                             />
-                            <span className="text-gray-700 dark:text-gray-300 capitalize">{option}</span>
+                            <span className="text-gray-700 dark:text-gray-300">{t(option)}</span>
                           </label>
                         ))}
                         <label className="flex items-center space-x-1 text-xs cursor-pointer">
@@ -318,7 +318,7 @@ export function ContentDeliverySection({
                             onChange={(e) => handleVideoOptionChange(index, 'controls', e.target.checked)}
                             className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                           />
-                          <span className="text-gray-700 dark:text-gray-300">Controls</span>
+                          <span className="text-gray-700 dark:text-gray-300">{t('controls')}</span>
                         </label>
                       </div>
                       <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">

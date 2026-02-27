@@ -89,7 +89,7 @@ const OrderBumpsPageContent: React.FC = () => {
       const orderBumps = await api.getCustom<OrderBumpWithDetails[]>('order-bumps');
       setOrderBumps(orderBumps || []);
     } catch (err) {
-      setError('Failed to load order bumps');
+      setError(t('loadError'));
       console.error('Error:', err);
     } finally {
       setLoading(false);
@@ -112,7 +112,7 @@ const OrderBumpsPageContent: React.FC = () => {
       await fetchOrderBumps();
       addToast(t('createSuccess'), 'success');
     } catch (err) {
-      addToast(err instanceof Error ? err.message : 'Failed to create order bump', 'error');
+      addToast(err instanceof Error ? err.message : t('createError'), 'error');
       return Promise.reject(err);
     } finally {
       setSubmitting(false);
@@ -131,7 +131,7 @@ const OrderBumpsPageContent: React.FC = () => {
       await fetchOrderBumps();
       addToast(t('updateSuccess'), 'success');
     } catch (err) {
-      addToast(err instanceof Error ? err.message : 'Failed to update order bump', 'error');
+      addToast(err instanceof Error ? err.message : t('updateError'), 'error');
       return Promise.reject(err);
     } finally {
       setSubmitting(false);
@@ -146,7 +146,7 @@ const OrderBumpsPageContent: React.FC = () => {
       await fetchOrderBumps();
       addToast(t('deleteSuccess'), 'success');
     } catch (err) {
-      addToast(err instanceof Error ? err.message : 'Failed to delete order bump', 'error');
+      addToast(err instanceof Error ? err.message : t('deleteError'), 'error');
     }
   };
 
@@ -160,7 +160,7 @@ const OrderBumpsPageContent: React.FC = () => {
         'success'
       );
     } catch (err) {
-      addToast(err instanceof Error ? err.message : 'Failed to toggle bump status', 'error');
+      addToast(err instanceof Error ? err.message : t('statusError'), 'error');
     }
   };
 

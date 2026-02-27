@@ -49,7 +49,7 @@ function LongDescriptionField({
         onChange={onChange}
         rows={expanded ? 10 : 2}
         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white font-mono text-sm resize-none transition-all duration-200"
-        placeholder="## What's included?&#10;- Feature 1&#10;- Feature 2"
+        placeholder={t('longDescriptionPlaceholder')}
       />
       {expanded && (
         <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400 flex items-start gap-1">
@@ -114,7 +114,7 @@ export function BasicInfoSection({
             required
           />
           {fieldErrors.name && (
-            <p className="mt-1 text-xs text-red-500">{t('productName')} is required</p>
+            <p className="mt-1 text-xs text-red-500">{t('nameRequired', { name: t('productName') })}</p>
           )}
         </div>
 
@@ -131,12 +131,12 @@ export function BasicInfoSection({
               value={formData.slug}
               onChange={handleInputChange}
               className={`w-full px-3 py-2.5 border ${fieldErrors.slug ? errorBorder : normalBorder} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:border-transparent dark:bg-gray-700 dark:text-white pr-12`}
-              placeholder="product-url-slug"
+              placeholder={t('slugPlaceholder')}
               required
             />
             {!slugModified && (
               <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 rounded px-2 py-1">
-                Auto
+                {t('autoSlug')}
               </span>
             )}
           </div>
@@ -148,7 +148,7 @@ export function BasicInfoSection({
 
       <div>
         <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Description
+          {t('description')}
         </label>
         <textarea
           id="description"
@@ -157,11 +157,11 @@ export function BasicInfoSection({
           onChange={handleInputChange}
           rows={3}
           className={`w-full px-3 py-2.5 border ${fieldErrors.description ? errorBorder : normalBorder} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:border-transparent dark:bg-gray-700 dark:text-white`}
-          placeholder="Describe your product"
+          placeholder={t('descriptionPlaceholder')}
           required
         />
         {fieldErrors.description && (
-          <p className="mt-1 text-xs text-red-500">Description is required</p>
+          <p className="mt-1 text-xs text-red-500">{t('descriptionRequired')}</p>
         )}
       </div>
 

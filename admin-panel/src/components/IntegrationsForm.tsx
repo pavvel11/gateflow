@@ -74,7 +74,7 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
       setIsScriptModalOpen(false)
       window.location.reload()
     } else {
-      addToast(result.error || 'Failed', 'error')
+      addToast(result.error || tCommon('error'), 'error')
     }
     setLoading(false)
   }
@@ -282,14 +282,14 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
                   <div className="grid gap-6 md:grid-cols-2">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('gtm.containerId')}</label>
-                      <input type="text" placeholder="GTM-XXXXXX" value={formData.gtm_container_id || ''} onChange={(e) => handleChange('gtm_container_id', e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none" />
+                      <input type="text" placeholder={t('gtm.containerIdPlaceholder')} value={formData.gtm_container_id || ''} onChange={(e) => handleChange('gtm_container_id', e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         {t('gtm.serverContainerUrl')}
                         <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">(Advanced)</span>
                       </label>
-                      <input type="text" placeholder="https://gtm.yourdomain.com" value={formData.gtm_server_container_url || ''} onChange={(e) => handleChange('gtm_server_container_url', e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none" />
+                      <input type="text" placeholder={t('gtm.serverContainerUrlPlaceholder')} value={formData.gtm_server_container_url || ''} onChange={(e) => handleChange('gtm_server_container_url', e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none" />
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('gtm.serverContainerHelp')}</p>
                     </div>
                   </div>
@@ -314,11 +314,11 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
                   <div className="grid gap-6 md:grid-cols-2">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('umami.websiteId')}</label>
-                      <input type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" value={formData.umami_website_id || ''} onChange={(e) => handleChange('umami_website_id', e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none" />
+                      <input type="text" placeholder={t('umami.websiteIdPlaceholder')} value={formData.umami_website_id || ''} onChange={(e) => handleChange('umami_website_id', e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('umami.scriptUrl')}</label>
-                      <input type="text" placeholder="https://cloud.umami.is/script.js" value={formData.umami_script_url || ''} onChange={(e) => handleChange('umami_script_url', e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none" />
+                      <input type="text" placeholder={t('umami.scriptUrlPlaceholder')} value={formData.umami_script_url || ''} onChange={(e) => handleChange('umami_script_url', e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none" />
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('umami.default')}: https://cloud.umami.is/script.js</p>
                     </div>
                   </div>
@@ -475,7 +475,7 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
                   <div className="grid gap-6 md:grid-cols-2">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('facebook.pixelId')}</label>
-                      <input type="text" placeholder="1234567890" value={formData.facebook_pixel_id || ''} onChange={(e) => handleChange('facebook_pixel_id', e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none" />
+                      <input type="text" placeholder={t('facebook.pixelIdPlaceholder')} value={formData.facebook_pixel_id || ''} onChange={(e) => handleChange('facebook_pixel_id', e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none" />
                     </div>
                     <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('facebook.capiToken')}</label>

@@ -39,7 +39,7 @@ export default function WebhookLogsDrawer({ endpoint, onClose, isOpen, onRefresh
       setLogs(response.data || []);
     } catch (err) {
       console.error(err);
-      addToast('Failed to load logs', 'error');
+      addToast(t('loadError'), 'error');
     } finally {
       setLoading(false);
     }

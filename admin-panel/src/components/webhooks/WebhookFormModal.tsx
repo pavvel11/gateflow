@@ -95,7 +95,7 @@ export default function WebhookFormModal({
                 value={formData.url}
                 onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                placeholder="https://api.zapier.com/..."
+                placeholder={t('urlPlaceholder')}
               />
             </div>
 

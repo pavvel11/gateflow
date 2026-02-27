@@ -120,7 +120,7 @@ export default function ShopSettings() {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {t('defaultCurrency')}
             <span className="block text-xs text-gray-500 dark:text-gray-400 font-normal mt-1">
-              This currency will be used for revenue goals and as the default display currency for all admins.
+              {t('defaultCurrencyHelp')}
             </span>
           </label>
           <select

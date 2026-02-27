@@ -113,21 +113,21 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
         } else {
           // GUS API returned error
           if (result.code === 'RATE_LIMIT_EXCEEDED') {
-            setGusError('Too many requests. Please wait and try again.')
+            setGusError(t('gus.rateLimitError'))
           } else if (result.code === 'NOT_FOUND') {
-            setGusError('Company not found in GUS database')
+            setGusError(t('gus.notFound'))
           } else if (result.code === 'NOT_CONFIGURED') {
             // Silent fail - GUS not configured, user can enter manually
             setGusError(null)
           } else if (result.code === 'INVALID_ORIGIN') {
-            setGusError('Security error. Please refresh and try again.')
+            setGusError(t('gus.securityError'))
           } else {
-            setGusError('Failed to fetch data from GUS. Enter data manually.')
+            setGusError(t('gus.fetchError'))
           }
         }
       } catch (error) {
         console.error('GUS fetch error:', error)
-        setGusError('Failed to fetch data from GUS. Enter data manually.')
+        setGusError(t('gus.fetchError'))
       } finally {
         setIsLoadingGUS(false)
       }
@@ -247,7 +247,7 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
                 <p className="mt-1 text-xs text-green-500 dark:text-green-400">{taxIdSuccess}</p>
               )}
               {gusSuccess && !isLoadingGUS && (
-                <p className="mt-1 text-xs text-green-500 dark:text-green-400">✓ Company data loaded from GUS database</p>
+                <p className="mt-1 text-xs text-green-500 dark:text-green-400">{t('gus.dataLoaded')}</p>
               )}
               {gusError && (
                 <p className="mt-1 text-xs text-yellow-500 dark:text-yellow-400">⚠️ {gusError}</p>
@@ -312,7 +312,7 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
                     type="text"
                     value={formData.country || ''}
                     onChange={(e) => handleChange('country', e.target.value)}
-                    placeholder="e.g. Poland"
+                    placeholder={t('fields.countryPlaceholder')}
                     className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>

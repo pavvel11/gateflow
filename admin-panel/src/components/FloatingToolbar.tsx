@@ -76,8 +76,8 @@ export default function FloatingToolbar({
             className={`flex items-center justify-center w-8 h-8 hover:bg-gray-100 dark:hover:bg-white/20 rounded-full transition-all duration-200 ${
               isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
             }`}
-            aria-label="Switch language"
-            title={`Language: ${currentLanguage.name}`}
+            aria-label={t('switchLanguage')}
+            title={t('languageTitle', { name: currentLanguage.name })}
           >
             <span className="text-sm">{currentLanguage.flag}</span>
           </button>
@@ -122,8 +122,8 @@ export default function FloatingToolbar({
         <button
           onClick={cycleTheme}
           className="relative flex items-center justify-center w-8 h-8 hover:bg-gray-100 dark:hover:bg-white/20 rounded-full transition-all duration-200 hover:scale-105"
-          aria-label={`Theme: ${theme}`}
-          title={`Theme: ${theme}`}
+          aria-label={t('themeLabel', { theme })}
+          title={t('themeLabel', { theme })}
         >
           {resolvedTheme === 'dark' ? (
             <svg className="w-4 h-4 text-yellow-300" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -152,7 +152,7 @@ export default function FloatingToolbar({
                 className={`flex items-center justify-center w-8 h-8 hover:bg-gray-100 dark:hover:bg-white/20 rounded-full transition-all duration-200 ${
                   isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
                 }`}
-                aria-label="User menu"
+                aria-label={t('userMenu')}
                 title={`${user.email}`}
               >
                 <div className="w-5 h-5 bg-gf-accent rounded-full flex items-center justify-center">

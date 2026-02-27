@@ -87,7 +87,7 @@ const VariantsPageContent: React.FC = () => {
       const groups = await api.getCustom<VariantGroup[]>('variant-groups');
       setGroups(groups || []);
     } catch (err) {
-      setError('Failed to load variant groups');
+      setError(t('loadError'));
       console.error('Error:', err);
     } finally {
       setLoading(false);
@@ -108,7 +108,7 @@ const VariantsPageContent: React.FC = () => {
       await fetchGroups();
       addToast(t('deleteSuccess'), 'success');
     } catch (err) {
-      addToast(err instanceof Error ? err.message : 'Failed to delete variant group', 'error');
+      addToast(err instanceof Error ? err.message : t('deleteGroupError'), 'error');
     }
   };
 
@@ -137,7 +137,7 @@ const VariantsPageContent: React.FC = () => {
       await fetchGroups();
       addToast(t('removeSuccess'), 'success');
     } catch (err) {
-      addToast(err instanceof Error ? err.message : 'Failed to remove product', 'error');
+      addToast(err instanceof Error ? err.message : t('removeProductError'), 'error');
     }
   };
 
@@ -156,7 +156,7 @@ const VariantsPageContent: React.FC = () => {
       await fetchGroups();
       addToast(t('featuredUpdated'), 'success');
     } catch (err) {
-      addToast(err instanceof Error ? err.message : 'Failed to update', 'error');
+      addToast(err instanceof Error ? err.message : t('updateError'), 'error');
     }
   };
 

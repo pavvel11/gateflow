@@ -246,13 +246,13 @@ export default function RevenueGoal() {
               <button
                 onClick={handleResetGoal}
                 className="text-xs text-gray-500 dark:text-gray-400 hover:underline"
-                title="Reset progress (start counting from now)"
+                title={t('resetProgressTitle')}
               >
                 Reset
               </button>
             </div>
             <span className="text-[10px] text-gray-500 dark:text-gray-500">
-              Goal is saved in shop's default currency
+              {t('goalCurrencyNote')}
             </span>
           </div>
         ) : (

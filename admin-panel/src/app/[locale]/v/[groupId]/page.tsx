@@ -56,7 +56,7 @@ export default function VariantSelectorPage() {
 
         if (fetchError) {
           console.error('Error fetching variants:', fetchError);
-          setError('Failed to load variants');
+          setError(t('loadError'));
           return;
         }
 
@@ -64,14 +64,14 @@ export default function VariantSelectorPage() {
         const activeVariants = data.filter((v: Variant) => v.is_active);
 
         if (!activeVariants || activeVariants.length === 0) {
-          setError('No variants found');
+          setError(t('noVariants'));
           return;
         }
 
         setVariants(activeVariants);
       } catch (err) {
         console.error('Error:', err);
-        setError('An error occurred');
+        setError(t('errorOccurred'));
       } finally {
         setLoading(false);
       }

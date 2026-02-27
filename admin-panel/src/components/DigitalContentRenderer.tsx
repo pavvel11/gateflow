@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import { ContentItem } from '@/types';
 import { parseVideoUrl, isTrustedVideoPlatform, addEmbedOptions } from '@/lib/videoUtils';
 
@@ -10,6 +11,7 @@ interface DigitalContentRendererProps {
 }
 
 export default function DigitalContentRenderer({ contentItems, productName }: DigitalContentRendererProps) {
+  const t = useTranslations('digitalContent');
   const sortedItems = contentItems
     .filter(item => item.is_active)
     .sort((a, b) => a.order - b.order);
@@ -53,11 +55,11 @@ export default function DigitalContentRenderer({ contentItems, productName }: Di
                     return (
                       <div className="flex items-center justify-center h-full p-4">
                         <div className="text-center">
-                          <div className="text-red-500 font-bold mb-2">⚠️ Invalid Video URL</div>
+                          <div className="text-red-500 font-bold mb-2">⚠️ {t('invalidVideoUrl')}</div>
                           <div className="text-sm text-gray-500 mb-2">
                             {!isTrustedVideoPlatform(url)
-                              ? 'Only trusted video platforms are allowed'
-                              : 'Unable to parse video URL. Please check the format.'}
+                              ? t('trustedPlatformsOnly')
+                              : t('unableToParseUrl')}
                           </div>
                           <div className="text-xs text-gray-600 font-mono bg-gray-800 p-2 rounded">
                             {url}
@@ -112,10 +114,10 @@ export default function DigitalContentRenderer({ contentItems, productName }: Di
             {item.config.embed_code && !item.config.embed_url && (
               <div className="aspect-video bg-black/20 rounded-lg overflow-hidden p-4">
                 <div className="text-red-500 font-bold">
-                  ⚠️ SECURITY: Raw HTML embed disabled for security reasons
+                  ⚠️ {t('securityEmbedDisabled')}
                 </div>
                 <div className="text-sm text-gray-500 mt-2">
-                  Use iframe embed_url instead for secure content embedding
+                  {t('useIframeInstead')}
                 </div>
               </div>
             )}
@@ -177,7 +179,7 @@ export default function DigitalContentRenderer({ contentItems, productName }: Di
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 15.5c-.77.833.192 2.5 1.732 2.5z" />
                         </svg>
-                        Invalid URL
+                        {t('invalidUrl')}
                       </div>
                     );
                   }
@@ -193,7 +195,7 @@ export default function DigitalContentRenderer({ contentItems, productName }: Di
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      Download
+                      {t('download')}
                     </a>
                   );
                 })()
@@ -214,7 +216,7 @@ export default function DigitalContentRenderer({ contentItems, productName }: Di
                   </svg>
                 </div>
                 <h3 className="text-white font-medium text-lg mb-2">{item.title}</h3>
-                <p className="text-gray-400 text-sm">Self-hosted video feature coming soon</p>
+                <p className="text-gray-400 text-sm">{t('hostedVideoComingSoon')}</p>
               </div>
             </div>
           </div>
@@ -232,7 +234,7 @@ export default function DigitalContentRenderer({ contentItems, productName }: Di
                   </svg>
                 </div>
                 <h3 className="text-white font-medium text-lg mb-2">{item.title}</h3>
-                <p className="text-gray-400 text-sm">Self-hosted file feature coming soon</p>
+                <p className="text-gray-400 text-sm">{t('hostedFileComingSoon')}</p>
               </div>
             </div>
           </div>
@@ -251,8 +253,8 @@ export default function DigitalContentRenderer({ contentItems, productName }: Di
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-4.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
           </svg>
         </div>
-        <h3 className="text-white font-medium text-lg mb-2">No Content Available</h3>
-        <p className="text-gray-400 text-sm">No digital content has been configured for this product yet.</p>
+        <h3 className="text-white font-medium text-lg mb-2">{t('noContent')}</h3>
+        <p className="text-gray-400 text-sm">{t('noContentMessage')}</p>
       </div>
     );
   }
@@ -260,8 +262,8 @@ export default function DigitalContentRenderer({ contentItems, productName }: Di
   return (
     <div className="space-y-6">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-white mb-2">Digital Content</h2>
-        <p className="text-gray-400 text-sm">Access your {productName} content below</p>
+        <h2 className="text-xl font-semibold text-white mb-2">{t('sectionTitle')}</h2>
+        <p className="text-gray-400 text-sm">{t('accessYourContent', { productName })}</p>
       </div>
       
       {sortedItems.map(renderContentItem)}

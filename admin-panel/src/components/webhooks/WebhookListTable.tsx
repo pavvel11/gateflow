@@ -39,7 +39,7 @@ const WebhookRow = ({
   const handleCopySecret = () => {
     if (endpoint.secret) {
       navigator.clipboard.writeText(endpoint.secret);
-      addToast('Secret copied to clipboard', 'success');
+      addToast(t('secretCopied'), 'success');
     }
   };
 
@@ -73,7 +73,7 @@ const WebhookRow = ({
           <button
             onClick={() => setShowSecret(!showSecret)}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-            title={showSecret ? "Hide Secret" : "Reveal Secret"}
+            title={showSecret ? t('hideSecret') : t('revealSecret')}
           >
             {showSecret ? (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -89,7 +89,7 @@ const WebhookRow = ({
           <button
             onClick={handleCopySecret}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-            title="Copy Secret"
+            title={t('copySecret')}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -112,7 +112,7 @@ const WebhookRow = ({
           onClick={() => onLogs(endpoint)}
           className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
         >
-          Logs
+          {t('logsButtonLabel')}
         </button>
         <button
           onClick={() => onTest(endpoint)}

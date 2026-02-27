@@ -1,6 +1,6 @@
 'use client'
 
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useRouter, usePathname } from 'next/navigation'
 import { useState, useTransition, useRef, useEffect } from 'react'
 import { locales } from '@/lib/locales'
@@ -24,6 +24,7 @@ export default function FloatingLanguageSwitcher({
   const locale = useLocale()
   const router = useRouter()
   const pathname = usePathname()
+  const t = useTranslations('navigation')
   const [isOpen, setIsOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -92,7 +93,7 @@ export default function FloatingLanguageSwitcher({
             ${isPending ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md'}
             ${variant === 'discrete' ? 'p-2' : 'px-3 py-2'}
           `}
-          aria-label="Switch language"
+          aria-label={t('switchLanguage')}
         >
           <span className="text-lg leading-none">{currentLanguage.flag}</span>
           {variant !== 'discrete' && (

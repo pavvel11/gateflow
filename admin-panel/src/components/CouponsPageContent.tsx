@@ -89,7 +89,7 @@ const CouponsPageContent: React.FC = () => {
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError('Failed to load coupons');
+        setError(t('loadError'));
       }
     } finally {
       setLoading(false);
@@ -126,7 +126,7 @@ const CouponsPageContent: React.FC = () => {
       if (err instanceof ApiError) {
         addToast(err.message, 'error');
       } else {
-        addToast('Failed to create coupon', 'error');
+        addToast(t('createError'), 'error');
       }
     } finally {
       setIsSubmitting(false);
@@ -147,7 +147,7 @@ const CouponsPageContent: React.FC = () => {
       if (err instanceof ApiError) {
         addToast(err.message, 'error');
       } else {
-        addToast('Failed to update coupon', 'error');
+        addToast(t('updateError'), 'error');
       }
     } finally {
       setIsSubmitting(false);
@@ -162,7 +162,7 @@ const CouponsPageContent: React.FC = () => {
       setCouponToDelete(null);
       addToast(t('deleteSuccess'), 'success');
     } catch (err) {
-      addToast('Failed to delete coupon', 'error');
+      addToast(t('deleteError'), 'error');
     }
   };
 
@@ -173,7 +173,7 @@ const CouponsPageContent: React.FC = () => {
       await fetchData();
       addToast(t('toggleSuccess', { status: t(!coupon.is_active ? 'activated' : 'deactivated') }), 'success');
     } catch (err) {
-      addToast('Failed to update status', 'error');
+      addToast(t('statusError'), 'error');
     }
   };
 
@@ -220,7 +220,7 @@ const CouponsPageContent: React.FC = () => {
         addToast(t('bulkDeleteSuccess', { count: ids.length }), 'success');
       }
     } catch (err) {
-      addToast('Failed to delete coupons', 'error');
+      addToast(t('bulkDeleteError'), 'error');
     }
   };
 
@@ -247,7 +247,7 @@ const CouponsPageContent: React.FC = () => {
         addToast(t('deleteExpiredSuccess', { count: expiredCoupons.length }), 'success');
       }
     } catch (err) {
-      addToast('Failed to delete expired coupons', 'error');
+      addToast(t('deleteExpiredError'), 'error');
     }
   };
 

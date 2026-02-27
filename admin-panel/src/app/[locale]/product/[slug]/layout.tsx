@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 export default function ProductClientRedirect() {
+  const t = useTranslations('productView');
   const router = useRouter();
 
   useEffect(() => {
@@ -20,7 +22,7 @@ export default function ProductClientRedirect() {
     <div className="flex justify-center items-center min-h-screen bg-gf-deep">
       <div className="text-center">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gf-accent mb-4"></div>
-        <p className="text-gf-heading">Redirecting to product page...</p>
+        <p className="text-gf-heading">{t('redirectingToProductPage')}</p>
       </div>
     </div>
   );

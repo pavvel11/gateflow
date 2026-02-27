@@ -37,21 +37,21 @@ export default function WebhookLogsTable({
     if (log.status === 'retried') {
       return (
         <span className="px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded text-xs font-medium border border-yellow-200 dark:border-yellow-800">
-          Retried
+          {t('retried')}
         </span>
       );
     }
     if (log.status === 'archived') {
         return (
           <span className="px-2 py-1 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 rounded text-xs font-medium border border-gray-200 dark:border-gray-600">
-            Archived
+            {t('archived')}
           </span>
         );
     }
     
     // Failed
     if (log.http_status === 0) {
-      return <span className="px-2 py-1 bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded text-xs font-medium border border-red-200 dark:border-red-800">Network Error</span>;
+      return <span className="px-2 py-1 bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded text-xs font-medium border border-red-200 dark:border-red-800">{t('networkError')}</span>;
     }
     return <span className="px-2 py-1 bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded text-xs font-medium border border-red-200 dark:border-red-800">HTTP {log.http_status}</span>;
   };
@@ -69,11 +69,11 @@ export default function WebhookLogsTable({
         method: 'POST'
       });
       if (res.ok) {
-        addToast('Log archived', 'success');
+        addToast(t('logArchived'), 'success');
         onRefresh?.();
       }
     } catch {
-      addToast('Failed to archive log', 'error');
+      addToast(t('archiveError'), 'error');
     } finally {
       setArchivingId(null);
     }
@@ -148,7 +148,7 @@ export default function WebhookLogsTable({
                     <button
                       onClick={(e) => handleArchive(e, log.id)}
                       disabled={archivingId === log.id}
-                      title="Archive/Dismiss"
+                      title={t('archiveDismiss')}
                       className="inline-flex items-center p-1.5 border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-md transition-colors"
                     >
                       {archivingId === log.id ? (
@@ -181,11 +181,11 @@ export default function WebhookLogsTable({
                         <div className="text-[10px] bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700 h-48 overflow-y-auto">
                           {log.error_message && (
                             <div className="text-red-600 dark:text-red-400 font-medium mb-2 border-b border-red-100 dark:border-red-900/30 pb-2">
-                              Error: {log.error_message}
+                              {t('errorPrefix', { message: log.error_message })}
                             </div>
                           )}
                           <pre className="whitespace-pre-wrap font-mono text-gray-800 dark:text-gray-200">
-                            {log.response_body || '(Empty response body)'}
+                            {log.response_body || t('emptyResponse')}
                           </pre>
                         </div>
                       </div>

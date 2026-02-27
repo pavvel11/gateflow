@@ -179,12 +179,16 @@
     "refundRequests": "Refund Requests",
     "store": "Store",
     "about": "About GateFlow",
-    "getGateflow": "Get GateFlow for Free",
+    "getGateflow": "Get GateFlow",
     "adminSection": "Admin",
     "userSection": "User",
     "roleAdmin": "Administrator",
     "roleUser": "User",
-    "openSidebar": "Open sidebar"
+    "openSidebar": "Open sidebar",
+    "switchLanguage": "Switch language",
+    "languageTitle": "Language: {name}",
+    "themeLabel": "Theme: {theme}",
+    "userMenu": "User menu"
   },
   "about": {
     "title": "About GateFlow",
@@ -208,14 +212,18 @@
       "serverContainerUrl": "GTM Server Container URL",
       "serverContainerHelp": "For server-side tracking. Leave empty for client-side only.",
       "ssEnabled": "Enable server-to-server event forwarding",
-      "ssEnabledHelp": "Send conversion events (Purchase, Lead) from backend directly to GTM SS container. Supports Facebook CAPI, TikTok Events API, and other tags configured in GTM."
+      "ssEnabledHelp": "Send conversion events (Purchase, Lead) from backend directly to GTM SS container. Supports Facebook CAPI, TikTok Events API, and other tags configured in GTM.",
+      "containerIdPlaceholder": "GTM-XXXXXX",
+      "serverContainerUrlPlaceholder": "https://gtm.yourdomain.com"
     },
     "umami": {
       "title": "Umami Analytics (Open Source)",
       "privacyFocused": "Privacy Focused",
       "websiteId": "Website ID (UUID)",
       "scriptUrl": "Script URL (Optional)",
-      "default": "Default"
+      "default": "Default",
+      "websiteIdPlaceholder": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      "scriptUrlPlaceholder": "https://cloud.umami.is/script.js"
     },
     "facebook": {
       "title": "Meta (Facebook)",
@@ -225,7 +233,8 @@
       "testEventCode": "Test Event Code",
       "testEventCodeHelp": "For testing events in Events Manager. Remove in production.",
       "enableCAPI": "Enable Conversions API (Server-Side)",
-      "capiTokenRequired": "CAPI Token is required to enable this feature"
+      "capiTokenRequired": "CAPI Token is required to enable this feature",
+      "pixelIdPlaceholder": "1234567890"
     },
     "cookieConsent": {
       "requireConsent": "Require Consent (Recommended)"
@@ -458,7 +467,8 @@
       "address2Placeholder": "Suite 4",
       "city": "City",
       "zipCode": "ZIP / Postal Code",
-      "country": "Country"
+      "country": "Country",
+      "countryPlaceholder": "e.g. Poland"
     },
     "messages": {
       "saveSuccess": "Profile updated successfully",
@@ -468,7 +478,14 @@
     "validPolishNIP": "✓ Valid Polish NIP",
     "validPolishNIPWithCode": "✓ Valid Polish NIP ({code})",
     "validTaxId": "✓ Valid tax ID",
-    "validTaxIdWithCode": "✓ Valid tax ID ({code})"
+    "validTaxIdWithCode": "✓ Valid tax ID ({code})",
+    "gus": {
+      "rateLimitError": "Too many requests. Please wait and try again.",
+      "notFound": "Company not found in GUS database",
+      "securityError": "Security error. Please refresh and try again.",
+      "fetchError": "Failed to fetch data from GUS. Enter data manually.",
+      "dataLoaded": "✓ Company data loaded from GUS database"
+    }
   },
   "auth": {
     "login": "Login",
@@ -489,7 +506,8 @@
     "openEmailProvider": "Open {provider}",
     "backToLogin": "Back to Login",
     "title": "GateFlow Admin",
-    "disposableEmailBlocked": "Registration blocked: Disposable email addresses are not allowed. Please use a permanent email address."
+    "disposableEmailBlocked": "Registration blocked: Disposable email addresses are not allowed. Please use a permanent email address.",
+    "emailValidationFailed": "Email validation failed. Please try again."
   },
   "products": {
     "title": "Products",
@@ -881,7 +899,28 @@
     "failedToRequestAccess": "Failed to request access",
     "accessGrantedSuccessfully": "Access granted successfully!",
     "invalidEmailDisposable": "Invalid or disposable email address not allowed",
-    "validEmailRequired": "Please enter a valid email address"
+    "validEmailRequired": "Please enter a valid email address",
+    "loadingSecureContent": "Loading secure content...",
+    "accessError": "Access Error",
+    "refreshPage": "Refresh Page",
+    "noContentAvailable": "No content available",
+    "redirectingTitle": "Redirecting...",
+    "redirectingMessage": "You're being redirected to your content.",
+    "goToContent": "Go to Content",
+    "accessExpiredStatus": "Expired {date}",
+    "accessExpiresStatus": "Expires {date}",
+    "legacyAccess": "Legacy Access",
+    "productDescription": "Product Description",
+    "securedByGateFlow": "Secured by GateFlow",
+    "notAvailableToNew": "This product is no longer available to new customers",
+    "accessGrantedStatus": "Access Granted",
+    "accessExpiredStatusLabel": "Access Expired",
+    "redirectingToProductPage": "Redirecting to product page...",
+    "accessDeniedOrExpired": "Access denied or expired",
+    "failedToLoadContent": "Failed to load content",
+    "loadingTimeoutTitle": "Loading is taking longer than expected",
+    "loadingTimeoutMessage": "We couldn't load your product information. This could be due to a temporary connection issue.",
+    "tryAgain": "Try Again"
   },
   "myProducts": {
     "title": "My Products",
@@ -1042,7 +1081,11 @@
         "subtitle": "Last {days} days performance",
         "hourlyTitle": "Today's Revenue",
         "hourlySubtitle": "Hourly breakdown"
-      }
+      },
+      "showValues": "Show values",
+      "hideValues": "Hide values",
+      "resetProgressTitle": "Reset progress (start counting from now)",
+      "goalCurrencyNote": "Goal is saved in shop's default currency"
     },
     "products": {
       "title": "Products",
@@ -1300,7 +1343,30 @@
           "exitMessage": "You have unsaved product data. Close without creating?",
           "exitDiscard": "Discard",
           "exitKeepEditing": "Keep Editing"
-        }
+        },
+        "description": "Description",
+        "descriptionPlaceholder": "Describe your product",
+        "descriptionRequired": "Description is required",
+        "nameRequired": "{name} is required",
+        "autoSlug": "Auto",
+        "supportedVideoPlatforms": "Supported Video Platforms",
+        "supportedVideoPlatformsDesc": "Paste any URL format - we'll convert it to the proper embed URL automatically!",
+        "supportedVideoPlatformsList": "📺 YouTube • 🎬 Vimeo • 🐰 Bunny.net • 🎥 Loom • 📹 Wistia • 🎞️ DailyMotion • 🎮 Twitch",
+        "trustedStorageProviders": "Trusted Storage Providers for Downloads",
+        "trustedStorageProvidersDesc": "Download URLs must use HTTPS and be from trusted storage providers for security.",
+        "storageCloudProviders": "☁️ Cloud: AWS S3, Google Cloud Storage, Supabase Storage",
+        "storagePersonalProviders": "📁 Personal: Google Drive, Dropbox, OneDrive, Box, SharePoint",
+        "storageCdnProviders": "🌐 CDN: Bunny CDN, Cloudinary, Imgix, Fastly",
+        "storageFileSharingProviders": "📤 File Sharing: Mega, MediaFire, WeTransfer, SendSpace",
+        "videoOptions": "Video Options",
+        "videoOptionsNote": "💡 Options support varies by platform (YouTube, Vimeo, Bunny.net, etc.)",
+        "controls": "Controls",
+        "autoplay": "Autoplay",
+        "loop": "Loop",
+        "muted": "Muted",
+        "preload": "Preload",
+        "longDescriptionPlaceholder": "## What's included?\n- Feature 1\n- Feature 2",
+        "slugPlaceholder": "product-url-slug"
       }
     },
     "categories": {
@@ -1402,7 +1468,21 @@
         "selectProduct": "Please select a product",
         "grantAccessError": "Failed to grant access",
         "removeAccessError": "Failed to remove access",
-        "errorFetch": "Failed to fetch user access"
+        "errorFetch": "Failed to fetch user access",
+        "noAccessGranted": "No product access granted",
+        "noAccessYet": "This user doesn't have access to any products yet.",
+        "grantNewAccess": "Grant New Access",
+        "selectProductLabel": "Select Product",
+        "chooseProductPlaceholder": "Choose a product to grant access...",
+        "accessTypeLabel": "Access Type",
+        "permanent": "Permanent",
+        "expiration": "Expiration",
+        "durationInDays": "Duration (in days)",
+        "enterDurationDays": "Enter duration in days",
+        "expirationDate": "Expiration Date",
+        "grantAccess": "Grant Access",
+        "noProductsAvailable": "No Products Available",
+        "addNewAccess": "Add New Access"
       }
     },
     "webhooks": {
@@ -1467,7 +1547,16 @@
         "failuresTitle": "Recent Delivery Failures",
         "errorDetails": "Error Details",
         "endpoint": "Endpoint",
-        "retryFailed": "Retry failed"
+        "retryFailed": "Retry failed",
+        "loadError": "Failed to load logs",
+        "logArchived": "Log archived",
+        "archiveError": "Failed to archive log",
+        "retried": "Retried",
+        "archived": "Archived",
+        "networkError": "Network Error",
+        "archiveDismiss": "Archive/Dismiss",
+        "errorPrefix": "Error: {message}",
+        "emptyResponse": "(Empty response body)"
       },
       "testModal": {
         "selectInstruction": "Select an event type to send a mock payload to:",
@@ -1482,7 +1571,13 @@
       "copy": "Copy",
       "secretAutoGenerated": "Secret will be generated automatically upon creation",
       "descriptionPlaceholder": "e.g. CRM Integration",
-      "eventTypeLabel": "Event type: {value}"
+      "eventTypeLabel": "Event type: {value}",
+      "logsButtonLabel": "Logs",
+      "hideSecret": "Hide Secret",
+      "revealSecret": "Reveal Secret",
+      "copySecret": "Copy Secret",
+      "pageDescription": "Manage outgoing webhooks for system events.",
+      "urlPlaceholder": "https://api.zapier.com/..."
     },
     "apiKeys": {
       "title": "API Keys",
@@ -1615,7 +1710,14 @@
         "activeLabel": "Active",
         "creating": "Creating...",
         "saving": "Saving..."
-      }
+      },
+      "loadError": "Failed to load coupons",
+      "createError": "Failed to create coupon",
+      "updateError": "Failed to update coupon",
+      "deleteError": "Failed to delete coupon",
+      "statusError": "Failed to update status",
+      "bulkDeleteError": "Failed to delete coupons",
+      "deleteExpiredError": "Failed to delete expired coupons"
     },
     "orderBumps": {
       "title": "Order Bumps",
@@ -1667,8 +1769,14 @@
         "cancel": "Cancel",
         "save": "Save Order Bump",
         "creating": "Creating...",
-        "saving": "Saving..."
-      }
+        "saving": "Saving...",
+        "accessDurationPlaceholder": "e.g. 30 days"
+      },
+      "loadError": "Failed to load order bumps",
+      "createError": "Failed to create order bump",
+      "updateError": "Failed to update order bump",
+      "deleteError": "Failed to delete order bump",
+      "statusError": "Failed to toggle bump status"
     },
     "payments": {
       "title": "Payment Management",
@@ -1732,7 +1840,8 @@
         "processing": "Processing...",
         "success": "Refund processed successfully",
         "error": "Failed to process refund"
-      }
+      },
+      "loadError": "Failed to load payment data"
     },
     "variantsPage": {
       "title": "Product Variants",
@@ -1789,7 +1898,11 @@
       "removeProductWillDeleteGroup": "Removing \"{name}\" will delete the entire group (minimum 2 products required).",
       "removeProduct": "Remove from group",
       "setFeatured": "Set as featured",
-      "removeFeatured": "Remove featured"
+      "removeFeatured": "Remove featured",
+      "loadError": "Failed to load variant groups",
+      "deleteGroupError": "Failed to delete variant group",
+      "removeProductError": "Failed to remove product",
+      "updateError": "Failed to update"
     }
   },
   "config": {
@@ -1909,7 +2022,8 @@
       "saveButton": "Save Settings",
       "saving": "Saving...",
       "saveSuccess": "Settings saved successfully",
-      "saveError": "Failed to save settings"
+      "saveError": "Failed to save settings",
+      "defaultCurrencyHelp": "This currency will be used for revenue goals and as the default display currency for all admins."
     },
     "omnibus": {
       "title": "EU Omnibus Directive",
@@ -2009,7 +2123,8 @@
         "taxRegistrations": "Registrations",
         "taxReports": "Tax Reports"
       },
-      "unknownError": "Unknown error"
+      "unknownError": "Unknown error",
+      "loadError": "Failed to load tax status"
     },
     "branding": {
       "title": "Branding & Whitelabel",
@@ -2053,7 +2168,10 @@
       "previewHeading": "Product Title",
       "previewBody": "This is how your store will look with this theme applied.",
       "previewButton": "Buy Now",
-      "previewStatus": "Status colors"
+      "previewStatus": "Status colors",
+      "themeNamePlaceholder": "My Custom Theme",
+      "fontFamilyPlaceholder": "Montserrat, system-ui, sans-serif",
+      "letterSpacingPlaceholder": "-0.02em"
     },
     "checkoutTheme": {
       "title": "Site Theme",
@@ -2076,7 +2194,9 @@
       "saving": "Saving...",
       "saveButton": "Save Documents",
       "saveSuccess": "Legal documents configuration saved successfully",
-      "saveError": "Failed to save legal documents configuration"
+      "saveError": "Failed to save legal documents configuration",
+      "termsPlaceholder": "https://example.com/terms-of-service.pdf",
+      "privacyPlaceholder": "https://example.com/privacy-policy.pdf"
     },
     "license": {
       "title": "GateFlow License",
@@ -2097,7 +2217,8 @@
       "howItWorks1": "The license key is cryptographically signed and verified offline",
       "howItWorks2": "Valid license removes GateFlow branding from checkout page",
       "howItWorks3": "License is bound to a specific domain",
-      "howItWorks4": "Get a license at"
+      "howItWorks4": "Get a license at",
+      "keyPlaceholder": "GF-yourdomain.com-UNLIMITED-xxxxxxxxxxxx"
     },
     "paymentMethods": {
       "title": "Payment Method Configuration",
@@ -2396,7 +2517,10 @@
     "subtitle": "Select the option that best fits your needs",
     "popular": "Most Popular",
     "select": "Select",
-    "securePayment": "Secure payment • Instant access"
+    "securePayment": "Secure payment • Instant access",
+    "loadError": "Failed to load variants",
+    "noVariants": "No variants found",
+    "errorOccurred": "An error occurred"
   },
   "myPurchases": {
     "title": "My Purchases",
@@ -2424,7 +2548,8 @@
     "submitRequest": "Submit Request",
     "refundedAmount": "Refunded",
     "naLabel": "N/A",
-    "invalidPrice": "Invalid Price"
+    "invalidPrice": "Invalid Price",
+    "refundSubmitError": "Failed to submit refund request"
   },
   "refundRequests": {
     "title": "Refund Requests",
@@ -2851,5 +2976,20 @@
       "title": "Payment Successful!",
       "description": "Your payment has been processed successfully. You now have access to your purchased product."
     }
+  },
+  "digitalContent": {
+    "invalidVideoUrl": "Invalid Video URL",
+    "trustedPlatformsOnly": "Only trusted video platforms are allowed",
+    "unableToParseUrl": "Unable to parse video URL. Please check the format.",
+    "securityEmbedDisabled": "SECURITY: Raw HTML embed disabled for security reasons",
+    "useIframeInstead": "Use iframe embed_url instead for secure content embedding",
+    "invalidUrl": "Invalid URL",
+    "download": "Download",
+    "hostedVideoComingSoon": "Self-hosted video feature coming soon",
+    "hostedFileComingSoon": "Self-hosted file feature coming soon",
+    "noContent": "No Content Available",
+    "noContentMessage": "No digital content has been configured for this product yet.",
+    "sectionTitle": "Digital Content",
+    "accessYourContent": "Access your {productName} content below"
   }
 }

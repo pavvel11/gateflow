@@ -72,7 +72,7 @@ export default function LoginForm() {
       const emailValidation = await validateEmailAction(email);
 
       if (emailValidation.isDisposable) {
-        setMessage('Disposable email addresses are not allowed. Please use a permanent email address.');
+        setMessage(t('auth.disposableEmailBlocked'));
         setSentEmail(false)
         setIsLoading(false)
 
@@ -82,7 +82,7 @@ export default function LoginForm() {
       }
 
       if (!emailValidation.isValid && emailValidation.error) {
-        setMessage('Email validation failed. Please try again.');
+        setMessage(t('auth.emailValidationFailed'));
         setSentEmail(false)
         setIsLoading(false)
 

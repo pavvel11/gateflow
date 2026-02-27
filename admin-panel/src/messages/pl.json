@@ -181,16 +181,20 @@
     "login": "Zaloguj",
     "profile": "Profil",
     "myProducts": "Moje Produkty",
-    "myPurchases": "Moje Zakupy",
-    "refundRequests": "Prośby o Zwrot",
+    "myPurchases": "Moje zakupy",
+    "refundRequests": "Wnioski o zwrot",
     "store": "Sklep",
     "about": "O GateFlow",
-    "getGateflow": "Pobierz GateFlow za darmo",
+    "getGateflow": "Pobierz GateFlow",
     "adminSection": "Admin",
     "userSection": "Użytkownik",
     "roleAdmin": "Administrator",
     "roleUser": "Użytkownik",
-    "openSidebar": "Otwórz menu boczne"
+    "openSidebar": "Otwórz menu boczne",
+    "switchLanguage": "Zmień język",
+    "languageTitle": "Język: {name}",
+    "themeLabel": "Motyw: {theme}",
+    "userMenu": "Menu użytkownika"
   },
   "about": {
     "title": "O GateFlow",
@@ -214,14 +218,18 @@
       "serverContainerUrl": "URL kontenera GTM Server-Side",
       "serverContainerHelp": "Dla śledzenia server-side. Zostaw puste dla client-side.",
       "ssEnabled": "Włącz wysyłkę eventów server-to-server",
-      "ssEnabledHelp": "Wysyła eventy konwersji (Purchase, Lead) z backendu bezpośrednio do kontenera GTM SS. Obsługuje Facebook CAPI, TikTok Events API i inne tagi skonfigurowane w GTM."
+      "ssEnabledHelp": "Wysyła eventy konwersji (Purchase, Lead) z backendu bezpośrednio do kontenera GTM SS. Obsługuje Facebook CAPI, TikTok Events API i inne tagi skonfigurowane w GTM.",
+      "containerIdPlaceholder": "GTM-XXXXXX",
+      "serverContainerUrlPlaceholder": "https://gtm.twojadomena.pl"
     },
     "umami": {
       "title": "Umami Analytics (Open Source)",
       "privacyFocused": "Prywatność",
       "websiteId": "ID Strony (UUID)",
       "scriptUrl": "URL Skryptu (Opcjonalne)",
-      "default": "Domyślnie"
+      "default": "Domyślnie",
+      "websiteIdPlaceholder": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      "scriptUrlPlaceholder": "https://cloud.umami.is/script.js"
     },
     "facebook": {
       "title": "Meta (Facebook)",
@@ -231,7 +239,8 @@
       "testEventCode": "Kod Testowy",
       "testEventCodeHelp": "Do testowania zdarzeń w Events Manager. Usuń na produkcji.",
       "enableCAPI": "Włącz Conversions API (Server-Side)",
-      "capiTokenRequired": "Token CAPI jest wymagany do włączenia tej funkcji"
+      "capiTokenRequired": "Token CAPI jest wymagany do włączenia tej funkcji",
+      "pixelIdPlaceholder": "1234567890"
     },
     "cookieConsent": {
       "requireConsent": "Wymagaj Zgody (Zalecane)"
@@ -473,7 +482,8 @@
       "address2Placeholder": "lokal 2",
       "city": "Miasto",
       "zipCode": "Kod pocztowy",
-      "country": "Kraj"
+      "country": "Kraj",
+      "countryPlaceholder": "np. Polska"
     },
     "messages": {
       "saveSuccess": "Profil został pomyślnie zaktualizowany",
@@ -483,7 +493,14 @@
     "validPolishNIP": "✓ Prawidłowy NIP",
     "validPolishNIPWithCode": "✓ Prawidłowy NIP ({code})",
     "validTaxId": "✓ Prawidłowy NIP/ID podatkowy",
-    "validTaxIdWithCode": "✓ Prawidłowy NIP/ID podatkowy ({code})"
+    "validTaxIdWithCode": "✓ Prawidłowy NIP/ID podatkowy ({code})",
+    "gus": {
+      "rateLimitError": "Zbyt wiele żądań. Poczekaj i spróbuj ponownie.",
+      "notFound": "Nie znaleziono firmy w bazie GUS",
+      "securityError": "Błąd bezpieczeństwa. Odśwież stronę i spróbuj ponownie.",
+      "fetchError": "Nie udało się pobrać danych z GUS. Wprowadź dane ręcznie.",
+      "dataLoaded": "✓ Dane firmy załadowane z bazy GUS"
+    }
   },
   "auth": {
     "login": "Zaloguj się",
@@ -504,7 +521,8 @@
     "openEmailProvider": "Otwórz {provider}",
     "backToLogin": "Powrót do logowania",
     "title": "GateFlow Admin",
-    "disposableEmailBlocked": "Rejestracja zablokowana: Tymczasowe adresy email nie są dozwolone. Użyj stałego adresu email."
+    "disposableEmailBlocked": "Rejestracja zablokowana: Tymczasowe adresy email nie są dozwolone. Użyj stałego adresu email.",
+    "emailValidationFailed": "Weryfikacja email nie powiodła się. Spróbuj ponownie."
   },
   "products": {
     "title": "Produkty",
@@ -896,7 +914,28 @@
     "failedToRequestAccess": "Nie udało się uzyskać dostępu",
     "accessGrantedSuccessfully": "Dostęp przyznany pomyślnie!",
     "invalidEmailDisposable": "Niedozwolony lub jednorazowy adres e-mail",
-    "validEmailRequired": "Podaj prawidłowy adres e-mail"
+    "validEmailRequired": "Podaj prawidłowy adres e-mail",
+    "loadingSecureContent": "Ładowanie zabezpieczonej zawartości...",
+    "accessError": "Błąd dostępu",
+    "refreshPage": "Odśwież stronę",
+    "noContentAvailable": "Brak dostępnej zawartości",
+    "redirectingTitle": "Przekierowanie...",
+    "redirectingMessage": "Zostaniesz przekierowany do swojej zawartości.",
+    "goToContent": "Przejdź do zawartości",
+    "accessExpiredStatus": "Wygasł {date}",
+    "accessExpiresStatus": "Wygasa {date}",
+    "legacyAccess": "Dostęp dziedziczony",
+    "productDescription": "Opis produktu",
+    "securedByGateFlow": "Zabezpieczone przez GateFlow",
+    "notAvailableToNew": "Ten produkt nie jest już dostępny dla nowych klientów",
+    "accessGrantedStatus": "Dostęp przyznany",
+    "accessExpiredStatusLabel": "Dostęp wygasł",
+    "redirectingToProductPage": "Przekierowanie do strony produktu...",
+    "accessDeniedOrExpired": "Odmowa dostępu lub wygasł",
+    "failedToLoadContent": "Nie udało się załadować zawartości",
+    "loadingTimeoutTitle": "Ładowanie trwa dłużej niż oczekiwano",
+    "loadingTimeoutMessage": "Nie udało się załadować informacji o produkcie. Może to być spowodowane tymczasowym problemem z połączeniem.",
+    "tryAgain": "Spróbuj ponownie"
   },
   "myProducts": {
     "title": "Moje produkty",
@@ -1057,7 +1096,11 @@
         "timeMinutesAgo": "{minutes} min. temu",
         "timeHoursAgo": "{hours} godz. temu",
         "timeDaysAgo": "{days} dni temu"
-      }
+      },
+      "showValues": "Pokaż wartości",
+      "hideValues": "Ukryj wartości",
+      "resetProgressTitle": "Resetuj postęp (zacznij liczyć od teraz)",
+      "goalCurrencyNote": "Cel jest zapisany w domyślnej walucie sklepu"
     },
     "products": {
       "title": "Produkty",
@@ -1268,14 +1311,14 @@
         "salePriceUntilDescription": "Data zakończenia promocji (opcjonalnie)",
         "salePriceMustBeLower": "Cena promocyjna musi być niższa niż regularna cena",
         "salePriceActiveInfo": "Promocja jest aktywna i będzie wyświetlana klientom wraz z informacją o najniższej cenie z ostatnich 30 dni",
-        "saleQuantityLimit": "Limit ilościowy",
+        "saleQuantityLimit": "Limit ilości",
         "saleQuantityLimitPlaceholder": "Bez limitu",
-        "saleQuantityLimitDescription": "Maks. sztuk w cenie promocyjnej. Zostaw puste dla nieograniczonego.",
-        "saleQuantitySoldLabel": "Sprzedano w promocji",
-        "saleQuantitySoldDescription": "Liczba sztuk sprzedanych w cenie promocyjnej.",
-        "resetSaleCounter": "Resetuj licznik",
+        "saleQuantityLimitDescription": "Maks. jednostek w cenie promocyjnej. Zostaw puste dla nieograniczonego.",
+        "saleQuantitySoldLabel": "Sprzedane po cenie promocyjnej",
+        "saleQuantitySoldDescription": "Liczba jednostek sprzedanych po cenie promocyjnej.",
+        "resetSaleCounter": "Zresetuj licznik",
         "reset": "Resetuj",
-        "saleQuantityLimitReached": "Limit ilościowy promocji został osiągnięty. Klienci widzą regularną cenę.",
+        "saleQuantityLimitReached": "Osiągnięto limit ilości. Klienci zobaczą cenę regularną.",
         "duplicateLabel": "Duplikuj {name}",
         "refundSettings": {
           "title": "Polityka zwrotów",
@@ -1315,7 +1358,30 @@
           "exitMessage": "Masz niezapisane dane produktu. Zamknąć bez tworzenia?",
           "exitDiscard": "Odrzuć",
           "exitKeepEditing": "Kontynuuj edycję"
-        }
+        },
+        "description": "Opis",
+        "descriptionPlaceholder": "Opisz swój produkt",
+        "descriptionRequired": "Opis jest wymagany",
+        "nameRequired": "{name} jest wymagana",
+        "autoSlug": "Auto",
+        "supportedVideoPlatforms": "Obsługiwane platformy wideo",
+        "supportedVideoPlatformsDesc": "Wklej dowolny format URL - automatycznie przekonwertujemy go na właściwy URL osadzenia!",
+        "supportedVideoPlatformsList": "📺 YouTube • 🎬 Vimeo • 🐰 Bunny.net • 🎥 Loom • 📹 Wistia • 🎞️ DailyMotion • 🎮 Twitch",
+        "trustedStorageProviders": "Zaufani dostawcy przechowywania plików",
+        "trustedStorageProvidersDesc": "Adresy URL pobierania muszą używać HTTPS i pochodzić od zaufanych dostawców.",
+        "storageCloudProviders": "☁️ Chmura: AWS S3, Google Cloud Storage, Supabase Storage",
+        "storagePersonalProviders": "📁 Osobiste: Google Drive, Dropbox, OneDrive, Box, SharePoint",
+        "storageCdnProviders": "🌐 CDN: Bunny CDN, Cloudinary, Imgix, Fastly",
+        "storageFileSharingProviders": "📤 Udostępnianie: Mega, MediaFire, WeTransfer, SendSpace",
+        "videoOptions": "Opcje wideo",
+        "videoOptionsNote": "💡 Obsługa opcji zależy od platformy (YouTube, Vimeo, Bunny.net itp.)",
+        "controls": "Kontrolki",
+        "autoplay": "Automatyczne odtwarzanie",
+        "loop": "Pętla",
+        "muted": "Wyciszony",
+        "preload": "Wstępne ładowanie",
+        "longDescriptionPlaceholder": "## Co zawiera?\n- Funkcja 1\n- Funkcja 2",
+        "slugPlaceholder": "adres-url-produktu"
       }
     },
     "categories": {
@@ -1417,7 +1483,21 @@
         "selectProduct": "Proszę wybierz produkt",
         "grantAccessError": "Nie udało się przyznać dostępu",
         "removeAccessError": "Nie udało się usunąć dostępu",
-        "errorFetch": "Nie udało się pobrać dostępu użytkownika"
+        "errorFetch": "Nie udało się pobrać dostępu użytkownika",
+        "noAccessGranted": "Brak dostępu do produktów",
+        "noAccessYet": "Ten użytkownik nie ma jeszcze dostępu do żadnych produktów.",
+        "grantNewAccess": "Przyznaj nowy dostęp",
+        "selectProductLabel": "Wybierz produkt",
+        "chooseProductPlaceholder": "Wybierz produkt, do którego chcesz przyznać dostęp...",
+        "accessTypeLabel": "Typ dostępu",
+        "permanent": "Stały",
+        "expiration": "Data wygaśnięcia",
+        "durationInDays": "Czas trwania (w dniach)",
+        "enterDurationDays": "Podaj liczbę dni",
+        "expirationDate": "Data wygaśnięcia",
+        "grantAccess": "Przyznaj dostęp",
+        "noProductsAvailable": "Brak dostępnych produktów",
+        "addNewAccess": "Dodaj nowy dostęp"
       }
     },
     "webhooks": {
@@ -1482,7 +1562,16 @@
         "failuresTitle": "Ostatnie błędy dostarczenia",
         "errorDetails": "Szczegóły błędu",
         "endpoint": "Endpoint",
-        "retryFailed": "Ponowna próba nieudana"
+        "retryFailed": "Ponowna próba nieudana",
+        "loadError": "Nie udało się załadować logów",
+        "logArchived": "Log zarchiwizowany",
+        "archiveError": "Nie udało się zarchiwizować logu",
+        "retried": "Ponowiony",
+        "archived": "Zarchiwizowany",
+        "networkError": "Błąd sieci",
+        "archiveDismiss": "Archiwizuj/Odrzuć",
+        "errorPrefix": "Błąd: {message}",
+        "emptyResponse": "(Pusta odpowiedź)"
       },
       "testModal": {
         "selectInstruction": "Wybierz typ zdarzenia do wysłania testowego payloadu:",
@@ -1497,7 +1586,13 @@
       "copy": "Kopiuj",
       "secretAutoGenerated": "Sekret zostanie wygenerowany automatycznie po utworzeniu",
       "descriptionPlaceholder": "np. Integracja CRM",
-      "eventTypeLabel": "Typ zdarzenia: {value}"
+      "eventTypeLabel": "Typ zdarzenia: {value}",
+      "logsButtonLabel": "Logi",
+      "hideSecret": "Ukryj sekret",
+      "revealSecret": "Pokaż sekret",
+      "copySecret": "Kopiuj sekret",
+      "pageDescription": "Zarządzaj wychodzącymi webhookami dla zdarzeń systemowych.",
+      "urlPlaceholder": "https://api.zapier.com/..."
     },
     "apiKeys": {
       "title": "Klucze API",
@@ -1630,7 +1725,14 @@
         "activeLabel": "Aktywny",
         "creating": "Tworzenie...",
         "saving": "Zapisywanie..."
-      }
+      },
+      "loadError": "Nie udało się załadować kuponów",
+      "createError": "Nie udało się utworzyć kuponu",
+      "updateError": "Nie udało się zaktualizować kuponu",
+      "deleteError": "Nie udało się usunąć kuponu",
+      "statusError": "Nie udało się zaktualizować statusu",
+      "bulkDeleteError": "Nie udało się usunąć kuponów",
+      "deleteExpiredError": "Nie udało się usunąć wygasłych kuponów"
     },
     "orderBumps": {
       "title": "Order Bumps",
@@ -1682,8 +1784,14 @@
         "cancel": "Anuluj",
         "save": "Zapisz Order Bump",
         "creating": "Tworzenie...",
-        "saving": "Zapisywanie..."
-      }
+        "saving": "Zapisywanie...",
+        "accessDurationPlaceholder": "np. 30 dni"
+      },
+      "loadError": "Nie udało się załadować order bumpów",
+      "createError": "Nie udało się utworzyć order bumpa",
+      "updateError": "Nie udało się zaktualizować order bumpa",
+      "deleteError": "Nie udało się usunąć order bumpa",
+      "statusError": "Nie udało się zmienić statusu bumpa"
     },
     "payments": {
       "title": "Zarządzanie Płatnościami",
@@ -1747,7 +1855,8 @@
         "processing": "Przetwarzanie...",
         "success": "Zwrot przetworzony pomyślnie",
         "error": "Nie udało się przetworzyć zwrotu"
-      }
+      },
+      "loadError": "Nie udało się załadować danych płatności"
     },
     "variantsPage": {
       "title": "Warianty produktów",
@@ -1804,7 +1913,11 @@
       "removeProductWillDeleteGroup": "Usunięcie \"{name}\" spowoduje usunięcie całej grupy (wymagane minimum 2 produkty).",
       "removeProduct": "Usuń z grupy",
       "setFeatured": "Ustaw jako wyróżniony",
-      "removeFeatured": "Usuń wyróżnienie"
+      "removeFeatured": "Usuń wyróżnienie",
+      "loadError": "Nie udało się załadować grup wariantów",
+      "deleteGroupError": "Nie udało się usunąć grupy wariantów",
+      "removeProductError": "Nie udało się usunąć produktu",
+      "updateError": "Nie udało się zaktualizować"
     }
   },
   "config": {
@@ -1924,7 +2037,8 @@
       "saveButton": "Zapisz ustawienia",
       "saving": "Zapisywanie...",
       "saveSuccess": "Ustawienia zapisane pomyślnie",
-      "saveError": "Nie udało się zapisać ustawień"
+      "saveError": "Nie udało się zapisać ustawień",
+      "defaultCurrencyHelp": "Ta waluta będzie używana do celów przychodów i jako domyślna waluta wyświetlania dla wszystkich adminów."
     },
     "omnibus": {
       "title": "Dyrektywa Omnibus EU",
@@ -2024,7 +2138,8 @@
         "taxRegistrations": "Rejestracje",
         "taxReports": "Raporty podatkowe"
       },
-      "unknownError": "Nieznany błąd"
+      "unknownError": "Nieznany błąd",
+      "loadError": "Nie udało się załadować statusu podatku"
     },
     "branding": {
       "title": "Branding i Whitelabel",
@@ -2068,7 +2183,10 @@
       "previewHeading": "Tytuł produktu",
       "previewBody": "Tak będzie wyglądał Twój sklep z tym motywem.",
       "previewButton": "Kup teraz",
-      "previewStatus": "Kolory statusów"
+      "previewStatus": "Kolory statusów",
+      "themeNamePlaceholder": "Mój motyw",
+      "fontFamilyPlaceholder": "Montserrat, system-ui, sans-serif",
+      "letterSpacingPlaceholder": "-0.02em"
     },
     "checkoutTheme": {
       "title": "Motyw strony",
@@ -2091,7 +2209,9 @@
       "saving": "Zapisywanie...",
       "saveButton": "Zapisz dokumenty",
       "saveSuccess": "Konfiguracja dokumentów prawnych zapisana pomyślnie",
-      "saveError": "Nie udało się zapisać konfiguracji dokumentów prawnych"
+      "saveError": "Nie udało się zapisać konfiguracji dokumentów prawnych",
+      "termsPlaceholder": "https://example.com/regulamin.pdf",
+      "privacyPlaceholder": "https://example.com/polityka-prywatnosci.pdf"
     },
     "license": {
       "title": "Licencja GateFlow",
@@ -2112,7 +2232,8 @@
       "howItWorks1": "Klucz licencji jest kryptograficznie podpisany i weryfikowany offline",
       "howItWorks2": "Ważna licencja usuwa branding GateFlow ze strony koszyka",
       "howItWorks3": "Licencja jest przypisana do konkretnej domeny",
-      "howItWorks4": "Kup licencję na"
+      "howItWorks4": "Kup licencję na",
+      "keyPlaceholder": "GF-twojadomena.pl-UNLIMITED-xxxxxxxxxxxx"
     },
     "paymentMethods": {
       "title": "Konfiguracja Metod Płatności",
@@ -2411,7 +2532,10 @@
     "subtitle": "Wybierz opcję najlepiej dopasowaną do Twoich potrzeb",
     "popular": "Najpopularniejsze",
     "select": "Wybierz",
-    "securePayment": "Bezpieczna płatność • Natychmiastowy dostęp"
+    "securePayment": "Bezpieczna płatność • Natychmiastowy dostęp",
+    "loadError": "Nie udało się załadować wariantów",
+    "noVariants": "Nie znaleziono wariantów",
+    "errorOccurred": "Wystąpił błąd"
   },
   "myPurchases": {
     "title": "Moje Zakupy",
@@ -2439,7 +2563,8 @@
     "submitRequest": "Wyślij prośbę",
     "refundedAmount": "Zwrócono",
     "naLabel": "N/D",
-    "invalidPrice": "Nieprawidłowa cena"
+    "invalidPrice": "Nieprawidłowa cena",
+    "refundSubmitError": "Nie udało się wysłać prośby o zwrot"
   },
   "refundRequests": {
     "title": "Prośby o Zwrot",
@@ -2866,5 +2991,20 @@
       "title": "Płatność zakończona sukcesem!",
       "description": "Twoja płatność została pomyślnie przetworzona. Masz teraz dostęp do zakupionego produktu."
     }
+  },
+  "digitalContent": {
+    "invalidVideoUrl": "Nieprawidłowy URL wideo",
+    "trustedPlatformsOnly": "Dozwolone są tylko zaufane platformy wideo",
+    "unableToParseUrl": "Nie można przetworzyć adresu URL wideo. Sprawdź format.",
+    "securityEmbedDisabled": "BEZPIECZEŃSTWO: Osadzanie surowego HTML wyłączone ze względów bezpieczeństwa",
+    "useIframeInstead": "Użyj embed_url iframe zamiast tego dla bezpiecznego osadzania treści",
+    "invalidUrl": "Nieprawidłowy URL",
+    "download": "Pobierz",
+    "hostedVideoComingSoon": "Funkcja własnego hostingu wideo wkrótce",
+    "hostedFileComingSoon": "Funkcja własnego hostingu plików wkrótce",
+    "noContent": "Brak dostępnej zawartości",
+    "noContentMessage": "Nie skonfigurowano jeszcze żadnej treści cyfrowej dla tego produktu.",
+    "sectionTitle": "Treść cyfrowa",
+    "accessYourContent": "Uzyskaj dostęp do treści {productName} poniżej"
   }
 }

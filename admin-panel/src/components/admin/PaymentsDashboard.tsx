@@ -66,7 +66,7 @@ export default function PaymentsDashboard() {
         thisMonthRevenue: statsData.this_month_revenue,
       });
     } catch {
-      addToast('Failed to load payment data', 'error');
+      addToast(t('loadError'), 'error');
     } finally {
       setLoading(false);
     }

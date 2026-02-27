@@ -103,7 +103,7 @@ export default function MyPurchasesPage() {
       await fetchPurchases();
     } catch (err) {
       const error = err as Error;
-      alert(error.message || 'Failed to submit refund request');
+      alert(error.message || t('refundSubmitError'));
     } finally {
       setSubmitting(false);
     }

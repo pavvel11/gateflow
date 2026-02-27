@@ -141,7 +141,7 @@ export default function StripeTaxSettings() {
           })
         }
       } catch (err) {
-        setError('Failed to load tax status')
+        setError(t('loadError'))
       } finally {
         setLoading(false)
       }

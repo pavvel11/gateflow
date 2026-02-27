@@ -34,6 +34,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
   onAccessChange
 }) => {
   const t = useTranslations('admin.users.accessModal');
+  const tCommon = useTranslations('common');
   const [userAccess, setUserAccess] = useState<UserAccess[]>([]);
   const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
@@ -265,18 +266,18 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                   </div>
-                  <p className="text-gray-500 dark:text-gray-400 font-medium">No product access granted</p>
-                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">This user doesn&apos;t have access to any products yet.</p>
+                  <p className="text-gray-500 dark:text-gray-400 font-medium">{t('noAccessGranted')}</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">{t('noAccessYet')}</p>
                 </div>
               )}
             </ModalSection>
 
-            <ModalSection title="Grant New Access">
+            <ModalSection title={t('grantNewAccess')}>
               {showAddForm ? (
                 <div className="space-y-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
                   <div>
                     <label htmlFor="product-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Select Product
+                      {t('selectProductLabel')}
                     </label>
                     <select
                       id="product-select"
@@ -284,7 +285,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                       onChange={(e) => setSelectedProductId(e.target.value)}
                       className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                     >
-                      <option value="">Choose a product to grant access...</option>
+                      <option value="">{t('chooseProductPlaceholder')}</option>
                       {getAvailableProductsForUser().map(product => (
                         <option key={product.id} value={product.id}>
                           {product.name} {product.price > 0 ? `(${product.currency} ${product.price})` : '(Free)'}
@@ -295,7 +296,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
 
                   <div>
                     <label htmlFor="access-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Access Type
+                      {t('accessTypeLabel')}
                     </label>
                     <div className="flex space-x-2">
                       <Button
@@ -303,21 +304,21 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                         variant={accessType === 'permanent' ? 'primary' : 'secondary'}
                         className="flex-1"
                       >
-                        Permanent
+                        {t('permanent')}
                       </Button>
                       <Button
                         onClick={() => setAccessType('duration')}
                         variant={accessType === 'duration' ? 'primary' : 'secondary'}
                         className="flex-1"
                       >
-                        Duration
+                        {t('duration')}
                       </Button>
                       <Button
                         onClick={() => setAccessType('expiration')}
                         variant={accessType === 'expiration' ? 'primary' : 'secondary'}
                         className="flex-1"
                       >
-                        Expiration
+                        {t('expiration')}
                       </Button>
                     </div>
                   </div>
@@ -325,7 +326,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                   {accessType === 'duration' && (
                     <div>
                       <label htmlFor="access-duration" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Duration (in days)
+                        {t('durationInDays')}
                       </label>
                       <input
                         id="access-duration"
@@ -333,7 +334,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                         value={accessDuration}
                         onChange={(e) => setAccessDuration(Number(e.target.value))}
                         className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                        placeholder="Enter duration in days"
+                        placeholder={t('enterDurationDays')}
                       />
                     </div>
                   )}
@@ -341,7 +342,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                   {accessType === 'expiration' && (
                     <div>
                       <label htmlFor="access-expiration" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Expiration Date
+                        {t('expirationDate')}
                       </label>
                       <input
                         id="access-expiration"
@@ -365,7 +366,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                       }}
                       variant="secondary"
                     >
-                      Cancel
+                      {tCommon('cancel')}
                     </Button>
                     <Button
                       onClick={handleGrantAccess}
@@ -373,7 +374,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                       loading={actionLoading === 'grant'}
                       variant="primary"
                     >
-                      Grant Access
+                      {t('grantAccess')}
                     </Button>
                   </div>
                 </div>
@@ -389,14 +390,14 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      No Products Available
+                      {t('noProductsAvailable')}
                     </>
                   ) : (
                     <>
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                       </svg>
-                      Add New Access
+                      {t('addNewAccess')}
                     </>
                   )}
                 </Button>
@@ -408,7 +409,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
 
       <ModalFooter>
         <Button onClick={onClose} variant="secondary">
-          Close
+          {tCommon('close')}
         </Button>
       </ModalFooter>
     </BaseModal>

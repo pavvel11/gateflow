@@ -34,7 +34,7 @@ export default function DashboardContent({ failedWebhooksCount }: DashboardConte
           <button
             onClick={toggleHideValues}
             className="p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
-            title={hideValues ? "Show values" : "Hide values"}
+            title={hideValues ? t('showValues') : t('hideValues')}
           >
             {hideValues ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>

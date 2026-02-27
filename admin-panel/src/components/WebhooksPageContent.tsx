@@ -219,7 +219,7 @@ export default function WebhooksPageContent() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('title')}</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage outgoing webhooks for system events.</p>
+          <p className="text-sm text-gray-500 mt-1">{t('pageDescription')}</p>
         </div>
         <button
           onClick={handleOpenCreate}

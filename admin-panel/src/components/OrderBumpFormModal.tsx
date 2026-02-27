@@ -337,7 +337,7 @@ const OrderBumpFormModal: React.FC<OrderBumpFormModalProps> = ({
                     value={accessDuration === '0' ? '' : accessDuration} 
                     onChange={(e) => setAccessDuration(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                    placeholder="e.g. 30 days"
+                    placeholder={t('form.accessDurationPlaceholder')}
                     required
                   />
                 </div>
