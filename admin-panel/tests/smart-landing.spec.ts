@@ -426,7 +426,8 @@ test.describe('Smart Landing Page', () => {
     await languageSwitcher.click();
     await page.waitForTimeout(500);
 
-    const plOption = page.locator('button:has-text("PL"), a:has-text("PL")').first();
+    // Dropdown shows full language names (e.g., "Polski", "English")
+    const plOption = page.locator('button:has-text("Polski"), button:has-text("PL"), a:has-text("PL")').first();
     await expect(plOption).toBeVisible({ timeout: 5000 });
 
     await plOption.click();

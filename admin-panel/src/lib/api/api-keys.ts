@@ -9,8 +9,8 @@ import { createHash, randomBytes, timingSafeEqual as cryptoTimingSafeEqual } fro
 
 // Key format: gf_{env}_{random}
 // Example: gf_live_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
-const KEY_PREFIX_LIVE = 'gf_live_';
-const KEY_PREFIX_TEST = 'gf_test_';
+const KEY_PREFIX_LIVE = 'sf_live_';
+const KEY_PREFIX_TEST = 'sf_test_';
 const KEY_RANDOM_LENGTH = 32; // 32 bytes = 64 hex characters
 
 // Scopes for API key permissions
@@ -210,7 +210,7 @@ export function parseApiKeyFromHeader(authHeader: string | null): string | null 
     : authHeader;
 
   // Validate key format
-  if (!key.startsWith('gf_live_') && !key.startsWith('gf_test_')) {
+  if (!key.startsWith('sf_live_') && !key.startsWith('sf_test_')) {
     return null;
   }
 

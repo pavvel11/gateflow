@@ -49,7 +49,8 @@ test.describe('Profile Management E2E', () => {
     console.log('Logging in with magic link...');
     // Login via link
     await page.goto(magicLink);
-    await expect(page).toHaveURL(/\/(en|pl)\/(dashboard|my-products)/, { timeout: 15000 });
+    // After magic link, URL may or may not include locale prefix
+    await expect(page).toHaveURL(/\/(en|pl)\/(dashboard|my-products)|\/my-products|\/dashboard/, { timeout: 15000 });
 
     // 2. Navigate to Profile
     await page.goto('/en/profile'); // Force EN locale

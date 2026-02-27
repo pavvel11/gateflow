@@ -57,8 +57,8 @@ test.describe('Theme Editor (Branding Settings)', () => {
     await expect(typographyTab).toBeVisible();
     await expect(shapesTab).toBeVisible();
 
-    // Should see theme name input
-    const themeNameInput = page.locator('input[placeholder="My Custom Theme"]');
+    // Should see theme name input (EN: "My Custom Theme", PL: "Mój motyw")
+    const themeNameInput = page.locator('input[placeholder="My Custom Theme"], input[placeholder="Mój motyw"]');
     await expect(themeNameInput).toBeVisible();
 
     // Should see Live Preview section

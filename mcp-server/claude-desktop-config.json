@@ -4,7 +4,7 @@
       "command": "bun",
       "args": ["/absolute/path/to/mcp-server/src/index.ts"],
       "env": {
-        "SELLF_API_KEY": "gf_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "SELLF_API_KEY": "sf_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         "SELLF_API_URL": "https://your-sellf-instance.com"
       }
     }

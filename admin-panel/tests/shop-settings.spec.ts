@@ -312,13 +312,9 @@ test.describe('Shop Settings', () => {
     await saveBtn.click();
     await page.waitForTimeout(2000);
 
-    // DB should have 0 (not null)
+    // DB should have 0 — a 0% tax rate is a valid, distinct value (not the same as "no tax configured")
     const config = await getShopConfigFromDB();
-    // Component sends null when tax_rate is empty string, but "0" → parseFloat("0")/100 = 0
-    // Actually looking at code: `formData.tax_rate ? parseFloat(formData.tax_rate) / 100 : null`
-    // "0" is falsy in JS → this sends null. This is a known behavior.
-    // The test verifies the actual behavior: 0% tax rate → null in DB
-    expect(config.tax_rate).toBeNull();
+    expect(config.tax_rate).toBe(0);
   });
 
   test('should deny access for non-admin users', async ({ page }) => {

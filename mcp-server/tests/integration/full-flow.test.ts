@@ -96,7 +96,7 @@ describe('Integration: Full MCP to API Flow', () => {
     // Initialize API client with mock server URL
     initApiClient({
       baseUrl: `http://localhost:${mockServerPort}`,
-      apiKey: 'gf_test_integration_key',
+      apiKey: 'sf_test_integration_key',
     });
   });
 

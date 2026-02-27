@@ -213,7 +213,8 @@ test.describe('Product Creation Wizard', () => {
 
     // Don't fill anything, just close
     // Click the X close button on the modal
-    await page.locator('button[aria-label="Close modal"]').click();
+    const closeBtn = page.locator('button[aria-label="Close modal"], button[aria-label="Zamknij okno"]');
+    await closeBtn.click();
 
     // Should close immediately without confirmation
     await expect(page.getByText('Utwórz nowy produkt')).not.toBeVisible({ timeout: 3000 });

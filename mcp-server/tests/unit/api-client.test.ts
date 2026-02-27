@@ -16,7 +16,7 @@ describe('SellfApiClient', () => {
   beforeEach(() => {
     client = new SellfApiClient({
       baseUrl: 'https://api.example.com',
-      apiKey: 'gf_test_123456',
+      apiKey: 'sf_test_123456',
     });
   });
 
@@ -28,7 +28,7 @@ describe('SellfApiClient', () => {
     it('should remove trailing slash from baseUrl', () => {
       const clientWithSlash = new SellfApiClient({
         baseUrl: 'https://api.example.com/',
-        apiKey: 'gf_test_123456',
+        apiKey: 'sf_test_123456',
       });
       // We can't directly test private property, but we can test via a request
       expect(clientWithSlash).toBeDefined();
@@ -51,7 +51,7 @@ describe('SellfApiClient', () => {
         expect.objectContaining({
           method: 'GET',
           headers: {
-            'X-API-Key': 'gf_test_123456',
+            'X-API-Key': 'sf_test_123456',
             'Content-Type': 'application/json',
           },
         })
@@ -235,7 +235,7 @@ describe('initApiClient / getApiClient', () => {
   it('should initialize and retrieve client', () => {
     const client = initApiClient({
       baseUrl: 'https://test.com',
-      apiKey: 'gf_test_abc',
+      apiKey: 'sf_test_abc',
     });
 
     expect(client).toBeInstanceOf(SellfApiClient);

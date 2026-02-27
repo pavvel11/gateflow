@@ -46,7 +46,7 @@ Add the Sellf server:
       "command": "bun",
       "args": ["/path/to/mcp-server/src/index.ts"],
       "env": {
-        "SELLF_API_KEY": "gf_live_xxx...",
+        "SELLF_API_KEY": "sf_live_xxx...",
         "SELLF_API_URL": "https://your-sellf-instance.com"
       }
     }
@@ -174,7 +174,7 @@ bunx @anthropic/mcp-inspector bun src/index.ts
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `SELLF_API_KEY` | Yes | API key (gf_live_xxx or gf_test_xxx) |
+| `SELLF_API_KEY` | Yes | API key (sf_live_xxx or sf_test_xxx) |
 | `SELLF_API_URL` | Yes | Base URL of your Sellf instance |
 
 ## API Key Scopes
@@ -192,7 +192,7 @@ For limited access, use specific scopes:
 ## Security Notes
 
 - API keys are never logged or stored by the MCP server
-- Use test mode keys (`gf_test_xxx`) for development
+- Use test mode keys (`sf_test_xxx`) for development
 - Rotate keys regularly via the admin panel
 - The server respects all API key scopes and rate limits
 

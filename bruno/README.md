@@ -12,7 +12,7 @@ Kolekcja requestów API dla [Bruno](https://www.usebruno.com/).
 1. Utwórz API key w panelu admina: `/dashboard/api-keys`
 2. Edytuj `environments/local.bru` i wstaw swój klucz:
    ```
-   API_KEY: gf_live_TWOJ_KLUCZ
+   API_KEY: sf_live_TWOJ_KLUCZ
    ```
 3. Wybierz środowisko "local" w Bruno
 

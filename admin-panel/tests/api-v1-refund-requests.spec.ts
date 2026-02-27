@@ -527,7 +527,7 @@ test.describe('Refund Requests API v1', () => {
         expect(body2.data.length).toBeGreaterThan(0);
         expect(body2.data[0].id).not.toBe(body1.data[0].id);
       } else {
-        expect.fail('Expected pagination with has_more=true and next_cursor but got none (need more than 1 refund request)');
+        throw new Error('Expected pagination with has_more=true and next_cursor but got none (need more than 1 refund request)');
       }
     });
 

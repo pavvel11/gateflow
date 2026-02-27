@@ -2281,7 +2281,7 @@
       "title": "Licencja Sellf",
       "subtitle": "Usuń branding Sellf ze strony koszyka i innych miejsc",
       "licenseKey": "Klucz licencji",
-      "formatHint": "Format: GF-domena-wygaśnięcie-podpis (np. GF-example.com-20271231-MEUCIQDx... lub GF-example.com-UNLIMITED-MEUCIQDx...)",
+      "formatHint": "Format: SF-domena-wygaśnięcie-podpis (np. SF-example.com-20271231-MEUCIQDx... lub SF-example.com-UNLIMITED-MEUCIQDx...)",
       "licenseDetails": "Szczegóły licencji",
       "domain": "Domena",
       "expires": "Wygasa",
@@ -2297,7 +2297,7 @@
       "howItWorks2": "Ważna licencja usuwa branding Sellf ze strony koszyka",
       "howItWorks3": "Licencja jest przypisana do konkretnej domeny",
       "howItWorks4": "Kup licencję na",
-      "keyPlaceholder": "GF-twojadomena.pl-UNLIMITED-xxxxxxxxxxxx"
+      "keyPlaceholder": "SF-twojadomena.pl-UNLIMITED-xxxxxxxxxxxx"
     },
     "paymentMethods": {
       "title": "Konfiguracja Metod Płatności",
@@ -2912,10 +2912,10 @@
       "subtitle": "Cokolwiek sprzedajesz, Sellf to obsługuje",
       "courses": {
         "title": "Kursy Online",
-        "desc": "Hostuj kursy wideo z kontrolą dostępu czasowego. Prosta i skuteczna dostawa treści.",
+        "desc": "Udostępniaj kursy wideo z ograniczeniem czasowym. Prosta i skuteczna dostawa treści.",
         "feature1": "Śledzenie postępu wideo (Wkrótce)",
-        "feature2": "Czasowy dostęp (30/90 dni)",
-        "feature3": "Integracja Bunny.net CDN"
+        "feature2": "Dostęp na 30 lub 90 dni",
+        "feature3": "Szybkie wideo przez Bunny.net"
       },
       "digital": {
         "title": "Produkty Cyfrowe",
@@ -2925,9 +2925,9 @@
         "feature3": "System kuponów"
       },
       "leads": {
-        "title": "Lead Magnety i Lejki",
-        "desc": "Darmowy ebook → zbierz email → sprzedaj kurs premium. Zero friction signup z magic linkami.",
-        "feature1": "Darmowe produkty do zbierania leadów",
+        "title": "Darmowe produkty i lejki sprzedażowe",
+        "desc": "Darmowy ebook zbiera emaile, a potem sprzedajesz kurs premium. Logowanie jednym kliknięciem z maila, bez haseł.",
+        "feature1": "Darmowe produkty do zbierania kontaktów",
         "feature2": "Bez formularzy, bez haseł",
         "feature3": "Wszystko w jednej bazie"
       },

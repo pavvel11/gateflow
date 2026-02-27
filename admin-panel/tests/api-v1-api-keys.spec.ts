@@ -109,7 +109,7 @@ test.describe('API Keys v1', () => {
       expect(body.data).toHaveProperty('id');
       expect(body.data).toHaveProperty('key');
       expect(body.data.name).toBe('Test Key');
-      expect(body.data.key).toMatch(/^gf_live_/);
+      expect(body.data.key).toMatch(/^sf_live_/);
       expect(body.data.scopes).toContain('*');
       expect(body.data).toHaveProperty('warning');
 
@@ -362,7 +362,7 @@ test.describe('API Keys v1', () => {
 
       expect(body.data).toHaveProperty('new_key');
       expect(body.data).toHaveProperty('old_key');
-      expect(body.data.new_key.key).toMatch(/^gf_live_/);
+      expect(body.data.new_key.key).toMatch(/^sf_live_/);
       expect(typeof body.data.old_key.grace_until).toBe('string');
       expect(new Date(body.data.old_key.grace_until).getTime()).toBeGreaterThan(Date.now());
 
@@ -438,7 +438,7 @@ test.describe('API Keys v1', () => {
     test('should reject invalid API key', async ({ request }) => {
       const response = await request.get('/api/v1/products', {
         headers: {
-          'Authorization': 'Bearer gf_live_invalidkey123456789'
+          'Authorization': 'Bearer sf_live_invalidkey123456789'
         }
       });
 

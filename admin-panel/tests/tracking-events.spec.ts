@@ -34,7 +34,12 @@ async function setupDataLayerSpy(page: Page) {
     const originalPush = window.dataLayer.push.bind(window.dataLayer);
     window.dataLayer.push = function(...args: any[]) {
       args.forEach(arg => {
-        (window as any).__dataLayerEvents.push(arg);
+        // gtag() pushes Arguments objects which aren't real arrays — normalize them
+        (window as any).__dataLayerEvents.push(
+          arg && typeof arg === 'object' && typeof arg.length === 'number' && !Array.isArray(arg)
+            ? Array.from(arg)
+            : arg
+        );
       });
       return originalPush(...args);
     };

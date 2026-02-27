@@ -25,13 +25,13 @@ describe('API Keys', () => {
   describe('generateApiKey', () => {
     it('should generate live key with correct prefix', () => {
       const key = generateApiKey(false);
-      expect(key.plaintext).toMatch(/^gf_live_[a-f0-9]{64}$/);
+      expect(key.plaintext).toMatch(/^sf_live_[a-f0-9]{64}$/);
       expect(key.prefix).toBe(key.plaintext.substring(0, 12));
     });
 
     it('should generate test key with correct prefix', () => {
       const key = generateApiKey(true);
-      expect(key.plaintext).toMatch(/^gf_test_[a-f0-9]{64}$/);
+      expect(key.plaintext).toMatch(/^sf_test_[a-f0-9]{64}$/);
       expect(key.prefix).toBe(key.plaintext.substring(0, 12));
     });
 
@@ -95,7 +95,7 @@ describe('API Keys', () => {
 
     it('should return false for non-matching key', () => {
       const key = generateApiKey();
-      const wrongKey = 'gf_live_' + 'a'.repeat(64);
+      const wrongKey = 'sf_live_' + 'a'.repeat(64);
       expect(verifyApiKey(wrongKey, key.hash)).toBe(false);
     });
 
@@ -211,8 +211,8 @@ describe('API Keys', () => {
   });
 
   describe('parseApiKeyFromHeader', () => {
-    const validLiveKey = 'gf_live_' + 'a'.repeat(64);
-    const validTestKey = 'gf_test_' + 'b'.repeat(64);
+    const validLiveKey = 'sf_live_' + 'a'.repeat(64);
+    const validTestKey = 'sf_test_' + 'b'.repeat(64);
 
     it('should parse Bearer token format', () => {
       expect(parseApiKeyFromHeader(`Bearer ${validLiveKey}`)).toBe(validLiveKey);
@@ -232,8 +232,8 @@ describe('API Keys', () => {
     });
 
     it('should return null for wrong length', () => {
-      expect(parseApiKeyFromHeader('gf_live_short')).toBe(null);
-      expect(parseApiKeyFromHeader('gf_live_' + 'a'.repeat(100))).toBe(null);
+      expect(parseApiKeyFromHeader('sf_live_short')).toBe(null);
+      expect(parseApiKeyFromHeader('sf_live_' + 'a'.repeat(100))).toBe(null);
     });
 
     it('should return null for null/empty input', () => {
@@ -244,9 +244,9 @@ describe('API Keys', () => {
 
   describe('maskApiKey', () => {
     it('should mask long keys correctly', () => {
-      const key = 'gf_live_' + 'a'.repeat(64);
+      const key = 'sf_live_' + 'a'.repeat(64);
       const masked = maskApiKey(key);
-      expect(masked).toBe('gf_live_aaaa...aaaa');
+      expect(masked).toBe('sf_live_aaaa...aaaa');
     });
 
     it('should handle short keys', () => {
@@ -255,9 +255,9 @@ describe('API Keys', () => {
     });
 
     it('should show first 12 and last 4 characters', () => {
-      const key = 'gf_live_1234567890abcdef';
+      const key = 'sf_live_1234567890abcdef';
       const masked = maskApiKey(key);
-      expect(masked.startsWith('gf_live_1234')).toBe(true);
+      expect(masked.startsWith('sf_live_1234')).toBe(true);
       expect(masked.endsWith('...cdef')).toBe(true);
     });
   });

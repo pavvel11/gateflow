@@ -83,7 +83,7 @@ test.describe('API Key Rotation', () => {
   // Helper to create API key for testing
   async function createTestApiKey(name: string): Promise<string> {
     const crypto = await import('crypto');
-    const plainKey = `gf_test_${crypto.randomBytes(24).toString('hex')}`;
+    const plainKey = `sf_test_${crypto.randomBytes(24).toString('hex')}`;
     const keyHash = crypto.createHash('sha256').update(plainKey).digest('hex');
     const keyPrefix = plainKey.substring(0, 12);
 
@@ -320,7 +320,7 @@ test.describe('API Key Rotation', () => {
 
       // Create key with specific properties
       const crypto = await import('crypto');
-      const plainKey = `gf_test_${crypto.randomBytes(24).toString('hex')}`;
+      const plainKey = `sf_test_${crypto.randomBytes(24).toString('hex')}`;
       const keyHash = crypto.createHash('sha256').update(plainKey).digest('hex');
       const keyPrefix = plainKey.substring(0, 12);
 
@@ -418,7 +418,7 @@ test.describe('API Key Rotation', () => {
 
       // Create key for other admin
       const crypto = await import('crypto');
-      const plainKey = `gf_test_${crypto.randomBytes(24).toString('hex')}`;
+      const plainKey = `sf_test_${crypto.randomBytes(24).toString('hex')}`;
       const keyHash = crypto.createHash('sha256').update(plainKey).digest('hex');
       const keyPrefix = plainKey.substring(0, 12);
 

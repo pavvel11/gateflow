@@ -32,7 +32,7 @@ function generateTestKey(): string {
   const randomHex = Array.from(crypto.getRandomValues(new Uint8Array(32)))
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
-  return `gf_live_${randomHex}`;
+  return `sf_live_${randomHex}`;
 }
 
 test.describe('API Keys Security - Hash Exposure Prevention', () => {
@@ -157,7 +157,7 @@ test.describe('API Keys Security - Hash Exposure Prevention', () => {
     // Should have 'key' (plaintext) but NOT 'key_hash'
     expect(responseText).not.toContain('key_hash');
     expect(json.data).toHaveProperty('key'); // Plaintext key returned once
-    expect(json.data.key).toMatch(/^gf_live_[a-f0-9]{64}$/);
+    expect(json.data.key).toMatch(/^sf_live_[a-f0-9]{64}$/);
 
     // Cleanup
     if (json.data.id) {
@@ -341,8 +341,8 @@ test.describe('API Keys Security - Invalid Key Handling', () => {
     const malformedKeys = [
       'invalid_key',
       'gf_xxx_1234567890',
-      'gf_live_short',
-      'gf_live_' + 'a'.repeat(100), // Too long
+      'sf_live_short',
+      'sf_live_' + 'a'.repeat(100), // Too long
       '',
       'null',
       '<script>alert(1)</script>',
@@ -361,7 +361,7 @@ test.describe('API Keys Security - Invalid Key Handling', () => {
 
       // Error message should NOT reveal expected format
       const json = await response.json();
-      expect(json.error.message).not.toContain('gf_live_');
+      expect(json.error.message).not.toContain('sf_live_');
       expect(json.error.message).not.toContain('64 characters');
       expect(json.error.message).not.toContain('hex');
     }
@@ -386,10 +386,10 @@ test.describe('API Keys Security - Invalid Key Handling', () => {
 
   test('SQL injection in key should be safely handled', async ({ request }) => {
     const sqlInjectionKeys = [
-      "gf_live_' OR '1'='1",
-      "gf_live_'; DROP TABLE api_keys;--",
-      "gf_live_\" OR \"1\"=\"1",
-      "gf_live_${malicious}",
+      "sf_live_' OR '1'='1",
+      "sf_live_'; DROP TABLE api_keys;--",
+      "sf_live_\" OR \"1\"=\"1",
+      "sf_live_${malicious}",
     ];
 
     for (const key of sqlInjectionKeys) {

@@ -92,12 +92,12 @@ function generateLicense(domain, expiry, privateKeyPem) {
         .replace(/=/g, '');
 
     // Build license key
-    return `GF-${domain}-${expiry}-${signatureBase64url}`;
+    return `SF-${domain}-${expiry}-${signatureBase64url}`;
 }
 
 function verifyLicense(licenseKey, publicKeyPem) {
     const parts = licenseKey.split('-');
-    if (parts.length < 4 || parts[0] !== 'GF') {
+    if (parts.length < 4 || parts[0] !== 'SF') {
         return { valid: false, reason: 'invalid_format' };
     }
 

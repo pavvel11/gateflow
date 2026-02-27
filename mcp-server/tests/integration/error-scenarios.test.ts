@@ -77,7 +77,7 @@ describe('Integration: Error Scenarios', () => {
     // Initialize API client
     initApiClient({
       baseUrl: `http://localhost:${mockServerPort}`,
-      apiKey: 'gf_test_error_scenarios',
+      apiKey: 'sf_test_error_scenarios',
     });
   });
 

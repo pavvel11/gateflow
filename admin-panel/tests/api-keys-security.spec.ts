@@ -46,11 +46,11 @@ test.describe('API Keys Security - Self-Management Prevention', () => {
     testAdminRowId = adminRow.id;
 
     // Create a test API key with full access
-    // Key format must be gf_live_ or gf_test_ + 64 hex characters
+    // Key format must be sf_live_ or sf_test_ + 64 hex characters
     const randomHex = Array.from(crypto.getRandomValues(new Uint8Array(32)))
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
-    const keyValue = `gf_live_${randomHex}`;
+    const keyValue = `sf_live_${randomHex}`;
     const keyHash = await hashKey(keyValue);
 
     const { data: key, error } = await supabaseAdmin

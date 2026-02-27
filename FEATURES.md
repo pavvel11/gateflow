@@ -471,8 +471,8 @@
 - **Zod schemas** - Type-safe validation and spec generation
 
 ### Authentication
-- **API Keys** - Format `gf_live_xxx` / `gf_test_xxx`
-- **Bearer token** - `Authorization: Bearer gf_live_xxx`
+- **API Keys** - Format `sf_live_xxx` / `sf_test_xxx`
+- **Bearer token** - `Authorization: Bearer sf_live_xxx`
 - **X-API-Key header** - Alternative method
 - **Scopes** - Granular permissions (`products:read`, `users:write`, `*`)
 - **Rate limiting** - Per-key limits (default 60/min)
@@ -535,7 +535,7 @@
       "command": "npx",
       "args": ["tsx", "/path/to/mcp-server/src/index.ts"],
       "env": {
-        "SELLF_API_KEY": "gf_live_xxx...",
+        "SELLF_API_KEY": "sf_live_xxx...",
         "SELLF_API_URL": "https://app.example.com"
       }
     }

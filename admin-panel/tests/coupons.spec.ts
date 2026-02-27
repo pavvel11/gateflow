@@ -88,8 +88,8 @@ test.describe('Smart Coupons System', () => {
     await acceptAllCookies(page);
     await page.goto(`/pl/checkout/${productSlug}?coupon=${invalidCode}`);
 
-    // 3. Verify Error Message
-    const input = page.locator('input[placeholder="Enter code"]');
+    // 3. Verify Error Message (EN: "Enter code", PL: "Wpisz kod")
+    const input = page.locator('input[placeholder="Enter code"], input[placeholder="Wpisz kod"]');
     await expect(input).toBeVisible({ timeout: 10000 });
 
     // Wait for validation error

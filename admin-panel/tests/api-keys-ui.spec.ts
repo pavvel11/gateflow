@@ -165,7 +165,7 @@ test.describe('API Keys Management UI', () => {
 
     // Get key value
     const keyValue = await keyInput.inputValue();
-    expect(keyValue).toMatch(/^gf_live_/);
+    expect(keyValue).toMatch(/^sf_live_/);
 
     // Close modal
     await page.getByRole('button', { name: /Done/i }).click();
@@ -224,7 +224,7 @@ test.describe('API Keys Management UI', () => {
 
     // Verify clipboard content
     const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
-    expect(clipboardText).toMatch(/^gf_live_/);
+    expect(clipboardText).toMatch(/^sf_live_/);
 
     await page.getByRole('button', { name: /Done/i }).click();
   });
@@ -272,7 +272,7 @@ test.describe('API Keys Management UI', () => {
     await expect(page.getByText('Test Key Default')).toBeVisible();
 
     // Should show key prefix with ellipsis
-    await expect(page.locator('code').filter({ hasText: /gf_live_.*\.\.\./ }).first()).toBeVisible();
+    await expect(page.locator('code').filter({ hasText: /sf_live_.*\.\.\./ }).first()).toBeVisible();
 
     // Should show Active status badge (green)
     await expect(page.locator('span').filter({ hasText: /Active/i }).first()).toBeVisible();
@@ -304,7 +304,7 @@ test.describe('API Keys Management UI', () => {
     // New key should be visible
     const keyInput = page.locator('input[readonly]').first();
     const newKey = await keyInput.inputValue();
-    expect(newKey).toMatch(/^gf_live_/);
+    expect(newKey).toMatch(/^sf_live_/);
 
     await page.getByRole('button', { name: /Done/i }).click();
 

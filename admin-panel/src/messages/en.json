@@ -2266,7 +2266,7 @@
       "title": "Sellf License",
       "subtitle": "Remove Sellf branding from checkout and other pages",
       "licenseKey": "License Key",
-      "formatHint": "Format: GF-domain-expiry-signature (e.g., GF-example.com-20271231-MEUCIQDx... or GF-example.com-UNLIMITED-MEUCIQDx...)",
+      "formatHint": "Format: SF-domain-expiry-signature (e.g., SF-example.com-20271231-MEUCIQDx... or SF-example.com-UNLIMITED-MEUCIQDx...)",
       "licenseDetails": "License Details",
       "domain": "Domain",
       "expires": "Expires",
@@ -2282,7 +2282,7 @@
       "howItWorks2": "Valid license removes Sellf branding from checkout page",
       "howItWorks3": "License is bound to a specific domain",
       "howItWorks4": "Get a license at",
-      "keyPlaceholder": "GF-yourdomain.com-UNLIMITED-xxxxxxxxxxxx"
+      "keyPlaceholder": "SF-yourdomain.com-UNLIMITED-xxxxxxxxxxxx"
     },
     "paymentMethods": {
       "title": "Payment Method Configuration",
@@ -2897,10 +2897,10 @@
       "subtitle": "Whatever you sell, Sellf handles it",
       "courses": {
         "title": "Online Courses",
-        "desc": "Host video courses with temporal access control. Simple and effective content delivery.",
+        "desc": "Share video courses with time-limited access. Simple and effective content delivery.",
         "feature1": "Video progress tracking (Coming Soon)",
-        "feature2": "Temporal access (30/90 days)",
-        "feature3": "Bunny.net CDN integration"
+        "feature2": "Access for 30 or 90 days",
+        "feature3": "Fast video via Bunny.net"
       },
       "digital": {
         "title": "Digital Products",
@@ -2910,9 +2910,9 @@
         "feature3": "Coupon system"
       },
       "leads": {
-        "title": "Lead Magnets & Funnels",
-        "desc": "Free ebook → collect email → sell premium course. Zero friction signup with magic links.",
-        "feature1": "Free products for lead collection",
+        "title": "Free Products & Sales Funnels",
+        "desc": "A free ebook collects emails, then you sell a premium course. One-click login from email, no passwords.",
+        "feature1": "Free products to collect contacts",
         "feature2": "No forms, no passwords needed",
         "feature3": "All in one database"
       },
