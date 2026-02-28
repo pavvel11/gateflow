@@ -17,6 +17,7 @@
     "test:api": "vitest run --config vitest.config.api.ts",
     "test:api:watch": "vitest --config vitest.config.api.ts",
     "test:config": "vitest run --config vitest.config.config.ts",
+    "test:a11y": "playwright test --project=accessibility",
     "test:visual": "playwright test --project=visual-mobile --project=visual-tablet --project=visual-laptop --project=visual-wide --project=visual-qhd --project=visual-4k",
     "test:visual:review": "playwright test --project=visual-mobile --project=visual-tablet --project=visual-laptop --project=visual-wide --project=visual-qhd --project=visual-4k && ../../../scripts/dev/visual-review",
     "t": "vitest run && playwright test tests/smoke --project=chromium --workers=2",
@@ -58,6 +59,7 @@
     "zod": "^4.3.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.1",
     "@eslint/eslintrc": "^3.3.1",
     "@playwright/test": "^1.57.0",
     "@types/node": "^24.10.1",

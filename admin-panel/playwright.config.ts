@@ -61,8 +61,8 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      // Rate-limiting and visual tests are excluded here
-      testIgnore: ['**/rate-limiting.spec.ts', '**/rate-limiting-v1.spec.ts'],
+      // Rate-limiting, visual, and accessibility tests are excluded here
+      testIgnore: ['**/rate-limiting.spec.ts', '**/rate-limiting-v1.spec.ts', '**/accessibility.spec.ts'],
     },
     {
       name: 'rate-limiting',
@@ -73,6 +73,13 @@ export default defineConfig({
       name: 'rate-limiting-v1',
       use: { ...devices['Desktop Chrome'] },
       testMatch: '**/rate-limiting-v1.spec.ts',
+    },
+
+    // Accessibility testing — WCAG 2.x AA via axe-core
+    {
+      name: 'accessibility',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: '**/accessibility.spec.ts',
     },
 
     // Visual testing projects — run subset of tests at different viewports with screenshots
