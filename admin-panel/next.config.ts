@@ -98,7 +98,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  env: loadStripeEnvConfig(), // Inject Stripe config as environment variables
+  env: {
+    ...loadStripeEnvConfig(),
+    NEXT_PUBLIC_APP_VERSION: JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8')).version,
+  },
 
   // Security headers
   async headers() {
