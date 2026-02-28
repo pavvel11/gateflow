@@ -105,6 +105,11 @@ jobs:
           cp next.config.ts ../release/ 2>/dev/null || cp next.config.js ../release/ 2>/dev/null || true
           cp tsconfig.json ../release/ 2>/dev/null || true
 
+          # Copy upgrade script
+          mkdir -p ../release/scripts
+          cp scripts/upgrade.sh ../release/scripts/ 2>/dev/null || true
+          chmod +x ../release/scripts/upgrade.sh 2>/dev/null || true
+
           # Copy Supabase migrations and email templates
           mkdir -p ../release/supabase
           cp -r ../supabase/migrations ../release/supabase/ 2>/dev/null || true
