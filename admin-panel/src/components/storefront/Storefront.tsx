@@ -478,13 +478,13 @@ export default function Storefront({
         <div className="max-w-4xl mx-auto text-center">
           <div className="relative">
             <div className="absolute -inset-4 bg-gf-accent rounded-3xl blur-2xl opacity-20"></div>
-            <div className="relative bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-3xl p-12 md:p-16">
-              <h2 className="text-4xl md:text-5xl font-black text-white mb-6">
+            <div className="relative bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-gf-border dark:border-white/10 rounded-3xl p-12 md:p-16 shadow-xl">
+              <h2 className="text-4xl md:text-5xl font-black text-gf-heading dark:text-white mb-6">
                 {isFreeOnly && t('cta.freeOnly.title')}
                 {isPaidOnly && t('cta.paidOnly.title')}
                 {isMixed && t('cta.mixed.title')}
               </h2>
-              <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
+              <p className="text-xl text-gf-muted dark:text-slate-300 mb-10 max-w-2xl mx-auto">
                 {isFreeOnly && t('cta.freeOnly.description')}
                 {isPaidOnly && t('cta.paidOnly.description')}
                 {isMixed && t('cta.mixed.description')}
@@ -504,7 +504,7 @@ export default function Storefront({
                 </svg>
               </a>
 
-              <p className="mt-8 text-sm text-slate-400">
+              <p className="mt-8 text-sm text-gf-muted dark:text-slate-400">
                 {t('cta.poweredBy', { count: products.length, shopName })}
               </p>
             </div>
