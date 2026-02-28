@@ -143,7 +143,7 @@ test.describe('V1 API Rate Limiting', () => {
       expect(response.status()).toBe(201);
       const data = await response.json();
       expect(data.data.key).toBeDefined();
-      expect(data.data.key).toMatch(/^gf_(live|test)_/);
+      expect(data.data.key).toMatch(/^sf_(live|test)_/);
 
       testApiKey = data.data.key;
       testApiKeyId = data.data.id;

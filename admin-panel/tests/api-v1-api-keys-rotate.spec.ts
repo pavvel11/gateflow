@@ -132,7 +132,7 @@ test.describe('API Key Rotation', () => {
 
       // New key should be returned
       expect(body.data.new_key).toBeDefined();
-      expect(body.data.new_key.key).toMatch(/^gf_(live|test)_/);
+      expect(body.data.new_key.key).toMatch(/^sf_(live|test)_/);
       expect(body.data.new_key.warning).toContain('Save this key now');
 
       // Old key info should be returned

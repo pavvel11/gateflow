@@ -20,7 +20,7 @@
 
   --gf-text-heading: #F0F4FA;
   --gf-text-body: #94A3B8;
-  --gf-text-muted: #6B7E94;
+  --gf-text-muted: #7A8DA3;
 
   --gf-border: rgba(255,255,255,0.06);
   --gf-border-accent: rgba(0,170,255,0.15);
@@ -38,33 +38,33 @@
 
 /* Light mode overrides — when .dark is NOT on <html>, landing uses these */
 :root:not(.dark) {
-  --gf-bg-deep: #F8FAFC;
+  --gf-bg-deep: #F0F4F8;
   --gf-bg-base: #FFFFFF;
   --gf-bg-raised: #F1F5F9;
-  --gf-bg-float: #FFFFFF;
+  --gf-bg-float: #FAFCFF;
 
-  --gf-accent: #0088CC;
-  --gf-accent-soft: rgba(0,136,204,0.06);
-  --gf-accent-med: rgba(0,136,204,0.12);
-  --gf-accent-hover: #006AAA;
-  --gf-accent-glow: rgba(0,136,204,0.15);
+  --gf-accent: #0070AA;
+  --gf-accent-soft: rgba(0,112,170,0.08);
+  --gf-accent-med: rgba(0,112,170,0.15);
+  --gf-accent-hover: #005C8F;
+  --gf-accent-glow: rgba(0,112,170,0.20);
 
   --gf-text-heading: #0B1120;
   --gf-text-body: #3E5068;
-  --gf-text-muted: #6B7E94;
+  --gf-text-muted: #5B7089;
 
-  --gf-border: rgba(0,0,0,0.06);
-  --gf-border-accent: rgba(0,136,204,0.12);
+  --gf-border: rgba(0,0,0,0.10);
+  --gf-border-accent: rgba(0,112,170,0.18);
 
   --gf-success: #059669;
-  --gf-success-soft: rgba(5,150,105,0.08);
+  --gf-success-soft: rgba(5,150,105,0.10);
   --gf-warning: #D97706;
-  --gf-warning-soft: rgba(217,119,6,0.08);
+  --gf-warning-soft: rgba(217,119,6,0.10);
   --gf-danger: #DC2626;
-  --gf-danger-soft: rgba(220,38,38,0.08);
+  --gf-danger-soft: rgba(220,38,38,0.10);
 
-  --gf-shadow: 0 4px 24px -4px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
-  --gf-shadow-accent: 0 4px 30px -4px rgba(0,136,204,0.12);
+  --gf-shadow: 0 4px 24px -4px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06);
+  --gf-shadow-accent: 0 4px 30px -4px rgba(0,112,170,0.20);
 }
 
 /* ===== Whitelabel Tokens — default to Sellf brand, overridden by theme ===== */
