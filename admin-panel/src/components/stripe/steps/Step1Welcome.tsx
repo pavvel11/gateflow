@@ -12,7 +12,7 @@ export function Step1Welcome() {
     <div className="max-w-2xl mx-auto">
       {/* Hero Section */}
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-gf-accent-soft rounded-full mb-4">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-gf-accent-soft  mb-4">
           <Shield className="w-8 h-8 text-gf-accent" />
         </div>
         <h3 className="text-2xl font-bold text-gf-heading mb-2">
@@ -27,7 +27,7 @@ export function Step1Welcome() {
       </div>
 
       {/* What are RAKs */}
-      <div className="bg-gf-accent-soft rounded-lg p-6 mb-6">
+      <div className="bg-gf-accent-soft p-6 mb-6">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0">
             <Key className="w-5 h-5 text-gf-accent mt-0.5" />
@@ -119,7 +119,7 @@ export function Step1Welcome() {
       </div>
 
       {/* Alternative Method */}
-      <div className="bg-gf-raised rounded-lg p-4 mb-8 border border-gf-border">
+      <div className="bg-gf-raised p-4 mb-8 border border-gf-border">
         <div className="flex items-start gap-3">
           <Lock className="w-5 h-5 text-gf-body mt-0.5 flex-shrink-0" />
           <div className="flex-1">
@@ -145,7 +145,7 @@ export function Step1Welcome() {
       <div className="flex justify-center">
         <button
           onClick={nextStep}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-gf-accent text-gf-inverse font-semibold rounded-lg hover:bg-gf-accent-hover transition-colors"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-gf-accent text-gf-inverse font-semibold hover:bg-gf-accent-hover transition-colors"
         >
           {t('startButton', { defaultValue: 'Start Configuration' })}
           <ArrowRight className="w-5 h-5" />

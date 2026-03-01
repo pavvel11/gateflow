@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, DM_Sans, DM_Mono } from "next/font/google";
 import "./globals.css";
 import { ConfigProvider } from "@/components/providers/config-provider";
 import { ThemeProvider, ThemeScript } from "@/components/providers/theme-provider";
@@ -17,6 +17,18 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+});
+
+const dmMono = DM_Mono({
+  variable: "--font-dm-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
@@ -41,7 +53,7 @@ export default async function RootLayout({
         <ThemeScript adminTheme={adminTheme} />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${dmSans.variable} ${dmMono.variable} antialiased`}
       >
         {/* Tracking Scripts (GTM, Pixel, Klaro, Custom Scripts) */}
         <Suspense fallback={null}>

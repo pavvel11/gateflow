@@ -13,7 +13,7 @@ export default function ProductExpiredState({ product }: ProductExpiredStateProp
     <div className="flex justify-center items-center min-h-screen bg-gf-deep">
       <FloatingToolbar position="top-right" />
 
-      <div className="max-w-4xl mx-auto p-8 bg-gf-raised/80 border border-gf-border rounded-xl shadow-2xl text-center">
+      <div className="max-w-4xl mx-auto p-8 bg-gf-raised/80 border border-gf-border rounded-2xl shadow-[var(--gf-shadow-accent)] text-center">
         <div className="text-6xl mb-4">{product.icon || '📦'}</div>
         <h1 className="text-3xl font-bold text-gf-heading mb-2">{product.name}</h1>
         {product.description && (

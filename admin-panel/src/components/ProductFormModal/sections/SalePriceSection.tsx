@@ -52,7 +52,7 @@ export function SalePriceSection({
             <label htmlFor="sale_price" className="block text-sm font-medium text-gf-body mb-2">
               {t('salePriceLabel')}
             </label>
-            <div className="relative rounded-lg shadow-sm">
+            <div className="relative">
               {showCurrencyPrefix && (
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <span className="text-gf-muted text-sm min-w-[24px]">
@@ -68,7 +68,7 @@ export function SalePriceSection({
                 value={salePriceDisplayValue}
                 onChange={handleSalePriceChange}
                 placeholder={!showCurrencyPrefix ? `0,00 ${getCurrencySymbol(formData.currency)}` : t('salePricePlaceholder')}
-                className={`${showCurrencyPrefix ? 'pl-12' : 'pl-3'} pr-12 w-full py-2.5 border ${salePriceInvalid ? 'border-red-500' : 'border-gf-border'} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading`}
+                className={`${showCurrencyPrefix ? 'pl-12' : 'pl-3'} pr-12 w-full py-2.5 border ${salePriceInvalid ? 'border-red-500' : 'border-gf-border'} focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading`}
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                 <span className="text-gf-muted text-sm">
@@ -113,7 +113,7 @@ export function SalePriceSection({
                 ...prev,
                 sale_quantity_limit: e.target.value ? parseInt(e.target.value, 10) : null
               }))}
-              className="w-full px-3 py-2.5 border border-gf-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
+              className="w-full px-3 py-2.5 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
               placeholder={t('saleQuantityLimitPlaceholder', { defaultValue: 'No limit' })}
             />
             <p className="mt-1 text-xs text-gf-muted">
@@ -128,7 +128,7 @@ export function SalePriceSection({
                 {t('saleQuantitySoldLabel', { defaultValue: 'Sold at Sale Price' })}
               </label>
               <div className="flex items-center gap-3">
-                <div className="flex-1 px-3 py-2.5 bg-gf-raised rounded-lg border border-gf-border">
+                <div className="flex-1 px-3 py-2.5 bg-gf-raised border-2 border-gf-border-medium">
                   <span className="text-lg font-semibold text-gf-heading">
                     {formData.sale_quantity_sold}
                   </span>
@@ -141,7 +141,7 @@ export function SalePriceSection({
                 <button
                   type="button"
                   onClick={() => setFormData(prev => ({ ...prev, sale_quantity_sold: 0 }))}
-                  className="px-3 py-2.5 text-sm font-medium text-gf-danger bg-gf-danger-soft hover:bg-gf-danger-soft rounded-lg border border-gf-danger/20 transition-colors"
+                  className="px-3 py-2.5 text-sm font-medium text-gf-danger bg-gf-danger-soft hover:bg-gf-danger-soft border border-gf-danger/20 transition-colors"
                   title={t('resetSaleCounter', { defaultValue: 'Reset counter' })}
                 >
                   {t('reset', { defaultValue: 'Reset' })}
@@ -155,7 +155,7 @@ export function SalePriceSection({
         </div>
 
         {salePriceActive && (
-          <div className="bg-gf-accent-soft p-3 rounded-lg">
+          <div className="bg-gf-accent-soft p-3">
             <p className="text-sm text-gf-accent">
               ℹ️ {t('salePriceActiveInfo')}
             </p>
@@ -164,7 +164,7 @@ export function SalePriceSection({
 
         {/* Warning when quantity limit is reached */}
         {quantityLimitReached && (
-          <div className="bg-gf-warning-soft p-3 rounded-lg border border-gf-warning/20">
+          <div className="bg-gf-warning-soft p-3 border border-gf-warning/20">
             <p className="text-sm text-gf-warning">
               ⚠️ {t('saleQuantityLimitReached', { defaultValue: 'Sale quantity limit reached. Customers will see the regular price.' })}
             </p>

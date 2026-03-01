@@ -77,8 +77,8 @@ export default function Storefront({
             <div className="mb-8 inline-block group">
               <div className="relative">
                 <div className="absolute -inset-1 bg-gf-accent rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
-                <div className="relative px-8 py-3 bg-gf-raised backdrop-blur-xl border border-gf-border rounded-full shadow-sm">
-                  <span className="text-lg font-semibold bg-gradient-to-r from-gf-accent to-gf-accent-hover bg-clip-text text-transparent">
+                <div className="relative px-8 py-3 bg-gf-raised backdrop-blur-xl border border-gf-border rounded-full">
+                  <span className="text-lg font-semibold text-gf-accent">
                     {shopName}
                   </span>
                 </div>
@@ -88,10 +88,10 @@ export default function Storefront({
             {/* Dynamic hero headline based on shop type */}
             {isFreeOnly && (
               <div className="space-y-6">
-                <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-gf-heading leading-tight">
+                <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-gf-heading leading-tight">
                   {t('hero.freeOnly.title')}
                   <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 animate-gradient-xy">
+                  <span className="text-gf-accent">
                     {t('hero.freeOnly.titleHighlight')}
                   </span>
                 </h1>
@@ -103,10 +103,10 @@ export default function Storefront({
 
             {isPaidOnly && (
               <div className="space-y-6">
-                <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-gf-heading leading-tight">
+                <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-gf-heading leading-tight">
                   {t('hero.paidOnly.title')}
                   <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-gf-accent to-gf-accent-hover animate-gradient-xy">
+                  <span className="text-gf-accent">
                     {t('hero.paidOnly.titleHighlight')}
                   </span>
                 </h1>
@@ -118,10 +118,10 @@ export default function Storefront({
 
             {isMixed && (
               <div className="space-y-6">
-                <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-gf-heading leading-tight">
+                <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-gf-heading leading-tight">
                   {t('hero.mixed.title')}
                   <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-gf-accent to-gf-accent-hover animate-gradient-xy">
+                  <span className="text-gf-accent">
                     {t('hero.mixed.titleHighlight')}
                   </span>
                 </h1>
@@ -146,16 +146,16 @@ export default function Storefront({
               </div>
 
               {hasLimitedTimeProducts && (
-                <div className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500/20 to-red-500/20 backdrop-blur-xl border border-orange-500/30 rounded-full">
-                  <svg className="w-5 h-5 text-orange-500 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                <div className="flex items-center gap-2 px-6 py-3 bg-gf-warning-soft backdrop-blur-xl border border-gf-warning/20 rounded-full">
+                  <svg className="w-5 h-5 text-gf-warning animate-pulse" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-orange-500 font-medium text-sm">{t('hero.badges.limitedTime')}</span>
+                  <span className="text-gf-warning font-medium text-sm">{t('hero.badges.limitedTime')}</span>
                 </div>
               )}
 
               {hasComingSoonProducts && (
-                <div className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 backdrop-blur-xl border border-blue-500/30 rounded-full">
+                <div className="flex items-center gap-2 px-6 py-3 bg-gf-accent-soft backdrop-blur-xl border border-gf-border-accent rounded-full">
                   <svg className="w-5 h-5 text-gf-accent" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
                   </svg>
@@ -173,14 +173,14 @@ export default function Storefront({
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <div className="inline-block mb-4">
-                <div className="flex items-center gap-2 px-4 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-full">
-                  <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                <div className="flex items-center gap-2 px-4 py-2 bg-gf-warning-soft border border-gf-warning/20 rounded-full">
+                  <svg className="w-5 h-5 text-gf-warning" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
-                  <span className="text-yellow-500 font-semibold text-sm uppercase tracking-wide">{t('featured.badge')}</span>
+                  <span className="text-gf-warning font-semibold text-sm uppercase tracking-wide">{t('featured.badge')}</span>
                 </div>
               </div>
-              <h2 className="text-4xl md:text-5xl font-black text-gf-heading mb-4">
+              <h2 className="text-4xl md:text-5xl font-bold text-gf-heading mb-4">
                 {t('featured.title')}
               </h2>
               <p className="text-xl text-gf-muted max-w-2xl mx-auto">
@@ -206,25 +206,25 @@ export default function Storefront({
                     }`}
                   >
                     <div className="absolute -inset-0.5 bg-gf-accent rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
-                    <div className="relative h-full bg-gf-raised backdrop-blur-xl border border-gf-border rounded-2xl p-6 md:p-8 hover:border-gf-border-accent shadow-sm transition-all duration-300 flex flex-col">
+                    <div className="relative h-full bg-gf-raised backdrop-blur-xl border border-gf-border rounded-2xl p-6 md:p-8 hover:border-gf-border-accent transition-all duration-300 flex flex-col">
                       {/* Badges */}
                       <div className="flex flex-wrap gap-2 mb-4">
-                        <div className="flex items-center px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/30 rounded-full">
-                          <svg className="w-4 h-4 text-yellow-500 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                        <div className="flex items-center px-3 py-1.5 bg-gf-warning-soft border border-gf-warning/20 rounded-full">
+                          <svg className="w-4 h-4 text-gf-warning mr-1.5" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                           </svg>
-                          <span className="text-yellow-500 font-semibold text-xs uppercase">{t('product.featured')}</span>
+                          <span className="text-gf-warning font-semibold text-xs uppercase">{t('product.featured')}</span>
                         </div>
                         {isLimitedTime && (
-                          <div className="flex items-center px-3 py-1.5 bg-orange-500/20 border border-orange-500/30 rounded-full animate-pulse">
-                            <svg className="w-4 h-4 text-orange-500 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                          <div className="flex items-center px-3 py-1.5 bg-gf-warning-soft border border-gf-warning/20 rounded-full animate-pulse">
+                            <svg className="w-4 h-4 text-gf-warning mr-1.5" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                             </svg>
-                            <span className="text-orange-500 font-semibold text-xs uppercase">{t('product.limited')}</span>
+                            <span className="text-gf-warning font-semibold text-xs uppercase">{t('product.limited')}</span>
                           </div>
                         )}
                         {isComingSoon && (
-                          <div className="flex items-center px-3 py-1.5 bg-blue-500/20 border border-blue-500/30 rounded-full">
+                          <div className="flex items-center px-3 py-1.5 bg-gf-accent-soft border border-gf-border-accent rounded-full">
                             <span className="text-gf-accent font-semibold text-xs uppercase">{t('product.comingSoon')}</span>
                           </div>
                         )}
@@ -236,7 +236,7 @@ export default function Storefront({
                       </div>
 
                       {/* Content */}
-                      <h3 className={`${isHero ? 'text-3xl md:text-4xl' : 'text-2xl'} font-bold text-gf-heading mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-gf-accent group-hover:to-gf-accent-hover transition-all duration-300`}>
+                      <h3 className={`${isHero ? 'text-3xl md:text-4xl' : 'text-2xl'} font-bold text-gf-heading mb-3 group-hover:text-gf-accent transition-colors duration-300`}>
                         {product.name}
                       </h3>
 
@@ -248,16 +248,16 @@ export default function Storefront({
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
                           {product.price === 0 ? (
-                            <div className="flex items-center gap-2 px-4 py-2 bg-green-500/20 border border-green-500/30 rounded-lg">
-                              <span className="text-2xl font-black text-gf-success">{t('product.free')}</span>
+                            <div className="flex items-center gap-2 px-4 py-2 bg-gf-success-soft border border-gf-success/20 rounded-lg">
+                              <span className="text-2xl font-bold text-gf-success">{t('product.free')}</span>
                             </div>
                           ) : (
-                            <div className={`${isHero ? 'text-4xl md:text-5xl' : 'text-3xl'} font-black text-transparent bg-clip-text bg-gradient-to-r from-gf-accent to-gf-accent-hover`}>
+                            <div className={`${isHero ? 'text-4xl md:text-5xl' : 'text-3xl'} font-bold text-gf-accent`}>
                               {formatPrice(product.price, product.currency)}
                             </div>
                           )}
                           {hasAccessDuration && (
-                            <div className="px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                            <div className="px-3 py-1.5 bg-gf-accent-soft border border-gf-border-accent rounded-lg">
                               <span className="text-gf-accent text-sm font-medium">
                                 {t('product.daysAccess', { days: product.auto_grant_duration_days! })}
                               </span>
@@ -267,10 +267,10 @@ export default function Storefront({
 
                         <Link
                           href={`/p/${product.slug}`}
-                          className={`block w-full text-center font-bold ${isHero ? 'py-5 text-lg' : 'py-4'} px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl ${
+                          className={`block w-full text-center font-bold ${isHero ? 'py-5 text-lg' : 'py-4'} px-6 rounded-full transition-all duration-300 active:scale-[0.98] shadow-[var(--gf-shadow-accent)] ${
                             product.price === 0
-                              ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white'
-                              : 'bg-gf-accent hover:bg-gf-accent-hover text-white'
+                              ? 'bg-gf-success hover:bg-gf-success/90 text-gf-heading'
+                              : 'bg-gf-accent hover:bg-gf-accent-hover text-gf-heading'
                           }`}
                         >
                           {product.price === 0 ? t('product.getFreeAccessIcon') : t('product.getAccessNowIcon')}
@@ -291,7 +291,7 @@ export default function Storefront({
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <div className="inline-block mb-4">
-                <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/20 rounded-full">
+                <div className="flex items-center gap-2 px-4 py-2 bg-gf-success-soft border border-gf-success/20 rounded-full">
                   <svg className="w-5 h-5 text-gf-success" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
@@ -300,7 +300,7 @@ export default function Storefront({
                   </span>
                 </div>
               </div>
-              <h2 className="text-4xl md:text-5xl font-black text-gf-heading mb-4">
+              <h2 className="text-4xl md:text-5xl font-bold text-gf-heading mb-4">
                 {isFreeOnly ? t('sections.free.titleFreeOnly') : t('sections.free.titleMixed')}
               </h2>
               <p className="text-xl text-gf-muted max-w-2xl mx-auto">
@@ -313,8 +313,8 @@ export default function Storefront({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {displayedFreeProducts.map((product) => (
                 <div key={product.id} className="group relative">
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
-                  <div className="relative h-full bg-gf-raised backdrop-blur-xl border border-gf-border rounded-2xl p-6 hover:border-gf-border-accent shadow-sm transition-all duration-300 flex flex-col">
+                  <div className="absolute -inset-0.5 bg-gf-success rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
+                  <div className="relative h-full bg-gf-raised backdrop-blur-xl border border-gf-border rounded-2xl p-6 hover:border-gf-border-accent transition-all duration-300 flex flex-col">
                     <div className="text-4xl mb-4 transform group-hover:scale-110 transition-transform duration-300">
                       {product.icon || '🎁'}
                     </div>
@@ -329,11 +329,11 @@ export default function Storefront({
 
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/20 border border-green-500/30 rounded-lg">
-                          <span className="text-xl font-black text-gf-success">{t('product.free')}</span>
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-gf-success-soft border border-gf-success/20 rounded-lg">
+                          <span className="text-xl font-bold text-gf-success">{t('product.free')}</span>
                         </div>
                         {product.auto_grant_duration_days && product.auto_grant_duration_days > 0 && (
-                          <div className="px-2 py-1 bg-blue-500/10 border border-blue-500/20 rounded text-xs text-gf-accent">
+                          <div className="px-2 py-1 bg-gf-accent-soft border border-gf-border-accent rounded text-xs text-gf-accent">
                             {t('product.daysAccessShort', { days: product.auto_grant_duration_days! })}
                           </div>
                         )}
@@ -341,7 +341,7 @@ export default function Storefront({
 
                       <Link
                         href={`/p/${product.slug}`}
-                        className="block w-full text-center font-bold py-3 px-6 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white transition-all duration-300 transform hover:scale-105"
+                        className="block w-full text-center font-bold py-3 px-6 rounded-full bg-gf-success hover:bg-gf-success/90 text-gf-heading transition-all duration-300 active:scale-[0.98] shadow-[var(--gf-shadow-accent)]"
                       >
                         {t('product.getFreeAccess')}
                       </Link>
@@ -355,7 +355,7 @@ export default function Storefront({
               <div className="text-center mt-12">
                 <button
                   onClick={() => setShowAllFree(true)}
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-gf-raised/80 hover:bg-gf-hover backdrop-blur-xl border border-gf-border hover:border-gf-border-accent rounded-xl text-gf-heading shadow-sm font-semibold transition-all duration-300 transform hover:scale-105"
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-gf-raised/80 hover:bg-gf-hover backdrop-blur-xl border border-gf-border hover:border-gf-border-accent rounded-full text-gf-heading font-semibold transition-all duration-300 active:scale-[0.98]"
                 >
                   <span>{t('sections.showAll.free', { count: freeProducts.length })}</span>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -383,7 +383,7 @@ export default function Storefront({
                   </span>
                 </div>
               </div>
-              <h2 className="text-4xl md:text-5xl font-black text-gf-heading mb-4">
+              <h2 className="text-4xl md:text-5xl font-bold text-gf-heading mb-4">
                 {isPaidOnly ? t('sections.premium.titlePaidOnly') : t('sections.premium.titleMixed')}
               </h2>
               <p className="text-xl text-gf-muted max-w-2xl mx-auto">
@@ -400,7 +400,7 @@ export default function Storefront({
                 return (
                   <div key={product.id} className="group relative">
                     <div className="absolute -inset-0.5 bg-gf-accent rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
-                    <div className="relative h-full bg-gf-raised backdrop-blur-xl border border-gf-border rounded-2xl p-6 hover:border-gf-border-accent shadow-sm transition-all duration-300 flex flex-col">
+                    <div className="relative h-full bg-gf-raised backdrop-blur-xl border border-gf-border rounded-2xl p-6 hover:border-gf-border-accent transition-all duration-300 flex flex-col">
                       {/* Badges */}
                       <div className="flex flex-wrap gap-2 mb-4">
                         <div className="flex items-center px-2 py-1 bg-gf-accent-soft border border-gf-border-accent rounded-full">
@@ -410,11 +410,11 @@ export default function Storefront({
                           <span className="text-xs font-semibold text-gf-accent uppercase">{t('product.premium')}</span>
                         </div>
                         {isLimitedTime && (
-                          <div className="flex items-center px-2 py-1 bg-orange-500/20 border border-orange-500/30 rounded-full animate-pulse">
-                            <svg className="w-3 h-3 text-orange-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <div className="flex items-center px-2 py-1 bg-gf-warning-soft border border-gf-warning/20 rounded-full animate-pulse">
+                            <svg className="w-3 h-3 text-gf-warning mr-1" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                             </svg>
-                            <span className="text-xs font-semibold text-orange-500 uppercase">{t('product.limited')}</span>
+                            <span className="text-xs font-semibold text-gf-warning uppercase">{t('product.limited')}</span>
                           </div>
                         )}
                       </div>
@@ -423,7 +423,7 @@ export default function Storefront({
                         {product.icon || '💎'}
                       </div>
 
-                      <h3 className="text-xl font-bold text-gf-heading mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-gf-accent group-hover:to-gf-accent-hover transition-all duration-300">
+                      <h3 className="text-xl font-bold text-gf-heading mb-3 group-hover:text-gf-accent transition-colors duration-300">
                         {product.name}
                       </h3>
 
@@ -433,11 +433,11 @@ export default function Storefront({
 
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gf-accent to-gf-accent-hover">
+                          <div className="text-3xl font-bold text-gf-accent">
                             {formatPrice(product.price, product.currency)}
                           </div>
                           {product.auto_grant_duration_days && product.auto_grant_duration_days > 0 && (
-                            <div className="px-2 py-1 bg-blue-500/10 border border-blue-500/20 rounded text-xs text-gf-accent">
+                            <div className="px-2 py-1 bg-gf-accent-soft border border-gf-border-accent rounded text-xs text-gf-accent">
                               {t('product.daysAccessShort', { days: product.auto_grant_duration_days! })}
                             </div>
                           )}
@@ -445,7 +445,7 @@ export default function Storefront({
 
                         <Link
                           href={`/p/${product.slug}`}
-                          className="block w-full text-center font-bold py-3 px-6 rounded-xl bg-gf-accent hover:bg-gf-accent-hover text-white transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
+                          className="block w-full text-center font-bold py-3 px-6 rounded-full bg-gf-accent hover:bg-gf-accent-hover text-gf-heading transition-all duration-300 active:scale-[0.98] shadow-[var(--gf-shadow-accent)]"
                         >
                           {t('product.getAccessNow')}
                         </Link>
@@ -460,7 +460,7 @@ export default function Storefront({
               <div className="text-center mt-12">
                 <button
                   onClick={() => setShowAllPaid(true)}
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-gf-accent-soft hover:bg-gf-accent-med backdrop-blur-xl border border-gf-border-accent hover:border-gf-accent/40 rounded-xl text-gf-heading font-semibold transition-all duration-300 transform hover:scale-105"
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-gf-accent-soft hover:bg-gf-accent-med backdrop-blur-xl border border-gf-border-accent hover:border-gf-accent/40 rounded-full text-gf-heading font-semibold transition-all duration-300 active:scale-[0.98]"
                 >
                   <span>{t('sections.showAll.premium', { count: paidProducts.length })}</span>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -477,9 +477,9 @@ export default function Storefront({
       <section className="relative py-32 px-4 sm:px-6 lg:px-8 z-10">
         <div className="max-w-4xl mx-auto text-center">
           <div className="relative">
-            <div className="absolute -inset-4 bg-gf-accent rounded-3xl blur-2xl opacity-20"></div>
-            <div className="relative bg-gf-base/90 backdrop-blur-2xl border border-gf-border rounded-3xl p-12 md:p-16 shadow-xl">
-              <h2 className="text-4xl md:text-5xl font-black text-gf-heading mb-6">
+            <div className="absolute -inset-4 bg-gf-accent rounded-2xl blur-2xl opacity-20"></div>
+            <div className="relative bg-gf-base/90 backdrop-blur-2xl border border-gf-border rounded-2xl p-12 md:p-16 shadow-[var(--gf-shadow-accent)]">
+              <h2 className="text-4xl md:text-5xl font-bold text-gf-heading mb-6">
                 {isFreeOnly && t('cta.freeOnly.title')}
                 {isPaidOnly && t('cta.paidOnly.title')}
                 {isMixed && t('cta.mixed.title')}
@@ -492,7 +492,7 @@ export default function Storefront({
 
               <a
                 href="#products"
-                className="inline-flex items-center gap-3 px-10 py-5 bg-gf-accent hover:bg-gf-accent-hover text-white rounded-xl font-black text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
+                className="inline-flex items-center gap-3 px-10 py-5 bg-gf-accent hover:bg-gf-accent-hover text-gf-heading rounded-full font-bold text-lg transition-all duration-300 active:scale-[0.98] shadow-[var(--gf-shadow-accent)]"
                 onClick={(e) => {
                   e.preventDefault();
                   document.getElementById('products')?.scrollIntoView({ behavior: 'smooth', block: 'start' });

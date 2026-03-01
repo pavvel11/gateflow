@@ -103,10 +103,10 @@ export default function WebhookFailuresPanel({ refreshTrigger, onRefresh }: Webh
   if (failures.length === 0) return null;
 
   return (
-    <div className="bg-gf-danger-soft border border-gf-danger/20 rounded-xl overflow-hidden mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
+    <div className="bg-gf-danger-soft border border-gf-danger/20 overflow-hidden mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
       <div className="px-6 py-4 border-b border-gf-danger/20 flex justify-between items-center bg-gf-danger-soft">
         <div className="flex items-center space-x-2">
-          <div className="bg-red-100 text-red-600 rounded-full p-1">
+          <div className="bg-red-100 text-red-600 p-1">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 15.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
@@ -138,7 +138,7 @@ export default function WebhookFailuresPanel({ refreshTrigger, onRefresh }: Webh
       {/* Inactive Endpoint Warning Modal */}
       {showInactiveWarning && pendingRetryLog && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-gf-base rounded-2xl shadow-2xl p-6 w-full max-w-md">
+          <div className="bg-gf-base p-6 w-full max-w-md">
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
                 <svg className="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -157,13 +157,13 @@ export default function WebhookFailuresPanel({ refreshTrigger, onRefresh }: Webh
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 onClick={cancelInactiveRetry}
-                className="px-4 py-2 text-sm font-medium text-gf-body bg-gf-base border border-gf-border rounded-md shadow-sm hover:bg-gf-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-accent"
+                className="px-4 py-2 text-sm font-medium text-gf-body bg-gf-base border-2 border-gf-border-medium hover:bg-gf-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-accent"
               >
                 {tCommon('cancel')}
               </button>
               <button
                 onClick={confirmInactiveRetry}
-                className="px-4 py-2 text-sm font-medium text-gf-inverse bg-gf-warning border border-transparent rounded-md shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-warning"
+                className="px-4 py-2 text-sm font-medium text-gf-inverse bg-gf-warning border border-transparent hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-warning"
               >
                 {t('retryAnyway')}
               </button>

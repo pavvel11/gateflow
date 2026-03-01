@@ -81,17 +81,17 @@ const UsersTable: React.FC<UsersTableProps> = ({
 
   if (error) {
     return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg m-4" role="alert">
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 m-4" role="alert">
         <strong className="font-bold">{t('error')}:</strong>
         <span className="block sm:inline"> {error}</span>
-        <button onClick={onRefresh} className="ml-4 bg-red-200 text-red-800 px-2 py-1 rounded">{t('tryAgain')}</button>
+        <button onClick={onRefresh} className="ml-4 bg-red-200 text-red-800 px-2 py-1">{t('tryAgain')}</button>
       </div>
     );
   }
 
   if (users.length === 0) {
     return (
-      <div className="text-center py-10 bg-gf-base rounded-lg shadow">
+      <div className="text-center py-10 bg-gf-base border-2 border-gf-border-medium">
         <h3 className="text-lg font-semibold text-gf-heading">{t('noUsers')}</h3>
         <p className="mt-2 text-sm text-gf-muted">
           {t('noUsersMessage')}
@@ -104,8 +104,8 @@ const UsersTable: React.FC<UsersTableProps> = ({
     <div className="flex flex-col">
       <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
         <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-          <div className="shadow-lg overflow-hidden border-b border-gf-border sm:rounded-lg bg-gf-base">
-            <table className="min-w-full divide-y divide-gf-border">
+          <div className="overflow-hidden border-2 border-gf-border-medium sm:bg-gf-base">
+            <table className="min-w-full divide-y divide-gf-border-subtle">
               <thead className="bg-gf-raised">
                 <tr>
                   <SortableHeader column="email" title={t('user')} />
@@ -120,13 +120,13 @@ const UsersTable: React.FC<UsersTableProps> = ({
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gf-border">
-                {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-gf-hover transition-colors duration-150">
+              <tbody className="divide-y divide-gf-border-subtle">
+                {users.map((user, index) => (
+                  <tr key={user.id} className={`hover:bg-gf-hover transition-colors duration-150 ${index % 2 === 1 ? 'bg-gf-row-alt' : ''}`}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-gf-accent flex items-center justify-center text-white font-bold">
+                          <div className="h-10 w-10 bg-gf-accent flex items-center justify-center text-white font-bold">
                             {user.email.charAt(0).toUpperCase()}
                           </div>
                         </div>
@@ -145,18 +145,18 @@ const UsersTable: React.FC<UsersTableProps> = ({
                           user.product_access.slice(0, 2).map((access) => (
                             <span
                               key={access.product_slug}
-                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gf-success-soft text-gf-success"
+                              className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-gf-success-soft text-gf-success"
                             >
                               {access.product_name}
                             </span>
                           ))
                         ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gf-raised text-gf-body">
+                          <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-gf-raised text-gf-body">
                             {t('noAccess')}
                           </span>
                         )}
                         {user.product_access.length > 2 && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gf-accent-soft text-gf-accent">
+                          <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-gf-accent-soft text-gf-accent">
                             +{user.product_access.length - 2} {t('more')}
                           </span>
                         )}
@@ -175,7 +175,7 @@ const UsersTable: React.FC<UsersTableProps> = ({
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold ${
                         user.email_confirmed_at
                           ? 'bg-gf-success-soft text-gf-success'
                           : 'bg-gf-warning-soft text-gf-warning'

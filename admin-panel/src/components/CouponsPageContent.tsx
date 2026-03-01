@@ -256,12 +256,12 @@ const CouponsPageContent: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gf-heading">{t('title')}</h1>
+          <h1 className="text-[40px] font-[800] text-gf-heading tracking-[-0.03em] leading-[1.1]">{t('title')}</h1>
           <p className="text-gf-body mt-2">{t('description')}</p>
         </div>
         <button
           onClick={() => { setEditingCoupon(null); setShowForm(true); }}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+          className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center space-x-2"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -277,7 +277,7 @@ const CouponsPageContent: React.FC = () => {
             <button
               key={filter}
               onClick={() => { setTypeFilter(filter); setSelectedIds(new Set()); }}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                 typeFilter === filter
                   ? 'bg-blue-600 text-white'
                   : 'bg-gf-raised text-gf-body hover:bg-gf-hover'
@@ -292,7 +292,7 @@ const CouponsPageContent: React.FC = () => {
           {expiredCoupons.length > 0 && (
             <button
               onClick={() => setShowDeleteExpiredConfirm(true)}
-              className="px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-600 text-white hover:bg-amber-700 transition-colors flex items-center gap-2"
+              className="px-3 py-1.5 text-sm font-medium bg-amber-600 text-white hover:bg-amber-700 transition-colors flex items-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -304,7 +304,7 @@ const CouponsPageContent: React.FC = () => {
           {selectedIds.size > 0 && (
             <button
               onClick={() => setShowBulkDeleteConfirm(true)}
-              className="px-3 py-1.5 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center gap-2"
+              className="px-3 py-1.5 text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -316,7 +316,7 @@ const CouponsPageContent: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-gf-base rounded-xl shadow-sm border border-gf-border overflow-hidden">
+      <div className="bg-gf-base border-2 border-gf-border-medium overflow-hidden">
         {loading ? (
           <div className="flex justify-center p-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gf-accent"></div>
@@ -346,13 +346,13 @@ const CouponsPageContent: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gf-border">
-                {filteredCoupons.map((coupon) => {
+                {filteredCoupons.map((coupon, index) => {
                   const isOto = isOtoCoupon(coupon);
                   const otoStatus = isOto ? getOtoExpiryStatus(coupon) : null;
                   const restrictedProducts = getRestrictedProducts(coupon, products);
 
                   return (
-                    <tr key={coupon.id} className={`hover:bg-gf-hover ${selectedIds.has(coupon.id) ? 'bg-gf-accent-soft' : ''}`}>
+                    <tr key={coupon.id} className={`hover:bg-gf-hover ${selectedIds.has(coupon.id) ? 'bg-gf-accent-soft' : index % 2 === 1 ? 'bg-gf-row-alt' : ''}`}>
                       <td className="px-4 py-4 w-10">
                         <input
                           type="checkbox"
@@ -365,7 +365,7 @@ const CouponsPageContent: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <span className="font-mono font-bold text-gf-accent">{coupon.code}</span>
                           {isOto && (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-gf-accent-soft text-gf-accent">
+                            <span className="px-1.5 py-0.5 text-[10px] font-medium bg-gf-accent-soft text-gf-accent">
                               OTO
                             </span>
                           )}
@@ -395,7 +395,7 @@ const CouponsPageContent: React.FC = () => {
                         {isOto ? (
                           // OTO coupons show expiry status instead of toggle
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            className={`px-3 py-1 text-xs font-medium ${
                               otoStatus?.isExpired
                                 ? 'bg-gf-danger-soft text-gf-danger'
                                 : 'bg-gf-warning-soft text-gf-warning'
@@ -411,7 +411,7 @@ const CouponsPageContent: React.FC = () => {
                           // Regular coupons have active/inactive toggle
                           <button
                             onClick={() => handleToggleActive(coupon)}
-                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            className={`px-3 py-1 text-xs font-medium ${
                               coupon.is_active
                                 ? 'bg-gf-success-soft text-gf-success'
                                 : 'bg-gf-raised text-gf-muted'
@@ -455,14 +455,14 @@ const CouponsPageContent: React.FC = () => {
       {/* Delete Confirmation */}
       {couponToDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-gf-base rounded-xl p-6 max-w-md w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-gf-base p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold mb-4 text-gf-heading">{t('confirmDelete')}</h3>
             <p className="text-gf-body mb-6">
               {t('deleteMessage', { code: couponToDelete.code })}
             </p>
             <div className="flex justify-end space-x-3">
-              <button onClick={() => setCouponToDelete(null)} className="px-4 py-2 text-gf-body hover:bg-gf-hover rounded-lg">{t('form.cancel')}</button>
-              <button onClick={() => handleDelete(couponToDelete)} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">{t('delete')}</button>
+              <button onClick={() => setCouponToDelete(null)} className="px-4 py-2 text-gf-body hover:bg-gf-hover">{t('form.cancel')}</button>
+              <button onClick={() => handleDelete(couponToDelete)} className="px-4 py-2 bg-red-600 text-white hover:bg-red-700">{t('delete')}</button>
             </div>
           </div>
         </div>
@@ -471,14 +471,14 @@ const CouponsPageContent: React.FC = () => {
       {/* Bulk Delete Confirmation */}
       {showBulkDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-gf-base rounded-xl p-6 max-w-md w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-gf-base p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold mb-4 text-gf-heading">{t('confirmBulkDelete')}</h3>
             <p className="text-gf-body mb-6">
               {t('bulkDeleteMessage', { count: selectedIds.size })}
             </p>
             <div className="flex justify-end space-x-3">
-              <button onClick={() => setShowBulkDeleteConfirm(false)} className="px-4 py-2 text-gf-body hover:bg-gf-hover rounded-lg">{t('form.cancel')}</button>
-              <button onClick={handleBulkDelete} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">{t('bulkDelete', { count: selectedIds.size })}</button>
+              <button onClick={() => setShowBulkDeleteConfirm(false)} className="px-4 py-2 text-gf-body hover:bg-gf-hover">{t('form.cancel')}</button>
+              <button onClick={handleBulkDelete} className="px-4 py-2 bg-red-600 text-white hover:bg-red-700">{t('bulkDelete', { count: selectedIds.size })}</button>
             </div>
           </div>
         </div>
@@ -487,14 +487,14 @@ const CouponsPageContent: React.FC = () => {
       {/* Delete Expired Confirmation */}
       {showDeleteExpiredConfirm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-gf-base rounded-xl p-6 max-w-md w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-gf-base p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold mb-4 text-gf-heading">{t('confirmDeleteExpired')}</h3>
             <p className="text-gf-body mb-6">
               {t('deleteExpiredMessage', { count: expiredCoupons.length })}
             </p>
             <div className="flex justify-end space-x-3">
-              <button onClick={() => setShowDeleteExpiredConfirm(false)} className="px-4 py-2 text-gf-body hover:bg-gf-hover rounded-lg">{t('form.cancel')}</button>
-              <button onClick={handleDeleteExpired} className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700">{t('deleteExpired', { count: expiredCoupons.length })}</button>
+              <button onClick={() => setShowDeleteExpiredConfirm(false)} className="px-4 py-2 text-gf-body hover:bg-gf-hover">{t('form.cancel')}</button>
+              <button onClick={handleDeleteExpired} className="px-4 py-2 bg-amber-600 text-white hover:bg-amber-700">{t('deleteExpired', { count: expiredCoupons.length })}</button>
             </div>
           </div>
         </div>

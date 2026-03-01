@@ -218,12 +218,12 @@ export default function WebhooksPageContent() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gf-heading">{t('title')}</h1>
+          <h1 className="text-[40px] font-[800] text-gf-heading tracking-[-0.03em] leading-[1.1]">{t('title')}</h1>
           <p className="text-sm text-gray-500 mt-1">{t('pageDescription')}</p>
         </div>
         <button
           onClick={handleOpenCreate}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm font-medium transition-colors"
         >
           {t('addEndpoint')}
         </button>
@@ -236,8 +236,8 @@ export default function WebhooksPageContent() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
         </div>
       ) : endpoints.length === 0 ? (
-        <div className="bg-gf-base rounded-xl p-12 text-center border border-dashed border-gf-border">
-          <div className="mx-auto w-12 h-12 bg-gf-raised rounded-full flex items-center justify-center mb-4">
+        <div className="bg-gf-base p-12 text-center border border-dashed border-gf-border">
+          <div className="mx-auto w-12 h-12 bg-gf-raised flex items-center justify-center mb-4">
             <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
@@ -288,7 +288,7 @@ export default function WebhooksPageContent() {
         <BaseModal isOpen={true} onClose={onEditWarningCancel} size="md">
           <ModalHeader title={t('waitlistWarning.editTitle')} />
           <ModalBody>
-            <div data-testid="waitlist-webhook-warning" className="p-4 bg-gf-warning-soft border border-gf-warning/20 rounded-lg">
+            <div data-testid="waitlist-webhook-warning" className="p-4 bg-gf-warning-soft border border-gf-warning/20">
               <div className="flex items-start gap-3">
                 <span className="text-xl">⚠️</span>
                 <div>

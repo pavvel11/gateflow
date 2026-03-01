@@ -18,7 +18,7 @@ export default function ErrorStatus({ product, errorMessage }: ErrorStatusProps)
       <div className="space-y-4">
         <button
           onClick={() => router.push(`/p/${product.slug}`)}
-          className="bg-gf-accent hover:bg-gf-accent-hover text-white font-medium py-3 px-6 rounded-xl transition-[background-color] duration-200"
+          className="bg-gf-accent hover:bg-gf-accent-hover text-gf-heading font-medium py-3 px-6 rounded-full transition-[background-color] duration-200 active:scale-[0.98]"
         >
           {t('tryAgain')}
         </button>

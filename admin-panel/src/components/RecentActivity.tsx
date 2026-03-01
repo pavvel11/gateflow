@@ -132,19 +132,21 @@ export default function RecentActivity() {
 
   if (loading) {
     return (
-      <div className="bg-gf-base rounded-xl shadow-sm border border-gf-border p-6">
-        <h2 className="text-xl font-semibold text-gf-heading mb-4">
-          {t('recentActivity.title')}
-        </h2>
-        <div className="space-y-3">
+      <div className="border-2 border-gf-border-medium">
+        <div className="px-6 py-4 border-b border-gf-border-subtle">
+          <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-gf-muted">
+            {t('recentActivity.title')}
+          </h2>
+        </div>
+        <div>
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center space-x-3 animate-pulse">
-              <div className="w-8 h-8 bg-gf-raised rounded-full"></div>
+            <div key={i} className={`flex items-center gap-3 px-6 py-4 animate-pulse ${i % 2 === 1 ? 'bg-gf-row-alt' : ''}`}>
+              <div className="w-8 h-8 bg-gf-raised flex-shrink-0"></div>
               <div className="flex-1">
-                <div className="h-4 bg-gf-raised rounded w-3/4 mb-1"></div>
-                <div className="h-3 bg-gf-raised rounded w-1/2"></div>
+                <div className="h-4 bg-gf-raised w-3/4 mb-1"></div>
+                <div className="h-3 bg-gf-raised w-1/2"></div>
               </div>
-              <div className="h-3 bg-gf-raised rounded w-16"></div>
+              <div className="h-3 bg-gf-raised w-16"></div>
             </div>
           ))}
         </div>
@@ -153,13 +155,15 @@ export default function RecentActivity() {
   }
 
   return (
-    <div className="bg-gf-base rounded-xl shadow-sm border border-gf-border p-6">
-      <h2 className="text-xl font-semibold text-gf-heading mb-4">
-        {t('recentActivity.title')}
-      </h2>
-      <div className="space-y-3">
+    <div className="border-2 border-gf-border-medium">
+      <div className="px-6 py-4 border-b border-gf-border-subtle">
+        <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-gf-muted">
+          {t('recentActivity.title')}
+        </h2>
+      </div>
+      <div>
         {activities.length === 0 ? (
-          <div className="text-center py-8">
+          <div className="text-center py-8 px-6">
             <div className="text-gf-muted mb-2">
               <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -168,9 +172,14 @@ export default function RecentActivity() {
             <p className="text-sm text-gf-muted">{t('recentActivity.noActivity')}</p>
           </div>
         ) : (
-          activities.map((activity) => (
-            <div key={activity.id} className="flex items-center space-x-3 group hover:bg-gf-hover rounded-lg p-2 -m-2 transition-colors">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getColorClasses(activity.color)}`}>
+          activities.map((activity, index) => (
+            <div
+              key={activity.id}
+              className={`flex items-center gap-3 px-6 py-4 transition-colors hover:bg-gf-hover ${
+                index % 2 === 1 ? 'bg-gf-row-alt' : ''
+              } ${index < activities.length - 1 ? 'border-b border-gf-border-subtle' : ''}`}
+            >
+              <div className={`w-8 h-8 flex-shrink-0 flex items-center justify-center ${getColorClasses(activity.color)}`}>
                 {getIcon(activity.icon)}
               </div>
               <div className="flex-1 min-w-0">
@@ -183,7 +192,7 @@ export default function RecentActivity() {
                   </p>
                 )}
               </div>
-              <span className="text-xs text-gf-muted flex-shrink-0">
+              <span className="text-xs text-gf-muted flex-shrink-0 font-mono">
                 {formatTimeAgo(activity.timestamp)}
               </span>
             </div>

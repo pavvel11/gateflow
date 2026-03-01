@@ -44,7 +44,7 @@ const WebhookRow = ({
   };
 
   return (
-    <tr className="hover:bg-gf-hover transition-colors">
+    <tr className={`hover:bg-gf-hover transition-colors`}>
       <td className="px-6 py-4">
         <div className="text-sm font-medium text-gf-heading truncate max-w-xs" title={endpoint.description || endpoint.url}>
           {endpoint.description || endpoint.url}
@@ -58,7 +58,7 @@ const WebhookRow = ({
           {endpoint.events.map((ev) => (
             <span
               key={ev}
-              className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-gf-accent-soft text-gf-accent border border-gf-border"
+              className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-gf-accent-soft text-gf-accent border-2 border-gf-border-medium"
             >
               {getEventLabel(ev)}
             </span>
@@ -67,7 +67,7 @@ const WebhookRow = ({
       </td>
       <td className="px-6 py-4">
         <div className="flex items-center space-x-2">
-          <code className="text-xs bg-gf-raised px-2 py-1 rounded border border-gf-border font-mono text-gf-body">
+          <code className="text-xs bg-gf-raised px-2 py-1 border-2 border-gf-border-medium font-mono text-gf-body">
             {showSecret ? endpoint.secret : 'gf_••••••••••••••••'}
           </code>
           <button
@@ -100,7 +100,7 @@ const WebhookRow = ({
       <td className="px-6 py-4 whitespace-nowrap text-center">
         <button
           onClick={() => onToggleStatus(endpoint.id, endpoint.is_active)}
-          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer transition-colors hover:opacity-80 ${
+          className={`px-2 inline-flex text-xs leading-5 font-semibold cursor-pointer transition-colors hover:opacity-80 ${
             endpoint.is_active ? 'bg-gf-success-soft text-gf-success' : 'bg-gf-raised text-gf-muted'
           }`}
         >
@@ -158,8 +158,8 @@ export default function WebhookListTable({
   };
 
   return (
-    <div className="bg-gf-base shadow-sm border border-gf-border overflow-hidden rounded-xl">
-      <table className="min-w-full divide-y divide-gf-border">
+    <div className="bg-gf-base border-2 border-gf-border-medium overflow-hidden">
+      <table className="min-w-full divide-y divide-gf-border-subtle">
         <thead className="bg-gf-raised">
           <tr>
             <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
@@ -179,7 +179,7 @@ export default function WebhookListTable({
             </th>
           </tr>
         </thead>
-        <tbody className="bg-gf-base divide-y divide-gf-border">
+        <tbody className="bg-gf-base divide-y divide-gf-border-subtle">
           {endpoints.map((endpoint) => (
             <WebhookRow
               key={endpoint.id}

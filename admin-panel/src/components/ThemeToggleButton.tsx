@@ -18,7 +18,7 @@ export default function ThemeToggleButton({ size = 'md' }: ThemeToggleButtonProp
   return (
     <button
       onClick={cycleTheme}
-      className={`relative flex items-center justify-center ${buttonSize} hover:bg-gf-hover rounded-full transition-all duration-200 hover:scale-105`}
+      className={`relative flex items-center justify-center ${buttonSize} border-2 border-gf-border-subtle hover:border-gf-border-medium hover:bg-gf-hover transition-all duration-200`}
       aria-label={t('themeLabel', { theme })}
       title={t('themeLabel', { theme })}
     >

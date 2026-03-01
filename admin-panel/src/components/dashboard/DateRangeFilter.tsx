@@ -39,7 +39,7 @@ export default function DateRangeFilter({ startDate, endDate, onChange }: DateRa
 
   return (
     <div className="flex items-center gap-2">
-      <div className="flex items-center gap-1 px-3 py-2 bg-gf-base border border-gf-border rounded-lg shadow-sm">
+      <div className="flex items-center gap-1 px-3 py-2 bg-gf-base border-2 border-gf-border-subtle">
         <CalendarIcon className="w-4 h-4 text-gf-muted" />
         <input
           type="date"

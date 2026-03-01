@@ -37,15 +37,15 @@ export function Step2ModeSelection() {
         {/* Test Mode */}
         <button
           onClick={() => handleSelectMode('test')}
-          className={`group relative p-6 rounded-xl border-2 transition-all text-left ${
+          className={`group relative p-6 border-2 transition-all text-left ${
             state.mode === 'test'
-              ? 'border-orange-500 bg-gf-warning-soft shadow-lg'
-              : 'border-gf-border hover:border-orange-300 hover:shadow-md'
+              ? 'border-orange-500 bg-gf-warning-soft'
+              : 'border-gf-border hover:border-orange-300'
           }`}
         >
           <div className="flex items-start gap-4">
             <div
-              className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${
+              className={`flex-shrink-0 w-12 h-12 flex items-center justify-center ${
                 state.mode === 'test'
                   ? 'bg-gf-warning-soft'
                   : 'bg-gf-raised group-hover:bg-gf-warning-soft'
@@ -58,7 +58,7 @@ export function Step2ModeSelection() {
             <div className="flex-1">
               <h4 className="text-lg font-semibold text-gf-heading mb-2">
                 {t('test.title', { defaultValue: 'Test Mode' })}
-                <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gf-warning-soft text-gf-warning">
+                <span className="ml-2 inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-gf-warning-soft text-gf-warning">
                   {t('test.badge', { defaultValue: 'Recommended First' })}
                 </span>
               </h4>
@@ -70,15 +70,15 @@ export function Step2ModeSelection() {
               </p>
               <ul className="space-y-1 text-sm text-gf-body">
                 <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                  <div className="w-1.5 h-1.5 bg-orange-400" />
                   {t('test.benefit1', { defaultValue: 'No real money involved' })}
                 </li>
                 <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                  <div className="w-1.5 h-1.5 bg-orange-400" />
                   {t('test.benefit2', { defaultValue: 'Test with fake card numbers' })}
                 </li>
                 <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                  <div className="w-1.5 h-1.5 bg-orange-400" />
                   {t('test.benefit3', { defaultValue: 'Perfect for development' })}
                 </li>
               </ul>
@@ -86,8 +86,8 @@ export function Step2ModeSelection() {
           </div>
           {state.mode === 'test' && (
             <div className="absolute top-3 right-3">
-              <div className="w-6 h-6 rounded-full bg-orange-600 flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-white" />
+              <div className="w-6 h-6 bg-orange-600 flex items-center justify-center">
+                <div className="w-2 h-2 bg-white" />
               </div>
             </div>
           )}
@@ -96,15 +96,15 @@ export function Step2ModeSelection() {
         {/* Live Mode */}
         <button
           onClick={() => handleSelectMode('live')}
-          className={`group relative p-6 rounded-xl border-2 transition-all text-left ${
+          className={`group relative p-6 border-2 transition-all text-left ${
             state.mode === 'live'
-              ? 'border-green-500 bg-gf-success-soft shadow-lg'
-              : 'border-gf-border hover:border-green-300 hover:shadow-md'
+              ? 'border-green-500 bg-gf-success-soft'
+              : 'border-gf-border hover:border-green-300'
           }`}
         >
           <div className="flex items-start gap-4">
             <div
-              className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${
+              className={`flex-shrink-0 w-12 h-12 flex items-center justify-center ${
                 state.mode === 'live'
                   ? 'bg-gf-success-soft'
                   : 'bg-gf-raised group-hover:bg-gf-success-soft'
@@ -117,7 +117,7 @@ export function Step2ModeSelection() {
             <div className="flex-1">
               <h4 className="text-lg font-semibold text-gf-heading mb-2">
                 {t('live.title', { defaultValue: 'Live Mode' })}
-                <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gf-success-soft text-gf-success">
+                <span className="ml-2 inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-gf-success-soft text-gf-success">
                   {t('live.badge', { defaultValue: 'Production' })}
                 </span>
               </h4>
@@ -129,15 +129,15 @@ export function Step2ModeSelection() {
               </p>
               <ul className="space-y-1 text-sm text-gf-body">
                 <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                  <div className="w-1.5 h-1.5 bg-green-400" />
                   {t('live.benefit1', { defaultValue: 'Real customer payments' })}
                 </li>
                 <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                  <div className="w-1.5 h-1.5 bg-green-400" />
                   {t('live.benefit2', { defaultValue: 'Production-ready' })}
                 </li>
                 <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                  <div className="w-1.5 h-1.5 bg-green-400" />
                   {t('live.benefit3', { defaultValue: 'Requires verified Stripe account' })}
                 </li>
               </ul>
@@ -145,8 +145,8 @@ export function Step2ModeSelection() {
           </div>
           {state.mode === 'live' && (
             <div className="absolute top-3 right-3">
-              <div className="w-6 h-6 rounded-full bg-green-600 flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-white" />
+              <div className="w-6 h-6 bg-green-600 flex items-center justify-center">
+                <div className="w-2 h-2 bg-white" />
               </div>
             </div>
           )}
@@ -154,7 +154,7 @@ export function Step2ModeSelection() {
       </div>
 
       {/* Info Banner */}
-      <div className="bg-gf-accent-soft rounded-lg p-4 mb-8 border border-gf-accent/20">
+      <div className="bg-gf-accent-soft p-4 mb-8 border border-gf-accent/20">
         <div className="flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-gf-accent mt-0.5 flex-shrink-0" />
           <div className="flex-1 text-sm">
@@ -175,7 +175,7 @@ export function Step2ModeSelection() {
       <div className="flex items-center justify-between">
         <button
           onClick={previousStep}
-          className="inline-flex items-center gap-2 px-5 py-2.5 text-gf-body hover:bg-gf-hover rounded-lg transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 text-gf-body hover:bg-gf-hover transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           {t('backButton', { defaultValue: 'Back' })}
@@ -184,7 +184,7 @@ export function Step2ModeSelection() {
         <button
           onClick={handleNext}
           disabled={!state.mode}
-          className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-lg font-semibold transition-colors ${
+          className={`inline-flex items-center gap-2 px-6 py-2.5 font-semibold transition-colors ${
             state.mode
               ? 'bg-gf-accent text-gf-inverse hover:bg-gf-accent-hover'
               : 'bg-gf-raised text-gf-muted cursor-not-allowed'

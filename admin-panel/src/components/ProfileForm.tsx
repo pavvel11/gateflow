@@ -137,7 +137,7 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       {/* 1. Personal Information */}
-      <div className="bg-gf-base rounded-xl shadow-sm border border-gf-border overflow-hidden">
+      <div className="bg-gf-base border-2 border-gf-border-medium overflow-hidden">
         <div className="px-6 py-4 border-b border-gf-border">
           <h3 className="text-lg font-bold text-gf-heading">
             {t('personalInfo.title')}
@@ -154,7 +154,7 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
                 type="text"
                 disabled
                 value={userEmail}
-                className="w-full rounded-lg border border-gf-border px-3 py-2 bg-gf-deep text-gf-muted cursor-not-allowed"
+                className="w-full border-2 border-gf-border-medium px-3 py-2 bg-gf-deep text-gf-muted cursor-not-allowed"
               />
               <p className="mt-1 text-xs text-gray-400">{t('fields.emailHelp')}</p>
             </div>
@@ -169,7 +169,7 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
                   value={formData.first_name || ''}
                   onChange={(e) => handleChange('first_name', e.target.value)}
                   placeholder={t('fields.firstNamePlaceholder')}
-                  className="w-full rounded-lg border border-gf-border px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none transition-all"
+                  className="w-full border-2 border-gf-border-medium px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none transition-all"
                 />
               </div>
               <div>
@@ -181,7 +181,7 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
                   value={formData.last_name || ''}
                   onChange={(e) => handleChange('last_name', e.target.value)}
                   placeholder={t('fields.lastNamePlaceholder')}
-                  className="w-full rounded-lg border border-gf-border px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none transition-all"
+                  className="w-full border-2 border-gf-border-medium px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none transition-all"
                 />
               </div>
             </div>
@@ -190,7 +190,7 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
       </div>
 
       {/* 2. Billing / Company Information */}
-      <div className="bg-gf-base rounded-xl shadow-sm border border-gf-border overflow-hidden">
+      <div className="bg-gf-base border-2 border-gf-border-medium overflow-hidden">
         <div className="px-6 py-4 border-b border-gf-border">
           <h3 className="text-lg font-bold text-gf-heading">
             {t('billingInfo.title')}
@@ -208,7 +208,7 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
                 value={formData.company_name || ''}
                 onChange={(e) => handleChange('company_name', e.target.value)}
                 placeholder={t('fields.companyNamePlaceholder')}
-                className="w-full rounded-lg border border-gf-border px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none"
+                className="w-full border-2 border-gf-border-medium px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none"
               />
             </div>
             
@@ -223,7 +223,7 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
                   onChange={(e) => handleChange('tax_id', e.target.value)}
                   onBlur={handleTaxIdBlur}
                   placeholder={t('fields.taxIdPlaceholder')}
-                  className={`w-full rounded-lg border px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none transition-all ${
+                  className={`w-full border px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none transition-all ${
                     taxIdError
                       ? 'border-red-500'
                       : taxIdSuccess
@@ -269,14 +269,14 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
                     value={formData.address_line1 || ''}
                     onChange={(e) => handleChange('address_line1', e.target.value)}
                     placeholder={t('fields.addressPlaceholder')}
-                    className="w-full rounded-lg border border-gf-border px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none mb-2"
+                    className="w-full border-2 border-gf-border-medium px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none mb-2"
                   />
                   <input
                     type="text"
                     value={formData.address_line2 || ''}
                     onChange={(e) => handleChange('address_line2', e.target.value)}
                     placeholder={t('fields.address2Placeholder')}
-                    className="w-full rounded-lg border border-gf-border px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none"
+                    className="w-full border-2 border-gf-border-medium px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none"
                   />
                 </div>
                 
@@ -288,7 +288,7 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
                     type="text"
                     value={formData.city || ''}
                     onChange={(e) => handleChange('city', e.target.value)}
-                    className="w-full rounded-lg border border-gf-border px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none"
+                    className="w-full border-2 border-gf-border-medium px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none"
                   />
                 </div>
 
@@ -300,7 +300,7 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
                     type="text"
                     value={formData.zip_code || ''}
                     onChange={(e) => handleChange('zip_code', e.target.value)}
-                    className="w-full rounded-lg border border-gf-border px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none"
+                    className="w-full border-2 border-gf-border-medium px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none"
                   />
                 </div>
 
@@ -313,7 +313,7 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
                     value={formData.country || ''}
                     onChange={(e) => handleChange('country', e.target.value)}
                     placeholder={t('fields.countryPlaceholder')}
-                    className="w-full rounded-lg border border-gf-border px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none"
+                    className="w-full border-2 border-gf-border-medium px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none"
                   />
                 </div>
               </div>
@@ -333,8 +333,8 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
           <button
             type="submit"
             disabled={loading}
-            className={`px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-all shadow-sm ${
-              loading ? 'opacity-70 cursor-not-allowed' : 'hover:shadow-md active:scale-95'
+            className={`px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold transition-all ${
+              loading ? 'opacity-70 cursor-not-allowed' : ''
             }`}
           >
             {loading ? tCommon('loading') : tCommon('save')}

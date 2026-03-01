@@ -17,7 +17,7 @@ export function Step5Success({ onComplete }: Step5SuccessProps) {
   return (
     <div className="max-w-2xl mx-auto text-center">
       {/* Success Icon */}
-      <div className="inline-flex items-center justify-center w-20 h-20 bg-gf-success-soft rounded-full mb-6">
+      <div className="inline-flex items-center justify-center w-20 h-20 bg-gf-success-soft mb-6">
         <CheckCircle2 className="w-10 h-10 text-gf-success" />
       </div>
 
@@ -36,7 +36,7 @@ export function Step5Success({ onComplete }: Step5SuccessProps) {
       <div className="space-y-4 mb-10">
         {/* Mode Card */}
         <div
-          className={`rounded-lg p-5 border-2 ${
+          className={`p-5 border-2 ${
             isTestMode
               ? 'bg-gf-warning-soft border-gf-warning/20'
               : 'bg-gf-success-soft border-gf-success/20'
@@ -56,7 +56,7 @@ export function Step5Success({ onComplete }: Step5SuccessProps) {
               </p>
             </div>
             <div
-              className={`px-3 py-1 rounded-full text-xs font-medium ${isTestMode ? 'bg-gf-warning-soft text-gf-warning' : 'bg-gf-success-soft text-gf-success'}`}
+              className={`px-3 py-1 text-xs font-medium ${isTestMode ? 'bg-gf-warning-soft text-gf-warning' : 'bg-gf-success-soft text-gf-success'}`}
             >
               {t('summary.active', { defaultValue: 'Active' })}
             </div>
@@ -64,7 +64,7 @@ export function Step5Success({ onComplete }: Step5SuccessProps) {
         </div>
 
         {/* Security Card */}
-        <div className="bg-gf-accent-soft rounded-lg p-5 border-2 border-gf-accent/20">
+        <div className="bg-gf-accent-soft p-5 border-2 border-gf-accent/20">
           <div className="flex items-start gap-3">
             <Sparkles className="w-5 h-5 text-gf-accent mt-0.5 flex-shrink-0" />
             <div className="text-left">
@@ -82,7 +82,7 @@ export function Step5Success({ onComplete }: Step5SuccessProps) {
         </div>
 
         {/* Rotation Reminder Card */}
-        <div className="bg-gf-raised rounded-lg p-5 border border-gf-border">
+        <div className="bg-gf-raised p-5 border border-gf-border">
           <div className="flex items-start gap-3">
             <RotateCcw className="w-5 h-5 text-gf-body mt-0.5 flex-shrink-0" />
             <div className="text-left">
@@ -102,7 +102,7 @@ export function Step5Success({ onComplete }: Step5SuccessProps) {
 
       {/* Next Steps */}
       {isTestMode && (
-        <div className="bg-gf-warning-soft rounded-lg p-6 mb-8 border border-gf-warning/20 text-left">
+        <div className="bg-gf-warning-soft p-6 mb-8 border border-gf-warning/20 text-left">
           <h4 className="font-semibold text-gf-heading mb-3">
             {t('nextSteps.title', { defaultValue: '💡 Next Steps' })}
           </h4>
@@ -146,7 +146,7 @@ export function Step5Success({ onComplete }: Step5SuccessProps) {
       )}
 
       {!isTestMode && (
-        <div className="bg-gf-success-soft rounded-lg p-6 mb-8 border border-gf-success/20 text-left">
+        <div className="bg-gf-success-soft p-6 mb-8 border border-gf-success/20 text-left">
           <h4 className="font-semibold text-gf-heading mb-3">
             {t('live.title', { defaultValue: '🎉 You\'re Live!' })}
           </h4>
@@ -169,7 +169,7 @@ export function Step5Success({ onComplete }: Step5SuccessProps) {
       <div className="flex justify-center">
         <button
           onClick={onComplete}
-          className="px-8 py-3 bg-gf-success hover:opacity-90 text-gf-inverse font-semibold rounded-lg transition-colors"
+          className="px-8 py-3 bg-gf-success hover:opacity-90 text-gf-inverse font-semibold transition-colors"
         >
           {t('doneButton', { defaultValue: 'Done' })}
         </button>

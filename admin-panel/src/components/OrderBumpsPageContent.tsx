@@ -169,7 +169,7 @@ const OrderBumpsPageContent: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gf-heading">
+          <h1 className="text-[40px] font-[800] text-gf-heading tracking-[-0.03em] leading-[1.1]">
             {t('title')}
           </h1>
           <p className="text-gf-body mt-2">
@@ -181,7 +181,7 @@ const OrderBumpsPageContent: React.FC = () => {
             setEditingBump(null);
             setShowBumpForm(true);
           }}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 shadow-sm"
+          className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center space-x-2"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -192,15 +192,15 @@ const OrderBumpsPageContent: React.FC = () => {
 
       {/* Stats Card */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gf-base rounded-xl shadow-sm border border-gf-border p-6">
+        <div className="bg-gf-base border-2 border-gf-border-medium p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gf-body">{t('stats.total')}</p>
-              <p className="text-2xl font-bold text-gf-heading mt-1">
+              <p className="text-[40px] font-[800] text-gf-heading tracking-[-0.03em] leading-[1.1] mt-1">
                 {orderBumps.length}
               </p>
             </div>
-            <div className="w-12 h-12 bg-gf-accent-soft rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-gf-accent-soft flex items-center justify-center">
               <svg className="w-6 h-6 text-gf-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
@@ -208,15 +208,15 @@ const OrderBumpsPageContent: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-gf-base rounded-xl shadow-sm border border-gf-border p-6">
+        <div className="bg-gf-base border-2 border-gf-border-medium p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gf-body">{t('stats.active')}</p>
-              <p className="text-2xl font-bold text-gf-heading mt-1">
+              <p className="text-[40px] font-[800] text-gf-heading tracking-[-0.03em] leading-[1.1] mt-1">
                 {orderBumps.filter(b => b.is_active).length}
               </p>
             </div>
-            <div className="w-12 h-12 bg-gf-success-soft rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-gf-success-soft flex items-center justify-center">
               <svg className="w-6 h-6 text-gf-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -224,15 +224,15 @@ const OrderBumpsPageContent: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-gf-base rounded-xl shadow-sm border border-gf-border p-6">
+        <div className="bg-gf-base border-2 border-gf-border-medium p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gf-body">{t('stats.inactive')}</p>
-              <p className="text-2xl font-bold text-gf-heading mt-1">
+              <p className="text-[40px] font-[800] text-gf-heading tracking-[-0.03em] leading-[1.1] mt-1">
                 {orderBumps.filter(b => !b.is_active).length}
               </p>
             </div>
-            <div className="w-12 h-12 bg-gf-raised rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-gf-raised flex items-center justify-center">
               <svg className="w-6 h-6 text-gf-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
               </svg>
@@ -242,7 +242,7 @@ const OrderBumpsPageContent: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-gf-base rounded-xl shadow-sm border border-gf-border overflow-hidden">
+      <div className="bg-gf-base border-2 border-gf-border-medium overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center p-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gf-accent"></div>
@@ -251,7 +251,7 @@ const OrderBumpsPageContent: React.FC = () => {
           <div className="text-center p-12 text-red-500">{error}</div>
         ) : orderBumps.length === 0 ? (
           <div className="text-center p-12">
-            <div className="w-16 h-16 bg-gf-raised rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-gf-raised flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-gf-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
@@ -264,7 +264,7 @@ const OrderBumpsPageContent: React.FC = () => {
                 setEditingBump(null);
                 setShowBumpForm(true);
               }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+              className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
             >
               {t('create')}
             </button>
@@ -292,8 +292,8 @@ const OrderBumpsPageContent: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-gf-base divide-y divide-gf-border">
-                {orderBumps.map((bump) => (
-                  <tr key={bump.id} className="hover:bg-gf-hover transition-colors">
+                {orderBumps.map((bump, index) => (
+                  <tr key={bump.id} className={`hover:bg-gf-hover transition-colors ${index % 2 === 1 ? 'bg-gf-row-alt' : ''}`}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <Link
                         href={`/p/${bump.main_product.slug}`}
@@ -326,7 +326,7 @@ const OrderBumpsPageContent: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => handleToggleActive(bump)}
-                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                        className={`px-3 py-1 text-xs font-medium transition-colors ${
                           bump.is_active
                             ? 'bg-gf-success-soft text-gf-success hover:bg-gf-success-soft'
                             : 'bg-gf-raised text-gf-muted hover:bg-gf-hover'
@@ -380,7 +380,7 @@ const OrderBumpsPageContent: React.FC = () => {
       {/* Delete Confirmation Modal */}
       {bumpToDelete && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-gf-base rounded-xl shadow-2xl max-w-md w-full p-6 border border-gf-border">
+          <div className="bg-gf-base max-w-md w-full p-6 border-2 border-gf-border-medium">
             <h3 className="text-lg font-bold text-gf-heading mb-4">
               {t('confirmDelete')}
             </h3>
@@ -390,13 +390,13 @@ const OrderBumpsPageContent: React.FC = () => {
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setBumpToDelete(null)}
-                className="px-4 py-2 text-gf-body hover:bg-gf-hover rounded-lg transition-colors"
+                className="px-4 py-2 text-gf-body hover:bg-gf-hover transition-colors"
               >
                 {t('form.cancel')}
               </button>
               <button
                 onClick={() => handleDeleteBump(bumpToDelete)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-sm"
+                className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors"
               >
                 {t('delete')}
               </button>

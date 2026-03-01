@@ -76,7 +76,7 @@ export default function CategoryFormModal({ isOpen, onClose, category }: Categor
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-gf-base rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="bg-gf-base w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="flex justify-between items-center p-6 border-b border-gf-border">
           <h2 className="text-xl font-bold text-gf-heading">
             {category ? t('editCategory', { defaultValue: 'Edit Category' }) : t('createCategory', { defaultValue: 'Create Category' })}
@@ -96,7 +96,7 @@ export default function CategoryFormModal({ isOpen, onClose, category }: Categor
               value={name}
               onChange={handleNameChange}
               required
-              className="w-full px-3 py-2 bg-gf-input text-gf-heading border border-gf-border rounded-lg focus:ring-2 focus:ring-gf-accent"
+              className="w-full px-3 py-2 bg-gf-input text-gf-heading border-2 border-gf-border-medium focus:ring-2 focus:ring-gf-accent"
             />
           </div>
 
@@ -109,7 +109,7 @@ export default function CategoryFormModal({ isOpen, onClose, category }: Categor
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
               required
-              className="w-full px-3 py-2 bg-gf-input text-gf-heading border border-gf-border rounded-lg focus:ring-2 focus:ring-gf-accent font-mono text-sm"
+              className="w-full px-3 py-2 bg-gf-input text-gf-heading border-2 border-gf-border-medium focus:ring-2 focus:ring-gf-accent font-mono text-sm"
             />
           </div>
 
@@ -121,7 +121,7 @@ export default function CategoryFormModal({ isOpen, onClose, category }: Categor
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 bg-gf-input text-gf-heading border border-gf-border rounded-lg focus:ring-2 focus:ring-gf-accent"
+              className="w-full px-3 py-2 bg-gf-input text-gf-heading border-2 border-gf-border-medium focus:ring-2 focus:ring-gf-accent"
             />
           </div>
 
@@ -129,14 +129,14 @@ export default function CategoryFormModal({ isOpen, onClose, category }: Categor
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gf-body hover:bg-gf-hover rounded-lg transition-colors"
+              className="px-4 py-2 text-gf-body hover:bg-gf-hover transition-colors"
             >
               {commonT('cancel')}
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="px-4 py-2 bg-gf-accent text-gf-inverse rounded-lg hover:bg-gf-accent-hover transition-colors disabled:opacity-50"
+              className="px-4 py-2 bg-gf-accent text-gf-inverse hover:bg-gf-accent-hover transition-colors disabled:opacity-50"
             >
               {isLoading ? commonT('loading') : commonT('save')}
             </button>

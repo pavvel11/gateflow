@@ -18,7 +18,7 @@ export default function DemoCheckoutNotice() {
   if (!demoMode) return null
 
   return (
-    <div className="mb-4 rounded-lg border border-gf-warning/30 bg-gf-warning-soft px-4 py-3 text-sm">
+    <div className="mb-4 border border-gf-warning/30 bg-gf-warning-soft px-4 py-3 text-sm">
       <div className="flex items-start gap-3">
         <span className="mt-0.5 text-lg">⚠️</span>
         <div className="flex-1 min-w-0">
@@ -29,7 +29,7 @@ export default function DemoCheckoutNotice() {
             {t('checkoutBannerDesc')}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <code className="rounded bg-gf-warning-soft px-2 py-0.5 font-mono text-xs text-gf-warning">
+            <code className="bg-gf-warning-soft px-2 py-0.5 font-mono text-xs text-gf-warning">
               {t('checkoutTestCardLabel')}: {t('checkoutTestCard')}
             </code>
             <span className="text-xs text-gf-warning">
@@ -72,7 +72,7 @@ export function DemoResetCountdown() {
   if (!demoMode || dismissed) return null
 
   return (
-    <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 rounded-full border border-gf-warning/30 bg-gf-warning-soft/95 backdrop-blur-sm px-3 py-1.5 text-xs shadow-lg">
+    <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 border border-gf-warning/30 bg-gf-warning-soft/95 backdrop-blur-sm px-3 py-1.5 text-xs">
       <span className="text-gf-warning">⏱</span>
       <span className="font-medium text-gf-warning">
         {t('resetCountdown', { time: timeLeft })}

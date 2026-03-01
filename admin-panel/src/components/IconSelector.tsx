@@ -58,7 +58,7 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
       <button
         type="button"
         onClick={toggleDropdown}
-        className="mt-1 flex items-center justify-between w-full rounded-md border border-gf-border bg-gf-input px-3 py-2 text-gf-heading shadow-sm focus:border-gf-accent focus:ring-gf-accent"
+        className="mt-1 flex items-center justify-between w-full border-2 border-gf-border-medium bg-gf-input px-3 py-2 text-gf-heading focus:border-gf-accent focus:ring-gf-accent"
       >
         <div className="flex items-center space-x-2">
           <span className="text-xl">{currentIcon.emoji}</span>
@@ -70,13 +70,13 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
       </button>
 
       {isOpen && (
-        <div className="absolute z-10 mt-1 w-full rounded-md bg-gf-base shadow-lg border border-gf-border">
+        <div className="absolute z-10 mt-1 w-full bg-gf-base border-2 border-gf-border-medium">
           <div className="p-2 grid grid-cols-4 gap-2">
             {ICONS.map((icon) => (
               <div 
                 key={icon.id}
                 onClick={() => handleSelectIcon(icon.id)}
-                className={`cursor-pointer p-2 rounded-md flex flex-col items-center ${
+                className={`cursor-pointer p-2 flex flex-col items-center ${
                   icon.id === selectedIcon
                     ? 'bg-blue-500 text-white' 
                     : 'hover:bg-gf-hover'

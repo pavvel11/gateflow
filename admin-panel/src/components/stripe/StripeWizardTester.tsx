@@ -25,7 +25,7 @@ export function StripeWizardTester() {
       <div className="fixed bottom-4 right-4 z-40">
         <button
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-3 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
         >
           <Settings className="w-5 h-5" />
           Test Stripe Wizard

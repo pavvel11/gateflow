@@ -31,7 +31,7 @@ export const WizardFooter: React.FC<WizardFooterProps> = ({
   const isLastStep = currentStep === totalSteps;
 
   return (
-    <div className="px-6 py-4 border-t border-gf-border bg-gf-raised rounded-b-2xl">
+    <div className="px-6 py-4 border-t border-gf-border bg-gf-raised">
       <div className="flex items-center justify-between">
         {/* Left side: Cancel / Back */}
         <div>

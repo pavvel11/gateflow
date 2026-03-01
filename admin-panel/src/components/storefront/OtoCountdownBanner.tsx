@@ -76,7 +76,7 @@ export default function OtoCountdownBanner({
   // Don't render if expired
   if (isExpired) {
     return (
-      <div className="bg-gf-raised border border-gf-border rounded-xl p-4 mb-6">
+      <div className="bg-gf-raised border border-gf-border rounded-2xl p-4 mb-6">
         <div className="flex items-center justify-center gap-2 text-gf-muted">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -95,11 +95,11 @@ export default function OtoCountdownBanner({
     <div
       data-testid="oto-countdown-banner"
       className={`
-        relative overflow-hidden rounded-xl p-4 mb-6 border-2 transition-all duration-300
+        relative overflow-hidden rounded-2xl p-4 mb-6 border-2 transition-all duration-300
         ${isUrgent
-          ? 'bg-gf-danger-soft border-red-500 animate-pulse'
+          ? 'bg-gf-danger-soft border-gf-danger animate-pulse'
           : isWarning
-            ? 'bg-gf-warning-soft border-orange-500'
+            ? 'bg-gf-warning-soft border-gf-warning'
             : 'bg-wl-accent-soft border-wl-border-accent'
         }
       `}
@@ -112,8 +112,8 @@ export default function OtoCountdownBanner({
         <div className="flex items-center gap-3">
           <div className={`
             flex items-center justify-center w-12 h-12 rounded-full
-            ${isUrgent ? 'bg-red-500' : isWarning ? 'bg-orange-500' : 'bg-wl-accent'}
-            text-white font-bold text-lg
+            ${isUrgent ? 'bg-gf-danger' : isWarning ? 'bg-gf-warning' : 'bg-wl-accent'}
+            text-gf-heading font-bold text-lg
           `}>
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -121,7 +121,7 @@ export default function OtoCountdownBanner({
           </div>
           <div>
             <p className="text-sm text-gf-muted">{t('exclusiveOffer')}</p>
-            <p className={`text-lg font-bold ${isUrgent ? 'text-red-600' : isWarning ? 'text-orange-600' : 'text-wl-accent'}`}>
+            <p className={`text-lg font-bold ${isUrgent ? 'text-gf-danger' : isWarning ? 'text-gf-warning' : 'text-wl-accent'}`}>
               {t('saveAmount', { amount: formatDiscount(discountType, discountValue, currency) })}
             </p>
           </div>
@@ -131,12 +131,12 @@ export default function OtoCountdownBanner({
         <div className="flex items-center gap-2">
           <span className="text-sm text-gf-muted">{t('expiresIn')}</span>
           <div className={`
-            px-4 py-2 rounded-lg font-mono text-2xl font-bold
+            px-4 py-2 rounded-xl font-mono text-2xl font-bold
             ${isUrgent
-              ? 'bg-red-500 text-white'
+              ? 'bg-gf-danger text-gf-heading'
               : isWarning
-                ? 'bg-orange-500 text-white'
-                : 'bg-wl-accent text-white'
+                ? 'bg-gf-warning text-gf-heading'
+                : 'bg-wl-accent text-gf-heading'
             }
           `}>
             {formatTime(secondsRemaining)}

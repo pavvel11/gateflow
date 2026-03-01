@@ -92,7 +92,7 @@ export default function DateTimePicker({
           disabled={disabled}
           placeholder={displayPlaceholder}
           className={`
-            flex-1 min-w-0 px-3 py-2.5 border rounded-lg shadow-sm transition-all duration-200
+            flex-1 min-w-0 px-3 py-2.5 border transition-all duration-200
             focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent
             ${disabled
               ? 'bg-gf-raised text-gf-muted cursor-not-allowed'
@@ -108,7 +108,7 @@ export default function DateTimePicker({
           <button
             type="button"
             onClick={handleClear}
-            className="flex-shrink-0 p-1.5 text-gf-muted hover:text-gf-body hover:bg-gf-hover rounded-lg transition-colors"
+            className="flex-shrink-0 p-1.5 text-gf-muted hover:text-gf-body hover:bg-gf-hover transition-colors"
             aria-label={tCommon('clearDate')}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

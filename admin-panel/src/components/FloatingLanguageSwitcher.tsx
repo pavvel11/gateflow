@@ -88,9 +88,9 @@ export default function FloatingLanguageSwitcher({
           onClick={() => setIsOpen(!isOpen)}
           disabled={isPending}
           className={`
-            group flex items-center justify-center gap-2 border rounded-lg transition-all duration-200 shadow-sm
+            group flex items-center justify-center gap-2 border-2 border-gf-border-subtle hover:border-gf-border-medium transition-all duration-200
             ${buttonBaseClasses}
-            ${isPending ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md'}
+            ${isPending ? 'opacity-50 cursor-not-allowed' : ''}
             ${variant === 'discrete' ? 'p-2' : 'px-3 py-2'}
           `}
           aria-label={t('switchLanguage')}
@@ -113,10 +113,10 @@ export default function FloatingLanguageSwitcher({
 
         {isOpen && (
           <div className={`
-            absolute mt-2 w-32 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200
+            absolute mt-2 w-32 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200
             ${mode === 'floating' 
               ? 'top-full right-0 bg-black/40 backdrop-blur-md border border-white/20' 
-              : 'top-full right-0 bg-gf-base border border-gf-border'}
+              : 'top-full right-0 bg-gf-base border-2 border-gf-border-medium'}
           `}>
             <div className="p-1">
               {Object.entries(languages).map(([code, lang]) => (
@@ -124,7 +124,7 @@ export default function FloatingLanguageSwitcher({
                   key={code}
                   onClick={() => handleLanguageChange(code)}
                   className={`
-                    flex items-center gap-3 w-full px-3 py-2 text-sm rounded-lg transition-colors
+                    flex items-center gap-3 w-full px-3 py-2 text-sm transition-colors
                     ${mode === 'floating'
                       ? (locale === code ? 'bg-white/20 text-white' : 'text-white/80 hover:bg-white/10 hover:text-white')
                       : (locale === code ? 'bg-gf-accent-soft text-gf-accent' : 'text-gf-body hover:bg-gf-hover')

@@ -142,7 +142,7 @@ export function ContentDeliverySection({
           <select
             value={formData.content_delivery_type}
             onChange={handleContentTypeChange}
-            className="w-full px-3 py-2.5 border border-gf-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
+            className="w-full px-3 py-2.5 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
           >
             <option value="content">{t('contentItems')}</option>
             <option value="redirect">{t('redirect')}</option>
@@ -159,7 +159,7 @@ export function ContentDeliverySection({
               placeholder={t('redirectPlaceholder')}
               value={(formData.content_config as { redirect_url?: string })?.redirect_url || ''}
               onChange={handleRedirectUrlChange}
-              className="w-full px-3 py-2.5 border border-gf-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
+              className="w-full px-3 py-2.5 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
             />
             <p className="mt-1 text-xs text-gf-muted">
               {t('redirectDescription')}
@@ -175,7 +175,7 @@ export function ContentDeliverySection({
 
             {/* Video platforms info */}
             {hasVideoEmbeds && (
-              <div className="mb-3 p-3 bg-gf-accent-soft border border-gf-accent/20 rounded-lg">
+              <div className="mb-3 p-3 bg-gf-accent-soft border border-gf-accent/20">
                 <div className="flex items-start">
                   <div className="flex-shrink-0">
                     <svg className="h-5 w-5 text-gf-accent" fill="currentColor" viewBox="0 0 20 20">
@@ -197,7 +197,7 @@ export function ContentDeliverySection({
 
             {/* Download providers info */}
             {hasDownloadLinks && (
-              <div className="mb-3 p-3 bg-gf-success-soft border border-gf-success/20 rounded-lg">
+              <div className="mb-3 p-3 bg-gf-success-soft border border-gf-success/20">
                 <div className="flex items-start">
                   <div className="flex-shrink-0">
                     <svg className="h-5 w-5 text-gf-success" fill="currentColor" viewBox="0 0 20 20">
@@ -222,12 +222,12 @@ export function ContentDeliverySection({
 
             <div className="space-y-3">
               {contentItems.map((item, index) => (
-                <div key={index} className="p-3 bg-gf-raised rounded-lg border border-gf-border">
+                <div key={index} className="p-3 bg-gf-raised border-2 border-gf-border-medium">
                   <div className="flex items-center space-x-2 mb-2">
                     <select
                       value={item.type}
                       onChange={(e) => handleItemTypeChange(index, e.target.value as 'video_embed' | 'download_link')}
-                      className="px-2 py-1 border border-gf-border rounded text-sm bg-gf-input text-gf-heading"
+                      className="px-2 py-1 border-2 border-gf-border-medium text-sm bg-gf-input text-gf-heading"
                     >
                       <option value="video_embed">{t('videoEmbed')}</option>
                       <option value="download_link">{t('downloadLink')}</option>
@@ -237,7 +237,7 @@ export function ContentDeliverySection({
                       placeholder={t('title')}
                       value={item.title}
                       onChange={(e) => handleItemTitleChange(index, e.target.value)}
-                      className="flex-1 px-2 py-1 border border-gf-border rounded text-sm bg-gf-input text-gf-heading"
+                      className="flex-1 px-2 py-1 border-2 border-gf-border-medium text-sm bg-gf-input text-gf-heading"
                     />
                     <div className="flex-1 relative">
                       <input
@@ -246,7 +246,7 @@ export function ContentDeliverySection({
                         value={item.config?.embed_url || item.config?.download_url || ''}
                         onChange={(e) => handleItemUrlChange(index, e.target.value)}
                         onBlur={(e) => handleItemUrlBlur(index, e.target.value, item.type as 'video_embed' | 'download_link')}
-                        className={`w-full px-2 py-1 pr-8 border rounded text-sm bg-gf-input text-gf-heading ${
+                        className={`w-full px-2 py-1 pr-8 border text-sm bg-gf-input text-gf-heading ${
                           urlValidation[index]
                             ? urlValidation[index].isValid
                               ? 'border-green-500'
@@ -331,7 +331,7 @@ export function ContentDeliverySection({
               <button
                 type="button"
                 onClick={handleAddItem}
-                className="px-3 py-1 text-sm bg-gf-accent text-gf-inverse rounded hover:bg-gf-accent-hover"
+                className="px-3 py-1 text-sm bg-gf-accent text-gf-inverse hover:bg-gf-accent-hover"
               >
                 {t('addContentItem')}
               </button>

@@ -43,7 +43,7 @@ export default function WebhookLogsTable({
     }
     if (log.status === 'archived') {
         return (
-          <span className="px-2 py-1 bg-gf-raised text-gf-body rounded text-xs font-medium border border-gf-border">
+          <span className="px-2 py-1 bg-gf-raised text-gf-body rounded text-xs font-medium border-2 border-gf-border-medium">
             {t('archived')}
           </span>
         );
@@ -80,8 +80,8 @@ export default function WebhookLogsTable({
   };
 
   return (
-    <div className="border border-gf-border rounded-lg overflow-hidden bg-gf-base shadow-sm">
-      <table className="min-w-full divide-y divide-gf-border">
+    <div className="border-2 border-gf-border-medium overflow-hidden bg-gf-base">
+      <table className="min-w-full divide-y divide-gf-border-subtle">
         <thead className="bg-gf-raised">
           <tr>
             <th className="px-4 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">{t('date')}</th>
@@ -94,7 +94,7 @@ export default function WebhookLogsTable({
             <th className="px-4 py-3 text-right text-xs font-medium text-gf-muted uppercase tracking-wider">{tCommon('actions')}</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gf-border">
+        <tbody className="divide-y divide-gf-border-subtle">
           {logs.map((log) => (
             <React.Fragment key={log.id}>
               <tr 
@@ -149,7 +149,7 @@ export default function WebhookLogsTable({
                       onClick={(e) => handleArchive(e, log.id)}
                       disabled={archivingId === log.id}
                       title={t('archiveDismiss')}
-                      className="inline-flex items-center p-1.5 border border-gf-border text-gf-muted hover:text-gf-danger rounded-md transition-colors"
+                      className="inline-flex items-center p-1.5 border-2 border-gf-border-medium text-gf-muted hover:text-gf-danger transition-colors"
                     >
                       {archivingId === log.id ? (
                         <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -172,13 +172,13 @@ export default function WebhookLogsTable({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <h4 className="text-xs font-bold text-gf-muted uppercase mb-2">{t('payload')}</h4>
-                        <pre className="text-[10px] bg-gf-base p-3 rounded border border-gf-border overflow-x-auto h-48 font-mono text-gf-body">
+                        <pre className="text-[10px] bg-gf-base p-3 rounded border-2 border-gf-border-medium overflow-x-auto h-48 font-mono text-gf-body">
                           {JSON.stringify(log.payload, null, 2)}
                         </pre>
                       </div>
                       <div>
                         <h4 className="text-xs font-bold text-gf-muted uppercase mb-2">{t('response')}</h4>
-                        <div className="text-[10px] bg-gf-base p-3 rounded border border-gf-border h-48 overflow-y-auto">
+                        <div className="text-[10px] bg-gf-base p-3 rounded border-2 border-gf-border-medium h-48 overflow-y-auto">
                           {log.error_message && (
                             <div className="text-gf-danger font-medium mb-2 border-b border-gf-danger/20 pb-2">
                               {t('errorPrefix', { message: log.error_message })}

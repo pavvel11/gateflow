@@ -79,7 +79,7 @@ async function PaymentSuccessContent({ searchParams }: PaymentSuccessPageProps) 
 
   return (
     <div className="min-h-screen bg-gf-deep flex items-center justify-center">
-      <div className="max-w-md mx-auto bg-gf-raised/80 border border-gf-border rounded-xl p-8 text-center">
+      <div className="max-w-md mx-auto bg-gf-raised/80 border border-gf-border rounded-2xl p-8 text-center">
         <div className="w-16 h-16 bg-gf-success/20 border border-gf-success/30 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg className="w-8 h-8 text-gf-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>

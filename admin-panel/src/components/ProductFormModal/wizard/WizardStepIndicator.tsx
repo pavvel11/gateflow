@@ -48,7 +48,7 @@ export const WizardStepIndicator: React.FC<WizardStepIndicatorProps> = ({
               >
                 <div
                   className={`
-                    flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold
+                    flex items-center justify-center w-8 h-8 text-sm font-semibold
                     transition-all duration-200 flex-shrink-0
                     ${isCompleted
                       ? 'bg-gf-accent text-gf-inverse'
@@ -108,7 +108,7 @@ export const WizardStepIndicator: React.FC<WizardStepIndicatorProps> = ({
                   onClick={() => isClickable && onStepClick(step.number)}
                   disabled={!isClickable}
                   className={`
-                    flex items-center justify-center w-7 h-7 rounded-full text-xs font-semibold
+                    flex items-center justify-center w-7 h-7 text-xs font-semibold
                     transition-all duration-200
                     ${isCompleted
                       ? 'bg-gf-accent text-gf-inverse'

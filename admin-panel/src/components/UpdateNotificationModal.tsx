@@ -73,12 +73,12 @@ export default function UpdateNotificationModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-gf-base rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-gf-border">
+      <div className="bg-gf-base max-w-lg w-full p-6 border-2 border-gf-border-medium">
         {/* Header */}
         {!upgradeInProgress ? (
           <>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-gf-accent/10 flex items-center justify-center">
+              <div className="w-10 h-10 bg-gf-accent/10 flex items-center justify-center">
                 <svg className="w-5 h-5 text-gf-accent" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182" />
                 </svg>
@@ -100,14 +100,14 @@ export default function UpdateNotificationModal({
 
             {/* Release notes */}
             {updateInfo.release_notes && (
-              <div className="mb-5 max-h-48 overflow-y-auto rounded-lg bg-gf-deep p-4 text-sm text-gf-body border border-gf-border">
+              <div className="mb-5 max-h-48 overflow-y-auto bg-gf-deep p-4 text-sm text-gf-body border-2 border-gf-border-medium">
                 <p className="font-medium text-gf-heading mb-2">{t('modal.whatsNew')}</p>
                 <div className="whitespace-pre-wrap">{updateInfo.release_notes}</div>
               </div>
             )}
 
             {/* Warning */}
-            <div className="flex items-start gap-2 mb-5 p-3 rounded-lg bg-gf-warning-soft border border-gf-warning/20">
+            <div className="flex items-start gap-2 mb-5 p-3 bg-gf-warning-soft border border-gf-warning/20">
               <svg className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
               </svg>
@@ -118,13 +118,13 @@ export default function UpdateNotificationModal({
             <div className="flex gap-3 justify-end">
               <button
                 onClick={onDismiss}
-                className="px-4 py-2 text-sm font-medium text-gf-body hover:bg-gf-hover rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-gf-body hover:bg-gf-hover transition-colors"
               >
                 {t('modal.remindLater')}
               </button>
               <button
                 onClick={onUpgrade}
-                className="px-4 py-2 text-sm font-medium text-white bg-gf-accent hover:bg-gf-accent-hover rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-white bg-gf-accent hover:bg-gf-accent-hover transition-colors"
               >
                 {t('modal.upgradeNow')}
               </button>
@@ -173,7 +173,7 @@ export default function UpdateNotificationModal({
 
             {/* Error message */}
             {isFailed && (
-              <div className="mb-4 p-3 rounded-lg bg-gf-danger-soft border border-gf-danger/20">
+              <div className="mb-4 p-3 bg-gf-danger-soft border border-gf-danger/20">
                 <p className="text-sm text-gf-danger">{upgradeProgress?.message}</p>
                 {upgradeProgress?.rollback && (
                   <p className="text-sm text-gf-danger mt-1">{t('progress.rolledBack')}</p>
@@ -183,7 +183,7 @@ export default function UpdateNotificationModal({
 
             {/* Success message */}
             {isDone && (
-              <div className="mb-4 p-3 rounded-lg bg-gf-success-soft border border-gf-success/20">
+              <div className="mb-4 p-3 bg-gf-success-soft border border-gf-success/20">
                 <p className="text-sm text-gf-success">{upgradeProgress?.message}</p>
               </div>
             )}
@@ -199,7 +199,7 @@ export default function UpdateNotificationModal({
               <div className="flex justify-end">
                 <button
                   onClick={() => isDone ? window.location.reload() : onDismiss()}
-                  className="px-4 py-2 text-sm font-medium text-white bg-gf-accent hover:bg-gf-accent-hover rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-white bg-gf-accent hover:bg-gf-accent-hover transition-colors"
                 >
                   {isDone ? t('progress.reload') : t('progress.close')}
                 </button>

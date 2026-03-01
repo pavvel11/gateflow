@@ -16,7 +16,7 @@ const UsersFilterBar: React.FC<UsersFilterBarProps> = ({
 }) => {
   const t = useTranslations('admin.users');
   return (
-    <div className="flex flex-col space-y-3 md:flex-row md:items-center md:justify-between md:space-y-0 md:space-x-4 p-4 bg-gf-base rounded-lg shadow-md">
+    <div className="flex flex-col space-y-3 md:flex-row md:items-center md:justify-between md:space-y-0 md:space-x-4 p-4 bg-gf-base">
       <div className="flex-1">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -29,14 +29,14 @@ const UsersFilterBar: React.FC<UsersFilterBarProps> = ({
             placeholder={t('searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="block w-full pl-10 pr-3 py-2 border border-gf-border rounded-lg leading-5 bg-gf-input text-gf-heading placeholder-gf-muted focus:outline-none focus:placeholder-gf-muted focus:ring-2 focus:ring-gf-accent focus:border-gf-accent sm:text-sm transition-all duration-200"
+            className="block w-full pl-10 pr-3 py-2 border-2 border-gf-border-medium leading-5 bg-gf-input text-gf-heading placeholder-gf-muted focus:outline-none focus:placeholder-gf-muted focus:ring-2 focus:ring-gf-accent focus:border-gf-accent sm:text-sm transition-all duration-200"
           />
         </div>
       </div>
       <div className="flex-shrink-0">
         <button
           onClick={onRefresh}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-gf-inverse bg-gf-accent hover:bg-gf-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-accent transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium text-gf-inverse bg-gf-accent hover:bg-gf-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-accent transition-all duration-200 hover:transform hover:scale-105"
           title={t('refresh')}
         >
           <svg className="-ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">

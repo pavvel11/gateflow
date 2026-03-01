@@ -153,7 +153,7 @@ const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({
                     <span className="font-mono text-gf-muted truncate max-w-[140px]">/p/{formData.slug}</span>
                   )}
                   {priceDisplayValue !== '' && (
-                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                    <span className={`inline-flex items-center px-1.5 py-0.5 text-xs font-medium ${
                       formData.price === 0
                         ? 'bg-gf-success-soft text-gf-success'
                         : 'bg-gf-accent-soft text-gf-accent'
@@ -273,7 +273,7 @@ const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({
                 {t('waitlistWarning.consequence')}
               </p>
             </ModalBody>
-            <div className="px-6 py-4 border-t border-gf-border bg-gf-raised rounded-b-2xl flex items-center justify-end space-x-3">
+            <div className="px-6 py-4 border-t border-gf-border bg-gf-raised flex items-center justify-end space-x-3">
               <Button onClick={dismissWaitlistWarning} variant="secondary">
                 {t('cancel')}
               </Button>
@@ -305,7 +305,7 @@ const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({
               {t('wizard.exitMessage')}
             </p>
           </ModalBody>
-          <div className="px-6 py-4 border-t border-gf-border bg-gf-raised rounded-b-2xl flex items-center justify-end space-x-3">
+          <div className="px-6 py-4 border-t border-gf-border bg-gf-raised flex items-center justify-end space-x-3">
             <Button onClick={() => setShowExitConfirm(false)} variant="secondary">
               {t('wizard.exitKeepEditing')}
             </Button>

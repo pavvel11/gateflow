@@ -65,7 +65,7 @@ export default function WebhookTestModal({
             <select
               value={selectedEvent}
               onChange={(e) => setSelectedEvent(e.target.value)}
-              className="w-full px-3 py-2 bg-gf-input text-gf-heading border border-gf-border rounded-lg"
+              className="w-full px-3 py-2 bg-gf-input text-gf-heading border-2 border-gf-border-medium"
             >
               <option value="test.event">{t('testModal.genericTestEvent')}</option>
               {endpoint.events.map((ev) => (
@@ -80,7 +80,7 @@ export default function WebhookTestModal({
             <label className="block text-sm font-medium text-gf-body mb-2">
               {t('testModal.examplePayload')}
             </label>
-            <div className="bg-gray-900 dark:bg-gray-950 rounded-lg p-4 border border-gray-700 max-h-96 overflow-y-auto">
+            <div className="bg-gray-900 dark:bg-gray-950 p-4 border border-gray-700 max-h-96 overflow-y-auto">
               <pre className="text-xs font-mono text-gray-100">
                 <code>{JSON.stringify({
                   event: selectedEvent,

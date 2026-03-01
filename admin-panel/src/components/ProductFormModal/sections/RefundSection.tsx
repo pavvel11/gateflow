@@ -52,7 +52,7 @@ export function RefundSection({
                 }))}
                 min="1"
                 max="365"
-                className="w-full px-3 py-2.5 border border-gf-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
+                className="w-full px-3 py-2.5 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
                 placeholder={t('refundSettings.refundPeriodPlaceholder', { defaultValue: 'e.g., 14, 30' })}
               />
               <p className="mt-1 text-xs text-gf-muted">
@@ -60,7 +60,7 @@ export function RefundSection({
               </p>
             </div>
 
-            <div className="bg-gf-accent-soft border border-gf-accent/20 rounded-lg p-4">
+            <div className="bg-gf-accent-soft border border-gf-accent/20 p-4">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
                   <svg className="h-5 w-5 text-gf-accent" fill="currentColor" viewBox="0 0 20 20">

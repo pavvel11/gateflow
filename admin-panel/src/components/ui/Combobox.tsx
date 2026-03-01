@@ -120,14 +120,14 @@ export const Combobox = ({ options, placeholder, selectedValue, onSelect, classN
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           placeholder={displayPlaceholder}
-          className="w-full py-2 pl-3 pr-10 border border-gf-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent text-sm bg-gf-input text-gf-heading"
+          className="w-full py-2 pl-3 pr-10 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent text-sm bg-gf-input text-gf-heading"
         />
         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
           <LucideSearch className="h-4 w-4 text-gf-muted" />
         </div>
       </div>
       {isOpen && filteredOptions.length > 0 && (
-        <ul className="absolute z-50 mt-1 w-full bg-gf-base border border-gf-border rounded-lg shadow-xl max-h-60 overflow-y-auto">
+        <ul className="absolute z-50 mt-1 w-full bg-gf-base border-2 border-gf-border-medium max-h-60 overflow-y-auto">
           {filteredOptions.map((option, index) => (
             <li
               key={option.value}
@@ -146,7 +146,7 @@ export const Combobox = ({ options, placeholder, selectedValue, onSelect, classN
         </ul>
       )}
       {isOpen && searchTerm && filteredOptions.length === 0 && (
-        <div className="absolute z-50 mt-1 w-full bg-gf-base border border-gf-border rounded-lg shadow-xl px-3 py-2 text-sm text-gf-muted">
+        <div className="absolute z-50 mt-1 w-full bg-gf-base border-2 border-gf-border-medium px-3 py-2 text-sm text-gf-muted">
           {t('noResults', { searchTerm })}
         </div>
       )}

@@ -45,6 +45,23 @@
 
   --gf-shadow: 0 4px 24px -4px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
   --gf-shadow-accent: 0 4px 30px -4px rgba(0,170,255,0.25);
+
+  /* Brutalist border tiers */
+  --gf-border-subtle: rgba(255,255,255,0.06);
+  --gf-border-medium: rgba(255,255,255,0.12);
+  --gf-border-strong: rgba(255,255,255,0.20);
+
+  /* Layout dimensions */
+  --gf-sidebar-width-collapsed: 80px;
+  --gf-sidebar-width-expanded: 260px;
+  --gf-topbar-height: 56px;
+
+  /* Timing */
+  --gf-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --gf-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --gf-duration-fast: 150ms;
+  --gf-duration-normal: 250ms;
+  --gf-duration-slow: 400ms;
 }
 
 /* Light mode overrides — when .dark is NOT on <html>, landing uses these */
@@ -87,6 +104,11 @@
 
   --gf-shadow: 0 4px 24px -4px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06);
   --gf-shadow-accent: 0 4px 30px -4px rgba(0,112,184,0.20);
+
+  /* Brutalist border tiers (light) */
+  --gf-border-subtle: rgba(0,0,0,0.06);
+  --gf-border-medium: rgba(0,0,0,0.12);
+  --gf-border-strong: rgba(0,0,0,0.20);
 }
 
 /* ===== Whitelabel Tokens — default to Sellf brand, overridden by theme ===== */
@@ -153,6 +175,9 @@
   --color-gf-sidebar-text: var(--gf-sidebar-text);
   --color-gf-sidebar-text-active: var(--gf-sidebar-text-active);
   --color-gf-sidebar-accent: var(--gf-sidebar-accent);
+  --color-gf-border-subtle: var(--gf-border-subtle);
+  --color-gf-border-medium: var(--gf-border-medium);
+  --color-gf-border-strong: var(--gf-border-strong);
 
   /* Whitelabel tokens (public pages — customizable via theme) */
   --color-wl-accent: var(--wl-accent);
@@ -176,6 +201,17 @@
   --radius-wl-md: var(--wl-radius-md);
   --radius-wl-lg: var(--wl-radius-lg);
   --radius-wl-full: var(--wl-radius-full);
+}
+
+/* Sidebar layout — desktop margin for fixed sidebar */
+@media (min-width: 1024px) {
+  .gf-main-content {
+    margin-left: var(--gf-sidebar-width-collapsed);
+    transition: margin-left var(--gf-duration-slow) var(--gf-ease-out);
+  }
+  .gf-main-content.gf-pinned {
+    margin-left: var(--gf-sidebar-width-expanded);
+  }
 }
 
 /* Grain noise overlay — static background image, no compositing overhead */
@@ -425,6 +461,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Dashboard uses DM Sans for brutalist/industrial aesthetic */
+.gf-dashboard {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.gf-dashboard .font-mono,
+.gf-dashboard code,
+.gf-dashboard pre {
+  font-family: var(--font-dm-mono), ui-monospace, monospace;
+}
+
 
 @layer utilities {
   .animate-fade-in {
@@ -512,6 +559,41 @@ body {
   100% {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+@keyframes kinetic-reveal {
+  0% {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes stat-slide-up {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes progress-fill {
+  0% {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  100% {
+    transform: scaleX(1);
+    transform-origin: left;
   }
 }
 

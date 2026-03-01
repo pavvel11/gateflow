@@ -40,7 +40,7 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({
   badge 
 }) => {
   const getBadgeClasses = (variant: string) => {
-    const baseClasses = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
+    const baseClasses = 'inline-flex items-center px-2.5 py-0.5 text-xs font-medium';
     
     switch (variant) {
       case 'success':
@@ -57,11 +57,11 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({
   };
 
   return (
-    <div className="px-6 py-3 border-b border-gf-border bg-gf-raised rounded-t-2xl">
+    <div className="px-6 py-3 border-b border-gf-border bg-gf-raised">
       <div className="flex items-start justify-between">
         <div className="flex items-center space-x-3">
           {icon && (
-            <div className="flex-shrink-0 p-1.5 bg-gf-base rounded-lg shadow-sm">
+            <div className="flex-shrink-0 p-1.5 bg-gf-base">
               {icon}
             </div>
           )}
@@ -156,7 +156,7 @@ export const ModalFooter: React.FC<ModalFooterProps> = ({
   return (
     <div className={`
       px-6 py-4 border-t border-gf-border
-      bg-gf-raised rounded-b-2xl
+      bg-gf-raised
       flex items-center justify-end space-x-3
       ${className}
     `}>
@@ -225,7 +225,7 @@ export const Button: React.FC<ButtonProps> = ({
       disabled={disabled || loading}
       className={`
         inline-flex items-center justify-center
-        border font-medium rounded-lg
+        border font-medium
         transition-colors duration-200
         focus:outline-none focus:ring-2 focus:ring-offset-2
         disabled:opacity-50 disabled:cursor-not-allowed
@@ -304,7 +304,7 @@ export const Message: React.FC<MessageProps> = ({
   };
 
   return (
-    <div className={`border rounded-lg p-4 ${getTypeClasses()} ${className}`}>
+    <div className={`border p-4 ${getTypeClasses()} ${className}`}>
       <div className="flex">
         <div className="flex-shrink-0">
           {getIcon()}

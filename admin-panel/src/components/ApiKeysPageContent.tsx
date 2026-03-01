@@ -174,15 +174,15 @@ export default function ApiKeysPageContent() {
   // Get status badge
   const getStatusBadge = (key: ApiKey) => {
     if (key.revoked_at) {
-      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-gf-danger-soft text-gf-danger">{t('statusRevoked')}</span>;
+      return <span className="px-2 py-1 text-xs font-medium bg-gf-danger-soft text-gf-danger">{t('statusRevoked')}</span>;
     }
     if (!key.is_active) {
-      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-gf-raised text-gf-muted">{t('statusInactive')}</span>;
+      return <span className="px-2 py-1 text-xs font-medium bg-gf-raised text-gf-muted">{t('statusInactive')}</span>;
     }
     if (key.expires_at && new Date(key.expires_at) < new Date()) {
-      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-gf-warning-soft text-gf-warning">{t('statusExpired')}</span>;
+      return <span className="px-2 py-1 text-xs font-medium bg-gf-warning-soft text-gf-warning">{t('statusExpired')}</span>;
     }
-    return <span className="px-2 py-1 text-xs font-medium rounded-full bg-gf-success-soft text-gf-success">{t('statusActive')}</span>;
+    return <span className="px-2 py-1 text-xs font-medium bg-gf-success-soft text-gf-success">{t('statusActive')}</span>;
   };
 
   return (
@@ -190,12 +190,12 @@ export default function ApiKeysPageContent() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gf-heading">{t('title')}</h1>
+          <h1 className="text-[40px] font-[800] text-gf-heading tracking-[-0.03em] leading-[1.1]">{t('title')}</h1>
           <p className="text-gf-body mt-1">{t('subtitle')}</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
           {t('createKey')}
@@ -203,7 +203,7 @@ export default function ApiKeysPageContent() {
       </div>
 
       {/* API Keys Table */}
-      <div className="bg-gf-base rounded-xl shadow-sm border border-gf-border overflow-hidden">
+      <div className="bg-gf-base border-2 border-gf-border-medium overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -234,8 +234,8 @@ export default function ApiKeysPageContent() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gf-border">
-                {apiKeys.map((key) => (
-                  <tr key={key.id} className="hover:bg-gf-hover transition-colors">
+                {apiKeys.map((key, index) => (
+                  <tr key={key.id} className={`hover:bg-gf-hover transition-colors ${index % 2 === 1 ? 'bg-gf-row-alt' : ''}`}>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <Key className="w-4 h-4 text-gray-400" />
@@ -243,19 +243,19 @@ export default function ApiKeysPageContent() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <code className="px-2 py-1 bg-gf-raised rounded text-sm font-mono text-gf-body">
+                      <code className="px-2 py-1 bg-gf-raised text-sm font-mono text-gf-body">
                         {key.key_prefix}...
                       </code>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-1">
                         {key.scopes.slice(0, 2).map((scope) => (
-                          <span key={scope} className="px-2 py-0.5 text-xs rounded bg-gf-accent-soft text-gf-accent">
+                          <span key={scope} className="px-2 py-0.5 text-xs bg-gf-accent-soft text-gf-accent">
                             {SCOPE_KEY_MAP[scope] ? t(SCOPE_KEY_MAP[scope]) : scope}
                           </span>
                         ))}
                         {key.scopes.length > 2 && (
-                          <span className="px-2 py-0.5 text-xs rounded bg-gf-raised text-gf-muted">
+                          <span className="px-2 py-0.5 text-xs bg-gf-raised text-gf-muted">
                             +{key.scopes.length - 2}
                           </span>
                         )}
@@ -277,14 +277,14 @@ export default function ApiKeysPageContent() {
                           <>
                             <button
                               onClick={() => setKeyToRotate(key)}
-                              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-gf-accent-soft rounded-lg transition-colors"
+                              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-gf-accent-soft transition-colors"
                               title={t('rotateKey')}
                             >
                               <RotateCw className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => setKeyToRevoke(key)}
-                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-gf-danger-soft rounded-lg transition-colors"
+                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-gf-danger-soft transition-colors"
                               title={t('revokeKey')}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -318,7 +318,7 @@ export default function ApiKeysPageContent() {
           />
           <ModalBody>
             <div className="space-y-4">
-              <div className="p-4 bg-gf-warning-soft border border-gf-warning/20 rounded-lg">
+              <div className="p-4 bg-gf-warning-soft border border-gf-warning/20">
                 <div className="flex items-start gap-3">
                   <AlertTriangle className="w-5 h-5 text-gf-warning mt-0.5" />
                   <div>
@@ -335,7 +335,7 @@ export default function ApiKeysPageContent() {
                       type={showSecret ? 'text' : 'password'}
                       value={newKeySecret}
                       readOnly
-                      className="w-full px-3 py-2 pr-10 bg-gf-raised border border-gf-border rounded-lg font-mono text-sm"
+                      className="w-full px-3 py-2 pr-10 bg-gf-raised border-2 border-gf-border-medium font-mono text-sm"
                     />
                     <button
                       type="button"
@@ -347,7 +347,7 @@ export default function ApiKeysPageContent() {
                   </div>
                   <button
                     onClick={() => copyToClipboard(newKeySecret)}
-                    className="p-2 bg-gf-raised hover:bg-gf-hover rounded-lg transition-colors"
+                    className="p-2 bg-gf-raised hover:bg-gf-hover transition-colors"
                     title={t('copy')}
                   >
                     <Copy className="w-4 h-4" />

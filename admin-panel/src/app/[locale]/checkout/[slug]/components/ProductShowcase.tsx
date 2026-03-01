@@ -80,7 +80,7 @@ export default function ProductShowcase({ product }: ProductShowcaseProps) {
         <div className="mb-8">
           {/* Strikethrough regular price if on sale */}
           {isSaleActive && (
-            <div className="text-2xl font-medium text-gray-500 line-through mb-1">
+            <div className="text-2xl font-medium text-gf-muted line-through mb-1">
               {formatPrice(product.price, product.currency)} {product.currency}
             </div>
           )}
@@ -97,7 +97,7 @@ export default function ProductShowcase({ product }: ProductShowcaseProps) {
 
           {/* Sale end date */}
           {isSaleActive && product.sale_price_until && (
-            <div className="text-sm text-yellow-400 mt-2 flex items-center gap-1">
+            <div className="text-sm text-gf-warning mt-2 flex items-center gap-1">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -115,7 +115,7 @@ export default function ProductShowcase({ product }: ProductShowcaseProps) {
 
           {/* Remaining quantity at sale price */}
           {isSaleActive && saleQuantityRemaining !== null && saleQuantityRemaining > 0 && (
-            <div className="text-sm text-orange-400 mt-2 flex items-center gap-1" data-testid="sale-quantity-remaining">
+            <div className="text-sm text-gf-warning mt-2 flex items-center gap-1" data-testid="sale-quantity-remaining">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
@@ -224,7 +224,7 @@ export default function ProductShowcase({ product }: ProductShowcaseProps) {
                     className="flex items-start gap-3 text-gf-body"
                   >
                     <svg
-                      className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5"
+                      className="w-5 h-5 text-gf-success flex-shrink-0 mt-0.5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

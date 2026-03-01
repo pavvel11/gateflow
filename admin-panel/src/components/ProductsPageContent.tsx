@@ -290,6 +290,7 @@ const ProductsPageContent: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <h1 className="text-[40px] font-[800] text-gf-heading tracking-[-0.03em] leading-[1.1]">{t('title')}</h1>
       <FilterBar
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
@@ -343,7 +344,7 @@ const ProductsPageContent: React.FC = () => {
       {productToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div
-            className="bg-gf-base rounded-lg shadow-2xl p-6 w-full max-w-md"
+            className="bg-gf-base p-6 w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-bold text-gf-heading">{t('confirmDelete')}</h3>
@@ -353,13 +354,13 @@ const ProductsPageContent: React.FC = () => {
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 onClick={() => setProductToDelete(null)}
-                className="px-4 py-2 text-sm font-medium text-gf-body bg-gf-base border border-gf-border rounded-md shadow-sm hover:bg-gf-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-accent"
+                className="px-4 py-2 text-sm font-medium text-gf-body bg-gf-base border-2 border-gf-border-medium hover:bg-gf-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-accent"
               >
                 {t('cancel')}
               </button>
               <button
                 onClick={confirmDelete}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
                 {t('delete')}
               </button>
@@ -371,7 +372,7 @@ const ProductsPageContent: React.FC = () => {
       {showExportConfirmation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div
-            className="bg-gf-base rounded-lg shadow-2xl p-6 w-full max-w-md"
+            className="bg-gf-base p-6 w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-bold text-gf-heading">{t('confirmExport')}</h3>
@@ -381,13 +382,13 @@ const ProductsPageContent: React.FC = () => {
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 onClick={() => setShowExportConfirmation(false)}
-                className="px-4 py-2 text-sm font-medium text-gf-body bg-gf-base border border-gf-border rounded-md shadow-sm hover:bg-gf-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-accent"
+                className="px-4 py-2 text-sm font-medium text-gf-body bg-gf-base border-2 border-gf-border-medium hover:bg-gf-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-accent"
               >
                 {t('cancel')}
               </button>
               <button
                 onClick={confirmExport}
-                className="px-4 py-2 text-sm font-medium text-gf-inverse bg-gf-accent border border-transparent rounded-md shadow-sm hover:bg-gf-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-accent"
+                className="px-4 py-2 text-sm font-medium text-gf-inverse bg-gf-accent border border-transparent hover:bg-gf-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-accent"
               >
                 {t('export')}
               </button>

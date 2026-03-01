@@ -61,7 +61,7 @@ export function AvailabilitySection({
             </div>
           </label>
           {isWaitlistDisabled && (
-            <div data-testid="waitlist-webhook-warning" className="mt-2 p-3 bg-gf-warning-soft border border-gf-warning/20 rounded-lg">
+            <div data-testid="waitlist-webhook-warning" className="mt-2 p-3 bg-gf-warning-soft border border-gf-warning/20">
               <p className="text-sm text-gf-warning">
                 {t('waitlist.noWebhookWarning')}{' '}
                 <button
@@ -76,7 +76,7 @@ export function AvailabilitySection({
           )}
         </div>
 
-        <div className="bg-gf-accent-soft border border-gf-accent/20 rounded-lg p-4">
+        <div className="bg-gf-accent-soft border border-gf-accent/20 p-4">
           <div className="flex items-start">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-gf-accent" fill="currentColor" viewBox="0 0 20 20">

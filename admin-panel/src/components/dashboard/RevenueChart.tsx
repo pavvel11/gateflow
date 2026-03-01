@@ -196,87 +196,81 @@ export default function RevenueChart() {
 
   if (loading) {
     return (
-      <div className="bg-gf-base rounded-xl shadow-sm border border-gf-border p-6 h-[400px] animate-pulse">
-        <div className="h-6 w-1/3 bg-gf-raised rounded mb-4"></div>
-        <div className="h-full bg-gf-raised rounded"></div>
+      <div className="border-2 border-gf-border-medium p-6 h-[400px] animate-pulse">
+        <div className="h-6 w-1/3 bg-gf-raised mb-4"></div>
+        <div className="h-full bg-gf-raised"></div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gf-base rounded-xl shadow-sm border border-gf-border p-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+    <div className="border-2 border-gf-border-medium">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-6 pt-6 pb-4 gap-4 border-b border-gf-border-subtle">
         <div className="flex items-center gap-6">
           <div>
-            <h2 className="text-xl font-semibold text-gf-heading">
+            <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-gf-muted">
               {viewMode === 'daily'
                 ? t('revenueChart.title', { defaultValue: 'Revenue Trend' })
                 : t('revenueChart.hourlyTitle', { defaultValue: "Today's Revenue" })}
             </h2>
-            <p className="text-sm text-gf-muted">
+            <p className="text-[48px] font-[800] text-gf-heading tracking-[-0.04em] leading-none mt-1">
+              {formatMultiCurrency(totalRevenue)}
+            </p>
+            <span className="text-xs text-gf-muted mt-1 block">
               {viewMode === 'daily'
                 ? t('revenueChart.subtitle', { days: daysDiff, defaultValue: 'Performance over time' })
                 : t('revenueChart.hourlySubtitle', { defaultValue: 'Hourly breakdown' })}
-            </p>
-          </div>
-          <div className="hidden sm:block h-12 w-px bg-gf-border"></div>
-          <div className="flex flex-col">
-            <div className="text-2xl font-bold text-gf-heading">
-              {formatMultiCurrency(totalRevenue)}
-            </div>
-            <span className="text-xs text-gf-muted">
-              total revenue
             </span>
           </div>
         </div>
-        
+
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex bg-gf-raised rounded-lg p-1">
+          <div className="flex gap-0">
             <button
               onClick={() => setPredefinedRange(0)}
-              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+              className={`px-3 py-1.5 text-sm font-medium border-2 border-gf-border-medium transition-colors -mr-0.5 ${
                 viewMode === 'hourly'
-                  ? 'bg-gf-base text-gf-heading shadow-sm'
-                  : 'text-gf-muted hover:text-gf-heading'
+                  ? 'bg-gf-accent text-gf-inverse border-gf-accent'
+                  : 'text-gf-muted hover:text-gf-heading hover:border-gf-border-strong'
               }`}
             >
               Today
             </button>
             <button
               onClick={() => setPredefinedRange(7)}
-              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+              className={`px-3 py-1.5 text-sm font-medium border-2 border-gf-border-medium transition-colors -mr-0.5 ${
                 viewMode === 'daily' && dateRange.start && (new Date().getTime() - dateRange.start.getTime()) < 8 * 24 * 3600 * 1000
-                  ? 'bg-gf-base text-gf-heading shadow-sm'
-                  : 'text-gf-muted hover:text-gf-heading'
+                  ? 'bg-gf-accent text-gf-inverse border-gf-accent'
+                  : 'text-gf-muted hover:text-gf-heading hover:border-gf-border-strong'
               }`}
             >
               7d
             </button>
             <button
               onClick={() => setPredefinedRange(30)}
-              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+              className={`px-3 py-1.5 text-sm font-medium border-2 border-gf-border-medium transition-colors ${
                 viewMode === 'daily' && dateRange.start && (new Date().getTime() - dateRange.start.getTime()) > 20 * 24 * 3600 * 1000
-                  ? 'bg-gf-base text-gf-heading shadow-sm'
-                  : 'text-gf-muted hover:text-gf-heading'
+                  ? 'bg-gf-accent text-gf-inverse border-gf-accent'
+                  : 'text-gf-muted hover:text-gf-heading hover:border-gf-border-strong'
               }`}
             >
               30d
             </button>
           </div>
-          
-          <div className="h-6 w-px bg-gf-border mx-1 hidden sm:block"></div>
-          
-          <DateRangeFilter 
-            startDate={dateRange.start} 
-            endDate={dateRange.end} 
-            onChange={handleRangeChange} 
+
+          <div className="h-6 w-px bg-gf-border-medium mx-1 hidden sm:block"></div>
+
+          <DateRangeFilter
+            startDate={dateRange.start}
+            endDate={dateRange.end}
+            onChange={handleRangeChange}
           />
         </div>
       </div>
 
       {(!data || data.length === 0) ? (
-        <div className="h-[300px] flex flex-col items-center justify-center text-center">
-          <div className="w-16 h-16 bg-gf-raised rounded-full flex items-center justify-center mb-4">
+        <div className="h-[300px] flex flex-col items-center justify-center text-center px-6">
+          <div className="w-16 h-16 bg-gf-raised flex items-center justify-center mb-4">
             <svg className="w-8 h-8 text-gf-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
@@ -287,7 +281,7 @@ export default function RevenueChart() {
           </p>
         </div>
       ) : (
-        <div className="h-[300px] w-full">
+        <div className="h-[300px] w-full p-6">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={displayData.map(item => {

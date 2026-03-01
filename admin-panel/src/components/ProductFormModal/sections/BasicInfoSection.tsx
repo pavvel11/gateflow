@@ -48,7 +48,7 @@ function LongDescriptionField({
         value={value}
         onChange={onChange}
         rows={expanded ? 10 : 2}
-        className="w-full px-3 py-2 border border-gf-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading font-mono text-sm resize-none transition-all duration-200"
+        className="w-full px-3 py-2 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading font-mono text-sm resize-none transition-all duration-200"
         placeholder={t('longDescriptionPlaceholder')}
       />
       {expanded && (
@@ -109,7 +109,7 @@ export function BasicInfoSection({
             value={formData.name}
             onChange={handleInputChange}
             ref={nameInputRef}
-            className={`w-full px-3 py-2.5 border ${fieldErrors.name ? errorBorder : normalBorder} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:border-transparent bg-gf-input text-gf-heading`}
+            className={`w-full px-3 py-2.5 border ${fieldErrors.name ? errorBorder : normalBorder} focus:outline-none focus:ring-2 focus:border-transparent bg-gf-input text-gf-heading`}
             placeholder={t('enterProductName')}
             required
           />
@@ -130,12 +130,12 @@ export function BasicInfoSection({
               name="slug"
               value={formData.slug}
               onChange={handleInputChange}
-              className={`w-full px-3 py-2.5 border ${fieldErrors.slug ? errorBorder : normalBorder} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:border-transparent bg-gf-input text-gf-heading pr-12`}
+              className={`w-full px-3 py-2.5 border ${fieldErrors.slug ? errorBorder : normalBorder} focus:outline-none focus:ring-2 focus:border-transparent bg-gf-input text-gf-heading pr-12`}
               placeholder={t('slugPlaceholder')}
               required
             />
             {!slugModified && (
-              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gf-accent bg-gf-accent-soft rounded px-2 py-1">
+              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gf-accent bg-gf-accent-soft px-2 py-1">
                 {t('autoSlug')}
               </span>
             )}
@@ -156,7 +156,7 @@ export function BasicInfoSection({
           value={formData.description || ''}
           onChange={handleInputChange}
           rows={3}
-          className={`w-full px-3 py-2.5 border ${fieldErrors.description ? errorBorder : normalBorder} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:border-transparent bg-gf-input text-gf-heading`}
+          className={`w-full px-3 py-2.5 border ${fieldErrors.description ? errorBorder : normalBorder} focus:outline-none focus:ring-2 focus:border-transparent bg-gf-input text-gf-heading`}
           placeholder={t('descriptionPlaceholder')}
           required
         />

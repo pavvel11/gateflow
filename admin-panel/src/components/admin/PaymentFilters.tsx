@@ -73,7 +73,7 @@ export default function PaymentFilters({
   };
 
   return (
-    <div className="bg-gf-base rounded-lg shadow p-6">
+    <div className="bg-gf-base border-2 border-gf-border-medium p-6">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
         <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
           {/* Status Filter */}
@@ -84,7 +84,7 @@ export default function PaymentFilters({
             <select
               value={filters.status}
               onChange={(e) => handleFilterChange('status', e.target.value)}
-              className="w-full sm:w-auto px-3 py-2 border border-gf-border rounded-md focus:outline-none focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading"
+              className="w-full sm:w-auto px-3 py-2 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading"
             >
               <option value="all">{t('allStatuses')}</option>
               <option value="pending">{t('pending')}</option>
@@ -104,7 +104,7 @@ export default function PaymentFilters({
             <select
               value={filters.dateRange}
               onChange={(e) => handleFilterChange('dateRange', e.target.value)}
-              className="w-full sm:w-auto px-3 py-2 border border-gf-border rounded-md focus:outline-none focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading"
+              className="w-full sm:w-auto px-3 py-2 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading"
             >
               <option value="7">{t('last7Days')}</option>
               <option value="30">{t('last30Days')}</option>
@@ -124,7 +124,7 @@ export default function PaymentFilters({
               placeholder={t('searchPlaceholder')}
               value={filters.searchTerm}
               onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
-              className="w-full sm:w-64 px-3 py-2 border border-gf-border rounded-md focus:outline-none focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading"
+              className="w-full sm:w-64 px-3 py-2 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading"
             />
           </div>
         </div>
@@ -133,19 +133,19 @@ export default function PaymentFilters({
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
           <button
             onClick={handleReset}
-            className="px-4 py-2 border border-gf-border text-gf-body rounded-md hover:bg-gf-hover transition-colors"
+            className="px-4 py-2 border-2 border-gf-border-medium text-gf-body hover:bg-gf-hover transition-colors"
           >
             {t('clear')}
           </button>
           <button
             onClick={onRefresh}
-            className="px-4 py-2 bg-gf-accent hover:bg-gf-accent-hover text-gf-inverse rounded-md transition-colors"
+            className="px-4 py-2 bg-gf-accent hover:bg-gf-accent-hover text-gf-inverse transition-colors"
           >
             🔄 {t('refresh')}
           </button>
           <button
             onClick={exportPayments}
-            className="px-4 py-2 bg-gf-success hover:opacity-90 text-gf-inverse rounded-md transition-colors"
+            className="px-4 py-2 bg-gf-success hover:opacity-90 text-gf-inverse transition-colors"
           >
             📊 {t('exportCsv')}
           </button>
@@ -157,7 +157,7 @@ export default function PaymentFilters({
         <div className="mt-4 flex flex-wrap gap-2">
           <span className="text-sm text-gf-body">{t('activeFilters')}</span>
           {filters.status !== 'all' && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gf-accent-soft text-gf-accent">
+            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gf-accent-soft text-gf-accent">
               {t('statusFilter', { status: filters.status })}
               <button
                 onClick={() => handleFilterChange('status', 'all')}
@@ -168,7 +168,7 @@ export default function PaymentFilters({
             </span>
           )}
           {filters.searchTerm && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gf-accent-soft text-gf-accent">
+            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gf-accent-soft text-gf-accent">
               {t('searchFilter', { term: filters.searchTerm })}
               <button
                 onClick={() => handleFilterChange('searchTerm', '')}
@@ -179,7 +179,7 @@ export default function PaymentFilters({
             </span>
           )}
           {filters.dateRange !== '30' && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gf-success-soft text-gf-success">
+            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gf-success-soft text-gf-success">
               {filters.dateRange === 'all' ? t('rangeFilter', { range: t('allTime') }) : t('rangeFilter', { range: `${filters.dateRange} ${t('days')}` })}
               <button
                 onClick={() => handleFilterChange('dateRange', '30')}

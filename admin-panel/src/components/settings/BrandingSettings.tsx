@@ -13,12 +13,12 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/contexts/ToastContext';
 import {
-  getActiveTheme,
-  saveActiveTheme,
-  removeActiveTheme,
-  getThemePresets,
-  checkThemeLicense,
-  exportActiveTheme,
+ getActiveTheme,
+ saveActiveTheme,
+ removeActiveTheme,
+ getThemePresets,
+ checkThemeLicense,
+ exportActiveTheme,
 } from '@/lib/actions/theme';
 import { themeConfigSchema, THEME_PRESETS } from '@/lib/themes';
 import type { ThemeConfig, ThemePreset } from '@/lib/themes';
@@ -32,625 +32,625 @@ const DEFAULT_THEME: ThemeConfig = THEME_PRESETS[0].theme;
 // ===== COLOR PICKER =====
 
 function ColorField({
-  label,
-  value,
-  onChange,
-  disabled,
+ label,
+ value,
+ onChange,
+ disabled,
 }: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  disabled?: boolean;
+ label: string;
+ value: string;
+ onChange: (v: string) => void;
+ disabled?: boolean;
 }) {
-  const isHex = value.startsWith('#');
-  return (
-    <div className="flex items-center gap-2">
-      <input
-        type="color"
-        value={isHex ? value : '#000000'}
-        onChange={(e) => onChange(e.target.value)}
-        disabled={disabled}
-        className="w-8 h-8 rounded border border-gf-border cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-      />
-      <div className="flex-1 min-w-0">
-        <label className="block text-xs text-gf-muted truncate">{label}</label>
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={disabled}
-          className="w-full px-2 py-1 text-xs border border-gf-border rounded bg-gf-input text-gf-heading disabled:opacity-50"
-        />
-      </div>
-    </div>
-  );
+ const isHex = value.startsWith('#');
+ return (
+ <div className="flex items-center gap-2">
+ <input
+ type="color"
+ value={isHex ? value : '#000000'}
+ onChange={(e) => onChange(e.target.value)}
+ disabled={disabled}
+ className="w-8 h-8 border-2 border-gf-border-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+ />
+ <div className="flex-1 min-w-0">
+ <label className="block text-xs text-gf-muted truncate">{label}</label>
+ <input
+ type="text"
+ value={value}
+ onChange={(e) => onChange(e.target.value)}
+ disabled={disabled}
+ className="w-full px-2 py-1 text-xs border-2 border-gf-border-medium bg-gf-input text-gf-heading disabled:opacity-50"
+ />
+ </div>
+ </div>
+ );
 }
 
 // ===== MAIN COMPONENT =====
 
 export default function BrandingSettings() {
-  const t = useTranslations('settings.branding');
-  const { addToast } = useToast();
+ const t = useTranslations('settings.branding');
+ const { addToast } = useToast();
 
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [licenseValid, setLicenseValid] = useState(false);
-  const [activeTheme, setActiveTheme] = useState<ThemeConfig | null>(null);
-  const [presets, setPresets] = useState<ThemePreset[]>([]);
-  const [editTheme, setEditTheme] = useState<ThemeConfig>(DEFAULT_THEME);
-  const [activeTab, setActiveTab] = useState<EditorTab>('colors');
-  const [hasChanges, setHasChanges] = useState(false);
-  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+ const [loading, setLoading] = useState(true);
+ const [saving, setSaving] = useState(false);
+ const [licenseValid, setLicenseValid] = useState(false);
+ const [activeTheme, setActiveTheme] = useState<ThemeConfig | null>(null);
+ const [presets, setPresets] = useState<ThemePreset[]>([]);
+ const [editTheme, setEditTheme] = useState<ThemeConfig>(DEFAULT_THEME);
+ const [activeTab, setActiveTab] = useState<EditorTab>('colors');
+ const [hasChanges, setHasChanges] = useState(false);
+ const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
+ const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ===== LOAD DATA =====
+ // ===== LOAD DATA =====
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const [theme, presetsData, licensed] = await Promise.all([
-          getActiveTheme(),
-          getThemePresets(),
-          checkThemeLicense(),
-        ]);
+ useEffect(() => {
+ async function load() {
+ try {
+ const [theme, presetsData, licensed] = await Promise.all([
+ getActiveTheme(),
+ getThemePresets(),
+ checkThemeLicense(),
+ ]);
 
-        setActiveTheme(theme);
-        setPresets(presetsData);
-        setLicenseValid(licensed);
+ setActiveTheme(theme);
+ setPresets(presetsData);
+ setLicenseValid(licensed);
 
-        if (theme) {
-          setEditTheme(theme);
-          // Find matching preset
-          const match = presetsData.find(
-            (p) => p.theme.name === theme.name && p.theme.colors.accent === theme.colors.accent
-          );
-          setSelectedPresetId(match?.id ?? 'custom');
-        } else {
-          setEditTheme(DEFAULT_THEME);
-          setSelectedPresetId(null);
-        }
-      } catch (error) {
-        console.error('[BrandingSettings] Load error:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, []);
+ if (theme) {
+ setEditTheme(theme);
+ // Find matching preset
+ const match = presetsData.find(
+ (p) => p.theme.name === theme.name && p.theme.colors.accent === theme.colors.accent
+ );
+ setSelectedPresetId(match?.id ?? 'custom');
+ } else {
+ setEditTheme(DEFAULT_THEME);
+ setSelectedPresetId(null);
+ }
+ } catch (error) {
+ console.error('[BrandingSettings] Load error:', error);
+ } finally {
+ setLoading(false);
+ }
+ }
+ load();
+ }, []);
 
-  // ===== HANDLERS =====
+ // ===== HANDLERS =====
 
-  const updateColors = useCallback(
-    (key: string, value: string) => {
-      setEditTheme((prev) => ({
-        ...prev,
-        colors: { ...prev.colors, [key]: value },
-      }));
-      setHasChanges(true);
-      setSelectedPresetId('custom');
-    },
-    []
-  );
+ const updateColors = useCallback(
+ (key: string, value: string) => {
+ setEditTheme((prev) => ({
+ ...prev,
+ colors: { ...prev.colors, [key]: value },
+ }));
+ setHasChanges(true);
+ setSelectedPresetId('custom');
+ },
+ []
+ );
 
-  const updateLightColors = useCallback(
-    (key: string, value: string) => {
-      setEditTheme((prev) => ({
-        ...prev,
-        'colors-light': { ...prev['colors-light'], [key]: value },
-      }));
-      setHasChanges(true);
-      setSelectedPresetId('custom');
-    },
-    []
-  );
+ const updateLightColors = useCallback(
+ (key: string, value: string) => {
+ setEditTheme((prev) => ({
+ ...prev,
+ 'colors-light': { ...prev['colors-light'], [key]: value },
+ }));
+ setHasChanges(true);
+ setSelectedPresetId('custom');
+ },
+ []
+ );
 
-  const updateTypography = useCallback(
-    (key: string, value: string) => {
-      setEditTheme((prev) => ({
-        ...prev,
-        typography: { ...prev.typography, [key]: value },
-      }));
-      setHasChanges(true);
-      setSelectedPresetId('custom');
-    },
-    []
-  );
+ const updateTypography = useCallback(
+ (key: string, value: string) => {
+ setEditTheme((prev) => ({
+ ...prev,
+ typography: { ...prev.typography, [key]: value },
+ }));
+ setHasChanges(true);
+ setSelectedPresetId('custom');
+ },
+ []
+ );
 
-  const updateShapes = useCallback(
-    (key: string, value: string) => {
-      setEditTheme((prev) => ({
-        ...prev,
-        shapes: { ...prev.shapes, [key]: value },
-      }));
-      setHasChanges(true);
-      setSelectedPresetId('custom');
-    },
-    []
-  );
+ const updateShapes = useCallback(
+ (key: string, value: string) => {
+ setEditTheme((prev) => ({
+ ...prev,
+ shapes: { ...prev.shapes, [key]: value },
+ }));
+ setHasChanges(true);
+ setSelectedPresetId('custom');
+ },
+ []
+ );
 
-  const selectPreset = (preset: ThemePreset) => {
-    setEditTheme(preset.theme);
-    setSelectedPresetId(preset.id);
-    setHasChanges(true);
-  };
+ const selectPreset = (preset: ThemePreset) => {
+ setEditTheme(preset.theme);
+ setSelectedPresetId(preset.id);
+ setHasChanges(true);
+ };
 
-  const handleSave = async () => {
-    if (!licenseValid) {
-      addToast(t('licenseRequired'), 'error');
-      return;
-    }
+ const handleSave = async () => {
+ if (!licenseValid) {
+ addToast(t('licenseRequired'), 'error');
+ return;
+ }
 
-    setSaving(true);
-    try {
-      const result = await saveActiveTheme(editTheme);
-      if (result.success) {
-        setActiveTheme(editTheme);
-        setHasChanges(false);
-        addToast(t('saveSuccess'), 'success');
-      } else {
-        addToast(result.error || t('saveError'), 'error');
-      }
-    } catch (error) {
-      console.error('[BrandingSettings] Save error:', error);
-      addToast(t('errorOccurred'), 'error');
-    } finally {
-      setSaving(false);
-    }
-  };
+ setSaving(true);
+ try {
+ const result = await saveActiveTheme(editTheme);
+ if (result.success) {
+ setActiveTheme(editTheme);
+ setHasChanges(false);
+ addToast(t('saveSuccess'), 'success');
+ } else {
+ addToast(result.error || t('saveError'), 'error');
+ }
+ } catch (error) {
+ console.error('[BrandingSettings] Save error:', error);
+ addToast(t('errorOccurred'), 'error');
+ } finally {
+ setSaving(false);
+ }
+ };
 
-  const handleRemoveTheme = async () => {
-    setSaving(true);
-    try {
-      const result = await removeActiveTheme();
-      if (result.success) {
-        setActiveTheme(null);
-        setEditTheme(DEFAULT_THEME);
-        setSelectedPresetId(null);
-        setHasChanges(false);
-        addToast(t('themeRemoved'), 'success');
-      } else {
-        addToast(result.error || t('saveError'), 'error');
-      }
-    } catch (error) {
-      console.error('[BrandingSettings] Remove error:', error);
-      addToast(t('errorOccurred'), 'error');
-    } finally {
-      setSaving(false);
-    }
-  };
+ const handleRemoveTheme = async () => {
+ setSaving(true);
+ try {
+ const result = await removeActiveTheme();
+ if (result.success) {
+ setActiveTheme(null);
+ setEditTheme(DEFAULT_THEME);
+ setSelectedPresetId(null);
+ setHasChanges(false);
+ addToast(t('themeRemoved'), 'success');
+ } else {
+ addToast(result.error || t('saveError'), 'error');
+ }
+ } catch (error) {
+ console.error('[BrandingSettings] Remove error:', error);
+ addToast(t('errorOccurred'), 'error');
+ } finally {
+ setSaving(false);
+ }
+ };
 
-  const handleExport = async () => {
-    try {
-      const json = JSON.stringify(editTheme, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${editTheme.name.toLowerCase().replace(/\s+/g, '-')}-theme.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('[BrandingSettings] Export error:', error);
-      addToast(t('errorOccurred'), 'error');
-    }
-  };
+ const handleExport = async () => {
+ try {
+ const json = JSON.stringify(editTheme, null, 2);
+ const blob = new Blob([json], { type: 'application/json' });
+ const url = URL.createObjectURL(blob);
+ const a = document.createElement('a');
+ a.href = url;
+ a.download = `${editTheme.name.toLowerCase().replace(/\s+/g, '-')}-theme.json`;
+ a.click();
+ URL.revokeObjectURL(url);
+ } catch (error) {
+ console.error('[BrandingSettings] Export error:', error);
+ addToast(t('errorOccurred'), 'error');
+ }
+ };
 
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+ const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+ const file = e.target.files?.[0];
+ if (!file) return;
 
-    const MAX_THEME_FILE_SIZE = 100 * 1024; // 100KB
-    if (file.size > MAX_THEME_FILE_SIZE) {
-      addToast(t('fileTooLarge'), 'error');
-      return;
-    }
+ const MAX_THEME_FILE_SIZE = 100 * 1024; // 100KB
+ if (file.size > MAX_THEME_FILE_SIZE) {
+ addToast(t('fileTooLarge'), 'error');
+ return;
+ }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const raw = JSON.parse(event.target?.result as string);
-        const result = themeConfigSchema.safeParse(raw);
-        if (!result.success) {
-          addToast(t('invalidThemeFile'), 'error');
-          return;
-        }
-        setEditTheme(result.data);
-        setSelectedPresetId('custom');
-        setHasChanges(true);
-        addToast(t('themeImported'), 'success');
-      } catch {
-        addToast(t('invalidThemeFile'), 'error');
-      }
-    };
-    reader.readAsText(file);
-    // Reset file input
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
+ const reader = new FileReader();
+ reader.onload = (event) => {
+ try {
+ const raw = JSON.parse(event.target?.result as string);
+ const result = themeConfigSchema.safeParse(raw);
+ if (!result.success) {
+ addToast(t('invalidThemeFile'), 'error');
+ return;
+ }
+ setEditTheme(result.data);
+ setSelectedPresetId('custom');
+ setHasChanges(true);
+ addToast(t('themeImported'), 'success');
+ } catch {
+ addToast(t('invalidThemeFile'), 'error');
+ }
+ };
+ reader.readAsText(file);
+ // Reset file input
+ if (fileInputRef.current) fileInputRef.current.value = '';
+ };
 
-  // ===== RENDER =====
+ // ===== RENDER =====
 
-  if (loading) {
-    return (
-      <div className="bg-gf-base rounded-xl shadow-sm border border-gf-border p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-gf-raised rounded w-1/4"></div>
-          <div className="h-10 bg-gf-raised rounded"></div>
-          <div className="h-10 bg-gf-raised rounded"></div>
-        </div>
-      </div>
-    );
-  }
+ if (loading) {
+ return (
+ <div className="bg-gf-base border-2 border-gf-border-medium p-6">
+ <div className="animate-pulse space-y-4">
+ <div className="h-4 bg-gf-raised w-1/4"></div>
+ <div className="h-10 bg-gf-raised"></div>
+ <div className="h-10 bg-gf-raised"></div>
+ </div>
+ </div>
+ );
+ }
 
-  const colors = editTheme.colors;
-  const lightColors = editTheme['colors-light'] || {};
-  const typo = editTheme.typography || {};
-  const shapes = editTheme.shapes || {};
+ const colors = editTheme.colors;
+ const lightColors = editTheme['colors-light'] || {};
+ const typo = editTheme.typography || {};
+ const shapes = editTheme.shapes || {};
 
-  return (
-    <div className="space-y-6">
-      {/* License Badge */}
-      {!licenseValid && (
-        <div className="flex items-center gap-3 p-4 bg-gf-warning-soft border border-gf-warning/20 rounded-xl">
-          <svg className="w-5 h-5 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-          </svg>
-          <div>
-            <p className="text-sm font-medium text-gf-warning">{t('licenseRequiredTitle')}</p>
-            <p className="text-xs text-gf-warning">{t('licenseRequiredDesc')}</p>
-          </div>
-        </div>
-      )}
+ return (
+ <div className="space-y-6">
+ {/* License Badge */}
+ {!licenseValid && (
+ <div className="flex items-center gap-3 p-4 bg-gf-warning-soft border border-gf-warning/20">
+ <svg className="w-5 h-5 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+ </svg>
+ <div>
+ <p className="text-sm font-medium text-gf-warning">{t('licenseRequiredTitle')}</p>
+ <p className="text-xs text-gf-warning">{t('licenseRequiredDesc')}</p>
+ </div>
+ </div>
+ )}
 
-      {/* Active Theme Status */}
-      {activeTheme && (
-        <div className="flex items-center justify-between p-4 bg-gf-success-soft border border-gf-success/20 rounded-xl">
-          <div className="flex items-center gap-3">
-            <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
-            <div>
-              <p className="text-sm font-medium text-gf-success">
-                {t('activeTheme')}: {activeTheme.name}
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={handleRemoveTheme}
-            disabled={saving}
-            className="text-xs text-gf-danger hover:opacity-80 disabled:opacity-50"
-          >
-            {t('removeTheme')}
-          </button>
-        </div>
-      )}
+ {/* Active Theme Status */}
+ {activeTheme && (
+ <div className="flex items-center justify-between p-4 bg-gf-success-soft border border-gf-success/20">
+ <div className="flex items-center gap-3">
+ <div className="w-3 h-3 bg-green-500 animate-pulse"></div>
+ <div>
+ <p className="text-sm font-medium text-gf-success">
+ {t('activeTheme')}: {activeTheme.name}
+ </p>
+ </div>
+ </div>
+ <button
+ type="button"
+ onClick={handleRemoveTheme}
+ disabled={saving}
+ className="text-xs text-gf-danger hover:opacity-80 disabled:opacity-50"
+ >
+ {t('removeTheme')}
+ </button>
+ </div>
+ )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* LEFT: Preset Selector + Editor */}
-        <div className="xl:col-span-2 space-y-6">
-          {/* Preset Grid */}
-          <div className="bg-gf-base rounded-xl shadow-sm border border-gf-border p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gf-heading">{t('themePresets')}</h2>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="text-xs px-3 py-1.5 border border-gf-border rounded-lg text-gf-body hover:bg-gf-hover transition-colors"
-                >
-                  {t('importTheme')}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleExport}
-                  className="text-xs px-3 py-1.5 border border-gf-border rounded-lg text-gf-body hover:bg-gf-hover transition-colors"
-                >
-                  {t('exportTheme')}
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".json"
-                  onChange={handleImport}
-                  className="hidden"
-                />
-              </div>
-            </div>
+ <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+ {/* LEFT: Preset Selector + Editor */}
+ <div className="xl:col-span-2 space-y-6">
+ {/* Preset Grid */}
+ <div className="bg-gf-base border-2 border-gf-border-medium p-6">
+ <div className="flex items-center justify-between mb-4">
+ <h2 className="text-lg font-semibold text-gf-heading">{t('themePresets')}</h2>
+ <div className="flex items-center gap-2">
+ <button
+ type="button"
+ onClick={() => fileInputRef.current?.click()}
+ className="text-xs px-3 py-1.5 border-2 border-gf-border-medium text-gf-body hover:bg-gf-hover transition-colors"
+ >
+ {t('importTheme')}
+ </button>
+ <button
+ type="button"
+ onClick={handleExport}
+ className="text-xs px-3 py-1.5 border-2 border-gf-border-medium text-gf-body hover:bg-gf-hover transition-colors"
+ >
+ {t('exportTheme')}
+ </button>
+ <input
+ ref={fileInputRef}
+ type="file"
+ accept=".json"
+ onChange={handleImport}
+ className="hidden"
+ />
+ </div>
+ </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-              {presets.map((preset) => (
-                <button
-                  key={preset.id}
-                  type="button"
-                  onClick={() => selectPreset(preset)}
-                  className={`relative p-3 rounded-xl border-2 transition-all text-left ${
-                    selectedPresetId === preset.id
-                      ? 'border-gf-accent bg-gf-accent-soft'
-                      : 'border-gf-border hover:border-gf-accent/50'
-                  }`}
-                >
-                  {/* Color swatch row */}
-                  <div className="flex gap-1 mb-2">
-                    <div className="w-5 h-5 rounded-full" style={{ backgroundColor: preset.theme.colors.accent }}></div>
-                    <div className="w-5 h-5 rounded-full" style={{ backgroundColor: preset.theme.colors['bg-deep'] }}></div>
-                    <div className="w-5 h-5 rounded-full" style={{ backgroundColor: preset.theme.colors['text-heading'] }}></div>
-                  </div>
-                  <p className="text-xs font-medium text-gf-heading truncate">{preset.theme.name}</p>
-                  {selectedPresetId === preset.id && (
-                    <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-gf-accent rounded-full flex items-center justify-center">
-                      <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
+ <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+ {presets.map((preset) => (
+ <button
+ key={preset.id}
+ type="button"
+ onClick={() => selectPreset(preset)}
+ className={`relative p-3 border-2 transition-all text-left ${
+ selectedPresetId === preset.id
+ ? 'border-gf-accent bg-gf-accent-soft'
+ : 'border-gf-border hover:border-gf-accent/50'
+ }`}
+ >
+ {/* Color swatch row */}
+ <div className="flex gap-1 mb-2">
+ <div className="w-5 h-5" style={{ backgroundColor: preset.theme.colors.accent }}></div>
+ <div className="w-5 h-5" style={{ backgroundColor: preset.theme.colors['bg-deep'] }}></div>
+ <div className="w-5 h-5" style={{ backgroundColor: preset.theme.colors['text-heading'] }}></div>
+ </div>
+ <p className="text-xs font-medium text-gf-heading truncate">{preset.theme.name}</p>
+ {selectedPresetId === preset.id && (
+ <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-gf-accent flex items-center justify-center">
+ <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+ </svg>
+ </div>
+ )}
+ </button>
+ ))}
+ </div>
+ </div>
 
-          {/* Editor Tabs */}
-          <div className="bg-gf-base rounded-xl shadow-sm border border-gf-border">
-            {/* Tab Headers */}
-            <div className="flex border-b border-gf-border">
-              {(['colors', 'typography', 'shapes'] as EditorTab[]).map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setActiveTab(tab)}
-                  className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                    activeTab === tab
-                      ? 'text-gf-accent border-b-2 border-gf-accent'
-                      : 'text-gf-muted hover:text-gf-body'
-                  }`}
-                >
-                  {t(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`)}
-                </button>
-              ))}
-            </div>
+ {/* Editor Tabs */}
+ <div className="bg-gf-base border-2 border-gf-border-medium">
+ {/* Tab Headers */}
+ <div className="flex border-b border-gf-border">
+ {(['colors', 'typography', 'shapes'] as EditorTab[]).map((tab) => (
+ <button
+ key={tab}
+ type="button"
+ onClick={() => setActiveTab(tab)}
+ className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+ activeTab === tab
+ ? 'text-gf-accent border-b-2 border-gf-accent'
+ : 'text-gf-muted hover:text-gf-body'
+ }`}
+ >
+ {t(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`)}
+ </button>
+ ))}
+ </div>
 
-            {/* Tab Content */}
-            <div className="p-6">
-              {/* Theme Name */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gf-body mb-1">{t('themeName')}</label>
-                <input
-                  type="text"
-                  value={editTheme.name}
-                  onChange={(e) => {
-                    setEditTheme((prev) => ({ ...prev, name: e.target.value }));
-                    setHasChanges(true);
-                    setSelectedPresetId('custom');
-                  }}
-                  className="w-full px-3 py-2 border border-gf-border rounded-lg bg-gf-input text-gf-heading text-sm"
-                  placeholder={t('themeNamePlaceholder')}
-                />
-              </div>
+ {/* Tab Content */}
+ <div className="p-6">
+ {/* Theme Name */}
+ <div className="mb-6">
+ <label className="block text-sm font-medium text-gf-body mb-1">{t('themeName')}</label>
+ <input
+ type="text"
+ value={editTheme.name}
+ onChange={(e) => {
+ setEditTheme((prev) => ({ ...prev, name: e.target.value }));
+ setHasChanges(true);
+ setSelectedPresetId('custom');
+ }}
+ className="w-full px-3 py-2 border-2 border-gf-border-medium bg-gf-input text-gf-heading text-sm"
+ placeholder={t('themeNamePlaceholder')}
+ />
+ </div>
 
-              {/* COLORS TAB */}
-              {activeTab === 'colors' && (
-                <div className="space-y-6">
-                  {/* Dark mode colors */}
-                  <div>
-                    <h4 className="text-sm font-medium text-gf-heading mb-3">{t('darkModeColors')}</h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      <ColorField label="Accent" value={colors.accent} onChange={(v) => updateColors('accent', v)} />
-                      <ColorField label="Accent Hover" value={colors['accent-hover']} onChange={(v) => updateColors('accent-hover', v)} />
-                      <ColorField label="Accent Soft" value={colors['accent-soft']} onChange={(v) => updateColors('accent-soft', v)} />
-                      <ColorField label="Background Deep" value={colors['bg-deep']} onChange={(v) => updateColors('bg-deep', v)} />
-                      <ColorField label="Background Base" value={colors['bg-base'] || ''} onChange={(v) => updateColors('bg-base', v)} />
-                      <ColorField label="Background Raised" value={colors['bg-raised'] || ''} onChange={(v) => updateColors('bg-raised', v)} />
-                      <ColorField label="Text Heading" value={colors['text-heading']} onChange={(v) => updateColors('text-heading', v)} />
-                      <ColorField label="Text Body" value={colors['text-body'] || ''} onChange={(v) => updateColors('text-body', v)} />
-                      <ColorField label="Text Muted" value={colors['text-muted'] || ''} onChange={(v) => updateColors('text-muted', v)} />
-                      <ColorField label="Border" value={colors.border || ''} onChange={(v) => updateColors('border', v)} />
-                      <ColorField label="Success" value={colors.success || ''} onChange={(v) => updateColors('success', v)} />
-                      <ColorField label="Danger" value={colors.danger || ''} onChange={(v) => updateColors('danger', v)} />
-                    </div>
-                  </div>
+ {/* COLORS TAB */}
+ {activeTab === 'colors' && (
+ <div className="space-y-6">
+ {/* Dark mode colors */}
+ <div>
+ <h4 className="text-sm font-medium text-gf-heading mb-3">{t('darkModeColors')}</h4>
+ <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+ <ColorField label="Accent" value={colors.accent} onChange={(v) => updateColors('accent', v)} />
+ <ColorField label="Accent Hover" value={colors['accent-hover']} onChange={(v) => updateColors('accent-hover', v)} />
+ <ColorField label="Accent Soft" value={colors['accent-soft']} onChange={(v) => updateColors('accent-soft', v)} />
+ <ColorField label="Background Deep" value={colors['bg-deep']} onChange={(v) => updateColors('bg-deep', v)} />
+ <ColorField label="Background Base" value={colors['bg-base'] || ''} onChange={(v) => updateColors('bg-base', v)} />
+ <ColorField label="Background Raised" value={colors['bg-raised'] || ''} onChange={(v) => updateColors('bg-raised', v)} />
+ <ColorField label="Text Heading" value={colors['text-heading']} onChange={(v) => updateColors('text-heading', v)} />
+ <ColorField label="Text Body" value={colors['text-body'] || ''} onChange={(v) => updateColors('text-body', v)} />
+ <ColorField label="Text Muted" value={colors['text-muted'] || ''} onChange={(v) => updateColors('text-muted', v)} />
+ <ColorField label="Border" value={colors.border || ''} onChange={(v) => updateColors('border', v)} />
+ <ColorField label="Success" value={colors.success || ''} onChange={(v) => updateColors('success', v)} />
+ <ColorField label="Danger" value={colors.danger || ''} onChange={(v) => updateColors('danger', v)} />
+ </div>
+ </div>
 
-                  {/* Light mode overrides */}
-                  <div>
-                    <h4 className="text-sm font-medium text-gf-heading mb-3">{t('lightModeColors')}</h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      <ColorField label="Accent" value={lightColors.accent || ''} onChange={(v) => updateLightColors('accent', v)} />
-                      <ColorField label="Accent Hover" value={lightColors['accent-hover'] || ''} onChange={(v) => updateLightColors('accent-hover', v)} />
-                      <ColorField label="Background Deep" value={lightColors['bg-deep'] || ''} onChange={(v) => updateLightColors('bg-deep', v)} />
-                      <ColorField label="Background Base" value={lightColors['bg-base'] || ''} onChange={(v) => updateLightColors('bg-base', v)} />
-                      <ColorField label="Background Raised" value={lightColors['bg-raised'] || ''} onChange={(v) => updateLightColors('bg-raised', v)} />
-                      <ColorField label="Text Heading" value={lightColors['text-heading'] || ''} onChange={(v) => updateLightColors('text-heading', v)} />
-                      <ColorField label="Text Body" value={lightColors['text-body'] || ''} onChange={(v) => updateLightColors('text-body', v)} />
-                      <ColorField label="Text Muted" value={lightColors['text-muted'] || ''} onChange={(v) => updateLightColors('text-muted', v)} />
-                    </div>
-                  </div>
-                </div>
-              )}
+ {/* Light mode overrides */}
+ <div>
+ <h4 className="text-sm font-medium text-gf-heading mb-3">{t('lightModeColors')}</h4>
+ <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+ <ColorField label="Accent" value={lightColors.accent || ''} onChange={(v) => updateLightColors('accent', v)} />
+ <ColorField label="Accent Hover" value={lightColors['accent-hover'] || ''} onChange={(v) => updateLightColors('accent-hover', v)} />
+ <ColorField label="Background Deep" value={lightColors['bg-deep'] || ''} onChange={(v) => updateLightColors('bg-deep', v)} />
+ <ColorField label="Background Base" value={lightColors['bg-base'] || ''} onChange={(v) => updateLightColors('bg-base', v)} />
+ <ColorField label="Background Raised" value={lightColors['bg-raised'] || ''} onChange={(v) => updateLightColors('bg-raised', v)} />
+ <ColorField label="Text Heading" value={lightColors['text-heading'] || ''} onChange={(v) => updateLightColors('text-heading', v)} />
+ <ColorField label="Text Body" value={lightColors['text-body'] || ''} onChange={(v) => updateLightColors('text-body', v)} />
+ <ColorField label="Text Muted" value={lightColors['text-muted'] || ''} onChange={(v) => updateLightColors('text-muted', v)} />
+ </div>
+ </div>
+ </div>
+ )}
 
-              {/* TYPOGRAPHY TAB */}
-              {activeTab === 'typography' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gf-body mb-1">{t('fontFamilyLabel')}</label>
-                    <input
-                      type="text"
-                      value={typo['font-family'] || 'inherit'}
-                      onChange={(e) => updateTypography('font-family', e.target.value)}
-                      className="w-full px-3 py-2 border border-gf-border rounded-lg bg-gf-input text-gf-heading text-sm"
-                      placeholder={t('fontFamilyPlaceholder')}
-                    />
-                    <p className="mt-1 text-xs text-gf-muted">{t('fontFamilyHelp')}</p>
-                  </div>
+ {/* TYPOGRAPHY TAB */}
+ {activeTab === 'typography' && (
+ <div className="space-y-4">
+ <div>
+ <label className="block text-sm font-medium text-gf-body mb-1">{t('fontFamilyLabel')}</label>
+ <input
+ type="text"
+ value={typo['font-family'] || 'inherit'}
+ onChange={(e) => updateTypography('font-family', e.target.value)}
+ className="w-full px-3 py-2 border-2 border-gf-border-medium bg-gf-input text-gf-heading text-sm"
+ placeholder={t('fontFamilyPlaceholder')}
+ />
+ <p className="mt-1 text-xs text-gf-muted">{t('fontFamilyHelp')}</p>
+ </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gf-body mb-1">{t('headingWeight')}</label>
-                      <select
-                        value={typo['font-heading-weight'] || '700'}
-                        onChange={(e) => updateTypography('font-heading-weight', e.target.value)}
-                        className="w-full px-3 py-2 border border-gf-border rounded-lg bg-gf-input text-gf-heading text-sm"
-                      >
-                        <option value="400">400 — Regular</option>
-                        <option value="500">500 — Medium</option>
-                        <option value="600">600 — Semibold</option>
-                        <option value="700">700 — Bold</option>
-                        <option value="800">800 — Extra Bold</option>
-                        <option value="900">900 — Black</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gf-body mb-1">{t('bodyWeight')}</label>
-                      <select
-                        value={typo['font-body-weight'] || '400'}
-                        onChange={(e) => updateTypography('font-body-weight', e.target.value)}
-                        className="w-full px-3 py-2 border border-gf-border rounded-lg bg-gf-input text-gf-heading text-sm"
-                      >
-                        <option value="300">300 — Light</option>
-                        <option value="400">400 — Regular</option>
-                        <option value="500">500 — Medium</option>
-                      </select>
-                    </div>
-                  </div>
+ <div className="grid grid-cols-2 gap-4">
+ <div>
+ <label className="block text-sm font-medium text-gf-body mb-1">{t('headingWeight')}</label>
+ <select
+ value={typo['font-heading-weight'] || '700'}
+ onChange={(e) => updateTypography('font-heading-weight', e.target.value)}
+ className="w-full px-3 py-2 border-2 border-gf-border-medium bg-gf-input text-gf-heading text-sm"
+ >
+ <option value="400">400 — Regular</option>
+ <option value="500">500 — Medium</option>
+ <option value="600">600 — Semibold</option>
+ <option value="700">700 — Bold</option>
+ <option value="800">800 — Extra Bold</option>
+ <option value="900">900 — Black</option>
+ </select>
+ </div>
+ <div>
+ <label className="block text-sm font-medium text-gf-body mb-1">{t('bodyWeight')}</label>
+ <select
+ value={typo['font-body-weight'] || '400'}
+ onChange={(e) => updateTypography('font-body-weight', e.target.value)}
+ className="w-full px-3 py-2 border-2 border-gf-border-medium bg-gf-input text-gf-heading text-sm"
+ >
+ <option value="300">300 — Light</option>
+ <option value="400">400 — Regular</option>
+ <option value="500">500 — Medium</option>
+ </select>
+ </div>
+ </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gf-body mb-1">{t('letterSpacing')}</label>
-                    <input
-                      type="text"
-                      value={typo['letter-spacing-heading'] || '-0.02em'}
-                      onChange={(e) => updateTypography('letter-spacing-heading', e.target.value)}
-                      className="w-full px-3 py-2 border border-gf-border rounded-lg bg-gf-input text-gf-heading text-sm"
-                      placeholder={t('letterSpacingPlaceholder')}
-                    />
-                  </div>
-                </div>
-              )}
+ <div>
+ <label className="block text-sm font-medium text-gf-body mb-1">{t('letterSpacing')}</label>
+ <input
+ type="text"
+ value={typo['letter-spacing-heading'] || '-0.02em'}
+ onChange={(e) => updateTypography('letter-spacing-heading', e.target.value)}
+ className="w-full px-3 py-2 border-2 border-gf-border-medium bg-gf-input text-gf-heading text-sm"
+ placeholder={t('letterSpacingPlaceholder')}
+ />
+ </div>
+ </div>
+ )}
 
-              {/* SHAPES TAB */}
-              {activeTab === 'shapes' && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    {[
-                      { key: 'radius-sm', label: t('radiusSmall'), placeholder: '6px' },
-                      { key: 'radius-md', label: t('radiusMedium'), placeholder: '12px' },
-                      { key: 'radius-lg', label: t('radiusLarge'), placeholder: '16px' },
-                      { key: 'radius-full', label: t('radiusFull'), placeholder: '9999px' },
-                    ].map(({ key, label, placeholder }) => (
-                      <div key={key}>
-                        <label className="block text-sm font-medium text-gf-body mb-1">{label}</label>
-                        <input
-                          type="text"
-                          value={(shapes as Record<string, string | undefined>)[key] || ''}
-                          onChange={(e) => updateShapes(key, e.target.value)}
-                          className="w-full px-3 py-2 border border-gf-border rounded-lg bg-gf-input text-gf-heading text-sm"
-                          placeholder={placeholder}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+ {/* SHAPES TAB */}
+ {activeTab === 'shapes' && (
+ <div className="space-y-4">
+ <div className="grid grid-cols-2 gap-4">
+ {[
+ { key: 'radius-sm', label: t('radiusSmall'), placeholder: '6px' },
+ { key: 'radius-md', label: t('radiusMedium'), placeholder: '12px' },
+ { key: 'radius-lg', label: t('radiusLarge'), placeholder: '16px' },
+ { key: 'radius-full', label: t('radiusFull'), placeholder: '9999px' },
+ ].map(({ key, label, placeholder }) => (
+ <div key={key}>
+ <label className="block text-sm font-medium text-gf-body mb-1">{label}</label>
+ <input
+ type="text"
+ value={(shapes as Record<string, string | undefined>)[key] || ''}
+ onChange={(e) => updateShapes(key, e.target.value)}
+ className="w-full px-3 py-2 border-2 border-gf-border-medium bg-gf-input text-gf-heading text-sm"
+ placeholder={placeholder}
+ />
+ </div>
+ ))}
+ </div>
+ </div>
+ )}
+ </div>
 
-            {/* Save Bar */}
-            <div className="flex items-center justify-between px-6 py-4 border-t border-gf-border">
-              <div className="text-xs text-gf-muted">
-                {hasChanges ? t('unsavedChanges') : activeTheme ? t('themeActive') : t('noThemeActive')}
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={saving || !hasChanges || !licenseValid}
-                  className="px-5 py-2 bg-gf-accent hover:bg-gf-accent-hover text-white font-medium rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  {saving ? t('saving') : t('saveTheme')}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+ {/* Save Bar */}
+ <div className="flex items-center justify-between px-6 py-4 border-t border-gf-border">
+ <div className="text-xs text-gf-muted">
+ {hasChanges ? t('unsavedChanges') : activeTheme ? t('themeActive') : t('noThemeActive')}
+ </div>
+ <div className="flex items-center gap-3">
+ <button
+ type="button"
+ onClick={handleSave}
+ disabled={saving || !hasChanges || !licenseValid}
+ className="px-5 py-2 bg-gf-accent hover:bg-gf-accent-hover text-white font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+ >
+ {saving ? t('saving') : t('saveTheme')}
+ </button>
+ </div>
+ </div>
+ </div>
+ </div>
 
-        {/* RIGHT: Live Preview */}
-        <div className="xl:col-span-1">
-          <div className="bg-gf-base rounded-xl shadow-sm border border-gf-border p-6 sticky top-6">
-            <h3 className="text-lg font-semibold text-gf-heading mb-4">{t('livePreview')}</h3>
+ {/* RIGHT: Live Preview */}
+ <div className="xl:col-span-1">
+ <div className="bg-gf-base border-2 border-gf-border-medium p-6 sticky top-6">
+ <h3 className="text-lg font-semibold text-gf-heading mb-4">{t('livePreview')}</h3>
 
-            {/* Mini store preview */}
-            <div
-              className="rounded-xl overflow-hidden border border-gf-border"
-              style={{
-                backgroundColor: colors['bg-deep'],
-                fontFamily: typo['font-family'] === 'inherit' ? undefined : typo['font-family'],
-              }}
-            >
-              {/* Header bar */}
-              <div className="px-4 py-3 flex items-center gap-2" style={{ backgroundColor: colors['bg-base'] || colors['bg-deep'] }}>
-                <div className="w-6 h-6 rounded-full" style={{ backgroundColor: colors.accent }}></div>
-                <div className="text-xs font-semibold" style={{ color: colors['text-heading'], fontWeight: typo['font-heading-weight'] || '700' }}>
-                  {editTheme.name}
-                </div>
-              </div>
+ {/* Mini store preview */}
+ <div
+ className="overflow-hidden border-2 border-gf-border-medium"
+ style={{
+ backgroundColor: colors['bg-deep'],
+ fontFamily: typo['font-family'] === 'inherit' ? undefined : typo['font-family'],
+ }}
+ >
+ {/* Header bar */}
+ <div className="px-4 py-3 flex items-center gap-2" style={{ backgroundColor: colors['bg-base'] || colors['bg-deep'] }}>
+ <div className="w-6 h-6" style={{ backgroundColor: colors.accent }}></div>
+ <div className="text-xs font-semibold" style={{ color: colors['text-heading'], fontWeight: typo['font-heading-weight'] || '700' }}>
+ {editTheme.name}
+ </div>
+ </div>
 
-              {/* Content area */}
-              <div className="p-4 space-y-3">
-                <div
-                  className="text-sm font-bold"
-                  style={{
-                    color: colors['text-heading'],
-                    fontWeight: typo['font-heading-weight'] || '700',
-                    letterSpacing: typo['letter-spacing-heading'],
-                  }}
-                >
-                  {t('previewHeading')}
-                </div>
-                <div className="text-xs" style={{ color: colors['text-body'] || colors['text-heading'], fontWeight: typo['font-body-weight'] || '400' }}>
-                  {t('previewBody')}
-                </div>
+ {/* Content area */}
+ <div className="p-4 space-y-3">
+ <div
+ className="text-sm font-bold"
+ style={{
+ color: colors['text-heading'],
+ fontWeight: typo['font-heading-weight'] || '700',
+ letterSpacing: typo['letter-spacing-heading'],
+ }}
+ >
+ {t('previewHeading')}
+ </div>
+ <div className="text-xs" style={{ color: colors['text-body'] || colors['text-heading'], fontWeight: typo['font-body-weight'] || '400' }}>
+ {t('previewBody')}
+ </div>
 
-                {/* Product card preview */}
-                <div
-                  className="p-3 rounded-lg"
-                  style={{
-                    backgroundColor: colors['bg-raised'] || colors['bg-base'] || colors['bg-deep'],
-                    borderRadius: shapes['radius-md'] || '12px',
-                  }}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold" style={{ color: colors['text-heading'] }}>Product</span>
-                    <span className="text-xs font-bold" style={{ color: colors.accent }}>$29</span>
-                  </div>
-                  <button
-                    type="button"
-                    className="w-full py-1.5 text-xs font-medium text-white transition-colors"
-                    style={{
-                      backgroundColor: colors.accent,
-                      borderRadius: shapes['radius-sm'] || '6px',
-                    }}
-                  >
-                    {t('previewButton')}
-                  </button>
-                </div>
+ {/* Product card preview */}
+ <div
+ className="p-3"
+ style={{
+ backgroundColor: colors['bg-raised'] || colors['bg-base'] || colors['bg-deep'],
+ borderRadius: shapes['radius-md'] || '12px',
+ }}
+ >
+ <div className="flex items-center justify-between mb-2">
+ <span className="text-xs font-semibold" style={{ color: colors['text-heading'] }}>Product</span>
+ <span className="text-xs font-bold" style={{ color: colors.accent }}>$29</span>
+ </div>
+ <button
+ type="button"
+ className="w-full py-1.5 text-xs font-medium text-white transition-colors"
+ style={{
+ backgroundColor: colors.accent,
+ borderRadius: shapes['radius-sm'] || '6px',
+ }}
+ >
+ {t('previewButton')}
+ </button>
+ </div>
 
-                {/* Status colors */}
-                <div className="flex gap-2">
-                  <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: colors.success || '#10B981' }}></span>
-                  <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: colors.warning || '#F59E0B' }}></span>
-                  <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: colors.danger || '#EF4444' }}></span>
-                  <span className="text-xs" style={{ color: colors['text-muted'] || colors['text-body'] }}>{t('previewStatus')}</span>
-                </div>
-              </div>
-            </div>
+ {/* Status colors */}
+ <div className="flex gap-2">
+ <span className="inline-block w-3 h-3" style={{ backgroundColor: colors.success || '#10B981' }}></span>
+ <span className="inline-block w-3 h-3" style={{ backgroundColor: colors.warning || '#F59E0B' }}></span>
+ <span className="inline-block w-3 h-3" style={{ backgroundColor: colors.danger || '#EF4444' }}></span>
+ <span className="text-xs" style={{ color: colors['text-muted'] || colors['text-body'] }}>{t('previewStatus')}</span>
+ </div>
+ </div>
+ </div>
 
-            {/* Color swatches */}
-            <div className="mt-4">
-              <p className="text-xs text-gf-muted mb-2">{t('colorPalette')}</p>
-              <div className="flex flex-wrap gap-1.5">
-                {[colors.accent, colors['accent-hover'], colors['bg-deep'], colors['bg-raised'] || colors['bg-deep'], colors['text-heading']].map(
-                  (c, i) => (
-                    <div key={i} className="w-8 h-8 rounded-lg border border-gf-border" style={{ backgroundColor: c }}></div>
-                  )
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+ {/* Color swatches */}
+ <div className="mt-4">
+ <p className="text-xs text-gf-muted mb-2">{t('colorPalette')}</p>
+ <div className="flex flex-wrap gap-1.5">
+ {[colors.accent, colors['accent-hover'], colors['bg-deep'], colors['bg-raised'] || colors['bg-deep'], colors['text-heading']].map(
+ (c, i) => (
+ <div key={i} className="w-8 h-8 border-2 border-gf-border-medium" style={{ backgroundColor: c }}></div>
+ )
+ )}
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ );
 }

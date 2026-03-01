@@ -53,7 +53,7 @@ const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className={`relative inline-flex items-center rounded-md px-3 py-2 text-sm font-medium
+          className={`relative inline-flex items-center px-3 py-2 text-sm font-medium
             ${currentPage === 1 
               ? 'bg-gf-raised text-gf-muted cursor-not-allowed'
               : 'bg-gf-base text-gf-body hover:bg-gf-hover'
@@ -71,7 +71,7 @@ const Pagination: React.FC<PaginationProps> = ({
             <>
               <button 
                 onClick={() => onPageChange(1)}
-                className={`relative inline-flex items-center rounded-md px-3 py-2 text-sm font-medium
+                className={`relative inline-flex items-center px-3 py-2 text-sm font-medium
                   bg-gf-base text-gf-body hover:bg-gf-hover`}
               >
                 1
@@ -89,7 +89,7 @@ const Pagination: React.FC<PaginationProps> = ({
             <button
               key={page}
               onClick={() => onPageChange(page)}
-              className={`relative inline-flex items-center rounded-md px-3 py-2 text-sm font-medium
+              className={`relative inline-flex items-center px-3 py-2 text-sm font-medium
                 ${currentPage === page
                   ? 'bg-gf-accent text-gf-inverse'
                   : 'bg-gf-base text-gf-body hover:bg-gf-hover'
@@ -109,7 +109,7 @@ const Pagination: React.FC<PaginationProps> = ({
               )}
               <button 
                 onClick={() => onPageChange(totalPages)}
-                className={`relative inline-flex items-center rounded-md px-3 py-2 text-sm font-medium
+                className={`relative inline-flex items-center px-3 py-2 text-sm font-medium
                   bg-gf-base text-gf-body hover:bg-gf-hover`}
               >
                 {totalPages}
@@ -121,7 +121,7 @@ const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className={`relative inline-flex items-center rounded-md px-3 py-2 text-sm font-medium
+          className={`relative inline-flex items-center px-3 py-2 text-sm font-medium
             ${currentPage === totalPages 
               ? 'bg-gf-raised text-gf-muted cursor-not-allowed'
               : 'bg-gf-base text-gf-body hover:bg-gf-hover'

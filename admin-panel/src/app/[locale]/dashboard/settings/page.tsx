@@ -19,7 +19,7 @@ export default async function SettingsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gf-heading">
+        <h1 className="text-[40px] font-[800] text-gf-heading tracking-[-0.03em] leading-[1.1]">
           {t('title')}
         </h1>
         <p className="text-gf-body mt-2">

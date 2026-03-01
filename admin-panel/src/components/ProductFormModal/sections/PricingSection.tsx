@@ -49,7 +49,7 @@ export function PricingSection({
           name="image_url"
           value={formData.image_url || ''}
           onChange={handleImageUrlChange}
-          className="w-full px-4 py-2 border border-gf-border rounded-lg bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent focus:border-transparent"
+          className="w-full px-4 py-2 border-2 border-gf-border-medium bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent focus:border-transparent"
           placeholder={t('imageUrlPlaceholder')}
         />
         <p className="mt-2 text-xs text-gf-muted">

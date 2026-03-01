@@ -86,7 +86,7 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
         
         <div className="space-y-6">
           {/* Product Info */}
-          <div className="bg-gf-raised p-4 rounded-lg">
+          <div className="bg-gf-raised p-4">
             <h3 className="font-semibold text-gf-heading mb-2">{t('product')}: {product.name}</h3>
             <p className="text-sm text-gf-body">{t('slug')}: {product.slug}</p>
           </div>
@@ -100,7 +100,7 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
               <div className={`grid gap-4 ${product.price === 0 ? 'grid-cols-3' : 'grid-cols-2'}`}>
                 <button
                   onClick={() => setOptions({...options, mode: 'page'})}
-                  className={`p-3 rounded-lg border text-left ${
+                  className={`p-3 border text-left ${
                     options.mode === 'page'
                       ? 'border-gf-accent bg-gf-accent-soft text-gf-accent'
                       : 'border-gf-border hover:border-gf-accent/50'
@@ -113,7 +113,7 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
                 </button>
                 <button
                   onClick={() => setOptions({...options, mode: 'element'})}
-                  className={`p-3 rounded-lg border text-left ${
+                  className={`p-3 border text-left ${
                     options.mode === 'element'
                       ? 'border-gf-accent bg-gf-accent-soft text-gf-accent'
                       : 'border-gf-border hover:border-gf-accent/50'
@@ -127,7 +127,7 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
                 {product.price === 0 && (
                   <button
                     onClick={() => setOptions({...options, mode: 'embed'})}
-                    className={`p-3 rounded-lg border text-left ${
+                    className={`p-3 border text-left ${
                       options.mode === 'embed'
                         ? 'border-gf-accent bg-gf-accent-soft text-gf-accent'
                         : 'border-gf-border hover:border-gf-accent/50'
@@ -151,7 +151,7 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
               </label>
               <button
                 onClick={handleCopy}
-                className={`px-3 py-1 text-sm rounded-lg transition ${
+                className={`px-3 py-1 text-sm transition ${
                   copiedCode === generatedCode
                     ? 'bg-gf-success-soft text-gf-success'
                     : 'bg-gf-accent-soft text-gf-accent hover:bg-gf-accent-soft/80'
@@ -160,13 +160,13 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
                 {copiedCode === generatedCode ? t('copied') : t('copyCode')}
               </button>
             </div>
-            <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg text-sm whitespace-pre-wrap break-all">
+            <pre className="bg-gray-900 text-gray-100 p-4 text-sm whitespace-pre-wrap break-all">
               <code>{generatedCode}</code>
             </pre>
           </div>
 
           {/* Instructions */}
-          <div className="bg-gf-accent-soft p-4 rounded-lg">
+          <div className="bg-gf-accent-soft p-4">
             <h4 className="font-semibold text-gf-accent mb-2">
               📋 {t('instructions')}
             </h4>
@@ -196,7 +196,7 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
           </div>
 
           {/* Additional Information */}
-          <div className="bg-gf-warning-soft p-4 rounded-lg">
+          <div className="bg-gf-warning-soft p-4">
             <h4 className="font-semibold text-gf-warning mb-2">
               ℹ️ {t('importantInfo')}
             </h4>
@@ -245,13 +245,13 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
         <div className="flex justify-end space-x-3 mt-6">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gf-body hover:bg-gf-hover rounded-lg transition"
+            className="px-4 py-2 text-gf-body hover:bg-gf-hover transition"
           >
             {t('close')}
           </button>
           <button
             onClick={handleCopy}
-            className="px-4 py-2 bg-gf-accent text-gf-inverse rounded-lg hover:bg-gf-accent-hover transition"
+            className="px-4 py-2 bg-gf-accent text-gf-inverse hover:bg-gf-accent-hover transition"
           >
             {t('copyCode')}
           </button>

@@ -143,7 +143,7 @@ const OrderBumpFormModal: React.FC<OrderBumpFormModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-gf-base rounded-xl shadow-xl max-w-2xl w-full my-8">
+      <div className="bg-gf-base max-w-2xl w-full my-8">
         <div className="p-6 border-b border-gf-border">
           <h2 className="text-2xl font-bold text-gf-heading">
             {editingBump ? t('edit') : t('create')}
@@ -170,7 +170,7 @@ const OrderBumpFormModal: React.FC<OrderBumpFormModalProps> = ({
                   onChange={(e) => setMainProductId(e.target.value)}
                   disabled={!!editingBump || loadingProducts}
                   required
-                  className="w-full px-4 py-2 border border-gf-border rounded-lg focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading disabled:opacity-50"
+                  className="w-full px-4 py-2 border-2 border-gf-border-medium focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading disabled:opacity-50"
                 >
                   <option value="">{t('form.selectProduct')}</option>
                   {products.map((product) => (
@@ -190,7 +190,7 @@ const OrderBumpFormModal: React.FC<OrderBumpFormModalProps> = ({
                   onChange={(e) => setBumpProductId(e.target.value)}
                   disabled={loadingProducts}
                   required
-                  className="w-full px-4 py-2 border border-gf-border rounded-lg focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading disabled:opacity-50"
+                  className="w-full px-4 py-2 border-2 border-gf-border-medium focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading disabled:opacity-50"
                 >
                   <option value="">{t('form.selectProduct')}</option>
                   {products
@@ -223,7 +223,7 @@ const OrderBumpFormModal: React.FC<OrderBumpFormModalProps> = ({
                   placeholder={t('form.bumpTitlePlaceholder')}
                   required
                   maxLength={255}
-                  className="w-full px-4 py-2 border border-gf-border rounded-lg focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading"
+                  className="w-full px-4 py-2 border-2 border-gf-border-medium focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading"
                 />
               </div>
 
@@ -237,7 +237,7 @@ const OrderBumpFormModal: React.FC<OrderBumpFormModalProps> = ({
                   placeholder={t('form.bumpDescriptionPlaceholder')}
                   maxLength={1000}
                   rows={3}
-                  className="w-full px-4 py-2 border border-gf-border rounded-lg focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading"
+                  className="w-full px-4 py-2 border-2 border-gf-border-medium focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading"
                 />
               </div>
             </div>
@@ -250,7 +250,7 @@ const OrderBumpFormModal: React.FC<OrderBumpFormModalProps> = ({
             </h3>
 
             {selectedBumpProduct && (
-              <div className="bg-gf-warning-soft border border-gf-warning/20 rounded-lg p-4">
+              <div className="bg-gf-warning-soft border border-gf-warning/20 p-4">
                 <div className="flex items-start space-x-3">
                   <input
                     type="checkbox"
@@ -281,7 +281,7 @@ const OrderBumpFormModal: React.FC<OrderBumpFormModalProps> = ({
                           onChange={(e) => setBumpPrice(e.target.value)}
                           placeholder={selectedBumpProduct.price.toString()}
                           required={useCustomPrice}
-                          className="w-full px-4 py-2 border border-gf-warning/30 rounded-lg focus:ring-2 focus:ring-gf-warning bg-gf-input text-gf-heading"
+                          className="w-full px-4 py-2 border border-gf-warning/30 focus:ring-2 focus:ring-gf-warning bg-gf-input text-gf-heading"
                         />
                       </div>
                     )}
@@ -297,7 +297,7 @@ const OrderBumpFormModal: React.FC<OrderBumpFormModalProps> = ({
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div
                   onClick={() => { setAccessDurationType('default'); setAccessDuration(''); }}
-                  className={`cursor-pointer border rounded-lg p-3 text-center transition-all ${
+                  className={`cursor-pointer border p-3 text-center transition-all ${
                     accessDurationType === 'default'
                       ? 'border-gf-accent bg-gf-accent-soft ring-1 ring-gf-accent'
                       : 'border-gf-border hover:border-gf-accent/50 bg-gf-base'
@@ -308,7 +308,7 @@ const OrderBumpFormModal: React.FC<OrderBumpFormModalProps> = ({
 
                 <div
                   onClick={() => setAccessDurationType('custom')}
-                  className={`cursor-pointer border rounded-lg p-3 text-center transition-all ${
+                  className={`cursor-pointer border p-3 text-center transition-all ${
                     accessDurationType === 'custom'
                       ? 'border-gf-accent bg-gf-accent-soft ring-1 ring-gf-accent'
                       : 'border-gf-border hover:border-gf-accent/50 bg-gf-base'
@@ -319,7 +319,7 @@ const OrderBumpFormModal: React.FC<OrderBumpFormModalProps> = ({
 
                 <div
                   onClick={() => { setAccessDurationType('unlimited'); setAccessDuration('0'); }}
-                  className={`cursor-pointer border rounded-lg p-3 text-center transition-all ${
+                  className={`cursor-pointer border p-3 text-center transition-all ${
                     accessDurationType === 'unlimited'
                       ? 'border-gf-accent bg-gf-accent-soft ring-1 ring-gf-accent'
                       : 'border-gf-border hover:border-gf-accent/50 bg-gf-base'
@@ -336,7 +336,7 @@ const OrderBumpFormModal: React.FC<OrderBumpFormModalProps> = ({
                     min="1"
                     value={accessDuration === '0' ? '' : accessDuration}
                     onChange={(e) => setAccessDuration(e.target.value)}
-                    className="w-full px-4 py-2 border border-gf-border rounded-lg focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading"
+                    className="w-full px-4 py-2 border-2 border-gf-border-medium focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading"
                     placeholder={t('form.accessDurationPlaceholder')}
                     required
                   />
@@ -365,14 +365,14 @@ const OrderBumpFormModal: React.FC<OrderBumpFormModalProps> = ({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 text-gf-body hover:bg-gf-hover rounded-lg transition-colors"
+              className="px-4 py-2 text-gf-body hover:bg-gf-hover transition-colors"
             >
               {t('form.cancel')}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2 bg-gf-accent text-gf-inverse rounded-lg hover:bg-gf-accent-hover transition-colors disabled:opacity-50 flex items-center space-x-2 shadow-sm"
+              className="px-6 py-2 bg-gf-accent text-gf-inverse hover:bg-gf-accent-hover transition-colors disabled:opacity-50 flex items-center space-x-2"
             >
               {isSubmitting ? (
                 <span>{t('form.saving')}</span>

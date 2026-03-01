@@ -501,7 +501,7 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
                   className={`
                     px-4 py-2 rounded-lg border text-sm font-medium transition-all
                     ${customAmount === preset
-                      ? 'bg-blue-500 border-blue-400 text-white'
+                      ? 'bg-gf-accent border-gf-accent text-gf-heading'
                       : 'bg-gf-raised border-gf-border text-gf-heading hover:bg-gf-hover'}
                   `}
                 >
@@ -541,7 +541,7 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
                 className={`
                   w-full px-4 py-3 bg-gf-input border rounded-lg text-lg font-semibold text-gf-heading
                   focus:outline-none focus:ring-2 focus:ring-gf-accent transition-all
-                  ${customAmountError ? 'border-red-500' : 'border-gf-border'}
+                  ${customAmountError ? 'border-gf-danger' : 'border-gf-border'}
                 `}
               />
             </div>
@@ -570,7 +570,7 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
               type="button"
               onClick={handlePwywFreeAccess}
               disabled={pwywFreeLoading}
-              className="w-full py-3 px-6 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold rounded-xl transition-all"
+              className="w-full py-3 px-6 bg-gf-success hover:bg-gf-success/90 disabled:opacity-50 text-gf-heading font-semibold rounded-full transition-all active:scale-[0.98]"
             >
               {pwywFreeLoading ? '...' : t('customPrice.getForFree')}
             </button>
@@ -600,7 +600,7 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
                   !pwywFreeTermsAccepted ||
                   (process.env.NODE_ENV === 'production' && !pwywFreeCaptchaToken)
                 }
-                className="w-full py-3 px-6 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold rounded-xl transition-all"
+                className="w-full py-3 px-6 bg-gf-success hover:bg-gf-success/90 disabled:opacity-50 text-gf-heading font-semibold rounded-full transition-all active:scale-[0.98]"
               >
                 {pwywFreeLoading || pwywFreeCaptchaLoading ? (
                   <span className="flex items-center justify-center">
@@ -627,7 +627,7 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
                 />
               </div>
               {pwywFreeMessage && (
-                <p className={`text-sm ${pwywFreeMessage.type === 'error' ? 'text-red-500' : pwywFreeMessage.type === 'success' ? 'text-green-600' : 'text-gray-500'}`}>
+                <p className={`text-sm ${pwywFreeMessage.type === 'error' ? 'text-gf-danger' : pwywFreeMessage.type === 'success' ? 'text-gf-success' : 'text-gf-muted'}`}>
                   {pwywFreeMessage.text}
                 </p>
               )}
@@ -705,7 +705,7 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
                       {formatPrice(orderBump.original_price, orderBump.bump_currency)} {orderBump.bump_currency}
                     </div>
                   )}
-                  <div className="text-xl font-black text-amber-400 leading-none tracking-tight filter drop-shadow-lg">
+                  <div className="text-xl font-bold text-gf-warning leading-none tracking-tight">
                     {formatPrice(orderBump.bump_price, orderBump.bump_currency)} {orderBump.bump_currency}
                   </div>
                   {orderBump.original_price > orderBump.bump_price && (
@@ -740,12 +740,12 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
                     disabled={appliedCoupon || isVerifyingCoupon}
                     className={`
                       w-full px-3 py-2 bg-gf-input border rounded-lg text-sm transition-all outline-none
-                      ${appliedCoupon ? 'border-green-500/50 text-gf-success bg-gf-success-soft' : 'border-gf-border focus:border-gf-accent/50'}
+                      ${appliedCoupon ? 'border-gf-success/50 text-gf-success bg-gf-success-soft' : 'border-gf-border focus:border-gf-accent/50'}
                     `}
                   />
                   {appliedCoupon && (
                     <div className="absolute right-3 inset-y-0 flex items-center">
-                      <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-4 h-4 text-gf-success" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
                     </div>
@@ -766,7 +766,7 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
                       setCouponCode('');
                       setCouponManuallyRemoved(true); 
                     }}
-                    className="px-2 py-2 text-gray-500 hover:text-red-400 transition-colors"
+                    className="px-2 py-2 text-gf-muted hover:text-gf-danger transition-colors"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -789,9 +789,9 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
 
       {/* Hide checkout card when PWYW-free — "Odbierz za darmo" replaces it; keep for error/access states */}
       {!(isPwywFree && !error && !hasAccess) && (
-      <div className="bg-gf-raised backdrop-blur-md rounded-lg p-6 border border-gf-border shadow-lg relative overflow-hidden">
+      <div className="bg-gf-raised backdrop-blur-md rounded-2xl p-6 border border-gf-border relative overflow-hidden">
         {isVerifyingCoupon && (
-          <div className="absolute top-0 left-0 h-0.5 bg-blue-500 animate-pulse w-full" />
+          <div className="absolute top-0 left-0 h-0.5 bg-gf-accent animate-pulse w-full" />
         )}
 
         <h2 className="text-xl font-semibold text-gf-heading mb-4">{t('title')}</h2>
@@ -853,7 +853,7 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
               </div>
               <button
                 onClick={handleRedirectToProduct}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-all duration-200 font-medium text-sm shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="bg-gf-success hover:bg-gf-success/90 text-gf-heading px-6 py-3 rounded-full transition-all duration-200 font-medium text-sm active:scale-[0.98]"
               >
                 {t('goToProduct')}
               </button>
@@ -905,7 +905,7 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gf-deep to-gf-raised p-4 lg:p-8">
-      <div className="w-full max-w-7xl mx-auto p-6 lg:p-8 bg-gf-base border border-gf-border shadow-xl backdrop-blur-md rounded-xl">
+      <div className="w-full max-w-7xl mx-auto p-6 lg:p-8 bg-gf-base border border-gf-border shadow-[var(--gf-shadow-accent)] backdrop-blur-md rounded-2xl">
         <div className="flex flex-col lg:flex-row">
           <ProductShowcase product={product} />
           {renderCheckoutForm()}

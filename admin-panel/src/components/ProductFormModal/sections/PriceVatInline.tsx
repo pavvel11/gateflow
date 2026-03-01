@@ -121,7 +121,7 @@ export function PriceVatInline({
       </label>
       <div className="flex flex-wrap items-center gap-3">
         {/* Price + Currency — fixed width */}
-        <div className="relative rounded-lg shadow-sm w-52">
+        <div className="relative w-52">
           {showCurrencyPrefix && (
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <span className="text-gf-muted text-sm">
@@ -137,7 +137,7 @@ export function PriceVatInline({
             value={priceDisplayValue}
             onChange={handlePriceChange}
             placeholder={!showCurrencyPrefix ? `${getCurrencySymbol(formData.currency)}` : ''}
-            className={`${showCurrencyPrefix ? 'pl-9' : 'pl-3'} pr-[4.5rem] w-full py-2 border ${fieldErrors.price ? 'border-red-500 focus:ring-red-500' : 'border-gf-border focus:ring-gf-accent'} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:border-transparent bg-gf-input text-gf-heading`}
+            className={`${showCurrencyPrefix ? 'pl-9' : 'pl-3'} pr-[4.5rem] w-full py-2 border ${fieldErrors.price ? 'border-red-500 focus:ring-red-500' : 'border-gf-border focus:ring-gf-accent'} focus:outline-none focus:ring-2 focus:border-transparent bg-gf-input text-gf-heading`}
           />
           <div className="absolute inset-y-0 right-0 pr-2 flex items-center">
             <select
@@ -145,7 +145,7 @@ export function PriceVatInline({
               name="currency"
               value={formData.currency}
               onChange={handleCurrencyChange}
-              className="h-full py-0 pl-1 pr-6 border-transparent bg-transparent text-gf-muted text-sm rounded-md focus:outline-none focus:ring-gf-accent focus:border-gf-accent"
+              className="h-full py-0 pl-1 pr-6 border-transparent bg-transparent text-gf-muted text-sm focus:outline-none focus:ring-gf-accent focus:border-gf-accent"
             >
               {CURRENCIES.map(currency => (
                 <option key={currency.code} value={currency.code}>
@@ -185,7 +185,7 @@ export function PriceVatInline({
                 max="100"
                 step="1"
                 placeholder={shopDefaultVatRate != null ? `${Math.round(shopDefaultVatRate * 100)}` : '23'}
-                className="w-14 px-2 py-2 border border-gf-border rounded-lg bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent focus:border-transparent text-sm text-center"
+                className="w-14 px-2 py-2 border-2 border-gf-border-medium bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent focus:border-transparent text-sm text-center"
               />
               <span className="text-sm text-gf-muted">%</span>
             </div>
@@ -221,7 +221,7 @@ export function PriceVatInline({
 
         {formData.allow_custom_price && (
           <div className="mt-2 ml-6 space-y-2">
-            <p className="text-xs text-gf-accent bg-gf-accent-soft rounded px-2 py-1">
+            <p className="text-xs text-gf-accent bg-gf-accent-soft px-2 py-1">
               {t('customPricing.suggestedPriceHint')}
             </p>
 
@@ -234,7 +234,7 @@ export function PriceVatInline({
                 onChange={handleMinPriceChange}
                 min="0"
                 step="0.10"
-                className="w-16 px-2 py-1 border border-gf-border rounded text-sm focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
+                className="w-16 px-2 py-1 border-2 border-gf-border-medium text-sm focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
               />
               <span className="text-xs text-gray-400">
                 {formData.custom_price_min === 0
@@ -263,7 +263,7 @@ export function PriceVatInline({
                   min="0"
                   step="1"
                   placeholder="0"
-                  className="w-14 px-1.5 py-1 border border-gf-border rounded text-sm text-center focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
+                  className="w-14 px-1.5 py-1 border-2 border-gf-border-medium text-sm text-center focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
                 />
               ))}
               {formData.show_price_presets && (

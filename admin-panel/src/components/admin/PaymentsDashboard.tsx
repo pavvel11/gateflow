@@ -142,7 +142,7 @@ export default function PaymentsDashboard() {
       />
 
       {/* Tabs */}
-      <div className="bg-gf-base rounded-lg shadow">
+      <div className="bg-gf-base shadow">
         <div className="border-b border-gf-border">
           <nav className="flex space-x-8 px-6 py-4">
             <button

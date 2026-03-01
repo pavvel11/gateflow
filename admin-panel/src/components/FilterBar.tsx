@@ -52,7 +52,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
           placeholder={t('searchPlaceholder')}
           value={searchTerm}
           onChange={handleSearchChange}
-          className="pl-10 pr-4 py-2 bg-gf-input border border-gf-border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent text-gf-heading placeholder-gf-muted"
+          className="pl-10 pr-4 py-2 bg-gf-input border-2 border-gf-border-medium w-full focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent text-gf-heading placeholder-gf-muted"
         />
       </div>
 
@@ -66,7 +66,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
             id="status-filter"
             value={statusFilter}
             onChange={(e) => onStatusFilterChange(e.target.value)}
-            className="text-sm bg-gf-input border border-gf-border text-gf-heading rounded-lg focus:ring-gf-accent focus:border-gf-accent py-2 px-3"
+            className="text-sm bg-gf-input border-2 border-gf-border-medium text-gf-heading focus:ring-gf-accent focus:border-gf-accent py-2 px-3"
           >
             {statusOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -81,7 +81,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
         {/* Refresh Button */}
         <button
           onClick={onRefresh}
-          className="inline-flex items-center px-4 py-2 border border-gf-border rounded-lg text-sm font-medium text-gf-body bg-gf-base hover:bg-gf-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-accent transition-all duration-200 shadow-sm hover:shadow-md"
+          className="inline-flex items-center px-4 py-2 border-2 border-gf-border-medium text-sm font-medium text-gf-body bg-gf-base hover:bg-gf-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-accent transition-all duration-200"
           title={t('refresh')}
         >
           <svg className="-ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -93,7 +93,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
         {/* Export Button */}
         <button
           onClick={onExport}
-          className="inline-flex items-center px-4 py-2 border border-gf-success/30 rounded-lg text-sm font-medium text-gf-success bg-gf-success-soft hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-success transition-all duration-200 shadow-sm hover:shadow-md"
+          className="inline-flex items-center px-4 py-2 border border-gf-success/30 text-sm font-medium text-gf-success bg-gf-success-soft hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-success transition-all duration-200"
           title={t('export')}
         >
           <svg className="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,7 +106,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
         <button
           ref={addButtonRef}
           onClick={onAddProduct}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-gf-inverse bg-gf-accent hover:bg-gf-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-accent transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium text-gf-inverse bg-gf-accent hover:bg-gf-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-accent transition-all duration-200"
           title={t('add')}
         >
           <svg className="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -113,7 +113,7 @@ export function PostPurchaseSection({
           <select
             value={selectedRedirectProduct?.slug || ''}
             onChange={handleProductSelect}
-            className="w-full px-3 py-2.5 border border-gf-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
+            className="w-full px-3 py-2.5 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
             disabled={loadingProducts}
           >
             <option value="">{loadingProducts ? tCommon('loading') : t('postPurchase.selectProductPlaceholder')}</option>
@@ -129,7 +129,7 @@ export function PostPurchaseSection({
 
           {/* Show selected product info */}
           {selectedRedirectProduct && (
-            <div className="flex items-center gap-3 p-3 bg-gf-accent-soft rounded-lg border border-gf-accent/20">
+            <div className="flex items-center gap-3 p-3 bg-gf-accent-soft border border-gf-accent/20">
               <span className="text-2xl">{selectedRedirectProduct.icon}</span>
               <div className="flex-1">
                 <p className="font-medium text-gf-heading">{selectedRedirectProduct.name}</p>
@@ -157,7 +157,7 @@ export function PostPurchaseSection({
               name="success_redirect_url"
               value={formData.success_redirect_url || ''}
               onChange={handleUrlChange}
-              className="w-full px-3 py-2.5 border border-gf-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
+              className="w-full px-3 py-2.5 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
               placeholder={t('postPurchase.redirectUrlPlaceholder')}
             />
           </div>
@@ -202,9 +202,9 @@ export function PostPurchaseSection({
         {canShowOtoOption && (
           <div className="pt-4 border-t border-gf-border">
             {/* OTO Toggle */}
-            <div className="flex items-center justify-between p-4 bg-gf-accent-soft rounded-lg border border-gf-border-accent">
+            <div className="flex items-center justify-between p-4 bg-gf-accent-soft border border-gf-border-accent">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gf-accent-soft rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-gf-accent-soft flex items-center justify-center">
                   <svg className="w-5 h-5 text-gf-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -237,7 +237,7 @@ export function PostPurchaseSection({
 
             {/* OTO Configuration */}
             {oto.enabled && (
-              <div className="mt-4 space-y-4 p-4 bg-gf-raised rounded-lg border border-gf-border">
+              <div className="mt-4 space-y-4 p-4 bg-gf-raised border-2 border-gf-border-medium">
                 {/* Discount Configuration */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -247,7 +247,7 @@ export function PostPurchaseSection({
                     <select
                       value={oto.discountType}
                       onChange={(e) => setOto(prev => ({ ...prev, discountType: e.target.value as 'percentage' | 'fixed' }))}
-                      className="w-full px-3 py-2.5 border border-gf-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
+                      className="w-full px-3 py-2.5 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
                     >
                       <option value="percentage">{t('oto.percentage', { defaultValue: 'Percentage (%)' })}</option>
                       <option value="fixed">{t('oto.fixed', { defaultValue: 'Fixed Amount' })}</option>
@@ -264,7 +264,7 @@ export function PostPurchaseSection({
                         onChange={(e) => setOto(prev => ({ ...prev, discountValue: Math.max(0, Number(e.target.value)) }))}
                         min="0"
                         max={oto.discountType === 'percentage' ? 100 : undefined}
-                        className="w-full px-3 py-2.5 border border-gf-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading pr-10"
+                        className="w-full px-3 py-2.5 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading pr-10"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gf-muted">
                         {oto.discountType === 'percentage' ? '%' : formData.currency}
@@ -285,7 +285,7 @@ export function PostPurchaseSection({
                       onChange={(e) => setOto(prev => ({ ...prev, durationMinutes: Math.max(1, Math.min(1440, Number(e.target.value))) }))}
                       min="1"
                       max="1440"
-                      className="w-24 px-3 py-2.5 border border-gf-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
+                      className="w-24 px-3 py-2.5 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
                     />
                     <span className="text-sm text-gf-body">
                       {t('oto.minutes', { defaultValue: 'minutes' })}
@@ -296,7 +296,7 @@ export function PostPurchaseSection({
                           key={mins}
                           type="button"
                           onClick={() => setOto(prev => ({ ...prev, durationMinutes: mins }))}
-                          className={`px-2 py-1 text-xs rounded ${oto.durationMinutes === mins
+                          className={`px-2 py-1 text-xs ${oto.durationMinutes === mins
                             ? 'bg-gf-accent text-gf-inverse'
                             : 'bg-gf-raised text-gf-body hover:bg-gf-hover'
                           }`}
@@ -309,7 +309,7 @@ export function PostPurchaseSection({
                 </div>
 
                 {/* Preview Box */}
-                <div className="p-3 bg-gf-accent-soft rounded-lg border border-gf-border-accent">
+                <div className="p-3 bg-gf-accent-soft border border-gf-border-accent">
                   <p className="text-sm text-gf-accent">
                     <span className="font-medium">{t('oto.preview', { defaultValue: 'Preview:' })}</span>{' '}
                     {t('oto.previewText', {
@@ -327,7 +327,7 @@ export function PostPurchaseSection({
 
         {/* Info when no product selected */}
         {!formData.success_redirect_url && (
-          <div className="p-3 bg-gf-raised rounded-lg border border-gf-border">
+          <div className="p-3 bg-gf-raised border-2 border-gf-border-medium">
             <p className="text-sm text-gf-muted">
               {t('postPurchase.noRedirectInfo', { defaultValue: 'Select a product above to create a sales funnel with optional time-limited discount (OTO).' })}
             </p>

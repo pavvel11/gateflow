@@ -42,28 +42,28 @@ export default async function PrivacyPage() {
   return (
     <div className="min-h-screen bg-wl-deep py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20">
+        <div className="bg-gf-raised/80 backdrop-blur-sm rounded-2xl p-8 shadow-[var(--gf-shadow-accent)] border border-gf-border">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-4">{t('title')}</h1>
-            <p className="text-gray-300">{t('configRequired')}</p>
+            <h1 className="text-3xl font-bold text-gf-heading mb-4">{t('title')}</h1>
+            <p className="text-gf-body">{t('configRequired')}</p>
           </div>
 
-          <div className="prose prose-invert max-w-none space-y-6 text-gray-300">
+          <div className="prose prose-invert max-w-none space-y-6 text-gf-body">
             <section>
-              <h2 className="text-xl font-semibold text-white mb-3">{t('configRequired')}</h2>
+              <h2 className="text-xl font-semibold text-gf-heading mb-3">{t('configRequired')}</h2>
               <p>{t('configDescription')}</p>
 
-              <div className="mt-4 p-4 bg-wl-accent-soft border border-wl-border-accent rounded-lg">
+              <div className="mt-4 p-4 bg-wl-accent-soft border border-wl-border-accent rounded-xl">
                 <p className="text-wl-accent font-medium">{t('option1Title')}</p>
                 <p className="text-wl-accent text-sm mt-2">{t('option1Description')}</p>
               </div>
 
-              <div className="mt-4 p-4 bg-blue-900/30 border border-blue-500/30 rounded-lg">
-                <p className="text-blue-200 font-medium">{t('option2Title')}</p>
-                <p className="text-blue-300 text-sm font-mono mt-2">{t('option2EnvVar')}</p>
+              <div className="mt-4 p-4 bg-gf-accent-soft border border-gf-accent/30 rounded-xl">
+                <p className="text-gf-accent font-medium">{t('option2Title')}</p>
+                <p className="text-gf-accent text-sm font-mono mt-2">{t('option2EnvVar')}</p>
               </div>
 
-              <p className="mt-4 text-sm text-gray-400">{t('urlHelp')}</p>
+              <p className="mt-4 text-sm text-gf-muted">{t('urlHelp')}</p>
             </section>
           </div>
         </div>

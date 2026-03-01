@@ -1899,6 +1899,9 @@
         },
         "refunded": "Zwrot: {amount}"
       },
+      "sessions": {
+        "title": "Sesje checkout"
+      },
       "refund": {
         "title": "Przetwórz Zwrot",
         "reason": "Powód Zwrotu",
@@ -1915,6 +1918,17 @@
         "error": "Nie udało się przetworzyć zwrotu"
       },
       "loadError": "Nie udało się załadować danych płatności",
+      "stats": {
+        "totalRevenue": "Łączny przychód",
+        "totalTransactions": "Łączna liczba transakcji",
+        "todayRevenue": "Dzisiejszy przychód",
+        "pendingSessions": "Oczekujące sesje",
+        "high": "Wysoki",
+        "normal": "Normalny",
+        "thisMonthRevenue": "Ten miesiąc",
+        "refundedAmount": "Zwroty",
+        "vsLastPeriod": "vs poprzedni okres"
+      },
       "cancelSession": {
         "label": "Anuluj",
         "loading": "Anulowanie...",

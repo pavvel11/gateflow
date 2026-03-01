@@ -1884,6 +1884,9 @@
         },
         "refunded": "Refunded: {amount}"
       },
+      "sessions": {
+        "title": "Checkout Sessions"
+      },
       "refund": {
         "title": "Process Refund",
         "reason": "Refund Reason",
@@ -1900,6 +1903,17 @@
         "error": "Failed to process refund"
       },
       "loadError": "Failed to load payment data",
+      "stats": {
+        "totalRevenue": "Total Revenue",
+        "totalTransactions": "Total Transactions",
+        "todayRevenue": "Today's Revenue",
+        "pendingSessions": "Pending Sessions",
+        "high": "High",
+        "normal": "Normal",
+        "thisMonthRevenue": "This Month",
+        "refundedAmount": "Refunded",
+        "vsLastPeriod": "vs last period"
+      },
       "cancelSession": {
         "label": "Cancel",
         "loading": "Cancelling...",

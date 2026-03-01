@@ -44,19 +44,19 @@ export default function CategoriesPageContent({ initialCategories }: { initialCa
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gf-heading">
+        <h1 className="text-[40px] font-[800] text-gf-heading tracking-[-0.03em] leading-[1.1]">
           {t('title', { defaultValue: 'Categories' })}
         </h1>
         <button
           onClick={openCreateModal}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
         >
           <Plus size={20} />
           {commonT('create')}
         </button>
       </div>
 
-      <div className="bg-gf-base rounded-xl shadow-sm border border-gf-border overflow-hidden">
+      <div className="bg-gf-base border-2 border-gf-border-medium overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-gf-border bg-gf-raised">
@@ -73,22 +73,22 @@ export default function CategoriesPageContent({ initialCategories }: { initialCa
                 </td>
               </tr>
             ) : (
-              initialCategories.map((category) => (
-                <tr key={category.id} className="border-b border-gf-border hover:bg-gf-hover">
+              initialCategories.map((category, index) => (
+                <tr key={category.id} className={`border-b border-gf-border hover:bg-gf-hover ${index % 2 === 1 ? 'bg-gf-row-alt' : ''}`}>
                   <td className="p-4 text-gf-heading font-medium">{category.name}</td>
                   <td className="p-4 text-gf-muted font-mono text-sm">{category.slug}</td>
                   <td className="p-4 text-right">
                     <div className="flex justify-end gap-2">
                       <button 
                         onClick={() => openEditModal(category)}
-                        className="p-2 text-gf-muted hover:text-gf-accent hover:bg-gf-accent-soft rounded-lg transition-colors"
+                        className="p-2 text-gf-muted hover:text-gf-accent hover:bg-gf-accent-soft transition-colors"
                         title={commonT('edit')}
                       >
                         <Edit size={18} />
                       </button>
                       <button
                         onClick={() => setCategoryToDelete(category)}
-                        className="p-2 text-gf-muted hover:text-gf-danger hover:bg-gf-danger-soft rounded-lg transition-colors"
+                        className="p-2 text-gf-muted hover:text-gf-danger hover:bg-gf-danger-soft transition-colors"
                         title={commonT('delete')}
                       >
                         <Trash2 size={18} />
@@ -111,7 +111,7 @@ export default function CategoriesPageContent({ initialCategories }: { initialCa
       {/* Delete Confirmation Modal */}
       {categoryToDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-gf-base rounded-xl p-6 max-w-md w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-gf-base p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold mb-4 text-gf-heading">
               {commonT('confirmDelete', { defaultValue: 'Confirm Delete' })}
             </h3>
@@ -124,13 +124,13 @@ export default function CategoriesPageContent({ initialCategories }: { initialCa
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setCategoryToDelete(null)}
-                className="px-4 py-2 text-gf-body hover:bg-gf-hover rounded-lg transition-colors"
+                className="px-4 py-2 text-gf-body hover:bg-gf-hover transition-colors"
               >
                 {commonT('cancel', { defaultValue: 'Cancel' })}
               </button>
               <button
                 onClick={() => handleDelete(categoryToDelete)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors"
               >
                 {commonT('delete', { defaultValue: 'Delete' })}
               </button>

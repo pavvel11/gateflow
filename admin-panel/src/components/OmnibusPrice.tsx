@@ -89,7 +89,7 @@ export default function OmnibusPrice({
 
       {/* Tooltip */}
       {showTooltip && (
-        <div className="absolute z-10 bottom-full left-0 mb-2 w-80 p-4 bg-gray-900 border border-gray-700 rounded-lg shadow-xl text-sm text-gray-300">
+        <div className="absolute z-10 bottom-full left-0 mb-2 w-80 p-4 bg-gray-900 border border-gray-700 rounded-lg text-sm text-gray-300">
           <p className="font-semibold text-white mb-2">{t('lowestPriceTooltipTitle')}</p>
           <p className="mb-2">{t('lowestPriceTooltipDescription')}</p>
           <p className="text-xs text-gray-400">{t('lowestPriceTooltipDisclaimer')}</p>

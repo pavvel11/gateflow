@@ -12,7 +12,7 @@ export default function AccessDenied() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gf-deep">
-      <div className="max-w-md w-full mx-auto p-8 bg-gf-raised/80 border border-gf-border rounded-xl shadow-2xl text-center">
+      <div className="max-w-md w-full mx-auto p-8 bg-gf-raised/80 border border-gf-border rounded-2xl shadow-[var(--gf-shadow-accent)] text-center">
         <div className="flex justify-center mb-6">
           <Shield className="h-16 w-16 text-gf-danger" />
         </div>
@@ -36,7 +36,7 @@ export default function AccessDenied() {
         <div className="space-y-3">
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center justify-center px-4 py-2 bg-gf-danger text-white rounded-xl hover:opacity-90 transition-opacity duration-200"
+            className="w-full flex items-center justify-center px-4 py-2 bg-gf-danger text-gf-heading rounded-full hover:opacity-90 transition-opacity duration-200 active:scale-[0.98]"
           >
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
@@ -44,7 +44,7 @@ export default function AccessDenied() {
 
           <button
             onClick={() => window.location.href = '/'}
-            className="w-full flex items-center justify-center px-4 py-2 bg-gf-raised border border-gf-border text-gf-heading rounded-xl hover:border-gf-border-accent transition-[border-color] duration-200"
+            className="w-full flex items-center justify-center px-4 py-2 bg-gf-raised border border-gf-border text-gf-heading rounded-full hover:border-gf-border-accent transition-[border-color] duration-200"
           >
             <Home className="h-4 w-4 mr-2" />
             Go to Homepage

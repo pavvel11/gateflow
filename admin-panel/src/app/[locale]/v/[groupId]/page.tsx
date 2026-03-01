@@ -97,7 +97,7 @@ export default function VariantSelectorPage() {
   if (error || variants.length === 0) {
     return (
       <div className="min-h-screen bg-wl-deep flex items-center justify-center">
-        <div className="bg-gf-base rounded-2xl shadow-xl p-8 max-w-md mx-4">
+        <div className="bg-gf-base rounded-2xl shadow-[var(--gf-shadow-accent)] p-8 max-w-md mx-4">
           <div className="text-center">
             <div className="text-6xl mb-4">😕</div>
             <h1 className="text-2xl font-bold text-gf-heading mb-2">
@@ -135,7 +135,7 @@ export default function VariantSelectorPage() {
               key={variant.id}
               onClick={() => handleSelectVariant(variant.slug)}
               className={`
-                relative bg-gf-base rounded-2xl shadow-lg hover:shadow-xl
+                relative bg-gf-base rounded-2xl shadow-[var(--gf-shadow-accent)]
                 transition-all duration-300 cursor-pointer border-2
                 ${variant.is_featured
                   ? 'border-gf-accent ring-2 ring-wl-accent-soft'
@@ -146,7 +146,7 @@ export default function VariantSelectorPage() {
               {/* Featured badge */}
               {variant.is_featured && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-wl-accent text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider shadow-lg">
+                  <span className="bg-wl-accent text-gf-heading text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider shadow-[var(--gf-shadow-accent)]">
                     {t('popular', { defaultValue: 'Most Popular' })}
                   </span>
                 </div>
@@ -159,7 +159,7 @@ export default function VariantSelectorPage() {
                     <img
                       src={variant.image_url}
                       alt={variant.variant_name || variant.name}
-                      className="w-24 h-24 object-cover rounded-xl shadow-md"
+                      className="w-24 h-24 object-cover rounded-xl"
                     />
                   </div>
                 )}
@@ -183,9 +183,9 @@ export default function VariantSelectorPage() {
                   </div>
                   <button
                     className={`
-                      px-6 py-2.5 rounded-xl font-semibold transition-all duration-200
+                      px-6 py-2.5 rounded-full font-semibold transition-all duration-200 active:scale-[0.98]
                       ${variant.is_featured
-                        ? 'bg-wl-accent text-white hover:bg-wl-accent-hover shadow-lg hover:shadow-xl'
+                        ? 'bg-wl-accent text-gf-heading hover:bg-wl-accent-hover shadow-[var(--gf-shadow-accent)]'
                         : 'bg-gf-raised text-gf-heading hover:bg-gf-hover'
                       }
                     `}

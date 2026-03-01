@@ -119,8 +119,8 @@ export default function PaymentSessionsTable({
           </tr>
         </thead>
         <tbody className="bg-gf-base divide-y divide-gf-border">
-          {sessions.map((session) => (
-            <tr key={session.id}>
+          {sessions.map((session, index) => (
+            <tr key={session.id} className={index % 2 === 1 ? 'bg-gf-row-alt' : ''}>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm font-medium text-gf-heading">
                   {session.session_id.slice(0, 20)}...
@@ -150,7 +150,7 @@ export default function PaymentSessionsTable({
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(session.status)}`}>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold ${getStatusColor(session.status)}`}>
                   {session.status}
                 </span>
               </td>

@@ -66,7 +66,7 @@ export default function FloatingToolbar({
   return (
     <div className={`fixed ${positionClasses[position]} z-50`}>
       {/* Unified Toolbar */}
-      <div className="flex items-center gap-1 p-1 bg-gf-base/80 backdrop-blur-md border border-gf-border rounded-full shadow-lg hover:shadow-xl transition-all duration-200">
+      <div className="flex items-center gap-1 p-1 bg-gf-base/80 backdrop-blur-md border-2 border-gf-border-medium rounded-full hover:transition-all duration-200">
         
         {/* Language Switcher */}
         <div className="relative">
@@ -84,13 +84,13 @@ export default function FloatingToolbar({
 
           {isLanguageOpen && (
             <>
-              <div className="absolute top-full right-0 mt-2 w-32 bg-gf-base backdrop-blur-md border border-gf-border rounded-lg shadow-xl z-50">
+              <div className="absolute top-full right-0 mt-2 w-32 bg-gf-base backdrop-blur-md border-2 border-gf-border-medium z-50">
                 <div className="p-1">
                   {Object.entries(languages).map(([code, lang]) => (
                     <button
                       key={code}
                       onClick={() => handleLanguageChange(code)}
-                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-md transition-colors ${
+                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm transition-colors ${
                         locale === code
                           ? 'bg-gf-raised text-gf-heading'
                           : 'text-gf-body hover:bg-gf-hover hover:text-gf-heading'
@@ -164,7 +164,7 @@ export default function FloatingToolbar({
 
               {isUserMenuOpen && (
                 <>
-                  <div className="absolute top-full right-0 mt-2 w-48 bg-gf-base backdrop-blur-md border border-gf-border rounded-lg shadow-xl z-50">
+                  <div className="absolute top-full right-0 mt-2 w-48 bg-gf-base backdrop-blur-md border-2 border-gf-border-medium z-50">
                     <div className="py-1">
                       <div className="px-4 py-2 text-sm text-gf-muted border-b border-gf-border">
                         {user.email}

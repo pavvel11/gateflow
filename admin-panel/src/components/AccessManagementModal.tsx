@@ -216,14 +216,14 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                 <div className="space-y-3">
                   {userAccess.map((access) => (
                     <div key={access.id} className="group relative">
-                      <div className="flex items-center justify-between p-4 bg-gf-deep rounded-xl border border-gf-border hover:bg-gf-hover transition-colors">
+                      <div className="flex items-center justify-between p-4 bg-gf-deep border-2 border-gf-border-medium hover:bg-gf-hover transition-colors">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-2">
                             <h4 className="text-sm font-medium text-gf-heading truncate">
                               {access.product_name}
                             </h4>
                             <div className="flex items-center space-x-2 ml-4">
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              <span className={`inline-flex items-center px-2 py-1 text-xs font-medium ${
                                 access.product_is_active
                                   ? 'bg-gf-success-soft text-gf-success'
                                   : 'bg-gf-raised text-gf-body'
@@ -261,7 +261,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gf-raised rounded-full flex items-center justify-center">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gf-raised flex items-center justify-center">
                     <svg className="w-8 h-8 text-gf-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
@@ -274,7 +274,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
 
             <ModalSection title={t('grantNewAccess')}>
               {showAddForm ? (
-                <div className="space-y-4 p-4 bg-gf-accent-soft rounded-xl border border-gf-accent/20">
+                <div className="space-y-4 p-4 bg-gf-accent-soft border border-gf-accent/20">
                   <div>
                     <label htmlFor="product-select" className="block text-sm font-medium text-gf-body mb-2">
                       {t('selectProductLabel')}
@@ -283,7 +283,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                       id="product-select"
                       value={selectedProductId}
                       onChange={(e) => setSelectedProductId(e.target.value)}
-                      className="w-full px-3 py-2.5 bg-gf-input text-gf-heading border border-gf-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent"
+                      className="w-full px-3 py-2.5 bg-gf-input text-gf-heading border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent"
                     >
                       <option value="">{t('chooseProductPlaceholder')}</option>
                       {getAvailableProductsForUser().map(product => (
@@ -333,7 +333,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                         type="number"
                         value={accessDuration}
                         onChange={(e) => setAccessDuration(Number(e.target.value))}
-                        className="w-full px-3 py-2.5 bg-gf-input text-gf-heading border border-gf-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent"
+                        className="w-full px-3 py-2.5 bg-gf-input text-gf-heading border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent"
                         placeholder={t('enterDurationDays')}
                       />
                     </div>
@@ -349,7 +349,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                         type="date"
                         value={accessExpiration}
                         onChange={(e) => setAccessExpiration(e.target.value)}
-                        className="w-full px-3 py-2.5 bg-gf-input text-gf-heading border border-gf-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent"
+                        className="w-full px-3 py-2.5 bg-gf-input text-gf-heading border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent"
                       />
                     </div>
                   )}

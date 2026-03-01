@@ -117,10 +117,10 @@ export default function MyProductsPage() {
         email: user.email || '',
         id: user.id || ''
       } : null}>
-        <div className="bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center min-h-96">
+        <div className="bg-gf-deep flex items-center justify-center min-h-96">
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-gf-accent mx-auto mb-4"></div>
-            <p className="text-gray-300">{t('loadingProducts')}</p>
+            <p className="text-gf-body">{t('loadingProducts')}</p>
           </div>
         </div>
       </DashboardLayout>
@@ -133,14 +133,14 @@ export default function MyProductsPage() {
         email: user.email || '',
         id: user.id || ''
       } : null}>
-        <div className="bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center min-h-96">
+        <div className="bg-gf-deep flex items-center justify-center min-h-96">
           <div className="text-center p-4">
-            <div className="text-red-400 text-6xl mb-4">⚠️</div>
-            <h1 className="text-2xl font-bold text-white mb-2">{t('errorTitle')}</h1>
-            <p className="text-gray-300 mb-6">{error}</p>
+            <div className="text-gf-danger text-6xl mb-4">⚠️</div>
+            <h1 className="text-2xl font-bold text-gf-heading mb-2">{t('errorTitle')}</h1>
+            <p className="text-gf-body mb-6">{error}</p>
             <button 
               onClick={fetchProductsData} 
-              className="px-6 py-3 bg-wl-accent hover:bg-wl-accent-hover text-white rounded-lg transition-colors"
+              className="px-6 py-3 bg-wl-accent hover:bg-wl-accent-hover text-gf-heading rounded-full transition-colors active:scale-[0.98]"
             >
               {t('tryAgain')}
             </button>
@@ -153,13 +153,13 @@ export default function MyProductsPage() {
   if (!user) {
     return (
       <DashboardLayout user={null}>
-        <div className="bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center min-h-96">
+        <div className="bg-gf-deep flex items-center justify-center min-h-96">
           <div className="text-center p-4">
-            <h2 className="text-2xl font-bold text-white mb-4">{t('accessRequired')}</h2>
-            <p className="text-gray-300 mb-6">{t('pleaseLoginToSeeProducts')}</p>
+            <h2 className="text-2xl font-bold text-gf-heading mb-4">{t('accessRequired')}</h2>
+            <p className="text-gf-body mb-6">{t('pleaseLoginToSeeProducts')}</p>
             <Link
               href="/login"
-              className="inline-flex items-center px-6 py-3 border border-transparent rounded-lg text-base font-medium text-white bg-wl-accent hover:bg-wl-accent-hover"
+              className="inline-flex items-center px-6 py-3 border border-transparent rounded-full text-base font-medium text-gf-heading bg-wl-accent hover:bg-wl-accent-hover active:scale-[0.98]"
             >
               {t('login')}
             </Link>
@@ -177,19 +177,19 @@ export default function MyProductsPage() {
   const renderProductCard = (product: Product, accessible: boolean) => (
     <div
       key={product.id}
-      className={`group bg-white/5 backdrop-blur-md border rounded-xl p-6 hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:shadow-2xl relative overflow-hidden ${accessible ? 'border-green-500/30' : 'border-white/10'}`}
+      className={`group bg-gf-raised/80 backdrop-blur-md border rounded-2xl p-6 hover:bg-gf-hover transition-all duration-300 active:scale-[0.98] relative overflow-hidden ${accessible ? 'border-gf-success/30' : 'border-gf-border'}`}
     >
       {/* Badges */}
       <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
         {accessible && (
-          <div className="flex items-center px-2 py-1 bg-green-500/20 border border-green-500/30 rounded-full text-xs font-medium text-green-300">
+          <div className="flex items-center px-2 py-1 bg-gf-success-soft border border-gf-success/30 rounded-full text-xs font-medium text-gf-success">
             <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
             {t('accessible')}
           </div>
         )}
         {product.is_featured && (
-          <div className="flex items-center px-3 py-1 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-xs font-medium text-yellow-300">
-            <svg className="w-3 h-3 text-yellow-400 mr-1" fill="currentColor" viewBox="0 0 20 20">
+          <div className="flex items-center px-3 py-1 bg-gf-warning-soft border border-gf-warning/30 rounded-full text-xs font-medium text-gf-warning">
+            <svg className="w-3 h-3 text-gf-warning mr-1" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
             </svg>
             {t('featured')}
@@ -200,7 +200,7 @@ export default function MyProductsPage() {
       <div className="flex items-center mb-4">
         <div className="text-4xl mr-4">{product.icon}</div>
         <div className="flex-1">
-          <h3 className={`text-xl font-semibold text-white transition-colors ${accessible ? 'group-hover:text-green-300' : 'group-hover:text-wl-accent'}`}>
+          <h3 className={`text-xl font-semibold text-gf-heading transition-colors ${accessible ? 'group-hover:text-gf-success' : 'group-hover:text-wl-accent'}`}>
             {product.name}
           </h3>
           <div className="flex items-center mt-1">
@@ -212,7 +212,7 @@ export default function MyProductsPage() {
                 <span className="text-xs font-medium text-wl-accent">{t('premium')}</span>
               </div>
             ) : (
-              <span className="inline-flex items-center px-2 py-1 bg-green-500/20 border border-green-500/30 rounded text-xs font-medium text-green-300">
+              <span className="inline-flex items-center px-2 py-1 bg-gf-success-soft border border-gf-success/30 rounded-full text-xs font-medium text-gf-success">
                 {t('free')}
               </span>
             )}
@@ -220,7 +220,7 @@ export default function MyProductsPage() {
         </div>
       </div>
       
-      <p className="text-gray-300 mb-6 min-h-[3rem] line-clamp-2">
+      <p className="text-gf-body mb-6 min-h-[3rem] line-clamp-2">
         {product.description}
       </p>
       
@@ -232,7 +232,7 @@ export default function MyProductsPage() {
 
       <Link
         href={`/p/${product.slug}`}
-        className={`block w-full text-center font-semibold py-3 px-4 rounded-lg transition-all duration-200 hover:shadow-lg ${accessible ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-wl-accent hover:bg-wl-accent-hover text-white'}`}
+        className={`block w-full text-center font-semibold py-3 px-4 rounded-full transition-colors duration-200 active:scale-[0.98] ${accessible ? 'bg-gf-success hover:bg-gf-success/90 text-gf-heading' : 'bg-wl-accent hover:bg-wl-accent-hover text-gf-heading'}`}
       >
         {accessible ? t('launchProduct') : t('viewProduct')}
       </Link>
@@ -244,15 +244,15 @@ export default function MyProductsPage() {
       email: user.email || '',
       id: user.id || ''
     } : null}>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white -mx-4 -my-6 px-4 py-6">
+      <div className="min-h-screen bg-gf-deep text-gf-heading -mx-4 -my-6 px-4 py-6">
         {/* Header */}
         <header className="relative pt-20 pb-16 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+          <h1 className="text-4xl md:text-6xl font-bold text-gf-heading mb-6">
             <span className="text-wl-accent">
               {t('title')}
             </span>
           </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+          <p className="text-xl text-gf-body max-w-3xl mx-auto">
             {t('subtitle')}
           </p>
         </header>
@@ -261,7 +261,7 @@ export default function MyProductsPage() {
         {/* My Access Section */}
         {userProducts.length > 0 && (
           <section className="mb-16">
-            <h2 className="text-3xl font-bold text-white mb-8">{t('myAccessibleProducts')}</h2>
+            <h2 className="text-3xl font-bold text-gf-heading mb-8">{t('myAccessibleProducts')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {userProducts.map((userProduct) => renderProductCard(userProduct.product, true))}
             </div>
@@ -271,11 +271,11 @@ export default function MyProductsPage() {
         {/* Available Products Section */}
         {(freeProducts.length > 0 || paidProducts.length > 0) && (
           <section>
-            <h2 className="text-3xl font-bold text-white mb-8">{t('availableProducts')}</h2>
+            <h2 className="text-3xl font-bold text-gf-heading mb-8">{t('availableProducts')}</h2>
             
             {freeProducts.length > 0 && (
               <div className="mb-12">
-                <h3 className="text-2xl font-semibold text-green-300 mb-6">{t('freeResources')}</h3>
+                <h3 className="text-2xl font-semibold text-gf-success mb-6">{t('freeResources')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {freeProducts.map((product) => renderProductCard(product, false))}
                 </div>
@@ -297,8 +297,8 @@ export default function MyProductsPage() {
         {userProducts.length === 0 && availableProducts.length === 0 && (
           <div className="text-center py-20">
             <div className="text-6xl mb-8">📦</div>
-            <h3 className="text-3xl font-bold text-white mb-4">{t('noProductsAvailable')}</h3>
-            <p className="text-xl text-gray-300 max-w-md mx-auto">
+            <h3 className="text-3xl font-bold text-gf-heading mb-4">{t('noProductsAvailable')}</h3>
+            <p className="text-xl text-gf-body max-w-md mx-auto">
               {t('noProductsMessage')}
             </p>
           </div>

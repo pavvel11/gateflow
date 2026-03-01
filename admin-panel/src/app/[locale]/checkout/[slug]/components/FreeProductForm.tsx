@@ -208,7 +208,7 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
           <p className="text-gf-body">{product.description}</p>
         </div>
       </div>
-      <div className="text-3xl font-bold text-green-400">
+      <div className="text-3xl font-bold text-gf-success">
         {t('free')}
       </div>
     </div>
@@ -216,7 +216,7 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
 
   const renderForm = () => (
     <div className="w-1/2 pl-8">
-      <div className="bg-gf-raised backdrop-blur-md rounded-lg p-6 border border-gf-border">
+      <div className="bg-gf-raised backdrop-blur-md rounded-2xl p-6 border border-gf-border">
         <h2 className="text-xl font-semibold text-gf-heading mb-4">
           {user ? t('getYourFreeProduct') : t('getInstantAccess')}
         </h2>
@@ -242,7 +242,7 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-3 border border-gf-border rounded-lg bg-gf-input text-gf-heading placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent"
+                className="w-full p-3 border border-gf-border rounded-lg bg-gf-input text-gf-heading placeholder-gf-muted focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent"
                 placeholder={t('enterEmailAddress')}
                 required
                 disabled={loading}
@@ -269,7 +269,7 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
               captchaLoading || // Disable when captcha is loading
               (!user && (!email || !termsAccepted || (process.env.NODE_ENV === 'production' && !captchaToken)))
             }
-            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+            className="w-full bg-gf-success hover:bg-gf-success/90 disabled:bg-gf-muted/30 disabled:cursor-not-allowed text-gf-heading font-semibold py-3 px-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gf-success focus:ring-offset-2 active:scale-[0.98]"
           >
             {loading || captchaLoading ? (
               <div className="flex items-center justify-center">
@@ -314,7 +314,7 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gf-deep to-gf-raised">
-      <div className="max-w-4xl mx-auto p-8 bg-gf-base border border-gf-border shadow-xl backdrop-blur-md rounded-xl">
+      <div className="max-w-4xl mx-auto p-8 bg-gf-base border border-gf-border shadow-[var(--gf-shadow-accent)] backdrop-blur-md rounded-2xl">
         <DemoCheckoutNotice />
         <div className="flex">
           {renderProductInfo()}

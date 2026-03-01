@@ -184,7 +184,7 @@ export function Step4EnterKey() {
       </div>
 
       {/* Info Box - Key Type Explanation */}
-      <div className="mb-6 p-4 bg-gf-accent-soft border border-gf-accent/20 rounded-lg">
+      <div className="mb-6 p-4 bg-gf-accent-soft border border-gf-accent/20">
         <div className="flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-gf-accent flex-shrink-0 mt-0.5" />
           <div className="text-sm text-gf-accent">
@@ -227,7 +227,7 @@ export function Step4EnterKey() {
             placeholder={t('input.placeholder', {
               defaultValue: state.mode === 'test' ? 'rk_test_... or sk_test_...' : 'rk_live_... or sk_live_...',
             })}
-            className={`w-full px-4 py-3 pr-12 border rounded-lg font-mono text-sm resize-none ${
+            className={`w-full px-4 py-3 pr-12 border font-mono text-sm resize-none ${
               state.validationStatus === 'success'
                 ? 'border-gf-success bg-gf-success-soft'
                 : state.validationStatus === 'error'
@@ -259,7 +259,7 @@ export function Step4EnterKey() {
       {state.validationResult &&
         !state.validationResult.formatValidation.isValid &&
         state.validationResult.formatValidation.errors.length > 0 && (
-          <div className="mb-6 bg-gf-danger-soft border border-gf-danger/20 rounded-lg p-4">
+          <div className="mb-6 bg-gf-danger-soft border border-gf-danger/20 p-4">
             <div className="flex items-start gap-3">
               <XCircle className="w-5 h-5 text-gf-danger mt-0.5 flex-shrink-0" />
               <div className="flex-1">
@@ -278,7 +278,7 @@ export function Step4EnterKey() {
 
       {/* Connection Test Result */}
       {state.validationResult?.connectionTest && !state.validationResult.connectionTest.success && (
-        <div className="mb-6 bg-gf-danger-soft border border-gf-danger/20 rounded-lg p-4">
+        <div className="mb-6 bg-gf-danger-soft border border-gf-danger/20 p-4">
           <div className="flex items-start gap-3">
             <XCircle className="w-5 h-5 text-gf-danger mt-0.5 flex-shrink-0" />
             <div className="flex-1">
@@ -296,7 +296,7 @@ export function Step4EnterKey() {
       {/* Permission Verification Result */}
       {state.validationResult?.permissionVerification &&
         !state.validationResult.permissionVerification.allGranted && (
-          <div className="mb-6 bg-gf-warning-soft border border-gf-warning/20 rounded-lg p-4">
+          <div className="mb-6 bg-gf-warning-soft border border-gf-warning/20 p-4">
             <div className="flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-gf-warning mt-0.5 flex-shrink-0" />
               <div className="flex-1">
@@ -335,7 +335,7 @@ export function Step4EnterKey() {
 
       {/* Success State */}
       {state.validationStatus === 'success' && state.validationResult?.isValid && (
-        <div className="mb-6 bg-gf-success-soft border border-gf-success/20 rounded-lg p-4">
+        <div className="mb-6 bg-gf-success-soft border border-gf-success/20 p-4">
           <div className="flex items-start gap-3">
             <CheckCircle2 className="w-5 h-5 text-gf-success mt-0.5 flex-shrink-0" />
             <div className="flex-1">
@@ -373,7 +373,7 @@ export function Step4EnterKey() {
           <button
             onClick={handleValidate}
             disabled={!canValidate || state.validationStatus === 'validating'}
-            className={`w-full py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors ${
+            className={`w-full py-3 font-semibold flex items-center justify-center gap-2 transition-colors ${
               canValidate && state.validationStatus !== 'validating'
                 ? 'bg-gf-accent text-gf-inverse hover:bg-gf-accent-hover'
                 : 'bg-gf-raised text-gf-muted cursor-not-allowed'
@@ -395,7 +395,7 @@ export function Step4EnterKey() {
       <div className="flex items-center justify-between">
         <button
           onClick={previousStep}
-          className="inline-flex items-center gap-2 px-5 py-2.5 text-gf-body hover:bg-gf-hover rounded-lg transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 text-gf-body hover:bg-gf-hover transition-colors"
           disabled={isSaving}
         >
           <ArrowLeft className="w-4 h-4" />
@@ -405,7 +405,7 @@ export function Step4EnterKey() {
         <button
           onClick={handleSaveAndContinue}
           disabled={!canSave || isSaving}
-          className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-lg font-semibold transition-colors ${
+          className={`inline-flex items-center gap-2 px-6 py-2.5 font-semibold transition-colors ${
             canSave && !isSaving
               ? 'bg-gf-success hover:opacity-90 text-gf-inverse'
               : 'bg-gf-raised text-gf-muted cursor-not-allowed'

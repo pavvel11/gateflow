@@ -22,7 +22,7 @@ export default function ComingSoonEmptyState({ shopName, contactEmail }: ComingS
 
         {/* Shop Name Badge */}
         <div className="mb-6 inline-block">
-          <div className="px-6 py-2 bg-gf-base/80 backdrop-blur-sm rounded-full border border-gf-border shadow-lg">
+          <div className="px-6 py-2 bg-gf-base/80 backdrop-blur-sm rounded-full border border-gf-border">
             <span className="text-sm font-medium text-gf-muted">
               {shopName}
             </span>

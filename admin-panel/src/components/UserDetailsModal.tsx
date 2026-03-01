@@ -96,13 +96,13 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
         subtitle={userProfile?.user.email || t('modal.loading')}
         icon={
           userProfile ? (
-            <div className="w-8 h-8 rounded-full bg-gf-accent flex items-center justify-center">
+            <div className="w-8 h-8 bg-gf-accent flex items-center justify-center">
               <span className="text-sm font-medium text-gf-inverse">
                 {userProfile.user.email.charAt(0).toUpperCase()}
               </span>
             </div>
           ) : (
-            <div className="w-8 h-8 rounded-full bg-gf-raised animate-pulse" />
+            <div className="w-8 h-8 bg-gf-raised animate-pulse" />
           )
         }
         badge={userProfile ? 
@@ -127,9 +127,9 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
           <div className="space-y-6">
             {/* User Basic Info */}
             <ModalSection title={t('modal.accountInfo')}>
-              <div className="flex items-center space-x-4 p-4 bg-gf-accent-soft rounded-xl border border-gf-border">
+              <div className="flex items-center space-x-4 p-4 bg-gf-accent-soft border-2 border-gf-border-medium">
                 <div className="flex-shrink-0 h-12 w-12">
-                  <div className="h-12 w-12 rounded-full bg-gf-accent flex items-center justify-center">
+                  <div className="h-12 w-12 bg-gf-accent flex items-center justify-center">
                     <span className="text-lg font-medium text-gf-inverse">
                       {userProfile.user.email.charAt(0).toUpperCase()}
                     </span>
@@ -146,22 +146,22 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gf-base p-4 rounded-lg border border-gf-border">
+                <div className="bg-gf-base p-4 border-2 border-gf-border-medium">
                   <p className="text-sm text-gf-muted">{t('modal.joined')}</p>
                   <p className="text-sm font-medium text-gf-heading">
                     {formatDate(userProfile.user.created_at)}
                   </p>
                 </div>
-                <div className="bg-gf-base p-4 rounded-lg border border-gf-border">
+                <div className="bg-gf-base p-4 border-2 border-gf-border-medium">
                   <p className="text-sm text-gf-muted">{t('modal.lastSignIn')}</p>
                   <p className="text-sm font-medium text-gf-heading">
                     {formatDate(userProfile.user.last_sign_in_at)}
                   </p>
                 </div>
-                <div className="bg-gf-base p-4 rounded-lg border border-gf-border">
+                <div className="bg-gf-base p-4 border-2 border-gf-border-medium">
                   <p className="text-sm text-gf-muted">{t('modal.emailStatus')}</p>
                   <div className="flex items-center space-x-2">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    <span className={`inline-flex items-center px-2 py-1 text-xs font-medium ${
                       userProfile.user.email_confirmed_at
                         ? 'bg-gf-success-soft text-gf-success'
                         : 'bg-gf-warning-soft text-gf-warning'
@@ -170,7 +170,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                     </span>
                   </div>
                 </div>
-                <div className="bg-gf-base p-4 rounded-lg border border-gf-border">
+                <div className="bg-gf-base p-4 border-2 border-gf-border-medium">
                   <p className="text-sm text-gf-muted">{t('modal.totalValue')}</p>
                   <p className="text-sm font-medium text-gf-heading">
                     {formatPrice(userProfile.stats.total_value, 'USD')}
@@ -182,19 +182,19 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
             {/* Activity Stats */}
             <ModalSection title={t('modal.activitySummary')}>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gf-base p-4 rounded-lg border border-gf-border text-center">
+                <div className="bg-gf-base p-4 border-2 border-gf-border-medium text-center">
                   <div className="text-2xl font-bold text-gf-accent">
                     {userProfile.stats.total_products}
                   </div>
                   <p className="text-sm text-gf-muted">{t('modal.productsAccessed')}</p>
                 </div>
-                <div className="bg-gf-base p-4 rounded-lg border border-gf-border text-center">
+                <div className="bg-gf-base p-4 border-2 border-gf-border-medium text-center">
                   <div className="text-2xl font-bold text-gf-success">
                     {formatPrice(userProfile.stats.total_value, 'USD')}
                   </div>
                   <p className="text-sm text-gf-muted">{t('modal.totalValue')}</p>
                 </div>
-                <div className="bg-gf-base p-4 rounded-lg border border-gf-border text-center">
+                <div className="bg-gf-base p-4 border-2 border-gf-border-medium text-center">
                   <div className="text-sm font-medium text-gf-heading">
                     {formatDate(userProfile.stats.first_access_granted_at)}
                   </div>
@@ -206,7 +206,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
             {/* Product Access */}
             <ModalSection title={t('modal.productAccess')}>
               {userProfile.access.length > 0 ? (
-                <div className="overflow-hidden border border-gf-border rounded-lg">
+                <div className="overflow-hidden border-2 border-gf-border-medium">
                   <table className="min-w-full divide-y divide-gf-border">
                     <thead className="bg-gf-raised">
                       <tr>
@@ -233,7 +233,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             </div>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
-                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            <span className={`inline-flex items-center px-2 py-1 text-xs font-medium ${
                               access.product_price === 0
                                 ? 'bg-gf-success-soft text-gf-success'
                                 : 'bg-gf-accent-soft text-gf-accent'
@@ -242,7 +242,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             </span>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
-                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            <span className={`inline-flex items-center px-2 py-1 text-xs font-medium ${
                               access.product_is_active
                                 ? 'bg-gf-success-soft text-gf-success'
                                 : 'bg-gf-danger-soft text-gf-danger'
@@ -259,7 +259,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                   </table>
                 </div>
               ) : (
-                <div className="bg-gf-base p-8 rounded-lg border border-gf-border text-center">
+                <div className="bg-gf-base p-8 border-2 border-gf-border-medium text-center">
                   <div className="text-gf-muted mb-4">
                     <svg className="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-4.5" />

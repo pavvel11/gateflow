@@ -27,7 +27,7 @@ export function CategoriesSection({
           <label className="block text-sm font-medium text-gf-body mb-2">
             {t('categories', { defaultValue: 'Categories' })}
           </label>
-          <div className="border border-gf-border rounded-lg max-h-40 overflow-y-auto p-2 bg-gf-input">
+          <div className="border-2 border-gf-border-medium max-h-40 overflow-y-auto p-2 bg-gf-input">
             {loadingCategories ? (
               <div className="text-sm text-gray-500 p-2">Loading categories...</div>
             ) : allCategories.length === 0 ? (
@@ -35,7 +35,7 @@ export function CategoriesSection({
             ) : (
               <div className="space-y-2">
                 {allCategories.map((cat) => (
-                  <label key={cat.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gf-hover p-1 rounded">
+                  <label key={cat.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gf-hover p-1">
                     <input
                       type="checkbox"
                       checked={formData.categories.includes(cat.id)}

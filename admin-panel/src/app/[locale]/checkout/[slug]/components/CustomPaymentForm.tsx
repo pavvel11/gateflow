@@ -399,7 +399,7 @@ export default function CustomPaymentForm({
             <button
               type="button"
               onClick={onChangeAccount}
-              className="text-blue-400 hover:text-blue-300 text-xs underline transition-colors"
+              className="text-gf-accent hover:text-gf-accent-hover text-xs underline transition-colors"
             >
               {t('changeAccount')}
             </button>
@@ -442,7 +442,7 @@ export default function CustomPaymentForm({
           placeholder={t('fullNamePlaceholder')}
           required
           disabled={isLoadingProfile}
-          className="w-full px-3 py-2.5 bg-gf-input border border-gf-border rounded-lg text-gf-heading placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full px-3 py-2.5 bg-gf-input border border-gf-border rounded-lg text-gf-heading placeholder-gf-muted focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed"
         />
       </div>
 
@@ -459,14 +459,14 @@ export default function CustomPaymentForm({
             />
             <span className="ml-3 text-sm text-gf-body">
               {t('iAgree', { defaultValue: 'I agree to the' })}{' '}
-              <a href="/terms" target="_blank" className="text-blue-400 hover:text-blue-300 underline transition-colors">
+              <a href="/terms" target="_blank" className="text-gf-accent hover:text-gf-accent-hover underline transition-colors">
                 {t('termsOfService', { defaultValue: 'Terms of Service' })}
               </a>
               {' '}{t('and', { defaultValue: 'and' })}{' '}
-              <a href="/privacy" target="_blank" className="text-blue-400 hover:text-blue-300 underline transition-colors">
+              <a href="/privacy" target="_blank" className="text-gf-accent hover:text-gf-accent-hover underline transition-colors">
                 {t('privacyPolicy', { defaultValue: 'Privacy Policy' })}
               </a>
-              <span className="text-red-400 ml-1">*</span>
+              <span className="text-gf-danger ml-1">*</span>
             </span>
           </label>
         </div>
@@ -523,7 +523,7 @@ export default function CustomPaymentForm({
       <div className="space-y-3">
         <div>
           <label htmlFor="nip" className="block text-sm font-medium text-gf-body mb-2">
-            {t('nipLabel')} <span className="text-gray-500 text-xs">({t('optional', { defaultValue: 'optional' })})</span>
+            {t('nipLabel')} <span className="text-gf-muted text-xs">({t('optional', { defaultValue: 'optional' })})</span>
           </label>
           <div className="relative">
             <input
@@ -541,14 +541,14 @@ export default function CustomPaymentForm({
               placeholder={t('taxIdPlaceholder')}
               maxLength={20}
               className={`w-full px-3 py-2.5 bg-gf-input border ${
-                nipError ? 'border-red-500/50' : gusSuccess ? 'border-green-500/50' : 'border-gf-border'
-              } rounded-lg text-gf-heading placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent ${
+                nipError ? 'border-gf-danger/50' : gusSuccess ? 'border-gf-success/50' : 'border-gf-border'
+              } rounded-lg text-gf-heading placeholder-gf-muted focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent ${
                 isLoadingGUS ? 'pr-10' : ''
               }`}
             />
             {isLoadingGUS && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <svg className="animate-spin h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-5 w-5 text-gf-accent" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
@@ -556,13 +556,13 @@ export default function CustomPaymentForm({
             )}
           </div>
           {nipError && (
-            <p className="mt-1 text-xs text-red-400">{nipError}</p>
+            <p className="mt-1 text-xs text-gf-danger">{nipError}</p>
           )}
           {gusError && (
-            <p className="mt-1 text-xs text-yellow-400">⚠️ {gusError}</p>
+            <p className="mt-1 text-xs text-gf-warning">⚠️ {gusError}</p>
           )}
           {gusSuccess && !isLoadingGUS && (
-            <p className="mt-1 text-xs text-green-400">✓ {t('gusDataFetched')}</p>
+            <p className="mt-1 text-xs text-gf-success">✓ {t('gusDataFetched')}</p>
           )}
         </div>
 
@@ -579,7 +579,7 @@ export default function CustomPaymentForm({
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 placeholder={t('companyNamePlaceholder')}
-                className="w-full px-3 py-2.5 bg-gf-input border border-gf-border rounded-lg text-gf-heading placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent"
+                className="w-full px-3 py-2.5 bg-gf-input border border-gf-border rounded-lg text-gf-heading placeholder-gf-muted focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent"
               />
             </div>
             <div>
@@ -592,7 +592,7 @@ export default function CustomPaymentForm({
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder={t('addressPlaceholder')}
-                className="w-full px-3 py-2.5 bg-gf-input border border-gf-border rounded-lg text-gf-heading placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent"
+                className="w-full px-3 py-2.5 bg-gf-input border border-gf-border rounded-lg text-gf-heading placeholder-gf-muted focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -606,7 +606,7 @@ export default function CustomPaymentForm({
                   value={postalCode}
                   onChange={(e) => setPostalCode(e.target.value)}
                   placeholder={t('postalCodePlaceholder')}
-                  className="w-full px-3 py-2.5 bg-gf-input border border-gf-border rounded-lg text-gf-heading placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent"
+                  className="w-full px-3 py-2.5 bg-gf-input border border-gf-border rounded-lg text-gf-heading placeholder-gf-muted focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent"
                 />
               </div>
               <div>
@@ -619,7 +619,7 @@ export default function CustomPaymentForm({
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder={t('cityPlaceholder')}
-                  className="w-full px-3 py-2.5 bg-gf-input border border-gf-border rounded-lg text-gf-heading placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent"
+                  className="w-full px-3 py-2.5 bg-gf-input border border-gf-border rounded-lg text-gf-heading placeholder-gf-muted focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent"
                 />
               </div>
             </div>
@@ -648,7 +648,7 @@ export default function CustomPaymentForm({
 
             {/* Coupon Discount */}
             {appliedCoupon && discountAmount > 0 && (
-              <div className="flex justify-between text-sm text-green-400">
+              <div className="flex justify-between text-sm text-gf-success">
                 <span>{t('couponDiscount', { defaultValue: 'Discount' })} ({appliedCoupon.code})</span>
                 <span>-{formatPrice(discountAmount, product.currency)} {product.currency}</span>
               </div>
@@ -661,19 +661,19 @@ export default function CustomPaymentForm({
         {/* Total - Prominent */}
         <div className="flex justify-between items-baseline">
           <div>
-            <div className={`font-semibold ${customAmountError ? 'text-red-400' : 'text-gf-heading'}`}>
+            <div className={`font-semibold ${customAmountError ? 'text-gf-danger' : 'text-gf-heading'}`}>
               {t('total', { defaultValue: 'Total' })}
               {customAmountError && (
                 <span className="text-xs font-normal ml-2">({t('invalidAmount', { defaultValue: 'invalid amount' })})</span>
               )}
             </div>
             {!customAmountError && product.vat_rate && product.vat_rate > 0 && (
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-gf-muted">
                 {t('netPrice')}: {formatPrice(totalNet, product.currency)} {product.currency} + {t('vat')} {vatRate}%
               </div>
             )}
           </div>
-          <div className={`text-2xl font-bold ${customAmountError ? 'text-red-400 line-through' : 'text-gf-heading'}`}>
+          <div className={`text-2xl font-bold ${customAmountError ? 'text-gf-danger line-through' : 'text-gf-heading'}`}>
             {formatPrice(totalGross, product.currency)} {product.currency}
           </div>
         </div>
@@ -712,15 +712,15 @@ export default function CustomPaymentForm({
       <button
         type="submit"
         disabled={!stripe || isProcessing || !!customAmountError || (emailMismatch && !emailConfirmed)}
-        className={`w-full px-6 py-4 text-white font-bold rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] ${
+        className={`w-full px-6 py-4 text-gf-heading font-bold rounded-full shadow-[var(--gf-shadow-accent)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] ${
           customAmountError
-            ? 'bg-gray-600 cursor-not-allowed'
-            : 'bg-wl-accent hover:bg-wl-accent-hover hover:shadow-xl'
+            ? 'bg-gf-muted/30 cursor-not-allowed'
+            : 'bg-wl-accent hover:bg-wl-accent-hover'
         }`}
       >
         {isProcessing ? (
           <span className="flex items-center justify-center">
-            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gf-heading" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
@@ -733,7 +733,7 @@ export default function CustomPaymentForm({
         )}
       </button>
 
-      <p className="text-xs text-gray-500 text-center">
+      <p className="text-xs text-gf-muted text-center">
         🔒 {t('securePayment')}
       </p>
     </form>

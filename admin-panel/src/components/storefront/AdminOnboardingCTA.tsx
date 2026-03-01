@@ -25,7 +25,7 @@ export default function AdminOnboardingCTA({ shopName, shopEmail }: AdminOnboard
         <div className="text-center mb-12">
           {/* Welcome Badge */}
           <div className="mb-6 inline-block">
-            <div className="px-6 py-2 bg-wl-accent-soft backdrop-blur-sm rounded-full border border-wl-border-accent shadow-lg">
+            <div className="px-6 py-2 bg-wl-accent-soft backdrop-blur-sm rounded-full border border-wl-border-accent">
               <span className="text-sm font-medium text-wl-accent">
                 Admin Panel
               </span>
@@ -45,7 +45,7 @@ export default function AdminOnboardingCTA({ shopName, shopEmail }: AdminOnboard
           {/* Main CTA Button */}
           <Link
             href="/dashboard/products?open=new"
-            className="inline-flex items-center px-8 py-4 border border-transparent rounded-xl text-lg font-medium text-white bg-wl-accent hover:bg-wl-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wl-accent transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+            className="inline-flex items-center px-8 py-4 border border-transparent rounded-full text-lg font-medium text-gf-heading bg-wl-accent hover:bg-wl-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wl-accent transition-all duration-200 shadow-[var(--gf-shadow-accent)] active:scale-[0.98]"
           >
             <svg className="-ml-1 mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -55,13 +55,13 @@ export default function AdminOnboardingCTA({ shopName, shopEmail }: AdminOnboard
         </div>
 
         {/* Setup Progress Card */}
-        <div className="bg-gf-base rounded-2xl shadow-xl border border-gf-border overflow-hidden">
+        <div className="bg-gf-base rounded-2xl shadow-[var(--gf-shadow-accent)] border border-gf-border overflow-hidden">
           {/* Card Header */}
           <div className="bg-wl-accent px-8 py-6">
-            <h2 className="text-2xl font-bold text-white">
+            <h2 className="text-2xl font-bold text-gf-heading">
               Setup Progress
             </h2>
-            <p className="text-white/80 mt-1">
+            <p className="text-gf-body mt-1">
               Complete these steps to launch your store
             </p>
           </div>
@@ -73,8 +73,8 @@ export default function AdminOnboardingCTA({ shopName, shopEmail }: AdminOnboard
                 <li key={item.key} className="flex items-start">
                   <div className="flex-shrink-0 mt-1">
                     {item.completed ? (
-                      <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-6 h-6 bg-gf-success rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-gf-heading" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
@@ -146,10 +146,10 @@ export default function AdminOnboardingCTA({ shopName, shopEmail }: AdminOnboard
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
           <Link
             href="/dashboard/products"
-            className="group p-6 bg-gf-base rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gf-border hover:border-wl-border-accent"
+            className="group p-6 bg-gf-base rounded-2xl transition-all duration-300 border border-gf-border hover:border-wl-border-accent"
           >
-            <div className="w-12 h-12 bg-wl-accent rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-wl-accent rounded-xl flex items-center justify-center mb-4">
+              <svg className="w-6 h-6 text-gf-heading" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
             </div>
@@ -163,10 +163,10 @@ export default function AdminOnboardingCTA({ shopName, shopEmail }: AdminOnboard
 
           <Link
             href="/dashboard/settings"
-            className="group p-6 bg-gf-base rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gf-border hover:border-gf-border"
+            className="group p-6 bg-gf-base rounded-2xl transition-all duration-300 border border-gf-border hover:border-gf-border-accent"
           >
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-gf-accent rounded-xl flex items-center justify-center mb-4">
+              <svg className="w-6 h-6 text-gf-heading" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
               </svg>
             </div>
@@ -180,10 +180,10 @@ export default function AdminOnboardingCTA({ shopName, shopEmail }: AdminOnboard
 
           <Link
             href="/dashboard"
-            className="group p-6 bg-gf-base rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gf-border hover:border-gf-border"
+            className="group p-6 bg-gf-base rounded-2xl transition-all duration-300 border border-gf-border hover:border-gf-border-accent"
           >
-            <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-gf-success rounded-xl flex items-center justify-center mb-4">
+              <svg className="w-6 h-6 text-gf-heading" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>

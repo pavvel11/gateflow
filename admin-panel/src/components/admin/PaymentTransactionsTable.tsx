@@ -70,7 +70,7 @@ export default function PaymentTransactionsTable({
   };
 
   return (
-    <div className="bg-gf-base rounded-lg shadow overflow-hidden">
+    <div className="bg-gf-base border-2 border-gf-border-medium overflow-hidden">
       <div className="px-6 py-4 border-b border-gf-border">
         <h3 className="text-lg font-semibold text-gf-heading">
           {t('title')}
@@ -78,7 +78,7 @@ export default function PaymentTransactionsTable({
       </div>
       
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gf-border">
+        <table className="min-w-full divide-y divide-gf-border-subtle">
           <thead className="bg-gf-raised">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
@@ -101,9 +101,9 @@ export default function PaymentTransactionsTable({
               </th>
             </tr>
           </thead>
-          <tbody className="bg-gf-base divide-y divide-gf-border">
-            {transactions.map((transaction) => (
-              <tr key={transaction.id}>
+          <tbody className="bg-gf-base divide-y divide-gf-border-subtle">
+            {transactions.map((transaction, index) => (
+              <tr key={transaction.id} className={index % 2 === 1 ? 'bg-gf-row-alt' : ''}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gf-heading">
                     {transaction.id.slice(0, 8)}...
@@ -114,7 +114,7 @@ export default function PaymentTransactionsTable({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gf-heading">
-                    {transaction.user_id.slice(0, 8)}...
+                    {transaction.user_id?.slice(0, 8) ?? '—'}...
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -128,7 +128,7 @@ export default function PaymentTransactionsTable({
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold ${
                     transaction.status === 'completed'
                       ? 'bg-gf-success-soft text-gf-success'
                       : transaction.status === 'refunded'
@@ -162,7 +162,7 @@ export default function PaymentTransactionsTable({
       {/* Refund Modal */}
       {showRefundModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-gf-base rounded-lg shadow-2xl p-6 max-w-md w-full mx-4">
+          <div className="bg-gf-base p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-gf-heading mb-4">
               {tRefund('title')}
             </h3>
@@ -174,7 +174,7 @@ export default function PaymentTransactionsTable({
                 <select
                   value={refundReason}
                   onChange={(e) => setRefundReason(e.target.value)}
-                  className="w-full px-3 py-2 border border-gf-border rounded-md focus:outline-none focus:ring-2 focus:ring-gf-accent bg-gf-raised text-gf-heading"
+                  className="w-full px-3 py-2 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent bg-gf-raised text-gf-heading"
                 >
                   <option value="">{tRefund('selectReason')}</option>
                   <option value="requested_by_customer">{tRefund('reasons.requested_by_customer')}</option>
@@ -186,7 +186,7 @@ export default function PaymentTransactionsTable({
                 <button
                   onClick={() => handleRefund(showRefundModal)}
                   disabled={!refundReason || refundingId === showRefundModal}
-                  className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                  className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 transition-colors"
                 >
                   {refundingId === showRefundModal ? tRefund('processing') : tRefund('fullRefund')}
                 </button>
@@ -195,7 +195,7 @@ export default function PaymentTransactionsTable({
                     setShowRefundModal(null);
                     setRefundReason('');
                   }}
-                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 transition-colors"
                 >
                   {tRefund('cancel')}
                 </button>

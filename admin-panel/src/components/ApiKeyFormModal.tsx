@@ -127,7 +127,7 @@ export default function ApiKeyFormModal({
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 bg-gf-input text-gf-heading border border-gf-border rounded-lg focus:ring-2 focus:ring-gf-accent focus:border-transparent outline-none transition-all"
+              className="w-full px-3 py-2 bg-gf-input text-gf-heading border-2 border-gf-border-medium focus:ring-2 focus:ring-gf-accent focus:border-transparent outline-none transition-all"
               placeholder={t('keyNamePlaceholder')}
             />
           </div>
@@ -143,7 +143,7 @@ export default function ApiKeyFormModal({
                   key={preset.id}
                   type="button"
                   onClick={() => applyPreset(preset.scopes)}
-                  className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                  className={`px-3 py-1.5 text-sm border transition-colors ${
                     JSON.stringify(formData.scopes.sort()) === JSON.stringify(preset.scopes.sort())
                       ? 'bg-gf-accent text-gf-inverse border-gf-accent'
                       : 'bg-gf-base text-gf-body border-gf-border hover:bg-gf-hover'
@@ -160,7 +160,7 @@ export default function ApiKeyFormModal({
             <label className="block text-sm font-medium text-gf-body mb-2">
               {t('permissions')}
             </label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gf-deep p-4 rounded-lg border border-gf-border">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gf-deep p-4 border-2 border-gf-border-medium">
               {AVAILABLE_SCOPES.map((scope) => (
                 <label key={scope.value} className="flex items-start space-x-3 cursor-pointer group">
                   <input
@@ -192,7 +192,7 @@ export default function ApiKeyFormModal({
             </button>
 
             {showAdvanced && (
-              <div className="mt-4 space-y-4 p-4 bg-gf-deep rounded-lg border border-gf-border">
+              <div className="mt-4 space-y-4 p-4 bg-gf-deep border-2 border-gf-border-medium">
                 {/* Rate Limit */}
                 <div>
                   <label className="block text-sm font-medium text-gf-body mb-1">
@@ -205,7 +205,7 @@ export default function ApiKeyFormModal({
                       max={1000}
                       value={formData.rate_limit_per_minute}
                       onChange={(e) => setFormData({ ...formData, rate_limit_per_minute: parseInt(e.target.value) || 60 })}
-                      className="w-32 px-3 py-2 bg-gf-input text-gf-heading border border-gf-border rounded-lg focus:ring-2 focus:ring-gf-accent focus:border-transparent outline-none transition-all"
+                      className="w-32 px-3 py-2 bg-gf-input text-gf-heading border-2 border-gf-border-medium focus:ring-2 focus:ring-gf-accent focus:border-transparent outline-none transition-all"
                     />
                     <span className="text-sm text-gf-muted">{t('requestsPerMinute')}</span>
                   </div>
@@ -221,7 +221,7 @@ export default function ApiKeyFormModal({
                     value={formData.expires_at}
                     onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })}
                     min={new Date().toISOString().slice(0, 16)}
-                    className="w-full px-3 py-2 bg-gf-input text-gf-heading border border-gf-border rounded-lg focus:ring-2 focus:ring-gf-accent focus:border-transparent outline-none transition-all"
+                    className="w-full px-3 py-2 bg-gf-input text-gf-heading border-2 border-gf-border-medium focus:ring-2 focus:ring-gf-accent focus:border-transparent outline-none transition-all"
                   />
                   <p className="text-xs text-gf-muted mt-1">{t('expirationHelp')}</p>
                 </div>

@@ -100,7 +100,7 @@ const Toast: React.FC<ToastProps> = ({
 
   return (
     <div 
-      className={`fixed bottom-4 right-4 flex items-center p-4 rounded-lg shadow-lg border z-50 transition-all duration-300 transform ${
+      className={`fixed bottom-4 right-4 flex items-center p-4 border z-50 transition-all duration-300 transform ${
         isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
       } ${styles.bg} ${styles.border}`}
       role="alert"
@@ -116,7 +116,7 @@ const Toast: React.FC<ToastProps> = ({
           setIsVisible(false);
           setTimeout(onClose, 300);
         }}
-        className="ml-auto -mx-1.5 -my-1.5 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 inline-flex h-8 w-8 text-gf-muted hover:text-gf-heading"
+        className="ml-auto -mx-1.5 -my-1.5 focus:ring-2 focus:ring-gray-300 p-1.5 inline-flex h-8 w-8 text-gf-muted hover:text-gf-heading"
       >
         <span className="sr-only">{t('close')}</span>
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

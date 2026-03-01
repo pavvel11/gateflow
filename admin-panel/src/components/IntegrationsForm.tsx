@@ -108,7 +108,7 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
   return (
     <div className="space-y-6">
       {/* General Quick Start Guide */}
-      <details className="group bg-gradient-to-r from-gf-success-soft to-gf-success-soft rounded-xl border border-gf-success/20">
+      <details className="group bg-gradient-to-r from-gf-success-soft to-gf-success-soft border border-gf-success/20">
         <summary className="px-6 py-4 cursor-pointer list-none flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-2xl">🚀</span>
@@ -122,9 +122,9 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
         <div className="px-6 pb-6 space-y-4">
           <div className="grid gap-4 md:grid-cols-3">
             {/* Step 1 - Analytics */}
-            <div className="p-4 bg-gf-base rounded-lg border border-gf-border">
+            <div className="p-4 bg-gf-base border-2 border-gf-border-medium">
               <div className="flex items-center gap-2 mb-2">
-                <span className="w-6 h-6 rounded-full bg-gf-accent-soft text-gf-accent text-xs font-bold flex items-center justify-center">1</span>
+                <span className="w-6 h-6 bg-gf-accent-soft text-gf-accent text-xs font-bold flex items-center justify-center">1</span>
                 <h4 className="font-medium text-gf-heading text-sm">{t('guide.quickStart.analytics.title')}</h4>
               </div>
               <p className="text-xs text-gf-body mb-2">{t('guide.quickStart.analytics.desc')}</p>
@@ -135,9 +135,9 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
             </div>
 
             {/* Step 2 - Marketing */}
-            <div className="p-4 bg-gf-base rounded-lg border border-gf-border">
+            <div className="p-4 bg-gf-base border-2 border-gf-border-medium">
               <div className="flex items-center gap-2 mb-2">
-                <span className="w-6 h-6 rounded-full bg-gf-accent-soft text-gf-accent text-xs font-bold flex items-center justify-center">2</span>
+                <span className="w-6 h-6 bg-gf-accent-soft text-gf-accent text-xs font-bold flex items-center justify-center">2</span>
                 <h4 className="font-medium text-gf-heading text-sm">{t('guide.quickStart.marketing.title')}</h4>
               </div>
               <p className="text-xs text-gf-body mb-2">{t('guide.quickStart.marketing.desc')}</p>
@@ -149,9 +149,9 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
             </div>
 
             {/* Step 3 - Consents */}
-            <div className="p-4 bg-gf-base rounded-lg border border-gf-border">
+            <div className="p-4 bg-gf-base border-2 border-gf-border-medium">
               <div className="flex items-center gap-2 mb-2">
-                <span className="w-6 h-6 rounded-full bg-gf-warning-soft text-gf-warning text-xs font-bold flex items-center justify-center">3</span>
+                <span className="w-6 h-6 bg-gf-warning-soft text-gf-warning text-xs font-bold flex items-center justify-center">3</span>
                 <h4 className="font-medium text-gf-heading text-sm">{t('guide.quickStart.consents.title')}</h4>
               </div>
               <p className="text-xs text-gf-body mb-2">{t('guide.quickStart.consents.desc')}</p>
@@ -162,7 +162,7 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
             </div>
           </div>
 
-          <div className="p-3 bg-gf-success-soft rounded-lg">
+          <div className="p-3 bg-gf-success-soft">
             <p className="text-xs text-gf-success text-center">
               ✅ {t('guide.quickStart.result')}
             </p>
@@ -170,7 +170,7 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
         </div>
       </details>
 
-      <div className="bg-gf-base rounded-xl shadow-sm border border-gf-border overflow-hidden">
+      <div className="bg-gf-base border-2 border-gf-border-medium overflow-hidden">
         {/* Tabs Header */}
         <div className="flex border-b border-gf-border overflow-x-auto">
           <TabButton id="analytics" label={t('tabs.analytics')} />
@@ -188,8 +188,8 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
             {activeTab === 'analytics' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-top-2">
                 {/* GTM Setup Guide */}
-                <details className="group border border-gf-accent/20 rounded-lg bg-gf-accent-soft">
-                  <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between text-sm font-medium text-gf-accent hover:bg-gf-accent-soft rounded-lg transition-colors">
+                <details className="group border border-gf-accent/20 bg-gf-accent-soft">
+                  <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between text-sm font-medium text-gf-accent hover:bg-gf-accent-soft transition-colors">
                     <span className="flex items-center gap-2">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                       {t('guide.gtm.title')}
@@ -218,7 +218,7 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
                         </div>
 
                         {/* Scenario 2 - Meta + Umami */}
-                        <div className="p-3 bg-gf-base rounded border border-gf-border">
+                        <div className="p-3 bg-gf-base rounded border-2 border-gf-border-medium">
                           <div className="font-medium text-teal-600 mb-2">2. {t('guide.gtm.scenario2.title')}</div>
                           <div className="text-xs space-y-1 mb-2">
                             <div className="text-gf-body">{t('guide.gtm.scenario2.gtm')}</div>
@@ -229,7 +229,7 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
                         </div>
 
                         {/* Scenario 3 - GA4 standard */}
-                        <div className="p-3 bg-gf-base rounded border border-gf-border">
+                        <div className="p-3 bg-gf-base rounded border-2 border-gf-border-medium">
                           <div className="font-medium text-gf-accent mb-2">3. {t('guide.gtm.scenario3.title')}</div>
                           <div className="text-xs space-y-1 mb-2">
                             <div className="text-gf-body">{t('guide.gtm.scenario3.gtm')}</div>
@@ -240,7 +240,7 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
                         </div>
 
                         {/* Scenario 4 - Full tracking */}
-                        <div className="p-3 bg-gf-base rounded border border-gf-border">
+                        <div className="p-3 bg-gf-base rounded border-2 border-gf-border-medium">
                           <div className="font-medium text-gf-accent mb-2">4. {t('guide.gtm.scenario4.title')}</div>
                           <div className="text-xs space-y-1 mb-2">
                             <div className="text-gf-body">{t('guide.gtm.scenario4.gtm')}</div>
@@ -251,7 +251,7 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
                         </div>
 
                         {/* Scenario 5 - Google Ads */}
-                        <div className="p-3 bg-gf-base rounded border border-gf-border">
+                        <div className="p-3 bg-gf-base rounded border-2 border-gf-border-medium">
                           <div className="font-medium text-gf-warning mb-2">5. {t('guide.gtm.scenario5.title')}</div>
                           <div className="text-xs space-y-1 mb-2">
                             <div className="text-gf-body">{t('guide.gtm.scenario5.gtm')}</div>
@@ -282,14 +282,14 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
                   <div className="grid gap-6 md:grid-cols-2">
                     <div>
                       <label className="block text-sm font-medium text-gf-body mb-1">{t('gtm.containerId')}</label>
-                      <input type="text" placeholder={t('gtm.containerIdPlaceholder')} value={formData.gtm_container_id || ''} onChange={(e) => handleChange('gtm_container_id', e.target.value)} className="w-full rounded-lg border border-gf-border px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none" />
+                      <input type="text" placeholder={t('gtm.containerIdPlaceholder')} value={formData.gtm_container_id || ''} onChange={(e) => handleChange('gtm_container_id', e.target.value)} className="w-full border-2 border-gf-border-medium px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gf-body mb-1">
                         {t('gtm.serverContainerUrl')}
                         <span className="text-xs text-gf-muted ml-2">(Advanced)</span>
                       </label>
-                      <input type="text" placeholder={t('gtm.serverContainerUrlPlaceholder')} value={formData.gtm_server_container_url || ''} onChange={(e) => handleChange('gtm_server_container_url', e.target.value)} className="w-full rounded-lg border border-gf-border px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none" />
+                      <input type="text" placeholder={t('gtm.serverContainerUrlPlaceholder')} value={formData.gtm_server_container_url || ''} onChange={(e) => handleChange('gtm_server_container_url', e.target.value)} className="w-full border-2 border-gf-border-medium px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none" />
                       <p className="mt-1 text-xs text-gf-muted">{t('gtm.serverContainerHelp')}</p>
                     </div>
                   </div>
@@ -314,11 +314,11 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
                   <div className="grid gap-6 md:grid-cols-2">
                     <div>
                       <label className="block text-sm font-medium text-gf-body mb-1">{t('umami.websiteId')}</label>
-                      <input type="text" placeholder={t('umami.websiteIdPlaceholder')} value={formData.umami_website_id || ''} onChange={(e) => handleChange('umami_website_id', e.target.value)} className="w-full rounded-lg border border-gf-border px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none" />
+                      <input type="text" placeholder={t('umami.websiteIdPlaceholder')} value={formData.umami_website_id || ''} onChange={(e) => handleChange('umami_website_id', e.target.value)} className="w-full border-2 border-gf-border-medium px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gf-body mb-1">{t('umami.scriptUrl')}</label>
-                      <input type="text" placeholder={t('umami.scriptUrlPlaceholder')} value={formData.umami_script_url || ''} onChange={(e) => handleChange('umami_script_url', e.target.value)} className="w-full rounded-lg border border-gf-border px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none" />
+                      <input type="text" placeholder={t('umami.scriptUrlPlaceholder')} value={formData.umami_script_url || ''} onChange={(e) => handleChange('umami_script_url', e.target.value)} className="w-full border-2 border-gf-border-medium px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none" />
                       <p className="mt-1 text-xs text-gf-muted">{t('umami.default')}: https://cloud.umami.is/script.js</p>
                     </div>
                   </div>
@@ -330,8 +330,8 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
             {activeTab === 'marketing' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-top-2">
                 {/* Facebook CAPI Setup Guide */}
-                <details className="group border border-gf-border-accent rounded-lg bg-gf-accent-soft">
-                  <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between text-sm font-medium text-gf-accent hover:bg-gf-accent-soft rounded-lg transition-colors">
+                <details className="group border border-gf-border-accent bg-gf-accent-soft">
+                  <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between text-sm font-medium text-gf-accent hover:bg-gf-accent-soft transition-colors">
                     <span className="flex items-center gap-2">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                       {t('guide.facebook.title')}
@@ -341,7 +341,7 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
                   <div className="px-4 pb-4 text-sm text-gf-body space-y-4">
                     {/* Quick Start - highlighted section */}
                     <div className="border-t border-gf-border-accent pt-4">
-                      <div className="p-4 bg-gf-success-soft rounded-lg border border-gf-success/20">
+                      <div className="p-4 bg-gf-success-soft border border-gf-success/20">
                         <h4 className="font-semibold text-gf-success mb-2 flex items-center gap-2">
                           <span className="text-lg">🚀</span> {t('guide.facebook.quickStart')}
                         </h4>
@@ -376,7 +376,7 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
                     <div>
                       <h4 className="font-semibold text-gf-heading mb-2">{t('guide.facebook.deduplication')}</h4>
                       <p className="text-gf-body text-xs mb-2">{t('guide.facebook.deduplicationDesc')}</p>
-                      <div className="p-3 bg-gf-base rounded border border-gf-border">
+                      <div className="p-3 bg-gf-base rounded border-2 border-gf-border-medium">
                         <pre className="text-xs text-gf-body whitespace-pre-wrap">
 {`Browser → FB Pixel (event_id: abc-123)
        → CAPI     (event_id: abc-123)
@@ -386,7 +386,7 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
                       </div>
                     </div>
 
-                    <div className="p-3 bg-gf-base rounded border border-gf-border">
+                    <div className="p-3 bg-gf-base rounded border-2 border-gf-border-medium">
                       <h4 className="font-semibold text-gf-heading mb-2">{t('guide.facebook.recommendation')}</h4>
                       <p className="text-xs text-gf-body mb-3">{t('guide.facebook.recommendationDesc')}</p>
                       <table className="w-full text-xs">
@@ -475,11 +475,11 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
                   <div className="grid gap-6 md:grid-cols-2">
                     <div>
                       <label className="block text-sm font-medium text-gf-body mb-1">{t('facebook.pixelId')}</label>
-                      <input type="text" placeholder={t('facebook.pixelIdPlaceholder')} value={formData.facebook_pixel_id || ''} onChange={(e) => handleChange('facebook_pixel_id', e.target.value)} className="w-full rounded-lg border border-gf-border px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none" />
+                      <input type="text" placeholder={t('facebook.pixelIdPlaceholder')} value={formData.facebook_pixel_id || ''} onChange={(e) => handleChange('facebook_pixel_id', e.target.value)} className="w-full border-2 border-gf-border-medium px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none" />
                     </div>
                     <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gf-body mb-1">{t('facebook.capiToken')}</label>
-                        <input type="password" value={formData.facebook_capi_token || ''} onChange={(e) => handleChange('facebook_capi_token', e.target.value)} className="w-full rounded-lg border border-gf-border px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none" />
+                        <input type="password" value={formData.facebook_capi_token || ''} onChange={(e) => handleChange('facebook_capi_token', e.target.value)} className="w-full border-2 border-gf-border-medium px-3 py-2 bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent outline-none" />
                         <p className="mt-1 text-xs text-gf-muted">{t('facebook.capiTokenHelp')}</p>
                     </div>
                     <div className="md:col-span-2">
@@ -509,8 +509,8 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
             {activeTab === 'consents' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-top-2">
                 {/* Consent Guide */}
-                <details className="group border border-gf-warning/20 rounded-lg bg-gf-warning-soft">
-                  <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between text-sm font-medium text-gf-warning hover:bg-gf-warning-soft rounded-lg transition-colors">
+                <details className="group border border-gf-warning/20 bg-gf-warning-soft">
+                  <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between text-sm font-medium text-gf-warning hover:bg-gf-warning-soft transition-colors">
                     <span className="flex items-center gap-2">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                       {t('guide.consent.title')}
@@ -556,7 +556,7 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
                     <div>
                       <h4 className="font-semibold text-gf-heading mb-2">{t('guide.consent.legitimateInterest')}</h4>
                       <p className="text-gf-body text-xs mb-2">{t('guide.consent.legitimateInterestDesc')}</p>
-                      <div className="p-3 bg-gf-base rounded border border-gf-border">
+                      <div className="p-3 bg-gf-base rounded border-2 border-gf-border-medium">
                         <p className="text-xs font-medium text-gf-body mb-1">{t('guide.consent.allowedWithoutConsent')}</p>
                         <ul className="text-xs text-gf-body list-disc list-inside">
                           <li><strong>Purchase</strong> - {t('guide.consent.purchaseDesc')}</li>
@@ -574,7 +574,7 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
                  </div>
 
                  {/* Server-side conversions without consent */}
-                 <div className="mt-6 p-4 border border-gf-warning/20 rounded-lg bg-gf-warning-soft">
+                 <div className="mt-6 p-4 border border-gf-warning/20 bg-gf-warning-soft">
                    <div className="flex items-start gap-3">
                      <input
                        id="send_conversions_without_consent"
@@ -611,7 +611,7 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
 
             {!['scripts', 'currency', 'gus'].includes(activeTab) && (
                 <div className="mt-6 border-t pt-4 flex justify-end">
-                    <button type="submit" disabled={loading} className="px-4 py-2 bg-gf-accent hover:bg-gf-accent-hover text-gf-inverse rounded-lg">{loading ? t('messages.saving') : t('saveConfig')}</button>
+                    <button type="submit" disabled={loading} className="px-4 py-2 bg-gf-accent hover:bg-gf-accent-hover text-gf-inverse">{loading ? t('messages.saving') : t('saveConfig')}</button>
                 </div>
             )}
           </form>
@@ -621,7 +621,7 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
             <div className="space-y-6 animate-in fade-in slide-in-from-top-2">
                 <div className="flex justify-between items-center">
                     <h3 className="text-lg font-medium text-gf-heading">{t('scripts.title')}</h3>
-                    <button onClick={() => setIsScriptModalOpen(true)} className="px-3 py-1.5 bg-gf-success hover:opacity-90 text-gf-inverse rounded-lg text-sm">+ {t('scripts.addScript')}</button>
+                    <button onClick={() => setIsScriptModalOpen(true)} className="px-3 py-1.5 bg-gf-success hover:opacity-90 text-gf-inverse text-sm">+ {t('scripts.addScript')}</button>
                 </div>
 
                 <div className="overflow-x-auto">
@@ -689,25 +689,25 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
       {/* ADD SCRIPT MODAL */}
       {isScriptModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-gf-base rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4">
+            <div className="bg-gf-base w-full max-w-lg p-6 space-y-4">
                 <h3 className="text-xl font-bold text-gf-heading">{t('scripts.modal.title')}</h3>
                 
                 <div>
                     <label className="block text-sm font-medium mb-1 text-gf-body">{t('scripts.modal.name')}</label>
-                    <input type="text" className="w-full border border-gf-border rounded p-2 bg-gf-input text-gf-heading" value={newScript.name} onChange={e => setNewScript({...newScript, name: e.target.value})} placeholder={t('scripts.modal.namePlaceholder')} />
+                    <input type="text" className="w-full border-2 border-gf-border-medium rounded p-2 bg-gf-input text-gf-heading" value={newScript.name} onChange={e => setNewScript({...newScript, name: e.target.value})} placeholder={t('scripts.modal.namePlaceholder')} />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-medium mb-1 text-gf-body">{t('scripts.modal.location')}</label>
-                        <select className="w-full border border-gf-border rounded p-2 bg-gf-input text-gf-heading" value={newScript.script_location} onChange={e => setNewScript({...newScript, script_location: e.target.value as any})}>
+                        <select className="w-full border-2 border-gf-border-medium rounded p-2 bg-gf-input text-gf-heading" value={newScript.script_location} onChange={e => setNewScript({...newScript, script_location: e.target.value as any})}>
                             <option value="head">{t('scripts.location.head')}</option>
                             <option value="body">{t('scripts.location.body')}</option>
                         </select>
                     </div>
                     <div>
                         <label className="block text-sm font-medium mb-1 text-gf-body">{t('scripts.modal.category')}</label>
-                        <select className="w-full border border-gf-border rounded p-2 bg-gf-input text-gf-heading" value={newScript.category} onChange={e => setNewScript({...newScript, category: e.target.value as any})}>
+                        <select className="w-full border-2 border-gf-border-medium rounded p-2 bg-gf-input text-gf-heading" value={newScript.category} onChange={e => setNewScript({...newScript, category: e.target.value as any})}>
                             <option value="marketing">{t('scripts.categories.marketing')}</option>
                             <option value="analytics">{t('scripts.categories.analytics')}</option>
                             <option value="essential">{t('scripts.categories.essential')}</option>
@@ -717,7 +717,7 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
 
                 <div>
                     <label className="block text-sm font-medium mb-1 text-gf-body">{t('scripts.modal.code')}</label>
-                    <textarea rows={5} className="w-full border border-gf-border rounded p-2 font-mono text-sm bg-gf-input text-gf-heading" value={newScript.script_content} onChange={e => setNewScript({...newScript, script_content: e.target.value})} placeholder={t('scripts.modal.codePlaceholder')}></textarea>
+                    <textarea rows={5} className="w-full border-2 border-gf-border-medium rounded p-2 font-mono text-sm bg-gf-input text-gf-heading" value={newScript.script_content} onChange={e => setNewScript({...newScript, script_content: e.target.value})} placeholder={t('scripts.modal.codePlaceholder')}></textarea>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-2">

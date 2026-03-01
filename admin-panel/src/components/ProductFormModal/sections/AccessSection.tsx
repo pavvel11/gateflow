@@ -27,7 +27,7 @@ export function AccessSection({
               auto_grant_duration_days: e.target.value ? Number(e.target.value) : null
             }))}
             min="1"
-            className="w-full px-3 py-2.5 border border-gf-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
+            className="w-full px-3 py-2.5 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
             placeholder={t('durationPlaceholder')}
           />
           <p className="mt-1 text-xs text-gf-muted">
@@ -35,7 +35,7 @@ export function AccessSection({
           </p>
         </div>
 
-        <div className="bg-gf-warning-soft border border-gf-warning/20 rounded-lg p-4">
+        <div className="bg-gf-warning-soft border border-gf-warning/20 p-4">
           <div className="flex items-start">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-gf-warning" fill="currentColor" viewBox="0 0 20 20">

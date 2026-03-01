@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -120,17 +120,43 @@ const Icons = {
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
     </svg>
-  )
+  ),
+  pin: (
+    <svg
+      width="16" height="16" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth="2"
+      strokeLinecap="round" strokeLinejoin="round"
+    >
+      <path d="M12 17v5"/>
+      <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/>
+    </svg>
+  ),
 };
 
 export default function DashboardLayout({ children, user, isAdmin: isAdminProp, shopConfig, showSellfCTA }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isPinned, setIsPinned] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
   const { signOut, isAdmin: isAdminContext } = useAuth()
   const t = useTranslations('navigation')
   const pathname = usePathname()
 
-  // Use prop if provided (from server), otherwise fallback to context (client)
   const isAdmin = isAdminProp !== undefined ? isAdminProp : isAdminContext
+  const isExpanded = isPinned || isHovered
+
+  // Load pin state from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem('gf_sidebar_pinned')
+    if (stored === 'true') setIsPinned(true)
+  }, [])
+
+  const togglePin = () => {
+    setIsPinned(prev => {
+      const next = !prev
+      localStorage.setItem('gf_sidebar_pinned', String(next))
+      return next
+    })
+  }
 
   // Auto-check for updates (admin only, with smart caching)
   const updateCheck = useUpdateCheck(!!isAdmin)
@@ -169,25 +195,198 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
     { href: '/about', label: t('about'), icon: Icons.about },
   ];
 
-  const NavItem = ({ href, label, icon, exact }: { href: string, label: string, icon: React.ReactNode, exact?: boolean }) => {
+  // Sidebar nav item with collapsible text
+  const SidebarNavItem = ({ href, label, icon, exact, expanded }: {
+    href: string, label: string, icon: React.ReactNode, exact?: boolean, expanded: boolean
+  }) => {
     const active = exact ? pathname === href || pathname === href + '/' : pathname.includes(href);
     return (
       <Link
         href={href}
         onClick={() => setIsSidebarOpen(false)}
-        className={`flex items-center px-3 py-2.5 rounded-lg mb-1 transition-colors duration-200 group ${
+        className={`flex items-center gap-3 py-2.5 px-4 border-l-[3px] whitespace-nowrap transition-colors duration-150 group ${
           active
-            ? 'bg-gf-sidebar-accent text-gf-accent font-medium'
-            : 'text-gf-sidebar-text hover:bg-gf-hover hover:text-gf-sidebar-text-active'
+            ? 'border-gf-accent bg-gf-sidebar-accent text-gf-sidebar-text-active font-semibold'
+            : 'border-transparent text-gf-sidebar-text hover:bg-gf-hover hover:text-gf-sidebar-text-active'
         }`}
       >
-        <span className={`mr-3 ${active ? 'text-gf-accent' : 'text-gf-sidebar-text group-hover:text-gf-sidebar-text-active'}`}>
+        <span className={`flex-shrink-0 transition-opacity duration-150 ${
+          active ? 'text-gf-accent' : 'opacity-60 group-hover:opacity-100'
+        }`}>
           {icon}
         </span>
-        {label}
+        <span
+          className="transition-opacity"
+          style={{
+            opacity: expanded ? 1 : 0,
+            transitionDuration: 'var(--gf-duration-normal, 250ms)',
+            transitionTimingFunction: 'var(--gf-ease-out, ease-out)',
+          }}
+        >
+          {label}
+        </span>
       </Link>
     );
   };
+
+  // Shared sidebar navigation content
+  const SidebarNav = ({ expanded }: { expanded: boolean }) => (
+    <>
+      {user && isAdmin && (
+        <div className="pt-5 pb-2">
+          <div
+            className="px-6 pb-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-gf-sidebar-text/70 whitespace-nowrap transition-opacity"
+            style={{
+              opacity: expanded ? 1 : 0,
+              transitionDuration: 'var(--gf-duration-normal, 250ms)',
+              transitionTimingFunction: 'var(--gf-ease-out, ease-out)',
+            }}
+          >
+            {t('adminSection')}
+          </div>
+          <nav className="flex flex-col gap-0.5 px-2">
+            {adminLinks.map(link => (
+              <SidebarNavItem key={link.href} {...link} expanded={expanded} />
+            ))}
+          </nav>
+        </div>
+      )}
+      <div className="pt-5 pb-2">
+        <div
+          className="px-6 pb-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-gf-sidebar-text/70 whitespace-nowrap transition-opacity"
+          style={{
+            opacity: expanded ? 1 : 0,
+            transitionDuration: 'var(--gf-duration-normal, 250ms)',
+            transitionTimingFunction: 'var(--gf-ease-out, ease-out)',
+          }}
+        >
+          {t('userSection')}
+        </div>
+        <nav className="flex flex-col gap-0.5 px-2">
+          {userLinks.map(link => (
+            <SidebarNavItem key={link.href} {...link} expanded={expanded} />
+          ))}
+        </nav>
+      </div>
+    </>
+  );
+
+  // Sidebar footer with user info
+  const SidebarFooter = ({ expanded, mobile }: { expanded: boolean, mobile?: boolean }) => (
+    <div className="mt-auto p-4 border-t border-gf-border-subtle flex-shrink-0">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-9 h-9 bg-gf-accent/20 flex items-center justify-center text-gf-accent text-sm font-bold flex-shrink-0">
+          {user?.email?.charAt(0).toUpperCase()}
+        </div>
+        <div
+          className="overflow-hidden transition-opacity"
+          style={{
+            opacity: expanded ? 1 : 0,
+            transitionDuration: 'var(--gf-duration-normal, 250ms)',
+            transitionTimingFunction: 'var(--gf-ease-out, ease-out)',
+          }}
+        >
+          <p className="text-[13px] font-medium text-gf-heading truncate">{user?.email}</p>
+          <p className="text-[11px] text-gf-sidebar-text uppercase tracking-[0.05em]">
+            {isAdmin ? t('roleAdmin') : t('roleUser')}
+          </p>
+        </div>
+      </div>
+      {mobile ? (
+        <>
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-2 w-full py-2 px-3 text-[13px] font-medium text-gf-sidebar-text hover:text-gf-danger border border-gf-border-subtle hover:border-gf-danger transition-colors duration-150"
+            title={t('logout')}
+          >
+            {Icons.logout}
+            <span>{t('logout')}</span>
+          </button>
+          <div className="flex justify-center gap-2 mt-4">
+            <ThemeToggleButton size="sm" />
+            <FloatingLanguageSwitcher mode="static" variant="compact" />
+          </div>
+        </>
+      ) : (
+        <button
+          onClick={handleSignOut}
+          className="flex items-center gap-2 h-10 text-[13px] font-medium text-gf-sidebar-text hover:text-gf-danger whitespace-nowrap"
+          style={{
+            width: expanded ? '100%' : '48px',
+            padding: expanded ? '8px 12px' : '10px',
+            justifyContent: expanded ? 'flex-start' : 'center',
+            borderWidth: '1px',
+            borderStyle: 'solid',
+            borderColor: expanded ? 'var(--gf-border-subtle)' : 'transparent',
+            transition: 'color 150ms, border-color 150ms, width 400ms cubic-bezier(0.16, 1, 0.3, 1), padding 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+          title={t('logout')}
+        >
+          {Icons.logout}
+          <span
+            className="transition-opacity"
+            style={{
+              opacity: expanded ? 1 : 0,
+              transitionDuration: 'var(--gf-duration-normal, 250ms)',
+              transitionTimingFunction: 'var(--gf-ease-out, ease-out)',
+            }}
+          >
+            {t('logout')}
+          </span>
+        </button>
+      )}
+    </div>
+  );
+
+  // Sidebar logo section
+  const SidebarLogo = ({ expanded, showPin }: { expanded: boolean, showPin?: boolean }) => (
+    <div className="relative flex items-center gap-3 px-6 h-[68px] flex-shrink-0 border-b border-gf-border-subtle">
+      <Link href="/" className="flex items-center gap-3">
+        {logoUrl ? (
+          <img src={logoUrl} alt={shopName} className="w-7 h-7 object-contain flex-shrink-0" />
+        ) : (
+          <div
+            className="w-7 h-7 flex items-center justify-center flex-shrink-0"
+            style={{ background: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})` }}
+          >
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+          </div>
+        )}
+        <span
+          className="text-[15px] font-bold text-gf-heading whitespace-nowrap tracking-tight transition-opacity"
+          style={{
+            opacity: expanded ? 1 : 0,
+            transitionDuration: 'var(--gf-duration-normal, 250ms)',
+            transitionTimingFunction: 'var(--gf-ease-out, ease-out)',
+          }}
+        >
+          {shopName}
+        </span>
+      </Link>
+      {showPin && (
+        <button
+          onClick={(e) => { e.stopPropagation(); togglePin(); }}
+          className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center text-gf-sidebar-text hover:text-gf-accent hover:bg-gf-hovertransition-all"
+          style={{
+            opacity: expanded ? 1 : 0,
+            pointerEvents: expanded ? 'auto' : 'none',
+            transitionDuration: 'var(--gf-duration-normal, 250ms)',
+            transitionTimingFunction: 'var(--gf-ease-out, ease-out)',
+          }}
+          aria-label={isPinned ? 'Unpin sidebar' : 'Pin sidebar open'}
+        >
+          <span
+            className="transition-transform duration-250"
+            style={{ transform: isPinned ? 'rotate(45deg)' : 'none' }}
+          >
+            {Icons.pin}
+          </span>
+        </button>
+      )}
+    </div>
+  );
 
   // ---------------------------------------------------------------------------
   // PUBLIC LAYOUT (No Sidebar) - For guests / login page / storefront
@@ -195,8 +394,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
   if (!user) {
     return (
       <div className="min-h-screen bg-gf-deep flex flex-col">
-        {/* Simple Top Header for Guests */}
-        <header className="h-16 bg-gf-base border-b border-gf-border flex items-center shadow-sm sticky top-0 z-40">
+        <header className="h-16 bg-gf-base border-b border-gf-border flex items-center sticky top-0 z-40">
           <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <div className="flex items-center">
               <Link href="/" className="flex items-center group">
@@ -204,7 +402,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
                   <img src={logoUrl} alt={shopName} className="w-9 h-9 object-contain mr-3 group-hover:scale-105 transition-transform" />
                 ) : (
                   <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center mr-3 shadow-md group-hover:scale-105 transition-transform"
+                    className="w-9 h-9 flex items-center justify-center mr-3 group-hover:scale-105 transition-transform"
                     style={{
                       background: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`
                     }}
@@ -223,7 +421,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
               {showSellfCTA && (
                 <Link
                   href="/about"
-                  className="hidden sm:inline-flex items-center px-4 py-2 rounded-full bg-gf-accent text-white text-xs font-bold hover:bg-gf-accent-hover hover:shadow-lg transition-all transform hover:scale-105"
+                  className="hidden sm:inline-flex items-center px-4 py-2 bg-gf-accent text-white text-xs font-bold hover:bg-gf-accent-hover transition-all"
                 >
                   <span className="mr-1.5">🚀</span>
                   {t('getSellf', { defaultValue: 'Get Sellf' })}
@@ -234,9 +432,9 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
                 <FloatingLanguageSwitcher mode="static" variant="compact" />
               </div>
               <div className="h-8 w-px bg-gf-border mx-2 hidden sm:block"></div>
-              <Link 
-                href="/login" 
-                className="inline-flex items-center px-4 py-2 bg-gf-accent hover:bg-gf-accent-hover text-gf-inverse rounded-lg text-sm font-semibold transition-all shadow-sm hover:shadow-md active:scale-95"
+              <Link
+                href="/login"
+                className="inline-flex items-center px-4 py-2 bg-gf-accent hover:bg-gf-accent-hover text-gf-inverse text-sm font-semibold transition-all hover:active:scale-95"
               >
                 {t('login')}
               </Link>
@@ -252,114 +450,56 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
   }
 
   // ---------------------------------------------------------------------------
-  // AUTHENTICATED LAYOUT (With Sidebar)
+  // AUTHENTICATED LAYOUT (Collapsible Sidebar)
   // ---------------------------------------------------------------------------
   return (
-    <div className="min-h-screen bg-gf-deep flex">
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 bg-gf-sidebar-bg border-r border-gf-border h-screen sticky top-0">
-        <div className="h-16 flex items-center px-6 border-b border-gf-border">
-          <Link href="/" className="flex items-center">
-            {logoUrl ? (
-              <img src={logoUrl} alt={shopName} className="w-8 h-8 object-contain mr-3" />
-            ) : (
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center mr-3 shadow-sm"
-                style={{
-                  background: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`
-                }}
-              >
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-              </div>
-            )}
-            <span className="text-xl font-bold text-gf-heading">
-              {shopName}
-            </span>
-          </Link>
+    <div className="min-h-screen bg-gf-deep gf-dashboard">
+      {/* Desktop Sidebar — Collapsible Icon Rail */}
+      <aside
+        className="hidden lg:flex fixed inset-y-0 left-0 flex-col bg-gf-sidebar-bg border-r border-gf-border-subtle z-[100] overflow-hidden"
+        style={{
+          width: isExpanded ? 'var(--gf-sidebar-width-expanded)' : 'var(--gf-sidebar-width-collapsed)',
+          transition: 'width var(--gf-duration-slow) var(--gf-ease-out)',
+        }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <SidebarLogo expanded={isExpanded} showPin />
+
+        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+          <SidebarNav expanded={isExpanded} />
         </div>
 
-        <div className="flex-1 overflow-y-auto py-6 px-4">
-          {user && isAdmin && (
-            <div className="mb-8">
-              <h3 className="px-3 text-xs font-semibold text-gf-sidebar-text uppercase tracking-wider mb-2">
-                {t('adminSection')}
-              </h3>
-              <nav className="space-y-0.5">
-                {adminLinks.map(link => (
-                  <NavItem key={link.href} {...link} />
-                ))}
-              </nav>
-            </div>
-          )}
-
-          <div>
-            <h3 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-              {t('userSection')}
-            </h3>
-            <nav className="space-y-0.5">
-              {userLinks.map(link => (
-                <NavItem key={link.href} {...link} />
-              ))}
-            </nav>
-          </div>
-        </div>
-
-        <div className="p-4 border-t border-gf-border bg-gf-raised">
-          <div className="flex items-center w-full">
-            <div className="w-8 h-8 rounded-full bg-gf-accent flex items-center justify-center text-gf-inverse text-xs font-bold mr-3 shadow-sm">
-              {user.email?.charAt(0).toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gf-heading truncate">
-                {user.email}
-              </p>
-              <p className="text-xs text-gf-muted truncate">
-                {isAdmin ? t('roleAdmin') : t('roleUser')}
-              </p>
-            </div>
-            <button 
-              onClick={handleSignOut}
-              className="ml-2 p-1.5 text-gf-muted hover:text-gf-heading rounded-md hover:bg-gf-hover transition-colors"
-              title={t('logout')}
-            >
-              {Icons.logout}
-            </button>
-          </div>
-        </div>
+        <SidebarFooter expanded={isExpanded} />
       </aside>
 
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-50 lg:hidden">
           <div
             className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
             onClick={() => setIsSidebarOpen(false)}
           />
-
-          <div className="fixed inset-y-0 left-0 w-64 bg-gf-sidebar-bg shadow-2xl flex flex-col h-full transform transition-transform duration-300 ease-in-out">
-            <div className="h-16 flex items-center justify-between px-6 border-b border-gf-border">
-              <div className="flex items-center">
+          <div className="fixed inset-y-0 left-0 w-[260px] bg-gf-sidebar-bg flex flex-col h-full transform transition-transform duration-300 ease-in-out">
+            <div className="h-[68px] flex items-center justify-between px-6 border-b border-gf-border-subtle">
+              <div className="flex items-center gap-3">
                 {logoUrl ? (
-                  <img src={logoUrl} alt={shopName} className="w-8 h-8 object-contain mr-3" />
+                  <img src={logoUrl} alt={shopName} className="w-7 h-7 object-contain" />
                 ) : (
                   <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center mr-3"
-                    style={{
-                      background: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`
-                    }}
+                    className="w-7 h-7 flex items-center justify-center"
+                    style={{ background: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})` }}
                   >
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
                   </div>
                 )}
-                <span className="text-xl font-bold text-gf-heading">{shopName}</span>
+                <span className="text-[15px] font-bold text-gf-heading">{shopName}</span>
               </div>
-              <button 
+              <button
                 onClick={() => setIsSidebarOpen(false)}
-                className="text-gf-muted hover:text-gf-heading"
+                className="text-gf-muted hover:text-gf-heading p-1"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -367,46 +507,22 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto py-6 px-4">
-              {user && isAdmin && (
-                <div className="mb-8">
-                  <h3 className="px-3 text-xs font-semibold text-gf-sidebar-text uppercase tracking-wider mb-2">{t('adminSection')}</h3>
-                  {adminLinks.map(link => <NavItem key={link.href} {...link} />)}
-                </div>
-              )}
-              <div>
-                <h3 className="px-3 text-xs font-semibold text-gf-sidebar-text uppercase tracking-wider mb-2">{t('userSection')}</h3>
-                {userLinks.map(link => <NavItem key={link.href} {...link} />)}
-              </div>
+            <div className="flex-1 overflow-y-auto">
+              <SidebarNav expanded={true} />
             </div>
 
-            <div className="p-4 border-t border-gf-border">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 rounded-full bg-gf-accent flex items-center justify-center text-gf-inverse text-xs font-bold mr-3">
-                    {user?.email?.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="text-sm font-medium text-gf-heading truncate max-w-[120px]">
-                    {user?.email}
-                  </div>
-                </div>
-                <button onClick={handleSignOut} className="text-gf-muted">{Icons.logout}</button>
-              </div>
-              <div className="flex justify-center gap-2">
-                <ThemeToggleButton size="sm" />
-                <FloatingLanguageSwitcher mode="static" variant="compact" />
-              </div>
-            </div>
+            <SidebarFooter expanded={true} mobile />
           </div>
         </div>
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 bg-gf-base border-b border-gf-border flex items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className={`flex-1 flex flex-col min-w-0 min-h-screen gf-main-content ${isPinned ? 'gf-pinned' : ''}`}>
+        {/* Top bar */}
+        <header className="h-14 bg-gf-base border-b border-gf-border-subtle flex items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-50">
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="md:hidden p-2 rounded-md text-gf-muted hover:text-gf-body hover:bg-gf-hover focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gf-accent"
+            className="lg:hidden p-2 text-gf-muted hover:text-gf-body hover:bg-gf-hover focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gf-accent"
           >
             <span className="sr-only">{t('openSidebar')}</span>
             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -414,30 +530,59 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
             </svg>
           </button>
 
-          <div className="flex-1 flex justify-end items-center space-x-4">
+          <div className="flex-1 flex justify-end items-center gap-4">
             {showSellfCTA && (
               <Link
                 href="/about"
-                className="hidden sm:inline-flex items-center px-4 py-2 rounded-full bg-gf-accent text-white text-xs font-bold hover:bg-gf-accent-hover hover:shadow-lg transition-all transform hover:scale-105"
+                className="hidden sm:inline-flex items-center px-4 py-2 bg-gf-accent text-white text-xs font-bold hover:bg-gf-accent-hover transition-all"
               >
                 <span className="mr-1.5">🚀</span>
                 {t('getSellf', { defaultValue: 'Get Sellf' })}
               </Link>
             )}
-            <div className="hidden md:flex md:items-center md:gap-1">
+            <div className="hidden lg:flex lg:items-center lg:gap-1">
               <ThemeToggleButton size="sm" />
               <FloatingLanguageSwitcher mode="static" variant="compact" />
             </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto bg-gf-deep p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto bg-gf-deep p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
           <DemoBanner />
           <div className="max-w-7xl mx-auto">
             {children}
           </div>
         </main>
       </div>
+
+      {/* Mobile Bottom Tab Bar */}
+      <nav className="fixed bottom-0 left-0 right-0 h-16 bg-gf-base border-t-2 border-gf-border-medium flex items-stretch z-50 lg:hidden">
+        {[
+          { href: '/dashboard', label: t('dashboard'), icon: Icons.dashboard, exact: true },
+          { href: '/dashboard/products', label: t('products'), icon: Icons.products },
+          { href: '/dashboard/users', label: t('users'), icon: Icons.users },
+          { href: '/dashboard/settings', label: t('settings'), icon: Icons.settings },
+          { href: '/profile', label: t('profile'), icon: Icons.profile },
+        ].map(tab => {
+          const active = tab.exact
+            ? pathname === tab.href || pathname === tab.href + '/'
+            : pathname.includes(tab.href);
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors ${
+                active
+                  ? 'text-gf-accent'
+                  : 'text-gf-muted hover:text-gf-body'
+              }`}
+            >
+              <span className="flex-shrink-0">{tab.icon}</span>
+              <span className="text-[10px] font-medium leading-none">{tab.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
 
       {/* Update notification modal (auto-shown when update available) */}
       {(updateCheck.showModal || updateCheck.upgradeInProgress) && updateCheck.updateInfo && (

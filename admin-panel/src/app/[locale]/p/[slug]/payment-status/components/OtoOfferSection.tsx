@@ -99,7 +99,7 @@ export default function OtoOfferSection({
           </p>
           <button
             onClick={onSkip}
-            className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+            className="px-6 py-2 bg-gf-muted/30 hover:bg-gf-muted/40 text-gf-heading rounded-lg transition-colors"
           >
             {skipLabel || t('continue')}
           </button>
@@ -115,9 +115,9 @@ export default function OtoOfferSection({
         className={`
           relative overflow-hidden rounded-xl p-6 border-2 transition-all duration-300
           ${isUrgent
-            ? 'bg-gf-danger-soft border-red-500 animate-pulse'
+            ? 'bg-gf-danger-soft border-gf-danger animate-pulse'
             : isWarning
-              ? 'bg-gf-warning-soft border-orange-500'
+              ? 'bg-gf-warning-soft border-gf-warning'
               : 'bg-wl-accent-soft border-wl-border-accent'
           }
         `}
@@ -131,8 +131,8 @@ export default function OtoOfferSection({
             <div className="flex items-center gap-3">
               <div className={`
                 flex items-center justify-center w-12 h-12 rounded-full
-                ${isUrgent ? 'bg-red-500' : isWarning ? 'bg-orange-500' : 'bg-wl-accent'}
-                text-white
+                ${isUrgent ? 'bg-gf-danger' : isWarning ? 'bg-gf-warning' : 'bg-wl-accent'}
+                text-gf-heading
               `}>
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -140,7 +140,7 @@ export default function OtoOfferSection({
               </div>
               <div>
                 <p className="text-sm text-gf-body">{t('exclusiveOffer')}</p>
-                <p className={`text-lg font-bold ${isUrgent ? 'text-red-600' : isWarning ? 'text-orange-600' : 'text-wl-accent'}`}>
+                <p className={`text-lg font-bold ${isUrgent ? 'text-gf-danger' : isWarning ? 'text-gf-warning' : 'text-wl-accent'}`}>
                   {t('saveAmount', { amount: formatDiscount(otoOffer.discountType, otoOffer.discountValue, otoOffer.currency) })}
                 </p>
               </div>
@@ -152,10 +152,10 @@ export default function OtoOfferSection({
               <div className={`
                 px-4 py-2 rounded-lg font-mono text-2xl font-bold
                 ${isUrgent
-                  ? 'bg-red-500 text-white'
+                  ? 'bg-gf-danger text-gf-heading'
                   : isWarning
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-wl-accent text-white'
+                    ? 'bg-gf-warning text-gf-heading'
+                    : 'bg-wl-accent text-gf-heading'
                 }
               `}>
                 {formatTime(secondsRemaining)}
@@ -177,21 +177,21 @@ export default function OtoOfferSection({
             <button
               onClick={handleAccept}
               className={`
-                flex-1 px-6 py-3 rounded-lg font-semibold text-white transition-all
+                flex-1 px-6 py-3 rounded-full font-semibold text-gf-heading transition-all
                 ${isUrgent
-                  ? 'bg-red-500 hover:bg-red-600'
+                  ? 'bg-gf-danger hover:bg-gf-danger/90'
                   : isWarning
-                    ? 'bg-orange-500 hover:bg-orange-600'
+                    ? 'bg-gf-warning hover:bg-gf-warning/90'
                     : 'bg-wl-accent hover:bg-wl-accent-hover'
                 }
-                transform hover:scale-[1.02] active:scale-[0.98]
+                active:scale-[0.98]
               `}
             >
               🎁 {t('acceptOffer')}
             </button>
             <button
               onClick={onSkip}
-              className="flex-1 sm:flex-none px-6 py-3 rounded-lg font-medium text-gf-body bg-gf-raised hover:bg-gf-hover transition-colors"
+              className="flex-1 sm:flex-none px-6 py-3 rounded-full font-medium text-gf-body bg-gf-raised hover:bg-gf-hover transition-colors"
             >
               {skipLabel || t('noThanks')}
             </button>

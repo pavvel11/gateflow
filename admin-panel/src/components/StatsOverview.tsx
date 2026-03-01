@@ -247,12 +247,12 @@ export default function StatsOverview() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-2 border-gf-border-medium">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-gf-base rounded-xl shadow-sm border border-gf-border p-6">
+          <div key={i} className={`p-6 sm:p-8 ${i < 3 ? 'lg:border-r border-gf-border-subtle' : ''} ${i % 2 === 1 ? 'bg-gf-row-alt' : 'bg-gf-base'} border-b-[3px] border-gf-border-medium`}>
             <div className="animate-pulse">
-              <div className="h-4 bg-gf-raised rounded w-3/4 mb-4"></div>
-              <div className="h-8 bg-gf-raised rounded w-1/2"></div>
+              <div className="h-3 bg-gf-raised w-3/4 mb-4"></div>
+              <div className="h-12 bg-gf-raised w-1/2"></div>
             </div>
           </div>
         ))}
@@ -263,41 +263,39 @@ export default function StatsOverview() {
   return (
     <>
       {newOrder && (
-        <NewOrderNotification 
+        <NewOrderNotification
           key={newOrder.id}
-          amount={newOrder.amount} 
-          currency={newOrder.currency} 
-          onClose={() => setNewOrder(null)} 
+          amount={newOrder.amount}
+          currency={newOrder.currency}
+          onClose={() => setNewOrder(null)}
         />
       )}
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statItems.map((item) => (
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-2 border-gf-border-medium">
+        {statItems.map((item, index) => (
           <div
             key={item.id}
             data-testid={`stat-card-${item.id}`}
-            className="bg-gf-base rounded-xl shadow-sm border border-gf-border p-6 hover:shadow-md transition-shadow relative overflow-hidden"
+            className={`p-6 sm:p-8 ${
+              index < statItems.length - 1 ? 'lg:border-r border-gf-border-subtle' : ''
+            } ${
+              index % 2 === 1 ? 'bg-gf-row-alt' : 'bg-gf-base'
+            } border-b-[3px] border-gf-border-medium`}
           >
-            <div className="flex items-center justify-between">
-              <div className="relative z-10">
-                <p className="text-sm font-medium text-gf-body">
-                  {item.name}
-                </p>
-                <p className="text-2xl font-bold text-gf-heading mt-1">
-                  {item.value}
-                </p>
-                {item.change && (
-                   <p className={`text-xs font-medium mt-1 ${item.changeType === 'positive' ? 'text-gf-success' : 'text-gf-muted'}`}>
-                     {item.change}
-                   </p>
-                )}
-              </div>
-              <div className={`w-12 h-12 rounded-xl ${item.bgColor} flex items-center justify-center relative z-10`}>
-                <div className={`text-white bg-gradient-to-r ${item.color} rounded-lg p-2`}>
-                  {item.icon}
-                </div>
-              </div>
-            </div>
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-gf-muted mb-2">
+              {item.name}
+            </p>
+            <p
+              className="text-[52px] font-[800] text-gf-heading tracking-[-0.04em] leading-none motion-safe:animate-[stat-slide-up_0.6s_ease-out_both]"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              {item.value}
+            </p>
+            {item.change && (
+              <p className={`text-xs font-medium mt-2 ${item.changeType === 'positive' ? 'text-gf-success' : 'text-gf-muted'}`}>
+                {item.change}
+              </p>
+            )}
           </div>
         ))}
       </div>

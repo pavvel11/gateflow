@@ -4,6 +4,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { getTranslations, getLocale } from 'next-intl/server';
+import GoBackButton from './components/GoBackButton';
 
 interface PaymentErrorPageProps {
   searchParams: Promise<{ reason?: string }>;
@@ -30,7 +31,7 @@ async function PaymentErrorContent({ searchParams }: PaymentErrorPageProps) {
 
   return (
     <div className="min-h-screen bg-gf-deep flex items-center justify-center">
-      <div className="max-w-md mx-auto bg-gf-raised/80 border border-gf-border rounded-xl p-8 text-center">
+      <div className="max-w-md mx-auto bg-gf-raised/80 border border-gf-border rounded-2xl p-8 text-center">
         <div className="w-16 h-16 bg-gf-danger/20 border border-gf-danger/30 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg className="w-8 h-8 text-gf-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -41,15 +42,10 @@ async function PaymentErrorContent({ searchParams }: PaymentErrorPageProps) {
           {getErrorMessage(reason)}
         </p>
         <div className="space-y-3">
-          <button
-            onClick={() => window.history.back()}
-            className="w-full bg-gf-accent hover:bg-gf-accent-hover text-white font-semibold py-2 px-4 rounded-xl transition-[background-color] duration-200"
-          >
-            {t('tryAgain')}
-          </button>
+          <GoBackButton label={t('tryAgain')} />
           <Link
             href="/"
-            className="block w-full bg-gf-raised border border-gf-border hover:border-gf-border-accent text-gf-heading font-semibold py-2 px-4 rounded-xl transition-[border-color] duration-200"
+            className="block w-full bg-gf-raised border border-gf-border hover:border-gf-border-accent text-gf-heading font-semibold py-2 px-4 rounded-full transition-[border-color] duration-200"
           >
             {t('goHome')}
           </Link>

@@ -20,7 +20,7 @@ export default function SourceBadge({ source, envAlsoSet }: SourceBadgeProps) {
 
   return (
     <span className="inline-flex items-center gap-1">
-      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${STYLES[source]}`}>
+      <span className={`text-[10px] font-medium px-1.5 py-0.5 ${STYLES[source]}`}>
         {t(source)}
       </span>
       {source === 'db' && envAlsoSet && (
