@@ -14,7 +14,7 @@
     "bg-float": "#3A2C14",
     "text-heading": "#FAF0E6",
     "text-body": "#B8A894",
-    "text-muted": "#8A7B6B",
+    "text-muted": "#8E806F",
     "border": "rgba(255,255,255,0.06)",
     "border-accent": "rgba(255,107,53,0.15)",
     "success": "#10B981",
@@ -22,16 +22,16 @@
     "danger": "#EF4444"
   },
   "colors-light": {
-    "accent": "#CC5500",
-    "accent-hover": "#AA4400",
-    "accent-soft": "rgba(204,85,0,0.06)",
+    "accent": "#B84C00",
+    "accent-hover": "#9A3F00",
+    "accent-soft": "rgba(184,76,0,0.06)",
     "bg-deep": "#FFF8F0",
     "bg-base": "#FFFFFF",
     "bg-raised": "#FFF0E0",
     "bg-float": "#FFFFFF",
     "text-heading": "#1A0F05",
     "text-body": "#5A4530",
-    "text-muted": "#8A7B6B"
+    "text-muted": "#7A6E60"
   },
   "typography": {
     "font-family": "inherit",

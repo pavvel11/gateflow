@@ -22,9 +22,9 @@
     "danger": "#EF4444"
   },
   "colors-light": {
-    "accent": "#0284C7",
-    "accent-hover": "#0369A1",
-    "accent-soft": "rgba(2,132,199,0.06)",
+    "accent": "#0272AB",
+    "accent-hover": "#015D8E",
+    "accent-soft": "rgba(2,114,171,0.06)",
     "bg-deep": "#F0F9FF",
     "bg-base": "#FFFFFF",
     "bg-raised": "#E0F2FE",
