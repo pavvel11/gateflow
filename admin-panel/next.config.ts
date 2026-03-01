@@ -140,7 +140,7 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: blob: i.ibb.co *.stripe.com",
               "font-src 'self' data:",
               "frame-src js.stripe.com challenges.cloudflare.com *.youtube.com player.vimeo.com iframe.mediadelivery.net *.loom.com fast.wistia.net *.dailymotion.com player.twitch.tv",
-              "connect-src 'self' *.supabase.co *.stripe.com challenges.cloudflare.com",
+              "connect-src 'self' *.supabase.co *.stripe.com challenges.cloudflare.com http://127.0.0.1:* http://localhost:*",
               "object-src 'none'",
               "base-uri 'self'",
             ].join('; '),

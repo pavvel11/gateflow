@@ -57,26 +57,6 @@ export default function Storefront({
   return (
     <div data-testid="storefront" className="w-full bg-sf-deep relative min-h-screen grain-overlay">
 
-      {/* Topbar */}
-      <Reveal animation="fade-down" delay={0}>
-        <header className="border-b border-sf-border">
-          <div className="max-w-[960px] mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-sf-accent to-[color-mix(in_srgb,var(--sf-accent)_70%,white)] rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0">
-                  {shopName.charAt(0).toUpperCase()}
-                </div>
-                <span className="text-sm font-semibold text-sf-heading">{shopName}</span>
-              </div>
-              <div className="text-xs text-sf-muted">
-                <span className="font-semibold text-sf-body">{products.length}</span>{' '}
-                {t('hero.badges.productsAvailable', { count: products.length }).toLowerCase()}
-              </div>
-            </div>
-          </div>
-        </header>
-      </Reveal>
-
       <div className="max-w-[960px] mx-auto px-6">
 
         {/* Brand Moment */}
