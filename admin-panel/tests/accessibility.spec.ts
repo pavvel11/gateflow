@@ -7,15 +7,11 @@
  * Run: bun run test:a11y
  */
 import { test, Page } from '@playwright/test';
-import { createTestAdmin } from './helpers/admin-auth';
+import { createTestAdmin, setAuthSession } from './helpers/admin-auth';
 import { acceptAllCookies } from './helpers/consent';
 import { checkAccessibility } from './helpers/axe';
 
 test.setTimeout(120_000);
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
-const LOCAL_ANON_KEY = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH';
-const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || LOCAL_ANON_KEY;
 
 // ===== SHARED STATE =====
 
@@ -43,19 +39,7 @@ test.afterAll(async () => {
 
 async function signIn(page: Page) {
   await acceptAllCookies(page);
-  await page.goto('/', { waitUntil: 'domcontentloaded' });
-
-  await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-    // @ts-ignore - dynamic ESM import works in browser context
-    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-    const supabase = createBrowserClient(supabaseUrl, anonKey);
-    await supabase.auth.signInWithPassword({ email, password });
-  }, {
-    email: adminEmail,
-    password: adminPassword,
-    supabaseUrl: SUPABASE_URL,
-    anonKey: ANON_KEY,
-  });
+  await setAuthSession(page, adminEmail, adminPassword);
 }
 
 async function setTheme(page: Page, theme: 'light' | 'dark') {

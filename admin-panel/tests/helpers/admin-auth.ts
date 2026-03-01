@@ -59,6 +59,56 @@ export async function createTestAdmin(prefix: string = 'test-admin') {
 }
 
 /**
+ * Sets Supabase auth session cookies on a Playwright page context.
+ * Signs in server-side and injects cookies in @supabase/ssr format.
+ * No CDN dependency — works fully offline.
+ *
+ * @param page - Playwright page
+ * @param email - User email
+ * @param password - User password
+ */
+export async function setAuthSession(page: Page, email: string, password: string) {
+  const signInClient = createClient(SUPABASE_URL, ANON_KEY);
+  const { data: { session }, error: signInError } = await signInClient.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (signInError || !session) {
+    throw new Error(`Failed to sign in: ${signInError?.message || 'no session'}`);
+  }
+
+  const supabaseHostname = new URL(SUPABASE_URL).hostname;
+  const cookieKey = `sb-${supabaseHostname.split('.')[0]}-auth-token`;
+  const sessionJson = JSON.stringify(session);
+  const base64Value = Buffer.from(sessionJson).toString('base64url');
+  const cookieValue = `base64-${base64Value}`;
+
+  const baseUrl = new URL(process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000');
+
+  const CHUNK_SIZE = 3180;
+  if (cookieValue.length <= CHUNK_SIZE) {
+    await page.context().addCookies([{
+      name: cookieKey,
+      value: cookieValue,
+      domain: baseUrl.hostname,
+      path: '/',
+    }]);
+  } else {
+    const chunks: string[] = [];
+    for (let i = 0; i < cookieValue.length; i += CHUNK_SIZE) {
+      chunks.push(cookieValue.substring(i, i + CHUNK_SIZE));
+    }
+    await page.context().addCookies(chunks.map((chunk, idx) => ({
+      name: `${cookieKey}.${idx}`,
+      value: chunk,
+      domain: baseUrl.hostname,
+      path: '/',
+    })));
+  }
+}
+
+/**
  * Logs in as admin user
  * @param page - Playwright page
  * @param email - Admin email
@@ -81,20 +131,7 @@ export async function loginAsAdmin(page: Page, email: string, password: string) 
     addStyle();
   });
 
-  await page.goto('/');
-  await page.waitForLoadState('domcontentloaded');
-
-  await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-    // @ts-ignore - dynamic ESM import works in browser context
-    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-    const supabase = createBrowserClient(supabaseUrl, anonKey);
-    await supabase.auth.signInWithPassword({ email, password });
-  }, {
-    email,
-    password,
-    supabaseUrl: SUPABASE_URL,
-    anonKey: ANON_KEY,
-  });
+  await setAuthSession(page, email, password);
 
   await page.goto('/pl/dashboard');
   // Wait for dashboard to load - look for sidebar navigation
