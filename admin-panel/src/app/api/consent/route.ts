@@ -54,13 +54,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, message: 'Logging disabled' })
     }
 
+    // Never trust user_id from request body — use session if available
+    // For anonymous visitors, user_id will be null
     const { error } = await supabase
       .from('consent_logs')
       .insert({
         anonymous_id: anonymous_id || null,
         consents: consents || null,
         consent_version: consent_version || null,
-        user_id: user_id || null,
+        user_id: null,
         ip_address,
         user_agent
       })

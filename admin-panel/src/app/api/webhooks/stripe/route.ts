@@ -385,7 +385,26 @@ async function processRefundForTransaction(
 
     if (revokeError) {
       console.error('[Stripe Webhook] Failed to revoke access after refund:', revokeError);
-      // Don't fail - refund is already processed
+    }
+  }
+
+  // Also clean up guest purchases (session-based access)
+  if (transaction.id) {
+    const { data: txFull } = await supabase
+      .from('payment_transactions')
+      .select('session_id, product_id')
+      .eq('id', transaction.id)
+      .single();
+
+    if (txFull?.session_id && txFull?.product_id) {
+      const { error: guestRevokeError } = await supabase
+        .from('guest_purchases')
+        .delete()
+        .eq('session_id', txFull.session_id);
+
+      if (guestRevokeError) {
+        console.error('[Stripe Webhook] Failed to revoke guest purchase after refund:', guestRevokeError);
+      }
     }
   }
 

@@ -17,6 +17,7 @@ import {
 import { createAdminClient } from '@/lib/supabase/admin';
 import { parseLimit, applyCursorToQuery, createPaginationResponse, validateCursor } from '@/lib/api/pagination';
 import { validateUUID } from '@/lib/validations/product';
+import { isValidEventType } from '@/lib/validations/webhook';
 
 export async function OPTIONS(request: NextRequest) {
   return handleCorsPreFlight(request);
@@ -95,8 +96,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Filter by event type
+    // Filter by event type (validate against whitelist)
     if (eventType) {
+      if (!isValidEventType(eventType)) {
+        return apiError(request, 'INVALID_INPUT', 'Invalid event_type filter');
+      }
       query = query.eq('event_type', eventType);
     }
 

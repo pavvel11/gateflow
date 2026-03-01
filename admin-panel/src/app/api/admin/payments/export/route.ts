@@ -140,15 +140,21 @@ export async function POST(request: NextRequest) {
       new Date(transaction.updated_at).toISOString()
     ]) || [];
 
+    // Sanitize CSV field to prevent formula injection (=, +, -, @, tab, CR)
+    const sanitizeCsvField = (field: unknown): string => {
+      const str = String(field ?? '');
+      const needsPrefix = /^[=+\-@\t\r]/.test(str);
+      const sanitized = needsPrefix ? `'${str}` : str;
+      if (sanitized.includes(',') || sanitized.includes('"') || sanitized.includes('\n'))
+        return `"${sanitized.replace(/"/g, '""')}"`;
+      return sanitized;
+    };
+
     // Create CSV content
     const csvContent = [
       csvHeaders.join(','),
-      ...csvRows.map(row => 
-        row.map(field => 
-          typeof field === 'string' && field.includes(',') 
-            ? `"${field.replace(/"/g, '""')}"` 
-            : field
-        ).join(',')
+      ...csvRows.map(row =>
+        row.map(sanitizeCsvField).join(',')
       )
     ].join('\n');
 

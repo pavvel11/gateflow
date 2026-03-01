@@ -130,10 +130,9 @@ const nextConfig: NextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
-          // HSTS is now handled by middleware.ts for runtime control
-          // Set DISABLE_HSTS=true to disable (e.g., when behind reverse proxy)
+          // HSTS is handled by proxy.ts with DISABLE_HSTS env var support
           {
-            key: 'Content-Security-Policy-Report-Only',
+            key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' js.stripe.com challenges.cloudflare.com",

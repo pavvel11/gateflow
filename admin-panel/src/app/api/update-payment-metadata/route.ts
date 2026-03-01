@@ -22,9 +22,8 @@ export async function POST(request: NextRequest) {
     const referer = request.headers.get('referer');
     const host = request.headers.get('host');
 
+    // Only trust NEXT_PUBLIC_SITE_URL — never derive allowed origins from Host header
     const allowedOrigins = [
-      `https://${host}`,
-      `http://${host}`,
       process.env.NEXT_PUBLIC_SITE_URL,
     ].filter(Boolean);
 
@@ -87,8 +86,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Extract Payment Intent ID from client secret
+    // Extract and validate Payment Intent ID from client secret
     const paymentIntentId = clientSecret.split('_secret_')[0];
+
+    if (!/^pi_[a-zA-Z0-9]+$/.test(paymentIntentId)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid payment intent format' },
+        { status: 400 }
+      );
+    }
 
     // Handle fullName - split into firstName and lastName
     let finalFirstName = firstName || '';
