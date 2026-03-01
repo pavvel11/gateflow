@@ -2284,10 +2284,14 @@
     },
     "checkoutTheme": {
       "title": "Motyw strony",
-      "description": "Wymuś konkretny motyw na całej stronie. 'Systemowy' podąża za preferencjami urządzenia odwiedzającego.",
+      "description": "Kontroluj, jaki tryb kolorystyczny widzą odwiedzający Twój sklep.",
       "system": "Systemowy",
+      "systemDesc": "Odwiedzający widzą jasny lub ciemny motyw zgodnie z ustawieniami swojego urządzenia. Mogą przełączać motyw przyciskiem.",
       "light": "Jasny",
+      "lightDesc": "Wymusza jasny motyw dla wszystkich odwiedzających. Przycisk przełączania motywu jest ukryty, preferencje użytkownika ignorowane.",
       "dark": "Ciemny",
+      "darkDesc": "Wymusza ciemny motyw dla wszystkich odwiedzających. Przycisk przełączania motywu jest ukryty, preferencje użytkownika ignorowane.",
+      "hint": "Wskazówka: Użyj Jasny lub Ciemny, jeśli Twoja marka wymaga spójnego wyglądu, np. jasny sklep pasujący do Twojej strony www. Systemowy daje odwiedzającym wybór.",
       "saveSuccess": "Motyw strony zaktualizowany.",
       "saveError": "Nie udało się zapisać motywu strony."
     },

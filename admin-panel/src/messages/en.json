@@ -2269,10 +2269,14 @@
     },
     "checkoutTheme": {
       "title": "Site Theme",
-      "description": "Force a specific theme across the entire site. 'System' follows the visitor's device preference.",
+      "description": "Control which color mode your visitors see on your storefront.",
       "system": "System",
+      "systemDesc": "Visitors see light or dark mode based on their device settings. They can switch freely using the theme toggle.",
       "light": "Light",
+      "lightDesc": "Forces light mode for all visitors. The theme toggle is hidden and visitor preferences are ignored.",
       "dark": "Dark",
+      "darkDesc": "Forces dark mode for all visitors. The theme toggle is hidden and visitor preferences are ignored.",
+      "hint": "Tip: Use Light or Dark if your brand requires a consistent look, e.g. a light storefront to match your website. System gives visitors the choice.",
       "saveSuccess": "Site theme updated.",
       "saveError": "Failed to save site theme."
     },

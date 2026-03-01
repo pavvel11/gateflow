@@ -9,7 +9,9 @@ interface ThemeToggleButtonProps {
 
 export default function ThemeToggleButton({ size = 'md' }: ThemeToggleButtonProps) {
   const t = useTranslations('navigation')
-  const { theme, resolvedTheme, cycleTheme } = useTheme()
+  const { theme, resolvedTheme, cycleTheme, isLocked } = useTheme()
+
+  if (isLocked) return null
 
   const iconSize = size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4'
   const buttonSize = size === 'sm' ? 'w-7 h-7' : 'w-8 h-8'

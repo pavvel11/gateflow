@@ -9,6 +9,8 @@ interface ThemeContextValue {
   resolvedTheme: 'light' | 'dark'
   setTheme: (theme: Theme) => void
   cycleTheme: () => void
+  /** True when admin forces light/dark via checkout_theme setting */
+  isLocked: boolean
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
@@ -20,8 +22,14 @@ function getSystemTheme(): 'light' | 'dark' {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
+function isLockedTheme(adminTheme?: string): boolean {
+  return adminTheme === 'light' || adminTheme === 'dark'
+}
+
 function readInitialTheme(adminTheme?: string): Theme {
   if (typeof window === 'undefined') return 'system'
+  // When admin forces a theme, ignore user localStorage
+  if (isLockedTheme(adminTheme)) return adminTheme as Theme
   const stored = localStorage.getItem(STORAGE_KEY) as Theme | null
   if (stored && ['light', 'dark', 'system'].includes(stored)) return stored
   if (adminTheme && ['light', 'dark', 'system'].includes(adminTheme)) return adminTheme as Theme
@@ -47,6 +55,8 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ children, adminTheme }: ThemeProviderProps) {
+  const locked = isLockedTheme(adminTheme)
+
   // Lazy initializers read localStorage on client — avoids useEffect → setState re-render.
   // On server they return static defaults; ThemeScript handles FOUC prevention.
   const [theme, setThemeState] = useState<Theme>(() => readInitialTheme(adminTheme))
@@ -61,6 +71,7 @@ export function ThemeProvider({ children, adminTheme }: ThemeProviderProps) {
 
   // Listen for OS theme changes when in system mode
   useEffect(() => {
+    if (locked) return
     const mq = window.matchMedia('(prefers-color-scheme: dark)')
     const handler = () => {
       if (theme === 'system') {
@@ -71,26 +82,28 @@ export function ThemeProvider({ children, adminTheme }: ThemeProviderProps) {
     }
     mq.addEventListener('change', handler)
     return () => mq.removeEventListener('change', handler)
-  }, [theme])
+  }, [theme, locked])
 
   const setTheme = useCallback((newTheme: Theme) => {
+    if (locked) return
     setThemeState(newTheme)
     localStorage.setItem(STORAGE_KEY, newTheme)
     const resolved = newTheme === 'system' ? getSystemTheme() : newTheme
     setResolvedTheme(resolved)
     applyTheme(resolved)
     window.dispatchEvent(new CustomEvent('sf-theme-change', { detail: newTheme }))
-  }, [])
+  }, [locked])
 
   const cycleTheme = useCallback(() => {
+    if (locked) return
     const order: Theme[] = ['system', 'light', 'dark']
     const next = order[(order.indexOf(theme) + 1) % order.length]
     setTheme(next)
-  }, [theme, setTheme])
+  }, [theme, setTheme, locked])
 
   const value = useMemo(
-    () => ({ theme, resolvedTheme, setTheme, cycleTheme }),
-    [theme, resolvedTheme, setTheme, cycleTheme]
+    () => ({ theme, resolvedTheme, setTheme, cycleTheme, isLocked: locked }),
+    [theme, resolvedTheme, setTheme, cycleTheme, locked]
   )
 
   return (
@@ -112,7 +125,10 @@ export function useTheme() {
  * Falls back to adminTheme from shop config when no user preference exists.
  */
 export function ThemeScript({ adminTheme }: { adminTheme?: string }) {
-  const script = `
+  const forced = adminTheme === 'light' || adminTheme === 'dark'
+  const script = forced
+    ? `(function(){try{${adminTheme === 'dark' ? "document.documentElement.classList.add('dark')" : "document.documentElement.classList.remove('dark')"}}catch(e){}})();`
+    : `
     (function() {
       try {
         var t = localStorage.getItem('${STORAGE_KEY}');

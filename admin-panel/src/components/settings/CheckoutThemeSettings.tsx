@@ -6,9 +6,9 @@ import { useToast } from '@/contexts/ToastContext';
 import { useTranslations } from 'next-intl';
 
 const THEME_OPTIONS = [
- { value: 'system', icon: '💻' },
- { value: 'light', icon: '☀️' },
- { value: 'dark', icon: '🌙' },
+ { value: 'system', icon: '💻', descKey: 'systemDesc' },
+ { value: 'light', icon: '☀️', descKey: 'lightDesc' },
+ { value: 'dark', icon: '🌙', descKey: 'darkDesc' },
 ] as const;
 
 export default function CheckoutThemeSettings() {
@@ -95,6 +95,14 @@ export default function CheckoutThemeSettings() {
  </button>
  ))}
  </div>
+
+ <p className="text-xs text-sf-muted mt-4">
+ {t(`${theme}Desc`)}
+ </p>
+
+ <p className="text-xs text-sf-muted/70 mt-3 border-t border-sf-border pt-3">
+ {t('hint')}
+ </p>
  </div>
  );
 }
