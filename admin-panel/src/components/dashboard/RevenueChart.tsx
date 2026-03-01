@@ -33,6 +33,7 @@ export default function RevenueChart() {
 
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [converting, setConverting] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('daily');
   const [convertedData, setConvertedData] = useState<any[]>([]);
   const [convertedTotal, setConvertedTotal] = useState<number>(0);
@@ -105,6 +106,7 @@ export default function RevenueChart() {
   useEffect(() => {
     async function convertData() {
       if (currencyViewMode === 'converted' && displayCurrency && data.length > 0) {
+        setConverting(true);
         try {
           // Extract amounts array
           const amountsArray = data.map(item => item.amount || {});
@@ -128,6 +130,8 @@ export default function RevenueChart() {
           console.error('Error converting currency data:', error);
           setConvertedData([]);
           setConvertedTotal(0);
+        } finally {
+          setConverting(false);
         }
       } else {
         setConvertedData([]);
@@ -194,11 +198,64 @@ export default function RevenueChart() {
     ? [displayCurrency!]
     : Array.from(new Set(data.flatMap(item => Object.keys(item.amount || {})))).sort();
 
-  if (loading) {
+  // Show skeleton while data loads OR while converting currencies
+  // (prevents flash of grouped chart when user has "convert to X" enabled)
+  const showSkeleton = loading || (converting && currencyViewMode === 'converted');
+
+  if (showSkeleton) {
     return (
-      <div className="border-2 border-sf-border-medium p-6 h-[400px] animate-pulse">
-        <div className="h-6 w-1/3 bg-sf-raised mb-4"></div>
-        <div className="h-full bg-sf-raised"></div>
+      <div className="border-2 border-sf-border-medium">
+        {/* Header skeleton */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-6 pt-6 pb-4 gap-4 border-b border-sf-border-subtle">
+          <div className="animate-pulse">
+            <div className="h-3 w-24 bg-sf-border-medium rounded mb-2"></div>
+            <div className="h-10 w-40 bg-sf-border-medium rounded mb-1"></div>
+            <div className="h-3 w-32 bg-sf-border-medium/60 rounded"></div>
+          </div>
+          <div className="flex gap-1 animate-pulse">
+            <div className="h-8 w-14 bg-sf-border-medium rounded"></div>
+            <div className="h-8 w-10 bg-sf-border-medium rounded"></div>
+            <div className="h-8 w-10 bg-sf-border-medium rounded"></div>
+          </div>
+        </div>
+        {/* Chart area skeleton */}
+        <div className="h-[300px] w-full p-6">
+          <svg className="w-full h-full" viewBox="0 0 600 240" preserveAspectRatio="none">
+            {/* Horizontal grid lines */}
+            {[0, 1, 2, 3, 4].map(i => (
+              <line
+                key={`grid-${i}`}
+                x1="40" y1={i * 55 + 10} x2="590" y2={i * 55 + 10}
+                stroke="currentColor" className="text-sf-border-medium" strokeDasharray="4 4" strokeWidth="1"
+              />
+            ))}
+            {/* Y-axis labels */}
+            {[0, 1, 2, 3, 4].map(i => (
+              <rect
+                key={`ylabel-${i}`}
+                x="4" y={i * 55 + 6} width="28" height="8" rx="2"
+                className="fill-sf-border-medium animate-pulse"
+              />
+            ))}
+            {/* X-axis labels */}
+            {[0, 1, 2, 3, 4, 5].map(i => (
+              <rect
+                key={`xlabel-${i}`}
+                x={i * 105 + 55} y="232" width="40" height="8" rx="2"
+                className="fill-sf-border-medium animate-pulse"
+              />
+            ))}
+            {/* Animated area wave */}
+            <path
+              d="M40,180 C100,175 140,150 200,120 C260,90 300,100 340,80 C380,60 420,70 460,50 C500,35 540,45 590,30 L590,220 L40,220 Z"
+              className="fill-sf-accent/[0.06] animate-pulse"
+            />
+            <path
+              d="M40,180 C100,175 140,150 200,120 C260,90 300,100 340,80 C380,60 420,70 460,50 C500,35 540,45 590,30"
+              fill="none" stroke="currentColor" className="text-sf-accent/20 animate-pulse" strokeWidth="2"
+            />
+          </svg>
+        </div>
       </div>
     );
   }
