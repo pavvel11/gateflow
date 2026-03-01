@@ -20,7 +20,7 @@ import {
 } from '@/lib/api';
 import { createClient } from '@/lib/supabase/server';
 import { requireAdminApi } from '@/lib/auth-server';
-import { validateProductId } from '@/lib/validations/product';
+import { validateUUID } from '@/lib/validations/product';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
 
     // Validate ID format
-    const idValidation = validateProductId(id);
+    const idValidation = validateUUID(id);
     if (!idValidation.isValid) {
       return apiError(request, 'INVALID_INPUT', 'Invalid key ID format');
     }
@@ -78,8 +78,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Validate grace period (default 24 hours, max 168 hours = 7 days)
     const gracePeriodHours = body.grace_period_hours ?? 24;
-    if (gracePeriodHours < 0 || gracePeriodHours > 168) {
-      throw new ApiValidationError('Grace period must be between 0 and 168 hours');
+    if (typeof gracePeriodHours !== 'number' || !Number.isInteger(gracePeriodHours) || gracePeriodHours < 0 || gracePeriodHours > 168) {
+      throw new ApiValidationError('Grace period must be an integer between 0 and 168 hours');
     }
 
     // Generate new key

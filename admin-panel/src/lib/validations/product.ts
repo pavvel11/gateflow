@@ -463,6 +463,13 @@ export function validateCreateProduct(data: unknown): ValidationResult {
     errors.push(...durationResult.errors);
   }
 
+  // Validate long_description length
+  if (input.long_description !== undefined && input.long_description !== null) {
+    if (typeof input.long_description === 'string' && input.long_description.length > 50000) {
+      errors.push('Long description must be 50,000 characters or less');
+    }
+  }
+
   // Validate content config
   if (input.content_config) {
     const contentConfigResult = validateContentConfig(input.content_config);
@@ -535,6 +542,13 @@ export function validateUpdateProduct(data: unknown): ValidationResult {
   if (input.auto_grant_duration_days !== undefined) {
     const durationResult = validateDuration(input.auto_grant_duration_days);
     errors.push(...durationResult.errors);
+  }
+
+  // Validate long_description length
+  if (input.long_description !== undefined && input.long_description !== null) {
+    if (typeof input.long_description === 'string' && input.long_description.length > 50000) {
+      errors.push('Long description must be 50,000 characters or less');
+    }
   }
 
   // Validate content config

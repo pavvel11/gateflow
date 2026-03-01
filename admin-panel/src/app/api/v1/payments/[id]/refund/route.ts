@@ -15,7 +15,7 @@ import {
   API_SCOPES,
 } from '@/lib/api';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { validateProductId } from '@/lib/validations/product';
+import { validateUUID } from '@/lib/validations/product';
 import { getStripeServer } from '@/lib/stripe/server';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limiting';
 import Stripe from 'stripe';
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
 
     // Validate ID format
-    const idValidation = validateProductId(id);
+    const idValidation = validateUUID(id);
     if (!idValidation.isValid) {
       return apiError(request, 'INVALID_INPUT', 'Invalid payment ID format');
     }
@@ -68,8 +68,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Parse request body
-    let body: { amount?: number; reason?: string } = {};
+    // Parse request body (empty body = full refund)
+    let body: { amount?: unknown; reason?: string } = {};
     try {
       body = await request.json();
     } catch {
@@ -77,6 +77,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     const { amount, reason } = body;
+
+    // Validate amount type if provided
+    if (amount !== undefined && amount !== null) {
+      if (typeof amount !== 'number' || !Number.isFinite(amount)) {
+        return apiError(request, 'INVALID_INPUT', 'Refund amount must be a number');
+      }
+    }
 
     // Validate reason if provided
     const validReasons = ['duplicate', 'fraudulent', 'requested_by_customer'];

@@ -108,6 +108,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       access_duration_days,
     } = body;
 
+    // Validate string lengths
+    if (bump_title !== undefined && typeof bump_title === 'string' && bump_title.length > 200) {
+      return apiError(request, 'VALIDATION_ERROR', 'Bump title too long', {
+        bump_title: ['Bump title must be 200 characters or less']
+      });
+    }
+    if (bump_description !== undefined && bump_description !== null && typeof bump_description === 'string' && bump_description.length > 2000) {
+      return apiError(request, 'VALIDATION_ERROR', 'Bump description too long', {
+        bump_description: ['Bump description must be 2000 characters or less']
+      });
+    }
+
     // Validate bump_price if provided
     if (bump_price !== undefined && bump_price !== null) {
       if (typeof bump_price !== 'number' || !Number.isFinite(bump_price) || bump_price < 0 || bump_price > 999999.99) {
@@ -155,6 +167,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       }
     }
 
+    // Validate is_active type if provided
+    if (is_active !== undefined && typeof is_active !== 'boolean') {
+      return apiError(request, 'VALIDATION_ERROR', 'Invalid is_active value', {
+        is_active: ['is_active must be a boolean']
+      });
+    }
+
     // Build update object with only provided fields
     const updates: Record<string, unknown> = {};
     if (bump_product_id !== undefined) updates.bump_product_id = bump_product_id;
@@ -164,6 +183,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (is_active !== undefined) updates.is_active = is_active;
     if (display_order !== undefined) updates.display_order = display_order;
     if (access_duration_days !== undefined) updates.access_duration_days = access_duration_days;
+
+    if (Object.keys(updates).length === 0) {
+      return apiError(request, 'VALIDATION_ERROR', 'No valid update fields provided');
+    }
 
     // Update order bump
     const { data, error } = await supabase

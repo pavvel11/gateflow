@@ -139,6 +139,18 @@ export async function POST(request: NextRequest) {
       return apiError(request, 'VALIDATION_ERROR', 'Missing required fields', errors);
     }
 
+    // Validate string lengths
+    if (typeof bump_title === 'string' && bump_title.length > 200) {
+      return apiError(request, 'VALIDATION_ERROR', 'Bump title too long', {
+        bump_title: ['Bump title must be 200 characters or less']
+      });
+    }
+    if (bump_description !== undefined && bump_description !== null && typeof bump_description === 'string' && bump_description.length > 2000) {
+      return apiError(request, 'VALIDATION_ERROR', 'Bump description too long', {
+        bump_description: ['Bump description must be 2000 characters or less']
+      });
+    }
+
     // Validate UUID formats
     const mainIdValidation = validateUUID(String(main_product_id));
     if (!mainIdValidation.isValid) {
@@ -147,6 +159,13 @@ export async function POST(request: NextRequest) {
     const bumpIdValidation = validateUUID(String(bump_product_id));
     if (!bumpIdValidation.isValid) {
       return apiError(request, 'INVALID_INPUT', 'Invalid bump product ID format');
+    }
+
+    // Prevent self-referencing order bump
+    if (String(main_product_id) === String(bump_product_id)) {
+      return apiError(request, 'VALIDATION_ERROR', 'Main product and bump product must be different', {
+        bump_product_id: ['Bump product cannot be the same as main product']
+      });
     }
 
     // Validate that products exist and are active
@@ -171,6 +190,13 @@ export async function POST(request: NextRequest) {
     if (!bumpProduct || !bumpProduct.is_active) {
       return apiError(request, 'VALIDATION_ERROR', 'Bump product not found or inactive', {
         bump_product_id: ['Bump product not found or inactive']
+      });
+    }
+
+    // Validate is_active type
+    if (is_active !== undefined && typeof is_active !== 'boolean') {
+      return apiError(request, 'VALIDATION_ERROR', 'Invalid is_active value', {
+        is_active: ['is_active must be a boolean']
       });
     }
 

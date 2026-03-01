@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     if (productsError) {
       databaseHealthy = false;
-      databaseError = productsError.message;
+      databaseError = 'Database connection error';
     }
 
     // Get user counts

@@ -12,6 +12,7 @@ import {
   apiError,
   authenticate,
   handleApiError,
+  parseJsonBody,
   successResponse,
   API_SCOPES,
 } from '@/lib/api';
@@ -95,13 +96,7 @@ export async function GET(request: NextRequest) {
       cursor
     );
 
-    return jsonResponse(
-      {
-        data: items,
-        pagination,
-      },
-      request
-    );
+    return jsonResponse(successResponse(items, pagination), request);
   } catch (error) {
     return handleApiError(error, request);
   }
@@ -124,19 +119,12 @@ export async function POST(request: NextRequest) {
 
     const adminClient = createAdminClient();
 
-    // Parse body
-    let body: {
+    const body = await parseJsonBody<{
       url?: string;
       events?: string[];
       description?: string;
       is_active?: boolean;
-    };
-
-    try {
-      body = await request.json();
-    } catch {
-      return apiError(request, 'INVALID_INPUT', 'Invalid JSON body');
-    }
+    }>(request);
 
     const { url, events, description, is_active = true } = body;
 
@@ -161,6 +149,11 @@ export async function POST(request: NextRequest) {
       return apiError(request, 'INVALID_INPUT', eventsValidation.error || 'Invalid event types');
     }
 
+    // Validate description length
+    if (description && description.length > 500) {
+      return apiError(request, 'INVALID_INPUT', 'Description must be 500 characters or less');
+    }
+
     // Create webhook
     const { data: webhook, error } = await adminClient
       .from('webhook_endpoints')
@@ -170,7 +163,7 @@ export async function POST(request: NextRequest) {
         description: description || null,
         is_active,
       })
-      .select()
+      .select('id, url, events, description, is_active, created_at, updated_at')
       .single();
 
     if (error) {

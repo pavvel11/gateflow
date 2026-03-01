@@ -11,10 +11,12 @@ import {
   apiError,
   authenticate,
   handleApiError,
+  successResponse,
   API_SCOPES,
 } from '@/lib/api';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { parseLimit, applyCursorToQuery, createPaginationResponse, validateCursor } from '@/lib/api/pagination';
+import { validateUUID } from '@/lib/validations/product';
 
 export async function OPTIONS(request: NextRequest) {
   return handleCorsPreFlight(request);
@@ -74,8 +76,12 @@ export async function GET(request: NextRequest) {
         )
       `);
 
-    // Filter by endpoint
+    // Filter by endpoint (validate UUID format)
     if (endpointId) {
+      const idValidation = validateUUID(endpointId);
+      if (!idValidation.isValid) {
+        return apiError(request, 'INVALID_INPUT', 'Invalid endpoint_id format');
+      }
       query = query.eq('endpoint_id', endpointId);
     }
 
@@ -138,13 +144,7 @@ export async function GET(request: NextRequest) {
       cursor
     );
 
-    return jsonResponse(
-      {
-        data: items,
-        pagination,
-      },
-      request
-    );
+    return jsonResponse(successResponse(items, pagination), request);
   } catch (error) {
     return handleApiError(error, request);
   }

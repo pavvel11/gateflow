@@ -40,6 +40,7 @@ export const API_SCOPES = {
 
   // System
   SYSTEM_READ: 'system:read',
+  SYSTEM_WRITE: 'system:write',
 
   // Full access
   FULL_ACCESS: '*',
@@ -278,6 +279,7 @@ export function getScopeDescription(scope: ApiScope): string {
     [API_SCOPES.REFUND_REQUESTS_READ]: 'View refund requests',
     [API_SCOPES.REFUND_REQUESTS_WRITE]: 'Process refund requests',
     [API_SCOPES.SYSTEM_READ]: 'View system configuration',
+    [API_SCOPES.SYSTEM_WRITE]: 'Trigger system operations (upgrade)',
     [API_SCOPES.FULL_ACCESS]: 'Full access to all resources',
   };
 

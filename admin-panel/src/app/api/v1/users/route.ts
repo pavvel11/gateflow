@@ -81,10 +81,10 @@ export async function GET(request: NextRequest) {
     // Pagination options - users view uses user_id instead of id
     const paginationOptions = { idField: 'user_id' };
 
-    // Build query for user stats
+    // Build query for user stats (explicit fields)
     let query = adminClient
       .from('user_access_stats')
-      .select('*');
+      .select('user_id, email, user_created_at, email_confirmed_at, last_sign_in_at, raw_user_meta_data, total_products, total_value, last_access_granted_at, first_access_granted_at');
 
     // Apply search filter
     if (search) {
@@ -119,7 +119,7 @@ export async function GET(request: NextRequest) {
     if (userIds.length > 0) {
       const { data: accessData, error: accessError } = await adminClient
         .from('user_product_access_detailed')
-        .select('*')
+        .select('id, user_id, product_id, product_slug, product_name, product_price, product_currency, product_icon, product_is_active, access_created_at, access_expires_at, access_duration_days')
         .in('user_id', userIds)
         .order('access_created_at', { ascending: false });
 

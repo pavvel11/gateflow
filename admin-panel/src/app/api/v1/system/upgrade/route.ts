@@ -5,7 +5,7 @@
  * Returns immediately with an upgrade token for progress tracking.
  *
  * Security:
- * - Admin-only (SYSTEM_READ scope)
+ * - Admin-only (SYSTEM_WRITE scope)
  * - Rate limited: 1 request per 10 minutes
  * - Lock file prevents concurrent upgrades
  * - Audit logged
@@ -39,7 +39,7 @@ export async function OPTIONS(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const auth = await authenticate(request, [API_SCOPES.SYSTEM_READ]);
+    const auth = await authenticate(request, [API_SCOPES.SYSTEM_WRITE]);
 
     // Rate limit: 1 request per 10 minutes
     const rateLimitOk = await checkRateLimit('system_upgrade', 1, 10, auth.admin.userId);

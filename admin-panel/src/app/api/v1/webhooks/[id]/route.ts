@@ -14,11 +14,12 @@ import {
   apiError,
   authenticate,
   handleApiError,
+  parseJsonBody,
   successResponse,
   API_SCOPES,
 } from '@/lib/api';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { validateProductId } from '@/lib/validations/product';
+import { validateUUID } from '@/lib/validations/product';
 import { isValidWebhookUrl, validateEventTypes } from '@/lib/validations/webhook';
 
 interface RouteParams {
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
 
     // Validate ID format
-    const idValidation = validateProductId(id);
+    const idValidation = validateUUID(id);
     if (!idValidation.isValid) {
       return apiError(request, 'INVALID_INPUT', 'Invalid webhook ID format');
     }
@@ -92,7 +93,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
 
     // Validate ID format
-    const idValidation = validateProductId(id);
+    const idValidation = validateUUID(id);
     if (!idValidation.isValid) {
       return apiError(request, 'INVALID_INPUT', 'Invalid webhook ID format');
     }
@@ -110,19 +111,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return apiError(request, 'NOT_FOUND', 'Webhook not found');
     }
 
-    // Parse body
-    let body: {
+    const body = await parseJsonBody<{
       url?: string;
       events?: string[];
       description?: string;
       is_active?: boolean;
-    };
-
-    try {
-      body = await request.json();
-    } catch {
-      return apiError(request, 'INVALID_INPUT', 'Invalid JSON body');
-    }
+    }>(request);
 
     const updates: Record<string, unknown> = {};
 
@@ -144,8 +138,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       updates.events = body.events;
     }
 
-    // Set description if provided
+    // Set description if provided (with length limit)
     if (body.description !== undefined) {
+      if (body.description && body.description.length > 500) {
+        return apiError(request, 'INVALID_INPUT', 'Description must be 500 characters or less');
+      }
       updates.description = body.description || null;
     }
 
@@ -158,7 +155,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     if (Object.keys(updates).length === 0) {
       const { data: webhook } = await adminClient
         .from('webhook_endpoints')
-        .select('*')
+        .select('id, url, events, description, is_active, created_at, updated_at')
         .eq('id', id)
         .single();
 
@@ -172,7 +169,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       .from('webhook_endpoints')
       .update(updates)
       .eq('id', id)
-      .select()
+      .select('id, url, events, description, is_active, created_at, updated_at')
       .single();
 
     if (error) {
@@ -200,7 +197,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
 
     // Validate ID format
-    const idValidation = validateProductId(id);
+    const idValidation = validateUUID(id);
     if (!idValidation.isValid) {
       return apiError(request, 'INVALID_INPUT', 'Invalid webhook ID format');
     }

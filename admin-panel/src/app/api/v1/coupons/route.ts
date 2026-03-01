@@ -17,7 +17,6 @@ import {
   successResponse,
   API_SCOPES,
 } from '@/lib/api';
-import { createAdminClient } from '@/lib/supabase/admin';
 import { parseLimit, applyCursorToQuery, createPaginationResponse, validateCursor } from '@/lib/api/pagination';
 import { escapeIlikePattern, validateUUID } from '@/lib/validations/product';
 import { SUPPORTED_CURRENCY_CODES } from '@/lib/constants';
@@ -49,9 +48,7 @@ export async function OPTIONS(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    await authenticate(request, [API_SCOPES.COUPONS_READ]);
-
-    const adminClient = createAdminClient();
+    const { supabase } = await authenticate(request, [API_SCOPES.COUPONS_READ]);
     const { searchParams } = request.nextUrl;
 
     // Parse params
@@ -68,7 +65,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build query
-    let query = adminClient
+    let query = supabase
       .from('coupons')
       .select(COUPON_API_FIELDS);
 
@@ -160,9 +157,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    await authenticate(request, [API_SCOPES.COUPONS_WRITE]);
-
-    const adminClient = createAdminClient();
+    const { supabase } = await authenticate(request, [API_SCOPES.COUPONS_WRITE]);
 
     const body = await parseJsonBody<{
       code?: string;
@@ -250,26 +245,47 @@ export async function POST(request: NextRequest) {
       expiresAt = date.toISOString();
     }
 
+    // Validate name length
+    if (body.name && body.name.length > 200) {
+      throw new ApiValidationError('Coupon name must be 200 characters or less');
+    }
+
     // Validate usage limits (null means unlimited)
     if (body.usage_limit_global !== undefined && body.usage_limit_global !== null) {
-      if (!Number.isInteger(body.usage_limit_global) || body.usage_limit_global < 1) {
-        throw new ApiValidationError('usage_limit_global must be a positive integer');
+      if (!Number.isInteger(body.usage_limit_global) || body.usage_limit_global < 1 || body.usage_limit_global > 10000000) {
+        throw new ApiValidationError('usage_limit_global must be a positive integer up to 10,000,000');
       }
     }
 
     if (body.usage_limit_per_user !== undefined) {
-      if (!Number.isInteger(body.usage_limit_per_user) || body.usage_limit_per_user < 1) {
-        throw new ApiValidationError('usage_limit_per_user must be a positive integer');
+      if (!Number.isInteger(body.usage_limit_per_user) || body.usage_limit_per_user < 1 || body.usage_limit_per_user > 10000) {
+        throw new ApiValidationError('usage_limit_per_user must be a positive integer up to 10,000');
       }
     }
 
     // Validate arrays
-    if (body.allowed_emails !== undefined && !Array.isArray(body.allowed_emails)) {
-      throw new ApiValidationError('allowed_emails must be an array');
+    if (body.allowed_emails !== undefined) {
+      if (!Array.isArray(body.allowed_emails)) {
+        throw new ApiValidationError('allowed_emails must be an array');
+      }
+      if (body.allowed_emails.length > 500) {
+        throw new ApiValidationError('allowed_emails cannot exceed 500 entries');
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      for (const email of body.allowed_emails) {
+        if (typeof email !== 'string' || !emailRegex.test(email)) {
+          throw new ApiValidationError(`Invalid email format in allowed_emails: ${email}`);
+        }
+      }
     }
 
-    if (body.allowed_product_ids !== undefined && !Array.isArray(body.allowed_product_ids)) {
-      throw new ApiValidationError('allowed_product_ids must be an array');
+    if (body.allowed_product_ids !== undefined) {
+      if (!Array.isArray(body.allowed_product_ids)) {
+        throw new ApiValidationError('allowed_product_ids must be an array');
+      }
+      if (body.allowed_product_ids.length > 100) {
+        throw new ApiValidationError('allowed_product_ids cannot exceed 100 entries');
+      }
     }
 
     // Validate each product ID in allowed_product_ids
@@ -283,7 +299,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert coupon
-    const { data: newCoupon, error: insertError } = await adminClient
+    const { data: newCoupon, error: insertError } = await supabase
       .from('coupons')
       .insert({
         code: body.code.toUpperCase().trim(),

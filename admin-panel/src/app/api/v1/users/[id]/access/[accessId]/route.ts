@@ -137,8 +137,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const updateData: Record<string, unknown> = {};
 
     if (body.extend_days !== undefined) {
-      const extendDays = Number(body.extend_days);
-      if (isNaN(extendDays) || extendDays < 1 || extendDays > 3650) {
+      if (typeof body.extend_days !== 'number' || !Number.isInteger(body.extend_days)) {
+        return apiError(request, 'VALIDATION_ERROR', 'extend_days must be an integer');
+      }
+      const extendDays = body.extend_days as number;
+      if (extendDays < 1 || extendDays > 3650) {
         return apiError(request, 'VALIDATION_ERROR', 'extend_days must be between 1 and 3650');
       }
 
@@ -155,7 +158,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       baseDate.setDate(baseDate.getDate() + extendDays);
       updateData.access_expires_at = baseDate.toISOString();
     } else if (body.access_expires_at !== undefined) {
-      const expiresAt = new Date(body.access_expires_at as string);
+      if (typeof body.access_expires_at !== 'string') {
+        return apiError(request, 'VALIDATION_ERROR', 'access_expires_at must be an ISO date string');
+      }
+      const expiresAt = new Date(body.access_expires_at);
       if (isNaN(expiresAt.getTime())) {
         return apiError(request, 'VALIDATION_ERROR', 'Invalid access_expires_at format');
       }
@@ -164,8 +170,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       }
       updateData.access_expires_at = expiresAt.toISOString();
     } else if (body.access_duration_days !== undefined) {
-      const durationDays = Number(body.access_duration_days);
-      if (isNaN(durationDays) || durationDays < 1 || durationDays > 3650) {
+      if (typeof body.access_duration_days !== 'number' || !Number.isInteger(body.access_duration_days)) {
+        return apiError(request, 'VALIDATION_ERROR', 'access_duration_days must be an integer');
+      }
+      const durationDays = body.access_duration_days as number;
+      if (durationDays < 1 || durationDays > 3650) {
         return apiError(request, 'VALIDATION_ERROR', 'access_duration_days must be between 1 and 3650');
       }
       updateData.access_duration_days = durationDays;

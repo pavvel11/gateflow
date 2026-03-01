@@ -113,8 +113,8 @@ export async function POST(request: NextRequest) {
 
     // Validate rate limit
     const rateLimit = body.rate_limit_per_minute ?? 60;
-    if (rateLimit < 1 || rateLimit > 1000) {
-      throw new ApiValidationError('Rate limit must be between 1 and 1000');
+    if (typeof rateLimit !== 'number' || !Number.isInteger(rateLimit) || rateLimit < 1 || rateLimit > 1000) {
+      throw new ApiValidationError('Rate limit must be an integer between 1 and 1000');
     }
 
     // Validate expiration

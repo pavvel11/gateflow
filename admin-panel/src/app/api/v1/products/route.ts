@@ -72,8 +72,11 @@ export async function GET(request: NextRequest) {
       .from('products')
       .select(PRODUCT_API_FIELDS);
 
-    // Apply search filter
+    // Apply search filter (limit length to prevent abuse)
     if (search) {
+      if (search.length > 200) {
+        return apiError(request, 'INVALID_INPUT', 'Search query must be 200 characters or less');
+      }
       const escapedSearch = escapeIlikePattern(search);
       query = query.or(`name.ilike.%${escapedSearch}%,description.ilike.%${escapedSearch}%`);
     }
@@ -189,6 +192,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Add categories if provided
+    if (product && Array.isArray(categories) && categories.length > 50) {
+      return apiError(request, 'VALIDATION_ERROR', 'Too many categories', {
+        categories: ['A product can have at most 50 categories']
+      });
+    }
     if (product && Array.isArray(categories) && categories.length > 0) {
       for (const catId of categories) {
         const catValidation = validateUUID(String(catId));

@@ -19,8 +19,8 @@ import {
   successResponse,
   API_SCOPES,
 } from '@/lib/api';
-import { createAdminClient } from '@/lib/supabase/admin';
-import { validateProductId } from '@/lib/validations/product';
+import { validateUUID } from '@/lib/validations/product';
+import { SUPPORTED_CURRENCY_CODES } from '@/lib/constants';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -37,18 +37,16 @@ export async function OPTIONS(request: NextRequest) {
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    await authenticate(request, [API_SCOPES.COUPONS_READ]);
+    const { supabase } = await authenticate(request, [API_SCOPES.COUPONS_READ]);
     const { id } = await params;
 
     // Validate ID format
-    const idValidation = validateProductId(id);
+    const idValidation = validateUUID(id);
     if (!idValidation.isValid) {
       return apiError(request, 'INVALID_INPUT', 'Invalid coupon ID format');
     }
 
-    const adminClient = createAdminClient();
-
-    const { data: coupon, error } = await adminClient
+    const { data: coupon, error } = await supabase
       .from('coupons')
       .select(`
         id,
@@ -113,19 +111,17 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
-    await authenticate(request, [API_SCOPES.COUPONS_WRITE]);
+    const { supabase } = await authenticate(request, [API_SCOPES.COUPONS_WRITE]);
     const { id } = await params;
 
     // Validate ID format
-    const idValidation = validateProductId(id);
+    const idValidation = validateUUID(id);
     if (!idValidation.isValid) {
       return apiError(request, 'INVALID_INPUT', 'Invalid coupon ID format');
     }
 
-    const adminClient = createAdminClient();
-
     // Check coupon exists
-    const { data: existingCoupon, error: checkError } = await adminClient
+    const { data: existingCoupon, error: checkError } = await supabase
       .from('coupons')
       .select('id, discount_type, is_oto_coupon')
       .eq('id', id)
@@ -135,21 +131,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return apiError(request, 'NOT_FOUND', 'Coupon not found');
     }
 
-    // OTO coupons have limited editability
-    if (existingCoupon.is_oto_coupon) {
-      // Only allow toggling is_active for OTO coupons
-      const body = await parseJsonBody<Record<string, unknown>>(request);
-      const allowedOtoFields = ['is_active'];
-      const providedFields = Object.keys(body);
-      const invalidFields = providedFields.filter(f => !allowedOtoFields.includes(f));
-
-      if (invalidFields.length > 0) {
-        throw new ApiValidationError(
-          `OTO coupons can only update: ${allowedOtoFields.join(', ')}. Invalid fields: ${invalidFields.join(', ')}`
-        );
-      }
-    }
-
+    // Parse body ONCE (stream can only be consumed once)
     const body = await parseJsonBody<{
       code?: string;
       name?: string;
@@ -166,6 +148,19 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       allowed_product_ids?: string[];
       exclude_order_bumps?: boolean;
     }>(request);
+
+    // OTO coupons have limited editability
+    if (existingCoupon.is_oto_coupon) {
+      const allowedOtoFields = ['is_active'];
+      const providedFields = Object.keys(body);
+      const invalidFields = providedFields.filter(f => !allowedOtoFields.includes(f));
+
+      if (invalidFields.length > 0) {
+        throw new ApiValidationError(
+          `OTO coupons can only update: ${allowedOtoFields.join(', ')}. Invalid fields: ${invalidFields.join(', ')}`
+        );
+      }
+    }
 
     // Build update data with validation
     const updateData: Record<string, unknown> = {};
@@ -187,6 +182,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     // Name
     if (body.name !== undefined) {
+      if (body.name && body.name.length > 200) {
+        throw new ApiValidationError('Coupon name must be 200 characters or less');
+      }
       updateData.name = body.name?.trim() || null;
     }
 
@@ -222,6 +220,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     // Currency
     if (body.currency !== undefined) {
+      if (body.currency) {
+        if (!(SUPPORTED_CURRENCY_CODES as readonly string[]).includes(body.currency.toUpperCase())) {
+          throw new ApiValidationError(`Unsupported currency code. Supported: ${SUPPORTED_CURRENCY_CODES.join(', ')}`);
+        }
+      }
       updateData.currency = body.currency || null;
     }
 
@@ -273,16 +276,16 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       if (body.usage_limit_global === null) {
         updateData.usage_limit_global = null;
       } else {
-        if (!Number.isInteger(body.usage_limit_global) || body.usage_limit_global < 1) {
-          throw new ApiValidationError('usage_limit_global must be a positive integer or null');
+        if (!Number.isInteger(body.usage_limit_global) || body.usage_limit_global < 1 || body.usage_limit_global > 10000000) {
+          throw new ApiValidationError('usage_limit_global must be a positive integer up to 10,000,000 or null');
         }
         updateData.usage_limit_global = body.usage_limit_global;
       }
     }
 
     if (body.usage_limit_per_user !== undefined) {
-      if (!Number.isInteger(body.usage_limit_per_user) || body.usage_limit_per_user < 1) {
-        throw new ApiValidationError('usage_limit_per_user must be a positive integer');
+      if (!Number.isInteger(body.usage_limit_per_user) || body.usage_limit_per_user < 1 || body.usage_limit_per_user > 10000) {
+        throw new ApiValidationError('usage_limit_per_user must be a positive integer up to 10,000');
       }
       updateData.usage_limit_per_user = body.usage_limit_per_user;
     }
@@ -292,12 +295,30 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       if (!Array.isArray(body.allowed_emails)) {
         throw new ApiValidationError('allowed_emails must be an array');
       }
+      if (body.allowed_emails.length > 500) {
+        throw new ApiValidationError('allowed_emails cannot exceed 500 entries');
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      for (const email of body.allowed_emails) {
+        if (typeof email !== 'string' || !emailRegex.test(email)) {
+          throw new ApiValidationError(`Invalid email format in allowed_emails: ${email}`);
+        }
+      }
       updateData.allowed_emails = body.allowed_emails;
     }
 
     if (body.allowed_product_ids !== undefined) {
       if (!Array.isArray(body.allowed_product_ids)) {
         throw new ApiValidationError('allowed_product_ids must be an array');
+      }
+      if (body.allowed_product_ids.length > 100) {
+        throw new ApiValidationError('allowed_product_ids cannot exceed 100 entries');
+      }
+      for (const pid of body.allowed_product_ids) {
+        const pidValidation = validateUUID(String(pid));
+        if (!pidValidation.isValid) {
+          throw new ApiValidationError(`Invalid product ID format in allowed_product_ids: ${pid}`);
+        }
       }
       updateData.allowed_product_ids = body.allowed_product_ids;
     }
@@ -307,11 +328,18 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     // Update coupon
-    const { data: updatedCoupon, error: updateError } = await adminClient
+    const { data: updatedCoupon, error: updateError } = await supabase
       .from('coupons')
       .update(updateData)
       .eq('id', id)
-      .select()
+      .select(`
+        id, code, name, discount_type, discount_value, currency,
+        is_active, is_public, starts_at, expires_at,
+        usage_limit_global, usage_limit_per_user, current_usage_count,
+        allowed_emails, allowed_product_ids, exclude_order_bumps,
+        is_oto_coupon, oto_offer_id, source_transaction_id,
+        created_at, updated_at
+      `)
       .single();
 
     if (updateError) {
@@ -336,21 +364,19 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    await authenticate(request, [API_SCOPES.COUPONS_WRITE]);
+    const { supabase } = await authenticate(request, [API_SCOPES.COUPONS_WRITE]);
     const { id } = await params;
 
     // Validate ID format
-    const idValidation = validateProductId(id);
+    const idValidation = validateUUID(id);
     if (!idValidation.isValid) {
       return apiError(request, 'INVALID_INPUT', 'Invalid coupon ID format');
     }
 
-    const adminClient = createAdminClient();
-
-    // Check coupon exists and get info for response
-    const { data: existingCoupon, error: checkError } = await adminClient
+    // Check coupon exists
+    const { data: existingCoupon, error: checkError } = await supabase
       .from('coupons')
-      .select('id, code, current_usage_count')
+      .select('id')
       .eq('id', id)
       .single();
 
@@ -359,7 +385,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // Delete coupon (cascade will handle redemptions/reservations)
-    const { error: deleteError } = await adminClient
+    const { error: deleteError } = await supabase
       .from('coupons')
       .delete()
       .eq('id', id);

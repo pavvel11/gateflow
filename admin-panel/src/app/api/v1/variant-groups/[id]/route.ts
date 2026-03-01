@@ -149,6 +149,20 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       }>;
     };
 
+    // Validate name length if provided
+    if (name !== undefined && name && String(name).length > 200) {
+      return apiError(request, 'VALIDATION_ERROR', 'Group name too long', {
+        name: ['Name must be 200 characters or less']
+      });
+    }
+
+    // Validate slug length if provided
+    if (slug !== undefined && slug && String(slug).length > 100) {
+      return apiError(request, 'VALIDATION_ERROR', 'Slug too long', {
+        slug: ['Slug must be 100 characters or less']
+      });
+    }
+
     // Validate slug format if provided
     if (slug !== undefined && slug && !/^[a-z0-9_-]+$/.test(slug)) {
       return apiError(request, 'VALIDATION_ERROR', 'Invalid slug format', {
@@ -177,14 +191,36 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
 
     // Update products if provided
+    if (products && products.length > 50) {
+      return apiError(request, 'VALIDATION_ERROR', 'Too many products', {
+        products: ['A variant group can have at most 50 products']
+      });
+    }
+
     if (products && products.length > 0) {
-      // Validate product UUIDs
+      // Validate product entries
       for (const p of products) {
         const uuidValidation = validateUUID(p.product_id);
         if (!uuidValidation.isValid) {
           return apiError(request, 'VALIDATION_ERROR', 'Invalid product ID format', {
             products: [`Invalid UUID format for product_id: ${p.product_id}`]
           });
+        }
+        // Validate variant_name if provided
+        if (p.variant_name !== undefined && p.variant_name !== null) {
+          if (typeof p.variant_name !== 'string' || p.variant_name.length > 200) {
+            return apiError(request, 'VALIDATION_ERROR', 'Invalid variant name', {
+              products: ['variant_name must be a string of 200 characters or less']
+            });
+          }
+        }
+        // Validate display_order if provided
+        if (p.display_order !== undefined) {
+          if (typeof p.display_order !== 'number' || !Number.isInteger(p.display_order) || p.display_order < 0 || p.display_order > 1000) {
+            return apiError(request, 'VALIDATION_ERROR', 'Invalid display order', {
+              products: ['display_order must be an integer between 0 and 1000']
+            });
+          }
         }
       }
 

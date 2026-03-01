@@ -10,11 +10,13 @@ import {
   apiError,
   authenticate,
   handleApiError,
+  parseJsonBody,
   API_SCOPES,
   getApiCorsHeaders,
 } from '@/lib/api';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limiting';
+import { validateUUID } from '@/lib/validations/product';
 
 export async function OPTIONS(request: NextRequest) {
   return handleCorsPreFlight(request);
@@ -52,7 +54,13 @@ export async function POST(request: NextRequest) {
     }
 
     const adminClient = createAdminClient();
-    const filters = await request.json();
+    const filters = await parseJsonBody<{
+      status?: string;
+      date_from?: string;
+      date_to?: string;
+      product_id?: string;
+      dateRange?: string;
+    }>(request);
 
     // Build query for transactions
     let query = adminClient
@@ -73,8 +81,12 @@ export async function POST(request: NextRequest) {
       `)
       .order('created_at', { ascending: false });
 
-    // Apply status filter
+    // Apply status filter (validate against whitelist)
     if (filters.status && filters.status !== 'all') {
+      const validStatuses = ['completed', 'refunded', 'failed', 'pending'];
+      if (!validStatuses.includes(filters.status)) {
+        return apiError(request, 'INVALID_INPUT', `Invalid status. Valid values: all, ${validStatuses.join(', ')}`);
+      }
       query = query.eq('status', filters.status);
     }
 
@@ -95,17 +107,17 @@ export async function POST(request: NextRequest) {
 
     // Apply product filter
     if (filters.product_id) {
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (!uuidRegex.test(filters.product_id)) {
+      const idValidation = validateUUID(filters.product_id);
+      if (!idValidation.isValid) {
         return apiError(request, 'INVALID_INPUT', 'Invalid product ID format');
       }
       query = query.eq('product_id', filters.product_id);
     }
 
-    // Legacy support: dateRange as number of days
+    // Legacy support: dateRange as number of days (max 3650 = ~10 years)
     if (filters.dateRange && filters.dateRange !== 'all' && !filters.date_from) {
       const days = parseInt(filters.dateRange);
-      if (!isNaN(days)) {
+      if (!isNaN(days) && days > 0 && days <= 3650) {
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
         query = query.gte('created_at', startDate.toISOString());
