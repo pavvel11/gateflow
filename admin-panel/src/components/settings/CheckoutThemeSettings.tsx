@@ -54,21 +54,21 @@ export default function CheckoutThemeSettings() {
 
  if (loading) {
  return (
- <div className="bg-gf-base border-2 border-gf-border-medium p-6">
+ <div className="bg-sf-base border-2 border-sf-border-medium p-6">
  <div className="animate-pulse space-y-4">
- <div className="h-4 bg-gf-raised w-1/4"></div>
- <div className="h-10 bg-gf-raised w-1/2"></div>
+ <div className="h-4 bg-sf-raised w-1/4"></div>
+ <div className="h-10 bg-sf-raised w-1/2"></div>
  </div>
  </div>
  );
  }
 
  return (
- <div className="bg-gf-base border-2 border-gf-border-medium p-6">
- <h2 className="text-xl font-semibold text-gf-heading mb-2">
+ <div className="bg-sf-base border-2 border-sf-border-medium p-6">
+ <h2 className="text-xl font-semibold text-sf-heading mb-2">
  {t('title')}
  </h2>
- <p className="text-sm text-gf-muted mb-6">
+ <p className="text-sm text-sf-muted mb-6">
  {t('description')}
  </p>
 
@@ -80,15 +80,15 @@ export default function CheckoutThemeSettings() {
  disabled={saving}
  className={`flex-1 flex flex-col items-center gap-2 px-4 py-4 border-2 transition-all ${
  theme === option.value
- ? 'border-gf-border-accent bg-gf-accent-soft'
- : 'border-gf-border hover:border-gf-accent/50'
+ ? 'border-sf-border-accent bg-sf-accent-soft'
+ : 'border-sf-border hover:border-sf-accent/50'
  } ${saving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
  >
  <span className="text-2xl">{option.icon}</span>
  <span className={`text-sm font-medium ${
  theme === option.value
- ? 'text-gf-accent'
- : 'text-gf-body'
+ ? 'text-sf-accent'
+ : 'text-sf-body'
  }`}>
  {t(option.value)}
  </span>

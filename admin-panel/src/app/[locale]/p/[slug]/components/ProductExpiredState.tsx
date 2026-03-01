@@ -10,23 +10,23 @@ export default function ProductExpiredState({ product }: ProductExpiredStateProp
   const t = useTranslations('productView');
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gf-deep">
+    <div className="flex justify-center items-center min-h-screen bg-sf-deep">
       <FloatingToolbar position="top-right" />
 
-      <div className="max-w-4xl mx-auto p-8 bg-gf-raised/80 border border-gf-border rounded-2xl shadow-[var(--gf-shadow-accent)] text-center">
+      <div className="max-w-4xl mx-auto p-8 bg-sf-raised/80 border border-sf-border rounded-2xl shadow-[var(--sf-shadow-accent)] text-center">
         <div className="text-6xl mb-4">{product.icon || '📦'}</div>
-        <h1 className="text-3xl font-bold text-gf-heading mb-2">{product.name}</h1>
+        <h1 className="text-3xl font-bold text-sf-heading mb-2">{product.name}</h1>
         {product.description && (
-          <p className="text-gf-body mb-6 max-w-2xl mx-auto">{product.description}</p>
+          <p className="text-sf-body mb-6 max-w-2xl mx-auto">{product.description}</p>
         )}
-        <div className="text-xl font-semibold text-gf-accent mb-8">
+        <div className="text-xl font-semibold text-sf-accent mb-8">
           {product.price === 0 ? 'FREE' : `$${product.price}`}
         </div>
 
         <div className="text-4xl mb-4">⏰</div>
-        <h2 className="text-2xl font-semibold text-gf-heading mb-2">{t('accessExpired')}</h2>
-        <p className="text-gf-muted mb-6">{t('accessExpiredMessage')}</p>
-        <div className="bg-gf-danger-soft border border-gf-danger/30 rounded-lg p-4 text-gf-danger">
+        <h2 className="text-2xl font-semibold text-sf-heading mb-2">{t('accessExpired')}</h2>
+        <p className="text-sf-muted mb-6">{t('accessExpiredMessage')}</p>
+        <div className="bg-sf-danger-soft border border-sf-danger/30 rounded-lg p-4 text-sf-danger">
           <p className="text-sm">{t('canPurchaseAgain')}</p>
         </div>
       </div>

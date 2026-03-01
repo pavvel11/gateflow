@@ -63,35 +63,35 @@ export default function NotFound() {
   const content = getContent();
 
   return (
-    <div className="min-h-screen bg-gf-deep flex items-center justify-center px-4">
+    <div className="min-h-screen bg-sf-deep flex items-center justify-center px-4">
       <div className="text-center max-w-lg mx-auto">
         <div className="mb-8 flex justify-center">
-          <div className="w-20 h-20 bg-gf-accent/15 border border-gf-border-accent rounded-2xl flex items-center justify-center">
-            <Lock className="h-10 w-10 text-gf-accent" />
+          <div className="w-20 h-20 bg-sf-accent/15 border border-sf-border-accent rounded-2xl flex items-center justify-center">
+            <Lock className="h-10 w-10 text-sf-accent" />
           </div>
         </div>
 
-        <h1 className="text-7xl font-bold text-gf-accent mb-4">404</h1>
+        <h1 className="text-7xl font-bold text-sf-accent mb-4">404</h1>
 
-        <h2 className="text-2xl font-bold text-gf-heading mb-3">
+        <h2 className="text-2xl font-bold text-sf-heading mb-3">
           {content.title}
         </h2>
 
-        <p className="text-gf-body mb-8">
+        <p className="text-sf-body mb-8">
           {content.description}
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-10">
           <Link
             href={content.actionHref}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white bg-gf-accent-bg hover:bg-gf-accent-hover transition-[background-color] duration-200 active:scale-[0.98]"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white bg-sf-accent-bg hover:bg-sf-accent-hover transition-[background-color] duration-200 active:scale-[0.98]"
           >
             {content.actionText}
           </Link>
 
           <button
             onClick={() => window.history.back()}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-gf-heading border border-gf-border hover:border-gf-border-accent bg-gf-raised/80 transition-[border-color] duration-200 active:scale-[0.98]"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-sf-heading border border-sf-border hover:border-sf-border-accent bg-sf-raised/80 transition-[border-color] duration-200 active:scale-[0.98]"
           >
             <ArrowLeft className="h-4 w-4" />
             {t('goBack')}
@@ -105,10 +105,10 @@ export default function NotFound() {
               <Link
                 key={link.href + link.label}
                 href={link.href}
-                className="p-4 rounded-xl border border-gf-border hover:border-gf-border-accent bg-gf-raised/60 transition-[border-color] duration-200"
+                className="p-4 rounded-xl border border-sf-border hover:border-sf-border-accent bg-sf-raised/60 transition-[border-color] duration-200"
               >
-                <Icon className="w-5 h-5 mx-auto mb-2 text-gf-accent" />
-                <p className="text-xs font-medium text-gf-heading">{link.label}</p>
+                <Icon className="w-5 h-5 mx-auto mb-2 text-sf-accent" />
+                <p className="text-xs font-medium text-sf-heading">{link.label}</p>
               </Link>
             );
           })}

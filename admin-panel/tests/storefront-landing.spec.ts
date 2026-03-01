@@ -112,7 +112,7 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     await expect(page.getByText('Ready to Start Learning?')).toBeVisible();
     await expect(page.getByText('Access all our free resources and join a community of learners')).toBeVisible();
 
-    // Verify gradient background exists (radial-gradient with gf-accent-glow)
+    // Verify gradient background exists (radial-gradient with sf-accent-glow)
     const bgGradient = page.locator('[style*="radial-gradient"]');
     await expect(bgGradient.first()).toBeVisible();
   });
@@ -592,11 +592,11 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    // Verify gradient background exists (radial-gradient with gf-accent-glow)
+    // Verify gradient background exists (radial-gradient with sf-accent-glow)
     const gradientBg = page.locator('[style*="radial-gradient"]');
     await expect(gradientBg.first()).toBeVisible({ timeout: 15000 });
 
-    // Verify shop name badge exists (bg-gf-raised with backdrop-blur)
+    // Verify shop name badge exists (bg-sf-raised with backdrop-blur)
     const shopBadge = page.locator('.backdrop-blur-xl').first();
     await expect(shopBadge).toBeVisible();
 
@@ -695,7 +695,7 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     // Verify premium product CTA has accent color
     const paidCTA = page.locator(`a[href="/p/${paidProduct.slug}"]`).first();
     await expect(paidCTA).toBeVisible();
-    await expect(paidCTA).toHaveClass(/bg-gf-accent/);
+    await expect(paidCTA).toHaveClass(/bg-sf-accent/);
 
     // Verify "Browse All Products" button at bottom (smooth scroll to #products)
     const browseAllButton = page.locator('a[href="#products"]').filter({ hasText: /Browse All Products/i });
@@ -732,7 +732,7 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    // Verify gradient background renders (radial-gradient with gf-accent-glow)
+    // Verify gradient background renders (radial-gradient with sf-accent-glow)
     const gradientBg = page.locator('[style*="radial-gradient"]');
     await expect(gradientBg.first()).toBeVisible({ timeout: 15000 });
   });

@@ -7,7 +7,7 @@
 
 import { createHash, randomBytes, timingSafeEqual as cryptoTimingSafeEqual } from 'crypto';
 
-// Key format: gf_{env}_{random}
+// Key format: sf_{env}_{random}
 // Example: sf_live_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
 const KEY_PREFIX_LIVE = 'sf_live_';
 const KEY_PREFIX_TEST = 'sf_test_';

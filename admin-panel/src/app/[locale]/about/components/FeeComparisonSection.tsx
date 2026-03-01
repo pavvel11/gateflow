@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Reveal } from './motion/Reveal';
+import { Reveal } from '@/components/motion/Reveal';
 
 interface PlatformFee {
   key: string;
@@ -22,10 +22,10 @@ function calculateFees(revenue: number): PlatformFee[] {
   const lemonFee = revenue * 0.05 + revenue * 0.035 + 0.30 * transactionCount;
 
   return [
-    { key: 'sellf', label: '', feeNote: '', fee: sellfFee, barColor: 'bg-gf-success' },
-    { key: 'gumroad', label: '', feeNote: '', fee: gumroadFee, barColor: 'bg-gf-danger-bg' },
-    { key: 'paddle', label: '', feeNote: '', fee: paddleFee, barColor: 'bg-gf-warning' },
-    { key: 'lemon', label: '', feeNote: '', fee: lemonFee, barColor: 'bg-gf-warning' },
+    { key: 'sellf', label: '', feeNote: '', fee: sellfFee, barColor: 'bg-sf-success' },
+    { key: 'gumroad', label: '', feeNote: '', fee: gumroadFee, barColor: 'bg-sf-danger-bg' },
+    { key: 'paddle', label: '', feeNote: '', fee: paddleFee, barColor: 'bg-sf-warning' },
+    { key: 'lemon', label: '', feeNote: '', fee: lemonFee, barColor: 'bg-sf-warning' },
   ];
 }
 
@@ -62,16 +62,16 @@ export function FeeComparisonSection() {
   const annualSavings = monthlySavings * 12;
 
   return (
-    <section className="py-24 md:py-32 bg-gf-base">
+    <section className="py-24 md:py-32 bg-sf-base">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
-          <p className="text-sm font-medium text-gf-muted tracking-[0.08em] uppercase mb-3 text-center">
+          <p className="text-sm font-medium text-sf-muted tracking-[0.08em] uppercase mb-3 text-center">
             {t('feeComparison.categoryLabel')}
           </p>
-          <h2 className="text-4xl md:text-5xl font-bold text-gf-heading mb-4 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold text-sf-heading mb-4 text-center">
             {t('feeComparison.title')}
           </h2>
-          <p className="text-xl text-gf-body max-w-3xl mx-auto text-center mb-12">
+          <p className="text-xl text-sf-body max-w-3xl mx-auto text-center mb-12">
             {t('feeComparison.subtitle')}
           </p>
         </Reveal>
@@ -79,8 +79,8 @@ export function FeeComparisonSection() {
         {/* Revenue slider */}
         <Reveal animation="fade-up" delay={100}>
           <div className="mb-12">
-            <label className="block text-sm font-medium text-gf-body mb-3 text-center">
-              {t('feeComparison.monthlyRevenue')}: <span className="text-lg font-bold text-gf-accent">{revenueFmt.format(revenue)}</span>
+            <label className="block text-sm font-medium text-sf-body mb-3 text-center">
+              {t('feeComparison.monthlyRevenue')}: <span className="text-lg font-bold text-sf-accent">{revenueFmt.format(revenue)}</span>
             </label>
             <input
               type="range"
@@ -89,9 +89,9 @@ export function FeeComparisonSection() {
               step={1000}
               value={revenue}
               onChange={(e) => setRevenue(Number(e.target.value))}
-              className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-gf-accent bg-gf-raised"
+              className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-sf-accent bg-sf-raised"
             />
-            <div className="flex justify-between text-xs text-gf-muted mt-1">
+            <div className="flex justify-between text-xs text-sf-muted mt-1">
               <span>$1,000</span>
               <span>$100,000</span>
             </div>
@@ -109,19 +109,19 @@ export function FeeComparisonSection() {
               <div key={platform.key}>
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <span className="text-sm font-semibold text-gf-heading">{label}</span>
-                    <span className="text-xs text-gf-muted ml-2">{feeNote}</span>
+                    <span className="text-sm font-semibold text-sf-heading">{label}</span>
+                    <span className="text-xs text-sf-muted ml-2">{feeNote}</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-sm font-medium text-gf-body">
+                    <span className="text-sm font-medium text-sf-body">
                       {t('feeComparison.platformFees')}: {fmt.format(platform.fee)}
                     </span>
-                    <span className="text-xs text-gf-muted ml-3">
+                    <span className="text-xs text-sf-muted ml-3">
                       {t('feeComparison.youKeep')}: {fmt.format(youKeep)}
                     </span>
                   </div>
                 </div>
-                <div className="bg-gf-raised rounded-full h-4">
+                <div className="bg-sf-raised rounded-full h-4">
                   <div
                     className={`${platform.barColor} rounded-full h-4 transition-[width] duration-500`}
                     style={{ width: `${barWidth}%` }}
@@ -134,11 +134,11 @@ export function FeeComparisonSection() {
 
         {/* Savings highlight */}
         <Reveal animation="scale" delay={200}>
-          <div className="bg-gf-success-soft border border-gf-success/20 rounded-xl p-6 text-center mt-8">
-            <p className="text-lg font-semibold text-gf-success">
+          <div className="bg-sf-success-soft border border-sf-success/20 rounded-xl p-6 text-center mt-8">
+            <p className="text-lg font-semibold text-sf-success">
               {t('feeComparison.youSave', { amount: fmt.format(monthlySavings) })}
             </p>
-            <p className="text-2xl font-bold text-gf-success mt-2">
+            <p className="text-2xl font-bold text-sf-success mt-2">
               {t('feeComparison.annualSavings', { amount: fmt.format(annualSavings) })}
             </p>
           </div>

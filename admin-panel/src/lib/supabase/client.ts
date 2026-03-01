@@ -10,7 +10,7 @@ interface RuntimeConfig {
 }
 
 // Shared cache key with ConfigProvider
-const CONFIG_CACHE_KEY = 'gf_runtime_config'
+const CONFIG_CACHE_KEY = 'sf_runtime_config'
 const CONFIG_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
 // Runtime configuration with aggressive caching

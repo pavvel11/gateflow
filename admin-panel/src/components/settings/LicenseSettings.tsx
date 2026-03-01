@@ -76,29 +76,29 @@ export default function LicenseSettings() {
 
  if (loading) {
  return (
- <div className="bg-gf-base border-2 border-gf-border-medium p-6">
+ <div className="bg-sf-base border-2 border-sf-border-medium p-6">
  <div className="animate-pulse space-y-4">
- <div className="h-4 bg-gf-raised w-1/4"></div>
- <div className="h-10 bg-gf-raised"></div>
+ <div className="h-4 bg-sf-raised w-1/4"></div>
+ <div className="h-10 bg-sf-raised"></div>
  </div>
  </div>
  );
  }
 
  return (
- <div className="bg-gf-base border-2 border-gf-border-medium overflow-hidden">
- <div className="bg-gf-accent-soft px-6 py-4 border-b border-gf-border-accent">
+ <div className="bg-sf-base border-2 border-sf-border-medium overflow-hidden">
+ <div className="bg-sf-accent-soft px-6 py-4 border-b border-sf-border-accent">
  <div className="flex items-center gap-3">
- <div className="w-10 h-10 bg-gf-accent-bg flex items-center justify-center">
+ <div className="w-10 h-10 bg-sf-accent-bg flex items-center justify-center">
  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
  </svg>
  </div>
  <div>
- <h2 className="text-lg font-semibold text-gf-heading">
+ <h2 className="text-lg font-semibold text-sf-heading">
  {t('title')}
  </h2>
- <p className="text-sm text-gf-accent">
+ <p className="text-sm text-sf-accent">
  {t('subtitle')}
  </p>
  </div>
@@ -107,7 +107,7 @@ export default function LicenseSettings() {
 
  <form onSubmit={handleSubmit} className="p-6 space-y-6">
  <div>
- <label htmlFor="license-key" className="block text-sm font-medium text-gf-body mb-2">
+ <label htmlFor="license-key" className="block text-sm font-medium text-sf-body mb-2">
  {t('licenseKey')}
  </label>
  <input
@@ -116,13 +116,13 @@ export default function LicenseSettings() {
  placeholder={t('keyPlaceholder')}
  value={license}
  onChange={(e) => setLicense(e.target.value)}
- className="w-full border-2 border-gf-border-medium px-4 py-3 bg-gf-input focus:ring-2 focus:ring-gf-accent outline-none font-mono text-sm"
+ className="w-full border-2 border-sf-border-medium px-4 py-3 bg-sf-input focus:ring-2 focus:ring-sf-accent outline-none font-mono text-sm"
  />
- <p className="mt-2 text-xs text-gf-muted">
+ <p className="mt-2 text-xs text-sf-muted">
  {t('formatHint')}
  </p>
  {validationError && (
- <p className="mt-2 text-sm text-gf-danger flex items-center gap-1">
+ <p className="mt-2 text-sm text-sf-danger flex items-center gap-1">
  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
  </svg>
@@ -132,19 +132,19 @@ export default function LicenseSettings() {
  </div>
 
  {license && licenseInfo && (
- <div className="p-4 bg-gf-deep border-2 border-gf-border-medium">
- <h4 className="text-sm font-medium text-gf-body mb-3">
+ <div className="p-4 bg-sf-deep border-2 border-sf-border-medium">
+ <h4 className="text-sm font-medium text-sf-body mb-3">
  {t('licenseDetails')}
  </h4>
  {licenseInfo.valid ? (
  <div className="space-y-2 text-sm">
  <div className="flex justify-between items-center">
- <span className="text-gf-muted">{t('domain')}:</span>
- <span className="font-mono text-gf-heading">{licenseInfo.domain}</span>
+ <span className="text-sf-muted">{t('domain')}:</span>
+ <span className="font-mono text-sf-heading">{licenseInfo.domain}</span>
  </div>
  <div className="flex justify-between items-center">
- <span className="text-gf-muted">{t('expires')}:</span>
- <span className={`font-mono ${licenseInfo.expiry === 'UNLIMITED' ? 'text-gf-success' : 'text-gf-heading'}`}>
+ <span className="text-sf-muted">{t('expires')}:</span>
+ <span className={`font-mono ${licenseInfo.expiry === 'UNLIMITED' ? 'text-sf-success' : 'text-sf-heading'}`}>
  {licenseInfo.expiry === 'UNLIMITED'
  ? t('never')
  : `${licenseInfo.expiry.slice(0,4)}-${licenseInfo.expiry.slice(4,6)}-${licenseInfo.expiry.slice(6,8)}`
@@ -152,23 +152,23 @@ export default function LicenseSettings() {
  </span>
  </div>
  <div className="flex justify-between items-center">
- <span className="text-gf-muted">{t('signature')}:</span>
- <span className="font-mono text-gf-muted text-xs">
+ <span className="text-sf-muted">{t('signature')}:</span>
+ <span className="font-mono text-sf-muted text-xs">
  {licenseInfo.signature?.slice(0, 20)}...
  </span>
  </div>
  </div>
  ) : (
- <p className="text-sm text-gf-danger">{t('invalidFormat')}</p>
+ <p className="text-sm text-sf-danger">{t('invalidFormat')}</p>
  )}
  </div>
  )}
 
- <div className="flex justify-end gap-3 pt-4 border-t border-gf-border">
+ <div className="flex justify-end gap-3 pt-4 border-t border-sf-border">
  <button
  type="submit"
  disabled={saving}
- className="px-6 py-2 bg-gf-accent-bg hover:bg-gf-accent-hover text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+ className="px-6 py-2 bg-sf-accent-bg hover:bg-sf-accent-hover text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all"
  >
  {saving ? t('saving') : t('saveLicense')}
  </button>
@@ -176,8 +176,8 @@ export default function LicenseSettings() {
  </form>
 
  <div className="px-6 pb-6">
- <div className="bg-gf-deep p-4 text-sm text-gf-body">
- <h4 className="font-medium text-gf-heading mb-2">{t('howItWorks')}</h4>
+ <div className="bg-sf-deep p-4 text-sm text-sf-body">
+ <h4 className="font-medium text-sf-heading mb-2">{t('howItWorks')}</h4>
  <ul className="space-y-1 list-disc list-inside">
  <li>{t('howItWorks1')}</li>
  <li>{t('howItWorks2')}</li>
@@ -188,7 +188,7 @@ export default function LicenseSettings() {
  href="https://demo.sellf.app"
  target="_blank"
  rel="noopener noreferrer"
- className="text-gf-accent underline hover:no-underline"
+ className="text-sf-accent underline hover:no-underline"
  >
  demo.sellf.app
  </a>

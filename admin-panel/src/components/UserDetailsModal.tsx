@@ -96,13 +96,13 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
         subtitle={userProfile?.user.email || t('modal.loading')}
         icon={
           userProfile ? (
-            <div className="w-8 h-8 bg-gf-accent-bg flex items-center justify-center">
+            <div className="w-8 h-8 bg-sf-accent-bg flex items-center justify-center">
               <span className="text-sm font-medium text-white">
                 {userProfile.user.email.charAt(0).toUpperCase()}
               </span>
             </div>
           ) : (
-            <div className="w-8 h-8 bg-gf-raised animate-pulse" />
+            <div className="w-8 h-8 bg-sf-raised animate-pulse" />
           )
         }
         badge={userProfile ? 
@@ -114,7 +114,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       <ModalBody>
         {loading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gf-accent"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sf-accent"></div>
           </div>
         ) : error ? (
           <Message
@@ -127,52 +127,52 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
           <div className="space-y-6">
             {/* User Basic Info */}
             <ModalSection title={t('modal.accountInfo')}>
-              <div className="flex items-center space-x-4 p-4 bg-gf-accent-soft border-2 border-gf-border-medium">
+              <div className="flex items-center space-x-4 p-4 bg-sf-accent-soft border-2 border-sf-border-medium">
                 <div className="flex-shrink-0 h-12 w-12">
-                  <div className="h-12 w-12 bg-gf-accent-bg flex items-center justify-center">
+                  <div className="h-12 w-12 bg-sf-accent-bg flex items-center justify-center">
                     <span className="text-lg font-medium text-white">
                       {userProfile.user.email.charAt(0).toUpperCase()}
                     </span>
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-lg font-semibold text-gf-heading truncate">
+                  <h4 className="text-lg font-semibold text-sf-heading truncate">
                     {userProfile.user.email}
                   </h4>
-                  <p className="text-sm text-gf-muted font-mono">
+                  <p className="text-sm text-sf-muted font-mono">
                     {userProfile.user.id}
                   </p>
                 </div>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gf-base p-4 border-2 border-gf-border-medium">
-                  <p className="text-sm text-gf-muted">{t('modal.joined')}</p>
-                  <p className="text-sm font-medium text-gf-heading">
+                <div className="bg-sf-base p-4 border-2 border-sf-border-medium">
+                  <p className="text-sm text-sf-muted">{t('modal.joined')}</p>
+                  <p className="text-sm font-medium text-sf-heading">
                     {formatDate(userProfile.user.created_at)}
                   </p>
                 </div>
-                <div className="bg-gf-base p-4 border-2 border-gf-border-medium">
-                  <p className="text-sm text-gf-muted">{t('modal.lastSignIn')}</p>
-                  <p className="text-sm font-medium text-gf-heading">
+                <div className="bg-sf-base p-4 border-2 border-sf-border-medium">
+                  <p className="text-sm text-sf-muted">{t('modal.lastSignIn')}</p>
+                  <p className="text-sm font-medium text-sf-heading">
                     {formatDate(userProfile.user.last_sign_in_at)}
                   </p>
                 </div>
-                <div className="bg-gf-base p-4 border-2 border-gf-border-medium">
-                  <p className="text-sm text-gf-muted">{t('modal.emailStatus')}</p>
+                <div className="bg-sf-base p-4 border-2 border-sf-border-medium">
+                  <p className="text-sm text-sf-muted">{t('modal.emailStatus')}</p>
                   <div className="flex items-center space-x-2">
                     <span className={`inline-flex items-center px-2 py-1 text-xs font-medium ${
                       userProfile.user.email_confirmed_at
-                        ? 'bg-gf-success-soft text-gf-success'
-                        : 'bg-gf-warning-soft text-gf-warning'
+                        ? 'bg-sf-success-soft text-sf-success'
+                        : 'bg-sf-warning-soft text-sf-warning'
                     }`}>
                       {userProfile.user.email_confirmed_at ? t('modal.verified') : t('modal.pending')}
                     </span>
                   </div>
                 </div>
-                <div className="bg-gf-base p-4 border-2 border-gf-border-medium">
-                  <p className="text-sm text-gf-muted">{t('modal.totalValue')}</p>
-                  <p className="text-sm font-medium text-gf-heading">
+                <div className="bg-sf-base p-4 border-2 border-sf-border-medium">
+                  <p className="text-sm text-sf-muted">{t('modal.totalValue')}</p>
+                  <p className="text-sm font-medium text-sf-heading">
                     {formatPrice(userProfile.stats.total_value, 'USD')}
                   </p>
                 </div>
@@ -182,23 +182,23 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
             {/* Activity Stats */}
             <ModalSection title={t('modal.activitySummary')}>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gf-base p-4 border-2 border-gf-border-medium text-center">
-                  <div className="text-2xl font-bold text-gf-accent">
+                <div className="bg-sf-base p-4 border-2 border-sf-border-medium text-center">
+                  <div className="text-2xl font-bold text-sf-accent">
                     {userProfile.stats.total_products}
                   </div>
-                  <p className="text-sm text-gf-muted">{t('modal.productsAccessed')}</p>
+                  <p className="text-sm text-sf-muted">{t('modal.productsAccessed')}</p>
                 </div>
-                <div className="bg-gf-base p-4 border-2 border-gf-border-medium text-center">
-                  <div className="text-2xl font-bold text-gf-success">
+                <div className="bg-sf-base p-4 border-2 border-sf-border-medium text-center">
+                  <div className="text-2xl font-bold text-sf-success">
                     {formatPrice(userProfile.stats.total_value, 'USD')}
                   </div>
-                  <p className="text-sm text-gf-muted">{t('modal.totalValue')}</p>
+                  <p className="text-sm text-sf-muted">{t('modal.totalValue')}</p>
                 </div>
-                <div className="bg-gf-base p-4 border-2 border-gf-border-medium text-center">
-                  <div className="text-sm font-medium text-gf-heading">
+                <div className="bg-sf-base p-4 border-2 border-sf-border-medium text-center">
+                  <div className="text-sm font-medium text-sf-heading">
                     {formatDate(userProfile.stats.first_access_granted_at)}
                   </div>
-                  <p className="text-sm text-gf-muted">{t('modal.firstAccess')}</p>
+                  <p className="text-sm text-sf-muted">{t('modal.firstAccess')}</p>
                 </div>
               </div>
             </ModalSection>
@@ -206,27 +206,27 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
             {/* Product Access */}
             <ModalSection title={t('modal.productAccess')}>
               {userProfile.access.length > 0 ? (
-                <div className="overflow-hidden border-2 border-gf-border-medium">
-                  <table className="min-w-full divide-y divide-gf-border">
-                    <thead className="bg-gf-raised">
+                <div className="overflow-hidden border-2 border-sf-border-medium">
+                  <table className="min-w-full divide-y divide-sf-border">
+                    <thead className="bg-sf-raised">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">{t('modal.product')}</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">{t('modal.price')}</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">{t('modal.status')}</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">{t('modal.granted')}</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">{t('modal.product')}</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">{t('modal.price')}</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">{t('modal.status')}</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">{t('modal.granted')}</th>
                       </tr>
                     </thead>
-                    <tbody className="bg-gf-deep divide-y divide-gf-border">
+                    <tbody className="bg-sf-deep divide-y divide-sf-border">
                       {userProfile.access.map((access) => (
-                        <tr key={access.id} className="hover:bg-gf-hover">
+                        <tr key={access.id} className="hover:bg-sf-hover">
                           <td className="px-4 py-3 whitespace-nowrap">
                             <div className="flex items-center">
                               <span className="text-xl mr-3">{access.product_icon}</span>
                               <div>
-                                <div className="text-sm font-medium text-gf-heading">
+                                <div className="text-sm font-medium text-sf-heading">
                                   {access.product_name}
                                 </div>
-                                <div className="text-sm text-gf-muted font-mono">
+                                <div className="text-sm text-sf-muted font-mono">
                                   /{access.product_slug}
                                 </div>
                               </div>
@@ -235,8 +235,8 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                           <td className="px-4 py-3 whitespace-nowrap">
                             <span className={`inline-flex items-center px-2 py-1 text-xs font-medium ${
                               access.product_price === 0
-                                ? 'bg-gf-success-soft text-gf-success'
-                                : 'bg-gf-accent-soft text-gf-accent'
+                                ? 'bg-sf-success-soft text-sf-success'
+                                : 'bg-sf-accent-soft text-sf-accent'
                             }`}>
                               {access.product_price === 0 ? t('modal.free') : formatPrice(access.product_price, access.product_currency)}
                             </span>
@@ -244,13 +244,13 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                           <td className="px-4 py-3 whitespace-nowrap">
                             <span className={`inline-flex items-center px-2 py-1 text-xs font-medium ${
                               access.product_is_active
-                                ? 'bg-gf-success-soft text-gf-success'
-                                : 'bg-gf-danger-soft text-gf-danger'
+                                ? 'bg-sf-success-soft text-sf-success'
+                                : 'bg-sf-danger-soft text-sf-danger'
                             }`}>
                               {access.product_is_active ? t('modal.active') : t('modal.inactive')}
                             </span>
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gf-heading">
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-sf-heading">
                             {formatDate(access.granted_at)}
                           </td>
                         </tr>
@@ -259,13 +259,13 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                   </table>
                 </div>
               ) : (
-                <div className="bg-gf-base p-8 border-2 border-gf-border-medium text-center">
-                  <div className="text-gf-muted mb-4">
+                <div className="bg-sf-base p-8 border-2 border-sf-border-medium text-center">
+                  <div className="text-sf-muted mb-4">
                     <svg className="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-4.5" />
                     </svg>
                   </div>
-                  <p className="text-gf-muted mb-4">{t('modal.noProducts')}</p>
+                  <p className="text-sf-muted mb-4">{t('modal.noProducts')}</p>
                   <Button onClick={onManageAccess} variant="primary" size="sm">
                     {t('modal.grantAccess')}
                   </Button>

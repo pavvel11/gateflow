@@ -2,9 +2,11 @@
 
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { Product } from '@/types';
-import { formatPrice } from '@/lib/constants';
 import { useState, useEffect } from 'react';
+import { Reveal } from '@/components/motion/Reveal';
+import { RevealGroup } from '@/components/motion/RevealGroup';
+import { formatPrice } from '@/lib/constants';
+import type { Product } from '@/types';
 
 interface StorefrontProps {
   products: Product[];
@@ -13,6 +15,8 @@ interface StorefrontProps {
   freeProducts: Product[];
   paidProducts: Product[];
 }
+
+type FilterType = 'all' | 'featured' | 'free' | 'premium';
 
 export default function Storefront({
   products,
@@ -23,6 +27,7 @@ export default function Storefront({
 }: StorefrontProps) {
   const t = useTranslations('storefront');
   const [mounted, setMounted] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [showAllFree, setShowAllFree] = useState(false);
   const [showAllPaid, setShowAllPaid] = useState(false);
 
@@ -30,487 +35,375 @@ export default function Storefront({
     setMounted(true);
   }, []);
 
-  // Determine shop personality based on product mix
   const isFreeOnly = freeProducts.length > 0 && paidProducts.length === 0;
   const isPaidOnly = paidProducts.length > 0 && freeProducts.length === 0;
   const isMixed = freeProducts.length > 0 && paidProducts.length > 0;
 
-  // Check for temporal availability badges
-  const hasLimitedTimeProducts = products.some(p => p.available_until);
-  const hasComingSoonProducts = products.some(p => p.available_from && new Date(p.available_from) > new Date());
-
-  // Display logic - show 6 initially, then all on click
   const displayedFreeProducts = showAllFree ? freeProducts : freeProducts.slice(0, 6);
   const displayedPaidProducts = showAllPaid ? paidProducts : paidProducts.slice(0, 6);
 
+  const showFeatured = featuredProducts.length > 0 && (activeFilter === 'all' || activeFilter === 'featured');
+  const showFree = freeProducts.length > 0 && (activeFilter === 'all' || activeFilter === 'free');
+  const showPremium = paidProducts.length > 0 && (activeFilter === 'all' || activeFilter === 'premium');
+
   if (!mounted) {
     return (
-      <div className="w-full bg-gf-deep flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gf-accent"></div>
+      <div className="w-full bg-sf-deep flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sf-accent"></div>
       </div>
     );
   }
 
   return (
-    <div data-testid="storefront" className="w-full bg-gf-deep relative overflow-hidden">
-      {/* Mesh gradient background */}
-      <div className="absolute inset-0 z-0">
-        <div
-          className="absolute inset-0"
-          style={{
-            background: [
-              'radial-gradient(ellipse at 20% 50%, var(--gf-accent-glow) 0%, transparent 60%)',
-              'radial-gradient(ellipse at 80% 20%, rgba(0,170,255,0.08) 0%, transparent 50%)',
-              'radial-gradient(ellipse at 50% 100%, rgba(0,170,255,0.05) 0%, transparent 40%)',
-            ].join(', '),
-          }}
-        />
-        <div className="absolute top-1/4 -left-48 w-96 h-96 bg-gf-accent-bg rounded-full filter blur-3xl opacity-[0.06]" />
-        <div className="absolute top-1/3 -right-48 w-96 h-96 bg-gf-accent-bg rounded-full filter blur-3xl opacity-[0.04]" />
+    <div data-testid="storefront" className="w-full bg-sf-deep relative min-h-screen grain-overlay">
+
+      {/* Topbar */}
+      <Reveal animation="fade-down" delay={0}>
+        <header className="border-b border-sf-border">
+          <div className="max-w-[960px] mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-sf-accent to-[color-mix(in_srgb,var(--sf-accent)_70%,white)] rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0">
+                  {shopName.charAt(0).toUpperCase()}
+                </div>
+                <span className="text-sm font-semibold text-sf-heading">{shopName}</span>
+              </div>
+              <div className="text-xs text-sf-muted">
+                <span className="font-semibold text-sf-body">{products.length}</span>{' '}
+                {t('hero.badges.productsAvailable', { count: products.length }).toLowerCase()}
+              </div>
+            </div>
+          </div>
+        </header>
+      </Reveal>
+
+      <div className="max-w-[960px] mx-auto px-6">
+
+        {/* Brand Moment */}
+        <Reveal animation="fade-up" delay={100}>
+          <section className="relative py-8 overflow-hidden">
+            <div className="brand-glow" />
+            <div className="relative z-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+              <div>
+                {isFreeOnly && (
+                  <>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-sf-heading tracking-[-0.035em] leading-tight mb-1">
+                      {t('hero.freeOnly.title')}{' '}
+                      <span className="text-gradient-accent">{t('hero.freeOnly.titleHighlight')}</span>
+                    </h1>
+                    <p className="text-sm text-sf-muted">
+                      {t('hero.freeOnly.description', { count: freeProducts.length })}
+                    </p>
+                  </>
+                )}
+                {isPaidOnly && (
+                  <>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-sf-heading tracking-[-0.035em] leading-tight mb-1">
+                      {t('hero.paidOnly.title')}{' '}
+                      <span className="text-gradient-accent">{t('hero.paidOnly.titleHighlight')}</span>
+                    </h1>
+                    <p className="text-sm text-sf-muted">
+                      {t('hero.paidOnly.description', { count: paidProducts.length })}
+                    </p>
+                  </>
+                )}
+                {isMixed && (
+                  <>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-sf-heading tracking-[-0.035em] leading-tight mb-1">
+                      {t('hero.mixed.title')}{' '}
+                      <span className="text-gradient-accent">{t('hero.mixed.titleHighlight')}</span>
+                    </h1>
+                    <p className="text-sm text-sf-muted">
+                      {t('hero.mixed.description', { freeCount: freeProducts.length, paidCount: paidProducts.length })}
+                    </p>
+                  </>
+                )}
+              </div>
+
+              {/* Stats strip */}
+              <div className="flex bg-sf-raised border border-sf-border rounded-xl overflow-hidden shrink-0">
+                <div className="px-5 py-3 text-center">
+                  <div className="text-xl font-extrabold text-sf-heading leading-none">{products.length}</div>
+                  <div className="text-[0.6rem] uppercase tracking-wider text-sf-muted mt-0.5">{t('brandMoment.statsProducts')}</div>
+                </div>
+                {freeProducts.length > 0 && (
+                  <div className="px-5 py-3 text-center border-l border-sf-border">
+                    <div className="text-xl font-extrabold text-sf-heading leading-none">{freeProducts.length}</div>
+                    <div className="text-[0.6rem] uppercase tracking-wider text-sf-muted mt-0.5">{t('brandMoment.statsFree')}</div>
+                  </div>
+                )}
+                {paidProducts.length > 0 && (
+                  <div className="px-5 py-3 text-center border-l border-sf-border">
+                    <div className="text-xl font-extrabold text-sf-heading leading-none">{paidProducts.length}</div>
+                    <div className="text-[0.6rem] uppercase tracking-wider text-sf-muted mt-0.5">{t('brandMoment.statsPremium')}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        </Reveal>
+
+        {/* Accent Divider */}
+        <div className="accent-divider" />
+
+        {/* Filter Bar */}
+        <Reveal animation="fade-up" delay={200}>
+          <div className="py-4 flex items-center justify-between gap-4 overflow-x-auto">
+            <div className="flex gap-1.5 shrink-0">
+              <FilterPill
+                active={activeFilter === 'all'}
+                onClick={() => setActiveFilter('all')}
+                label={t('filters.all', { count: products.length })}
+              />
+              {featuredProducts.length > 0 && (
+                <FilterPill
+                  active={activeFilter === 'featured'}
+                  onClick={() => setActiveFilter('featured')}
+                  label={t('filters.featured', { count: featuredProducts.length })}
+                />
+              )}
+              {freeProducts.length > 0 && (
+                <FilterPill
+                  active={activeFilter === 'free'}
+                  onClick={() => setActiveFilter('free')}
+                  label={t('filters.free', { count: freeProducts.length })}
+                />
+              )}
+              {paidProducts.length > 0 && (
+                <FilterPill
+                  active={activeFilter === 'premium'}
+                  onClick={() => setActiveFilter('premium')}
+                  label={t('filters.premium', { count: paidProducts.length })}
+                />
+              )}
+            </div>
+          </div>
+        </Reveal>
+
+        {/* Product List */}
+        <div id="products" className="pb-12">
+
+          {/* Featured Section */}
+          {showFeatured && (
+            <div>
+              <SectionHeader
+                dotColor="var(--sf-warning, #FBBF24)"
+                label={t('featured.badge')}
+                count={featuredProducts.length}
+              />
+              <RevealGroup animation="fade-up" stagger={60}>
+                {featuredProducts.map((product, index) => (
+                  <ProductRow
+                    key={product.id}
+                    product={product}
+                    t={t}
+                    isHero={index === 0 && featuredProducts.length > 1}
+                    showFeaturedBadge
+                  />
+                ))}
+              </RevealGroup>
+            </div>
+          )}
+
+          {/* Free Section */}
+          {showFree && (
+            <div>
+              <SectionHeader
+                dotColor="var(--sf-success, #10B981)"
+                label={t('sections.free.badge', { count: freeProducts.length })}
+                count={freeProducts.length}
+              />
+              <RevealGroup animation="fade-up" stagger={60}>
+                {displayedFreeProducts.map((product) => (
+                  <ProductRow
+                    key={product.id}
+                    product={product}
+                    t={t}
+                    showFreeBadge
+                  />
+                ))}
+              </RevealGroup>
+              {freeProducts.length > 6 && !showAllFree && (
+                <div className="text-center mt-4">
+                  <button
+                    onClick={() => setShowAllFree(true)}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-sf-raised hover:bg-sf-hover border border-sf-border hover:border-sf-border-accent rounded-full text-sm text-sf-heading font-medium transition-all duration-300 active:scale-[0.98]"
+                  >
+                    <span>{t('sections.showAll.free', { count: freeProducts.length })}</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Premium Section */}
+          {showPremium && (
+            <div>
+              <SectionHeader
+                dotColor="var(--sf-accent, #0078BB)"
+                label={t('sections.premium.badge', { count: paidProducts.length })}
+                count={paidProducts.length}
+              />
+              <RevealGroup animation="fade-up" stagger={60}>
+                {displayedPaidProducts.map((product) => (
+                  <ProductRow
+                    key={product.id}
+                    product={product}
+                    t={t}
+                  />
+                ))}
+              </RevealGroup>
+              {paidProducts.length > 6 && !showAllPaid && (
+                <div className="text-center mt-4">
+                  <button
+                    onClick={() => setShowAllPaid(true)}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-sf-raised hover:bg-sf-hover border border-sf-border hover:border-sf-border-accent rounded-full text-sm text-sf-heading font-medium transition-all duration-300 active:scale-[0.98]"
+                  >
+                    <span>{t('sections.showAll.premium', { count: paidProducts.length })}</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Hero Section - Dynamic based on product mix */}
-      <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 z-10">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            {/* Shop name badge with pulse effect */}
-            <div className="mb-8 inline-block group">
-              <div className="relative">
-                <div className="absolute -inset-1 bg-gf-accent-bg rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
-                <div className="relative px-8 py-3 bg-gf-raised backdrop-blur-xl border border-gf-border rounded-full">
-                  <span className="text-lg font-semibold text-gf-accent">
-                    {shopName}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Dynamic hero headline based on shop type */}
-            {isFreeOnly && (
-              <div className="space-y-6">
-                <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-gf-heading leading-tight">
-                  {t('hero.freeOnly.title')}
-                  <br />
-                  <span className="text-gf-accent">
-                    {t('hero.freeOnly.titleHighlight')}
-                  </span>
-                </h1>
-                <p className="text-xl md:text-2xl text-gf-body max-w-3xl mx-auto leading-relaxed">
-                  {t('hero.freeOnly.description', { count: freeProducts.length })}
-                </p>
-              </div>
-            )}
-
-            {isPaidOnly && (
-              <div className="space-y-6">
-                <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-gf-heading leading-tight">
-                  {t('hero.paidOnly.title')}
-                  <br />
-                  <span className="text-gf-accent">
-                    {t('hero.paidOnly.titleHighlight')}
-                  </span>
-                </h1>
-                <p className="text-xl md:text-2xl text-gf-body max-w-3xl mx-auto leading-relaxed">
-                  {t('hero.paidOnly.description', { count: paidProducts.length })}
-                </p>
-              </div>
-            )}
-
-            {isMixed && (
-              <div className="space-y-6">
-                <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-gf-heading leading-tight">
-                  {t('hero.mixed.title')}
-                  <br />
-                  <span className="text-gf-accent">
-                    {t('hero.mixed.titleHighlight')}
-                  </span>
-                </h1>
-                <p className="text-xl md:text-2xl text-gf-body max-w-3xl mx-auto leading-relaxed">
-                  {t('hero.mixed.description', { freeCount: freeProducts.length, paidCount: paidProducts.length })}
-                </p>
-              </div>
-            )}
-
-            {/* Dynamic badges */}
-            <div className="flex flex-wrap justify-center gap-4 mt-12">
-              <div className="flex items-center gap-3 px-6 py-3 bg-gf-raised/80 backdrop-blur-xl border border-gf-border rounded-full group hover:bg-gf-hover transition-all duration-300">
-                <div className="relative">
-                  <div className="absolute -inset-1 bg-gf-accent-bg rounded-full blur opacity-25 group-hover:opacity-75 transition duration-300"></div>
-                  <div className="relative w-8 h-8 bg-gf-accent-bg rounded-full flex items-center justify-center">
-                    <span className="text-gf-heading font-bold text-sm">{products.length}</span>
-                  </div>
-                </div>
-                <span className="text-gf-heading font-medium">
-                  {t('hero.badges.productsAvailable', { count: products.length })}
-                </span>
-              </div>
-
-              {hasLimitedTimeProducts && (
-                <div className="flex items-center gap-2 px-6 py-3 bg-gf-warning-soft backdrop-blur-xl border border-gf-warning/20 rounded-full">
-                  <svg className="w-5 h-5 text-gf-warning animate-pulse" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gf-warning font-medium text-sm">{t('hero.badges.limitedTime')}</span>
-                </div>
-              )}
-
-              {hasComingSoonProducts && (
-                <div className="flex items-center gap-2 px-6 py-3 bg-gf-accent-soft backdrop-blur-xl border border-gf-border-accent rounded-full">
-                  <svg className="w-5 h-5 text-gf-accent" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
-                  </svg>
-                  <span className="text-gf-accent font-medium text-sm">{t('hero.badges.comingSoon')}</span>
-                </div>
-              )}
-            </div>
-          </div>
+      {/* Footer */}
+      <footer className="border-t border-sf-border">
+        <div className="max-w-[960px] mx-auto px-6 py-8 text-center">
+          <p className="text-xs text-sf-muted opacity-50">
+            {t('footer.poweredBy', { shopName })}
+          </p>
         </div>
-      </section>
-
-      {/* Featured Products - Bento Grid */}
-      {featuredProducts.length > 0 && (
-        <section className="relative py-20 px-4 sm:px-6 lg:px-8 z-10">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-              <div className="inline-block mb-4">
-                <div className="flex items-center gap-2 px-4 py-2 bg-gf-warning-soft border border-gf-warning/20 rounded-full">
-                  <svg className="w-5 h-5 text-gf-warning" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                  <span className="text-gf-warning font-semibold text-sm uppercase tracking-wide">{t('featured.badge')}</span>
-                </div>
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-gf-heading mb-4">
-                {t('featured.title')}
-              </h2>
-              <p className="text-xl text-gf-muted max-w-2xl mx-auto">
-                {t('featured.subtitle')}
-              </p>
-            </div>
-
-            {/* Bento Grid Layout - responsive and dynamic */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredProducts.map((product, index) => {
-                const isLimitedTime = product.available_until && new Date(product.available_until) > new Date();
-                const isComingSoon = product.available_from && new Date(product.available_from) > new Date();
-                const hasAccessDuration = product.auto_grant_duration_days && product.auto_grant_duration_days > 0;
-
-                // First featured product gets larger card
-                const isHero = index === 0 && featuredProducts.length > 1;
-
-                return (
-                  <div
-                    key={product.id}
-                    className={`group relative ${
-                      isHero ? 'md:col-span-2 md:row-span-2' : ''
-                    }`}
-                  >
-                    <div className="absolute -inset-0.5 bg-gf-accent-bg rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
-                    <div className="relative h-full bg-gf-raised backdrop-blur-xl border border-gf-border rounded-2xl p-6 md:p-8 hover:border-gf-border-accent transition-all duration-300 flex flex-col">
-                      {/* Badges */}
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        <div className="flex items-center px-3 py-1.5 bg-gf-warning-soft border border-gf-warning/20 rounded-full">
-                          <svg className="w-4 h-4 text-gf-warning mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                          <span className="text-gf-warning font-semibold text-xs uppercase">{t('product.featured')}</span>
-                        </div>
-                        {isLimitedTime && (
-                          <div className="flex items-center px-3 py-1.5 bg-gf-warning-soft border border-gf-warning/20 rounded-full animate-pulse">
-                            <svg className="w-4 h-4 text-gf-warning mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                            </svg>
-                            <span className="text-gf-warning font-semibold text-xs uppercase">{t('product.limited')}</span>
-                          </div>
-                        )}
-                        {isComingSoon && (
-                          <div className="flex items-center px-3 py-1.5 bg-gf-accent-soft border border-gf-border-accent rounded-full">
-                            <span className="text-gf-accent font-semibold text-xs uppercase">{t('product.comingSoon')}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Icon */}
-                      <div className={`${isHero ? 'text-6xl md:text-8xl' : 'text-5xl'} mb-4 transform group-hover:scale-110 transition-transform duration-300`}>
-                        {product.icon || '📦'}
-                      </div>
-
-                      {/* Content */}
-                      <h3 className={`${isHero ? 'text-3xl md:text-4xl' : 'text-2xl'} font-bold text-gf-heading mb-3 group-hover:text-gf-accent transition-colors duration-300`}>
-                        {product.name}
-                      </h3>
-
-                      <p className={`${isHero ? 'text-lg' : 'text-base'} text-gf-muted mb-6 flex-grow`}>
-                        {product.description}
-                      </p>
-
-                      {/* Price & Duration */}
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          {product.price === 0 ? (
-                            <div className="flex items-center gap-2 px-4 py-2 bg-gf-success-soft border border-gf-success/20 rounded-lg">
-                              <span className="text-2xl font-bold text-gf-success">{t('product.free')}</span>
-                            </div>
-                          ) : (
-                            <div className={`${isHero ? 'text-4xl md:text-5xl' : 'text-3xl'} font-bold text-gf-accent`}>
-                              {formatPrice(product.price, product.currency)}
-                            </div>
-                          )}
-                          {hasAccessDuration && (
-                            <div className="px-3 py-1.5 bg-gf-accent-soft border border-gf-border-accent rounded-lg">
-                              <span className="text-gf-accent text-sm font-medium">
-                                {t('product.daysAccess', { days: product.auto_grant_duration_days! })}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        <Link
-                          href={`/p/${product.slug}`}
-                          className={`block w-full text-center font-bold ${isHero ? 'py-5 text-lg' : 'py-4'} px-6 rounded-full transition-all duration-300 active:scale-[0.98] shadow-[var(--gf-shadow-accent)] ${
-                            product.price === 0
-                              ? 'bg-gf-success hover:bg-gf-success/90 text-gf-inverse'
-                              : 'bg-gf-accent-bg hover:bg-gf-accent-hover text-white'
-                          }`}
-                        >
-                          {product.price === 0 ? t('product.getFreeAccessIcon') : t('product.getAccessNowIcon')}
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Free Products Section */}
-      {freeProducts.length > 0 && (
-        <section id="products" className="relative py-20 px-4 sm:px-6 lg:px-8 z-10">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-              <div className="inline-block mb-4">
-                <div className="flex items-center gap-2 px-4 py-2 bg-gf-success-soft border border-gf-success/20 rounded-full">
-                  <svg className="w-5 h-5 text-gf-success" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gf-success font-semibold text-sm uppercase tracking-wide">
-                    {t('sections.free.badge', { count: freeProducts.length })}
-                  </span>
-                </div>
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-gf-heading mb-4">
-                {isFreeOnly ? t('sections.free.titleFreeOnly') : t('sections.free.titleMixed')}
-              </h2>
-              <p className="text-xl text-gf-muted max-w-2xl mx-auto">
-                {isFreeOnly
-                  ? t('sections.free.subtitleFreeOnly')
-                  : t('sections.free.subtitleMixed')}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {displayedFreeProducts.map((product) => (
-                <div key={product.id} className="group relative">
-                  <div className="absolute -inset-0.5 bg-gf-success rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
-                  <div className="relative h-full bg-gf-raised backdrop-blur-xl border border-gf-border rounded-2xl p-6 hover:border-gf-border-accent transition-all duration-300 flex flex-col">
-                    <div className="text-4xl mb-4 transform group-hover:scale-110 transition-transform duration-300">
-                      {product.icon || '🎁'}
-                    </div>
-
-                    <h3 className="text-xl font-bold text-gf-heading mb-3 group-hover:text-gf-success transition-colors duration-300">
-                      {product.name}
-                    </h3>
-
-                    <p className="text-gf-muted mb-6 flex-grow">
-                      {product.description}
-                    </p>
-
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-gf-success-soft border border-gf-success/20 rounded-lg">
-                          <span className="text-xl font-bold text-gf-success">{t('product.free')}</span>
-                        </div>
-                        {product.auto_grant_duration_days && product.auto_grant_duration_days > 0 && (
-                          <div className="px-2 py-1 bg-gf-accent-soft border border-gf-border-accent rounded text-xs text-gf-accent">
-                            {t('product.daysAccessShort', { days: product.auto_grant_duration_days! })}
-                          </div>
-                        )}
-                      </div>
-
-                      <Link
-                        href={`/p/${product.slug}`}
-                        className="block w-full text-center font-bold py-3 px-6 rounded-full bg-gf-success hover:bg-gf-success/90 text-gf-inverse transition-all duration-300 active:scale-[0.98] shadow-[var(--gf-shadow-accent)]"
-                      >
-                        {t('product.getFreeAccess')}
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {freeProducts.length > 6 && !showAllFree && (
-              <div className="text-center mt-12">
-                <button
-                  onClick={() => setShowAllFree(true)}
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-gf-raised/80 hover:bg-gf-hover backdrop-blur-xl border border-gf-border hover:border-gf-border-accent rounded-full text-gf-heading font-semibold transition-all duration-300 active:scale-[0.98]"
-                >
-                  <span>{t('sections.showAll.free', { count: freeProducts.length })}</span>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* Premium Products Section */}
-      {paidProducts.length > 0 && (
-        <section id={freeProducts.length === 0 ? "products" : undefined} className="relative py-20 px-4 sm:px-6 lg:px-8 z-10">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-              <div className="inline-block mb-4">
-                <div className="flex items-center gap-2 px-4 py-2 bg-gf-accent-soft border border-gf-border-accent rounded-full">
-                  <svg className="w-5 h-5 text-gf-accent" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                  <span className="text-gf-accent font-semibold text-sm uppercase tracking-wide">
-                    {t('sections.premium.badge', { count: paidProducts.length })}
-                  </span>
-                </div>
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-gf-heading mb-4">
-                {isPaidOnly ? t('sections.premium.titlePaidOnly') : t('sections.premium.titleMixed')}
-              </h2>
-              <p className="text-xl text-gf-muted max-w-2xl mx-auto">
-                {isPaidOnly
-                  ? t('sections.premium.subtitlePaidOnly')
-                  : t('sections.premium.subtitleMixed')}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {displayedPaidProducts.map((product) => {
-                const isLimitedTime = product.available_until && new Date(product.available_until) > new Date();
-
-                return (
-                  <div key={product.id} className="group relative">
-                    <div className="absolute -inset-0.5 bg-gf-accent-bg rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
-                    <div className="relative h-full bg-gf-raised backdrop-blur-xl border border-gf-border rounded-2xl p-6 hover:border-gf-border-accent transition-all duration-300 flex flex-col">
-                      {/* Badges */}
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        <div className="flex items-center px-2 py-1 bg-gf-accent-soft border border-gf-border-accent rounded-full">
-                          <svg className="w-3 h-3 text-gf-accent mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                          <span className="text-xs font-semibold text-gf-accent uppercase">{t('product.premium')}</span>
-                        </div>
-                        {isLimitedTime && (
-                          <div className="flex items-center px-2 py-1 bg-gf-warning-soft border border-gf-warning/20 rounded-full animate-pulse">
-                            <svg className="w-3 h-3 text-gf-warning mr-1" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                            </svg>
-                            <span className="text-xs font-semibold text-gf-warning uppercase">{t('product.limited')}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="text-4xl mb-4 transform group-hover:scale-110 transition-transform duration-300">
-                        {product.icon || '💎'}
-                      </div>
-
-                      <h3 className="text-xl font-bold text-gf-heading mb-3 group-hover:text-gf-accent transition-colors duration-300">
-                        {product.name}
-                      </h3>
-
-                      <p className="text-gf-muted mb-6 flex-grow">
-                        {product.description}
-                      </p>
-
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="text-3xl font-bold text-gf-accent">
-                            {formatPrice(product.price, product.currency)}
-                          </div>
-                          {product.auto_grant_duration_days && product.auto_grant_duration_days > 0 && (
-                            <div className="px-2 py-1 bg-gf-accent-soft border border-gf-border-accent rounded text-xs text-gf-accent">
-                              {t('product.daysAccessShort', { days: product.auto_grant_duration_days! })}
-                            </div>
-                          )}
-                        </div>
-
-                        <Link
-                          href={`/p/${product.slug}`}
-                          className="block w-full text-center font-bold py-3 px-6 rounded-full bg-gf-accent-bg hover:bg-gf-accent-hover text-white transition-all duration-300 active:scale-[0.98] shadow-[var(--gf-shadow-accent)]"
-                        >
-                          {t('product.getAccessNow')}
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {paidProducts.length > 6 && !showAllPaid && (
-              <div className="text-center mt-12">
-                <button
-                  onClick={() => setShowAllPaid(true)}
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-gf-accent-soft hover:bg-gf-accent-med backdrop-blur-xl border border-gf-border-accent hover:border-gf-accent/40 rounded-full text-gf-heading font-semibold transition-all duration-300 active:scale-[0.98]"
-                >
-                  <span>{t('sections.showAll.premium', { count: paidProducts.length })}</span>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* Final CTA Section - Dynamic */}
-      <section className="relative py-32 px-4 sm:px-6 lg:px-8 z-10">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="relative">
-            <div className="absolute -inset-4 bg-gf-accent-bg rounded-2xl blur-2xl opacity-20"></div>
-            <div className="relative bg-gf-base/90 backdrop-blur-2xl border border-gf-border rounded-2xl p-12 md:p-16 shadow-[var(--gf-shadow-accent)]">
-              <h2 className="text-4xl md:text-5xl font-bold text-gf-heading mb-6">
-                {isFreeOnly && t('cta.freeOnly.title')}
-                {isPaidOnly && t('cta.paidOnly.title')}
-                {isMixed && t('cta.mixed.title')}
-              </h2>
-              <p className="text-xl text-gf-muted mb-10 max-w-2xl mx-auto">
-                {isFreeOnly && t('cta.freeOnly.description')}
-                {isPaidOnly && t('cta.paidOnly.description')}
-                {isMixed && t('cta.mixed.description')}
-              </p>
-
-              <a
-                href="#products"
-                className="inline-flex items-center gap-3 px-10 py-5 bg-gf-accent-bg hover:bg-gf-accent-hover text-white rounded-full font-bold text-lg transition-all duration-300 active:scale-[0.98] shadow-[var(--gf-shadow-accent)]"
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById('products')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }}
-              >
-                <span>{t('cta.browseAll')}</span>
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </a>
-
-              <p className="mt-8 text-sm text-gf-muted">
-                {t('cta.poweredBy', { count: products.length, shopName })}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      </footer>
     </div>
+  );
+}
+
+// ===== SUB-COMPONENTS =====
+
+function FilterPill({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border whitespace-nowrap ${
+        active
+          ? 'bg-sf-accent-bg border-sf-accent text-white'
+          : 'bg-transparent border-sf-border text-sf-muted hover:border-sf-body hover:text-sf-body'
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function SectionHeader({ dotColor, label, count }: { dotColor: string; label: string; count: number }) {
+  return (
+    <div className="flex items-center gap-3 pt-6 pb-3">
+      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: dotColor }} />
+      <span className="text-[0.7rem] uppercase tracking-wider text-sf-muted whitespace-nowrap">{label}</span>
+      <div className="flex-1 h-px bg-sf-border" />
+      <span className="text-[0.7rem] text-sf-muted whitespace-nowrap">
+        {count} {count === 1 ? 'product' : 'products'}
+      </span>
+    </div>
+  );
+}
+
+function ProductRow({
+  product,
+  t,
+  isHero = false,
+  showFeaturedBadge = false,
+  showFreeBadge = false,
+}: {
+  product: Product;
+  t: ReturnType<typeof useTranslations<'storefront'>>;
+  isHero?: boolean;
+  showFeaturedBadge?: boolean;
+  showFreeBadge?: boolean;
+}) {
+  const isFree = product.price === 0;
+  const hasAccessDuration = product.auto_grant_duration_days && product.auto_grant_duration_days > 0;
+
+  return (
+    <Link
+      href={`/p/${product.slug}`}
+      className={`group flex items-stretch border rounded-xl overflow-hidden mb-2.5 transition-all duration-250 bg-sf-raised cursor-pointer ${
+        isHero
+          ? 'border-sf-border-accent relative'
+          : 'border-sf-border hover:border-sf-border-accent hover:shadow-[var(--sf-shadow-accent)]'
+      }`}
+    >
+      {/* Accent left bar for hero */}
+      {isHero && (
+        <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-sf-accent to-[color-mix(in_srgb,var(--sf-accent)_70%,white)] rounded-l-xl" />
+      )}
+
+      {/* Icon */}
+      <div className={`flex items-center justify-center shrink-0 border-r border-sf-border bg-sf-base ${
+        isHero ? 'w-[88px] min-h-[88px] text-[32px]' : 'w-[72px] min-h-[72px] text-[26px]'
+      }`}>
+        {product.icon || (isFree ? '🎁' : '📦')}
+      </div>
+
+      {/* Body */}
+      <div className={`flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4 ${
+        isHero ? 'p-4 sm:px-6' : 'p-3.5 sm:px-5'
+      }`}>
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className={`font-semibold text-sf-heading truncate group-hover:text-sf-accent transition-colors duration-300 ${
+              isHero ? 'text-base' : 'text-[0.92rem]'
+            }`}>
+              {product.name}
+            </span>
+            {showFeaturedBadge && (
+              <span className="px-2 py-0.5 rounded-full text-[0.58rem] font-semibold uppercase tracking-wide bg-sf-warning-soft text-sf-warning shrink-0">
+                {t('product.featured')}
+              </span>
+            )}
+            {showFreeBadge && (
+              <span className="px-2 py-0.5 rounded-full text-[0.58rem] font-semibold uppercase tracking-wide bg-sf-success-soft text-sf-success shrink-0">
+                {t('product.free')}
+              </span>
+            )}
+            {hasAccessDuration && (
+              <span className="px-2 py-0.5 rounded-full text-[0.58rem] font-medium bg-sf-accent-soft text-sf-accent shrink-0">
+                {t('product.daysAccessShort', { days: product.auto_grant_duration_days! })}
+              </span>
+            )}
+          </div>
+          <p className={`text-sf-muted truncate ${
+            isHero ? 'text-[0.82rem] sm:whitespace-normal sm:line-clamp-2' : 'text-[0.78rem]'
+          }`}>
+            {product.description}
+          </p>
+        </div>
+
+        {/* Action */}
+        <div className="flex items-center gap-3.5 shrink-0 sm:justify-end">
+          <span className={`text-[0.95rem] font-bold whitespace-nowrap ${
+            isFree ? 'text-sf-success' : 'text-sf-heading'
+          }`}>
+            {isFree ? t('product.free') : formatPrice(product.price, product.currency)}
+          </span>
+          <span className={`px-4 py-1.5 rounded-lg text-[0.78rem] font-semibold whitespace-nowrap transition-all duration-200 ${
+            isFree
+              ? 'bg-sf-success hover:bg-sf-success/90 text-sf-inverse'
+              : 'bg-sf-accent-bg hover:bg-sf-accent-hover text-white'
+          }`}>
+            {isFree ? t('product.getFreeAccess') : t('product.getAccessNow')}
+          </span>
+        </div>
+      </div>
+    </Link>
   );
 }

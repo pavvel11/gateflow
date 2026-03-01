@@ -70,10 +70,10 @@ export default function DateTimePicker({
   return (
     <div className="space-y-2">
       {label && (
-        <label className="block text-sm font-medium text-gf-body">
+        <label className="block text-sm font-medium text-sf-body">
           {label}
-          {required && <span className="text-gf-danger ml-1">*</span>}
-          {!required && <span className="text-xs text-gf-muted ml-1">({tCommon('optional')})</span>}
+          {required && <span className="text-sf-danger ml-1">*</span>}
+          {!required && <span className="text-xs text-sf-muted ml-1">({tCommon('optional')})</span>}
         </label>
       )}
 
@@ -93,14 +93,14 @@ export default function DateTimePicker({
           placeholder={displayPlaceholder}
           className={`
             flex-1 min-w-0 px-3 py-2.5 border transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent
+            focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent
             ${disabled
-              ? 'bg-gf-raised text-gf-muted cursor-not-allowed'
-              : 'bg-gf-input text-gf-heading hover:border-gf-border'
+              ? 'bg-sf-raised text-sf-muted cursor-not-allowed'
+              : 'bg-sf-input text-sf-heading hover:border-sf-border'
             }
             ${error
-              ? 'border-gf-danger'
-              : 'border-gf-border'
+              ? 'border-sf-danger'
+              : 'border-sf-border'
             }
           `}
         />
@@ -108,7 +108,7 @@ export default function DateTimePicker({
           <button
             type="button"
             onClick={handleClear}
-            className="flex-shrink-0 p-1.5 text-gf-muted hover:text-gf-body hover:bg-gf-hover transition-colors"
+            className="flex-shrink-0 p-1.5 text-sf-muted hover:text-sf-body hover:bg-sf-hover transition-colors"
             aria-label={tCommon('clearDate')}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -119,13 +119,13 @@ export default function DateTimePicker({
       </div>
 
       {description && (
-        <p className="text-xs text-gf-muted">
+        <p className="text-xs text-sf-muted">
           {addTimezoneInfo(description)}
         </p>
       )}
 
       {error && (
-        <p className="text-xs text-gf-danger">
+        <p className="text-xs text-sf-danger">
           {error}
         </p>
       )}

@@ -7,178 +7,178 @@
 
 /* Dark mode (default — dark-first) */
 :root {
-  --gf-bg-deep: #06080D;
-  --gf-bg-base: #0B1120;
-  --gf-bg-raised: #111B2E;
-  --gf-bg-float: #162236;
-  --gf-bg-hover: #1a2740;
-  --gf-bg-row-alt: #0e1626;
-  --gf-bg-input: #0B1120;
+  --sf-bg-deep: #06080D;
+  --sf-bg-base: #0B1120;
+  --sf-bg-raised: #111B2E;
+  --sf-bg-float: #162236;
+  --sf-bg-hover: #1a2740;
+  --sf-bg-row-alt: #0e1626;
+  --sf-bg-input: #0B1120;
 
-  --gf-accent: #0078BB;
-  --gf-accent-bg: #0078BB;
-  --gf-accent-soft: rgba(0,120,187,0.10);
-  --gf-accent-med: rgba(0,120,187,0.22);
-  --gf-accent-hover: #2090D0;
-  --gf-accent-glow: rgba(0,120,187,0.35);
+  --sf-accent: #0078BB;
+  --sf-accent-bg: #0078BB;
+  --sf-accent-soft: rgba(0,120,187,0.10);
+  --sf-accent-med: rgba(0,120,187,0.22);
+  --sf-accent-hover: #2090D0;
+  --sf-accent-glow: rgba(0,120,187,0.35);
 
   /* Tailwind v4 @theme overrides: brighter colors for dark-mode text contrast */
-  --color-gf-accent: #1A8FC8;
-  --color-gf-danger: #F25555;
+  --color-sf-accent: #1A8FC8;
+  --color-sf-danger: #F25555;
 
-  --gf-text-heading: #F0F4FA;
-  --gf-text-body: #94A3B8;
-  --gf-text-muted: #7A8DA3;
-  --gf-text-inverse: #0b1120;
+  --sf-text-heading: #F0F4FA;
+  --sf-text-body: #94A3B8;
+  --sf-text-muted: #7A8DA3;
+  --sf-text-inverse: #0b1120;
 
-  --gf-border: rgba(255,255,255,0.06);
-  --gf-border-accent: rgba(0,120,187,0.18);
+  --sf-border: rgba(255,255,255,0.06);
+  --sf-border-accent: rgba(0,120,187,0.18);
 
-  --gf-success: #10B981;
-  --gf-success-soft: rgba(16,185,129,0.10);
-  --gf-warning: #F59E0B;
-  --gf-warning-soft: rgba(245,158,11,0.10);
-  --gf-danger: #EF4444;
-  --gf-danger-bg: #EF4444;
-  --gf-danger-soft: rgba(239,68,68,0.10);
-  --gf-info: #F97316;
-  --gf-info-soft: rgba(249,115,22,0.10);
+  --sf-success: #10B981;
+  --sf-success-soft: rgba(16,185,129,0.10);
+  --sf-warning: #F59E0B;
+  --sf-warning-soft: rgba(245,158,11,0.10);
+  --sf-danger: #EF4444;
+  --sf-danger-bg: #EF4444;
+  --sf-danger-soft: rgba(239,68,68,0.10);
+  --sf-info: #F97316;
+  --sf-info-soft: rgba(249,115,22,0.10);
 
-  --gf-sidebar-bg: #070c18;
-  --gf-sidebar-text: #7A8DA3;
-  --gf-sidebar-text-active: #F0F4FA;
-  --gf-sidebar-accent: rgba(0,120,187,0.12);
+  --sf-sidebar-bg: #070c18;
+  --sf-sidebar-text: #7A8DA3;
+  --sf-sidebar-text-active: #F0F4FA;
+  --sf-sidebar-accent: rgba(0,120,187,0.12);
 
-  --gf-shadow: 0 4px 24px -4px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
-  --gf-shadow-accent: 0 4px 30px -4px rgba(0,120,187,0.30);
+  --sf-shadow: 0 4px 24px -4px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  --sf-shadow-accent: 0 4px 30px -4px rgba(0,120,187,0.30);
 
   /* Brutalist border tiers */
-  --gf-border-subtle: rgba(255,255,255,0.06);
-  --gf-border-medium: rgba(255,255,255,0.12);
-  --gf-border-strong: rgba(255,255,255,0.20);
+  --sf-border-subtle: rgba(255,255,255,0.06);
+  --sf-border-medium: rgba(255,255,255,0.12);
+  --sf-border-strong: rgba(255,255,255,0.20);
 
   /* Layout dimensions */
-  --gf-sidebar-width-collapsed: 80px;
-  --gf-sidebar-width-expanded: 260px;
-  --gf-topbar-height: 56px;
+  --sf-sidebar-width-collapsed: 80px;
+  --sf-sidebar-width-expanded: 260px;
+  --sf-topbar-height: 56px;
 
   /* Timing */
-  --gf-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --gf-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --gf-duration-fast: 150ms;
-  --gf-duration-normal: 250ms;
-  --gf-duration-slow: 400ms;
+  --sf-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --sf-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --sf-duration-fast: 150ms;
+  --sf-duration-normal: 250ms;
+  --sf-duration-slow: 400ms;
 }
 
 /* Light mode overrides — when .dark is NOT on <html>, landing uses these */
 :root:not(.dark) {
-  --gf-bg-deep: #F0F4F8;
-  --gf-bg-base: #FFFFFF;
-  --gf-bg-raised: #F1F5F9;
-  --gf-bg-float: #FAFCFF;
-  --gf-bg-hover: #f0f4f8;
-  --gf-bg-row-alt: #f8fafc;
-  --gf-bg-input: #ffffff;
+  --sf-bg-deep: #F0F4F8;
+  --sf-bg-base: #FFFFFF;
+  --sf-bg-raised: #F1F5F9;
+  --sf-bg-float: #FAFCFF;
+  --sf-bg-hover: #f0f4f8;
+  --sf-bg-row-alt: #f8fafc;
+  --sf-bg-input: #ffffff;
 
-  --gf-accent: #006AAB;
-  --gf-accent-bg: #006AAB;
-  --gf-accent-soft: rgba(0,106,171,0.08);
-  --gf-accent-med: rgba(0,106,171,0.15);
-  --gf-accent-hover: #005C8F;
-  --gf-accent-glow: rgba(0,106,171,0.20);
+  --sf-accent: #006AAB;
+  --sf-accent-bg: #006AAB;
+  --sf-accent-soft: rgba(0,106,171,0.08);
+  --sf-accent-med: rgba(0,106,171,0.15);
+  --sf-accent-hover: #005C8F;
+  --sf-accent-glow: rgba(0,106,171,0.20);
 
-  --gf-text-heading: #0B1120;
-  --gf-text-body: #3E5068;
-  --gf-text-muted: #5b6578;
-  --gf-text-inverse: #ffffff;
+  --sf-text-heading: #0B1120;
+  --sf-text-body: #3E5068;
+  --sf-text-muted: #5b6578;
+  --sf-text-inverse: #ffffff;
 
-  --gf-border: rgba(0,0,0,0.10);
-  --gf-border-accent: rgba(0,112,184,0.18);
+  --sf-border: rgba(0,0,0,0.10);
+  --sf-border-accent: rgba(0,112,184,0.18);
 
-  --gf-success: #065f46;
-  --gf-success-soft: rgba(6,95,70,0.12);
-  --gf-warning: #92400E;
-  --gf-warning-soft: rgba(146,64,14,0.12);
-  --gf-danger: #991B1B;
-  --gf-danger-bg: #991B1B;
-  --gf-danger-soft: rgba(153,27,27,0.12);
-  --gf-info: #EA580C;
-  --gf-info-soft: rgba(234,88,12,0.10);
+  --sf-success: #065f46;
+  --sf-success-soft: rgba(6,95,70,0.12);
+  --sf-warning: #92400E;
+  --sf-warning-soft: rgba(146,64,14,0.12);
+  --sf-danger: #991B1B;
+  --sf-danger-bg: #991B1B;
+  --sf-danger-soft: rgba(153,27,27,0.12);
+  --sf-info: #EA580C;
+  --sf-info-soft: rgba(234,88,12,0.10);
 
-  --gf-sidebar-bg: #f8fafc;
-  --gf-sidebar-text: #5b6578;
-  --gf-sidebar-text-active: #0b1120;
-  --gf-sidebar-accent: rgba(0,112,184,0.08);
+  --sf-sidebar-bg: #f8fafc;
+  --sf-sidebar-text: #5b6578;
+  --sf-sidebar-text-active: #0b1120;
+  --sf-sidebar-accent: rgba(0,112,184,0.08);
 
-  --gf-shadow: 0 4px 24px -4px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06);
-  --gf-shadow-accent: 0 4px 30px -4px rgba(0,112,184,0.20);
+  --sf-shadow: 0 4px 24px -4px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06);
+  --sf-shadow-accent: 0 4px 30px -4px rgba(0,112,184,0.20);
 
   /* Brutalist border tiers (light) */
-  --gf-border-subtle: rgba(0,0,0,0.06);
-  --gf-border-medium: rgba(0,0,0,0.12);
-  --gf-border-strong: rgba(0,0,0,0.20);
+  --sf-border-subtle: rgba(0,0,0,0.06);
+  --sf-border-medium: rgba(0,0,0,0.12);
+  --sf-border-strong: rgba(0,0,0,0.20);
 
   /* Tailwind v4 @theme color overrides for light mode
      (needed because @theme resolves var() at build time, not runtime) */
-  --color-gf-accent: #006AAB;
-  --color-gf-accent-bg: #006AAB;
-  --color-gf-accent-soft: rgba(0,106,171,0.08);
-  --color-gf-accent-med: rgba(0,106,171,0.15);
-  --color-gf-accent-hover: #005C8F;
-  --color-gf-accent-glow: rgba(0,106,171,0.20);
-  --color-gf-success: #065f46;
-  --color-gf-success-soft: rgba(6,95,70,0.12);
-  --color-gf-warning: #92400E;
-  --color-gf-warning-soft: rgba(146,64,14,0.12);
-  --color-gf-danger: #991B1B;
-  --color-gf-danger-bg: #991B1B;
-  --color-gf-danger-soft: rgba(153,27,27,0.12);
-  --color-gf-heading: #0B1120;
-  --color-gf-body: #3E5068;
-  --color-gf-muted: #5b6578;
-  --color-gf-inverse: #ffffff;
-  --color-gf-deep: #F0F4F8;
-  --color-gf-base: #FFFFFF;
-  --color-gf-raised: #F1F5F9;
-  --color-gf-float: #FAFCFF;
-  --color-gf-hover: #f0f4f8;
-  --color-gf-row-alt: #f8fafc;
-  --color-gf-input: #ffffff;
-  --color-gf-border: rgba(0,0,0,0.10);
-  --color-gf-border-accent: rgba(0,106,171,0.18);
-  --color-gf-border-subtle: rgba(0,0,0,0.06);
-  --color-gf-border-medium: rgba(0,0,0,0.12);
-  --color-gf-border-strong: rgba(0,0,0,0.20);
-  --color-gf-info: #EA580C;
-  --color-gf-info-soft: rgba(234,88,12,0.10);
-  --color-gf-sidebar-bg: #f8fafc;
-  --color-gf-sidebar-text: #5b6578;
-  --color-gf-sidebar-text-active: #0b1120;
-  --color-gf-sidebar-accent: rgba(0,106,171,0.08);
+  --color-sf-accent: #006AAB;
+  --color-sf-accent-bg: #006AAB;
+  --color-sf-accent-soft: rgba(0,106,171,0.08);
+  --color-sf-accent-med: rgba(0,106,171,0.15);
+  --color-sf-accent-hover: #005C8F;
+  --color-sf-accent-glow: rgba(0,106,171,0.20);
+  --color-sf-success: #065f46;
+  --color-sf-success-soft: rgba(6,95,70,0.12);
+  --color-sf-warning: #92400E;
+  --color-sf-warning-soft: rgba(146,64,14,0.12);
+  --color-sf-danger: #991B1B;
+  --color-sf-danger-bg: #991B1B;
+  --color-sf-danger-soft: rgba(153,27,27,0.12);
+  --color-sf-heading: #0B1120;
+  --color-sf-body: #3E5068;
+  --color-sf-muted: #5b6578;
+  --color-sf-inverse: #ffffff;
+  --color-sf-deep: #F0F4F8;
+  --color-sf-base: #FFFFFF;
+  --color-sf-raised: #F1F5F9;
+  --color-sf-float: #FAFCFF;
+  --color-sf-hover: #f0f4f8;
+  --color-sf-row-alt: #f8fafc;
+  --color-sf-input: #ffffff;
+  --color-sf-border: rgba(0,0,0,0.10);
+  --color-sf-border-accent: rgba(0,106,171,0.18);
+  --color-sf-border-subtle: rgba(0,0,0,0.06);
+  --color-sf-border-medium: rgba(0,0,0,0.12);
+  --color-sf-border-strong: rgba(0,0,0,0.20);
+  --color-sf-info: #EA580C;
+  --color-sf-info-soft: rgba(234,88,12,0.10);
+  --color-sf-sidebar-bg: #f8fafc;
+  --color-sf-sidebar-text: #5b6578;
+  --color-sf-sidebar-text-active: #0b1120;
+  --color-sf-sidebar-accent: rgba(0,106,171,0.08);
 }
 
 /* ===== Whitelabel Tokens — default to Sellf brand, overridden by theme ===== */
 :root {
-  --wl-accent: var(--gf-accent);
-  --wl-accent-hover: var(--gf-accent-hover);
-  --wl-accent-soft: var(--gf-accent-soft);
-  --wl-accent-med: var(--gf-accent-med);
-  --wl-accent-glow: var(--gf-accent-glow);
-  --wl-bg-deep: var(--gf-bg-deep);
-  --wl-bg-base: var(--gf-bg-base);
-  --wl-bg-raised: var(--gf-bg-raised);
-  --wl-bg-float: var(--gf-bg-float);
-  --wl-text-heading: var(--gf-text-heading);
-  --wl-text-body: var(--gf-text-body);
-  --wl-text-muted: var(--gf-text-muted);
-  --wl-border: var(--gf-border);
-  --wl-border-accent: var(--gf-border-accent);
-  --wl-success: var(--gf-success);
-  --wl-warning: var(--gf-warning);
-  --wl-danger: var(--gf-danger);
-  --wl-info: var(--gf-info);
-  --wl-shadow: var(--gf-shadow);
-  --wl-shadow-accent: var(--gf-shadow-accent);
+  --wl-accent: var(--sf-accent);
+  --wl-accent-hover: var(--sf-accent-hover);
+  --wl-accent-soft: var(--sf-accent-soft);
+  --wl-accent-med: var(--sf-accent-med);
+  --wl-accent-glow: var(--sf-accent-glow);
+  --wl-bg-deep: var(--sf-bg-deep);
+  --wl-bg-base: var(--sf-bg-base);
+  --wl-bg-raised: var(--sf-bg-raised);
+  --wl-bg-float: var(--sf-bg-float);
+  --wl-text-heading: var(--sf-text-heading);
+  --wl-text-body: var(--sf-text-body);
+  --wl-text-muted: var(--sf-text-muted);
+  --wl-border: var(--sf-border);
+  --wl-border-accent: var(--sf-border-accent);
+  --wl-success: var(--sf-success);
+  --wl-warning: var(--sf-warning);
+  --wl-danger: var(--sf-danger);
+  --wl-info: var(--sf-info);
+  --wl-shadow: var(--sf-shadow);
+  --wl-shadow-accent: var(--sf-shadow-accent);
   --wl-font-family: inherit;
   --wl-font-heading-weight: 700;
   --wl-font-body-weight: 400;
@@ -188,44 +188,44 @@
   --wl-radius-full: 9999px;
 }
 
-/* Tailwind v4 theme tokens — enables bg-gf-deep, text-gf-accent, bg-wl-accent, etc. */
+/* Tailwind v4 theme tokens — enables bg-sf-deep, text-sf-accent, bg-wl-accent, etc. */
 @theme {
   /* Sellf brand tokens (admin panel) */
-  --color-gf-deep: var(--gf-bg-deep);
-  --color-gf-base: var(--gf-bg-base);
-  --color-gf-raised: var(--gf-bg-raised);
-  --color-gf-float: var(--gf-bg-float);
-  --color-gf-accent: var(--gf-accent);
-  --color-gf-accent-bg: var(--gf-accent-bg);
-  --color-gf-accent-hover: var(--gf-accent-hover);
-  --color-gf-accent-soft: var(--gf-accent-soft);
-  --color-gf-accent-med: var(--gf-accent-med);
-  --color-gf-accent-glow: var(--gf-accent-glow);
-  --color-gf-heading: var(--gf-text-heading);
-  --color-gf-body: var(--gf-text-body);
-  --color-gf-muted: var(--gf-text-muted);
-  --color-gf-border: var(--gf-border);
-  --color-gf-border-accent: var(--gf-border-accent);
-  --color-gf-success: var(--gf-success);
-  --color-gf-success-soft: var(--gf-success-soft);
-  --color-gf-warning: var(--gf-warning);
-  --color-gf-warning-soft: var(--gf-warning-soft);
-  --color-gf-danger: var(--gf-danger);
-  --color-gf-danger-bg: var(--gf-danger-bg);
-  --color-gf-danger-soft: var(--gf-danger-soft);
-  --color-gf-info: var(--gf-info);
-  --color-gf-info-soft: var(--gf-info-soft);
-  --color-gf-hover: var(--gf-bg-hover);
-  --color-gf-row-alt: var(--gf-bg-row-alt);
-  --color-gf-input: var(--gf-bg-input);
-  --color-gf-inverse: var(--gf-text-inverse);
-  --color-gf-sidebar-bg: var(--gf-sidebar-bg);
-  --color-gf-sidebar-text: var(--gf-sidebar-text);
-  --color-gf-sidebar-text-active: var(--gf-sidebar-text-active);
-  --color-gf-sidebar-accent: var(--gf-sidebar-accent);
-  --color-gf-border-subtle: var(--gf-border-subtle);
-  --color-gf-border-medium: var(--gf-border-medium);
-  --color-gf-border-strong: var(--gf-border-strong);
+  --color-sf-deep: var(--sf-bg-deep);
+  --color-sf-base: var(--sf-bg-base);
+  --color-sf-raised: var(--sf-bg-raised);
+  --color-sf-float: var(--sf-bg-float);
+  --color-sf-accent: var(--sf-accent);
+  --color-sf-accent-bg: var(--sf-accent-bg);
+  --color-sf-accent-hover: var(--sf-accent-hover);
+  --color-sf-accent-soft: var(--sf-accent-soft);
+  --color-sf-accent-med: var(--sf-accent-med);
+  --color-sf-accent-glow: var(--sf-accent-glow);
+  --color-sf-heading: var(--sf-text-heading);
+  --color-sf-body: var(--sf-text-body);
+  --color-sf-muted: var(--sf-text-muted);
+  --color-sf-border: var(--sf-border);
+  --color-sf-border-accent: var(--sf-border-accent);
+  --color-sf-success: var(--sf-success);
+  --color-sf-success-soft: var(--sf-success-soft);
+  --color-sf-warning: var(--sf-warning);
+  --color-sf-warning-soft: var(--sf-warning-soft);
+  --color-sf-danger: var(--sf-danger);
+  --color-sf-danger-bg: var(--sf-danger-bg);
+  --color-sf-danger-soft: var(--sf-danger-soft);
+  --color-sf-info: var(--sf-info);
+  --color-sf-info-soft: var(--sf-info-soft);
+  --color-sf-hover: var(--sf-bg-hover);
+  --color-sf-row-alt: var(--sf-bg-row-alt);
+  --color-sf-input: var(--sf-bg-input);
+  --color-sf-inverse: var(--sf-text-inverse);
+  --color-sf-sidebar-bg: var(--sf-sidebar-bg);
+  --color-sf-sidebar-text: var(--sf-sidebar-text);
+  --color-sf-sidebar-text-active: var(--sf-sidebar-text-active);
+  --color-sf-sidebar-accent: var(--sf-sidebar-accent);
+  --color-sf-border-subtle: var(--sf-border-subtle);
+  --color-sf-border-medium: var(--sf-border-medium);
+  --color-sf-border-strong: var(--sf-border-strong);
 
   /* Whitelabel tokens (public pages — customizable via theme) */
   --color-wl-accent: var(--wl-accent);
@@ -253,13 +253,21 @@
 
 /* Sidebar layout — desktop margin for fixed sidebar */
 @media (min-width: 1024px) {
-  .gf-main-content {
-    margin-left: var(--gf-sidebar-width-collapsed);
-    transition: margin-left var(--gf-duration-slow) var(--gf-ease-out);
+  .sf-main-content {
+    margin-left: var(--sf-sidebar-width-collapsed);
+    transition: margin-left var(--sf-duration-slow) var(--sf-ease-out);
   }
-  .gf-main-content.gf-pinned {
-    margin-left: var(--gf-sidebar-width-expanded);
+  .sf-main-content.sf-pinned {
+    margin-left: var(--sf-sidebar-width-expanded);
   }
+}
+
+/* Gradient text — accent to lighter shade, used on hero headlines */
+.text-gradient-accent {
+  background: linear-gradient(135deg, var(--sf-accent) 0%, color-mix(in srgb, var(--sf-accent) 60%, white) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Grain noise overlay — static background image, no compositing overhead */
@@ -272,7 +280,23 @@
 /* Section divider — gradient line for visual rhythm between sections */
 .section-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--gf-border-accent), transparent);
+  background: linear-gradient(90deg, transparent, var(--sf-border-accent), transparent);
+}
+
+/* Brand glow — radial accent glow for storefront brand moment */
+.brand-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 50%, var(--sf-accent-glow) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Accent divider — gradient line with accent color for storefront sections */
+.accent-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--sf-accent) 30%, var(--sf-accent) 70%, transparent 100%);
+  opacity: 0.35;
 }
 
 /* ===== Scroll Reveal System (CSS-only, single IntersectionObserver) ===== */
@@ -510,13 +534,13 @@ body {
 }
 
 /* Dashboard uses DM Sans for brutalist/industrial aesthetic */
-.gf-dashboard {
+.sf-dashboard {
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
-.gf-dashboard .font-mono,
-.gf-dashboard code,
-.gf-dashboard pre {
+.sf-dashboard .font-mono,
+.sf-dashboard code,
+.sf-dashboard pre {
   font-family: var(--font-dm-mono), ui-monospace, monospace;
 }
 

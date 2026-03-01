@@ -39,20 +39,20 @@ export function Step3CreateKey() {
         <div
           className={`inline-flex items-center justify-center w-12 h-12 mb-3 ${
             isTestMode
-              ? 'bg-gf-warning-soft'
-              : 'bg-gf-success-soft'
+              ? 'bg-sf-warning-soft'
+              : 'bg-sf-success-soft'
           }`}
         >
           <span
-            className={`text-2xl ${isTestMode ? 'text-gf-warning' : 'text-gf-success'}`}
+            className={`text-2xl ${isTestMode ? 'text-sf-warning' : 'text-sf-success'}`}
           >
             {isTestMode ? '🧪' : '🚀'}
           </span>
         </div>
-        <h3 className="text-2xl font-bold text-gf-heading mb-2">
+        <h3 className="text-2xl font-bold text-sf-heading mb-2">
           {t('title', { defaultValue: 'Create Your Restricted API Key' })}
         </h3>
-        <p className="text-gf-body">
+        <p className="text-sf-body">
           {t('subtitle', {
             defaultValue: 'Follow these steps to create a secure Restricted API Key in Stripe',
           })}
@@ -60,8 +60,8 @@ export function Step3CreateKey() {
         <div
           className={`inline-block mt-2 px-3 py-1 text-sm font-medium ${
             isTestMode
-              ? 'bg-gf-warning-soft text-gf-warning'
-              : 'bg-gf-success-soft text-gf-success'
+              ? 'bg-sf-warning-soft text-sf-warning'
+              : 'bg-sf-success-soft text-sf-success'
           }`}
         >
           {isTestMode
@@ -71,13 +71,13 @@ export function Step3CreateKey() {
       </div>
 
       {/* Open Stripe Dashboard CTA */}
-      <div className="bg-gf-accent-soft p-6 mb-8 border border-gf-accent/20">
+      <div className="bg-sf-accent-soft p-6 mb-8 border border-sf-accent/20">
         <div className="flex items-center justify-between">
           <div>
-            <h4 className="font-semibold text-gf-heading mb-1">
+            <h4 className="font-semibold text-sf-heading mb-1">
               {t('openDashboard.title', { defaultValue: 'Step 1: Open Stripe Dashboard' })}
             </h4>
-            <p className="text-sm text-gf-body">
+            <p className="text-sm text-sf-body">
               {t('openDashboard.description', {
                 defaultValue: 'Click below to open the API Keys page in a new tab',
               })}
@@ -87,7 +87,7 @@ export function Step3CreateKey() {
             href={stripeDashboardUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gf-accent-bg text-white font-semibold hover:bg-gf-accent-hover transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-sf-accent-bg text-white font-semibold hover:bg-sf-accent-hover transition-colors"
           >
             {t('openDashboard.button', { defaultValue: 'Open Stripe' })}
             <ExternalLink className="w-4 h-4" />
@@ -98,16 +98,16 @@ export function Step3CreateKey() {
       {/* Instructions */}
       <div className="space-y-6 mb-8">
         {/* Step 2 */}
-        <div className="bg-gf-base p-5 border border-gf-border">
+        <div className="bg-sf-base p-5 border border-sf-border">
           <div className="flex items-start gap-4">
-            <div className="flex-shrink-0 w-8 h-8 bg-gf-accent-soft flex items-center justify-center font-semibold text-gf-accent">
+            <div className="flex-shrink-0 w-8 h-8 bg-sf-accent-soft flex items-center justify-center font-semibold text-sf-accent">
               2
             </div>
             <div className="flex-1">
-              <h4 className="font-semibold text-gf-heading mb-2">
+              <h4 className="font-semibold text-sf-heading mb-2">
                 {t('step2.title', { defaultValue: 'Create a Restricted Key' })}
               </h4>
-              <p className="text-sm text-gf-body mb-3">
+              <p className="text-sm text-sf-body mb-3">
                 {t('step2.description', {
                   defaultValue:
                     'In the Stripe dashboard, click "Create restricted key" button (not "Create secret key")',
@@ -118,27 +118,27 @@ export function Step3CreateKey() {
         </div>
 
         {/* Step 3 */}
-        <div className="bg-gf-base p-5 border border-gf-border">
+        <div className="bg-sf-base p-5 border border-sf-border">
           <div className="flex items-start gap-4">
-            <div className="flex-shrink-0 w-8 h-8 bg-gf-accent-soft flex items-center justify-center font-semibold text-gf-accent">
+            <div className="flex-shrink-0 w-8 h-8 bg-sf-accent-soft flex items-center justify-center font-semibold text-sf-accent">
               3
             </div>
             <div className="flex-1">
-              <h4 className="font-semibold text-gf-heading mb-2">
+              <h4 className="font-semibold text-sf-heading mb-2">
                 {t('step3.title', { defaultValue: 'Name Your Key' })}
               </h4>
-              <p className="text-sm text-gf-body mb-3">
+              <p className="text-sm text-sf-body mb-3">
                 {t('step3.description', {
                   defaultValue: 'Give your key a descriptive name, for example:',
                 })}
               </p>
-              <div className="bg-gf-raised p-3 font-mono text-sm flex items-center justify-between">
-                <span className="text-gf-heading">
+              <div className="bg-sf-raised p-3 font-mono text-sm flex items-center justify-between">
+                <span className="text-sf-heading">
                   Sellf {isTestMode ? t('test') : t('live')}
                 </span>
                 <button
                   onClick={() => copyToClipboard(`Sellf ${isTestMode ? 'Test' : 'Live'}`, 3)}
-                  className="text-gf-muted hover:text-gf-body transition-colors"
+                  className="text-sf-muted hover:text-sf-body transition-colors"
                 >
                   {copiedStep === 3 ? (
                     <CheckCircle2 className="w-4 h-4 text-green-600" />
@@ -152,30 +152,30 @@ export function Step3CreateKey() {
         </div>
 
         {/* Step 4 - Permissions */}
-        <div className="bg-gf-base p-5 border border-gf-border">
+        <div className="bg-sf-base p-5 border border-sf-border">
           <div className="flex items-start gap-4">
-            <div className="flex-shrink-0 w-8 h-8 bg-gf-accent-soft flex items-center justify-center font-semibold text-gf-accent">
+            <div className="flex-shrink-0 w-8 h-8 bg-sf-accent-soft flex items-center justify-center font-semibold text-sf-accent">
               4
             </div>
             <div className="flex-1">
-              <h4 className="font-semibold text-gf-heading mb-2">
+              <h4 className="font-semibold text-sf-heading mb-2">
                 {t('step4.title', { defaultValue: 'Set Required Permissions' })}
               </h4>
-              <p className="text-sm text-gf-body mb-4">
+              <p className="text-sm text-sf-body mb-4">
                 {t('step4.description', {
                   defaultValue:
                     'Configure the following permissions for Sellf to work properly:',
                 })}
               </p>
 
-              <div className="bg-gf-warning-soft p-4 mb-4 border border-gf-warning/20">
+              <div className="bg-sf-warning-soft p-4 mb-4 border border-sf-warning/20">
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="w-5 h-5 text-gf-warning mt-0.5 flex-shrink-0" />
+                  <AlertCircle className="w-5 h-5 text-sf-warning mt-0.5 flex-shrink-0" />
                   <div className="text-sm">
-                    <p className="font-medium text-gf-heading mb-1">
+                    <p className="font-medium text-sf-heading mb-1">
                       {t('step4.important', { defaultValue: 'Important' })}
                     </p>
-                    <p className="text-gf-body">
+                    <p className="text-sf-body">
                       {t('step4.importantText', {
                         defaultValue:
                           'Required permissions are marked with ⚠️. Without these, Sellf will not function properly.',
@@ -189,24 +189,24 @@ export function Step3CreateKey() {
                 {requiredPermissions.map((perm, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-3 bg-gf-raised"
+                    className="flex items-center justify-between p-3 bg-sf-raised"
                   >
                     <div className="flex items-center gap-3">
                       {perm.required && <span className="text-red-600">⚠️</span>}
-                      <span className="text-sm font-medium text-gf-heading">
+                      <span className="text-sm font-medium text-sf-heading">
                         {perm.resource}
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-gf-body">
+                      <span className="text-sm text-sf-body">
                         {perm.access}
                       </span>
                       {perm.required ? (
-                        <span className="px-2 py-0.5 text-xs font-medium bg-gf-danger-soft text-gf-danger">
+                        <span className="px-2 py-0.5 text-xs font-medium bg-sf-danger-soft text-sf-danger">
                           Required
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 text-xs font-medium bg-gf-raised text-gf-body">
+                        <span className="px-2 py-0.5 text-xs font-medium bg-sf-raised text-sf-body">
                           Optional
                         </span>
                       )}
@@ -219,22 +219,22 @@ export function Step3CreateKey() {
         </div>
 
         {/* Step 5 */}
-        <div className="bg-gf-base p-5 border border-gf-border">
+        <div className="bg-sf-base p-5 border border-sf-border">
           <div className="flex items-start gap-4">
-            <div className="flex-shrink-0 w-8 h-8 bg-gf-accent-soft flex items-center justify-center font-semibold text-gf-accent">
+            <div className="flex-shrink-0 w-8 h-8 bg-sf-accent-soft flex items-center justify-center font-semibold text-sf-accent">
               5
             </div>
             <div className="flex-1">
-              <h4 className="font-semibold text-gf-heading mb-2">
+              <h4 className="font-semibold text-sf-heading mb-2">
                 {t('step5.title', { defaultValue: 'Create & Copy the Key' })}
               </h4>
-              <p className="text-sm text-gf-body mb-2">
+              <p className="text-sm text-sf-body mb-2">
                 {t('step5.description', {
                   defaultValue:
                     'Click "Create key" and immediately copy it. You will paste it in the next step.',
                 })}
               </p>
-              <p className="text-sm text-gf-warning font-medium">
+              <p className="text-sm text-sf-warning font-medium">
                 ⚠️{' '}
                 {t('step5.warning', {
                   defaultValue: 'The key is only shown once! Make sure to copy it.',
@@ -249,7 +249,7 @@ export function Step3CreateKey() {
       <div className="flex items-center justify-between">
         <button
           onClick={previousStep}
-          className="inline-flex items-center gap-2 px-5 py-2.5 text-gf-body hover:bg-gf-hover transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 text-sf-body hover:bg-sf-hover transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           {t('backButton', { defaultValue: 'Back' })}
@@ -257,7 +257,7 @@ export function Step3CreateKey() {
 
         <button
           onClick={nextStep}
-          className="inline-flex items-center gap-2 px-6 py-2.5 bg-gf-accent-bg text-white font-semibold hover:bg-gf-accent-hover transition-colors"
+          className="inline-flex items-center gap-2 px-6 py-2.5 bg-sf-accent-bg text-white font-semibold hover:bg-sf-accent-hover transition-colors"
         >
           {t('nextButton', { defaultValue: "I've Created the Key" })}
           <ArrowRight className="w-4 h-4" />

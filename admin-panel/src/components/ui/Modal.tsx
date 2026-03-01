@@ -44,30 +44,30 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({
     
     switch (variant) {
       case 'success':
-        return `${baseClasses} bg-gf-success-soft text-gf-success`;
+        return `${baseClasses} bg-sf-success-soft text-sf-success`;
       case 'warning':
-        return `${baseClasses} bg-gf-warning-soft text-gf-warning`;
+        return `${baseClasses} bg-sf-warning-soft text-sf-warning`;
       case 'error':
-        return `${baseClasses} bg-gf-danger-soft text-gf-danger`;
+        return `${baseClasses} bg-sf-danger-soft text-sf-danger`;
       case 'info':
-        return `${baseClasses} bg-gf-accent-soft text-gf-accent`;
+        return `${baseClasses} bg-sf-accent-soft text-sf-accent`;
       default:
-        return `${baseClasses} bg-gf-raised text-gf-muted`;
+        return `${baseClasses} bg-sf-raised text-sf-muted`;
     }
   };
 
   return (
-    <div className="px-6 py-3 border-b border-gf-border bg-gf-raised">
+    <div className="px-6 py-3 border-b border-sf-border bg-sf-raised">
       <div className="flex items-start justify-between">
         <div className="flex items-center space-x-3">
           {icon && (
-            <div className="flex-shrink-0 p-1.5 bg-gf-base">
+            <div className="flex-shrink-0 p-1.5 bg-sf-base">
               {icon}
             </div>
           )}
           <div>
             <div className="flex items-center space-x-3">
-              <h3 className="text-lg font-semibold text-gf-heading">
+              <h3 className="text-lg font-semibold text-sf-heading">
                 {title}
               </h3>
               {badge && (
@@ -77,7 +77,7 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({
               )}
             </div>
             {subtitle && (
-              <p className="mt-1 text-sm text-gf-muted">
+              <p className="mt-1 text-sm text-sf-muted">
                 {subtitle}
               </p>
             )}
@@ -120,14 +120,14 @@ export const ModalSection: React.FC<ModalSectionProps> = ({
         <button
           type="button"
           onClick={() => collapsible && setIsExpanded(!isExpanded)}
-          className={`w-full flex items-center justify-between text-sm font-medium text-gf-heading border-b border-gf-border pb-2 mb-4 ${
-            collapsible ? 'cursor-pointer hover:text-gf-accent transition-colors' : 'cursor-default'
+          className={`w-full flex items-center justify-between text-sm font-medium text-sf-heading border-b border-sf-border pb-2 mb-4 ${
+            collapsible ? 'cursor-pointer hover:text-sf-accent transition-colors' : 'cursor-default'
           }`}
         >
           <span>{title}</span>
           {collapsible && (
             <svg
-              className={`w-4 h-4 text-gf-muted transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+              className={`w-4 h-4 text-sf-muted transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -155,8 +155,8 @@ export const ModalFooter: React.FC<ModalFooterProps> = ({
 }) => {
   return (
     <div className={`
-      px-6 py-4 border-t border-gf-border
-      bg-gf-raised
+      px-6 py-4 border-t border-sf-border
+      bg-sf-raised
       flex items-center justify-end space-x-3
       ${className}
     `}>
@@ -192,15 +192,15 @@ export const Button: React.FC<ButtonProps> = ({
   const getVariantClasses = () => {
     switch (variant) {
       case 'primary':
-        return 'bg-gf-accent-bg hover:bg-gf-accent-hover text-white border-transparent focus:ring-gf-accent';
+        return 'bg-sf-accent-bg hover:bg-sf-accent-hover text-white border-transparent focus:ring-sf-accent';
       case 'secondary':
-        return 'bg-gf-raised hover:bg-gf-hover text-gf-heading border-gf-border focus:ring-gf-accent';
+        return 'bg-sf-raised hover:bg-sf-hover text-sf-heading border-sf-border focus:ring-sf-accent';
       case 'danger':
-        return 'bg-gf-danger-bg hover:opacity-90 text-gf-inverse border-transparent focus:ring-gf-danger';
+        return 'bg-sf-danger-bg hover:opacity-90 text-sf-inverse border-transparent focus:ring-sf-danger';
       case 'ghost':
-        return 'bg-transparent hover:bg-gf-hover text-gf-body border-gf-border focus:ring-gf-accent';
+        return 'bg-transparent hover:bg-sf-hover text-sf-body border-sf-border focus:ring-sf-accent';
       default:
-        return 'bg-gf-accent-bg hover:bg-gf-accent-hover text-white border-transparent focus:ring-gf-accent';
+        return 'bg-sf-accent-bg hover:bg-sf-accent-hover text-white border-transparent focus:ring-sf-accent';
     }
   };
 
@@ -262,15 +262,15 @@ export const Message: React.FC<MessageProps> = ({
   const getTypeClasses = () => {
     switch (type) {
       case 'error':
-        return 'bg-gf-danger-soft border-gf-danger/20 text-gf-danger';
+        return 'bg-sf-danger-soft border-sf-danger/20 text-sf-danger';
       case 'success':
-        return 'bg-gf-success-soft border-gf-success/20 text-gf-success';
+        return 'bg-sf-success-soft border-sf-success/20 text-sf-success';
       case 'warning':
-        return 'bg-gf-warning-soft border-gf-warning/20 text-gf-warning';
+        return 'bg-sf-warning-soft border-sf-warning/20 text-sf-warning';
       case 'info':
-        return 'bg-gf-accent-soft border-gf-accent/20 text-gf-accent';
+        return 'bg-sf-accent-soft border-sf-accent/20 text-sf-accent';
       default:
-        return 'bg-gf-raised border-gf-border text-gf-body';
+        return 'bg-sf-raised border-sf-border text-sf-body';
     }
   };
 

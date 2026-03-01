@@ -114,7 +114,7 @@ export default function PaymentsDashboard() {
   if (loading && !stats) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gf-muted">{t('loading')}</div>
+        <div className="text-sf-muted">{t('loading')}</div>
       </div>
     );
   }
@@ -123,10 +123,10 @@ export default function PaymentsDashboard() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gf-heading">
+        <h1 className="text-2xl font-bold text-sf-heading">
           {t('title')}
         </h1>
-        <p className="text-gf-body">
+        <p className="text-sf-body">
           {t('subtitle')}
         </p>
       </div>
@@ -142,15 +142,15 @@ export default function PaymentsDashboard() {
       />
 
       {/* Tabs */}
-      <div className="bg-gf-base shadow">
-        <div className="border-b border-gf-border">
+      <div className="bg-sf-base shadow">
+        <div className="border-b border-sf-border">
           <nav className="flex space-x-8 px-6 py-4">
             <button
               onClick={() => setActiveTab('transactions')}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'transactions'
-                  ? 'border-gf-accent text-gf-accent'
-                  : 'border-transparent text-gf-muted hover:text-gf-heading'
+                  ? 'border-sf-accent text-sf-accent'
+                  : 'border-transparent text-sf-muted hover:text-sf-heading'
               }`}
             >
               {t('transactions.title')} ({filteredTransactions.length})
@@ -159,8 +159,8 @@ export default function PaymentsDashboard() {
               onClick={() => setActiveTab('sessions')}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'sessions'
-                  ? 'border-gf-accent text-gf-accent'
-                  : 'border-transparent text-gf-muted hover:text-gf-heading'
+                  ? 'border-sf-accent text-sf-accent'
+                  : 'border-transparent text-sf-muted hover:text-sf-heading'
               }`}
             >
               {t('sessions.title')} ({filteredSessions.length})

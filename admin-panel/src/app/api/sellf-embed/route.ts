@@ -223,7 +223,7 @@ function init(){
 }
 
 function renderWidget(container,productSlug){
-  const widgetId='gf-'+Math.random().toString(36).substr(2,9);
+  const widgetId='sf-'+Math.random().toString(36).substr(2,9);
 
   widgetState.set(widgetId,{
     productSlug,

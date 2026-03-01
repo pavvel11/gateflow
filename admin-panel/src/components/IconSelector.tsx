@@ -58,19 +58,19 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
       <button
         type="button"
         onClick={toggleDropdown}
-        className="mt-1 flex items-center justify-between w-full border-2 border-gf-border-medium bg-gf-input px-3 py-2 text-gf-heading focus:border-gf-accent focus:ring-gf-accent"
+        className="mt-1 flex items-center justify-between w-full border-2 border-sf-border-medium bg-sf-input px-3 py-2 text-sf-heading focus:border-sf-accent focus:ring-sf-accent"
       >
         <div className="flex items-center space-x-2">
           <span className="text-xl">{currentIcon.emoji}</span>
           <span>{currentIcon.id !== 'custom' ? currentIcon.id : t('custom')}</span>
         </div>
-        <svg className="h-5 w-5 text-gf-muted" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+        <svg className="h-5 w-5 text-sf-muted" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
           <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
         </svg>
       </button>
 
       {isOpen && (
-        <div className="absolute z-10 mt-1 w-full bg-gf-base border-2 border-gf-border-medium">
+        <div className="absolute z-10 mt-1 w-full bg-sf-base border-2 border-sf-border-medium">
           <div className="p-2 grid grid-cols-4 gap-2">
             {ICONS.map((icon) => (
               <div 
@@ -79,14 +79,14 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
                 className={`cursor-pointer p-2 flex flex-col items-center ${
                   icon.id === selectedIcon
                     ? 'bg-blue-500 text-white' 
-                    : 'hover:bg-gf-hover'
+                    : 'hover:bg-sf-hover'
                 }`}
               >
                 <span className="text-2xl">{icon.emoji}</span>
                 <span className={`text-xs mt-1 ${
                   icon.id === selectedIcon
                     ? 'text-white' 
-                    : 'text-gf-body'
+                    : 'text-sf-body'
                 }`}>{icon.id}</span>
               </div>
             ))}

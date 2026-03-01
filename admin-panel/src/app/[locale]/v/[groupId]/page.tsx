@@ -89,7 +89,7 @@ export default function VariantSelectorPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-wl-deep flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gf-accent"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sf-accent"></div>
       </div>
     );
   }
@@ -97,13 +97,13 @@ export default function VariantSelectorPage() {
   if (error || variants.length === 0) {
     return (
       <div className="min-h-screen bg-wl-deep flex items-center justify-center">
-        <div className="bg-gf-base rounded-2xl shadow-[var(--gf-shadow-accent)] p-8 max-w-md mx-4">
+        <div className="bg-sf-base rounded-2xl shadow-[var(--sf-shadow-accent)] p-8 max-w-md mx-4">
           <div className="text-center">
             <div className="text-6xl mb-4">😕</div>
-            <h1 className="text-2xl font-bold text-gf-heading mb-2">
+            <h1 className="text-2xl font-bold text-sf-heading mb-2">
               {t('notFound.title', { defaultValue: 'Variants Not Found' })}
             </h1>
-            <p className="text-gf-body">
+            <p className="text-sf-body">
               {t('notFound.description', { defaultValue: 'The requested product variants could not be found.' })}
             </p>
           </div>
@@ -120,10 +120,10 @@ export default function VariantSelectorPage() {
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="text-center mb-10">
-          <h1 className="text-3xl md:text-4xl font-bold text-gf-heading mb-3">
+          <h1 className="text-3xl md:text-4xl font-bold text-sf-heading mb-3">
             {t('title', { defaultValue: 'Choose Your Option' })}
           </h1>
-          <p className="text-lg text-gf-body">
+          <p className="text-lg text-sf-body">
             {t('subtitle', { defaultValue: 'Select the option that best fits your needs' })}
           </p>
         </div>
@@ -135,10 +135,10 @@ export default function VariantSelectorPage() {
               key={variant.id}
               onClick={() => handleSelectVariant(variant.slug)}
               className={`
-                relative bg-gf-base rounded-2xl shadow-[var(--gf-shadow-accent)]
+                relative bg-sf-base rounded-2xl shadow-[var(--sf-shadow-accent)]
                 transition-all duration-300 cursor-pointer border-2
                 ${variant.is_featured
-                  ? 'border-gf-accent ring-2 ring-wl-accent-soft'
+                  ? 'border-sf-accent ring-2 ring-wl-accent-soft'
                   : 'border-transparent hover:border-wl-border-accent'
                 }
               `}
@@ -146,7 +146,7 @@ export default function VariantSelectorPage() {
               {/* Featured badge */}
               {variant.is_featured && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-wl-accent text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider shadow-[var(--gf-shadow-accent)]">
+                  <span className="bg-wl-accent text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider shadow-[var(--sf-shadow-accent)]">
                     {t('popular', { defaultValue: 'Most Popular' })}
                   </span>
                 </div>
@@ -166,11 +166,11 @@ export default function VariantSelectorPage() {
 
                 {/* Variant Info */}
                 <div className="flex-grow text-center md:text-left">
-                  <h3 className="text-xl font-bold text-gf-heading mb-1">
+                  <h3 className="text-xl font-bold text-sf-heading mb-1">
                     {variant.variant_name || variant.name}
                   </h3>
                   {variant.description && (
-                    <p className="text-gf-body text-sm line-clamp-2">
+                    <p className="text-sf-body text-sm line-clamp-2">
                       {variant.description}
                     </p>
                   )}
@@ -178,15 +178,15 @@ export default function VariantSelectorPage() {
 
                 {/* Price and CTA */}
                 <div className="flex-shrink-0 text-center md:text-right">
-                  <div className="text-2xl md:text-3xl font-bold text-gf-heading mb-2">
+                  <div className="text-2xl md:text-3xl font-bold text-sf-heading mb-2">
                     {formatPrice(variant.price, variant.currency)} {variant.currency}
                   </div>
                   <button
                     className={`
                       px-6 py-2.5 rounded-full font-semibold transition-all duration-200 active:scale-[0.98]
                       ${variant.is_featured
-                        ? 'bg-wl-accent text-white hover:bg-wl-accent-hover shadow-[var(--gf-shadow-accent)]'
-                        : 'bg-gf-raised text-gf-heading hover:bg-gf-hover'
+                        ? 'bg-wl-accent text-white hover:bg-wl-accent-hover shadow-[var(--sf-shadow-accent)]'
+                        : 'bg-sf-raised text-sf-heading hover:bg-sf-hover'
                       }
                     `}
                   >
@@ -199,7 +199,7 @@ export default function VariantSelectorPage() {
         </div>
 
         {/* Footer note */}
-        <p className="text-center text-sm text-gf-muted mt-8">
+        <p className="text-center text-sm text-sf-muted mt-8">
           {t('securePayment', { defaultValue: 'Secure payment • Instant access' })}
         </p>
       </div>

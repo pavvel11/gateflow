@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
-import { Reveal } from './motion/Reveal';
-import { RevealGroup } from './motion/RevealGroup';
+import { Reveal } from '@/components/motion/Reveal';
+import { RevealGroup } from '@/components/motion/RevealGroup';
 
 const techs = ['nextjs', 'supabase', 'stripe', 'tailwind', 'typescript', 'docker', 'postgresql', 'bunny'] as const;
 
@@ -8,16 +8,16 @@ export async function TechStackGrid() {
   const t = await getTranslations('landing');
 
   return (
-    <section className="py-20 md:py-24 bg-gf-deep">
+    <section className="py-20 md:py-24 bg-sf-deep">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal className="text-center mb-12">
-          <p className="text-sm font-medium text-gf-muted tracking-[0.08em] uppercase mb-3">
+          <p className="text-sm font-medium text-sf-muted tracking-[0.08em] uppercase mb-3">
             {t('techStack.categoryLabel')}
           </p>
-          <h3 className="text-3xl md:text-4xl font-bold text-gf-heading mb-3">
+          <h3 className="text-3xl md:text-4xl font-bold text-sf-heading mb-3">
             {t('techStack.title')}
           </h3>
-          <p className="text-lg text-gf-body max-w-2xl mx-auto">
+          <p className="text-lg text-sf-body max-w-2xl mx-auto">
             {t('techStack.subtitle')}
           </p>
         </Reveal>
@@ -26,12 +26,12 @@ export async function TechStackGrid() {
           {techs.map((tech) => (
             <div
               key={tech}
-              className="group relative inline-flex flex-col items-center px-5 py-3 rounded-full bg-gf-raised/80 border border-gf-border hover:border-gf-border-accent hover:shadow-[var(--gf-shadow-accent)] transition-[border-color,box-shadow] duration-300"
+              className="group relative inline-flex flex-col items-center px-5 py-3 rounded-full bg-sf-raised/80 border border-sf-border hover:border-sf-border-accent hover:shadow-[var(--sf-shadow-accent)] transition-[border-color,box-shadow] duration-300"
             >
-              <span className="text-sm font-bold text-gf-heading">
+              <span className="text-sm font-bold text-sf-heading">
                 {t(`techStack.${tech}.name`)}
               </span>
-              <span className="text-[11px] text-gf-muted leading-tight">
+              <span className="text-[11px] text-sf-muted leading-tight">
                 {t(`techStack.${tech}.desc`)}
               </span>
             </div>
@@ -43,7 +43,7 @@ export async function TechStackGrid() {
             href="https://github.com/jurczykpawel/sellf"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm font-medium text-gf-accent hover:text-gf-accent-hover transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent rounded"
+            className="text-sm font-medium text-sf-accent hover:text-sf-accent-hover transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sf-accent rounded"
           >
             {t('techStack.viewStack')}
           </a>

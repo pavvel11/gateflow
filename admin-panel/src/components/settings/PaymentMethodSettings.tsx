@@ -424,88 +424,88 @@ export default function PaymentMethodSettings() {
 
  if (loading) {
  return (
- <div className="bg-gf-base border-2 border-gf-border-medium p-6">
- <h3 className="text-xl font-semibold text-gf-heading mb-4">
+ <div className="bg-sf-base border-2 border-sf-border-medium p-6">
+ <h3 className="text-xl font-semibold text-sf-heading mb-4">
  {t('paymentMethods.title')}
  </h3>
- <p className="text-gf-body">{t('paymentMethods.buttons.loading')}</p>
+ <p className="text-sf-body">{t('paymentMethods.buttons.loading')}</p>
  </div>
  );
  }
 
  return (
- <div className="bg-gf-base border-2 border-gf-border-medium p-6">
+ <div className="bg-sf-base border-2 border-sf-border-medium p-6">
  <div className="mb-6">
- <h3 className="text-xl font-semibold text-gf-heading mb-2">
+ <h3 className="text-xl font-semibold text-sf-heading mb-2">
  {t('paymentMethods.title')}
  </h3>
- <p className="text-sm text-gf-body">
+ <p className="text-sm text-sf-body">
  {t('paymentMethods.subtitle')}
  </p>
  </div>
 
  {/* Configuration Mode Selector */}
  <div className="mb-8">
- <label className="flex items-center gap-2 text-sm font-medium text-gf-body mb-3">
+ <label className="flex items-center gap-2 text-sm font-medium text-sf-body mb-3">
  {t('paymentMethods.mode.label')}
  <SourceBadge source={pmSource} envAlsoSet={pmEnvExists} />
  </label>
  <div className="space-y-3">
  {/* Automatic Mode */}
- <label className="flex items-start p-4 border-2 cursor-pointer transition-colors hover:border-gf-border-accent" style={{ borderColor: configMode === 'automatic' ? 'var(--gf-accent)' : '' }}>
+ <label className="flex items-start p-4 border-2 cursor-pointer transition-colors hover:border-sf-border-accent" style={{ borderColor: configMode === 'automatic' ? 'var(--sf-accent)' : '' }}>
  <input
  type="radio"
  name="config_mode"
  value="automatic"
  checked={configMode === 'automatic'}
  onChange={() => handleModeChange('automatic')}
- className="mt-1 h-4 w-4 text-gf-accent"
+ className="mt-1 h-4 w-4 text-sf-accent"
  />
  <div className="ml-3 flex-1">
- <div className="font-medium text-gf-heading">
+ <div className="font-medium text-sf-heading">
  {t('paymentMethods.mode.automatic')}
  </div>
- <div className="text-sm text-gf-body mt-1">
+ <div className="text-sm text-sf-body mt-1">
  {t('paymentMethods.mode.automaticDescription')}
  </div>
  </div>
  </label>
 
  {/* Stripe Preset Mode */}
- <label className="flex items-start p-4 border-2 cursor-pointer transition-colors hover:border-gf-border-accent" style={{ borderColor: configMode === 'stripe_preset' ? 'var(--gf-accent)' : '' }}>
+ <label className="flex items-start p-4 border-2 cursor-pointer transition-colors hover:border-sf-border-accent" style={{ borderColor: configMode === 'stripe_preset' ? 'var(--sf-accent)' : '' }}>
  <input
  type="radio"
  name="config_mode"
  value="stripe_preset"
  checked={configMode === 'stripe_preset'}
  onChange={() => handleModeChange('stripe_preset')}
- className="mt-1 h-4 w-4 text-gf-accent"
+ className="mt-1 h-4 w-4 text-sf-accent"
  />
  <div className="ml-3 flex-1">
- <div className="font-medium text-gf-heading">
+ <div className="font-medium text-sf-heading">
  {t('paymentMethods.mode.stripePreset')}
  </div>
- <div className="text-sm text-gf-body mt-1">
+ <div className="text-sm text-sf-body mt-1">
  {t('paymentMethods.mode.stripePresetDescription')}
  </div>
  </div>
  </label>
 
  {/* Custom Mode */}
- <label className="flex items-start p-4 border-2 cursor-pointer transition-colors hover:border-gf-border-accent" style={{ borderColor: configMode === 'custom' ? 'var(--gf-accent)' : '' }}>
+ <label className="flex items-start p-4 border-2 cursor-pointer transition-colors hover:border-sf-border-accent" style={{ borderColor: configMode === 'custom' ? 'var(--sf-accent)' : '' }}>
  <input
  type="radio"
  name="config_mode"
  value="custom"
  checked={configMode === 'custom'}
  onChange={() => handleModeChange('custom')}
- className="mt-1 h-4 w-4 text-gf-accent"
+ className="mt-1 h-4 w-4 text-sf-accent"
  />
  <div className="ml-3 flex-1">
- <div className="font-medium text-gf-heading">
+ <div className="font-medium text-sf-heading">
  {t('paymentMethods.mode.custom')}
  </div>
- <div className="text-sm text-gf-body mt-1">
+ <div className="text-sm text-sf-body mt-1">
  {t('paymentMethods.mode.customDescription')}
  </div>
  </div>
@@ -515,8 +515,8 @@ export default function PaymentMethodSettings() {
 
  {/* Stripe PMC Selector (only for stripe_preset mode) */}
  {configMode === 'stripe_preset' && (
- <div className="mb-8 p-4 bg-gf-raised">
- <label className="block text-sm font-medium text-gf-body mb-3">
+ <div className="mb-8 p-4 bg-sf-raised">
+ <label className="block text-sm font-medium text-sf-body mb-3">
  {t('paymentMethods.stripeConfig.title')}
  </label>
  <div className="flex gap-2">
@@ -527,7 +527,7 @@ export default function PaymentMethodSettings() {
  setStripePmcId(e.target.value);
  setStripePmcName(selectedPmc?.name || '');
  }}
- className="flex-1 px-3 py-2 border-2 border-gf-border-medium bg-gf-input text-gf-heading"
+ className="flex-1 px-3 py-2 border-2 border-sf-border-medium bg-sf-input text-sf-heading"
  disabled={stripePmcsLoading}
  aria-label={t('paymentMethods.stripeConfig.title')}
  >
@@ -541,14 +541,14 @@ export default function PaymentMethodSettings() {
  <button
  onClick={handleRefreshStripePmcs}
  disabled={refreshing}
- className="px-4 py-2 bg-gf-raised text-gf-body hover:bg-gf-hover transition-colors disabled:opacity-50"
+ className="px-4 py-2 bg-sf-raised text-sf-body hover:bg-sf-hover transition-colors disabled:opacity-50"
  title={t('paymentMethods.stripeConfig.refresh')}
  >
  <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
  </button>
  </div>
  {stripePmcsLoading && (
- <p className="text-sm text-gf-body mt-2">{t('paymentMethods.stripeConfig.refreshing')}</p>
+ <p className="text-sm text-sf-body mt-2">{t('paymentMethods.stripeConfig.refreshing')}</p>
  )}
 
  {/* Stripe Preset Preview - show enabled payment methods */}
@@ -567,8 +567,8 @@ export default function PaymentMethodSettings() {
  });
 
  return (
- <div className="mt-4 p-3 bg-gf-base border-2 border-gf-border-medium">
- <p className="text-sm font-medium text-gf-body mb-2">
+ <div className="mt-4 p-3 bg-sf-base border-2 border-sf-border-medium">
+ <p className="text-sm font-medium text-sf-body mb-2">
  {t('paymentMethods.stripeConfig.preview')}
  </p>
  {enabledMethods.length > 0 ? (
@@ -578,7 +578,7 @@ export default function PaymentMethodSettings() {
  return (
  <span
  key={method}
- className="inline-flex items-center px-2.5 py-1 bg-gf-success-soft text-gf-success text-sm border border-gf-success/20"
+ className="inline-flex items-center px-2.5 py-1 bg-sf-success-soft text-sf-success text-sm border border-sf-success/20"
  >
  <Check className="w-3 h-3 mr-1" />
  <span className="mr-1">{info.icon}</span>
@@ -588,7 +588,7 @@ export default function PaymentMethodSettings() {
  })}
  </div>
  ) : (
- <p className="text-sm text-gf-muted">
+ <p className="text-sm text-sf-muted">
  {t('paymentMethods.stripeConfig.noMethodsEnabled')}
  </p>
  )}
@@ -600,8 +600,8 @@ export default function PaymentMethodSettings() {
 
  {/* Custom Payment Methods (only for custom mode) */}
  {configMode === 'custom' && (
- <div className="mb-8 p-4 bg-gf-raised">
- <label className="block text-sm font-medium text-gf-body mb-3">
+ <div className="mb-8 p-4 bg-sf-raised">
+ <label className="block text-sm font-medium text-sf-body mb-3">
  {t('paymentMethods.customConfig.title')}
  </label>
  <div className="space-y-2">
@@ -610,18 +610,18 @@ export default function PaymentMethodSettings() {
  return (
  <label
  key={pm.type}
- className="flex items-center p-3 border-2 border-gf-border-medium hover:bg-gf-hover cursor-pointer"
+ className="flex items-center p-3 border-2 border-sf-border-medium hover:bg-sf-hover cursor-pointer"
  >
  <input
  type="checkbox"
  checked={pm.enabled}
  onChange={() => togglePaymentMethod(pm.type)}
- className="h-4 w-4 text-gf-accent"
+ className="h-4 w-4 text-sf-accent"
  />
  <span className="ml-3 text-2xl">{info.icon}</span>
  <div className="ml-3 flex-1">
- <div className="font-medium text-gf-heading">{info.name}</div>
- <div className="text-sm text-gf-body">
+ <div className="font-medium text-sf-heading">{info.name}</div>
+ <div className="text-sm text-sf-body">
  {pm.currency_restrictions && pm.currency_restrictions.length > 0
  ? pm.currency_restrictions.join(', ')
  : t('paymentMethods.customConfig.currencyNote')}
@@ -637,10 +637,10 @@ export default function PaymentMethodSettings() {
  {/* Payment Method Order (drag & drop) */}
  {paymentMethodOrder.length > 0 && (
  <div className="mb-8">
- <label className="block text-sm font-medium text-gf-body mb-3">
+ <label className="block text-sm font-medium text-sf-body mb-3">
  {t('paymentMethods.customConfig.orderTitle')}
  </label>
- <p className="text-sm text-gf-body mb-3">
+ <p className="text-sm text-sf-body mb-3">
  {t('paymentMethods.customConfig.orderDescription')}
  </p>
  <div className="space-y-2">
@@ -653,16 +653,16 @@ export default function PaymentMethodSettings() {
  onDragStart={() => handleDragStart(index)}
  onDragOver={(e) => handleDragOver(e, index)}
  onDragEnd={handleDragEnd}
- className="flex items-center p-3 bg-gf-base border-2 border-gf-border-medium cursor-move hover:border-gf-border-accent transition-colors"
+ className="flex items-center p-3 bg-sf-base border-2 border-sf-border-medium cursor-move hover:border-sf-border-accent transition-colors"
  style={{ opacity: draggedIndex === index ? 0.5 : 1 }}
  >
- <GripVertical className="w-5 h-5 text-gf-muted mr-2" />
- <span className="text-lg font-medium text-gf-body mr-2">
+ <GripVertical className="w-5 h-5 text-sf-muted mr-2" />
+ <span className="text-lg font-medium text-sf-body mr-2">
  {index + 1}.
  </span>
  <span className="text-2xl mr-3">{info.icon}</span>
  <div className="flex-1">
- <div className="font-medium text-gf-heading">{info.name}</div>
+ <div className="font-medium text-sf-heading">{info.name}</div>
  </div>
  </div>
  );
@@ -672,8 +672,8 @@ export default function PaymentMethodSettings() {
  )}
 
  {/* Express Checkout Toggles */}
- <div className="mb-8 p-4 bg-gf-raised">
- <label className="block text-sm font-medium text-gf-body mb-3">
+ <div className="mb-8 p-4 bg-sf-raised">
+ <label className="block text-sm font-medium text-sf-body mb-3">
  {t('paymentMethods.expressCheckout.title')}
  </label>
  <div className="space-y-3">
@@ -682,9 +682,9 @@ export default function PaymentMethodSettings() {
  type="checkbox"
  checked={enableExpressCheckout}
  onChange={(e) => setEnableExpressCheckout(e.target.checked)}
- className="h-4 w-4 text-gf-accent"
+ className="h-4 w-4 text-sf-accent"
  />
- <span className="ml-3 text-gf-heading font-medium">
+ <span className="ml-3 text-sf-heading font-medium">
  {t('paymentMethods.expressCheckout.enable')}
  </span>
  </label>
@@ -695,30 +695,30 @@ export default function PaymentMethodSettings() {
  type="checkbox"
  checked={enableApplePay}
  onChange={(e) => setEnableApplePay(e.target.checked)}
- className="h-4 w-4 text-gf-accent"
+ className="h-4 w-4 text-sf-accent"
  />
- <span className="ml-3 text-gf-body">{t('paymentMethods.expressCheckout.applePay')}</span>
+ <span className="ml-3 text-sf-body">{t('paymentMethods.expressCheckout.applePay')}</span>
  </label>
  <label className="flex items-center">
  <input
  type="checkbox"
  checked={enableGooglePay}
  onChange={(e) => setEnableGooglePay(e.target.checked)}
- className="h-4 w-4 text-gf-accent"
+ className="h-4 w-4 text-sf-accent"
  />
- <span className="ml-3 text-gf-body">{t('paymentMethods.expressCheckout.googlePay')}</span>
+ <span className="ml-3 text-sf-body">{t('paymentMethods.expressCheckout.googlePay')}</span>
  </label>
  <label className="flex items-center">
  <input
  type="checkbox"
  checked={enableLink}
  onChange={(e) => setEnableLink(e.target.checked)}
- className="h-4 w-4 text-gf-accent"
+ className="h-4 w-4 text-sf-accent"
  />
- <span className="ml-3 text-gf-body">{t('paymentMethods.expressCheckout.link')}</span>
+ <span className="ml-3 text-sf-body">{t('paymentMethods.expressCheckout.link')}</span>
  </label>
  {enableLink && (
- <p className="ml-7 mt-1 text-xs text-gf-muted">
+ <p className="ml-7 mt-1 text-xs text-sf-muted">
  {t('paymentMethods.expressCheckout.linkEnabledDescription', { defaultValue: 'Link is displayed as part of the email field. Users with a Link account can pay with saved cards.' })}
  </p>
  )}
@@ -732,7 +732,7 @@ export default function PaymentMethodSettings() {
  <button
  type="button"
  onClick={() => setShowCurrencyOverrides(!showCurrencyOverrides)}
- className="flex items-center w-full text-left text-sm font-medium text-gf-body mb-3 hover:text-gf-accent transition-colors"
+ className="flex items-center w-full text-left text-sm font-medium text-sf-body mb-3 hover:text-sf-accent transition-colors"
  >
  {showCurrencyOverrides ? (
  <ChevronDown className="w-4 h-4 mr-2" />
@@ -740,14 +740,14 @@ export default function PaymentMethodSettings() {
  <ChevronRight className="w-4 h-4 mr-2" />
  )}
  {t('paymentMethods.currencyOverrides.title')}
- <span className="ml-2 text-xs text-gf-muted">
+ <span className="ml-2 text-xs text-sf-muted">
  ({t('paymentMethods.currencyOverrides.advanced')})
  </span>
  </button>
 
  {showCurrencyOverrides && (
- <div className="p-4 bg-gf-raised space-y-4">
- <p className="text-sm text-gf-body">
+ <div className="p-4 bg-sf-raised space-y-4">
+ <p className="text-sm text-sf-body">
  {t('paymentMethods.currencyOverrides.description')}
  </p>
 
@@ -760,7 +760,7 @@ export default function PaymentMethodSettings() {
  key={currency}
  type="button"
  onClick={() => addCurrencyOverride(currency)}
- className="px-3 py-1.5 text-sm border border-dashed border-gf-border hover:border-gf-border-accent hover:bg-gf-accent-soft transition-colors flex items-center gap-1"
+ className="px-3 py-1.5 text-sm border border-dashed border-sf-border hover:border-sf-border-accent hover:bg-sf-accent-soft transition-colors flex items-center gap-1"
  >
  <Plus className="w-3 h-3" />
  {currency}
@@ -770,10 +770,10 @@ export default function PaymentMethodSettings() {
 
  {/* Currency Override Cards */}
  {Object.entries(currencyOverrides).filter(([, order]) => Array.isArray(order)).map(([currency, order]) => (
- <div key={currency} className="p-3 bg-gf-base border-2 border-gf-border-medium">
+ <div key={currency} className="p-3 bg-sf-base border-2 border-sf-border-medium">
  <div className="flex items-center justify-between mb-3">
- <span className="font-medium text-gf-heading flex items-center gap-2">
- <span className="px-2 py-0.5 bg-gf-accent-soft text-gf-accent text-xs">
+ <span className="font-medium text-sf-heading flex items-center gap-2">
+ <span className="px-2 py-0.5 bg-sf-accent-soft text-sf-accent text-xs">
  {currency}
  </span>
  {t('paymentMethods.currencyOverrides.orderFor', { currency })}
@@ -781,7 +781,7 @@ export default function PaymentMethodSettings() {
  <button
  type="button"
  onClick={() => removeCurrencyOverride(currency)}
- className="text-gf-muted hover:text-red-500 transition-colors"
+ className="text-sf-muted hover:text-red-500 transition-colors"
  title={t('paymentMethods.currencyOverrides.remove')}
  >
  <Trash2 className="w-4 h-4" />
@@ -799,17 +799,17 @@ export default function PaymentMethodSettings() {
  onDragStart={() => handleCurrencyDragStart(currency, index)}
  onDragOver={(e) => handleCurrencyDragOver(e, currency, index)}
  onDragEnd={handleCurrencyDragEnd}
- className="flex items-center p-2 bg-gf-raised cursor-move hover:bg-gf-hover transition-colors"
+ className="flex items-center p-2 bg-sf-raised cursor-move hover:bg-sf-hover transition-colors"
  style={{ opacity: isDragging ? 0.5 : 1 }}
  >
- <GripVertical className="w-4 h-4 text-gf-muted mr-2" />
- <span className="text-sm text-gf-body mr-2">{index + 1}.</span>
+ <GripVertical className="w-4 h-4 text-sf-muted mr-2" />
+ <span className="text-sm text-sf-body mr-2">{index + 1}.</span>
  <span className="text-lg mr-2">{info.icon}</span>
- <span className="text-sm text-gf-heading flex-1">{info.name}</span>
+ <span className="text-sm text-sf-heading flex-1">{info.name}</span>
  <button
  type="button"
  onClick={() => removeMethodFromOverride(currency, type)}
- className="text-gf-muted hover:text-red-500 transition-colors ml-2"
+ className="text-sf-muted hover:text-red-500 transition-colors ml-2"
  title={t('paymentMethods.currencyOverrides.remove')}
  >
  <X className="w-3.5 h-3.5" />
@@ -824,8 +824,8 @@ export default function PaymentMethodSettings() {
  const excluded = getExcludedMethodsForCurrency(currency);
  if (excluded.length === 0) return null;
  return (
- <div className="mt-2 pt-2 border-t border-gf-border">
- <span className="text-xs text-gf-muted mb-1 block">
+ <div className="mt-2 pt-2 border-t border-sf-border">
+ <span className="text-xs text-sf-muted mb-1 block">
  {t('paymentMethods.currencyOverrides.excludedMethods')}
  </span>
  <div className="flex gap-1 flex-wrap">
@@ -836,7 +836,7 @@ export default function PaymentMethodSettings() {
  key={type}
  type="button"
  onClick={() => addMethodToOverride(currency, type)}
- className="flex items-center gap-1 px-2 py-1 text-xs border border-dashed border-gf-border hover:border-gf-border-accent hover:bg-gf-accent-soft text-gf-body transition-colors"
+ className="flex items-center gap-1 px-2 py-1 text-xs border border-dashed border-sf-border hover:border-sf-border-accent hover:bg-sf-accent-soft text-sf-body transition-colors"
  >
  <Plus className="w-3 h-3" />
  <span>{info.icon}</span>
@@ -852,7 +852,7 @@ export default function PaymentMethodSettings() {
  ))}
 
  {Object.keys(currencyOverrides).length === 0 && (
- <p className="text-sm text-gf-muted text-center py-4">
+ <p className="text-sm text-sf-muted text-center py-4">
  {t('paymentMethods.currencyOverrides.empty')}
  </p>
  )}
@@ -861,23 +861,23 @@ export default function PaymentMethodSettings() {
  </div>
 
  {/* Recommended Configuration */}
- <div className="mb-8 p-4 bg-gf-accent-soft border border-gf-border-accent">
+ <div className="mb-8 p-4 bg-sf-accent-soft border border-sf-border-accent">
  <div className="flex items-start justify-between">
  <div>
- <label className="block text-sm font-medium text-gf-accent mb-1">
+ <label className="block text-sm font-medium text-sf-accent mb-1">
  {t('paymentMethods.recommended.title')}
  </label>
- <p className="text-sm text-gf-accent">
+ <p className="text-sm text-sf-accent">
  {t('paymentMethods.recommended.description')}
  </p>
- <p className="text-xs text-gf-accent mt-1">
+ <p className="text-xs text-sf-accent mt-1">
  {t('paymentMethods.recommended.features')}
  </p>
  </div>
  <button
  onClick={handleResetToRecommended}
  disabled={resettingToRecommended || saving}
- className="px-4 py-2 bg-gf-accent-bg text-white text-sm hover:bg-gf-accent-hover transition-colors disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+ className="px-4 py-2 bg-sf-accent-bg text-white text-sm hover:bg-sf-accent-hover transition-colors disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
  >
  {resettingToRecommended ? (
  <>
@@ -899,14 +899,14 @@ export default function PaymentMethodSettings() {
  <button
  onClick={handleReset}
  disabled={saving}
- className="px-4 py-2 border-2 border-gf-border-medium text-gf-body hover:bg-gf-hover transition-colors disabled:opacity-50"
+ className="px-4 py-2 border-2 border-sf-border-medium text-sf-body hover:bg-sf-hover transition-colors disabled:opacity-50"
  >
  {t('paymentMethods.buttons.reset')}
  </button>
  <button
  onClick={handleSave}
  disabled={saving}
- className="px-6 py-2 bg-gf-accent-bg text-white hover:bg-gf-accent-hover transition-colors disabled:opacity-50 flex items-center gap-2"
+ className="px-6 py-2 bg-sf-accent-bg text-white hover:bg-sf-accent-hover transition-colors disabled:opacity-50 flex items-center gap-2"
  >
  {saving ? (
  <>

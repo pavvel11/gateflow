@@ -44,7 +44,7 @@ const Pagination: React.FC<PaginationProps> = ({
   return (
     <nav className="flex items-center justify-between py-3" aria-label={t('pagination')}>
       <div className="hidden sm:block">
-        <p className="text-sm text-gf-body">
+        <p className="text-sm text-sf-body">
           {t('showingPage', { current: currentPage, total: totalPages })}
         </p>
       </div>
@@ -55,8 +55,8 @@ const Pagination: React.FC<PaginationProps> = ({
           disabled={currentPage === 1}
           className={`relative inline-flex items-center px-3 py-2 text-sm font-medium
             ${currentPage === 1 
-              ? 'bg-gf-raised text-gf-muted cursor-not-allowed'
-              : 'bg-gf-base text-gf-body hover:bg-gf-hover'
+              ? 'bg-sf-raised text-sf-muted cursor-not-allowed'
+              : 'bg-sf-base text-sf-body hover:bg-sf-hover'
             }`}
         >
           <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -72,12 +72,12 @@ const Pagination: React.FC<PaginationProps> = ({
               <button 
                 onClick={() => onPageChange(1)}
                 className={`relative inline-flex items-center px-3 py-2 text-sm font-medium
-                  bg-gf-base text-gf-body hover:bg-gf-hover`}
+                  bg-sf-base text-sf-body hover:bg-sf-hover`}
               >
                 1
               </button>
               {pageNumbers[0] > 2 && (
-                <span className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gf-muted">
+                <span className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-sf-muted">
                   ...
                 </span>
               )}
@@ -91,8 +91,8 @@ const Pagination: React.FC<PaginationProps> = ({
               onClick={() => onPageChange(page)}
               className={`relative inline-flex items-center px-3 py-2 text-sm font-medium
                 ${currentPage === page
-                  ? 'bg-gf-accent-bg text-white'
-                  : 'bg-gf-base text-gf-body hover:bg-gf-hover'
+                  ? 'bg-sf-accent-bg text-white'
+                  : 'bg-sf-base text-sf-body hover:bg-sf-hover'
                 }`}
             >
               {page}
@@ -103,14 +103,14 @@ const Pagination: React.FC<PaginationProps> = ({
           {pageNumbers[pageNumbers.length - 1] < totalPages && (
             <>
               {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
-                <span className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gf-muted">
+                <span className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-sf-muted">
                   ...
                 </span>
               )}
               <button 
                 onClick={() => onPageChange(totalPages)}
                 className={`relative inline-flex items-center px-3 py-2 text-sm font-medium
-                  bg-gf-base text-gf-body hover:bg-gf-hover`}
+                  bg-sf-base text-sf-body hover:bg-sf-hover`}
               >
                 {totalPages}
               </button>
@@ -123,8 +123,8 @@ const Pagination: React.FC<PaginationProps> = ({
           disabled={currentPage === totalPages}
           className={`relative inline-flex items-center px-3 py-2 text-sm font-medium
             ${currentPage === totalPages 
-              ? 'bg-gf-raised text-gf-muted cursor-not-allowed'
-              : 'bg-gf-base text-gf-body hover:bg-gf-hover'
+              ? 'bg-sf-raised text-sf-muted cursor-not-allowed'
+              : 'bg-sf-base text-sf-body hover:bg-sf-hover'
             }`}
         >
           {t('next')}

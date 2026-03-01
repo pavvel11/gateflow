@@ -130,7 +130,7 @@ const BaseModal: React.FC<BaseModalProps> = ({
         ref={modalRef}
         className={`
           relative w-full ${getSizeClasses()} 
-          bg-gf-base
+          bg-sf-base
           
           transform transition-all duration-300 ease-out
           animate-[modalIn_0.3s_ease-out]
@@ -143,7 +143,7 @@ const BaseModal: React.FC<BaseModalProps> = ({
         {showCloseButton && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 p-2 text-gf-muted hover:text-gf-heading hover:bg-gf-hover transition-colors duration-200"
+            className="absolute top-4 right-4 z-10 p-2 text-sf-muted hover:text-sf-heading hover:bg-sf-hover transition-colors duration-200"
             aria-label={tCommon('closeModal')}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

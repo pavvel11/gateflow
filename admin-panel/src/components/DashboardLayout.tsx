@@ -146,14 +146,14 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
 
   // Load pin state from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem('gf_sidebar_pinned')
+    const stored = localStorage.getItem('sf_sidebar_pinned')
     if (stored === 'true') setIsPinned(true)
   }, [])
 
   const togglePin = () => {
     setIsPinned(prev => {
       const next = !prev
-      localStorage.setItem('gf_sidebar_pinned', String(next))
+      localStorage.setItem('sf_sidebar_pinned', String(next))
       return next
     })
   }
@@ -206,12 +206,12 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
         onClick={() => setIsSidebarOpen(false)}
         className={`flex items-center gap-3 py-2.5 px-4 border-l-[3px] whitespace-nowrap transition-colors duration-150 group ${
           active
-            ? 'border-gf-accent bg-gf-sidebar-accent text-gf-sidebar-text-active font-semibold'
-            : 'border-transparent text-gf-sidebar-text hover:bg-gf-hover hover:text-gf-sidebar-text-active'
+            ? 'border-sf-accent bg-sf-sidebar-accent text-sf-sidebar-text-active font-semibold'
+            : 'border-transparent text-sf-sidebar-text hover:bg-sf-hover hover:text-sf-sidebar-text-active'
         }`}
       >
         <span className={`flex-shrink-0 transition-opacity duration-150 ${
-          active ? 'text-gf-accent' : 'opacity-60 group-hover:opacity-100'
+          active ? 'text-sf-accent' : 'opacity-60 group-hover:opacity-100'
         }`}>
           {icon}
         </span>
@@ -219,8 +219,8 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
           className="transition-opacity"
           style={{
             opacity: expanded ? 1 : 0,
-            transitionDuration: 'var(--gf-duration-normal, 250ms)',
-            transitionTimingFunction: 'var(--gf-ease-out, ease-out)',
+            transitionDuration: 'var(--sf-duration-normal, 250ms)',
+            transitionTimingFunction: 'var(--sf-ease-out, ease-out)',
           }}
         >
           {label}
@@ -235,11 +235,11 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
       {user && isAdmin && (
         <div className="pt-5 pb-2">
           <div
-            className="px-6 pb-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-gf-sidebar-text/70 whitespace-nowrap transition-opacity"
+            className="px-6 pb-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-sf-sidebar-text/70 whitespace-nowrap transition-opacity"
             style={{
               opacity: expanded ? 1 : 0,
-              transitionDuration: 'var(--gf-duration-normal, 250ms)',
-              transitionTimingFunction: 'var(--gf-ease-out, ease-out)',
+              transitionDuration: 'var(--sf-duration-normal, 250ms)',
+              transitionTimingFunction: 'var(--sf-ease-out, ease-out)',
             }}
           >
             {t('adminSection')}
@@ -253,11 +253,11 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
       )}
       <div className="pt-5 pb-2">
         <div
-          className="px-6 pb-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-gf-sidebar-text/70 whitespace-nowrap transition-opacity"
+          className="px-6 pb-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-sf-sidebar-text/70 whitespace-nowrap transition-opacity"
           style={{
             opacity: expanded ? 1 : 0,
-            transitionDuration: 'var(--gf-duration-normal, 250ms)',
-            transitionTimingFunction: 'var(--gf-ease-out, ease-out)',
+            transitionDuration: 'var(--sf-duration-normal, 250ms)',
+            transitionTimingFunction: 'var(--sf-ease-out, ease-out)',
           }}
         >
           {t('userSection')}
@@ -273,21 +273,21 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
 
   // Sidebar footer with user info
   const SidebarFooter = ({ expanded, mobile }: { expanded: boolean, mobile?: boolean }) => (
-    <div className="mt-auto p-4 border-t border-gf-border-subtle flex-shrink-0">
+    <div className="mt-auto p-4 border-t border-sf-border-subtle flex-shrink-0">
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-9 h-9 bg-gf-accent/20 flex items-center justify-center text-gf-accent text-sm font-bold flex-shrink-0">
+        <div className="w-9 h-9 bg-sf-accent/20 flex items-center justify-center text-sf-accent text-sm font-bold flex-shrink-0">
           {user?.email?.charAt(0).toUpperCase()}
         </div>
         <div
           className="overflow-hidden transition-opacity"
           style={{
             opacity: expanded ? 1 : 0,
-            transitionDuration: 'var(--gf-duration-normal, 250ms)',
-            transitionTimingFunction: 'var(--gf-ease-out, ease-out)',
+            transitionDuration: 'var(--sf-duration-normal, 250ms)',
+            transitionTimingFunction: 'var(--sf-ease-out, ease-out)',
           }}
         >
-          <p className="text-[13px] font-medium text-gf-heading truncate">{user?.email}</p>
-          <p className="text-[11px] text-gf-sidebar-text uppercase tracking-[0.05em]">
+          <p className="text-[13px] font-medium text-sf-heading truncate">{user?.email}</p>
+          <p className="text-[11px] text-sf-sidebar-text uppercase tracking-[0.05em]">
             {isAdmin ? t('roleAdmin') : t('roleUser')}
           </p>
         </div>
@@ -296,7 +296,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
         <>
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-2 w-full py-2 px-3 text-[13px] font-medium text-gf-sidebar-text hover:text-gf-danger border border-gf-border-subtle hover:border-gf-danger transition-colors duration-150"
+            className="flex items-center gap-2 w-full py-2 px-3 text-[13px] font-medium text-sf-sidebar-text hover:text-sf-danger border border-sf-border-subtle hover:border-sf-danger transition-colors duration-150"
             title={t('logout')}
           >
             {Icons.logout}
@@ -310,14 +310,14 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
       ) : (
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-2 h-10 text-[13px] font-medium text-gf-sidebar-text hover:text-gf-danger whitespace-nowrap"
+          className="flex items-center gap-2 h-10 text-[13px] font-medium text-sf-sidebar-text hover:text-sf-danger whitespace-nowrap"
           style={{
             width: expanded ? '100%' : '48px',
             padding: expanded ? '8px 12px' : '10px',
             justifyContent: expanded ? 'flex-start' : 'center',
             borderWidth: '1px',
             borderStyle: 'solid',
-            borderColor: expanded ? 'var(--gf-border-subtle)' : 'transparent',
+            borderColor: expanded ? 'var(--sf-border-subtle)' : 'transparent',
             transition: 'color 150ms, border-color 150ms, width 400ms cubic-bezier(0.16, 1, 0.3, 1), padding 400ms cubic-bezier(0.16, 1, 0.3, 1)',
           }}
           title={t('logout')}
@@ -327,8 +327,8 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
             className="transition-opacity"
             style={{
               opacity: expanded ? 1 : 0,
-              transitionDuration: 'var(--gf-duration-normal, 250ms)',
-              transitionTimingFunction: 'var(--gf-ease-out, ease-out)',
+              transitionDuration: 'var(--sf-duration-normal, 250ms)',
+              transitionTimingFunction: 'var(--sf-ease-out, ease-out)',
             }}
           >
             {t('logout')}
@@ -340,7 +340,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
 
   // Sidebar logo section
   const SidebarLogo = ({ expanded, showPin }: { expanded: boolean, showPin?: boolean }) => (
-    <div className="relative flex items-center gap-3 px-6 h-[68px] flex-shrink-0 border-b border-gf-border-subtle">
+    <div className="relative flex items-center gap-3 px-6 h-[68px] flex-shrink-0 border-b border-sf-border-subtle">
       <Link href="/" className="flex items-center gap-3">
         {logoUrl ? (
           <img src={logoUrl} alt={shopName} className="w-7 h-7 object-contain flex-shrink-0" />
@@ -355,11 +355,11 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
           </div>
         )}
         <span
-          className="text-[15px] font-bold text-gf-heading whitespace-nowrap tracking-tight transition-opacity"
+          className="text-[15px] font-bold text-sf-heading whitespace-nowrap tracking-tight transition-opacity"
           style={{
             opacity: expanded ? 1 : 0,
-            transitionDuration: 'var(--gf-duration-normal, 250ms)',
-            transitionTimingFunction: 'var(--gf-ease-out, ease-out)',
+            transitionDuration: 'var(--sf-duration-normal, 250ms)',
+            transitionTimingFunction: 'var(--sf-ease-out, ease-out)',
           }}
         >
           {shopName}
@@ -368,12 +368,12 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
       {showPin && (
         <button
           onClick={(e) => { e.stopPropagation(); togglePin(); }}
-          className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center text-gf-sidebar-text hover:text-gf-accent hover:bg-gf-hovertransition-all"
+          className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center text-sf-sidebar-text hover:text-sf-accent hover:bg-sf-hovertransition-all"
           style={{
             opacity: expanded ? 1 : 0,
             pointerEvents: expanded ? 'auto' : 'none',
-            transitionDuration: 'var(--gf-duration-normal, 250ms)',
-            transitionTimingFunction: 'var(--gf-ease-out, ease-out)',
+            transitionDuration: 'var(--sf-duration-normal, 250ms)',
+            transitionTimingFunction: 'var(--sf-ease-out, ease-out)',
           }}
           aria-label={isPinned ? 'Unpin sidebar' : 'Pin sidebar open'}
         >
@@ -393,8 +393,8 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
   // ---------------------------------------------------------------------------
   if (!user) {
     return (
-      <div className="min-h-screen bg-gf-deep flex flex-col">
-        <header className="h-16 bg-gf-base border-b border-gf-border flex items-center sticky top-0 z-40">
+      <div className="min-h-screen bg-sf-deep flex flex-col">
+        <header className="h-16 bg-sf-base border-b border-sf-border flex items-center sticky top-0 z-40">
           <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <div className="flex items-center">
               <Link href="/" className="flex items-center group">
@@ -412,7 +412,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
                     </svg>
                   </div>
                 )}
-                <span className="text-xl font-extrabold text-gf-heading leading-none">
+                <span className="text-xl font-extrabold text-sf-heading leading-none">
                   {shopName}
                 </span>
               </Link>
@@ -421,7 +421,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
               {showSellfCTA && (
                 <Link
                   href="/about"
-                  className="hidden sm:inline-flex items-center px-4 py-2 bg-gf-accent-bg text-white text-xs font-bold hover:bg-gf-accent-hover transition-all"
+                  className="hidden sm:inline-flex items-center px-4 py-2 bg-sf-accent-bg text-white text-xs font-bold hover:bg-sf-accent-hover transition-all"
                 >
                   <span className="mr-1.5">🚀</span>
                   {t('getSellf', { defaultValue: 'Get Sellf' })}
@@ -431,10 +431,10 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
                 <ThemeToggleButton size="sm" />
                 <FloatingLanguageSwitcher mode="static" variant="compact" />
               </div>
-              <div className="h-8 w-px bg-gf-border mx-2 hidden sm:block"></div>
+              <div className="h-8 w-px bg-sf-border mx-2 hidden sm:block"></div>
               <Link
                 href="/login"
-                className="inline-flex items-center px-4 py-2 bg-gf-accent-bg hover:bg-gf-accent-hover text-white text-sm font-semibold transition-all hover:active:scale-95"
+                className="inline-flex items-center px-4 py-2 bg-sf-accent-bg hover:bg-sf-accent-hover text-white text-sm font-semibold transition-all hover:active:scale-95"
               >
                 {t('login')}
               </Link>
@@ -453,13 +453,13 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
   // AUTHENTICATED LAYOUT (Collapsible Sidebar)
   // ---------------------------------------------------------------------------
   return (
-    <div className="min-h-screen bg-gf-deep gf-dashboard">
+    <div className="min-h-screen bg-sf-deep sf-dashboard">
       {/* Desktop Sidebar — Collapsible Icon Rail */}
       <aside
-        className="hidden lg:flex fixed inset-y-0 left-0 flex-col bg-gf-sidebar-bg border-r border-gf-border-subtle z-[100] overflow-hidden"
+        className="hidden lg:flex fixed inset-y-0 left-0 flex-col bg-sf-sidebar-bg border-r border-sf-border-subtle z-[100] overflow-hidden"
         style={{
-          width: isExpanded ? 'var(--gf-sidebar-width-expanded)' : 'var(--gf-sidebar-width-collapsed)',
-          transition: 'width var(--gf-duration-slow) var(--gf-ease-out)',
+          width: isExpanded ? 'var(--sf-sidebar-width-expanded)' : 'var(--sf-sidebar-width-collapsed)',
+          transition: 'width var(--sf-duration-slow) var(--sf-ease-out)',
         }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -480,8 +480,8 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
             className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
             onClick={() => setIsSidebarOpen(false)}
           />
-          <div className="fixed inset-y-0 left-0 w-[260px] bg-gf-sidebar-bg flex flex-col h-full transform transition-transform duration-300 ease-in-out">
-            <div className="h-[68px] flex items-center justify-between px-6 border-b border-gf-border-subtle">
+          <div className="fixed inset-y-0 left-0 w-[260px] bg-sf-sidebar-bg flex flex-col h-full transform transition-transform duration-300 ease-in-out">
+            <div className="h-[68px] flex items-center justify-between px-6 border-b border-sf-border-subtle">
               <div className="flex items-center gap-3">
                 {logoUrl ? (
                   <img src={logoUrl} alt={shopName} className="w-7 h-7 object-contain" />
@@ -495,11 +495,11 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
                     </svg>
                   </div>
                 )}
-                <span className="text-[15px] font-bold text-gf-heading">{shopName}</span>
+                <span className="text-[15px] font-bold text-sf-heading">{shopName}</span>
               </div>
               <button
                 onClick={() => setIsSidebarOpen(false)}
-                className="text-gf-muted hover:text-gf-heading p-1"
+                className="text-sf-muted hover:text-sf-heading p-1"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -517,12 +517,12 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
       )}
 
       {/* Main Content Area */}
-      <div className={`flex-1 flex flex-col min-w-0 min-h-screen gf-main-content ${isPinned ? 'gf-pinned' : ''}`}>
+      <div className={`flex-1 flex flex-col min-w-0 min-h-screen sf-main-content ${isPinned ? 'sf-pinned' : ''}`}>
         {/* Top bar */}
-        <header className="h-14 bg-gf-base border-b border-gf-border-subtle flex items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-50">
+        <header className="h-14 bg-sf-base border-b border-sf-border-subtle flex items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-50">
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="lg:hidden p-2 text-gf-muted hover:text-gf-body hover:bg-gf-hover focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gf-accent"
+            className="lg:hidden p-2 text-sf-muted hover:text-sf-body hover:bg-sf-hover focus:outline-none focus:ring-2 focus:ring-inset focus:ring-sf-accent"
           >
             <span className="sr-only">{t('openSidebar')}</span>
             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -534,7 +534,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
             {showSellfCTA && (
               <Link
                 href="/about"
-                className="hidden sm:inline-flex items-center px-4 py-2 bg-gf-accent-bg text-white text-xs font-bold hover:bg-gf-accent-hover transition-all"
+                className="hidden sm:inline-flex items-center px-4 py-2 bg-sf-accent-bg text-white text-xs font-bold hover:bg-sf-accent-hover transition-all"
               >
                 <span className="mr-1.5">🚀</span>
                 {t('getSellf', { defaultValue: 'Get Sellf' })}
@@ -547,7 +547,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto bg-gf-deep p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
+        <main className="flex-1 overflow-y-auto bg-sf-deep p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
           <DemoBanner />
           <div className="max-w-7xl mx-auto">
             {children}
@@ -556,7 +556,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
       </div>
 
       {/* Mobile Bottom Tab Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 h-16 bg-gf-base border-t-2 border-gf-border-medium flex items-stretch z-50 lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 h-16 bg-sf-base border-t-2 border-sf-border-medium flex items-stretch z-50 lg:hidden">
         {[
           { href: '/dashboard', label: t('dashboard'), icon: Icons.dashboard, exact: true },
           { href: '/dashboard/products', label: t('products'), icon: Icons.products },
@@ -573,8 +573,8 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
               href={tab.href}
               className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors ${
                 active
-                  ? 'text-gf-accent'
-                  : 'text-gf-muted hover:text-gf-body'
+                  ? 'text-sf-accent'
+                  : 'text-sf-muted hover:text-sf-body'
               }`}
             >
               <span className="flex-shrink-0">{tab.icon}</span>

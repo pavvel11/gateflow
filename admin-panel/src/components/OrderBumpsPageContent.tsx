@@ -169,10 +169,10 @@ const OrderBumpsPageContent: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-[40px] font-[800] text-gf-heading tracking-[-0.03em] leading-[1.1]">
+          <h1 className="text-[40px] font-[800] text-sf-heading tracking-[-0.03em] leading-[1.1]">
             {t('title')}
           </h1>
-          <p className="text-gf-body mt-2">
+          <p className="text-sf-body mt-2">
             {t('description')}
           </p>
         </div>
@@ -192,48 +192,48 @@ const OrderBumpsPageContent: React.FC = () => {
 
       {/* Stats Card */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gf-base border-2 border-gf-border-medium p-6">
+        <div className="bg-sf-base border-2 border-sf-border-medium p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gf-body">{t('stats.total')}</p>
-              <p className="text-[40px] font-[800] text-gf-heading tracking-[-0.03em] leading-[1.1] mt-1">
+              <p className="text-sm text-sf-body">{t('stats.total')}</p>
+              <p className="text-[40px] font-[800] text-sf-heading tracking-[-0.03em] leading-[1.1] mt-1">
                 {orderBumps.length}
               </p>
             </div>
-            <div className="w-12 h-12 bg-gf-accent-soft flex items-center justify-center">
-              <svg className="w-6 h-6 text-gf-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-sf-accent-soft flex items-center justify-center">
+              <svg className="w-6 h-6 text-sf-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
             </div>
           </div>
         </div>
 
-        <div className="bg-gf-base border-2 border-gf-border-medium p-6">
+        <div className="bg-sf-base border-2 border-sf-border-medium p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gf-body">{t('stats.active')}</p>
-              <p className="text-[40px] font-[800] text-gf-heading tracking-[-0.03em] leading-[1.1] mt-1">
+              <p className="text-sm text-sf-body">{t('stats.active')}</p>
+              <p className="text-[40px] font-[800] text-sf-heading tracking-[-0.03em] leading-[1.1] mt-1">
                 {orderBumps.filter(b => b.is_active).length}
               </p>
             </div>
-            <div className="w-12 h-12 bg-gf-success-soft flex items-center justify-center">
-              <svg className="w-6 h-6 text-gf-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-sf-success-soft flex items-center justify-center">
+              <svg className="w-6 h-6 text-sf-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
           </div>
         </div>
 
-        <div className="bg-gf-base border-2 border-gf-border-medium p-6">
+        <div className="bg-sf-base border-2 border-sf-border-medium p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gf-body">{t('stats.inactive')}</p>
-              <p className="text-[40px] font-[800] text-gf-heading tracking-[-0.03em] leading-[1.1] mt-1">
+              <p className="text-sm text-sf-body">{t('stats.inactive')}</p>
+              <p className="text-[40px] font-[800] text-sf-heading tracking-[-0.03em] leading-[1.1] mt-1">
                 {orderBumps.filter(b => !b.is_active).length}
               </p>
             </div>
-            <div className="w-12 h-12 bg-gf-raised flex items-center justify-center">
-              <svg className="w-6 h-6 text-gf-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-sf-raised flex items-center justify-center">
+              <svg className="w-6 h-6 text-sf-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
               </svg>
             </div>
@@ -242,21 +242,21 @@ const OrderBumpsPageContent: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-gf-base border-2 border-gf-border-medium overflow-hidden">
+      <div className="bg-sf-base border-2 border-sf-border-medium overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center p-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gf-accent"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sf-accent"></div>
           </div>
         ) : error ? (
           <div className="text-center p-12 text-red-500">{error}</div>
         ) : orderBumps.length === 0 ? (
           <div className="text-center p-12">
-            <div className="w-16 h-16 bg-gf-raised flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-gf-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 bg-sf-raised flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-sf-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gf-heading mb-2">
+            <h3 className="text-lg font-medium text-sf-heading mb-2">
               {t('noBumps')}
             </h3>
             <button
@@ -272,54 +272,54 @@ const OrderBumpsPageContent: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gf-raised">
+              <thead className="bg-sf-raised">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
                     {t('mainProduct')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
                     {t('bumpProduct')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
                     {t('price')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
                     {t('status')}
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gf-muted uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-sf-muted uppercase tracking-wider">
                     {t('actions')}
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-gf-base divide-y divide-gf-border">
+              <tbody className="bg-sf-base divide-y divide-sf-border">
                 {orderBumps.map((bump, index) => (
-                  <tr key={bump.id} className={`hover:bg-gf-hover transition-colors ${index % 2 === 1 ? 'bg-gf-row-alt' : ''}`}>
+                  <tr key={bump.id} className={`hover:bg-sf-hover transition-colors ${index % 2 === 1 ? 'bg-sf-row-alt' : ''}`}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <Link
                         href={`/p/${bump.main_product.slug}`}
                         className="group block"
                       >
-                        <div className="text-sm font-medium text-gf-heading group-hover:text-gf-accent transition-colors">
+                        <div className="text-sm font-medium text-sf-heading group-hover:text-sf-accent transition-colors">
                           {bump.main_product.name}
                         </div>
-                        <div className="text-sm text-gf-muted font-mono group-hover:text-gf-accent transition-colors">
+                        <div className="text-sm text-sf-muted font-mono group-hover:text-sf-accent transition-colors">
                           /{bump.main_product.slug}
                         </div>
                       </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-gf-accent">
+                      <div className="text-sm font-semibold text-sf-accent">
                         {bump.bump_title}
                       </div>
                       <Link
                         href={`/p/${bump.bump_product.slug}`}
-                        className="text-xs text-gf-muted hover:text-gf-accent transition-colors"
+                        className="text-xs text-sf-muted hover:text-sf-accent transition-colors"
                       >
                         {bump.bump_product.name}
                       </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-bold text-gf-heading">
+                      <div className="text-sm font-bold text-sf-heading">
                         {bump.bump_price !== null ? bump.bump_price : bump.bump_product.price} {bump.main_product.currency}
                       </div>
                     </td>
@@ -328,8 +328,8 @@ const OrderBumpsPageContent: React.FC = () => {
                         onClick={() => handleToggleActive(bump)}
                         className={`px-3 py-1 text-xs font-medium transition-colors ${
                           bump.is_active
-                            ? 'bg-gf-success-soft text-gf-success hover:bg-gf-success-soft'
-                            : 'bg-gf-raised text-gf-muted hover:bg-gf-hover'
+                            ? 'bg-sf-success-soft text-sf-success hover:bg-sf-success-soft'
+                            : 'bg-sf-raised text-sf-muted hover:bg-sf-hover'
                         }`}
                       >
                         {t(bump.is_active ? 'active' : 'inactive')}
@@ -342,13 +342,13 @@ const OrderBumpsPageContent: React.FC = () => {
                             setEditingBump(bump);
                             setShowBumpForm(true);
                           }}
-                          className="text-gf-accent hover:opacity-80"
+                          className="text-sf-accent hover:opacity-80"
                         >
                           {t('edit')}
                         </button>
                         <button
                           onClick={() => setBumpToDelete(bump)}
-                          className="text-gf-danger hover:opacity-80"
+                          className="text-sf-danger hover:opacity-80"
                         >
                           {t('delete')}
                         </button>
@@ -380,17 +380,17 @@ const OrderBumpsPageContent: React.FC = () => {
       {/* Delete Confirmation Modal */}
       {bumpToDelete && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-gf-base max-w-md w-full p-6 border-2 border-gf-border-medium">
-            <h3 className="text-lg font-bold text-gf-heading mb-4">
+          <div className="bg-sf-base max-w-md w-full p-6 border-2 border-sf-border-medium">
+            <h3 className="text-lg font-bold text-sf-heading mb-4">
               {t('confirmDelete')}
             </h3>
-            <p className="text-gf-body mb-6">
+            <p className="text-sf-body mb-6">
               {t('deleteMessage')}
             </p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setBumpToDelete(null)}
-                className="px-4 py-2 text-gf-body hover:bg-gf-hover transition-colors"
+                className="px-4 py-2 text-sf-body hover:bg-sf-hover transition-colors"
               >
                 {t('form.cancel')}
               </button>

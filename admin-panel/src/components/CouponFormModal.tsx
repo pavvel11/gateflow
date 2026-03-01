@@ -107,12 +107,12 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-gf-base max-w-2xl w-full my-8 border-2 border-gf-border-medium">
-        <div className="p-6 border-b border-gf-border bg-gf-deep/50">
-          <h2 className="text-2xl font-bold text-gf-heading">
+      <div className="bg-sf-base max-w-2xl w-full my-8 border-2 border-sf-border-medium">
+        <div className="p-6 border-b border-sf-border bg-sf-deep/50">
+          <h2 className="text-2xl font-bold text-sf-heading">
             {editingCoupon ? t('edit') : t('create')}
           </h2>
-          <p className="text-gf-muted mt-1">
+          <p className="text-sf-muted mt-1">
             {t('description')}
           </p>
         </div>
@@ -120,35 +120,35 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-8">
           {/* Section: Basic Info */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gf-heading uppercase tracking-wider border-b border-gf-border pb-2">
+            <h3 className="text-sm font-semibold text-sf-heading uppercase tracking-wider border-b border-sf-border pb-2">
               {t('form.basicInfo')}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gf-body mb-1">{t('form.codeLabel')} <span className="text-gf-danger">*</span></label>
+                <label className="block text-sm font-medium text-sf-body mb-1">{t('form.codeLabel')} <span className="text-sf-danger">*</span></label>
                 <div className="relative">
                   <input
                     type="text"
                     value={formData.code}
                     onChange={e => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                    className="w-full pl-10 pr-4 py-2 border-2 border-gf-border-medium uppercase font-mono tracking-wide focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading"
+                    className="w-full pl-10 pr-4 py-2 border-2 border-sf-border-medium uppercase font-mono tracking-wide focus:ring-2 focus:ring-sf-accent bg-sf-input text-sf-heading"
                     placeholder={t('form.codePlaceholder')}
                     required
                   />
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-gf-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-5 w-5 text-sf-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
                   </div>
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gf-body mb-1">{t('form.nameLabel')}</label>
+                <label className="block text-sm font-medium text-sf-body mb-1">{t('form.nameLabel')}</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-2 border-2 border-gf-border-medium focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading"
+                  className="w-full px-4 py-2 border-2 border-sf-border-medium focus:ring-2 focus:ring-sf-accent bg-sf-input text-sf-heading"
                   placeholder={t('form.namePlaceholder')}
                 />
               </div>
@@ -157,7 +157,7 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({
 
           {/* Section: Discount Configuration */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gf-heading uppercase tracking-wider border-b border-gf-border pb-2">
+            <h3 className="text-sm font-semibold text-sf-heading uppercase tracking-wider border-b border-sf-border pb-2">
               {t('form.discountValue')}
             </h3>
             
@@ -167,27 +167,27 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({
                   onClick={() => setFormData({ ...formData, discount_type: 'percentage', currency: null as any })}
                   className={`cursor-pointer border p-3 text-center transition-all ${
                     formData.discount_type === 'percentage'
-                      ? 'border-gf-accent bg-gf-accent-soft ring-1 ring-gf-accent'
-                      : 'border-gf-border hover:border-gf-accent bg-gf-base'
+                      ? 'border-sf-accent bg-sf-accent-soft ring-1 ring-sf-accent'
+                      : 'border-sf-border hover:border-sf-accent bg-sf-base'
                   }`}
                 >
-                  <div className={`text-sm font-bold ${formData.discount_type === 'percentage' ? 'text-gf-accent' : 'text-gf-heading'}`}>{t('percentage')} (%)</div>
+                  <div className={`text-sm font-bold ${formData.discount_type === 'percentage' ? 'text-sf-accent' : 'text-sf-heading'}`}>{t('percentage')} (%)</div>
                 </div>
                 <div 
                   onClick={() => setFormData({ ...formData, discount_type: 'fixed' })}
                   className={`cursor-pointer border p-3 text-center transition-all ${
                     formData.discount_type === 'fixed'
-                      ? 'border-gf-accent bg-gf-accent-soft ring-1 ring-gf-accent'
-                      : 'border-gf-border hover:border-gf-accent bg-gf-base'
+                      ? 'border-sf-accent bg-sf-accent-soft ring-1 ring-sf-accent'
+                      : 'border-sf-border hover:border-sf-accent bg-sf-base'
                   }`}
                 >
-                  <div className={`text-sm font-bold ${formData.discount_type === 'fixed' ? 'text-gf-accent' : 'text-gf-heading'}`}>{t('fixed')} ($)</div>
+                  <div className={`text-sm font-bold ${formData.discount_type === 'fixed' ? 'text-sf-accent' : 'text-sf-heading'}`}>{t('fixed')} ($)</div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gf-body mb-1">
-                  {formData.discount_type === 'percentage' ? t('percentage') : t('fixed')} <span className="text-gf-danger">*</span>
+                <label className="block text-sm font-medium text-sf-body mb-1">
+                  {formData.discount_type === 'percentage' ? t('percentage') : t('fixed')} <span className="text-sf-danger">*</span>
                 </label>
                 <div className="relative">
                   <input
@@ -198,11 +198,11 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({
                     max={formData.discount_type === 'percentage' ? "100" : undefined}
                     value={formData.discount_value}
                     onChange={e => setFormData({ ...formData, discount_value: parseFloat(e.target.value) })}
-                    className="w-full px-4 py-2 border-2 border-gf-border-medium focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading pr-8"
+                    className="w-full px-4 py-2 border-2 border-sf-border-medium focus:ring-2 focus:ring-sf-accent bg-sf-input text-sf-heading pr-8"
                     required
                   />
                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    <span className="text-gf-muted">
+                    <span className="text-sf-muted">
                       {formData.discount_type === 'percentage' ? '%' : ''}
                     </span>
                   </div>
@@ -211,11 +211,11 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({
 
               {formData.discount_type === 'fixed' && (
                 <div>
-                  <label className="block text-sm font-medium text-gf-body mb-1">{t('form.currency')}</label>
+                  <label className="block text-sm font-medium text-sf-body mb-1">{t('form.currency')}</label>
                   <select
                     value={formData.currency || ''}
                     onChange={e => setFormData({ ...formData, currency: (e.target.value || null) as any })}
-                    className="w-full px-4 py-2 border-2 border-gf-border-medium focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading"
+                    className="w-full px-4 py-2 border-2 border-sf-border-medium focus:ring-2 focus:ring-sf-accent bg-sf-input text-sf-heading"
                   >
                     <option value="">{t('form.anyCurrency')}</option>
                     {CURRENCIES.map(c => (
@@ -231,38 +231,38 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({
 
           {/* Section: Limits & Validity */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gf-heading uppercase tracking-wider border-b border-gf-border pb-2">
+            <h3 className="text-sm font-semibold text-sf-heading uppercase tracking-wider border-b border-sf-border pb-2">
               {t('form.limitations')}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gf-body mb-1">{t('form.usageLimit')}</label>
+                <label className="block text-sm font-medium text-sf-body mb-1">{t('form.usageLimit')}</label>
                 <input
                   type="number"
                   min="0"
                   value={formData.usage_limit_global || ''}
                   onChange={e => setFormData({ ...formData, usage_limit_global: e.target.value ? parseInt(e.target.value) : null })}
-                  className="w-full px-4 py-2 border-2 border-gf-border-medium focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading"
+                  className="w-full px-4 py-2 border-2 border-sf-border-medium focus:ring-2 focus:ring-sf-accent bg-sf-input text-sf-heading"
                   placeholder={t('form.unlimited')}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gf-body mb-1">{t('form.perUserLimit')}</label>
+                <label className="block text-sm font-medium text-sf-body mb-1">{t('form.perUserLimit')}</label>
                 <input
                   type="number"
                   min="1"
                   value={formData.usage_limit_per_user}
                   onChange={e => setFormData({ ...formData, usage_limit_per_user: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2 border-2 border-gf-border-medium focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading"
+                  className="w-full px-4 py-2 border-2 border-sf-border-medium focus:ring-2 focus:ring-sf-accent bg-sf-input text-sf-heading"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gf-body mb-1">{t('form.validUntil')}</label>
+                <label className="block text-sm font-medium text-sf-body mb-1">{t('form.validUntil')}</label>
                 <input
                   type="date"
                   value={formData.expires_at || ''}
                   onChange={e => setFormData({ ...formData, expires_at: e.target.value || null })}
-                  className="w-full px-4 py-2 border-2 border-gf-border-medium focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading"
+                  className="w-full px-4 py-2 border-2 border-sf-border-medium focus:ring-2 focus:ring-sf-accent bg-sf-input text-sf-heading"
                 />
               </div>
             </div>
@@ -270,26 +270,26 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({
 
           {/* Section: Restrictions */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gf-heading uppercase tracking-wider border-b border-gf-border pb-2">
+            <h3 className="text-sm font-semibold text-sf-heading uppercase tracking-wider border-b border-sf-border pb-2">
               {t('form.restrictions')}
             </h3>
             
             {/* Products */}
             <div>
-              <label className="block text-sm font-medium text-gf-body mb-2">{t('form.productRestriction')}</label>
-              <div className="border-2 border-gf-border-medium p-3 max-h-40 overflow-y-auto space-y-2 bg-gf-deep/50">
+              <label className="block text-sm font-medium text-sf-body mb-2">{t('form.productRestriction')}</label>
+              <div className="border-2 border-sf-border-medium p-3 max-h-40 overflow-y-auto space-y-2 bg-sf-deep/50">
                 {products.length === 0 ? (
-                  <p className="text-sm text-gf-muted">{t('noActiveProducts')}</p>
+                  <p className="text-sm text-sf-muted">{t('noActiveProducts')}</p>
                 ) : (
                   products.map(product => (
-                    <label key={product.id} className="flex items-center space-x-3 p-2 hover:bg-gf-hover cursor-pointer">
+                    <label key={product.id} className="flex items-center space-x-3 p-2 hover:bg-sf-hover cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.allowed_product_ids?.includes(product.id)}
                         onChange={() => toggleProduct(product.id)}
-                        className="w-4 h-4 rounded border-gf-border text-gf-accent focus:ring-gf-accent"
+                        className="w-4 h-4 rounded border-sf-border text-sf-accent focus:ring-sf-accent"
                       />
-                      <span className="text-sm text-gf-body">{product.name}</span>
+                      <span className="text-sm text-sf-body">{product.name}</span>
                     </label>
                   ))
                 )}
@@ -298,7 +298,7 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({
 
             {/* Exclude Order Bumps (Global Coupons only) */}
             {(!formData.allowed_product_ids || formData.allowed_product_ids.length === 0) && (
-              <div className="bg-gf-warning-soft border border-gf-warning/20 p-3">
+              <div className="bg-sf-warning-soft border border-sf-warning/20 p-3">
                 <label className="flex items-center space-x-3 cursor-pointer">
                   <input
                     type="checkbox"
@@ -307,8 +307,8 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({
                     className="w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
                   />
                   <div>
-                    <span className="text-sm font-medium text-gf-heading">{t('form.excludeOrderBumps')}</span>
-                    <p className="text-xs text-gf-muted">
+                    <span className="text-sm font-medium text-sf-heading">{t('form.excludeOrderBumps')}</span>
+                    <p className="text-xs text-sf-muted">
                       {t('form.excludeOrderBumpsHelp')}
                     </p>
                   </div>
@@ -318,20 +318,20 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({
 
             {/* Emails */}
             <div>
-              <label className="block text-sm font-medium text-gf-body mb-2">{t('form.emailRestriction')}</label>
+              <label className="block text-sm font-medium text-sf-body mb-2">{t('form.emailRestriction')}</label>
               <div className="flex space-x-2 mb-3">
                 <input
                   type="email"
                   value={emailInput}
                   onChange={e => setEmailInput(e.target.value)}
-                  className="flex-1 px-4 py-2 border-2 border-gf-border-medium focus:ring-2 focus:ring-gf-accent bg-gf-input text-gf-heading"
+                  className="flex-1 px-4 py-2 border-2 border-sf-border-medium focus:ring-2 focus:ring-sf-accent bg-sf-input text-sf-heading"
                   placeholder={t('form.emailPlaceholder')}
                   onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addEmail())}
                 />
                 <button
                   type="button"
                   onClick={addEmail}
-                  className="px-4 py-2 bg-gf-raised hover:bg-gf-hover text-gf-body transition-colors"
+                  className="px-4 py-2 bg-sf-raised hover:bg-sf-hover text-sf-body transition-colors"
                 >
                   {t('form.add')}
                 </button>
@@ -339,35 +339,35 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({
               <div className="flex flex-wrap gap-2 min-h-[32px]">
                 {formData.allowed_emails && formData.allowed_emails.length > 0 ? (
                   formData.allowed_emails.map(email => (
-                    <span key={email} className="inline-flex items-center px-3 py-1 text-xs font-medium bg-gf-accent-soft text-gf-accent border border-gf-accent/30">
+                    <span key={email} className="inline-flex items-center px-3 py-1 text-xs font-medium bg-sf-accent-soft text-sf-accent border border-sf-accent/30">
                       {email}
                       <button
                         type="button"
                         onClick={() => removeEmail(email)}
-                        className="ml-2 h-4 w-4 inline-flex items-center justify-center hover:bg-gf-accent/20 transition-colors"
+                        className="ml-2 h-4 w-4 inline-flex items-center justify-center hover:bg-sf-accent/20 transition-colors"
                       >
                         ×
                       </button>
                     </span>
                   ))
                 ) : (
-                  <p className="text-xs text-gf-muted italic">{t('form.emailHelp')}</p>
+                  <p className="text-xs text-sf-muted italic">{t('form.emailHelp')}</p>
                 )}
               </div>
             </div>
           </div>
 
           {/* Footer Actions */}
-          <div className="flex items-center justify-between pt-6 border-t border-gf-border mt-8">
+          <div className="flex items-center justify-between pt-6 border-t border-sf-border mt-8">
             <div className="flex items-center space-x-3">
               <input
                 type="checkbox"
                 id="isActive"
                 checked={formData.is_active}
                 onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
-                className="w-5 h-5 rounded border-gf-border text-gf-accent focus:ring-gf-accent"
+                className="w-5 h-5 rounded border-sf-border text-sf-accent focus:ring-sf-accent"
               />
-              <label htmlFor="isActive" className="text-sm font-medium text-gf-body cursor-pointer">
+              <label htmlFor="isActive" className="text-sm font-medium text-sf-body cursor-pointer">
                 {t('form.activeLabel')}
               </label>
             </div>
@@ -377,14 +377,14 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({
                 type="button"
                 onClick={onClose}
                 disabled={isSubmitting}
-                className="px-5 py-2.5 text-gf-body hover:bg-gf-hover transition-colors font-medium disabled:opacity-50"
+                className="px-5 py-2.5 text-sf-body hover:bg-sf-hover transition-colors font-medium disabled:opacity-50"
               >
                 {t('form.cancel')}
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-2.5 bg-gf-accent-bg text-white hover:bg-gf-accent-hover transition-colors font-medium disabled:opacity-50"
+                className="px-6 py-2.5 bg-sf-accent-bg text-white hover:bg-sf-accent-hover transition-colors font-medium disabled:opacity-50"
               >
                 {isSubmitting ? t('form.saving') : (editingCoupon ? t('form.update') : t('form.save'))}
               </button>

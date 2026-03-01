@@ -17,10 +17,10 @@ export default function PaymentStatusLayout({
   statusInfo
 }: PaymentStatusLayoutProps) {
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gf-deep overflow-hidden relative font-sans">
+    <div className="flex justify-center items-center min-h-screen bg-sf-deep overflow-hidden relative font-sans">
       {/* Aurora background effect */}
       <div
-        className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_20%_20%,var(--gf-accent-glow)_0%,transparent_40%),radial-gradient(circle_at_80%_70%,var(--gf-accent-glow)_0%,transparent_40%)]"
+        className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_20%_20%,var(--sf-accent-glow)_0%,transparent_40%),radial-gradient(circle_at_80%_70%,var(--sf-accent-glow)_0%,transparent_40%)]"
         style={{ animation: 'aurora 20s infinite linear' }}
       />
 
@@ -35,7 +35,7 @@ export default function PaymentStatusLayout({
           0% {
             opacity: 0;
             transform: scale(0.95);
-            box-shadow: 0 0 0 0 var(--gf-accent-glow);
+            box-shadow: 0 0 0 0 var(--sf-accent-glow);
           }
           50% {
             transform: scale(1.02);
@@ -82,7 +82,7 @@ export default function PaymentStatusLayout({
       `}</style>
 
       {/* Main Content */}
-      <div className={`max-w-4xl mx-auto p-8 bg-gf-raised/80 backdrop-blur-md border border-gf-border rounded-xl shadow-[var(--gf-shadow-accent)] z-10 text-center`}>
+      <div className={`max-w-4xl mx-auto p-8 bg-sf-raised/80 backdrop-blur-md border border-sf-border rounded-xl shadow-[var(--sf-shadow-accent)] z-10 text-center`}>
         {statusInfo && (
           <>
             <div className="text-5xl mb-4">{statusInfo.emoji}</div>
@@ -98,8 +98,8 @@ export default function PaymentStatusLayout({
         <div className="mt-8 flex items-center justify-center gap-4">
           <div className="text-3xl">{product.icon}</div>
           <div>
-            <h3 className="text-xl font-semibold text-gf-heading">{product.name}</h3>
-            <p className="text-gf-body">{product.description}</p>
+            <h3 className="text-xl font-semibold text-sf-heading">{product.name}</h3>
+            <p className="text-sf-body">{product.description}</p>
           </div>
         </div>
       </div>

@@ -290,7 +290,7 @@ const ProductsPageContent: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-[40px] font-[800] text-gf-heading tracking-[-0.03em] leading-[1.1]">{t('title')}</h1>
+      <h1 className="text-[40px] font-[800] text-sf-heading tracking-[-0.03em] leading-[1.1]">{t('title')}</h1>
       <FilterBar
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
@@ -344,17 +344,17 @@ const ProductsPageContent: React.FC = () => {
       {productToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div
-            className="bg-gf-base p-6 w-full max-w-md"
+            className="bg-sf-base p-6 w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-gf-heading">{t('confirmDelete')}</h3>
-            <p className="mt-2 text-sm text-gf-body">
+            <h3 className="text-lg font-bold text-sf-heading">{t('confirmDelete')}</h3>
+            <p className="mt-2 text-sm text-sf-body">
               {t('deleteConfirmMessage', { name: productToDelete.name })}
             </p>
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 onClick={() => setProductToDelete(null)}
-                className="px-4 py-2 text-sm font-medium text-gf-body bg-gf-base border-2 border-gf-border-medium hover:bg-gf-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-accent"
+                className="px-4 py-2 text-sm font-medium text-sf-body bg-sf-base border-2 border-sf-border-medium hover:bg-sf-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sf-accent"
               >
                 {t('cancel')}
               </button>
@@ -372,23 +372,23 @@ const ProductsPageContent: React.FC = () => {
       {showExportConfirmation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div
-            className="bg-gf-base p-6 w-full max-w-md"
+            className="bg-sf-base p-6 w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-gf-heading">{t('confirmExport')}</h3>
-            <p className="mt-2 text-sm text-gf-body">
+            <h3 className="text-lg font-bold text-sf-heading">{t('confirmExport')}</h3>
+            <p className="mt-2 text-sm text-sf-body">
               {t('exportConfirmMessage', { count: products.length })}
             </p>
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 onClick={() => setShowExportConfirmation(false)}
-                className="px-4 py-2 text-sm font-medium text-gf-body bg-gf-base border-2 border-gf-border-medium hover:bg-gf-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-accent"
+                className="px-4 py-2 text-sm font-medium text-sf-body bg-sf-base border-2 border-sf-border-medium hover:bg-sf-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sf-accent"
               >
                 {t('cancel')}
               </button>
               <button
                 onClick={confirmExport}
-                className="px-4 py-2 text-sm font-medium text-white bg-gf-accent-bg border border-transparent hover:bg-gf-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-accent"
+                className="px-4 py-2 text-sm font-medium text-white bg-sf-accent-bg border border-transparent hover:bg-sf-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sf-accent"
               >
                 {t('export')}
               </button>

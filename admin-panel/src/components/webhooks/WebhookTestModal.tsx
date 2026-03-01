@@ -50,22 +50,22 @@ export default function WebhookTestModal({
       <ModalHeader title={t('test')} />
       <ModalBody>
         <div className="space-y-4">
-          <p className="text-gf-body text-sm">
+          <p className="text-sf-body text-sm">
             {t('testModal.selectInstruction')}
             <br />
-            <span className="font-mono text-xs mt-1 block p-2 bg-gf-raised rounded">
+            <span className="font-mono text-xs mt-1 block p-2 bg-sf-raised rounded">
               {endpoint.url}
             </span>
           </p>
 
           <div>
-            <label className="block text-sm font-medium text-gf-body mb-2">
+            <label className="block text-sm font-medium text-sf-body mb-2">
               {t('testModal.eventTypeLabel')}
             </label>
             <select
               value={selectedEvent}
               onChange={(e) => setSelectedEvent(e.target.value)}
-              className="w-full px-3 py-2 bg-gf-input text-gf-heading border-2 border-gf-border-medium"
+              className="w-full px-3 py-2 bg-sf-input text-sf-heading border-2 border-sf-border-medium"
             >
               <option value="test.event">{t('testModal.genericTestEvent')}</option>
               {endpoint.events.map((ev) => (
@@ -77,7 +77,7 @@ export default function WebhookTestModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gf-body mb-2">
+            <label className="block text-sm font-medium text-sf-body mb-2">
               {t('testModal.examplePayload')}
             </label>
             <div className="bg-gray-900 dark:bg-gray-950 p-4 border border-gray-700 max-h-96 overflow-y-auto">

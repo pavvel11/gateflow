@@ -1,7 +1,7 @@
 import { getTranslations, getLocale } from 'next-intl/server';
 import { BarChart3, CreditCard, Layers, Tag, Zap, Gift, Package, ShieldCheck, Clock, TrendingUp, RotateCcw, FileText } from 'lucide-react';
-import { Reveal } from './motion/Reveal';
-import { RevealGroup } from './motion/RevealGroup';
+import { Reveal } from '@/components/motion/Reveal';
+import { RevealGroup } from '@/components/motion/RevealGroup';
 
 import type { LucideIcon } from 'lucide-react';
 
@@ -35,16 +35,16 @@ export async function FeatureGrid() {
   const restFeatures = visibleFeatures.slice(2);
 
   return (
-    <section className="py-24 md:py-32 bg-gf-deep">
+    <section className="py-24 md:py-32 bg-sf-deep">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal className="text-center mb-16">
-          <p className="text-sm font-medium text-gf-muted tracking-[0.08em] uppercase mb-3">
+          <p className="text-sm font-medium text-sf-muted tracking-[0.08em] uppercase mb-3">
             {t('features.categoryLabel')}
           </p>
-          <h2 className="text-4xl md:text-5xl font-bold text-gf-heading mb-4">
+          <h2 className="text-4xl md:text-5xl font-bold text-sf-heading mb-4">
             {t('features.title')}
           </h2>
-          <p className="text-xl text-gf-body max-w-3xl mx-auto">
+          <p className="text-xl text-sf-body max-w-3xl mx-auto">
             {t('features.subtitle')}
           </p>
         </Reveal>
@@ -59,14 +59,14 @@ export async function FeatureGrid() {
                 animation={i === 0 ? 'fade-left' : 'fade-right'}
                 delay={i * 100}
               >
-                <div className="group p-8 rounded-2xl bg-gf-raised/80 border-2 border-gf-border-accent hover:shadow-[var(--gf-shadow-accent)] transition-[box-shadow] duration-300 h-full">
-                  <div className="w-14 h-14 bg-gf-accent-med rounded-xl flex items-center justify-center mb-5 group-hover:bg-gf-accent/30 transition-colors duration-300">
-                    <Icon className="w-7 h-7 text-gf-accent" />
+                <div className="group p-8 rounded-2xl bg-sf-raised/80 border-2 border-sf-border-accent hover:shadow-[var(--sf-shadow-accent)] transition-[box-shadow] duration-300 h-full">
+                  <div className="w-14 h-14 bg-sf-accent-med rounded-xl flex items-center justify-center mb-5 group-hover:bg-sf-accent/30 transition-colors duration-300">
+                    <Icon className="w-7 h-7 text-sf-accent" />
                   </div>
-                  <h3 className="text-xl font-bold text-gf-heading mb-3">
+                  <h3 className="text-xl font-bold text-sf-heading mb-3">
                     {t(`features.${feature.key}.title`)}
                   </h3>
-                  <p className="text-gf-body leading-relaxed">
+                  <p className="text-sf-body leading-relaxed">
                     {t(`features.${feature.key}.desc`)}
                   </p>
                 </div>
@@ -82,15 +82,15 @@ export async function FeatureGrid() {
             return (
               <div
                 key={feature.key}
-                className="group p-6 rounded-2xl bg-gf-raised/80 border border-gf-border hover:border-gf-border-accent transition-[border-color,box-shadow] duration-300 hover:shadow-[var(--gf-shadow-accent)]"
+                className="group p-6 rounded-2xl bg-sf-raised/80 border border-sf-border hover:border-sf-border-accent transition-[border-color,box-shadow] duration-300 hover:shadow-[var(--sf-shadow-accent)]"
               >
-                <div className="w-12 h-12 bg-gf-accent-soft rounded-xl flex items-center justify-center mb-4 group-hover:bg-gf-accent-med transition-colors duration-300">
-                  <Icon className="w-6 h-6 text-gf-accent" />
+                <div className="w-12 h-12 bg-sf-accent-soft rounded-xl flex items-center justify-center mb-4 group-hover:bg-sf-accent-med transition-colors duration-300">
+                  <Icon className="w-6 h-6 text-sf-accent" />
                 </div>
-                <h3 className="text-lg font-bold text-gf-heading mb-2">
+                <h3 className="text-lg font-bold text-sf-heading mb-2">
                   {t(`features.${feature.key}.title`)}
                 </h3>
-                <p className="text-sm text-gf-body leading-relaxed">
+                <p className="text-sm text-sf-body leading-relaxed">
                   {t(`features.${feature.key}.desc`)}
                 </p>
               </div>

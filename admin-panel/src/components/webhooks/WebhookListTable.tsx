@@ -44,12 +44,12 @@ const WebhookRow = ({
   };
 
   return (
-    <tr className={`hover:bg-gf-hover transition-colors`}>
+    <tr className={`hover:bg-sf-hover transition-colors`}>
       <td className="px-6 py-4">
-        <div className="text-sm font-medium text-gf-heading truncate max-w-xs" title={endpoint.description || endpoint.url}>
+        <div className="text-sm font-medium text-sf-heading truncate max-w-xs" title={endpoint.description || endpoint.url}>
           {endpoint.description || endpoint.url}
         </div>
-        <div className="text-xs text-gf-muted mt-0.5 truncate max-w-xs font-mono">
+        <div className="text-xs text-sf-muted mt-0.5 truncate max-w-xs font-mono">
           {endpoint.url}
         </div>
       </td>
@@ -58,7 +58,7 @@ const WebhookRow = ({
           {endpoint.events.map((ev) => (
             <span
               key={ev}
-              className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-gf-accent-soft text-gf-accent border-2 border-gf-border-medium"
+              className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-sf-accent-soft text-sf-accent border-2 border-sf-border-medium"
             >
               {getEventLabel(ev)}
             </span>
@@ -67,12 +67,12 @@ const WebhookRow = ({
       </td>
       <td className="px-6 py-4">
         <div className="flex items-center space-x-2">
-          <code className="text-xs bg-gf-raised px-2 py-1 border-2 border-gf-border-medium font-mono text-gf-body">
-            {showSecret ? endpoint.secret : 'gf_••••••••••••••••'}
+          <code className="text-xs bg-sf-raised px-2 py-1 border-2 border-sf-border-medium font-mono text-sf-body">
+            {showSecret ? endpoint.secret : 'sf_••••••••••••••••'}
           </code>
           <button
             onClick={() => setShowSecret(!showSecret)}
-            className="text-gf-muted hover:text-gf-body"
+            className="text-sf-muted hover:text-sf-body"
             title={showSecret ? t('hideSecret') : t('revealSecret')}
           >
             {showSecret ? (
@@ -88,7 +88,7 @@ const WebhookRow = ({
           </button>
           <button
             onClick={handleCopySecret}
-            className="text-gf-muted hover:text-gf-body"
+            className="text-sf-muted hover:text-sf-body"
             title={t('copySecret')}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,7 +101,7 @@ const WebhookRow = ({
         <button
           onClick={() => onToggleStatus(endpoint.id, endpoint.is_active)}
           className={`px-2 inline-flex text-xs leading-5 font-semibold cursor-pointer transition-colors hover:opacity-80 ${
-            endpoint.is_active ? 'bg-gf-success-soft text-gf-success' : 'bg-gf-raised text-gf-muted'
+            endpoint.is_active ? 'bg-sf-success-soft text-sf-success' : 'bg-sf-raised text-sf-muted'
           }`}
         >
           {endpoint.is_active ? t('active') : tCommon('inactive')}
@@ -110,25 +110,25 @@ const WebhookRow = ({
       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
         <button
           onClick={() => onLogs(endpoint)}
-          className="text-gf-body hover:text-gf-heading transition-colors"
+          className="text-sf-body hover:text-sf-heading transition-colors"
         >
           {t('logsButtonLabel')}
         </button>
         <button
           onClick={() => onTest(endpoint)}
-          className="text-gf-accent hover:text-gf-heading transition-colors"
+          className="text-sf-accent hover:text-sf-heading transition-colors"
         >
           {t('test')}
         </button>
         <button
           onClick={() => onEdit(endpoint)}
-          className="text-gf-accent hover:text-gf-heading transition-colors"
+          className="text-sf-accent hover:text-sf-heading transition-colors"
         >
           {t('edit')}
         </button>
         <button
           onClick={() => onDelete(endpoint)}
-          className="text-gf-danger hover:text-gf-heading transition-colors"
+          className="text-sf-danger hover:text-sf-heading transition-colors"
         >
           {t('delete')}
         </button>
@@ -158,28 +158,28 @@ export default function WebhookListTable({
   };
 
   return (
-    <div className="bg-gf-base border-2 border-gf-border-medium overflow-hidden">
-      <table className="min-w-full divide-y divide-gf-border-subtle">
-        <thead className="bg-gf-raised">
+    <div className="bg-sf-base border-2 border-sf-border-medium overflow-hidden">
+      <table className="min-w-full divide-y divide-sf-border-subtle">
+        <thead className="bg-sf-raised">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
               {t('description')} / {t('url')}
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
               {t('events')}
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
               {t('secret')}
             </th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-gf-muted uppercase tracking-wider">
+            <th className="px-6 py-3 text-center text-xs font-medium text-sf-muted uppercase tracking-wider">
               {t('active')}
             </th>
-            <th className="px-6 py-3 text-right text-xs font-medium text-gf-muted uppercase tracking-wider">
+            <th className="px-6 py-3 text-right text-xs font-medium text-sf-muted uppercase tracking-wider">
               {tCommon('actions')}
             </th>
           </tr>
         </thead>
-        <tbody className="bg-gf-base divide-y divide-gf-border-subtle">
+        <tbody className="bg-sf-base divide-y divide-sf-border-subtle">
           {endpoints.map((endpoint) => (
             <WebhookRow
               key={endpoint.id}

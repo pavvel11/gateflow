@@ -39,14 +39,14 @@ export default function WhitelabelProvider({ theme, licenseValid, children }: Wh
       }
     };
 
-    window.addEventListener('gf-theme-change', handleThemeChange);
+    window.addEventListener('sf-theme-change', handleThemeChange);
 
     // Also observe class changes on <html> for theme toggle
     const observer = new MutationObserver(() => handleThemeChange());
     observer.observe(root, { attributes: true, attributeFilter: ['class'] });
 
     return () => {
-      window.removeEventListener('gf-theme-change', handleThemeChange);
+      window.removeEventListener('sf-theme-change', handleThemeChange);
       observer.disconnect();
 
       // Clean up injected variables

@@ -30,22 +30,22 @@ async function PaymentErrorContent({ searchParams }: PaymentErrorPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gf-deep flex items-center justify-center">
-      <div className="max-w-md mx-auto bg-gf-raised/80 border border-gf-border rounded-2xl p-8 text-center">
-        <div className="w-16 h-16 bg-gf-danger/20 border border-gf-danger/30 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-gf-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div className="min-h-screen bg-sf-deep flex items-center justify-center">
+      <div className="max-w-md mx-auto bg-sf-raised/80 border border-sf-border rounded-2xl p-8 text-center">
+        <div className="w-16 h-16 bg-sf-danger/20 border border-sf-danger/30 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-sf-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
         </div>
-        <h1 className="text-2xl font-bold text-gf-heading mb-2">{t('title')}</h1>
-        <p className="text-gf-muted mb-6">
+        <h1 className="text-2xl font-bold text-sf-heading mb-2">{t('title')}</h1>
+        <p className="text-sf-muted mb-6">
           {getErrorMessage(reason)}
         </p>
         <div className="space-y-3">
           <GoBackButton label={t('tryAgain')} />
           <Link
             href="/"
-            className="block w-full bg-gf-raised border border-gf-border hover:border-gf-border-accent text-gf-heading font-semibold py-2 px-4 rounded-full transition-[border-color] duration-200"
+            className="block w-full bg-sf-raised border border-sf-border hover:border-sf-border-accent text-sf-heading font-semibold py-2 px-4 rounded-full transition-[border-color] duration-200"
           >
             {t('goHome')}
           </Link>
@@ -58,8 +58,8 @@ async function PaymentErrorContent({ searchParams }: PaymentErrorPageProps) {
 export default function PaymentErrorPage(props: PaymentErrorPageProps) {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gf-deep flex items-center justify-center">
-        <div className="text-gf-heading">Loading...</div>
+      <div className="min-h-screen bg-sf-deep flex items-center justify-center">
+        <div className="text-sf-heading">Loading...</div>
       </div>
     }>
       <PaymentErrorContent {...props} />

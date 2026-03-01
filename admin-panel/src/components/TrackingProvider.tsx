@@ -205,13 +205,13 @@ klaroConfig.callback = function(consent, service) {
     clearTimeout(window.__gfConsentLogTimer);
     window.__gfConsentLogTimer = setTimeout(function() {
       try {
-        var anonId = localStorage.getItem('gf_anonymous_id');
+        var anonId = localStorage.getItem('sf_anonymous_id');
         if (!anonId) {
           anonId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
             var r = Math.random() * 16 | 0;
             return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
           });
-          localStorage.setItem('gf_anonymous_id', anonId);
+          localStorage.setItem('sf_anonymous_id', anonId);
         }
         fetch('/api/consent', {
           method: 'POST',

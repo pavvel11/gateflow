@@ -19,7 +19,7 @@ export const WizardStepIndicator: React.FC<WizardStepIndicatorProps> = ({
   onStepClick,
 }) => {
   return (
-    <div className="px-6 py-3 border-b border-gf-border">
+    <div className="px-6 py-3 border-b border-sf-border">
       {/* Desktop view */}
       <div className="hidden sm:flex items-center justify-center">
         {steps.map((step, index) => {
@@ -33,8 +33,8 @@ export const WizardStepIndicator: React.FC<WizardStepIndicatorProps> = ({
                 <div
                   className={`h-0.5 w-16 mx-2 transition-colors duration-200 ${
                     isCompleted
-                      ? 'bg-gf-accent-bg'
-                      : 'bg-gf-raised'
+                      ? 'bg-sf-accent-bg'
+                      : 'bg-sf-raised'
                   }`}
                 />
               )}
@@ -51,12 +51,12 @@ export const WizardStepIndicator: React.FC<WizardStepIndicatorProps> = ({
                     flex items-center justify-center w-8 h-8 text-sm font-semibold
                     transition-all duration-200 flex-shrink-0
                     ${isCompleted
-                      ? 'bg-gf-accent-bg text-white'
+                      ? 'bg-sf-accent-bg text-white'
                       : isCurrent
-                        ? 'bg-gf-accent-bg text-white ring-2 ring-gf-accent-med'
-                        : 'bg-gf-raised text-gf-muted'
+                        ? 'bg-sf-accent-bg text-white ring-2 ring-sf-accent-med'
+                        : 'bg-sf-raised text-sf-muted'
                     }
-                    ${isClickable ? 'group-hover:ring-2 group-hover:ring-gf-accent-med' : ''}
+                    ${isClickable ? 'group-hover:ring-2 group-hover:ring-sf-accent-med' : ''}
                   `}
                 >
                   {isCompleted ? (
@@ -70,10 +70,10 @@ export const WizardStepIndicator: React.FC<WizardStepIndicatorProps> = ({
                 <span
                   className={`text-sm font-medium whitespace-nowrap ${
                     isCurrent
-                      ? 'text-gf-accent'
+                      ? 'text-sf-accent'
                       : isCompleted
-                        ? 'text-gf-body'
-                        : 'text-gf-muted'
+                        ? 'text-sf-body'
+                        : 'text-sf-muted'
                   }`}
                 >
                   {step.label}
@@ -98,8 +98,8 @@ export const WizardStepIndicator: React.FC<WizardStepIndicatorProps> = ({
                   <div
                     className={`h-0.5 w-6 transition-colors duration-200 ${
                       isCompleted
-                        ? 'bg-gf-accent-bg'
-                        : 'bg-gf-raised'
+                        ? 'bg-sf-accent-bg'
+                        : 'bg-sf-raised'
                     }`}
                   />
                 )}
@@ -111,10 +111,10 @@ export const WizardStepIndicator: React.FC<WizardStepIndicatorProps> = ({
                     flex items-center justify-center w-7 h-7 text-xs font-semibold
                     transition-all duration-200
                     ${isCompleted
-                      ? 'bg-gf-accent-bg text-white'
+                      ? 'bg-sf-accent-bg text-white'
                       : isCurrent
-                        ? 'bg-gf-accent-bg text-white ring-2 ring-gf-accent-med'
-                        : 'bg-gf-raised text-gf-muted'
+                        ? 'bg-sf-accent-bg text-white ring-2 ring-sf-accent-med'
+                        : 'bg-sf-raised text-sf-muted'
                     }
                   `}
                 >
@@ -130,7 +130,7 @@ export const WizardStepIndicator: React.FC<WizardStepIndicatorProps> = ({
             );
           })}
         </div>
-        <span className="text-xs text-gf-muted">
+        <span className="text-xs text-sf-muted">
           {steps[currentStep - 1]?.label}
         </span>
       </div>

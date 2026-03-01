@@ -152,7 +152,7 @@ export default function PaymentStatusView({
         >
           {hasOtoOffer ? (
             <>
-              <p className="text-gf-body mb-4">
+              <p className="text-sf-body mb-4">
                 {t('accessGrantedToProduct', { productName: product.name })}
               </p>
               <OtoOfferSection
@@ -202,7 +202,7 @@ export default function PaymentStatusView({
         >
           {showOtoForGuest ? (
             <>
-              <p className="text-gf-body mb-4">
+              <p className="text-sf-body mb-4">
                 {t('paymentSuccessful')} {t('accessGrantedToProduct', { productName: product.name })}
               </p>
               <OtoOfferSection

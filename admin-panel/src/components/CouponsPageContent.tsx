@@ -256,8 +256,8 @@ const CouponsPageContent: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-[40px] font-[800] text-gf-heading tracking-[-0.03em] leading-[1.1]">{t('title')}</h1>
-          <p className="text-gf-body mt-2">{t('description')}</p>
+          <h1 className="text-[40px] font-[800] text-sf-heading tracking-[-0.03em] leading-[1.1]">{t('title')}</h1>
+          <p className="text-sf-body mt-2">{t('description')}</p>
         </div>
         <button
           onClick={() => { setEditingCoupon(null); setShowForm(true); }}
@@ -280,7 +280,7 @@ const CouponsPageContent: React.FC = () => {
               className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                 typeFilter === filter
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gf-raised text-gf-body hover:bg-gf-hover'
+                  : 'bg-sf-raised text-sf-body hover:bg-sf-hover'
               }`}
             >
               {t(`filter.${filter}`)}
@@ -316,19 +316,19 @@ const CouponsPageContent: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-gf-base border-2 border-gf-border-medium overflow-hidden">
+      <div className="bg-sf-base border-2 border-sf-border-medium overflow-hidden">
         {loading ? (
           <div className="flex justify-center p-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gf-accent"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sf-accent"></div>
           </div>
         ) : error ? (
           <div className="text-center p-12 text-red-500">{error}</div>
         ) : filteredCoupons.length === 0 ? (
-          <div className="text-center p-12 text-gf-muted">{t('noCoupons')}</div>
+          <div className="text-center p-12 text-sf-muted">{t('noCoupons')}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gf-raised">
+              <thead className="bg-sf-raised">
                 <tr>
                   <th className="px-4 py-3 w-10">
                     <input
@@ -336,45 +336,45 @@ const CouponsPageContent: React.FC = () => {
                       checked={filteredCoupons.length > 0 && selectedIds.size === filteredCoupons.length}
                       onChange={handleSelectAll}
                       aria-label={t('selectAll', { defaultValue: 'Select all coupons' })}
-                      className="w-4 h-4 rounded border-gf-border text-gf-accent focus:ring-gf-accent"
+                      className="w-4 h-4 rounded border-sf-border text-sf-accent focus:ring-sf-accent"
                     />
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase">{t('code')}</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase">{t('discount')}</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase">{t('usage')}</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase">{t('status')}</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gf-muted uppercase">{t('actions')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase">{t('code')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase">{t('discount')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase">{t('usage')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase">{t('status')}</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-sf-muted uppercase">{t('actions')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gf-border">
+              <tbody className="divide-y divide-sf-border">
                 {filteredCoupons.map((coupon, index) => {
                   const isOto = isOtoCoupon(coupon);
                   const otoStatus = isOto ? getOtoExpiryStatus(coupon) : null;
                   const restrictedProducts = getRestrictedProducts(coupon, products);
 
                   return (
-                    <tr key={coupon.id} className={`hover:bg-gf-hover ${selectedIds.has(coupon.id) ? 'bg-gf-accent-soft' : index % 2 === 1 ? 'bg-gf-row-alt' : ''}`}>
+                    <tr key={coupon.id} className={`hover:bg-sf-hover ${selectedIds.has(coupon.id) ? 'bg-sf-accent-soft' : index % 2 === 1 ? 'bg-sf-row-alt' : ''}`}>
                       <td className="px-4 py-4 w-10">
                         <input
                           type="checkbox"
                           checked={selectedIds.has(coupon.id)}
                           onChange={() => handleSelectOne(coupon.id)}
                           aria-label={`${t('select', { defaultValue: 'Select' })} ${coupon.code}`}
-                          className="w-4 h-4 rounded border-gf-border text-gf-accent focus:ring-gf-accent"
+                          className="w-4 h-4 rounded border-sf-border text-sf-accent focus:ring-sf-accent"
                         />
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-gf-accent">{coupon.code}</span>
+                          <span className="font-mono font-bold text-sf-accent">{coupon.code}</span>
                           {isOto && (
-                            <span className="px-1.5 py-0.5 text-[10px] font-medium bg-gf-accent-soft text-gf-accent">
+                            <span className="px-1.5 py-0.5 text-[10px] font-medium bg-sf-accent-soft text-sf-accent">
                               OTO
                             </span>
                           )}
                         </div>
-                        {coupon.name && <div className="text-xs text-gf-muted">{coupon.name}</div>}
+                        {coupon.name && <div className="text-xs text-sf-muted">{coupon.name}</div>}
                         {restrictedProducts.length > 0 && (
-                          <div className="text-xs text-gf-muted mt-1 flex items-center gap-1">
+                          <div className="text-xs text-sf-muted mt-1 flex items-center gap-1">
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                             </svg>
@@ -382,12 +382,12 @@ const CouponsPageContent: React.FC = () => {
                           </div>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gf-heading">
+                      <td className="px-6 py-4 text-sm text-sf-heading">
                         {coupon.discount_type === 'percentage'
                           ? `${coupon.discount_value}%`
                           : `${coupon.discount_value} ${coupon.currency || t('allCurrencies')}`}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gf-muted">
+                      <td className="px-6 py-4 text-sm text-sf-muted">
                         {t(coupon.usage_limit_global ? 'usageCount' : 'usageUnlimited', {
                           current: coupon.current_usage_count,
                           limit: coupon.usage_limit_global || 0
@@ -399,8 +399,8 @@ const CouponsPageContent: React.FC = () => {
                           <span
                             className={`px-3 py-1 text-xs font-medium ${
                               otoStatus?.isExpired
-                                ? 'bg-gf-danger-soft text-gf-danger'
-                                : 'bg-gf-warning-soft text-gf-warning'
+                                ? 'bg-sf-danger-soft text-sf-danger'
+                                : 'bg-sf-warning-soft text-sf-warning'
                             }`}
                             title={otoStatus?.expiresAt ? otoStatus.expiresAt.toLocaleString() : ''}
                           >
@@ -415,8 +415,8 @@ const CouponsPageContent: React.FC = () => {
                             onClick={() => handleToggleActive(coupon)}
                             className={`px-3 py-1 text-xs font-medium ${
                               coupon.is_active
-                                ? 'bg-gf-success-soft text-gf-success'
-                                : 'bg-gf-raised text-gf-muted'
+                                ? 'bg-sf-success-soft text-sf-success'
+                                : 'bg-sf-raised text-sf-muted'
                             }`}
                           >
                             {t(coupon.is_active ? 'active' : 'inactive')}
@@ -426,11 +426,11 @@ const CouponsPageContent: React.FC = () => {
                       <td className="px-6 py-4 text-right space-x-2">
                         {isOto ? (
                           // OTO coupons can only be deleted, not edited
-                          <button onClick={() => setCouponToDelete(coupon)} className="text-gf-danger hover:opacity-80">{t('delete')}</button>
+                          <button onClick={() => setCouponToDelete(coupon)} className="text-sf-danger hover:opacity-80">{t('delete')}</button>
                         ) : (
                           <>
-                            <button onClick={() => { setEditingCoupon(coupon); setShowForm(true); }} className="text-gf-accent hover:opacity-80">{t('edit')}</button>
-                            <button onClick={() => setCouponToDelete(coupon)} className="text-gf-danger hover:opacity-80">{t('delete')}</button>
+                            <button onClick={() => { setEditingCoupon(coupon); setShowForm(true); }} className="text-sf-accent hover:opacity-80">{t('edit')}</button>
+                            <button onClick={() => setCouponToDelete(coupon)} className="text-sf-danger hover:opacity-80">{t('delete')}</button>
                           </>
                         )}
                       </td>
@@ -457,13 +457,13 @@ const CouponsPageContent: React.FC = () => {
       {/* Delete Confirmation */}
       {couponToDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-gf-base p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold mb-4 text-gf-heading">{t('confirmDelete')}</h3>
-            <p className="text-gf-body mb-6">
+          <div className="bg-sf-base p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold mb-4 text-sf-heading">{t('confirmDelete')}</h3>
+            <p className="text-sf-body mb-6">
               {t('deleteMessage', { code: couponToDelete.code })}
             </p>
             <div className="flex justify-end space-x-3">
-              <button onClick={() => setCouponToDelete(null)} className="px-4 py-2 text-gf-body hover:bg-gf-hover">{t('form.cancel')}</button>
+              <button onClick={() => setCouponToDelete(null)} className="px-4 py-2 text-sf-body hover:bg-sf-hover">{t('form.cancel')}</button>
               <button onClick={() => handleDelete(couponToDelete)} className="px-4 py-2 bg-red-600 text-white hover:bg-red-700">{t('delete')}</button>
             </div>
           </div>
@@ -473,13 +473,13 @@ const CouponsPageContent: React.FC = () => {
       {/* Bulk Delete Confirmation */}
       {showBulkDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-gf-base p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold mb-4 text-gf-heading">{t('confirmBulkDelete')}</h3>
-            <p className="text-gf-body mb-6">
+          <div className="bg-sf-base p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold mb-4 text-sf-heading">{t('confirmBulkDelete')}</h3>
+            <p className="text-sf-body mb-6">
               {t('bulkDeleteMessage', { count: selectedIds.size })}
             </p>
             <div className="flex justify-end space-x-3">
-              <button onClick={() => setShowBulkDeleteConfirm(false)} className="px-4 py-2 text-gf-body hover:bg-gf-hover">{t('form.cancel')}</button>
+              <button onClick={() => setShowBulkDeleteConfirm(false)} className="px-4 py-2 text-sf-body hover:bg-sf-hover">{t('form.cancel')}</button>
               <button onClick={handleBulkDelete} className="px-4 py-2 bg-red-600 text-white hover:bg-red-700">{t('bulkDelete', { count: selectedIds.size })}</button>
             </div>
           </div>
@@ -489,13 +489,13 @@ const CouponsPageContent: React.FC = () => {
       {/* Delete Expired Confirmation */}
       {showDeleteExpiredConfirm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-gf-base p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold mb-4 text-gf-heading">{t('confirmDeleteExpired')}</h3>
-            <p className="text-gf-body mb-6">
+          <div className="bg-sf-base p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold mb-4 text-sf-heading">{t('confirmDeleteExpired')}</h3>
+            <p className="text-sf-body mb-6">
               {t('deleteExpiredMessage', { count: expiredCoupons.length })}
             </p>
             <div className="flex justify-end space-x-3">
-              <button onClick={() => setShowDeleteExpiredConfirm(false)} className="px-4 py-2 text-gf-body hover:bg-gf-hover">{t('form.cancel')}</button>
+              <button onClick={() => setShowDeleteExpiredConfirm(false)} className="px-4 py-2 text-sf-body hover:bg-sf-hover">{t('form.cancel')}</button>
               <button onClick={handleDeleteExpired} className="px-4 py-2 bg-amber-700 text-white hover:bg-amber-700">{t('deleteExpired', { count: expiredCoupons.length })}</button>
             </div>
           </div>

@@ -83,26 +83,26 @@ export default function ShopSettings() {
 
  if (loading) {
  return (
- <div className="bg-gf-base border-2 border-gf-border-medium p-6">
+ <div className="bg-sf-base border-2 border-sf-border-medium p-6">
  <div className="animate-pulse space-y-4">
- <div className="h-4 bg-gf-raised w-1/4"></div>
- <div className="h-10 bg-gf-raised"></div>
- <div className="h-10 bg-gf-raised"></div>
+ <div className="h-4 bg-sf-raised w-1/4"></div>
+ <div className="h-10 bg-sf-raised"></div>
+ <div className="h-10 bg-sf-raised"></div>
  </div>
  </div>
  );
  }
 
  return (
- <div className="bg-gf-base border-2 border-gf-border-medium p-6">
- <h2 className="text-xl font-semibold text-gf-heading mb-6">
+ <div className="bg-sf-base border-2 border-sf-border-medium p-6">
+ <h2 className="text-xl font-semibold text-sf-heading mb-6">
  {t('title')}
  </h2>
 
  <form onSubmit={handleSubmit} className="space-y-6">
  {/* Shop Name */}
  <div>
- <label htmlFor="shop-name" className="block text-sm font-medium text-gf-body mb-2">
+ <label htmlFor="shop-name" className="block text-sm font-medium text-sf-body mb-2">
  {t('shopName')}
  </label>
  <input
@@ -110,7 +110,7 @@ export default function ShopSettings() {
  type="text"
  value={formData.shop_name}
  onChange={(e) => setFormData({ ...formData, shop_name: e.target.value })}
- className="w-full px-4 py-2 border-2 border-gf-border-medium bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent focus:border-transparent"
+ className="w-full px-4 py-2 border-2 border-sf-border-medium bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent focus:border-transparent"
  placeholder={t('shopNamePlaceholder')}
  required
  />
@@ -118,9 +118,9 @@ export default function ShopSettings() {
 
  {/* Default Currency */}
  <div>
- <label htmlFor="shop-currency" className="block text-sm font-medium text-gf-body mb-2">
+ <label htmlFor="shop-currency" className="block text-sm font-medium text-sf-body mb-2">
  {t('defaultCurrency')}
- <span className="block text-xs text-gf-muted font-normal mt-1">
+ <span className="block text-xs text-sf-muted font-normal mt-1">
  {t('defaultCurrencyHelp')}
  </span>
  </label>
@@ -128,7 +128,7 @@ export default function ShopSettings() {
  id="shop-currency"
  value={formData.default_currency}
  onChange={(e) => setFormData({ ...formData, default_currency: e.target.value })}
- className="w-full px-4 py-2 border-2 border-gf-border-medium bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent focus:border-transparent"
+ className="w-full px-4 py-2 border-2 border-sf-border-medium bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent focus:border-transparent"
  >
  {CURRENCIES.map((currency) => (
  <option key={currency.code} value={currency.code}>
@@ -140,7 +140,7 @@ export default function ShopSettings() {
 
  {/* Contact Email */}
  <div>
- <label htmlFor="shop-contact-email" className="block text-sm font-medium text-gf-body mb-2">
+ <label htmlFor="shop-contact-email" className="block text-sm font-medium text-sf-body mb-2">
  {t('contactEmail')}
  </label>
  <input
@@ -148,16 +148,16 @@ export default function ShopSettings() {
  type="email"
  value={formData.contact_email}
  onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
- className="w-full px-4 py-2 border-2 border-gf-border-medium bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent focus:border-transparent"
+ className="w-full px-4 py-2 border-2 border-sf-border-medium bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent focus:border-transparent"
  placeholder={t('contactEmailPlaceholder')}
  />
  </div>
 
  {/* Tax Rate */}
  <div>
- <label htmlFor="shop-tax-rate" className="block text-sm font-medium text-gf-body mb-2">
+ <label htmlFor="shop-tax-rate" className="block text-sm font-medium text-sf-body mb-2">
  {t('taxRate')}
- <span className="block text-xs text-gf-muted font-normal mt-1">
+ <span className="block text-xs text-sf-muted font-normal mt-1">
  {t('taxRateHelp')}
  </span>
  </label>
@@ -170,10 +170,10 @@ export default function ShopSettings() {
  max="100"
  value={formData.tax_rate}
  onChange={(e) => setFormData({ ...formData, tax_rate: e.target.value })}
- className="w-32 px-4 py-2 border-2 border-gf-border-medium bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent focus:border-transparent"
+ className="w-32 px-4 py-2 border-2 border-sf-border-medium bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent focus:border-transparent"
  placeholder={t('taxRatePlaceholder')}
  />
- <span className="text-sm text-gf-muted">%</span>
+ <span className="text-sm text-sf-muted">%</span>
  </div>
  </div>
 
@@ -182,7 +182,7 @@ export default function ShopSettings() {
  <button
  type="submit"
  disabled={saving}
- className="px-6 py-2 bg-gf-accent-bg hover:bg-gf-accent-hover text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+ className="px-6 py-2 bg-sf-accent-bg hover:bg-sf-accent-hover text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
  >
  {saving ? t('saving') : t('saveButton')}
  </button>

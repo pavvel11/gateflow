@@ -16,7 +16,7 @@ type ViewMode = 'daily' | 'hourly';
 const CURRENCY_COLORS: { [key: string]: string } = {
   'USD': '#3B82F6', // blue
   'EUR': '#10B981', // green
-  'GBP': '#00AAFF', // gf-accent
+  'GBP': '#00AAFF', // sf-accent
   'PLN': '#F59E0B', // amber
   'CAD': '#EF4444', // red
   'AUD': '#14B8A6', // teal
@@ -196,27 +196,27 @@ export default function RevenueChart() {
 
   if (loading) {
     return (
-      <div className="border-2 border-gf-border-medium p-6 h-[400px] animate-pulse">
-        <div className="h-6 w-1/3 bg-gf-raised mb-4"></div>
-        <div className="h-full bg-gf-raised"></div>
+      <div className="border-2 border-sf-border-medium p-6 h-[400px] animate-pulse">
+        <div className="h-6 w-1/3 bg-sf-raised mb-4"></div>
+        <div className="h-full bg-sf-raised"></div>
       </div>
     );
   }
 
   return (
-    <div className="border-2 border-gf-border-medium">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-6 pt-6 pb-4 gap-4 border-b border-gf-border-subtle">
+    <div className="border-2 border-sf-border-medium">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-6 pt-6 pb-4 gap-4 border-b border-sf-border-subtle">
         <div className="flex items-center gap-6">
           <div>
-            <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-gf-muted">
+            <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-sf-muted">
               {viewMode === 'daily'
                 ? t('revenueChart.title', { defaultValue: 'Revenue Trend' })
                 : t('revenueChart.hourlyTitle', { defaultValue: "Today's Revenue" })}
             </h2>
-            <p className="text-[48px] font-[800] text-gf-heading tracking-[-0.04em] leading-none mt-1">
+            <p className="text-[48px] font-[800] text-sf-heading tracking-[-0.04em] leading-none mt-1">
               {formatMultiCurrency(totalRevenue)}
             </p>
-            <span className="text-xs text-gf-muted mt-1 block">
+            <span className="text-xs text-sf-muted mt-1 block">
               {viewMode === 'daily'
                 ? t('revenueChart.subtitle', { days: daysDiff, defaultValue: 'Performance over time' })
                 : t('revenueChart.hourlySubtitle', { defaultValue: 'Hourly breakdown' })}
@@ -228,37 +228,37 @@ export default function RevenueChart() {
           <div className="flex gap-0">
             <button
               onClick={() => setPredefinedRange(0)}
-              className={`px-3 py-1.5 text-sm font-medium border-2 border-gf-border-medium transition-colors -mr-0.5 ${
+              className={`px-3 py-1.5 text-sm font-medium border-2 border-sf-border-medium transition-colors -mr-0.5 ${
                 viewMode === 'hourly'
-                  ? 'bg-gf-accent-bg text-white border-gf-accent'
-                  : 'text-gf-muted hover:text-gf-heading hover:border-gf-border-strong'
+                  ? 'bg-sf-accent-bg text-white border-sf-accent'
+                  : 'text-sf-muted hover:text-sf-heading hover:border-sf-border-strong'
               }`}
             >
               Today
             </button>
             <button
               onClick={() => setPredefinedRange(7)}
-              className={`px-3 py-1.5 text-sm font-medium border-2 border-gf-border-medium transition-colors -mr-0.5 ${
+              className={`px-3 py-1.5 text-sm font-medium border-2 border-sf-border-medium transition-colors -mr-0.5 ${
                 viewMode === 'daily' && dateRange.start && (new Date().getTime() - dateRange.start.getTime()) < 8 * 24 * 3600 * 1000
-                  ? 'bg-gf-accent-bg text-white border-gf-accent'
-                  : 'text-gf-muted hover:text-gf-heading hover:border-gf-border-strong'
+                  ? 'bg-sf-accent-bg text-white border-sf-accent'
+                  : 'text-sf-muted hover:text-sf-heading hover:border-sf-border-strong'
               }`}
             >
               7d
             </button>
             <button
               onClick={() => setPredefinedRange(30)}
-              className={`px-3 py-1.5 text-sm font-medium border-2 border-gf-border-medium transition-colors ${
+              className={`px-3 py-1.5 text-sm font-medium border-2 border-sf-border-medium transition-colors ${
                 viewMode === 'daily' && dateRange.start && (new Date().getTime() - dateRange.start.getTime()) > 20 * 24 * 3600 * 1000
-                  ? 'bg-gf-accent-bg text-white border-gf-accent'
-                  : 'text-gf-muted hover:text-gf-heading hover:border-gf-border-strong'
+                  ? 'bg-sf-accent-bg text-white border-sf-accent'
+                  : 'text-sf-muted hover:text-sf-heading hover:border-sf-border-strong'
               }`}
             >
               30d
             </button>
           </div>
 
-          <div className="h-6 w-px bg-gf-border-medium mx-1 hidden sm:block"></div>
+          <div className="h-6 w-px bg-sf-border-medium mx-1 hidden sm:block"></div>
 
           <DateRangeFilter
             startDate={dateRange.start}
@@ -270,13 +270,13 @@ export default function RevenueChart() {
 
       {(!data || data.length === 0) ? (
         <div className="h-[300px] flex flex-col items-center justify-center text-center px-6">
-          <div className="w-16 h-16 bg-gf-raised flex items-center justify-center mb-4">
-            <svg className="w-8 h-8 text-gf-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-16 h-16 bg-sf-raised flex items-center justify-center mb-4">
+            <svg className="w-8 h-8 text-sf-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gf-heading">No Revenue Data Yet</h3>
-          <p className="text-sm text-gf-muted mt-1 max-w-xs">
+          <h3 className="text-lg font-medium text-sf-heading">No Revenue Data Yet</h3>
+          <p className="text-sm text-sf-muted mt-1 max-w-xs">
             {viewMode === 'daily' ? 'Once you start making sales, your revenue trend will appear here.' : 'No sales recorded today yet.'}
           </p>
         </div>

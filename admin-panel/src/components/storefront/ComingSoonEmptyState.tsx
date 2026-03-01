@@ -22,22 +22,22 @@ export default function ComingSoonEmptyState({ shopName, contactEmail }: ComingS
 
         {/* Shop Name Badge */}
         <div className="mb-6 inline-block">
-          <div className="px-6 py-2 bg-gf-base/80 backdrop-blur-sm rounded-full border border-gf-border">
-            <span className="text-sm font-medium text-gf-muted">
+          <div className="px-6 py-2 bg-sf-base/80 backdrop-blur-sm rounded-full border border-sf-border">
+            <span className="text-sm font-medium text-sf-muted">
               {shopName}
             </span>
           </div>
         </div>
 
         {/* Title */}
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gf-heading mb-6">
+        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-sf-heading mb-6">
           <span className="text-wl-accent">
             {t('title')}
           </span>
         </h1>
 
         {/* Subtitle */}
-        <p className="text-xl md:text-2xl text-gf-body mb-8 leading-relaxed">
+        <p className="text-xl md:text-2xl text-sf-body mb-8 leading-relaxed">
           {t('subtitle')}
         </p>
 
@@ -55,8 +55,8 @@ export default function ComingSoonEmptyState({ shopName, contactEmail }: ComingS
 
         {/* Contact Information */}
         {contactEmail && (
-          <div className="mt-12 p-6 bg-gf-base/50 backdrop-blur-sm rounded-2xl border border-gf-border">
-            <p className="text-sm text-gf-muted">
+          <div className="mt-12 p-6 bg-sf-base/50 backdrop-blur-sm rounded-2xl border border-sf-border">
+            <p className="text-sm text-sf-muted">
               {t('contactUs', { email: contactEmail })}
             </p>
           </div>

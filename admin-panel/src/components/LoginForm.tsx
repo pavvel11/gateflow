@@ -132,7 +132,7 @@ export default function LoginForm() {
   const renderLoginForm = () => (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gf-heading mb-2">
+        <label htmlFor="email" className="block text-sm font-medium text-sf-heading mb-2">
           {t('auth.email')}
         </label>
         <input
@@ -141,7 +141,7 @@ export default function LoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full px-4 py-3 bg-gf-float border border-gf-border rounded-xl text-gf-heading placeholder-gf-muted focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent transition-all"
+          className="w-full px-4 py-3 bg-sf-float border border-sf-border rounded-xl text-sf-heading placeholder-sf-muted focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent transition-all"
           placeholder={demoMode ? 'demo@sellf.app' : t('auth.emailPlaceholder')}
         />
       </div>
@@ -149,7 +149,7 @@ export default function LoginForm() {
       {/* Password field - demo mode only */}
       {demoMode && (
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gf-heading mb-2">
+          <label htmlFor="password" className="block text-sm font-medium text-sf-heading mb-2">
             {t('auth.password')}
           </label>
           <input
@@ -158,7 +158,7 @@ export default function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full px-4 py-3 bg-gf-float border border-gf-border rounded-xl text-gf-heading placeholder-gf-muted focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent transition-all"
+            className="w-full px-4 py-3 bg-sf-float border border-sf-border rounded-xl text-sf-heading placeholder-sf-muted focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent transition-all"
             placeholder={t('auth.passwordPlaceholder')}
           />
         </div>
@@ -175,11 +175,11 @@ export default function LoginForm() {
       <button
         type="submit"
         disabled={isLoading || (!demoMode && captchaLoading)}
-        className="w-full py-3 px-4 bg-gf-accent-bg hover:bg-gf-accent-hover text-white font-semibold rounded-full shadow-[var(--gf-shadow-accent)] hover:shadow-[0_6px_40px_-4px_var(--gf-accent-glow)] focus:outline-none focus:ring-2 focus:ring-gf-accent focus:ring-offset-2 focus:ring-offset-gf-deep transition-[background-color,box-shadow] duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
+        className="w-full py-3 px-4 bg-sf-accent-bg hover:bg-sf-accent-hover text-white font-semibold rounded-full shadow-[var(--sf-shadow-accent)] hover:shadow-[0_6px_40px_-4px_var(--sf-accent-glow)] focus:outline-none focus:ring-2 focus:ring-sf-accent focus:ring-offset-2 focus:ring-offset-sf-deep transition-[background-color,box-shadow] duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
       >
         {isLoading || (!demoMode && captchaLoading) ? (
           <div className="flex items-center justify-center">
-            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gf-heading" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-sf-heading" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
@@ -209,7 +209,7 @@ export default function LoginForm() {
       )}
 
       {message && !sentEmail && (
-        <div className="p-4 rounded-xl text-sm bg-gf-danger-soft text-gf-danger border border-gf-danger/20">
+        <div className="p-4 rounded-xl text-sm bg-sf-danger-soft text-sf-danger border border-sf-danger/20">
           {message}
         </div>
       )}
@@ -270,16 +270,16 @@ export default function LoginForm() {
     return (
       <div className="text-center space-y-6">
         <div className="flex justify-center">
-          <svg className="w-16 h-16 text-gf-success" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <svg className="w-16 h-16 text-sf-success" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         </div>
         
-        <div className="p-4 rounded-xl text-sm bg-gf-success-soft text-gf-success border border-gf-success/20">
+        <div className="p-4 rounded-xl text-sm bg-sf-success-soft text-sf-success border border-sf-success/20">
           {message}
         </div>
         
-        <div className="text-gf-body text-sm space-y-3">
+        <div className="text-sf-body text-sm space-y-3">
           <p>{t('productView.checkEmailAtForMagicLink', { email })}</p>
           <p>{t('auth.clickLinkToSignIn')}</p>
         </div>
@@ -289,7 +289,7 @@ export default function LoginForm() {
           {emailProvider && (
             <button
               onClick={() => window.open(emailProvider.url, '_blank')}
-              className="w-full py-3 px-4 bg-gf-accent-bg hover:bg-gf-accent-hover text-white font-semibold rounded-full shadow-[var(--gf-shadow-accent)] transition-colors duration-200 flex items-center justify-center space-x-2 active:scale-[0.98]"
+              className="w-full py-3 px-4 bg-sf-accent-bg hover:bg-sf-accent-hover text-white font-semibold rounded-full shadow-[var(--sf-shadow-accent)] transition-colors duration-200 flex items-center justify-center space-x-2 active:scale-[0.98]"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -306,7 +306,7 @@ export default function LoginForm() {
               setTermsAccepted(false)
               setCaptchaToken(null)
             }}
-            className="w-full py-2 px-4 bg-gf-float text-gf-body font-medium rounded-full border border-gf-border hover:border-gf-border-accent transition-[border-color] duration-200"
+            className="w-full py-2 px-4 bg-sf-float text-sf-body font-medium rounded-full border border-sf-border hover:border-sf-border-accent transition-[border-color] duration-200"
           >
             {t('auth.backToLogin')}
           </button>
@@ -316,7 +316,7 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="bg-gf-raised/80 rounded-2xl p-8 shadow-[var(--gf-shadow-accent)] border border-gf-border">
+    <div className="bg-sf-raised/80 rounded-2xl p-8 shadow-[var(--sf-shadow-accent)] border border-sf-border">
       {!sentEmail ? renderLoginForm() : renderSuccessMessage()}
     </div>
   )

@@ -24,11 +24,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 export default function AboutPage() {
   return (
-    <div className="grain-overlay min-h-screen bg-gf-deep overflow-hidden">
+    <div className="grain-overlay min-h-screen bg-sf-deep overflow-hidden">
       {/* Skip to main content — a11y */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-gf-accent-bg focus:text-white focus:outline-none"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-sf-accent-bg focus:text-white focus:outline-none"
       >
         Skip to main content
       </a>

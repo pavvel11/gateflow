@@ -202,7 +202,7 @@ export default function StatsOverview() {
         </svg>
       ),
       color: 'from-green-500 to-green-600',
-      bgColor: 'bg-gf-success-soft',
+      bgColor: 'bg-sf-success-soft',
       change: revenueStats?.todayRevenue ? `+${formatMultiCurrency(revenueStats.todayRevenue, convertedRevenue?.today)} today` : null,
       changeType: 'positive'
     },
@@ -216,7 +216,7 @@ export default function StatsOverview() {
         </svg>
       ),
       color: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-gf-accent-soft',
+      bgColor: 'bg-sf-accent-soft',
       change: revenueStats?.lastOrderAt ? `Last: ${timeAgo(revenueStats.lastOrderAt)}` : null,
     },
     {
@@ -228,8 +228,8 @@ export default function StatsOverview() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
         </svg>
       ),
-      color: 'bg-gf-accent-bg',
-      bgColor: 'bg-gf-accent-soft',
+      color: 'bg-sf-accent-bg',
+      bgColor: 'bg-sf-accent-soft',
     },
     {
       id: 'active-users',
@@ -241,18 +241,18 @@ export default function StatsOverview() {
         </svg>
       ),
       color: 'from-yellow-500 to-yellow-600',
-      bgColor: 'bg-gf-warning-soft',
+      bgColor: 'bg-sf-warning-soft',
     },
   ];
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-2 border-gf-border-medium">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-2 border-sf-border-medium">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className={`p-6 sm:p-8 ${i < 3 ? 'lg:border-r border-gf-border-subtle' : ''} ${i % 2 === 1 ? 'bg-gf-row-alt' : 'bg-gf-base'} border-b-[3px] border-gf-border-medium`}>
+          <div key={i} className={`p-6 sm:p-8 ${i < 3 ? 'lg:border-r border-sf-border-subtle' : ''} ${i % 2 === 1 ? 'bg-sf-row-alt' : 'bg-sf-base'} border-b-[3px] border-sf-border-medium`}>
             <div className="animate-pulse">
-              <div className="h-3 bg-gf-raised w-3/4 mb-4"></div>
-              <div className="h-12 bg-gf-raised w-1/2"></div>
+              <div className="h-3 bg-sf-raised w-3/4 mb-4"></div>
+              <div className="h-12 bg-sf-raised w-1/2"></div>
             </div>
           </div>
         ))}
@@ -271,28 +271,28 @@ export default function StatsOverview() {
         />
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-2 border-gf-border-medium">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-2 border-sf-border-medium">
         {statItems.map((item, index) => (
           <div
             key={item.id}
             data-testid={`stat-card-${item.id}`}
             className={`p-6 sm:p-8 ${
-              index < statItems.length - 1 ? 'lg:border-r border-gf-border-subtle' : ''
+              index < statItems.length - 1 ? 'lg:border-r border-sf-border-subtle' : ''
             } ${
-              index % 2 === 1 ? 'bg-gf-row-alt' : 'bg-gf-base'
-            } border-b-[3px] border-gf-border-medium`}
+              index % 2 === 1 ? 'bg-sf-row-alt' : 'bg-sf-base'
+            } border-b-[3px] border-sf-border-medium`}
           >
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-gf-muted mb-2">
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-sf-muted mb-2">
               {item.name}
             </p>
             <p
-              className="text-[52px] font-[800] text-gf-heading tracking-[-0.04em] leading-none motion-safe:animate-[stat-slide-up_0.6s_ease-out_both]"
+              className="text-[52px] font-[800] text-sf-heading tracking-[-0.04em] leading-none motion-safe:animate-[stat-slide-up_0.6s_ease-out_both]"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {item.value}
             </p>
             {item.change && (
-              <p className={`text-xs font-medium mt-2 ${item.changeType === 'positive' ? 'text-gf-success' : 'text-gf-muted'}`}>
+              <p className={`text-xs font-medium mt-2 ${item.changeType === 'positive' ? 'text-sf-success' : 'text-sf-muted'}`}>
                 {item.change}
               </p>
             )}

@@ -77,12 +77,12 @@ export default function MagicLinkStatus({
 
   return (
     <>
-      <p className="text-gf-body mb-6">{t('paymentProcessedSuccessfully')}</p>
+      <p className="text-sf-body mb-6">{t('paymentProcessedSuccessfully')}</p>
       
       <div className="space-y-4">
         {showValidationBlock ? (
-          <div className="bg-gf-warning-soft border-2 border-gf-warning/30 rounded-xl p-6 mb-6">
-            <h3 className="text-xl font-bold text-gf-warning mb-6">
+          <div className="bg-sf-warning-soft border-2 border-sf-warning/30 rounded-xl p-6 mb-6">
+            <h3 className="text-xl font-bold text-sf-warning mb-6">
               ⚠️ {tCompliance('beforeSendingLink')}
             </h3>
             
@@ -134,20 +134,20 @@ export default function MagicLinkStatus({
           </div>
         ) : magicLinkSent ? (
           // Show success message if magic link was sent successfully
-          <div className="bg-gf-success-soft border border-gf-success/30 rounded-lg p-4 mb-6">
-            <h3 className="text-lg font-semibold text-gf-success mb-2">
+          <div className="bg-sf-success-soft border border-sf-success/30 rounded-lg p-4 mb-6">
+            <h3 className="text-lg font-semibold text-sf-success mb-2">
               ✅ {t('magicLinkSent')}
             </h3>
-            <p className="text-gf-success text-sm">
+            <p className="text-sf-success text-sm">
               {t('checkEmailForLoginLink', { email: customerEmail || '' })}
             </p>
             {/* Show countdown if redirect is configured */}
             {redirectUrl && countdown !== undefined && (
-              <div className="mt-4 pt-4 border-t border-gf-success/20">
+              <div className="mt-4 pt-4 border-t border-sf-success/20">
                 <div className="flex items-center justify-center space-x-3">
-                  <div className="text-4xl font-bold text-gf-heading tabular-nums">{countdown}</div>
+                  <div className="text-4xl font-bold text-sf-heading tabular-nums">{countdown}</div>
                 </div>
-                <p className="text-gf-muted text-sm mt-2 text-center">{t('redirectingToProduct')}</p>
+                <p className="text-sf-muted text-sm mt-2 text-center">{t('redirectingToProduct')}</p>
               </div>
             )}
           </div>
@@ -155,10 +155,10 @@ export default function MagicLinkStatus({
         
         {/* SINGLE SPINNER OUTSIDE YELLOW BLOCK - shows in 2 cases */}
         {shouldShowSpinner && customerEmail && (
-          <div className="bg-gf-accent-soft border border-gf-border-accent rounded-lg p-4 flex items-center justify-center mb-6">
+          <div className="bg-sf-accent-soft border border-sf-border-accent rounded-lg p-4 flex items-center justify-center mb-6">
             <div className="flex items-center space-x-3">
-              <div className="animate-spin h-5 w-5 border-2 border-gf-accent border-t-transparent rounded-full"></div>
-              <span className="text-gf-accent font-medium">
+              <div className="animate-spin h-5 w-5 border-2 border-sf-accent border-t-transparent rounded-full"></div>
+              <span className="text-sf-accent font-medium">
                 {captchaToken ? t('sendingMagicLink') : 'Processing verification...'}
               </span>
             </div>
@@ -167,12 +167,12 @@ export default function MagicLinkStatus({
         
         {/* Show captcha errors always (even for invisible captcha) */}
         {captchaError && (
-          <div className="bg-gf-danger-soft border border-gf-danger/30 rounded-lg p-3 text-sm text-gf-danger mb-4">
+          <div className="bg-sf-danger-soft border border-sf-danger/30 rounded-lg p-3 text-sm text-sf-danger mb-4">
             ❌ {captchaError}
             {captchaTimeout ? (
               <>
                 {' '}{tSecurity('refreshPageOrLogin')}{' '}
-                <Link href="/login?message=payment_completed_login_required" className="text-gf-accent hover:text-gf-accent-hover underline">
+                <Link href="/login?message=payment_completed_login_required" className="text-sf-accent hover:text-sf-accent-hover underline">
                   {tSecurity('tryLoggingInAgain')}
                 </Link>
                 .
@@ -180,7 +180,7 @@ export default function MagicLinkStatus({
             ) : (
               <>
                 {' '}{tSecurity('captchaErrorLoginPrompt')}{' '}
-                <Link href="/login?message=payment_completed_login_required" className="text-gf-accent hover:text-gf-accent-hover underline">
+                <Link href="/login?message=payment_completed_login_required" className="text-sf-accent hover:text-sf-accent-hover underline">
                   {tSecurity('tryLoggingInAgain')}
                 </Link>
                 .
@@ -191,12 +191,12 @@ export default function MagicLinkStatus({
         
         {/* Show magic link errors */}
         {magicLinkError && (
-          <div className="bg-gf-danger-soft border border-gf-danger/30 rounded-lg p-3 text-sm text-gf-danger mb-4">
+          <div className="bg-sf-danger-soft border border-sf-danger/30 rounded-lg p-3 text-sm text-sf-danger mb-4">
             ❌ {magicLinkError}
             <div className="mt-3">
               <Link 
                 href="/login?message=payment_completed_login_required" 
-                className="inline-block px-4 py-2 bg-gf-accent-bg hover:bg-gf-accent-hover text-white text-sm rounded transition-colors"
+                className="inline-block px-4 py-2 bg-sf-accent-bg hover:bg-sf-accent-hover text-white text-sm rounded transition-colors"
               >
                 {t('goToLoginPage')}
               </Link>
@@ -205,18 +205,18 @@ export default function MagicLinkStatus({
         )}
         
         {!captchaError && !magicLinkError && (
-        <div className="bg-gf-accent-soft border border-gf-border-accent rounded-lg p-4 animate-fadeInPulse">
-          <h3 className="text-lg font-semibold text-gf-accent mb-2 animate-pulse">
+        <div className="bg-sf-accent-soft border border-sf-border-accent rounded-lg p-4 animate-fadeInPulse">
+          <h3 className="text-lg font-semibold text-sf-accent mb-2 animate-pulse">
             🎯 {t('toAccessYourProduct')}
           </h3>
-          <div className="text-sm text-gf-body space-y-2">
+          <div className="text-sm text-sf-body space-y-2">
             <p className="animate-slideInLeft delay-100">{t('step1CheckEmail', { email: customerEmail ? `(${customerEmail})` : '' })}</p>
             <p className="animate-slideInLeft delay-200">{t('step2ClickMagicLink')}</p>
             <p className="animate-slideInLeft delay-300">{t('step3AutoRedirect')}</p>
           </div>
         </div>
         )}
-        <p className="text-gf-muted text-sm">
+        <p className="text-sf-muted text-sm">
           {t('didNotReceiveEmail')}
         </p>
       </div>

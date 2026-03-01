@@ -90,10 +90,10 @@ export default function GUSSettings() {
 
  if (loading) {
  return (
- <div className="bg-gf-base border-2 border-gf-border-medium p-6">
+ <div className="bg-sf-base border-2 border-sf-border-medium p-6">
  <div className="animate-pulse space-y-4">
- <div className="h-4 bg-gf-raised w-1/4"></div>
- <div className="h-20 bg-gf-raised"></div>
+ <div className="h-4 bg-sf-raised w-1/4"></div>
+ <div className="h-20 bg-sf-raised"></div>
  </div>
  </div>
  );
@@ -105,7 +105,7 @@ export default function GUSSettings() {
  <BaseModal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} size="md">
  <ModalHeader title={t('deleteModal.title')} />
  <ModalBody>
- <p className="text-gf-body">
+ <p className="text-sf-body">
  {t('deleteModal.description')}
  </p>
  </ModalBody>
@@ -119,29 +119,29 @@ export default function GUSSettings() {
  </ModalFooter>
  </BaseModal>
 
- <div className="bg-gf-base border-2 border-gf-border-medium p-6">
+ <div className="bg-sf-base border-2 border-sf-border-medium p-6">
  <div className="flex items-start justify-between mb-6">
  <div>
- <h2 className="text-xl font-semibold text-gf-heading mb-2">
+ <h2 className="text-xl font-semibold text-sf-heading mb-2">
  {t('title')}
  </h2>
- <p className="text-sm text-gf-body">
+ <p className="text-sm text-sf-body">
  {t('subtitle')}
  </p>
  </div>
- <Building2 className="w-8 h-8 text-gf-accent" />
+ <Building2 className="w-8 h-8 text-sf-accent" />
  </div>
 
  {/* Status Banner */}
  {hasKey && enabled && (
- <div className="mb-6 bg-gf-success-soft border border-gf-success/20 p-4">
+ <div className="mb-6 bg-sf-success-soft border border-sf-success/20 p-4">
  <div className="flex items-start gap-3">
- <CheckCircle2 className="w-5 h-5 text-gf-success mt-0.5 flex-shrink-0" />
+ <CheckCircle2 className="w-5 h-5 text-sf-success mt-0.5 flex-shrink-0" />
  <div className="flex-1">
- <p className="text-sm font-medium text-gf-heading mb-1">
+ <p className="text-sm font-medium text-sf-heading mb-1">
  {t('status.active')}
  </p>
- <p className="text-sm text-gf-body">
+ <p className="text-sm text-sf-body">
  {t('status.activeDescription')}
  </p>
  </div>
@@ -150,14 +150,14 @@ export default function GUSSettings() {
  )}
 
  {hasKey && !enabled && (
- <div className="mb-6 bg-gf-warning-soft border border-gf-warning/20 p-4">
+ <div className="mb-6 bg-sf-warning-soft border border-sf-warning/20 p-4">
  <div className="flex items-start gap-3">
- <AlertCircle className="w-5 h-5 text-gf-warning mt-0.5 flex-shrink-0" />
+ <AlertCircle className="w-5 h-5 text-sf-warning mt-0.5 flex-shrink-0" />
  <div className="flex-1">
- <p className="text-sm font-medium text-gf-heading mb-1">
+ <p className="text-sm font-medium text-sf-heading mb-1">
  {t('status.disabled')}
  </p>
- <p className="text-sm text-gf-body">
+ <p className="text-sm text-sf-body">
  {t('status.disabledDescription')}
  </p>
  </div>
@@ -168,7 +168,7 @@ export default function GUSSettings() {
  {/* Configuration Form */}
  <div className="space-y-4">
  <div>
- <label htmlFor="gus-api-key" className="block text-sm font-medium text-gf-body mb-2">
+ <label htmlFor="gus-api-key" className="block text-sm font-medium text-sf-body mb-2">
  {t('apiKeyLabel')}
  </label>
  <input
@@ -177,15 +177,15 @@ export default function GUSSettings() {
  value={apiKey}
  onChange={(e) => setApiKey(e.target.value)}
  placeholder={hasKey ? '••••••••••••••••' : t('apiKeyPlaceholder')}
- className="w-full px-4 py-2.5 bg-gf-input border-2 border-gf-border-medium text-gf-heading placeholder-gf-muted focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent"
+ className="w-full px-4 py-2.5 bg-sf-input border-2 border-sf-border-medium text-sf-heading placeholder-sf-muted focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent"
  />
- <p className="mt-2 text-xs text-gf-muted">
+ <p className="mt-2 text-xs text-sf-muted">
  {t('apiKeyHelp')}{' '}
  <a
  href="https://api.stat.gov.pl/Home/RegonApi"
  target="_blank"
  rel="noopener noreferrer"
- className="text-gf-accent underline hover:no-underline inline-flex items-center gap-1"
+ className="text-sf-accent underline hover:no-underline inline-flex items-center gap-1"
  >
  {t('getApiKey')}
  <ExternalLink className="w-3 h-3" />
@@ -199,13 +199,13 @@ export default function GUSSettings() {
  type="checkbox"
  checked={enabled}
  onChange={(e) => setEnabled(e.target.checked)}
- className="w-4 h-4 text-gf-accent bg-gf-raised border-gf-border rounded focus:ring-2 focus:ring-gf-accent"
+ className="w-4 h-4 text-sf-accent bg-sf-raised border-sf-border rounded focus:ring-2 focus:ring-sf-accent"
  />
- <span className="text-sm text-gf-body">
+ <span className="text-sm text-sf-body">
  {t('enableLabel')}
  </span>
  </label>
- <p className="mt-1 ml-7 text-xs text-gf-muted">
+ <p className="mt-1 ml-7 text-xs text-sf-muted">
  {t('enableHelp')}
  </p>
  </div>
@@ -215,7 +215,7 @@ export default function GUSSettings() {
  <button
  onClick={handleSave}
  disabled={saving || deleting}
- className="px-6 py-2.5 bg-gf-accent-bg hover:bg-gf-accent-hover disabled:bg-gf-muted text-white font-medium transition-colors disabled:cursor-not-allowed flex items-center gap-2"
+ className="px-6 py-2.5 bg-sf-accent-bg hover:bg-sf-accent-hover disabled:bg-sf-muted text-white font-medium transition-colors disabled:cursor-not-allowed flex items-center gap-2"
  >
  {saving && <Loader2 className="w-4 h-4 animate-spin" />}
  {t('saveButton')}
@@ -225,7 +225,7 @@ export default function GUSSettings() {
  <button
  onClick={() => setShowDeleteModal(true)}
  disabled={saving || deleting}
- className="px-6 py-2.5 bg-gf-danger-bg hover:opacity-90 disabled:bg-gf-muted text-gf-inverse font-medium transition-colors disabled:cursor-not-allowed flex items-center gap-2"
+ className="px-6 py-2.5 bg-sf-danger-bg hover:opacity-90 disabled:bg-sf-muted text-sf-inverse font-medium transition-colors disabled:cursor-not-allowed flex items-center gap-2"
  >
  {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
  {t('deleteButton')}

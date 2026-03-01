@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ChevronDown } from 'lucide-react';
-import { Reveal } from './motion/Reveal';
+import { Reveal } from '@/components/motion/Reveal';
 
 export function FAQSection() {
   const t = useTranslations('landing');
@@ -16,21 +16,21 @@ export function FAQSection() {
   }
 
   return (
-    <section className="py-24 md:py-32 bg-gf-deep">
+    <section className="py-24 md:py-32 bg-sf-deep">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Split layout: sticky title left, accordion right */}
         <div className="flex flex-col md:flex-row md:gap-16">
           {/* Left column — title */}
           <Reveal animation="fade-left" className="md:w-1/3 mb-10 md:mb-0">
             <div className="md:sticky md:top-24">
-              <h2 className="text-4xl md:text-5xl font-bold text-gf-heading mb-4">
+              <h2 className="text-4xl md:text-5xl font-bold text-sf-heading mb-4">
                 {t('faq.title')}
               </h2>
               <a
                 href="https://github.com/jurczykpawel/sellf/issues"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm font-medium text-gf-accent hover:text-gf-accent-hover transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent rounded"
+                className="text-sm font-medium text-sf-accent hover:text-sf-accent-hover transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sf-accent rounded"
               >
                 {t('faq.githubIssues')}
               </a>
@@ -43,19 +43,19 @@ export function FAQSection() {
               {items.map((item, i) => {
                 const isOpen = openIndex === i;
                 return (
-                  <div key={i} className="border-b border-gf-border">
+                  <div key={i} className="border-b border-sf-border">
                     <button
                       type="button"
                       onClick={() => handleToggle(i)}
                       aria-expanded={isOpen}
                       aria-controls={`faq-answer-${i}`}
-                      className="w-full flex justify-between items-center py-5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gf-accent rounded"
+                      className="w-full flex justify-between items-center py-5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sf-accent rounded"
                     >
-                      <span className="text-lg font-semibold text-gf-heading pr-8">
+                      <span className="text-lg font-semibold text-sf-heading pr-8">
                         {item.q}
                       </span>
                       <ChevronDown
-                        className={`w-5 h-5 text-gf-muted transition-transform duration-300 ${
+                        className={`w-5 h-5 text-sf-muted transition-transform duration-300 ${
                           isOpen ? 'rotate-180' : ''
                         }`}
                       />
@@ -68,7 +68,7 @@ export function FAQSection() {
                         isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
                       }`}
                     >
-                      <p className="pb-5 text-gf-body leading-relaxed">
+                      <p className="pb-5 text-sf-body leading-relaxed">
                         {item.a}
                       </p>
                     </div>

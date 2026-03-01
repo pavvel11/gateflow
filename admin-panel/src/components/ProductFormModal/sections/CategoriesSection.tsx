@@ -24,25 +24,25 @@ export function CategoriesSection({
     <ModalSection title={t('organization', { defaultValue: 'Organization' })} collapsible defaultExpanded={formData.categories.length > 0}>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gf-body mb-2">
+          <label className="block text-sm font-medium text-sf-body mb-2">
             {t('categories', { defaultValue: 'Categories' })}
           </label>
-          <div className="border-2 border-gf-border-medium max-h-40 overflow-y-auto p-2 bg-gf-input">
+          <div className="border-2 border-sf-border-medium max-h-40 overflow-y-auto p-2 bg-sf-input">
             {loadingCategories ? (
-              <div className="text-sm text-gf-muted p-2">Loading categories...</div>
+              <div className="text-sm text-sf-muted p-2">Loading categories...</div>
             ) : allCategories.length === 0 ? (
-              <div className="text-sm text-gf-muted p-2">No categories found. Create one in Settings &gt; Categories.</div>
+              <div className="text-sm text-sf-muted p-2">No categories found. Create one in Settings &gt; Categories.</div>
             ) : (
               <div className="space-y-2">
                 {allCategories.map((cat) => (
-                  <label key={cat.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gf-hover p-1">
+                  <label key={cat.id} className="flex items-center space-x-2 cursor-pointer hover:bg-sf-hover p-1">
                     <input
                       type="checkbox"
                       checked={formData.categories.includes(cat.id)}
                       onChange={(e) => handleCategoryToggle(cat.id, e.target.checked)}
-                      className="h-4 w-4 text-gf-accent focus:ring-gf-accent border-gf-border rounded"
+                      className="h-4 w-4 text-sf-accent focus:ring-sf-accent border-sf-border rounded"
                     />
-                    <span className="text-sm text-gf-heading">{cat.name}</span>
+                    <span className="text-sm text-sf-heading">{cat.name}</span>
                   </label>
                 ))}
               </div>

@@ -11,24 +11,24 @@ export default function AccessDenied() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gf-deep">
-      <div className="max-w-md w-full mx-auto p-8 bg-gf-raised/80 border border-gf-border rounded-2xl shadow-[var(--gf-shadow-accent)] text-center">
+    <div className="min-h-screen flex items-center justify-center bg-sf-deep">
+      <div className="max-w-md w-full mx-auto p-8 bg-sf-raised/80 border border-sf-border rounded-2xl shadow-[var(--sf-shadow-accent)] text-center">
         <div className="flex justify-center mb-6">
-          <Shield className="h-16 w-16 text-gf-danger" />
+          <Shield className="h-16 w-16 text-sf-danger" />
         </div>
 
-        <h1 className="text-2xl font-bold text-gf-heading mb-4">
+        <h1 className="text-2xl font-bold text-sf-heading mb-4">
           Access Denied
         </h1>
 
-        <p className="text-gf-body mb-6">
+        <p className="text-sf-body mb-6">
           You don&apos;t have administrator privileges to access this panel.
         </p>
 
         {user && (
-          <div className="mb-6 p-4 bg-gf-float rounded-lg border border-gf-border">
-            <p className="text-sm text-gf-body">
-              Logged in as: <span className="font-semibold text-gf-heading">{user.email}</span>
+          <div className="mb-6 p-4 bg-sf-float rounded-lg border border-sf-border">
+            <p className="text-sm text-sf-body">
+              Logged in as: <span className="font-semibold text-sf-heading">{user.email}</span>
             </p>
           </div>
         )}
@@ -36,7 +36,7 @@ export default function AccessDenied() {
         <div className="space-y-3">
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center justify-center px-4 py-2 bg-gf-danger-bg text-gf-inverse rounded-full hover:opacity-90 transition-opacity duration-200 active:scale-[0.98]"
+            className="w-full flex items-center justify-center px-4 py-2 bg-sf-danger-bg text-sf-inverse rounded-full hover:opacity-90 transition-opacity duration-200 active:scale-[0.98]"
           >
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
@@ -44,7 +44,7 @@ export default function AccessDenied() {
 
           <button
             onClick={() => window.location.href = '/'}
-            className="w-full flex items-center justify-center px-4 py-2 bg-gf-raised border border-gf-border text-gf-heading rounded-full hover:border-gf-border-accent transition-[border-color] duration-200"
+            className="w-full flex items-center justify-center px-4 py-2 bg-sf-raised border border-sf-border text-sf-heading rounded-full hover:border-sf-border-accent transition-[border-color] duration-200"
           >
             <Home className="h-4 w-4 mr-2" />
             Go to Homepage

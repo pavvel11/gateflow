@@ -227,7 +227,7 @@ describe('API Keys', () => {
     });
 
     it('should return null for invalid prefix', () => {
-      expect(parseApiKeyFromHeader('gf_invalid_' + 'a'.repeat(64))).toBe(null);
+      expect(parseApiKeyFromHeader('sf_invalid_' + 'a'.repeat(64))).toBe(null);
       expect(parseApiKeyFromHeader('invalid_key')).toBe(null);
     });
 

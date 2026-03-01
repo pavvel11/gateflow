@@ -191,10 +191,10 @@ test.describe('Checkout Theme Settings', () => {
 
     const themeSection = themeHeading.locator('..');
 
-    // The "Light" button should have the selected styling (border-gf-border-accent)
+    // The "Light" button should have the selected styling (border-sf-border-accent)
     const lightButton = themeSection.locator('button', { hasText: '☀️' });
     const buttonClass = await lightButton.getAttribute('class');
-    expect(buttonClass).toContain('border-gf-border-accent');
+    expect(buttonClass).toContain('border-sf-border-accent');
 
     // Now switch to dark
     await themeSection.locator('button', { hasText: '🌙' }).click();
@@ -210,7 +210,7 @@ test.describe('Checkout Theme Settings', () => {
     const reloadedSection = reloadedHeading.locator('..');
     const darkButton = reloadedSection.locator('button', { hasText: '🌙' });
     const darkClass = await darkButton.getAttribute('class');
-    expect(darkClass).toContain('border-gf-border-accent');
+    expect(darkClass).toContain('border-sf-border-accent');
   });
 
   test('should apply dark theme on checkout page', async ({ page }) => {
@@ -224,7 +224,7 @@ test.describe('Checkout Theme Settings', () => {
 
     // Clear any stored theme preference to ensure admin theme applies
     await page.addInitScript(() => {
-      localStorage.removeItem('gf_theme');
+      localStorage.removeItem('sf_theme');
     });
 
     // Visit checkout page (public, no login needed)

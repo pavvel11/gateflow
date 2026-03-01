@@ -65,9 +65,9 @@ function Toggle({
  aria-label={label}
  onClick={() => onChange(!enabled)}
  disabled={disabled}
- className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gf-accent focus:ring-offset-2 focus:ring-offset-gf-base ${
+ className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sf-accent focus:ring-offset-2 focus:ring-offset-sf-base ${
  disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
- } ${enabled ? 'bg-gf-accent-bg' : 'bg-gf-raised'}`}
+ } ${enabled ? 'bg-sf-accent-bg' : 'bg-sf-raised'}`}
  >
  <span
  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
@@ -220,35 +220,35 @@ export default function StripeTaxSettings() {
 
  if (loading) {
  return (
- <div className="bg-gf-base border-2 border-gf-border-medium p-6">
+ <div className="bg-sf-base border-2 border-sf-border-medium p-6">
  <div className="animate-pulse space-y-4">
- <div className="h-4 bg-gf-raised w-1/4"></div>
- <div className="h-20 bg-gf-raised"></div>
+ <div className="h-4 bg-sf-raised w-1/4"></div>
+ <div className="h-20 bg-sf-raised"></div>
  </div>
  </div>
  )
  }
 
  return (
- <div className="bg-gf-base border-2 border-gf-border-medium p-6">
+ <div className="bg-sf-base border-2 border-sf-border-medium p-6">
  <div className="flex items-start justify-between mb-6">
  <div>
- <h2 className="text-xl font-semibold text-gf-heading mb-2">
+ <h2 className="text-xl font-semibold text-sf-heading mb-2">
  {t('title')}
  </h2>
- <p className="text-sm text-gf-body">
+ <p className="text-sm text-sf-body">
  {t('subtitle')}
  </p>
  </div>
- <Receipt className="w-8 h-8 text-gf-accent" />
+ <Receipt className="w-8 h-8 text-sf-accent" />
  </div>
 
  {/* Status Banner */}
  {error && (
- <div className="mb-6 bg-gf-danger-soft border border-gf-danger/20 p-4">
+ <div className="mb-6 bg-sf-danger-soft border border-sf-danger/20 p-4">
  <div className="flex items-start gap-3">
- <AlertCircle className="w-5 h-5 text-gf-danger mt-0.5 flex-shrink-0" />
- <p className="text-sm text-gf-danger">{error}</p>
+ <AlertCircle className="w-5 h-5 text-sf-danger mt-0.5 flex-shrink-0" />
+ <p className="text-sm text-sf-danger">{error}</p>
  </div>
  </div>
  )}
@@ -256,14 +256,14 @@ export default function StripeTaxSettings() {
  {taxStatus && (
  <>
  {taxStatus.status === 'active' && (
- <div className="mb-6 bg-gf-success-soft border border-gf-success/20 p-4">
+ <div className="mb-6 bg-sf-success-soft border border-sf-success/20 p-4">
  <div className="flex items-start gap-3">
- <CheckCircle2 className="w-5 h-5 text-gf-success mt-0.5 flex-shrink-0" />
+ <CheckCircle2 className="w-5 h-5 text-sf-success mt-0.5 flex-shrink-0" />
  <div className="flex-1">
- <p className="text-sm font-medium text-gf-heading mb-1">
+ <p className="text-sm font-medium text-sf-heading mb-1">
  {t('status.active')}
  </p>
- <p className="text-sm text-gf-body">
+ <p className="text-sm text-sf-body">
  {t('status.activeDescription')}
  </p>
  </div>
@@ -272,14 +272,14 @@ export default function StripeTaxSettings() {
  )}
 
  {taxStatus.status === 'pending' && (
- <div className="mb-6 bg-gf-warning-soft border border-gf-warning/20 p-4">
+ <div className="mb-6 bg-sf-warning-soft border border-sf-warning/20 p-4">
  <div className="flex items-start gap-3">
- <AlertCircle className="w-5 h-5 text-gf-warning mt-0.5 flex-shrink-0" />
+ <AlertCircle className="w-5 h-5 text-sf-warning mt-0.5 flex-shrink-0" />
  <div className="flex-1">
- <p className="text-sm font-medium text-gf-heading mb-1">
+ <p className="text-sm font-medium text-sf-heading mb-1">
  {t('status.pending')}
  </p>
- <p className="text-sm text-gf-body">
+ <p className="text-sm text-sf-body">
  {t('status.pendingDescription')}
  </p>
  </div>
@@ -288,14 +288,14 @@ export default function StripeTaxSettings() {
  )}
 
  {taxStatus.status === 'no_permission' && (
- <div className="mb-6 bg-gf-accent-soft border border-gf-accent/20 p-4">
+ <div className="mb-6 bg-sf-accent-soft border border-sf-accent/20 p-4">
  <div className="flex items-start gap-3">
- <Info className="w-5 h-5 text-gf-accent mt-0.5 flex-shrink-0" />
+ <Info className="w-5 h-5 text-sf-accent mt-0.5 flex-shrink-0" />
  <div className="flex-1">
- <p className="text-sm font-medium text-gf-heading mb-1">
+ <p className="text-sm font-medium text-sf-heading mb-1">
  {t('status.noPermission')}
  </p>
- <p className="text-sm text-gf-body">
+ <p className="text-sm text-sf-body">
  {t('status.noPermissionDescription')}
  </p>
  </div>
@@ -304,14 +304,14 @@ export default function StripeTaxSettings() {
  )}
 
  {taxStatus.status === 'stripe_not_configured' && (
- <div className="mb-6 bg-gf-raised border-2 border-gf-border-medium p-4">
+ <div className="mb-6 bg-sf-raised border-2 border-sf-border-medium p-4">
  <div className="flex items-start gap-3">
- <AlertCircle className="w-5 h-5 text-gf-muted mt-0.5 flex-shrink-0" />
+ <AlertCircle className="w-5 h-5 text-sf-muted mt-0.5 flex-shrink-0" />
  <div className="flex-1">
- <p className="text-sm font-medium text-gf-heading mb-1">
+ <p className="text-sm font-medium text-sf-heading mb-1">
  {t('status.stripeNotConfigured')}
  </p>
- <p className="text-sm text-gf-body">
+ <p className="text-sm text-sf-body">
  {t('status.stripeNotConfiguredDescription')}
  </p>
  </div>
@@ -322,7 +322,7 @@ export default function StripeTaxSettings() {
  {/* Head Office */}
  {taxStatus.headOffice && taxStatus.headOffice.country && (
  <div className="mb-4">
- <p className="text-xs text-gf-muted">
+ <p className="text-xs text-sf-muted">
  {t('headOffice')}:{' '}
  {getCountryFlag(taxStatus.headOffice.country)}{' '}
  {getCountryName(taxStatus.headOffice.country)}
@@ -335,7 +335,7 @@ export default function StripeTaxSettings() {
  {taxStatus.status !== 'stripe_not_configured' &&
  taxStatus.status !== 'no_permission' && (
  <div className="mb-6">
- <h3 className="text-sm font-medium text-gf-body mb-3">
+ <h3 className="text-sm font-medium text-sf-body mb-3">
  {t('registrations')}
  </h3>
  {taxStatus.registrations.length > 0 ? (
@@ -343,7 +343,7 @@ export default function StripeTaxSettings() {
  {taxStatus.registrations.map((reg) => (
  <span
  key={`${reg.country}-${reg.state || ''}`}
- className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-gf-raised text-gf-body"
+ className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-sf-raised text-sf-body"
  >
  {getCountryFlag(reg.country)}{' '}
  {getCountryName(reg.country)}
@@ -352,7 +352,7 @@ export default function StripeTaxSettings() {
  ))}
  </div>
  ) : (
- <p className="text-sm text-gf-muted">
+ <p className="text-sm text-sf-muted">
  {t('noRegistrations')}
  </p>
  )}
@@ -364,15 +364,15 @@ export default function StripeTaxSettings() {
  {/* Checkout Settings Toggles */}
  <div className="mb-6 space-y-0">
  {/* Automatic Tax */}
- <div className="flex items-center justify-between py-3 border-t border-gf-border">
+ <div className="flex items-center justify-between py-3 border-t border-sf-border">
  <div className="flex-1 min-w-0 mr-4">
  <div className="flex items-center gap-2 mb-1">
- <p className="text-sm font-medium text-gf-heading">
+ <p className="text-sm font-medium text-sf-heading">
  {t('toggles.automaticTax')}
  </p>
  <SourceBadge source={sources.automatic_tax} envAlsoSet={envExists.automatic_tax} />
  </div>
- <p className="text-xs text-gf-muted">
+ <p className="text-xs text-sf-muted">
  {t('toggles.automaticTaxDescription')}
  </p>
  </div>
@@ -385,15 +385,15 @@ export default function StripeTaxSettings() {
  </div>
 
  {/* Tax ID Collection */}
- <div className="flex items-center justify-between py-3 border-t border-gf-border">
+ <div className="flex items-center justify-between py-3 border-t border-sf-border">
  <div className="flex-1 min-w-0 mr-4">
  <div className="flex items-center gap-2 mb-1">
- <p className="text-sm font-medium text-gf-heading">
+ <p className="text-sm font-medium text-sf-heading">
  {t('toggles.taxIdCollection')}
  </p>
  <SourceBadge source={sources.tax_id_collection} envAlsoSet={envExists.tax_id_collection} />
  </div>
- <p className="text-xs text-gf-muted">
+ <p className="text-xs text-sf-muted">
  {t('toggles.taxIdCollectionDescription')}
  </p>
  </div>
@@ -406,15 +406,15 @@ export default function StripeTaxSettings() {
  </div>
 
  {/* Billing Address */}
- <div className="flex items-center justify-between py-3 border-t border-gf-border">
+ <div className="flex items-center justify-between py-3 border-t border-sf-border">
  <div className="flex-1 min-w-0 mr-4">
  <div className="flex items-center gap-2 mb-1">
- <p className="text-sm font-medium text-gf-heading">
+ <p className="text-sm font-medium text-sf-heading">
  {t('toggles.billingAddress')}
  </p>
  <SourceBadge source={sources.billing_address_collection} envAlsoSet={envExists.billing_address_collection} />
  </div>
- <p className="text-xs text-gf-muted">
+ <p className="text-xs text-sf-muted">
  {t('toggles.billingAddressDescription')}
  </p>
  </div>
@@ -426,8 +426,8 @@ export default function StripeTaxSettings() {
  disabled={saving}
  className={`px-3 py-1.5 text-xs font-medium transition-colors ${
  billingAddress === value
- ? 'bg-gf-accent-bg text-white'
- : 'bg-gf-raised text-gf-body hover:bg-gf-hover'
+ ? 'bg-sf-accent-bg text-white'
+ : 'bg-sf-raised text-sf-body hover:bg-sf-hover'
  } ${saving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
  >
  {t(`toggles.billing${value.charAt(0).toUpperCase() + value.slice(1)}`)}
@@ -437,15 +437,15 @@ export default function StripeTaxSettings() {
  </div>
 
  {/* Session Expires Hours */}
- <div className="flex items-center justify-between py-3 border-t border-gf-border">
+ <div className="flex items-center justify-between py-3 border-t border-sf-border">
  <div className="flex-1 min-w-0 mr-4">
  <div className="flex items-center gap-2 mb-1">
- <p className="text-sm font-medium text-gf-heading">
+ <p className="text-sm font-medium text-sf-heading">
  {t('toggles.expiresHours')}
  </p>
  <SourceBadge source={sources.expires_hours} envAlsoSet={envExists.expires_hours} />
  </div>
- <p className="text-xs text-gf-muted">
+ <p className="text-xs text-sf-muted">
  {t('toggles.expiresHoursDescription')}
  </p>
  </div>
@@ -459,26 +459,26 @@ export default function StripeTaxSettings() {
  onBlur={() => handleExpiresHours(expiresHours)}
  disabled={saving}
  aria-label={t('toggles.expiresHoursDescription')}
- className={`w-20 px-2 py-1.5 text-sm text-right border-2 border-gf-border-medium bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent focus:border-transparent ${
+ className={`w-20 px-2 py-1.5 text-sm text-right border-2 border-sf-border-medium bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent focus:border-transparent ${
  saving ? 'opacity-50 cursor-not-allowed' : ''
  }`}
  />
- <span className="text-xs text-gf-muted">
+ <span className="text-xs text-sf-muted">
  {t('toggles.expiresHoursSuffix')}
  </span>
  </div>
  </div>
 
  {/* Terms of Service Collection */}
- <div className="flex items-center justify-between py-3 border-t border-gf-border">
+ <div className="flex items-center justify-between py-3 border-t border-sf-border">
  <div className="flex-1 min-w-0 mr-4">
  <div className="flex items-center gap-2 mb-1">
- <p className="text-sm font-medium text-gf-heading">
+ <p className="text-sm font-medium text-sf-heading">
  {t('toggles.collectTerms')}
  </p>
  <SourceBadge source={sources.collect_terms} envAlsoSet={envExists.collect_terms} />
  </div>
- <p className="text-xs text-gf-muted">
+ <p className="text-xs text-sf-muted">
  {t('toggles.collectTermsDescription')}
  </p>
  </div>
@@ -499,7 +499,7 @@ export default function StripeTaxSettings() {
  href={link.url}
  target="_blank"
  rel="noopener noreferrer"
- className="inline-flex items-center gap-2 px-4 py-2 border-2 border-gf-border-medium text-gf-body font-medium hover:bg-gf-hover transition-colors text-sm"
+ className="inline-flex items-center gap-2 px-4 py-2 border-2 border-sf-border-medium text-sf-body font-medium hover:bg-sf-hover transition-colors text-sm"
  >
  {t(`links.${link.key}`)}
  <ExternalLink className="w-4 h-4" />

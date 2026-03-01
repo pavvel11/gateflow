@@ -42,15 +42,15 @@ export default async function TermsPage() {
   return (
     <div className="min-h-screen bg-wl-deep py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gf-raised/80 backdrop-blur-sm rounded-2xl p-8 shadow-[var(--gf-shadow-accent)] border border-gf-border">
+        <div className="bg-sf-raised/80 backdrop-blur-sm rounded-2xl p-8 shadow-[var(--sf-shadow-accent)] border border-sf-border">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gf-heading mb-4">{t('title')}</h1>
-            <p className="text-gf-body">{t('configRequired')}</p>
+            <h1 className="text-3xl font-bold text-sf-heading mb-4">{t('title')}</h1>
+            <p className="text-sf-body">{t('configRequired')}</p>
           </div>
 
-          <div className="prose prose-invert max-w-none space-y-6 text-gf-body">
+          <div className="prose prose-invert max-w-none space-y-6 text-sf-body">
             <section>
-              <h2 className="text-xl font-semibold text-gf-heading mb-3">{t('configRequired')}</h2>
+              <h2 className="text-xl font-semibold text-sf-heading mb-3">{t('configRequired')}</h2>
               <p>{t('configDescription')}</p>
 
               <div className="mt-4 p-4 bg-wl-accent-soft border border-wl-border-accent rounded-xl">
@@ -58,12 +58,12 @@ export default async function TermsPage() {
                 <p className="text-wl-accent text-sm mt-2">{t('option1Description')}</p>
               </div>
 
-              <div className="mt-4 p-4 bg-gf-accent-soft border border-gf-accent/30 rounded-xl">
-                <p className="text-gf-accent font-medium">{t('option2Title')}</p>
-                <p className="text-gf-accent text-sm font-mono mt-2">{t('option2EnvVar')}</p>
+              <div className="mt-4 p-4 bg-sf-accent-soft border border-sf-accent/30 rounded-xl">
+                <p className="text-sf-accent font-medium">{t('option2Title')}</p>
+                <p className="text-sf-accent text-sm font-mono mt-2">{t('option2EnvVar')}</p>
               </div>
 
-              <p className="mt-4 text-sm text-gf-muted">{t('urlHelp')}</p>
+              <p className="mt-4 text-sm text-sf-muted">{t('urlHelp')}</p>
             </section>
           </div>
         </div>

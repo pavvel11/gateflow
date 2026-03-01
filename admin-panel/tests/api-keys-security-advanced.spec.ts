@@ -340,7 +340,7 @@ test.describe('API Keys Security - Invalid Key Handling', () => {
   test('Malformed key should return 401 without revealing format expectations', async ({ request }) => {
     const malformedKeys = [
       'invalid_key',
-      'gf_xxx_1234567890',
+      'sf_xxx_1234567890',
       'sf_live_short',
       'sf_live_' + 'a'.repeat(100), // Too long
       '',

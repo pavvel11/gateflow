@@ -832,8 +832,20 @@
       "browseAll": "Browse All Products",
       "poweredBy": "{count, plural, one {# product} other {# products}} available • Powered by {shopName}"
     },
+    "filters": {
+      "all": "All ({count})",
+      "featured": "Featured ({count})",
+      "free": "Free ({count})",
+      "premium": "Premium ({count})"
+    },
+    "brandMoment": {
+      "statsProducts": "Products",
+      "statsFree": "Free",
+      "statsPremium": "Premium"
+    },
     "footer": {
-      "copyright": "© 2025 Powered by Sellf • Secure Product Access Management"
+      "copyright": "© 2025 Powered by Sellf • Secure Product Access Management",
+      "poweredBy": "Powered by {shopName}"
     }
   },
   "productView": {

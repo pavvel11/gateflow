@@ -66,29 +66,29 @@ export default function LegalDocumentsSettings() {
 
  if (loading) {
  return (
- <div className="bg-gf-base border-2 border-gf-border-medium p-6">
+ <div className="bg-sf-base border-2 border-sf-border-medium p-6">
  <div className="animate-pulse space-y-4">
- <div className="h-4 bg-gf-raised w-1/4"></div>
- <div className="h-10 bg-gf-raised"></div>
- <div className="h-10 bg-gf-raised"></div>
+ <div className="h-4 bg-sf-raised w-1/4"></div>
+ <div className="h-10 bg-sf-raised"></div>
+ <div className="h-10 bg-sf-raised"></div>
  </div>
  </div>
  );
  }
 
  return (
- <div className="bg-gf-base border-2 border-gf-border-medium p-6">
- <h2 className="text-xl font-semibold text-gf-heading mb-2">
+ <div className="bg-sf-base border-2 border-sf-border-medium p-6">
+ <h2 className="text-xl font-semibold text-sf-heading mb-2">
  {t('title')}
  </h2>
- <p className="text-sm text-gf-body mb-6">
+ <p className="text-sm text-sf-body mb-6">
  {t('description')}
  </p>
 
  <form onSubmit={handleSubmit} className="space-y-6">
  {/* Terms of Service URL */}
  <div>
- <label htmlFor="legal-terms-url" className="block text-sm font-medium text-gf-body mb-2">
+ <label htmlFor="legal-terms-url" className="block text-sm font-medium text-sf-body mb-2">
  {t('termsOfServiceUrl')}
  </label>
  <input
@@ -96,17 +96,17 @@ export default function LegalDocumentsSettings() {
  type="url"
  value={formData.terms_of_service_url}
  onChange={(e) => setFormData({ ...formData, terms_of_service_url: e.target.value })}
- className="w-full px-4 py-2 border-2 border-gf-border-medium bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent focus:border-transparent"
+ className="w-full px-4 py-2 border-2 border-sf-border-medium bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent focus:border-transparent"
  placeholder={t('termsPlaceholder')}
  />
- <p className="mt-1 text-xs text-gf-muted">
+ <p className="mt-1 text-xs text-sf-muted">
  {t('termsHelp')}
  </p>
  </div>
 
  {/* Privacy Policy URL */}
  <div>
- <label htmlFor="legal-privacy-url" className="block text-sm font-medium text-gf-body mb-2">
+ <label htmlFor="legal-privacy-url" className="block text-sm font-medium text-sf-body mb-2">
  {t('privacyPolicyUrl')}
  </label>
  <input
@@ -114,33 +114,33 @@ export default function LegalDocumentsSettings() {
  type="url"
  value={formData.privacy_policy_url}
  onChange={(e) => setFormData({ ...formData, privacy_policy_url: e.target.value })}
- className="w-full px-4 py-2 border-2 border-gf-border-medium bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent focus:border-transparent"
+ className="w-full px-4 py-2 border-2 border-sf-border-medium bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent focus:border-transparent"
  placeholder={t('privacyPlaceholder')}
  />
- <p className="mt-1 text-xs text-gf-muted">
+ <p className="mt-1 text-xs text-sf-muted">
  {t('privacyHelp')}
  </p>
  </div>
 
  {/* Info Box */}
- <div className="p-4 bg-gf-accent-soft border border-gf-accent/20">
+ <div className="p-4 bg-sf-accent-soft border border-sf-accent/20">
  <div className="flex gap-3">
- <span className="text-gf-accent text-lg">ℹ️</span>
- <div className="text-sm text-gf-accent">
+ <span className="text-sf-accent text-lg">ℹ️</span>
+ <div className="text-sm text-sf-accent">
  <p className="font-medium mb-1">{t('infoTitle')}</p>
- <p className="text-gf-accent">{t('infoDescription')}</p>
+ <p className="text-sf-accent">{t('infoDescription')}</p>
  <div className="mt-2 flex gap-4">
  <a
  href="/terms"
  target="_blank"
- className="text-gf-accent underline hover:no-underline"
+ className="text-sf-accent underline hover:no-underline"
  >
  /terms
  </a>
  <a
  href="/privacy"
  target="_blank"
- className="text-gf-accent underline hover:no-underline"
+ className="text-sf-accent underline hover:no-underline"
  >
  /privacy
  </a>
@@ -154,7 +154,7 @@ export default function LegalDocumentsSettings() {
  <button
  type="submit"
  disabled={saving}
- className="px-6 py-2 bg-gf-accent-bg hover:bg-gf-accent-hover text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+ className="px-6 py-2 bg-sf-accent-bg hover:bg-sf-accent-hover text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
  >
  {saving ? t('saving') : t('saveButton')}
  </button>

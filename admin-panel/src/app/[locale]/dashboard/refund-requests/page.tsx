@@ -103,10 +103,10 @@ export default function RefundRequestsPage() {
 
   const getStatusBadge = (status: string) => {
     const statusStyles: Record<string, string> = {
-      pending: 'bg-gf-warning-soft text-gf-warning',
-      approved: 'bg-gf-success-soft text-gf-success',
-      rejected: 'bg-gf-danger-soft text-gf-danger',
-      cancelled: 'bg-gf-raised text-gf-muted',
+      pending: 'bg-sf-warning-soft text-sf-warning',
+      approved: 'bg-sf-success-soft text-sf-success',
+      rejected: 'bg-sf-danger-soft text-sf-danger',
+      cancelled: 'bg-sf-raised text-sf-muted',
     };
 
     return (
@@ -119,10 +119,10 @@ export default function RefundRequestsPage() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gf-heading">
+        <h1 className="text-2xl font-bold text-sf-heading">
           {t('title', { defaultValue: 'Refund Requests' })}
         </h1>
-        <p className="text-gf-body mt-1">
+        <p className="text-sf-body mt-1">
           {t('subtitle', { defaultValue: 'Review and process customer refund requests' })}
         </p>
       </div>
@@ -133,7 +133,7 @@ export default function RefundRequestsPage() {
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           aria-label={t('filterByStatus', { defaultValue: 'Filter by status' })}
-          className="px-4 py-2 border border-gf-border rounded-lg bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent"
+          className="px-4 py-2 border border-sf-border rounded-lg bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent"
         >
           <option value="">{t('allStatuses', { defaultValue: 'All Statuses' })}</option>
           <option value="pending">{t('pending', { defaultValue: 'Pending' })}</option>
@@ -144,89 +144,89 @@ export default function RefundRequestsPage() {
 
         <button
           onClick={fetchRequests}
-          className="px-4 py-2 bg-gf-accent-bg hover:bg-gf-accent-hover text-white rounded-lg transition-colors"
+          className="px-4 py-2 bg-sf-accent-bg hover:bg-sf-accent-hover text-white rounded-lg transition-colors"
         >
           {t('refresh', { defaultValue: 'Refresh' })}
         </button>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-gf-danger-soft border border-gf-danger/20 rounded-lg text-gf-danger">
+        <div className="mb-6 p-4 bg-sf-danger-soft border border-sf-danger/20 rounded-lg text-sf-danger">
           {error}
         </div>
       )}
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gf-accent"></div>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-sf-accent"></div>
         </div>
       ) : requests.length === 0 ? (
-        <div className="text-center py-12 bg-gf-raised rounded-lg">
+        <div className="text-center py-12 bg-sf-raised rounded-lg">
           <div className="text-4xl mb-4">📋</div>
-          <p className="text-gf-muted">
+          <p className="text-sf-muted">
             {t('noRequests', { defaultValue: 'No refund requests found' })}
           </p>
         </div>
       ) : (
-        <div className="bg-gf-base rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gf-border">
-            <thead className="bg-gf-raised">
+        <div className="bg-sf-base rounded-lg shadow overflow-hidden">
+          <table className="min-w-full divide-y divide-sf-border">
+            <thead className="bg-sf-raised">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
                   {t('product', { defaultValue: 'Product' })}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
                   {t('customer', { defaultValue: 'Customer' })}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
                   {t('amount', { defaultValue: 'Amount' })}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
                   {t('status', { defaultValue: 'Status' })}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
                   {t('requestedOn', { defaultValue: 'Requested' })}
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gf-muted uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-sf-muted uppercase tracking-wider">
                   {t('actions', { defaultValue: 'Actions' })}
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gf-border">
+            <tbody className="divide-y divide-sf-border">
               {requests.map((request) => (
-                <tr key={request.id} className="hover:bg-gf-hover">
+                <tr key={request.id} className="hover:bg-sf-hover">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gf-heading">
+                    <div className="text-sm font-medium text-sf-heading">
                       {request.product_name}
                     </div>
-                    <div className="text-xs text-gf-muted">
+                    <div className="text-xs text-sf-muted">
                       {t('purchasedOn', { defaultValue: 'Purchased' })}: {formatDate(request.purchase_date || null, t('naLabel'))}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gf-heading">
+                    <div className="text-sm text-sf-heading">
                       {request.customer_email}
                     </div>
                     {request.reason && (
-                      <div className="text-xs text-gf-muted max-w-xs truncate" title={request.reason}>
+                      <div className="text-xs text-sf-muted max-w-xs truncate" title={request.reason}>
                         {t('reason', { defaultValue: 'Reason' })}: {request.reason}
                       </div>
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gf-heading">
+                    <div className="text-sm font-medium text-sf-heading">
                       {formatPrice(request.requested_amount, request.currency, t('naLabel'), t('invalidPrice'))}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {getStatusBadge(request.status)}
                     {request.processed_at && (
-                      <div className="text-xs text-gf-muted mt-1">
+                      <div className="text-xs text-sf-muted mt-1">
                         {formatDate(request.processed_at, t('naLabel'))}
                       </div>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gf-muted">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-sf-muted">
                     {formatDate(request.created_at, t('naLabel'))}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -248,11 +248,11 @@ export default function RefundRequestsPage() {
                         </button>
                       </div>
                     ) : request.admin_response ? (
-                      <span className="text-xs text-gf-muted max-w-xs truncate block" title={request.admin_response}>
+                      <span className="text-xs text-sf-muted max-w-xs truncate block" title={request.admin_response}>
                         {request.admin_response}
                       </span>
                     ) : (
-                      <span className="text-gf-muted">—</span>
+                      <span className="text-sf-muted">—</span>
                     )}
                   </td>
                 </tr>
@@ -265,25 +265,25 @@ export default function RefundRequestsPage() {
       {/* Action Modal */}
       {actionModalOpen && selectedRequest && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gf-base rounded-xl max-w-md w-full p-6">
-            <h2 className="text-xl font-bold text-gf-heading mb-4">
+          <div className="bg-sf-base rounded-xl max-w-md w-full p-6">
+            <h2 className="text-xl font-bold text-sf-heading mb-4">
               {actionType === 'approve'
                 ? t('approveTitle', { defaultValue: 'Approve Refund Request' })
                 : t('rejectTitle', { defaultValue: 'Reject Refund Request' })}
             </h2>
 
-            <div className="mb-4 p-4 bg-gf-raised rounded-lg">
-              <div className="text-sm text-gf-heading font-medium">
+            <div className="mb-4 p-4 bg-sf-raised rounded-lg">
+              <div className="text-sm text-sf-heading font-medium">
                 {selectedRequest.product_name}
               </div>
-              <div className="text-sm text-gf-body">
+              <div className="text-sm text-sf-body">
                 {selectedRequest.customer_email}
               </div>
-              <div className="text-lg font-bold text-gf-heading mt-2">
+              <div className="text-lg font-bold text-sf-heading mt-2">
                 {formatPrice(selectedRequest.requested_amount, selectedRequest.currency, t('naLabel'), t('invalidPrice'))}
               </div>
               {selectedRequest.reason && (
-                <div className="mt-2 text-sm text-gf-body">
+                <div className="mt-2 text-sm text-sf-body">
                   <span className="font-medium">{t('customerReason', { defaultValue: 'Customer reason' })}:</span>{' '}
                   {selectedRequest.reason}
                 </div>
@@ -291,7 +291,7 @@ export default function RefundRequestsPage() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gf-body mb-2">
+              <label className="block text-sm font-medium text-sf-body mb-2">
                 {actionType === 'approve'
                   ? t('approveNote', { defaultValue: 'Note (optional)' })
                   : t('rejectReason', { defaultValue: 'Reason for rejection' })}
@@ -300,7 +300,7 @@ export default function RefundRequestsPage() {
                 value={adminResponse}
                 onChange={(e) => setAdminResponse(e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-gf-border rounded-lg bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent"
+                className="w-full px-3 py-2 border border-sf-border rounded-lg bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent"
                 placeholder={
                   actionType === 'approve'
                     ? t('approveNotePlaceholder', { defaultValue: 'Add any notes for the customer...' })
@@ -310,12 +310,12 @@ export default function RefundRequestsPage() {
             </div>
 
             {actionType === 'approve' && (
-              <div className="mb-4 p-4 bg-gf-warning-soft border border-gf-warning/20 rounded-lg">
+              <div className="mb-4 p-4 bg-sf-warning-soft border border-sf-warning/20 rounded-lg">
                 <div className="flex items-start">
-                  <svg className="h-5 w-5 text-gf-warning mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="h-5 w-5 text-sf-warning mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
-                  <p className="text-sm text-gf-warning">
+                  <p className="text-sm text-sf-warning">
                     {t('approveWarning', { defaultValue: 'This will process the refund through Stripe and revoke product access.' })}
                   </p>
                 </div>
@@ -326,7 +326,7 @@ export default function RefundRequestsPage() {
               <button
                 onClick={() => setActionModalOpen(false)}
                 disabled={processingId !== null}
-                className="flex-1 px-4 py-2 border border-gf-border text-gf-body rounded-lg hover:bg-gf-hover transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 border border-sf-border text-sf-body rounded-lg hover:bg-sf-hover transition-colors disabled:opacity-50"
               >
                 {t('cancel', { defaultValue: 'Cancel' })}
               </button>

@@ -116,7 +116,7 @@ export function PriceVatInline({
   return (
     <div>
       {/* Price input row with inline VAT controls */}
-      <label htmlFor="price" className="block text-sm font-medium text-gf-body mb-2">
+      <label htmlFor="price" className="block text-sm font-medium text-sf-body mb-2">
         {t('price')}
       </label>
       <div className="flex flex-wrap items-center gap-3">
@@ -124,7 +124,7 @@ export function PriceVatInline({
         <div className="relative w-52">
           {showCurrencyPrefix && (
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-gf-muted text-sm">
+              <span className="text-sf-muted text-sm">
                 {getCurrencySymbol(formData.currency)}
               </span>
             </div>
@@ -137,7 +137,7 @@ export function PriceVatInline({
             value={priceDisplayValue}
             onChange={handlePriceChange}
             placeholder={!showCurrencyPrefix ? `${getCurrencySymbol(formData.currency)}` : ''}
-            className={`${showCurrencyPrefix ? 'pl-9' : 'pl-3'} pr-[4.5rem] w-full py-2 border ${fieldErrors.price ? 'border-red-500 focus:ring-red-500' : 'border-gf-border focus:ring-gf-accent'} focus:outline-none focus:ring-2 focus:border-transparent bg-gf-input text-gf-heading`}
+            className={`${showCurrencyPrefix ? 'pl-9' : 'pl-3'} pr-[4.5rem] w-full py-2 border ${fieldErrors.price ? 'border-red-500 focus:ring-red-500' : 'border-sf-border focus:ring-sf-accent'} focus:outline-none focus:ring-2 focus:border-transparent bg-sf-input text-sf-heading`}
           />
           <div className="absolute inset-y-0 right-0 pr-2 flex items-center">
             <select
@@ -145,7 +145,7 @@ export function PriceVatInline({
               name="currency"
               value={formData.currency}
               onChange={handleCurrencyChange}
-              className="h-full py-0 pl-1 pr-6 border-transparent bg-transparent text-gf-muted text-sm focus:outline-none focus:ring-gf-accent focus:border-gf-accent"
+              className="h-full py-0 pl-1 pr-6 border-transparent bg-transparent text-sf-muted text-sm focus:outline-none focus:ring-sf-accent focus:border-sf-accent"
             >
               {CURRENCIES.map(currency => (
                 <option key={currency.code} value={currency.code}>
@@ -164,9 +164,9 @@ export function PriceVatInline({
               id="price_includes_vat"
               checked={formData.price_includes_vat}
               onChange={(e) => setFormData(prev => ({ ...prev, price_includes_vat: e.target.checked }))}
-              className="h-4 w-4 text-gf-accent focus:ring-gf-accent border-gf-border rounded"
+              className="h-4 w-4 text-sf-accent focus:ring-sf-accent border-sf-border rounded"
             />
-            <span className="text-sm text-gf-body whitespace-nowrap">
+            <span className="text-sm text-sf-body whitespace-nowrap">
               {formData.price_includes_vat ? t('vatIncluded') : t('vatExcluded')}
             </span>
           </label>
@@ -185,9 +185,9 @@ export function PriceVatInline({
                 max="100"
                 step="1"
                 placeholder={shopDefaultVatRate != null ? `${Math.round(shopDefaultVatRate * 100)}` : '23'}
-                className="w-14 px-2 py-2 border-2 border-gf-border-medium bg-gf-input text-gf-heading focus:ring-2 focus:ring-gf-accent focus:border-transparent text-sm text-center"
+                className="w-14 px-2 py-2 border-2 border-sf-border-medium bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent focus:border-transparent text-sm text-center"
               />
-              <span className="text-sm text-gf-muted">%</span>
+              <span className="text-sm text-sf-muted">%</span>
             </div>
           )}
         </div>
@@ -196,7 +196,7 @@ export function PriceVatInline({
       {fieldErrors.price ? (
         <p className="mt-1.5 text-xs text-red-500">{t('price')} is required</p>
       ) : (
-        <p className="mt-1.5 text-xs text-gf-muted">
+        <p className="mt-1.5 text-xs text-sf-muted">
           {t('setToZeroForFree')}
         </p>
       )}
@@ -209,24 +209,24 @@ export function PriceVatInline({
             id="allow_custom_price"
             checked={formData.allow_custom_price}
             onChange={(e) => handleCustomPriceToggle(e.target.checked)}
-            className="h-4 w-4 text-gf-accent focus:ring-gf-accent border-gf-border rounded"
+            className="h-4 w-4 text-sf-accent focus:ring-sf-accent border-sf-border rounded"
           />
-          <span className="text-sm font-medium text-gf-body">
+          <span className="text-sm font-medium text-sf-body">
             {t('customPricing.allowCustomPrice')}
           </span>
-          <span className="text-xs text-gf-muted w-full pl-6 sm:w-auto sm:pl-0">
+          <span className="text-xs text-sf-muted w-full pl-6 sm:w-auto sm:pl-0">
             {t('customPricing.allowCustomPriceHelp')}
           </span>
         </label>
 
         {formData.allow_custom_price && (
           <div className="mt-2 ml-6 space-y-2">
-            <p className="text-xs text-gf-accent bg-gf-accent-soft px-2 py-1">
+            <p className="text-xs text-sf-accent bg-sf-accent-soft px-2 py-1">
               {t('customPricing.suggestedPriceHint')}
             </p>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gf-body">{t('customPricing.minimumPrice')}</span>
+              <span className="text-xs text-sf-body">{t('customPricing.minimumPrice')}</span>
               <input
                 type="number"
                 id="custom_price_min"
@@ -234,9 +234,9 @@ export function PriceVatInline({
                 onChange={handleMinPriceChange}
                 min="0"
                 step="0.10"
-                className="w-16 px-2 py-1 border-2 border-gf-border-medium text-sm focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
+                className="w-16 px-2 py-1 border-2 border-sf-border-medium text-sm focus:ring-2 focus:ring-sf-accent focus:border-transparent bg-sf-input text-sf-heading"
               />
-              <span className="text-xs text-gf-muted">
+              <span className="text-xs text-sf-muted">
                 {formData.custom_price_min === 0
                   ? t('customPricing.freeOptionHint')
                   : `(${t('customPricing.stripeMinimum')})`}
@@ -250,9 +250,9 @@ export function PriceVatInline({
                   id="show_price_presets"
                   checked={formData.show_price_presets}
                   onChange={(e) => setFormData(prev => ({ ...prev, show_price_presets: e.target.checked }))}
-                  className="h-3.5 w-3.5 text-gf-accent focus:ring-gf-accent border-gf-border rounded"
+                  className="h-3.5 w-3.5 text-sf-accent focus:ring-sf-accent border-sf-border rounded"
                 />
-                <span className="text-xs text-gf-body">{t('customPricing.showPresets')}</span>
+                <span className="text-xs text-sf-body">{t('customPricing.showPresets')}</span>
               </label>
               {formData.show_price_presets && [0, 1, 2].map((index) => (
                 <input
@@ -263,11 +263,11 @@ export function PriceVatInline({
                   min="0"
                   step="1"
                   placeholder="0"
-                  className="w-14 px-1.5 py-1 border-2 border-gf-border-medium text-sm text-center focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
+                  className="w-14 px-1.5 py-1 border-2 border-sf-border-medium text-sm text-center focus:ring-2 focus:ring-sf-accent focus:border-transparent bg-sf-input text-sf-heading"
                 />
               ))}
               {formData.show_price_presets && (
-                <span className="text-xs text-gf-muted">(0 = ukryty)</span>
+                <span className="text-xs text-sf-muted">(0 = ukryty)</span>
               )}
             </div>
           </div>

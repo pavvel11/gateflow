@@ -80,21 +80,21 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} size="lg" closeOnBackdropClick={false}>
       <div className="p-6">
-        <h2 className="text-2xl font-bold text-gf-heading mb-6">
+        <h2 className="text-2xl font-bold text-sf-heading mb-6">
           {t('title')}
         </h2>
         
         <div className="space-y-6">
           {/* Product Info */}
-          <div className="bg-gf-raised p-4">
-            <h3 className="font-semibold text-gf-heading mb-2">{t('product')}: {product.name}</h3>
-            <p className="text-sm text-gf-body">{t('slug')}: {product.slug}</p>
+          <div className="bg-sf-raised p-4">
+            <h3 className="font-semibold text-sf-heading mb-2">{t('product')}: {product.name}</h3>
+            <p className="text-sm text-sf-body">{t('slug')}: {product.slug}</p>
           </div>
 
           {/* Options */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gf-body mb-2">
+              <label className="block text-sm font-medium text-sf-body mb-2">
                 {t('protectionMode')}
               </label>
               <div className={`grid gap-4 ${product.price === 0 ? 'grid-cols-3' : 'grid-cols-2'}`}>
@@ -102,12 +102,12 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
                   onClick={() => setOptions({...options, mode: 'page'})}
                   className={`p-3 border text-left ${
                     options.mode === 'page'
-                      ? 'border-gf-accent bg-gf-accent-soft text-gf-accent'
-                      : 'border-gf-border hover:border-gf-accent/50'
+                      ? 'border-sf-accent bg-sf-accent-soft text-sf-accent'
+                      : 'border-sf-border hover:border-sf-accent/50'
                   }`}
                 >
                   <div className="font-medium">🌐 {t('pageMode')}</div>
-                  <div className="text-sm text-gf-body">
+                  <div className="text-sm text-sf-body">
                     {t('pageDescription')}
                   </div>
                 </button>
@@ -115,12 +115,12 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
                   onClick={() => setOptions({...options, mode: 'element'})}
                   className={`p-3 border text-left ${
                     options.mode === 'element'
-                      ? 'border-gf-accent bg-gf-accent-soft text-gf-accent'
-                      : 'border-gf-border hover:border-gf-accent/50'
+                      ? 'border-sf-accent bg-sf-accent-soft text-sf-accent'
+                      : 'border-sf-border hover:border-sf-accent/50'
                   }`}
                 >
                   <div className="font-medium">🎯 {t('elementMode')}</div>
-                  <div className="text-sm text-gf-body">
+                  <div className="text-sm text-sf-body">
                     {t('elementDescription')}
                   </div>
                 </button>
@@ -129,12 +129,12 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
                     onClick={() => setOptions({...options, mode: 'embed'})}
                     className={`p-3 border text-left ${
                       options.mode === 'embed'
-                        ? 'border-gf-accent bg-gf-accent-soft text-gf-accent'
-                        : 'border-gf-border hover:border-gf-accent/50'
+                        ? 'border-sf-accent bg-sf-accent-soft text-sf-accent'
+                        : 'border-sf-border hover:border-sf-accent/50'
                     }`}
                   >
                     <div className="font-medium">🎁 {t('embedMode')}</div>
-                    <div className="text-sm text-gf-body">
+                    <div className="text-sm text-sf-body">
                       {t('embedDescription')}
                     </div>
                   </button>
@@ -146,15 +146,15 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
           {/* Generated Code */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gf-body">
+              <label className="block text-sm font-medium text-sf-body">
                 {t('generatedCode')}
               </label>
               <button
                 onClick={handleCopy}
                 className={`px-3 py-1 text-sm transition ${
                   copiedCode === generatedCode
-                    ? 'bg-gf-success-soft text-gf-success'
-                    : 'bg-gf-accent-soft text-gf-accent hover:bg-gf-accent-soft/80'
+                    ? 'bg-sf-success-soft text-sf-success'
+                    : 'bg-sf-accent-soft text-sf-accent hover:bg-sf-accent-soft/80'
                 }`}
               >
                 {copiedCode === generatedCode ? t('copied') : t('copyCode')}
@@ -166,11 +166,11 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
           </div>
 
           {/* Instructions */}
-          <div className="bg-gf-accent-soft p-4">
-            <h4 className="font-semibold text-gf-accent mb-2">
+          <div className="bg-sf-accent-soft p-4">
+            <h4 className="font-semibold text-sf-accent mb-2">
               📋 {t('instructions')}
             </h4>
-            <div className="text-sm text-gf-accent space-y-1">
+            <div className="text-sm text-sf-accent space-y-1">
               {options.mode === 'page' ? (
                 <>
                   <p dangerouslySetInnerHTML={{ __html: t('pageInstructions.step1') }} />
@@ -196,11 +196,11 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
           </div>
 
           {/* Additional Information */}
-          <div className="bg-gf-warning-soft p-4">
-            <h4 className="font-semibold text-gf-warning mb-2">
+          <div className="bg-sf-warning-soft p-4">
+            <h4 className="font-semibold text-sf-warning mb-2">
               ℹ️ {t('importantInfo')}
             </h4>
-            <div className="text-sm text-gf-warning space-y-2">
+            <div className="text-sm text-sf-warning space-y-2">
               {options.mode === 'page' ? (
                 <>
                   <p>
@@ -245,13 +245,13 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
         <div className="flex justify-end space-x-3 mt-6">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gf-body hover:bg-gf-hover transition"
+            className="px-4 py-2 text-sf-body hover:bg-sf-hover transition"
           >
             {t('close')}
           </button>
           <button
             onClick={handleCopy}
-            className="px-4 py-2 bg-gf-accent-bg text-white hover:bg-gf-accent-hover transition"
+            className="px-4 py-2 bg-sf-accent-bg text-white hover:bg-sf-accent-hover transition"
           >
             {t('copyCode')}
           </button>

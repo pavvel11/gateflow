@@ -49,13 +49,13 @@ export function SalePriceSection({
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="sale_price" className="block text-sm font-medium text-gf-body mb-2">
+            <label htmlFor="sale_price" className="block text-sm font-medium text-sf-body mb-2">
               {t('salePriceLabel')}
             </label>
             <div className="relative">
               {showCurrencyPrefix && (
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gf-muted text-sm min-w-[24px]">
+                  <span className="text-sf-muted text-sm min-w-[24px]">
                     {getCurrencySymbol(formData.currency)}
                   </span>
                 </div>
@@ -68,19 +68,19 @@ export function SalePriceSection({
                 value={salePriceDisplayValue}
                 onChange={handleSalePriceChange}
                 placeholder={!showCurrencyPrefix ? `0,00 ${getCurrencySymbol(formData.currency)}` : t('salePricePlaceholder')}
-                className={`${showCurrencyPrefix ? 'pl-12' : 'pl-3'} pr-12 w-full py-2.5 border ${salePriceInvalid ? 'border-red-500' : 'border-gf-border'} focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading`}
+                className={`${showCurrencyPrefix ? 'pl-12' : 'pl-3'} pr-12 w-full py-2.5 border ${salePriceInvalid ? 'border-red-500' : 'border-sf-border'} focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent bg-sf-input text-sf-heading`}
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                <span className="text-gf-muted text-sm">
+                <span className="text-sf-muted text-sm">
                   {formData.currency}
                 </span>
               </div>
             </div>
-            <p className="mt-1 text-xs text-gf-muted">
+            <p className="mt-1 text-xs text-sf-muted">
               {t('salePriceDescription')}
             </p>
             {salePriceInvalid && (
-              <p className="mt-1 text-xs text-gf-danger">
+              <p className="mt-1 text-xs text-sf-danger">
                 {t('salePriceMustBeLower')}
               </p>
             )}
@@ -100,9 +100,9 @@ export function SalePriceSection({
         {/* Quantity Limit */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="sale_quantity_limit" className="block text-sm font-medium text-gf-body mb-2">
+            <label htmlFor="sale_quantity_limit" className="block text-sm font-medium text-sf-body mb-2">
               {t('saleQuantityLimit', { defaultValue: 'Quantity Limit' })}
-              <span className="text-xs text-gf-muted ml-1">({t('optional')})</span>
+              <span className="text-xs text-sf-muted ml-1">({t('optional')})</span>
             </label>
             <input
               type="number"
@@ -113,10 +113,10 @@ export function SalePriceSection({
                 ...prev,
                 sale_quantity_limit: e.target.value ? parseInt(e.target.value, 10) : null
               }))}
-              className="w-full px-3 py-2.5 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
+              className="w-full px-3 py-2.5 border-2 border-sf-border-medium focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent bg-sf-input text-sf-heading"
               placeholder={t('saleQuantityLimitPlaceholder', { defaultValue: 'No limit' })}
             />
-            <p className="mt-1 text-xs text-gf-muted">
+            <p className="mt-1 text-xs text-sf-muted">
               {t('saleQuantityLimitDescription', { defaultValue: 'Max units at sale price. Leave empty for unlimited.' })}
             </p>
           </div>
@@ -124,16 +124,16 @@ export function SalePriceSection({
           {/* Quantity Sold Display & Reset */}
           {formData.sale_quantity_sold !== undefined && formData.sale_quantity_sold > 0 && (
             <div>
-              <label className="block text-sm font-medium text-gf-body mb-2">
+              <label className="block text-sm font-medium text-sf-body mb-2">
                 {t('saleQuantitySoldLabel', { defaultValue: 'Sold at Sale Price' })}
               </label>
               <div className="flex items-center gap-3">
-                <div className="flex-1 px-3 py-2.5 bg-gf-raised border-2 border-gf-border-medium">
-                  <span className="text-lg font-semibold text-gf-heading">
+                <div className="flex-1 px-3 py-2.5 bg-sf-raised border-2 border-sf-border-medium">
+                  <span className="text-lg font-semibold text-sf-heading">
                     {formData.sale_quantity_sold}
                   </span>
                   {formData.sale_quantity_limit && (
-                    <span className="text-gf-muted">
+                    <span className="text-sf-muted">
                       {' / '}{formData.sale_quantity_limit}
                     </span>
                   )}
@@ -141,13 +141,13 @@ export function SalePriceSection({
                 <button
                   type="button"
                   onClick={() => setFormData(prev => ({ ...prev, sale_quantity_sold: 0 }))}
-                  className="px-3 py-2.5 text-sm font-medium text-gf-danger bg-gf-danger-soft hover:bg-gf-danger-soft border border-gf-danger/20 transition-colors"
+                  className="px-3 py-2.5 text-sm font-medium text-sf-danger bg-sf-danger-soft hover:bg-sf-danger-soft border border-sf-danger/20 transition-colors"
                   title={t('resetSaleCounter', { defaultValue: 'Reset counter' })}
                 >
                   {t('reset', { defaultValue: 'Reset' })}
                 </button>
               </div>
-              <p className="mt-1 text-xs text-gf-muted">
+              <p className="mt-1 text-xs text-sf-muted">
                 {t('saleQuantitySoldDescription', { defaultValue: 'Number of units sold at the promotional price.' })}
               </p>
             </div>
@@ -155,8 +155,8 @@ export function SalePriceSection({
         </div>
 
         {salePriceActive && (
-          <div className="bg-gf-accent-soft p-3">
-            <p className="text-sm text-gf-accent">
+          <div className="bg-sf-accent-soft p-3">
+            <p className="text-sm text-sf-accent">
               ℹ️ {t('salePriceActiveInfo')}
             </p>
           </div>
@@ -164,8 +164,8 @@ export function SalePriceSection({
 
         {/* Warning when quantity limit is reached */}
         {quantityLimitReached && (
-          <div className="bg-gf-warning-soft p-3 border border-gf-warning/20">
-            <p className="text-sm text-gf-warning">
+          <div className="bg-sf-warning-soft p-3 border border-sf-warning/20">
+            <p className="text-sm text-sf-warning">
               ⚠️ {t('saleQuantityLimitReached', { defaultValue: 'Sale quantity limit reached. Customers will see the regular price.' })}
             </p>
           </div>

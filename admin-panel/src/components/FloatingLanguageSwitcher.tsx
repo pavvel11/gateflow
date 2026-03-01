@@ -79,7 +79,7 @@ export default function FloatingLanguageSwitcher({
     // Floating style (dark overlay typically)
     ? 'bg-black/20 backdrop-blur-sm border-white/10 hover:bg-black/30 hover:border-white/20 text-white'
     // Static style (fits into layout, handles light/dark)
-    : 'bg-gf-base border-gf-border hover:bg-gf-hover text-gf-body';
+    : 'bg-sf-base border-sf-border hover:bg-sf-hover text-sf-body';
 
   return (
     <div className={wrapperClasses} ref={containerRef}>
@@ -88,7 +88,7 @@ export default function FloatingLanguageSwitcher({
           onClick={() => setIsOpen(!isOpen)}
           disabled={isPending}
           className={`
-            group flex items-center justify-center gap-2 border-2 border-gf-border-subtle hover:border-gf-border-medium transition-all duration-200
+            group flex items-center justify-center gap-2 border-2 border-sf-border-subtle hover:border-sf-border-medium transition-all duration-200
             ${buttonBaseClasses}
             ${isPending ? 'opacity-50 cursor-not-allowed' : ''}
             ${variant === 'discrete' ? 'p-2' : 'px-3 py-2'}
@@ -116,7 +116,7 @@ export default function FloatingLanguageSwitcher({
             absolute mt-2 w-32 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200
             ${mode === 'floating' 
               ? 'top-full right-0 bg-black/40 backdrop-blur-md border border-white/20' 
-              : 'top-full right-0 bg-gf-base border-2 border-gf-border-medium'}
+              : 'top-full right-0 bg-sf-base border-2 border-sf-border-medium'}
           `}>
             <div className="p-1">
               {Object.entries(languages).map(([code, lang]) => (
@@ -127,7 +127,7 @@ export default function FloatingLanguageSwitcher({
                     flex items-center gap-3 w-full px-3 py-2 text-sm transition-colors
                     ${mode === 'floating'
                       ? (locale === code ? 'bg-white/20 text-white' : 'text-white/80 hover:bg-white/10 hover:text-white')
-                      : (locale === code ? 'bg-gf-accent-soft text-gf-accent' : 'text-gf-body hover:bg-gf-hover')
+                      : (locale === code ? 'bg-sf-accent-soft text-sf-accent' : 'text-sf-body hover:bg-sf-hover')
                     }
                   `}
                 >

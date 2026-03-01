@@ -209,23 +209,23 @@ export default function RevenueGoal() {
 
   if (loading) {
     return (
-      <div className="border-[3px] border-gf-border-medium h-[140px] animate-pulse p-6">
-        <div className="h-4 bg-gf-raised w-1/3 mb-4"></div>
-        <div className="h-8 bg-gf-raised w-full"></div>
+      <div className="border-[3px] border-sf-border-medium h-[140px] animate-pulse p-6">
+        <div className="h-4 bg-sf-raised w-1/3 mb-4"></div>
+        <div className="h-8 bg-sf-raised w-full"></div>
       </div>
     );
   }
 
   return (
-    <div className="border-[3px] border-gf-border-medium flex">
+    <div className="border-[3px] border-sf-border-medium flex">
       {/* Left panel - percentage */}
-      <div className="flex flex-col items-center justify-center px-6 py-6 border-r-[3px] border-gf-border-medium min-w-[120px]">
+      <div className="flex flex-col items-center justify-center px-6 py-6 border-r-[3px] border-sf-border-medium min-w-[120px]">
         <span className={`text-[72px] font-[800] tracking-[-0.04em] leading-none ${
-          rawPercentage >= 100 ? 'text-gf-success' : 'text-gf-accent'
+          rawPercentage >= 100 ? 'text-sf-success' : 'text-sf-accent'
         }`}>
           {hideValues ? '**' : rawPercentage}
         </span>
-        <span className="text-xs font-bold uppercase tracking-[0.08em] text-gf-muted mt-1">
+        <span className="text-xs font-bold uppercase tracking-[0.08em] text-sf-muted mt-1">
           %
         </span>
       </div>
@@ -233,7 +233,7 @@ export default function RevenueGoal() {
       {/* Right panel - details */}
       <div className="flex-1 px-6 py-5 flex flex-col justify-between">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-xs font-bold uppercase tracking-[0.08em] text-gf-muted">
+          <h3 className="text-xs font-bold uppercase tracking-[0.08em] text-sf-muted">
             {t('revenueGoal', { defaultValue: 'Revenue Goal' })}
           </h3>
           {isEditing ? (
@@ -245,28 +245,28 @@ export default function RevenueGoal() {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder={hideValues ? '****' : (goal / 100).toString()}
-                    className="w-24 px-2 py-1 text-sm border-2 border-gf-border-medium bg-gf-base text-gf-heading"
+                    className="w-24 px-2 py-1 text-sm border-2 border-sf-border-medium bg-sf-base text-sf-heading"
                     autoFocus
                   />
-                  <span className="text-xs font-bold text-gf-body">
+                  <span className="text-xs font-bold text-sf-body">
                     {goalCurrency}
                   </span>
                 </div>
                 <button
                   onClick={handleSave}
-                  className="text-xs bg-gf-accent-bg text-white px-2 py-1 hover:opacity-90"
+                  className="text-xs bg-sf-accent-bg text-white px-2 py-1 hover:opacity-90"
                 >
                   {tCommon('save')}
                 </button>
                 <button
                   onClick={handleResetGoal}
-                  className="text-xs text-gf-muted hover:underline"
+                  className="text-xs text-sf-muted hover:underline"
                   title={t('resetProgressTitle')}
                 >
                   {tCommon('reset')}
                 </button>
               </div>
-              <span className="text-[10px] text-gf-muted">
+              <span className="text-[10px] text-sf-muted">
                 {t('goalCurrencyNote')}
               </span>
             </div>
@@ -277,12 +277,12 @@ export default function RevenueGoal() {
                   setInputValue((goal / 100).toString());
                   setIsEditing(true);
                 }}
-                className="text-xs text-gf-accent hover:underline font-medium"
+                className="text-xs text-sf-accent hover:underline font-medium"
               >
                 {t('setGoal', { defaultValue: 'Set Goal' })}
               </button>
               {goalStartDate && (
-                <span className="text-xs text-gf-muted ml-2">
+                <span className="text-xs text-sf-muted ml-2">
                   ({t('stats.since', { date: new Date(goalStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) })})
                 </span>
               )}
@@ -292,18 +292,18 @@ export default function RevenueGoal() {
 
         <div className="mt-3">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold text-gf-heading">
+            <span className="text-sm font-semibold text-sf-heading">
               {formatCurrency(currentRevenue)}
             </span>
-            <span className="text-sm text-gf-muted">
+            <span className="text-sm text-sf-muted">
               / {formatCurrency(displayGoal)}
             </span>
           </div>
-          <div className="overflow-hidden h-3 border border-gf-border-medium bg-gf-raised">
+          <div className="overflow-hidden h-3 border border-sf-border-medium bg-sf-raised">
             <div
               style={{ width: `${visualPercentage}%` }}
               className={`h-full motion-safe:animate-[progress-fill_0.8s_ease-out_0.3s_both] ${
-                rawPercentage >= 100 ? 'bg-gf-success' : 'bg-gf-accent-bg'
+                rawPercentage >= 100 ? 'bg-sf-success' : 'bg-sf-accent-bg'
               }`}
             ></div>
           </div>

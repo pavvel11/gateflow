@@ -37,7 +37,7 @@ export default async function LocaleLayout({
       <AuthProvider>
         <ToastProvider>
           <WhitelabelProvider theme={theme} licenseValid={licenseValid}>
-            <div className="min-h-screen bg-gf-deep">
+            <div className="min-h-screen bg-sf-deep">
               {children}
             </div>
           </WhitelabelProvider>

@@ -119,7 +119,7 @@ export default function ApiKeyFormModal({
         <form id="api-key-form" onSubmit={handleSubmit} className="space-y-6">
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gf-body mb-1">
+            <label className="block text-sm font-medium text-sf-body mb-1">
               {t('keyName')} <span className="text-red-500">*</span>
             </label>
             <input
@@ -127,14 +127,14 @@ export default function ApiKeyFormModal({
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 bg-gf-input text-gf-heading border-2 border-gf-border-medium focus:ring-2 focus:ring-gf-accent focus:border-transparent outline-none transition-all"
+              className="w-full px-3 py-2 bg-sf-input text-sf-heading border-2 border-sf-border-medium focus:ring-2 focus:ring-sf-accent focus:border-transparent outline-none transition-all"
               placeholder={t('keyNamePlaceholder')}
             />
           </div>
 
           {/* Scope Presets */}
           <div>
-            <label className="block text-sm font-medium text-gf-body mb-2">
+            <label className="block text-sm font-medium text-sf-body mb-2">
               {t('quickPresets')}
             </label>
             <div className="flex flex-wrap gap-2">
@@ -145,8 +145,8 @@ export default function ApiKeyFormModal({
                   onClick={() => applyPreset(preset.scopes)}
                   className={`px-3 py-1.5 text-sm border transition-colors ${
                     JSON.stringify(formData.scopes.sort()) === JSON.stringify(preset.scopes.sort())
-                      ? 'bg-gf-accent-bg text-white border-gf-accent'
-                      : 'bg-gf-base text-gf-body border-gf-border hover:bg-gf-hover'
+                      ? 'bg-sf-accent-bg text-white border-sf-accent'
+                      : 'bg-sf-base text-sf-body border-sf-border hover:bg-sf-hover'
                   }`}
                 >
                   {preset.name}
@@ -157,10 +157,10 @@ export default function ApiKeyFormModal({
 
           {/* Scopes */}
           <div>
-            <label className="block text-sm font-medium text-gf-body mb-2">
+            <label className="block text-sm font-medium text-sf-body mb-2">
               {t('permissions')}
             </label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gf-deep p-4 border-2 border-gf-border-medium">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-sf-deep p-4 border-2 border-sf-border-medium">
               {AVAILABLE_SCOPES.map((scope) => (
                 <label key={scope.value} className="flex items-start space-x-3 cursor-pointer group">
                   <input
@@ -168,13 +168,13 @@ export default function ApiKeyFormModal({
                     checked={formData.scopes.includes(scope.value)}
                     onChange={() => toggleScope(scope.value)}
                     disabled={scope.value !== '*' && formData.scopes.includes('*')}
-                    className="mt-1 h-4 w-4 rounded border-gf-border text-gf-accent focus:ring-gf-accent transition-colors disabled:opacity-50"
+                    className="mt-1 h-4 w-4 rounded border-sf-border text-sf-accent focus:ring-sf-accent transition-colors disabled:opacity-50"
                   />
                   <div className="flex flex-col">
-                    <span className={`text-sm font-medium ${formData.scopes.includes('*') && scope.value !== '*' ? 'text-gf-muted' : 'text-gf-heading group-hover:text-gf-accent'} transition-colors`}>
+                    <span className={`text-sm font-medium ${formData.scopes.includes('*') && scope.value !== '*' ? 'text-sf-muted' : 'text-sf-heading group-hover:text-sf-accent'} transition-colors`}>
                       {scope.label}
                     </span>
-                    <span className="text-xs text-gf-muted">{scope.description}</span>
+                    <span className="text-xs text-sf-muted">{scope.description}</span>
                   </div>
                 </label>
               ))}
@@ -186,16 +186,16 @@ export default function ApiKeyFormModal({
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="text-sm text-gf-accent hover:opacity-80"
+              className="text-sm text-sf-accent hover:opacity-80"
             >
               {showAdvanced ? t('hideAdvanced') : t('showAdvanced')}
             </button>
 
             {showAdvanced && (
-              <div className="mt-4 space-y-4 p-4 bg-gf-deep border-2 border-gf-border-medium">
+              <div className="mt-4 space-y-4 p-4 bg-sf-deep border-2 border-sf-border-medium">
                 {/* Rate Limit */}
                 <div>
-                  <label className="block text-sm font-medium text-gf-body mb-1">
+                  <label className="block text-sm font-medium text-sf-body mb-1">
                     {t('rateLimit')}
                   </label>
                   <div className="flex items-center gap-2">
@@ -205,15 +205,15 @@ export default function ApiKeyFormModal({
                       max={1000}
                       value={formData.rate_limit_per_minute}
                       onChange={(e) => setFormData({ ...formData, rate_limit_per_minute: parseInt(e.target.value) || 60 })}
-                      className="w-32 px-3 py-2 bg-gf-input text-gf-heading border-2 border-gf-border-medium focus:ring-2 focus:ring-gf-accent focus:border-transparent outline-none transition-all"
+                      className="w-32 px-3 py-2 bg-sf-input text-sf-heading border-2 border-sf-border-medium focus:ring-2 focus:ring-sf-accent focus:border-transparent outline-none transition-all"
                     />
-                    <span className="text-sm text-gf-muted">{t('requestsPerMinute')}</span>
+                    <span className="text-sm text-sf-muted">{t('requestsPerMinute')}</span>
                   </div>
                 </div>
 
                 {/* Expiration */}
                 <div>
-                  <label className="block text-sm font-medium text-gf-body mb-1">
+                  <label className="block text-sm font-medium text-sf-body mb-1">
                     {t('expiration')}
                   </label>
                   <input
@@ -221,9 +221,9 @@ export default function ApiKeyFormModal({
                     value={formData.expires_at}
                     onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })}
                     min={new Date().toISOString().slice(0, 16)}
-                    className="w-full px-3 py-2 bg-gf-input text-gf-heading border-2 border-gf-border-medium focus:ring-2 focus:ring-gf-accent focus:border-transparent outline-none transition-all"
+                    className="w-full px-3 py-2 bg-sf-input text-sf-heading border-2 border-sf-border-medium focus:ring-2 focus:ring-sf-accent focus:border-transparent outline-none transition-all"
                   />
-                  <p className="text-xs text-gf-muted mt-1">{t('expirationHelp')}</p>
+                  <p className="text-xs text-sf-muted mt-1">{t('expirationHelp')}</p>
                 </div>
               </div>
             )}

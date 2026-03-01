@@ -200,15 +200,15 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
   };
 
   const renderProductInfo = () => (
-    <div className="w-1/2 pr-8 border-r border-gf-border">
+    <div className="w-1/2 pr-8 border-r border-sf-border">
       <div className="flex items-center mb-6">
         <div className="text-5xl mr-6">{product.icon}</div>
         <div>
-          <h1 className="text-2xl font-bold text-gf-heading">{product.name}</h1>
-          <p className="text-gf-body">{product.description}</p>
+          <h1 className="text-2xl font-bold text-sf-heading">{product.name}</h1>
+          <p className="text-sf-body">{product.description}</p>
         </div>
       </div>
-      <div className="text-3xl font-bold text-gf-success">
+      <div className="text-3xl font-bold text-sf-success">
         {t('free')}
       </div>
     </div>
@@ -216,16 +216,16 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
 
   const renderForm = () => (
     <div className="w-1/2 pl-8">
-      <div className="bg-gf-raised backdrop-blur-md rounded-2xl p-6 border border-gf-border">
-        <h2 className="text-xl font-semibold text-gf-heading mb-4">
+      <div className="bg-sf-raised backdrop-blur-md rounded-2xl p-6 border border-sf-border">
+        <h2 className="text-xl font-semibold text-sf-heading mb-4">
           {user ? t('getYourFreeProduct') : t('getInstantAccess')}
         </h2>
         
         {message.type && (
           <div className={`mb-4 p-3 rounded-lg text-sm ${
-            message.type === 'success' ? 'bg-gf-success-soft border border-gf-success/20 text-gf-success' :
-            message.type === 'error' ? 'bg-gf-danger-soft border border-gf-danger/20 text-gf-danger' :
-            'bg-gf-accent-soft border border-gf-accent/20 text-gf-accent'
+            message.type === 'success' ? 'bg-sf-success-soft border border-sf-success/20 text-sf-success' :
+            message.type === 'error' ? 'bg-sf-danger-soft border border-sf-danger/20 text-sf-danger' :
+            'bg-sf-accent-soft border border-sf-accent/20 text-sf-accent'
           }`}>
             {message.text}
           </div>
@@ -234,7 +234,7 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
         <form onSubmit={(e) => { e.preventDefault(); handleFreeAccess(); }} className="space-y-4">
           {!user && (
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gf-body mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-sf-body mb-2">
                 {t('emailAddress')}
               </label>
               <input
@@ -242,7 +242,7 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-3 border border-gf-border rounded-lg bg-gf-input text-gf-heading placeholder-gf-muted focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent"
+                className="w-full p-3 border border-sf-border rounded-lg bg-sf-input text-sf-heading placeholder-sf-muted focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent"
                 placeholder={t('enterEmailAddress')}
                 required
                 disabled={loading}
@@ -269,7 +269,7 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
               captchaLoading || // Disable when captcha is loading
               (!user && (!email || !termsAccepted || (process.env.NODE_ENV === 'production' && !captchaToken)))
             }
-            className="w-full bg-gf-success hover:bg-gf-success/90 disabled:bg-gf-muted/30 disabled:cursor-not-allowed text-gf-inverse font-semibold py-3 px-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gf-success focus:ring-offset-2 active:scale-[0.98]"
+            className="w-full bg-sf-success hover:bg-sf-success/90 disabled:bg-sf-muted/30 disabled:cursor-not-allowed text-sf-inverse font-semibold py-3 px-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-sf-success focus:ring-offset-2 active:scale-[0.98]"
           >
             {loading || captchaLoading ? (
               <div className="flex items-center justify-center">
@@ -302,7 +302,7 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
                 />
               </div>
               
-              <p className="text-xs text-gf-muted mt-2 text-center">
+              <p className="text-xs text-sf-muted mt-2 text-center">
                 {t('magicLinkExplanation')}
               </p>
             </>
@@ -313,8 +313,8 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
   );
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gf-deep to-gf-raised">
-      <div className="max-w-4xl mx-auto p-8 bg-gf-base border border-gf-border shadow-[var(--gf-shadow-accent)] backdrop-blur-md rounded-2xl">
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-sf-deep to-sf-raised">
+      <div className="max-w-4xl mx-auto p-8 bg-sf-base border border-sf-border shadow-[var(--sf-shadow-accent)] backdrop-blur-md rounded-2xl">
         <DemoCheckoutNotice />
         <div className="flex">
           {renderProductInfo()}

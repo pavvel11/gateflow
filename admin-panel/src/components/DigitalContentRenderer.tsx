@@ -22,15 +22,15 @@ export default function DigitalContentRenderer({ contentItems, productName }: Di
         return (
           <div key={item.id} className="bg-white/10 border border-white/10 rounded-lg p-6 mb-6">
             <div className="flex items-start mb-4">
-              <div className="bg-gf-accent-soft p-3 rounded-lg mr-4">
-                <svg className="w-6 h-6 text-gf-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="bg-sf-accent-soft p-3 rounded-lg mr-4">
+                <svg className="w-6 h-6 text-sf-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
               </div>
               <div className="flex-1">
                 <h3 className="text-white font-medium text-lg mb-2">{item.title}</h3>
                 {item.description && (
-                  <p className="text-gf-muted text-sm mb-4">{item.description}</p>
+                  <p className="text-sf-muted text-sm mb-4">{item.description}</p>
                 )}
                 {item.config.duration && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/30">
@@ -56,7 +56,7 @@ export default function DigitalContentRenderer({ contentItems, productName }: Di
                       <div className="flex items-center justify-center h-full p-4">
                         <div className="text-center">
                           <div className="text-red-500 font-bold mb-2">⚠️ {t('invalidVideoUrl')}</div>
-                          <div className="text-sm text-gf-muted mb-2">
+                          <div className="text-sm text-sf-muted mb-2">
                             {!isTrustedVideoPlatform(url)
                               ? t('trustedPlatformsOnly')
                               : t('unableToParseUrl')}
@@ -116,7 +116,7 @@ export default function DigitalContentRenderer({ contentItems, productName }: Di
                 <div className="text-red-500 font-bold">
                   ⚠️ {t('securityEmbedDisabled')}
                 </div>
-                <div className="text-sm text-gf-muted mt-2">
+                <div className="text-sm text-sf-muted mt-2">
                   {t('useIframeInstead')}
                 </div>
               </div>
@@ -137,9 +137,9 @@ export default function DigitalContentRenderer({ contentItems, productName }: Di
                 <div className="flex-1">
                   <h3 className="text-white font-medium text-lg mb-1">{item.title}</h3>
                   {item.description && (
-                    <p className="text-gf-muted text-sm mb-2">{item.description}</p>
+                    <p className="text-sf-muted text-sm mb-2">{item.description}</p>
                   )}
-                  <div className="flex items-center gap-3 text-sm text-gf-muted">
+                  <div className="flex items-center gap-3 text-sm text-sf-muted">
                     {item.config.file_name && (
                       <span className="flex items-center">
                         <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -210,13 +210,13 @@ export default function DigitalContentRenderer({ contentItems, productName }: Di
           <div key={item.id} className="bg-white/10 border border-white/10 rounded-lg p-6 mb-6">
             <div className="flex items-center justify-center py-8">
               <div className="text-center">
-                <div className="bg-gf-accent-soft p-4 rounded-lg mb-4 mx-auto w-16 h-16 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-gf-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-sf-accent-soft p-4 rounded-lg mb-4 mx-auto w-16 h-16 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-sf-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
                 </div>
                 <h3 className="text-white font-medium text-lg mb-2">{item.title}</h3>
-                <p className="text-gf-muted text-sm">{t('hostedVideoComingSoon')}</p>
+                <p className="text-sf-muted text-sm">{t('hostedVideoComingSoon')}</p>
               </div>
             </div>
           </div>
@@ -234,7 +234,7 @@ export default function DigitalContentRenderer({ contentItems, productName }: Di
                   </svg>
                 </div>
                 <h3 className="text-white font-medium text-lg mb-2">{item.title}</h3>
-                <p className="text-gf-muted text-sm">{t('hostedFileComingSoon')}</p>
+                <p className="text-sf-muted text-sm">{t('hostedFileComingSoon')}</p>
               </div>
             </div>
           </div>
@@ -249,12 +249,12 @@ export default function DigitalContentRenderer({ contentItems, productName }: Di
     return (
       <div className="bg-white/10 border border-white/10 rounded-lg p-8 text-center">
         <div className="w-16 h-16 mx-auto mb-4 bg-gray-500/20 rounded-full flex items-center justify-center">
-          <svg className="w-8 h-8 text-gf-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-8 h-8 text-sf-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-4.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
           </svg>
         </div>
         <h3 className="text-white font-medium text-lg mb-2">{t('noContent')}</h3>
-        <p className="text-gf-muted text-sm">{t('noContentMessage')}</p>
+        <p className="text-sf-muted text-sm">{t('noContentMessage')}</p>
       </div>
     );
   }
@@ -263,7 +263,7 @@ export default function DigitalContentRenderer({ contentItems, productName }: Di
     <div className="space-y-6">
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-white mb-2">{t('sectionTitle')}</h2>
-        <p className="text-gf-muted text-sm">{t('accessYourContent', { productName })}</p>
+        <p className="text-sf-muted text-sm">{t('accessYourContent', { productName })}</p>
       </div>
       
       {sortedItems.map(renderContentItem)}

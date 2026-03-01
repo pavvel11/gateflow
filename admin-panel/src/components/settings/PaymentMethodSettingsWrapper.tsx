@@ -12,14 +12,14 @@ interface ErrorBoundaryState {
 function ErrorFallback({ error }: { error: Error | null }) {
  const tCommon = useTranslations('common');
  return (
- <div className="bg-gf-danger-soft border border-gf-danger/30 p-6">
- <h3 className="text-xl font-semibold text-gf-danger mb-2">
+ <div className="bg-sf-danger-soft border border-sf-danger/30 p-6">
+ <h3 className="text-xl font-semibold text-sf-danger mb-2">
  Error Loading Payment Method Settings
  </h3>
- <p className="text-gf-danger">
+ <p className="text-sf-danger">
  {error?.message || tCommon('unexpectedError')}
  </p>
- <pre className="mt-4 p-2 bg-gf-danger-soft text-xs overflow-auto">
+ <pre className="mt-4 p-2 bg-sf-danger-soft text-xs overflow-auto">
  {error?.stack}
  </pre>
  </div>
@@ -55,7 +55,7 @@ class PaymentMethodErrorBoundary extends Component<
 export default function PaymentMethodSettingsWrapper() {
  return (
  <PaymentMethodErrorBoundary>
- <Suspense fallback={<div className="p-6 bg-gf-base">Loading Payment Method Settings...</div>}>
+ <Suspense fallback={<div className="p-6 bg-sf-base">Loading Payment Method Settings...</div>}>
  <PaymentMethodSettings />
  </Suspense>
  </PaymentMethodErrorBoundary>

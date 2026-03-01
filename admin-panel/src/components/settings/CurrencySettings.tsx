@@ -134,10 +134,10 @@ export default function CurrencySettings() {
 
  if (loading) {
  return (
- <div className="bg-gf-base border-2 border-gf-border-medium p-6">
+ <div className="bg-sf-base border-2 border-sf-border-medium p-6">
  <div className="animate-pulse space-y-4">
- <div className="h-4 bg-gf-raised w-1/4"></div>
- <div className="h-20 bg-gf-raised"></div>
+ <div className="h-4 bg-sf-raised w-1/4"></div>
+ <div className="h-20 bg-sf-raised"></div>
  </div>
  </div>
  );
@@ -158,7 +158,7 @@ export default function CurrencySettings() {
  <BaseModal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} size="md">
  <ModalHeader title={t('deleteModal.title')} />
  <ModalBody>
- <p className="text-gf-body">
+ <p className="text-sf-body">
  {t('deleteModal.description')}
  </p>
  </ModalBody>
@@ -172,28 +172,28 @@ export default function CurrencySettings() {
  </ModalFooter>
  </BaseModal>
 
- <div className="bg-gf-base border-2 border-gf-border-medium p-6">
+ <div className="bg-sf-base border-2 border-sf-border-medium p-6">
  <div className="flex items-start justify-between mb-6">
  <div>
- <h2 className="text-xl font-semibold text-gf-heading mb-2">
+ <h2 className="text-xl font-semibold text-sf-heading mb-2">
  {t('title')}
  </h2>
- <p className="text-sm text-gf-body">
+ <p className="text-sm text-sf-body">
  {t('subtitle')}
  </p>
  </div>
- <DollarSign className="w-8 h-8 text-gf-success" />
+ <DollarSign className="w-8 h-8 text-sf-success" />
  </div>
 
  {/* Info Banner - Exchange rates are approximate */}
- <div className="mb-6 bg-gf-accent-soft border border-gf-accent/20 p-4">
+ <div className="mb-6 bg-sf-accent-soft border border-sf-accent/20 p-4">
  <div className="flex items-start gap-3">
- <Info className="w-5 h-5 text-gf-accent mt-0.5 flex-shrink-0" />
+ <Info className="w-5 h-5 text-sf-accent mt-0.5 flex-shrink-0" />
  <div className="flex-1">
- <p className="text-sm font-medium text-gf-heading mb-1">
+ <p className="text-sm font-medium text-sf-heading mb-1">
  {t('info.title')}
  </p>
- <p className="text-sm text-gf-body">
+ <p className="text-sm text-sf-body">
  {t('info.description')}
  </p>
  </div>
@@ -204,28 +204,28 @@ export default function CurrencySettings() {
  {config && (
  <div className={`mb-6 p-4 border ${
  config.configuredIn === 'both'
- ? 'bg-gf-accent-soft border-gf-border-accent'
+ ? 'bg-sf-accent-soft border-sf-border-accent'
  : config.configuredIn === 'database'
- ? 'bg-gf-success-soft border-gf-success/20'
+ ? 'bg-sf-success-soft border-sf-success/20'
  : config.configuredIn === 'env'
- ? 'bg-gf-warning-soft border-gf-warning/20'
- : 'bg-gf-raised border-gf-border'
+ ? 'bg-sf-warning-soft border-sf-warning/20'
+ : 'bg-sf-raised border-sf-border'
  }`}>
  <div className="flex items-start gap-3">
  {config.configuredIn === 'both' ? (
- <CheckCircle2 className="w-5 h-5 text-gf-accent mt-0.5 flex-shrink-0" />
+ <CheckCircle2 className="w-5 h-5 text-sf-accent mt-0.5 flex-shrink-0" />
  ) : config.configuredIn === 'database' ? (
- <CheckCircle2 className="w-5 h-5 text-gf-success mt-0.5 flex-shrink-0" />
+ <CheckCircle2 className="w-5 h-5 text-sf-success mt-0.5 flex-shrink-0" />
  ) : config.configuredIn === 'env' ? (
- <AlertCircle className="w-5 h-5 text-gf-warning mt-0.5 flex-shrink-0" />
+ <AlertCircle className="w-5 h-5 text-sf-warning mt-0.5 flex-shrink-0" />
  ) : (
- <Info className="w-5 h-5 text-gf-body mt-0.5 flex-shrink-0" />
+ <Info className="w-5 h-5 text-sf-body mt-0.5 flex-shrink-0" />
  )}
  <div className="flex-1">
- <p className="text-sm font-medium text-gf-heading mb-1">
+ <p className="text-sm font-medium text-sf-heading mb-1">
  {t('status.currentProvider')}: <span className="font-semibold">{getProviderLabel(config.provider)}</span>
  </p>
- <p className="text-sm text-gf-body">
+ <p className="text-sm text-sf-body">
  {config.configuredIn === 'both'
  ? t('status.configuredBothDescription')
  : config.configuredIn === 'database'
@@ -243,20 +243,20 @@ export default function CurrencySettings() {
  <div className="space-y-4">
  {/* Provider Selection */}
  <div>
- <label htmlFor="provider" className="block text-sm font-medium text-gf-body mb-2">
+ <label htmlFor="provider" className="block text-sm font-medium text-sf-body mb-2">
  {t('providerLabel')}
  </label>
  <select
  id="provider"
  value={provider}
  onChange={(e) => setProvider(e.target.value as any)}
- className="w-full px-4 py-2.5 bg-gf-input border-2 border-gf-border-medium text-gf-heading focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent"
+ className="w-full px-4 py-2.5 bg-sf-input border-2 border-sf-border-medium text-sf-heading focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent"
  >
  <option value="ecb">{t('providers.ecb')}</option>
  <option value="exchangerate-api">{t('providers.exchangerateApi')}</option>
  <option value="fixer">{t('providers.fixer')}</option>
  </select>
- <p className="mt-2 text-xs text-gf-muted">
+ <p className="mt-2 text-xs text-sf-muted">
  {provider === 'ecb' && t('providerHelp.ecb')}
  {provider === 'exchangerate-api' && t('providerHelp.exchangerateApi')}
  {provider === 'fixer' && t('providerHelp.fixer')}
@@ -266,7 +266,7 @@ export default function CurrencySettings() {
  {/* API Key Input - Only for exchangerate-api and fixer */}
  {providerNeedsKey && (
  <div>
- <label htmlFor="currency-api-key" className="block text-sm font-medium text-gf-body mb-2">
+ <label htmlFor="currency-api-key" className="block text-sm font-medium text-sf-body mb-2">
  {t('apiKeyLabel')}
  </label>
  <input
@@ -275,9 +275,9 @@ export default function CurrencySettings() {
  value={apiKey}
  onChange={(e) => setApiKey(e.target.value)}
  placeholder={config?.hasDatabaseConfig ? '••••••••••••••••' : t('apiKeyPlaceholder')}
- className="w-full px-4 py-2.5 bg-gf-input border-2 border-gf-border-medium text-gf-heading placeholder-gf-muted focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent"
+ className="w-full px-4 py-2.5 bg-sf-input border-2 border-sf-border-medium text-sf-heading placeholder-sf-muted focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent"
  />
- <p className="mt-2 text-xs text-gf-muted">
+ <p className="mt-2 text-xs text-sf-muted">
  {provider === 'exchangerate-api' && (
  <>
  {t('apiKeyHelp.exchangerateApi')}{' '}
@@ -285,7 +285,7 @@ export default function CurrencySettings() {
  href="https://www.exchangerate-api.com/"
  target="_blank"
  rel="noopener noreferrer"
- className="text-gf-accent underline hover:no-underline inline-flex items-center gap-1"
+ className="text-sf-accent underline hover:no-underline inline-flex items-center gap-1"
  >
  {t('getApiKey')}
  <ExternalLink className="w-3 h-3" />
@@ -299,7 +299,7 @@ export default function CurrencySettings() {
  href="https://fixer.io/"
  target="_blank"
  rel="noopener noreferrer"
- className="text-gf-accent underline hover:no-underline inline-flex items-center gap-1"
+ className="text-sf-accent underline hover:no-underline inline-flex items-center gap-1"
  >
  {t('getApiKey')}
  <ExternalLink className="w-3 h-3" />
@@ -315,7 +315,7 @@ export default function CurrencySettings() {
  <button
  onClick={handleSave}
  disabled={saving || deleting}
- className="px-6 py-2.5 bg-gf-accent-bg hover:bg-gf-accent-hover disabled:bg-gf-muted text-white font-medium transition-colors disabled:cursor-not-allowed flex items-center gap-2"
+ className="px-6 py-2.5 bg-sf-accent-bg hover:bg-sf-accent-hover disabled:bg-sf-muted text-white font-medium transition-colors disabled:cursor-not-allowed flex items-center gap-2"
  >
  {saving && <Loader2 className="w-4 h-4 animate-spin" />}
  {t('saveButton')}
@@ -325,7 +325,7 @@ export default function CurrencySettings() {
  <button
  onClick={() => setShowDeleteModal(true)}
  disabled={saving || deleting}
- className="px-6 py-2.5 bg-gf-danger-bg hover:opacity-90 disabled:bg-gf-muted text-gf-inverse font-medium transition-colors disabled:cursor-not-allowed flex items-center gap-2"
+ className="px-6 py-2.5 bg-sf-danger-bg hover:opacity-90 disabled:bg-sf-muted text-sf-inverse font-medium transition-colors disabled:cursor-not-allowed flex items-center gap-2"
  >
  {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
  {t('deleteButton')}
@@ -335,21 +335,21 @@ export default function CurrencySettings() {
  </div>
 
  {/* Exchange Rates Display - Collapsible */}
- <div className="mt-6 border-t border-gf-border pt-6">
+ <div className="mt-6 border-t border-sf-border pt-6">
  <button
  onClick={fetchExchangeRates}
  className="flex items-center justify-between w-full text-left group"
  >
  <div className="flex items-center gap-2">
- <DollarSign className="w-5 h-5 text-gf-body" />
- <span className="text-sm font-medium text-gf-heading group-hover:text-gf-accent transition-colors">
+ <DollarSign className="w-5 h-5 text-sf-body" />
+ <span className="text-sm font-medium text-sf-heading group-hover:text-sf-accent transition-colors">
  {t('exchangeRates.title')}
  </span>
  </div>
  {showRates ? (
- <ChevronUp className="w-5 h-5 text-gf-body group-hover:text-gf-accent transition-colors" />
+ <ChevronUp className="w-5 h-5 text-sf-body group-hover:text-sf-accent transition-colors" />
  ) : (
- <ChevronDown className="w-5 h-5 text-gf-body group-hover:text-gf-accent transition-colors" />
+ <ChevronDown className="w-5 h-5 text-sf-body group-hover:text-sf-accent transition-colors" />
  )}
  </button>
 
@@ -357,16 +357,16 @@ export default function CurrencySettings() {
  <div className="mt-4 space-y-3">
  {loadingRates && (
  <div className="flex items-center justify-center py-8">
- <Loader2 className="w-6 h-6 animate-spin text-gf-accent" />
- <span className="ml-2 text-sm text-gf-body">
+ <Loader2 className="w-6 h-6 animate-spin text-sf-accent" />
+ <span className="ml-2 text-sm text-sf-body">
  {t('exchangeRates.loading')}
  </span>
  </div>
  )}
 
  {ratesError && (
- <div className="bg-gf-danger-soft border border-gf-danger/20 p-4">
- <p className="text-sm text-gf-danger">
+ <div className="bg-sf-danger-soft border border-sf-danger/20 p-4">
+ <p className="text-sm text-sf-danger">
  {t('exchangeRates.error')}
  </p>
  </div>
@@ -374,18 +374,18 @@ export default function CurrencySettings() {
 
  {rates && !loadingRates && (
  <>
- <div className="grid grid-cols-2 gap-x-6 gap-y-2 mb-3 text-xs bg-gf-raised p-3">
+ <div className="grid grid-cols-2 gap-x-6 gap-y-2 mb-3 text-xs bg-sf-raised p-3">
  <div>
- <span className="text-gf-body">{t('exchangeRates.baseCurrency')}:</span>{' '}
- <span className="font-medium text-gf-heading">{baseCurrency}</span>
+ <span className="text-sf-body">{t('exchangeRates.baseCurrency')}:</span>{' '}
+ <span className="font-medium text-sf-heading">{baseCurrency}</span>
  </div>
  <div>
- <span className="text-gf-body">{t('exchangeRates.provider', { provider: '' })}</span>{' '}
- <span className="font-medium text-gf-heading">{getProviderLabel(config?.provider || 'ecb')}</span>
+ <span className="text-sf-body">{t('exchangeRates.provider', { provider: '' })}</span>{' '}
+ <span className="font-medium text-sf-heading">{getProviderLabel(config?.provider || 'ecb')}</span>
  </div>
  <div>
- <span className="text-gf-body">{t('exchangeRates.apiDate')}:</span>{' '}
- <span className="font-medium text-gf-heading">
+ <span className="text-sf-body">{t('exchangeRates.apiDate')}:</span>{' '}
+ <span className="font-medium text-sf-heading">
  {new Date(rates.timestamp).toLocaleString(locale === 'pl' ? 'pl-PL' : 'en-US', {
  year: 'numeric',
  month: '2-digit',
@@ -396,8 +396,8 @@ export default function CurrencySettings() {
  </span>
  </div>
  <div>
- <span className="text-gf-body">{t('exchangeRates.cacheExpires')}:</span>{' '}
- <span className="font-medium text-gf-warning">
+ <span className="text-sf-body">{t('exchangeRates.cacheExpires')}:</span>{' '}
+ <span className="font-medium text-sf-warning">
  💾 {new Date(ratesFetchedAt + 3600000).toLocaleString(locale === 'pl' ? 'pl-PL' : 'en-US', {
  year: 'numeric',
  month: '2-digit',
@@ -408,7 +408,7 @@ export default function CurrencySettings() {
  </span>
  </div>
  </div>
- <pre className="bg-gf-deep text-green-400 p-4 overflow-x-auto text-xs font-mono border-2 border-gf-border-medium">
+ <pre className="bg-sf-deep text-green-400 p-4 overflow-x-auto text-xs font-mono border-2 border-sf-border-medium">
  {JSON.stringify(rates, null, 2)}
  </pre>
  </>

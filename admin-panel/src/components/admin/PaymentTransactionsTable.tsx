@@ -70,59 +70,59 @@ export default function PaymentTransactionsTable({
   };
 
   return (
-    <div className="bg-gf-base border-2 border-gf-border-medium overflow-hidden">
-      <div className="px-6 py-4 border-b border-gf-border">
-        <h3 className="text-lg font-semibold text-gf-heading">
+    <div className="bg-sf-base border-2 border-sf-border-medium overflow-hidden">
+      <div className="px-6 py-4 border-b border-sf-border">
+        <h3 className="text-lg font-semibold text-sf-heading">
           {t('title')}
         </h3>
       </div>
       
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gf-border-subtle">
-          <thead className="bg-gf-raised">
+        <table className="min-w-full divide-y divide-sf-border-subtle">
+          <thead className="bg-sf-raised">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
                 {t('transactionId')}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
                 {t('user')}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
                 {t('amount')}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
                 {t('status')}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
                 {t('date')}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
                 {t('actions')}
               </th>
             </tr>
           </thead>
-          <tbody className="bg-gf-base divide-y divide-gf-border-subtle">
+          <tbody className="bg-sf-base divide-y divide-sf-border-subtle">
             {transactions.map((transaction, index) => (
-              <tr key={transaction.id} className={index % 2 === 1 ? 'bg-gf-row-alt' : ''}>
+              <tr key={transaction.id} className={index % 2 === 1 ? 'bg-sf-row-alt' : ''}>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gf-heading">
+                  <div className="text-sm font-medium text-sf-heading">
                     {transaction.id.slice(0, 8)}...
                   </div>
-                  <div className="text-sm text-gf-muted">
+                  <div className="text-sm text-sf-muted">
                     {transaction.stripe_payment_intent_id?.slice(0, 20)}...
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gf-heading">
+                  <div className="text-sm text-sf-heading">
                     {transaction.user_id?.slice(0, 8) ?? '—'}...
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gf-heading">
+                  <div className="text-sm font-medium text-sf-heading">
                     {formatCurrency(transaction.amount, transaction.currency)}
                   </div>
                   {transaction.refunded_amount > 0 && (
-                    <div className="text-sm text-gf-danger">
+                    <div className="text-sm text-sf-danger">
                       {t('refunded', { amount: formatCurrency(transaction.refunded_amount, transaction.currency) })}
                     </div>
                   )}
@@ -130,15 +130,15 @@ export default function PaymentTransactionsTable({
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold ${
                     transaction.status === 'completed'
-                      ? 'bg-gf-success-soft text-gf-success'
+                      ? 'bg-sf-success-soft text-sf-success'
                       : transaction.status === 'refunded'
-                      ? 'bg-gf-danger-soft text-gf-danger'
-                      : 'bg-gf-warning-soft text-gf-warning'
+                      ? 'bg-sf-danger-soft text-sf-danger'
+                      : 'bg-sf-warning-soft text-sf-warning'
                   }`}>
                     {t(`statuses.${transaction.status}`)}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gf-muted">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-sf-muted">
                   {formatDate(transaction.created_at)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -147,7 +147,7 @@ export default function PaymentTransactionsTable({
                     <button
                       onClick={() => setShowRefundModal(transaction.id)}
                       disabled={refundingId === transaction.id}
-                      className="text-gf-danger hover:text-gf-danger disabled:opacity-50"
+                      className="text-sf-danger hover:text-sf-danger disabled:opacity-50"
                     >
                       {refundingId === transaction.id ? tRefund('processing') : t('refund')}
                     </button>
@@ -162,19 +162,19 @@ export default function PaymentTransactionsTable({
       {/* Refund Modal */}
       {showRefundModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-gf-base p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gf-heading mb-4">
+          <div className="bg-sf-base p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-sf-heading mb-4">
               {tRefund('title')}
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gf-body mb-2">
+                <label className="block text-sm font-medium text-sf-body mb-2">
                   {tRefund('reason')}
                 </label>
                 <select
                   value={refundReason}
                   onChange={(e) => setRefundReason(e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent bg-gf-raised text-gf-heading"
+                  className="w-full px-3 py-2 border-2 border-sf-border-medium focus:outline-none focus:ring-2 focus:ring-sf-accent bg-sf-raised text-sf-heading"
                 >
                   <option value="">{tRefund('selectReason')}</option>
                   <option value="requested_by_customer">{tRefund('reasons.requested_by_customer')}</option>

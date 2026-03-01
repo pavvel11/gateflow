@@ -48,7 +48,7 @@ export default function DemoBanner() {
   }
 
   return (
-    <div className="mb-4 bg-gf-warning px-4 sm:px-8 py-3 text-sm text-gf-inverse font-semibold">
+    <div className="mb-4 bg-sf-warning px-4 sm:px-8 py-3 text-sm text-sf-inverse font-semibold">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <svg className="w-[18px] h-[18px] flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
@@ -64,7 +64,7 @@ export default function DemoBanner() {
         </div>
         <button
           onClick={handleDismiss}
-          className="shrink-0 text-gf-inverse/70 hover:text-gf-inverse transition-opacity"
+          className="shrink-0 text-sf-inverse/70 hover:text-sf-inverse transition-opacity"
           aria-label={t('dismiss')}
         >
           <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">

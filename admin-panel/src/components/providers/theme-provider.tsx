@@ -13,7 +13,7 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
-const STORAGE_KEY = 'gf_theme'
+const STORAGE_KEY = 'sf_theme'
 
 function getSystemTheme(): 'light' | 'dark' {
   if (typeof window === 'undefined') return 'dark'
@@ -79,7 +79,7 @@ export function ThemeProvider({ children, adminTheme }: ThemeProviderProps) {
     const resolved = newTheme === 'system' ? getSystemTheme() : newTheme
     setResolvedTheme(resolved)
     applyTheme(resolved)
-    window.dispatchEvent(new CustomEvent('gf-theme-change', { detail: newTheme }))
+    window.dispatchEvent(new CustomEvent('sf-theme-change', { detail: newTheme }))
   }, [])
 
   const cycleTheme = useCallback(() => {

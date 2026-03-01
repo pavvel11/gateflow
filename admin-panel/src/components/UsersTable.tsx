@@ -56,7 +56,7 @@ const UsersTable: React.FC<UsersTableProps> = ({
   const SortableHeader = ({ column, title }: { column: string; title: string }) => (
     <th
       scope="col"
-      className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider cursor-pointer"
+      className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider cursor-pointer"
       onClick={() => onSort(column)}
     >
       <div className="flex items-center">
@@ -73,8 +73,8 @@ const UsersTable: React.FC<UsersTableProps> = ({
   if (loading) {
     return (
       <div className="text-center py-10">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gf-accent mx-auto"></div>
-        <p className="mt-4 text-gf-body">{t('loadingUsers')}</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sf-accent mx-auto"></div>
+        <p className="mt-4 text-sf-body">{t('loadingUsers')}</p>
       </div>
     );
   }
@@ -91,9 +91,9 @@ const UsersTable: React.FC<UsersTableProps> = ({
 
   if (users.length === 0) {
     return (
-      <div className="text-center py-10 bg-gf-base border-2 border-gf-border-medium">
-        <h3 className="text-lg font-semibold text-gf-heading">{t('noUsers')}</h3>
-        <p className="mt-2 text-sm text-gf-muted">
+      <div className="text-center py-10 bg-sf-base border-2 border-sf-border-medium">
+        <h3 className="text-lg font-semibold text-sf-heading">{t('noUsers')}</h3>
+        <p className="mt-2 text-sm text-sf-muted">
           {t('noUsersMessage')}
         </p>
       </div>
@@ -104,13 +104,13 @@ const UsersTable: React.FC<UsersTableProps> = ({
     <div className="flex flex-col">
       <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
         <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-          <div className="overflow-hidden border-2 border-gf-border-medium sm:bg-gf-base">
-            <table className="min-w-full divide-y divide-gf-border-subtle">
-              <thead className="bg-gf-raised">
+          <div className="overflow-hidden border-2 border-sf-border-medium sm:bg-sf-base">
+            <table className="min-w-full divide-y divide-sf-border-subtle">
+              <thead className="bg-sf-raised">
                 <tr>
                   <SortableHeader column="email" title={t('user')} />
                   <SortableHeader column="last_sign_in_at" title={t('lastSeen')} />
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
                     {t('productAccess')}
                   </th>
                   <SortableHeader column="total_value" title={t('totalValue')} />
@@ -120,23 +120,23 @@ const UsersTable: React.FC<UsersTableProps> = ({
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gf-border-subtle">
+              <tbody className="divide-y divide-sf-border-subtle">
                 {users.map((user, index) => (
-                  <tr key={user.id} className={`hover:bg-gf-hover transition-colors duration-150 ${index % 2 === 1 ? 'bg-gf-row-alt' : ''}`}>
+                  <tr key={user.id} className={`hover:bg-sf-hover transition-colors duration-150 ${index % 2 === 1 ? 'bg-sf-row-alt' : ''}`}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 bg-gf-accent-bg flex items-center justify-center text-white font-bold">
+                          <div className="h-10 w-10 bg-sf-accent-bg flex items-center justify-center text-white font-bold">
                             {user.email.charAt(0).toUpperCase()}
                           </div>
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gf-heading">{user.email}</div>
-                          <div className="text-sm text-gf-muted">{t('joined')}: {formatDate(user.created_at)}</div>
+                          <div className="text-sm font-medium text-sf-heading">{user.email}</div>
+                          <div className="text-sm text-sf-muted">{t('joined')}: {formatDate(user.created_at)}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gf-muted">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-sf-muted">
                       {formatDate(user.last_sign_in_at)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -145,18 +145,18 @@ const UsersTable: React.FC<UsersTableProps> = ({
                           user.product_access.slice(0, 2).map((access) => (
                             <span
                               key={access.product_slug}
-                              className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-gf-success-soft text-gf-success"
+                              className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-sf-success-soft text-sf-success"
                             >
                               {access.product_name}
                             </span>
                           ))
                         ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-gf-raised text-gf-body">
+                          <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-sf-raised text-sf-body">
                             {t('noAccess')}
                           </span>
                         )}
                         {user.product_access.length > 2 && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-gf-accent-soft text-gf-accent">
+                          <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-sf-accent-soft text-sf-accent">
                             +{user.product_access.length - 2} {t('more')}
                           </span>
                         )}
@@ -164,21 +164,21 @@ const UsersTable: React.FC<UsersTableProps> = ({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {user.stats && user.stats.total_value > 0 ? (
-                        <div className="text-gf-heading">
+                        <div className="text-sf-heading">
                           {new Intl.NumberFormat('en-US', {
                             style: 'currency',
                             currency: 'USD',
                           }).format(user.stats.total_value)}
                         </div>
                       ) : (
-                        <span className="text-gf-muted">-</span>
+                        <span className="text-sf-muted">-</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold ${
                         user.email_confirmed_at
-                          ? 'bg-gf-success-soft text-gf-success'
-                          : 'bg-gf-warning-soft text-gf-warning'
+                          ? 'bg-sf-success-soft text-sf-success'
+                          : 'bg-sf-warning-soft text-sf-warning'
                       }`}>
                         {user.email_confirmed_at ? t('verified') : t('pending')}
                       </span>
@@ -187,7 +187,7 @@ const UsersTable: React.FC<UsersTableProps> = ({
                       <div className="flex items-center justify-end space-x-2">
                         <button
                           onClick={() => onViewDetails(user)}
-                          className="text-gf-success hover:text-gf-success transition-colors"
+                          className="text-sf-success hover:text-sf-success transition-colors"
                           aria-label={t('viewDetailsLabel', { email: user.email })}
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -197,7 +197,7 @@ const UsersTable: React.FC<UsersTableProps> = ({
                         </button>
                         <button
                           onClick={() => onManageAccess(user)}
-                          className="text-gf-accent hover:text-gf-accent transition-colors"
+                          className="text-sf-accent hover:text-sf-accent transition-colors"
                           aria-label={t('manageAccessLabel', { email: user.email })}
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -211,9 +211,9 @@ const UsersTable: React.FC<UsersTableProps> = ({
                 ))}
               </tbody>
             </table>
-            <div className="px-4 py-3 sm:px-6 border-t border-gf-border">
+            <div className="px-4 py-3 sm:px-6 border-t border-sf-border">
               <div className="flex items-center justify-between">
-                <div className="text-sm text-gf-body">
+                <div className="text-sm text-sf-body">
                   {t('showing')} <span className="font-medium">{startIndex}</span> {t('to')} <span className="font-medium">{endIndex}</span> {t('of')} <span className="font-medium">{totalItems}</span> {t('results')}
                 </div>
                 <Pagination

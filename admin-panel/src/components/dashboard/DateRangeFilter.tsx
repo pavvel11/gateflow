@@ -39,17 +39,17 @@ export default function DateRangeFilter({ startDate, endDate, onChange }: DateRa
 
   return (
     <div className="flex items-center gap-2">
-      <div className="flex items-center gap-1 px-3 py-2 bg-gf-base border-2 border-gf-border-subtle">
-        <CalendarIcon className="w-4 h-4 text-gf-muted" />
+      <div className="flex items-center gap-1 px-3 py-2 bg-sf-base border-2 border-sf-border-subtle">
+        <CalendarIcon className="w-4 h-4 text-sf-muted" />
         <input
           type="date"
           value={formatDateForInput(startDate)}
           onChange={handleStartChange}
           max={formatDateForInput(endDate || new Date())}
           aria-label={t('startDate', { defaultValue: 'Start date' })}
-          className="bg-transparent border-none outline-none text-sm text-gf-body w-[130px]"
+          className="bg-transparent border-none outline-none text-sm text-sf-body w-[130px]"
         />
-        <span className="text-gf-muted text-sm">-</span>
+        <span className="text-sf-muted text-sm">-</span>
         <input
           type="date"
           value={formatDateForInput(endDate)}
@@ -57,13 +57,13 @@ export default function DateRangeFilter({ startDate, endDate, onChange }: DateRa
           min={formatDateForInput(startDate)}
           max={formatDateForInput(new Date())}
           aria-label={t('endDate', { defaultValue: 'End date' })}
-          className="bg-transparent border-none outline-none text-sm text-gf-body w-[130px]"
+          className="bg-transparent border-none outline-none text-sm text-sf-body w-[130px]"
         />
       </div>
       {(startDate || endDate) && (
         <button
           onClick={handleClear}
-          className="px-3 py-2 text-sm text-gf-muted hover:text-gf-body"
+          className="px-3 py-2 text-sm text-sf-muted hover:text-sf-body"
         >
           {t('clear')}
         </button>

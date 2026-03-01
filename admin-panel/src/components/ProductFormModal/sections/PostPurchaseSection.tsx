@@ -105,15 +105,15 @@ export function PostPurchaseSection({
       <div className="space-y-4">
         {/* Product Selection */}
         <div className="space-y-3">
-          <label className="block text-sm font-medium text-gf-body">
+          <label className="block text-sm font-medium text-sf-body">
             {t('postPurchase.redirectProduct', { defaultValue: 'Redirect to product' })}
-            <span className="text-xs text-gf-muted ml-1">({t('postPurchase.optional')})</span>
+            <span className="text-xs text-sf-muted ml-1">({t('postPurchase.optional')})</span>
           </label>
 
           <select
             value={selectedRedirectProduct?.slug || ''}
             onChange={handleProductSelect}
-            className="w-full px-3 py-2.5 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
+            className="w-full px-3 py-2.5 border-2 border-sf-border-medium focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent bg-sf-input text-sf-heading"
             disabled={loadingProducts}
           >
             <option value="">{loadingProducts ? tCommon('loading') : t('postPurchase.selectProductPlaceholder')}</option>
@@ -129,18 +129,18 @@ export function PostPurchaseSection({
 
           {/* Show selected product info */}
           {selectedRedirectProduct && (
-            <div className="flex items-center gap-3 p-3 bg-gf-accent-soft border border-gf-accent/20">
+            <div className="flex items-center gap-3 p-3 bg-sf-accent-soft border border-sf-accent/20">
               <span className="text-2xl">{selectedRedirectProduct.icon}</span>
               <div className="flex-1">
-                <p className="font-medium text-gf-heading">{selectedRedirectProduct.name}</p>
-                <p className="text-sm text-gf-muted">
+                <p className="font-medium text-sf-heading">{selectedRedirectProduct.name}</p>
+                <p className="text-sm text-sf-muted">
                   {selectedRedirectProduct.price === 0 ? t('free') : `${selectedRedirectProduct.price} ${selectedRedirectProduct.currency}`}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => handleProductSelect({ target: { value: '' } } as React.ChangeEvent<HTMLSelectElement>)}
-                className="p-1 text-gf-muted hover:text-gf-body"
+                className="p-1 text-sf-muted hover:text-sf-body"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -157,27 +157,27 @@ export function PostPurchaseSection({
               name="success_redirect_url"
               value={formData.success_redirect_url || ''}
               onChange={handleUrlChange}
-              className="w-full px-3 py-2.5 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
+              className="w-full px-3 py-2.5 border-2 border-sf-border-medium focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent bg-sf-input text-sf-heading"
               placeholder={t('postPurchase.redirectUrlPlaceholder')}
             />
           </div>
-          <p className="text-xs text-gf-muted">
+          <p className="text-xs text-sf-muted">
             {t('postPurchase.redirectUrlHelp')}
           </p>
         </div>
 
         {/* Options (only show when redirect is set) */}
         {formData.success_redirect_url && (
-          <div className="space-y-3 pt-3 border-t border-gf-border">
+          <div className="space-y-3 pt-3 border-t border-sf-border">
             <div className="flex items-center">
               <input
                 type="checkbox"
                 id="hide_bump"
                 checked={formData.success_redirect_url?.includes('hide_bump=true') || false}
                 onChange={handleHideBumpChange}
-                className="h-4 w-4 text-gf-accent focus:ring-gf-accent border-gf-border rounded"
+                className="h-4 w-4 text-sf-accent focus:ring-sf-accent border-sf-border rounded"
               />
-              <label htmlFor="hide_bump" className="ml-3 block text-sm text-gf-body cursor-pointer">
+              <label htmlFor="hide_bump" className="ml-3 block text-sm text-sf-body cursor-pointer">
                 {t('postPurchase.hideBump')}
               </label>
             </div>
@@ -189,9 +189,9 @@ export function PostPurchaseSection({
                 name="pass_params_to_redirect"
                 checked={formData.pass_params_to_redirect}
                 onChange={handleCheckboxChange}
-                className="h-4 w-4 text-gf-accent focus:ring-gf-accent border-gf-border rounded"
+                className="h-4 w-4 text-sf-accent focus:ring-sf-accent border-sf-border rounded"
               />
-              <label htmlFor="pass_params_to_redirect" className="ml-3 block text-sm text-gf-body cursor-pointer">
+              <label htmlFor="pass_params_to_redirect" className="ml-3 block text-sm text-sf-body cursor-pointer">
                 {t('postPurchase.passParams')}
               </label>
             </div>
@@ -200,20 +200,20 @@ export function PostPurchaseSection({
 
         {/* OTO Option - Only show when internal product is selected */}
         {canShowOtoOption && (
-          <div className="pt-4 border-t border-gf-border">
+          <div className="pt-4 border-t border-sf-border">
             {/* OTO Toggle */}
-            <div className="flex items-center justify-between p-4 bg-gf-accent-soft border border-gf-border-accent">
+            <div className="flex items-center justify-between p-4 bg-sf-accent-soft border border-sf-border-accent">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gf-accent-soft flex items-center justify-center">
-                  <svg className="w-5 h-5 text-gf-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-10 h-10 bg-sf-accent-soft flex items-center justify-center">
+                  <svg className="w-5 h-5 text-sf-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <div>
-                  <p className="font-medium text-gf-heading">
+                  <p className="font-medium text-sf-heading">
                     {t('oto.addDiscount', { defaultValue: 'Add time-limited discount' })}
                   </p>
-                  <p className="text-xs text-gf-muted">
+                  <p className="text-xs text-sf-muted">
                     {t('oto.addDiscountDesc', { defaultValue: 'Offer "{product}" at a special price', product: selectedRedirectProduct?.name })}
                   </p>
                 </div>
@@ -231,30 +231,30 @@ export function PostPurchaseSection({
                   }}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gf-raised peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gf-accent rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gf-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gf-accent-bg"></div>
+                <div className="w-11 h-6 bg-sf-raised peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-sf-accent rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-sf-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sf-accent-bg"></div>
               </label>
             </div>
 
             {/* OTO Configuration */}
             {oto.enabled && (
-              <div className="mt-4 space-y-4 p-4 bg-gf-raised border-2 border-gf-border-medium">
+              <div className="mt-4 space-y-4 p-4 bg-sf-raised border-2 border-sf-border-medium">
                 {/* Discount Configuration */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gf-body mb-2">
+                    <label className="block text-sm font-medium text-sf-body mb-2">
                       {t('oto.discountType', { defaultValue: 'Discount Type' })}
                     </label>
                     <select
                       value={oto.discountType}
                       onChange={(e) => setOto(prev => ({ ...prev, discountType: e.target.value as 'percentage' | 'fixed' }))}
-                      className="w-full px-3 py-2.5 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
+                      className="w-full px-3 py-2.5 border-2 border-sf-border-medium focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent bg-sf-input text-sf-heading"
                     >
                       <option value="percentage">{t('oto.percentage', { defaultValue: 'Percentage (%)' })}</option>
                       <option value="fixed">{t('oto.fixed', { defaultValue: 'Fixed Amount' })}</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gf-body mb-2">
+                    <label className="block text-sm font-medium text-sf-body mb-2">
                       {t('oto.discountValue', { defaultValue: 'Discount Value' })}
                     </label>
                     <div className="relative">
@@ -264,9 +264,9 @@ export function PostPurchaseSection({
                         onChange={(e) => setOto(prev => ({ ...prev, discountValue: Math.max(0, Number(e.target.value)) }))}
                         min="0"
                         max={oto.discountType === 'percentage' ? 100 : undefined}
-                        className="w-full px-3 py-2.5 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading pr-10"
+                        className="w-full px-3 py-2.5 border-2 border-sf-border-medium focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent bg-sf-input text-sf-heading pr-10"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gf-muted">
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sf-muted">
                         {oto.discountType === 'percentage' ? '%' : formData.currency}
                       </span>
                     </div>
@@ -275,7 +275,7 @@ export function PostPurchaseSection({
 
                 {/* Duration */}
                 <div>
-                  <label className="block text-sm font-medium text-gf-body mb-2">
+                  <label className="block text-sm font-medium text-sf-body mb-2">
                     {t('oto.duration', { defaultValue: 'Offer Duration' })}
                   </label>
                   <div className="flex items-center gap-3">
@@ -285,9 +285,9 @@ export function PostPurchaseSection({
                       onChange={(e) => setOto(prev => ({ ...prev, durationMinutes: Math.max(1, Math.min(1440, Number(e.target.value))) }))}
                       min="1"
                       max="1440"
-                      className="w-24 px-3 py-2.5 border-2 border-gf-border-medium focus:outline-none focus:ring-2 focus:ring-gf-accent focus:border-transparent bg-gf-input text-gf-heading"
+                      className="w-24 px-3 py-2.5 border-2 border-sf-border-medium focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent bg-sf-input text-sf-heading"
                     />
-                    <span className="text-sm text-gf-body">
+                    <span className="text-sm text-sf-body">
                       {t('oto.minutes', { defaultValue: 'minutes' })}
                     </span>
                     <div className="flex gap-2 ml-auto">
@@ -297,8 +297,8 @@ export function PostPurchaseSection({
                           type="button"
                           onClick={() => setOto(prev => ({ ...prev, durationMinutes: mins }))}
                           className={`px-2 py-1 text-xs ${oto.durationMinutes === mins
-                            ? 'bg-gf-accent-bg text-white'
-                            : 'bg-gf-raised text-gf-body hover:bg-gf-hover'
+                            ? 'bg-sf-accent-bg text-white'
+                            : 'bg-sf-raised text-sf-body hover:bg-sf-hover'
                           }`}
                         >
                           {mins}m
@@ -309,8 +309,8 @@ export function PostPurchaseSection({
                 </div>
 
                 {/* Preview Box */}
-                <div className="p-3 bg-gf-accent-soft border border-gf-border-accent">
-                  <p className="text-sm text-gf-accent">
+                <div className="p-3 bg-sf-accent-soft border border-sf-border-accent">
+                  <p className="text-sm text-sf-accent">
                     <span className="font-medium">{t('oto.preview', { defaultValue: 'Preview:' })}</span>{' '}
                     {t('oto.previewText', {
                       defaultValue: 'After purchasing this product, customer will see a {discount} discount on "{product}" for {duration} minutes.',
@@ -327,8 +327,8 @@ export function PostPurchaseSection({
 
         {/* Info when no product selected */}
         {!formData.success_redirect_url && (
-          <div className="p-3 bg-gf-raised border-2 border-gf-border-medium">
-            <p className="text-sm text-gf-muted">
+          <div className="p-3 bg-sf-raised border-2 border-sf-border-medium">
+            <p className="text-sm text-sf-muted">
               {t('postPurchase.noRedirectInfo', { defaultValue: 'Select a product above to create a sales funnel with optional time-limited discount (OTO).' })}
             </p>
           </div>

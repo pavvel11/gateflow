@@ -120,33 +120,33 @@ export default function RecentActivity() {
   const getColorClasses = (color: string) => {
     switch (color) {
       case 'green':
-        return 'bg-gf-success-soft text-gf-success'
+        return 'bg-sf-success-soft text-sf-success'
       case 'blue':
-        return 'bg-gf-accent-soft text-gf-accent'
+        return 'bg-sf-accent-soft text-sf-accent'
       case 'yellow':
-        return 'bg-gf-warning-soft text-gf-warning'
+        return 'bg-sf-warning-soft text-sf-warning'
       default:
-        return 'bg-gf-raised text-gf-body'
+        return 'bg-sf-raised text-sf-body'
     }
   }
 
   if (loading) {
     return (
-      <div className="border-2 border-gf-border-medium">
-        <div className="px-6 py-4 border-b border-gf-border-subtle">
-          <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-gf-muted">
+      <div className="border-2 border-sf-border-medium">
+        <div className="px-6 py-4 border-b border-sf-border-subtle">
+          <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-sf-muted">
             {t('recentActivity.title')}
           </h2>
         </div>
         <div>
           {[...Array(5)].map((_, i) => (
-            <div key={i} className={`flex items-center gap-3 px-6 py-4 animate-pulse ${i % 2 === 1 ? 'bg-gf-row-alt' : ''}`}>
-              <div className="w-8 h-8 bg-gf-raised flex-shrink-0"></div>
+            <div key={i} className={`flex items-center gap-3 px-6 py-4 animate-pulse ${i % 2 === 1 ? 'bg-sf-row-alt' : ''}`}>
+              <div className="w-8 h-8 bg-sf-raised flex-shrink-0"></div>
               <div className="flex-1">
-                <div className="h-4 bg-gf-raised w-3/4 mb-1"></div>
-                <div className="h-3 bg-gf-raised w-1/2"></div>
+                <div className="h-4 bg-sf-raised w-3/4 mb-1"></div>
+                <div className="h-3 bg-sf-raised w-1/2"></div>
               </div>
-              <div className="h-3 bg-gf-raised w-16"></div>
+              <div className="h-3 bg-sf-raised w-16"></div>
             </div>
           ))}
         </div>
@@ -155,44 +155,44 @@ export default function RecentActivity() {
   }
 
   return (
-    <div className="border-2 border-gf-border-medium">
-      <div className="px-6 py-4 border-b border-gf-border-subtle">
-        <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-gf-muted">
+    <div className="border-2 border-sf-border-medium">
+      <div className="px-6 py-4 border-b border-sf-border-subtle">
+        <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-sf-muted">
           {t('recentActivity.title')}
         </h2>
       </div>
       <div>
         {activities.length === 0 ? (
           <div className="text-center py-8 px-6">
-            <div className="text-gf-muted mb-2">
+            <div className="text-sf-muted mb-2">
               <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <p className="text-sm text-gf-muted">{t('recentActivity.noActivity')}</p>
+            <p className="text-sm text-sf-muted">{t('recentActivity.noActivity')}</p>
           </div>
         ) : (
           activities.map((activity, index) => (
             <div
               key={activity.id}
-              className={`flex items-center gap-3 px-6 py-4 transition-colors hover:bg-gf-hover ${
-                index % 2 === 1 ? 'bg-gf-row-alt' : ''
-              } ${index < activities.length - 1 ? 'border-b border-gf-border-subtle' : ''}`}
+              className={`flex items-center gap-3 px-6 py-4 transition-colors hover:bg-sf-hover ${
+                index % 2 === 1 ? 'bg-sf-row-alt' : ''
+              } ${index < activities.length - 1 ? 'border-b border-sf-border-subtle' : ''}`}
             >
               <div className={`w-8 h-8 flex-shrink-0 flex items-center justify-center ${getColorClasses(activity.color)}`}>
                 {getIcon(activity.icon)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gf-heading truncate">
+                <p className="text-sm font-medium text-sf-heading truncate">
                   {activity.message}
                 </p>
                 {activity.user_email && (
-                  <p className="text-xs text-gf-muted truncate">
+                  <p className="text-xs text-sf-muted truncate">
                     {activity.user_email}
                   </p>
                 )}
               </div>
-              <span className="text-xs text-gf-muted flex-shrink-0 font-mono">
+              <span className="text-xs text-sf-muted flex-shrink-0 font-mono">
                 {formatTimeAgo(activity.timestamp)}
               </span>
             </div>

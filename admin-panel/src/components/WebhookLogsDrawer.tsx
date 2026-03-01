@@ -114,7 +114,7 @@ export default function WebhookLogsDrawer({ endpoint, onClose, isOpen, onRefresh
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value as any)}
-                className="px-3 py-2 border-2 border-gf-border-medium bg-gf-input text-gf-heading text-sm focus:outline-none focus:ring-2 focus:ring-gf-accent"
+                className="px-3 py-2 border-2 border-sf-border-medium bg-sf-input text-sf-heading text-sm focus:outline-none focus:ring-2 focus:ring-sf-accent"
               >
                 <option value="all">{t('filterAll')}</option>
                 <option value="success">{t('filterSuccess')}</option>
@@ -126,10 +126,10 @@ export default function WebhookLogsDrawer({ endpoint, onClose, isOpen, onRefresh
 
             {loading ? (
               <div className="flex justify-center py-10">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gf-accent"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sf-accent"></div>
               </div>
             ) : logs.length === 0 ? (
-              <div className="text-center py-10 text-gf-muted border border-dashed border-gf-border">
+              <div className="text-center py-10 text-sf-muted border border-dashed border-sf-border">
                 {t('noLogs')}
               </div>
             ) : (
@@ -151,7 +151,7 @@ export default function WebhookLogsDrawer({ endpoint, onClose, isOpen, onRefresh
       {/* Inactive Endpoint Warning Modal - Outside BaseModal */}
       {showInactiveWarning && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-gf-base p-6 w-full max-w-md">
+          <div className="bg-sf-base p-6 w-full max-w-md">
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
                 <svg className="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -159,10 +159,10 @@ export default function WebhookLogsDrawer({ endpoint, onClose, isOpen, onRefresh
                 </svg>
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-gf-heading">
+                <h3 className="text-lg font-bold text-sf-heading">
                   {t('inactiveEndpointWarningTitle')}
                 </h3>
-                <p className="mt-2 text-sm text-gf-body">
+                <p className="mt-2 text-sm text-sf-body">
                   {t('inactiveEndpointWarningMessage')}
                 </p>
               </div>
@@ -170,13 +170,13 @@ export default function WebhookLogsDrawer({ endpoint, onClose, isOpen, onRefresh
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 onClick={cancelInactiveRetry}
-                className="px-4 py-2 text-sm font-medium text-gf-body bg-gf-base border-2 border-gf-border-medium hover:bg-gf-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-accent"
+                className="px-4 py-2 text-sm font-medium text-sf-body bg-sf-base border-2 border-sf-border-medium hover:bg-sf-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sf-accent"
               >
                 {tCommon('cancel')}
               </button>
               <button
                 onClick={confirmInactiveRetry}
-                className="px-4 py-2 text-sm font-medium text-gf-inverse bg-gf-warning border border-transparent hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gf-warning"
+                className="px-4 py-2 text-sm font-medium text-sf-inverse bg-sf-warning border border-transparent hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sf-warning"
               >
                 {t('retryAnyway')}
               </button>

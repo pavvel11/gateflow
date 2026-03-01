@@ -13,10 +13,10 @@ export default async function IntegrationsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gf-heading">
+        <h1 className="text-2xl font-bold text-sf-heading">
           Integrations & Tracking
         </h1>
-        <p className="mt-1 text-sm text-gf-muted">
+        <p className="mt-1 text-sm text-sf-muted">
           Configure analytics, marketing pixels, and manage custom scripts (GDPR compliant).
         </p>
       </div>

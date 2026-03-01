@@ -847,8 +847,20 @@
       "browseAll": "Przeglądaj wszystkie produkty",
       "poweredBy": "{count, plural, one {# produkt} few {# produkty} other {# produktów}} dostępnych • Napędzane przez {shopName}"
     },
+    "filters": {
+      "all": "Wszystkie ({count})",
+      "featured": "Polecane ({count})",
+      "free": "Darmowe ({count})",
+      "premium": "Premium ({count})"
+    },
+    "brandMoment": {
+      "statsProducts": "Produkty",
+      "statsFree": "Darmowe",
+      "statsPremium": "Premium"
+    },
     "footer": {
-      "copyright": "© 2025 Napędzane przez Sellf • Bezpieczne zarządzanie dostępem do produktów"
+      "copyright": "© 2025 Napędzane przez Sellf • Bezpieczne zarządzanie dostępem do produktów",
+      "poweredBy": "Napedzane przez {shopName}"
     }
   },
   "productView": {

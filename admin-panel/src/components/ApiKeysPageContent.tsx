@@ -174,15 +174,15 @@ export default function ApiKeysPageContent() {
   // Get status badge
   const getStatusBadge = (key: ApiKey) => {
     if (key.revoked_at) {
-      return <span className="px-2 py-1 text-xs font-medium bg-gf-danger-soft text-gf-danger">{t('statusRevoked')}</span>;
+      return <span className="px-2 py-1 text-xs font-medium bg-sf-danger-soft text-sf-danger">{t('statusRevoked')}</span>;
     }
     if (!key.is_active) {
-      return <span className="px-2 py-1 text-xs font-medium bg-gf-raised text-gf-muted">{t('statusInactive')}</span>;
+      return <span className="px-2 py-1 text-xs font-medium bg-sf-raised text-sf-muted">{t('statusInactive')}</span>;
     }
     if (key.expires_at && new Date(key.expires_at) < new Date()) {
-      return <span className="px-2 py-1 text-xs font-medium bg-gf-warning-soft text-gf-warning">{t('statusExpired')}</span>;
+      return <span className="px-2 py-1 text-xs font-medium bg-sf-warning-soft text-sf-warning">{t('statusExpired')}</span>;
     }
-    return <span className="px-2 py-1 text-xs font-medium bg-gf-success-soft text-gf-success">{t('statusActive')}</span>;
+    return <span className="px-2 py-1 text-xs font-medium bg-sf-success-soft text-sf-success">{t('statusActive')}</span>;
   };
 
   return (
@@ -190,8 +190,8 @@ export default function ApiKeysPageContent() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-[40px] font-[800] text-gf-heading tracking-[-0.03em] leading-[1.1]">{t('title')}</h1>
-          <p className="text-gf-body mt-1">{t('subtitle')}</p>
+          <h1 className="text-[40px] font-[800] text-sf-heading tracking-[-0.03em] leading-[1.1]">{t('title')}</h1>
+          <p className="text-sf-body mt-1">{t('subtitle')}</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
@@ -203,7 +203,7 @@ export default function ApiKeysPageContent() {
       </div>
 
       {/* API Keys Table */}
-      <div className="bg-gf-base border-2 border-gf-border-medium overflow-hidden">
+      <div className="bg-sf-base border-2 border-sf-border-medium overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -214,7 +214,7 @@ export default function ApiKeysPageContent() {
             {error}
           </div>
         ) : apiKeys.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-gf-muted">
+          <div className="flex flex-col items-center justify-center py-12 text-sf-muted">
             <Key className="w-12 h-12 mb-4 opacity-50" />
             <p className="text-lg font-medium">{t('noKeys')}</p>
             <p className="text-sm">{t('noKeysDescription')}</p>
@@ -222,53 +222,53 @@ export default function ApiKeysPageContent() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gf-raised">
+              <thead className="bg-sf-raised">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">{t('columnName')}</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">{t('columnKey')}</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">{t('columnScopes')}</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">{t('columnStatus')}</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">{t('columnLastUsed')}</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">{t('columnCreated')}</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gf-muted uppercase tracking-wider">{t('columnActions')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">{t('columnName')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">{t('columnKey')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">{t('columnScopes')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">{t('columnStatus')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">{t('columnLastUsed')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">{t('columnCreated')}</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-sf-muted uppercase tracking-wider">{t('columnActions')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gf-border">
+              <tbody className="divide-y divide-sf-border">
                 {apiKeys.map((key, index) => (
-                  <tr key={key.id} className={`hover:bg-gf-hover transition-colors ${index % 2 === 1 ? 'bg-gf-row-alt' : ''}`}>
+                  <tr key={key.id} className={`hover:bg-sf-hover transition-colors ${index % 2 === 1 ? 'bg-sf-row-alt' : ''}`}>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <Key className="w-4 h-4 text-gf-muted" />
-                        <span className="font-medium text-gf-heading">{key.name}</span>
+                        <Key className="w-4 h-4 text-sf-muted" />
+                        <span className="font-medium text-sf-heading">{key.name}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <code className="px-2 py-1 bg-gf-raised text-sm font-mono text-gf-body">
+                      <code className="px-2 py-1 bg-sf-raised text-sm font-mono text-sf-body">
                         {key.key_prefix}...
                       </code>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-1">
                         {key.scopes.slice(0, 2).map((scope) => (
-                          <span key={scope} className="px-2 py-0.5 text-xs bg-gf-accent-soft text-gf-accent">
+                          <span key={scope} className="px-2 py-0.5 text-xs bg-sf-accent-soft text-sf-accent">
                             {SCOPE_KEY_MAP[scope] ? t(SCOPE_KEY_MAP[scope]) : scope}
                           </span>
                         ))}
                         {key.scopes.length > 2 && (
-                          <span className="px-2 py-0.5 text-xs bg-gf-raised text-gf-muted">
+                          <span className="px-2 py-0.5 text-xs bg-sf-raised text-sf-muted">
                             +{key.scopes.length - 2}
                           </span>
                         )}
                       </div>
                     </td>
                     <td className="px-6 py-4">{getStatusBadge(key)}</td>
-                    <td className="px-6 py-4 text-sm text-gf-muted">
+                    <td className="px-6 py-4 text-sm text-sf-muted">
                       {key.last_used_at ? formatDate(key.last_used_at) : t('neverUsed')}
                       {key.usage_count > 0 && (
                         <span className="block text-xs">({key.usage_count} {t('requests')})</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gf-muted">
+                    <td className="px-6 py-4 text-sm text-sf-muted">
                       {formatDate(key.created_at)}
                     </td>
                     <td className="px-6 py-4">
@@ -277,14 +277,14 @@ export default function ApiKeysPageContent() {
                           <>
                             <button
                               onClick={() => setKeyToRotate(key)}
-                              className="p-2 text-gf-muted hover:text-blue-600 hover:bg-gf-accent-soft transition-colors"
+                              className="p-2 text-sf-muted hover:text-blue-600 hover:bg-sf-accent-soft transition-colors"
                               title={t('rotateKey')}
                             >
                               <RotateCw className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => setKeyToRevoke(key)}
-                              className="p-2 text-gf-muted hover:text-red-600 hover:bg-gf-danger-soft transition-colors"
+                              className="p-2 text-sf-muted hover:text-red-600 hover:bg-sf-danger-soft transition-colors"
                               title={t('revokeKey')}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -318,36 +318,36 @@ export default function ApiKeysPageContent() {
           />
           <ModalBody>
             <div className="space-y-4">
-              <div className="p-4 bg-gf-warning-soft border border-gf-warning/20">
+              <div className="p-4 bg-sf-warning-soft border border-sf-warning/20">
                 <div className="flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-gf-warning mt-0.5" />
+                  <AlertTriangle className="w-5 h-5 text-sf-warning mt-0.5" />
                   <div>
-                    <p className="font-medium text-gf-warning">{t('saveKeyWarning')}</p>
-                    <p className="text-sm text-gf-warning mt-1">{t('saveKeyDescription')}</p>
+                    <p className="font-medium text-sf-warning">{t('saveKeyWarning')}</p>
+                    <p className="text-sm text-sf-warning mt-1">{t('saveKeyDescription')}</p>
                   </div>
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gf-body mb-2">{t('yourApiKey')}</label>
+                <label className="block text-sm font-medium text-sf-body mb-2">{t('yourApiKey')}</label>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 relative">
                     <input
                       type={showSecret ? 'text' : 'password'}
                       value={newKeySecret}
                       readOnly
-                      className="w-full px-3 py-2 pr-10 bg-gf-raised border-2 border-gf-border-medium font-mono text-sm"
+                      className="w-full px-3 py-2 pr-10 bg-sf-raised border-2 border-sf-border-medium font-mono text-sm"
                     />
                     <button
                       type="button"
                       onClick={() => setShowSecret(!showSecret)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gf-muted hover:text-gray-600"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-sf-muted hover:text-gray-600"
                     >
                       {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                   <button
                     onClick={() => copyToClipboard(newKeySecret)}
-                    className="p-2 bg-gf-raised hover:bg-gf-hover transition-colors"
+                    className="p-2 bg-sf-raised hover:bg-sf-hover transition-colors"
                     title={t('copy')}
                   >
                     <Copy className="w-4 h-4" />
@@ -372,10 +372,10 @@ export default function ApiKeysPageContent() {
             icon={<Trash2 className="w-6 h-6 text-red-500" />}
           />
           <ModalBody>
-            <p className="text-gf-body">
+            <p className="text-sf-body">
               {t('revokeConfirmation', { name: keyToRevoke.name })}
             </p>
-            <p className="text-sm text-gf-muted mt-2">
+            <p className="text-sm text-sf-muted mt-2">
               {t('revokeWarning')}
             </p>
           </ModalBody>
@@ -398,10 +398,10 @@ export default function ApiKeysPageContent() {
             icon={<RotateCw className="w-6 h-6 text-blue-500" />}
           />
           <ModalBody>
-            <p className="text-gf-body">
+            <p className="text-sf-body">
               {t('rotateConfirmation', { name: keyToRotate.name })}
             </p>
-            <p className="text-sm text-gf-muted mt-2">
+            <p className="text-sm text-sf-muted mt-2">
               {t('rotateGracePeriod')}
             </p>
           </ModalBody>

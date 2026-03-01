@@ -60,7 +60,7 @@ async function signIn(page: Page) {
 
 async function setTheme(page: Page, theme: 'light' | 'dark') {
   await page.addInitScript((t) => {
-    localStorage.setItem('gf_theme', t);
+    localStorage.setItem('sf_theme', t);
     if (t === 'dark') {
       document.documentElement.classList.add('dark');
     } else {

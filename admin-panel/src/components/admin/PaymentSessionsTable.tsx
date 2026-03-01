@@ -65,22 +65,22 @@ export default function PaymentSessionsTable({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'bg-gf-warning-soft text-gf-warning';
+        return 'bg-sf-warning-soft text-sf-warning';
       case 'completed':
-        return 'bg-gf-success-soft text-gf-success';
+        return 'bg-sf-success-soft text-sf-success';
       case 'failed':
-        return 'bg-gf-danger-soft text-gf-danger';
+        return 'bg-sf-danger-soft text-sf-danger';
       case 'cancelled':
-        return 'bg-gf-raised text-gf-body';
+        return 'bg-sf-raised text-sf-body';
       default:
-        return 'bg-gf-raised text-gf-body';
+        return 'bg-sf-raised text-sf-body';
     }
   };
 
   if (sessions.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="text-gf-muted">
+        <div className="text-sf-muted">
           No payment sessions found.
         </div>
       </div>
@@ -89,63 +89,63 @@ export default function PaymentSessionsTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gf-border">
-        <thead className="bg-gf-raised">
+      <table className="min-w-full divide-y divide-sf-border">
+        <thead className="bg-sf-raised">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
               Session
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
               Customer
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
               Product
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
               Amount
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
               Status
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
               Created
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
               Expires
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gf-muted uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">
               Actions
             </th>
           </tr>
         </thead>
-        <tbody className="bg-gf-base divide-y divide-gf-border">
+        <tbody className="bg-sf-base divide-y divide-sf-border">
           {sessions.map((session, index) => (
-            <tr key={session.id} className={index % 2 === 1 ? 'bg-gf-row-alt' : ''}>
+            <tr key={session.id} className={index % 2 === 1 ? 'bg-sf-row-alt' : ''}>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gf-heading">
+                <div className="text-sm font-medium text-sf-heading">
                   {session.session_id.slice(0, 20)}...
                 </div>
-                <div className="text-sm text-gf-muted">
+                <div className="text-sm text-sf-muted">
                   {session.provider_type}
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gf-heading">
+                <div className="text-sm text-sf-heading">
                   {session.customer_email}
                 </div>
                 {session.user_id && (
-                  <div className="text-sm text-gf-muted">
+                  <div className="text-sm text-sf-muted">
                     {session.user_id.slice(0, 8)}...
                   </div>
                 )}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gf-heading">
+                <div className="text-sm text-sf-heading">
                   {session.product_id.slice(0, 8)}...
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gf-heading">
+                <div className="text-sm font-medium text-sf-heading">
                   {formatCurrency(session.amount, session.currency)}
                 </div>
               </td>
@@ -154,10 +154,10 @@ export default function PaymentSessionsTable({
                   {session.status}
                 </span>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gf-muted">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-sf-muted">
                 {formatDate(session.created_at)}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gf-muted">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-sf-muted">
                 {formatDate(session.expires_at)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -165,7 +165,7 @@ export default function PaymentSessionsTable({
                   <button
                     onClick={() => handleCancelSession(session.session_id)}
                     disabled={cancelingId === session.session_id}
-                    className="text-gf-danger hover:opacity-80 disabled:opacity-50"
+                    className="text-sf-danger hover:opacity-80 disabled:opacity-50"
                   >
                     {cancelingId === session.session_id ? tCancel('loading') : tCancel('label')}
                   </button>

@@ -73,42 +73,42 @@ export default function OmnibusSettings() {
 
  if (loading) {
  return (
- <div className="bg-gf-base border-2 border-gf-border-medium p-6">
+ <div className="bg-sf-base border-2 border-sf-border-medium p-6">
  <div className="animate-pulse space-y-4">
- <div className="h-4 bg-gf-raised w-1/3"></div>
- <div className="h-10 bg-gf-raised"></div>
+ <div className="h-4 bg-sf-raised w-1/3"></div>
+ <div className="h-10 bg-sf-raised"></div>
  </div>
  </div>
  );
  }
 
  return (
- <div className="bg-gf-base border-2 border-gf-border-medium p-6">
+ <div className="bg-sf-base border-2 border-sf-border-medium p-6">
  <div className="flex items-start justify-between">
  <div className="flex-1">
- <h2 className="text-xl font-semibold text-gf-heading mb-2">
+ <h2 className="text-xl font-semibold text-sf-heading mb-2">
  {t('title')}
  </h2>
- <p className="text-sm text-gf-body mb-4">
+ <p className="text-sm text-sf-body mb-4">
  {t('description')}
  </p>
 
- <div className="bg-gf-accent-soft border border-gf-accent/20 p-4 mb-4">
- <h3 className="text-sm font-medium text-gf-accent mb-2">
+ <div className="bg-sf-accent-soft border border-sf-accent/20 p-4 mb-4">
+ <h3 className="text-sm font-medium text-sf-accent mb-2">
  ℹ️ {t('whatIsOmnibus')}
  </h3>
- <p className="text-xs text-gf-accent leading-relaxed">
+ <p className="text-xs text-sf-accent leading-relaxed">
  {t('omnibusExplanation')}
  </p>
  </div>
 
  {/* Toggle Switch */}
- <div className="flex items-center justify-between py-4 px-4 bg-gf-raised">
+ <div className="flex items-center justify-between py-4 px-4 bg-sf-raised">
  <div>
- <span className="text-sm font-medium text-gf-heading">
+ <span className="text-sm font-medium text-sf-heading">
  {t('enableOmnibus')}
  </span>
- <p className="text-xs text-gf-muted mt-1">
+ <p className="text-xs text-sf-muted mt-1">
  {omnibusEnabled ? t('currentlyEnabled') : t('currentlyDisabled')}
  </p>
  </div>
@@ -118,8 +118,8 @@ export default function OmnibusSettings() {
  disabled={saving}
  className={`
  relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent
- transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gf-accent focus:ring-offset-2
- ${omnibusEnabled ? 'bg-gf-accent-bg' : 'bg-gf-raised'}
+ transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sf-accent focus:ring-offset-2
+ ${omnibusEnabled ? 'bg-sf-accent-bg' : 'bg-sf-raised'}
  ${saving ? 'opacity-50 cursor-not-allowed' : ''}
  `}
  role="switch"
@@ -138,11 +138,11 @@ export default function OmnibusSettings() {
  </div>
 
  {/* Help Text */}
- <div className="mt-4 p-4 bg-gf-raised">
- <h4 className="text-xs font-medium text-gf-body mb-2">
+ <div className="mt-4 p-4 bg-sf-raised">
+ <h4 className="text-xs font-medium text-sf-body mb-2">
  {t('additionalInfo')}
  </h4>
- <ul className="text-xs text-gf-body space-y-1 list-disc list-inside">
+ <ul className="text-xs text-sf-body space-y-1 list-disc list-inside">
  <li>{t('info1')}</li>
  <li>{t('info2')}</li>
  <li>{t('info3')}</li>

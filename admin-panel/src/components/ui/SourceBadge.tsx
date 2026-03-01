@@ -10,9 +10,9 @@ interface SourceBadgeProps {
 }
 
 const STYLES: Record<ConfigSource, string> = {
-  db: 'bg-gf-accent-soft text-gf-accent',
-  env: 'bg-gf-accent-soft text-gf-accent',
-  default: 'bg-gf-raised text-gf-muted',
+  db: 'bg-sf-accent-soft text-sf-accent',
+  env: 'bg-sf-accent-soft text-sf-accent',
+  default: 'bg-sf-raised text-sf-muted',
 }
 
 export default function SourceBadge({ source, envAlsoSet }: SourceBadgeProps) {
@@ -24,7 +24,7 @@ export default function SourceBadge({ source, envAlsoSet }: SourceBadgeProps) {
         {t(source)}
       </span>
       {source === 'db' && envAlsoSet && (
-        <span className="text-[9px] text-gf-muted">
+        <span className="text-[9px] text-sf-muted">
           ({t('overridesEnv')})
         </span>
       )}

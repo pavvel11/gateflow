@@ -218,8 +218,8 @@ export default function WebhooksPageContent() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-[40px] font-[800] text-gf-heading tracking-[-0.03em] leading-[1.1]">{t('title')}</h1>
-          <p className="text-sm text-gf-muted mt-1">{t('pageDescription')}</p>
+          <h1 className="text-[40px] font-[800] text-sf-heading tracking-[-0.03em] leading-[1.1]">{t('title')}</h1>
+          <p className="text-sm text-sf-muted mt-1">{t('pageDescription')}</p>
         </div>
         <button
           onClick={handleOpenCreate}
@@ -236,13 +236,13 @@ export default function WebhooksPageContent() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
         </div>
       ) : endpoints.length === 0 ? (
-        <div className="bg-gf-base p-12 text-center border border-dashed border-gf-border">
-          <div className="mx-auto w-12 h-12 bg-gf-raised flex items-center justify-center mb-4">
-            <svg className="w-6 h-6 text-gf-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-sf-base p-12 text-center border border-dashed border-sf-border">
+          <div className="mx-auto w-12 h-12 bg-sf-raised flex items-center justify-center mb-4">
+            <svg className="w-6 h-6 text-sf-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
-          <p className="text-gf-muted">{t('noEndpoints')}</p>
+          <p className="text-sf-muted">{t('noEndpoints')}</p>
           <button onClick={handleOpenCreate} className="mt-4 text-blue-600 hover:text-blue-500 font-medium">
             {t('addEndpoint')}
           </button>
@@ -288,14 +288,14 @@ export default function WebhooksPageContent() {
         <BaseModal isOpen={true} onClose={onEditWarningCancel} size="md">
           <ModalHeader title={t('waitlistWarning.editTitle')} />
           <ModalBody>
-            <div data-testid="waitlist-webhook-warning" className="p-4 bg-gf-warning-soft border border-gf-warning/20">
+            <div data-testid="waitlist-webhook-warning" className="p-4 bg-sf-warning-soft border border-sf-warning/20">
               <div className="flex items-start gap-3">
                 <span className="text-xl">⚠️</span>
                 <div>
-                  <p className="font-medium text-gf-warning">
+                  <p className="font-medium text-sf-warning">
                     {t('waitlistWarning.title')}
                   </p>
-                  <p className="text-sm text-gf-warning mt-1">
+                  <p className="text-sm text-sf-warning mt-1">
                     {t('waitlistWarning.editDescription', { count: editWaitlistWarning.productsCount })}
                   </p>
                 </div>
