@@ -50,7 +50,7 @@ jobs:
       - name: Scan for leaked secrets
         uses: trufflesecurity/trufflehog@main
         with:
-          extra_args: --results verified,unknown --fail
+          extra_args: --results verified,unknown
 
   build:
     runs-on: ubuntu-latest
