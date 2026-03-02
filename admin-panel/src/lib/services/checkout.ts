@@ -9,6 +9,7 @@ import {
 } from '@/types/checkout';
 import { STRIPE_CONFIG, CHECKOUT_ERRORS, HTTP_STATUS } from '@/lib/stripe/config';
 import { getCheckoutConfig } from '@/lib/stripe/checkout-config';
+import { getOrCreateStripeTaxRate } from '@/lib/stripe/tax-rate-manager';
 import { sanitizeForLog } from '@/lib/logger';
 
 // Remove the local ProductForCheckout interface since we now use ValidatedProduct
@@ -173,8 +174,43 @@ export class CheckoutService {
         }
       }
 
+      // Resolve checkout config: DB > env var > default
+      const checkoutConfig = await getCheckoutConfig();
+
+      // --- Tax mode: resolve tax_behavior and tax_rates per line item ---
+      const isLocalTax = checkoutConfig.tax_mode === 'local';
+
+      // Resolve tax rates for local mode (per-product vat_rate)
+      let mainTaxRates: string[] | undefined;
+      let bumpTaxRates: string[] | undefined;
+
+      if (isLocalTax) {
+        if (options.product.vat_rate && options.product.vat_rate > 0) {
+          const txrId = await getOrCreateStripeTaxRate({
+            percentage: options.product.vat_rate,
+            inclusive: options.product.price_includes_vat,
+          });
+          mainTaxRates = [txrId];
+        }
+
+        if (options.bumpProduct?.vat_rate && options.bumpProduct.vat_rate > 0) {
+          const txrId = await getOrCreateStripeTaxRate({
+            percentage: options.bumpProduct.vat_rate,
+            inclusive: options.bumpProduct.price_includes_vat,
+          });
+          bumpTaxRates = [txrId];
+        }
+      }
+
+      // tax_behavior: tells Stripe how to interpret the price amount
+      // In stripe_tax mode: required for automatic tax calculation
+      // In local mode with vat_rate: tells Stripe the price is inclusive/exclusive of the attached tax rate
+      const mainTaxBehavior = (isLocalTax && mainTaxRates) || !isLocalTax
+        ? (options.product.price_includes_vat ? 'inclusive' : 'exclusive')
+        : undefined;
+
       // Build line items array (main product + optional bump)
-      const lineItems = [
+      const lineItems: Record<string, unknown>[] = [
         {
           price_data: {
             currency: options.product.currency.toLowerCase(),
@@ -183,7 +219,9 @@ export class CheckoutService {
               description: options.product.description || undefined,
             },
             unit_amount: Math.round(mainProductPrice * 100),
+            ...(mainTaxBehavior && { tax_behavior: mainTaxBehavior }),
           },
+          ...(mainTaxRates && { tax_rates: mainTaxRates }),
           quantity: 1,
         },
       ];
@@ -195,7 +233,11 @@ export class CheckoutService {
         if (coupon && coupon.discount_type === 'percentage' && !coupon.exclude_order_bumps) {
           bumpPrice = bumpPrice * (1 - coupon.discount_value / 100);
         }
-        
+
+        const bumpTaxBehavior = (isLocalTax && bumpTaxRates) || !isLocalTax
+          ? (options.bumpProduct.price_includes_vat ? 'inclusive' : 'exclusive')
+          : undefined;
+
         lineItems.push({
           price_data: {
             currency: options.bumpProduct.currency.toLowerCase(),
@@ -204,13 +246,12 @@ export class CheckoutService {
               description: options.bumpProduct.description || undefined,
             },
             unit_amount: Math.round(bumpPrice * 100),
+            ...(bumpTaxBehavior && { tax_behavior: bumpTaxBehavior }),
           },
+          ...(bumpTaxRates && { tax_rates: bumpTaxRates }),
           quantity: 1,
         });
       }
-
-      // Resolve checkout config: DB > env var > default
-      const checkoutConfig = await getCheckoutConfig();
 
       // Prepare session configuration
       const sessionConfig: Record<string, unknown> = {

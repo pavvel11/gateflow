@@ -6,12 +6,18 @@ import { cache } from 'react'
 import { cacheGet, cacheSet, cacheDel, CacheKeys, CacheTTL } from '@/lib/redis/cache'
 import { isDemoMode } from '@/lib/demo-guard'
 
+export type TaxMode = 'local' | 'stripe_tax'
+
 export interface ShopConfig {
   id: string
   default_currency: string
   shop_name: string
   contact_email?: string | null
   tax_rate?: number | null
+
+  // Dual tax mode
+  tax_mode: TaxMode
+  stripe_tax_rate_cache: Record<string, string>
 
   // Branding & Whitelabel
   logo_url?: string | null

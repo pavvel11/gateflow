@@ -15,7 +15,7 @@ import { SUPPORTED_CURRENCY_CODES } from '@/lib/constants';
  *
  * @see supabase/migrations/20250101000000_core_schema.sql (products table)
  */
-export const PRODUCT_API_FIELDS = `id, name, slug, description, long_description, icon, image_url, thumbnail_url, price, currency, features, layout_template, is_active, is_featured, is_listed, available_from, available_until, auto_grant_duration_days, content_delivery_type, content_config, is_refundable, refund_period_days, enable_waitlist, allow_custom_price, custom_price_min, show_price_presets, custom_price_presets, created_at, updated_at`;
+export const PRODUCT_API_FIELDS = `id, name, slug, description, long_description, icon, image_url, thumbnail_url, price, currency, features, layout_template, is_active, is_featured, is_listed, available_from, available_until, auto_grant_duration_days, content_delivery_type, content_config, is_refundable, refund_period_days, enable_waitlist, allow_custom_price, custom_price_min, show_price_presets, custom_price_presets, vat_rate, price_includes_vat, omnibus_exempt, sale_price, sale_price_until, sale_quantity_limit, success_redirect_url, pass_params_to_redirect, created_at, updated_at`;
 
 /**
  * SECURITY FIX (V13): Escape ILIKE special characters to prevent SQL pattern injection

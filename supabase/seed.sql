@@ -53,6 +53,8 @@ INSERT INTO shop_config (
   default_currency,
   shop_name,
   tax_rate,
+  tax_mode,
+  stripe_tax_rate_cache,
   logo_url,
   primary_color,
   secondary_color,
@@ -63,6 +65,8 @@ INSERT INTO shop_config (
   'USD',
   'Sellf Demo Shop',
   0.23, -- 23% VAT (Polish default)
+  'local', -- Default: Fixed VAT rate sent to Stripe per product
+  '{}'::jsonb, -- Empty cache, populated on first local-mode checkout
   NULL, -- Upload logo to imgbb.com
   NULL, -- uses var(--sf-accent) fallback
   NULL, -- uses var(--sf-accent-hover) fallback

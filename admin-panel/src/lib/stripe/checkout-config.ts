@@ -1,6 +1,7 @@
 import { getShopConfig } from '@/lib/actions/shop-config'
 import { getPaymentMethodConfig } from '@/lib/actions/payment-config'
 import { STRIPE_CONFIG } from '@/lib/stripe/config'
+import type { TaxMode } from '@/lib/actions/shop-config'
 import type { PaymentConfigMode } from '@/types/payment-config'
 
 export type ConfigSource = 'db' | 'env' | 'default'
@@ -9,6 +10,7 @@ export type ConfigSource = 'db' | 'env' | 'default'
 export type TaxConfigSource = ConfigSource
 
 export interface CheckoutConfig {
+  tax_mode: TaxMode
   automatic_tax: { enabled: boolean }
   tax_id_collection: { enabled: boolean }
   billing_address_collection: 'auto' | 'required'
@@ -66,13 +68,18 @@ export async function getCheckoutConfig(): Promise<CheckoutConfig> {
     getPaymentMethodConfig(),
   ])
 
-  // --- Tax ---
-  const autoTax = resolveNullable(
-    shopConfig?.automatic_tax_enabled,
-    process.env.STRIPE_SESSION_AUTOMATIC_TAX_ENABLED,
-    STRIPE_CONFIG.session.automatic_tax.enabled,
-    true,
+  // --- Tax Mode ---
+  const taxModeEnv = process.env.STRIPE_TAX_MODE as TaxMode | undefined
+  const taxMode = resolveNullable<TaxMode>(
+    shopConfig?.tax_mode as TaxMode | null | undefined,
+    taxModeEnv,
+    taxModeEnv || 'local',
+    'local',
   )
+
+  // automatic_tax is derived from tax_mode (local = false, stripe_tax = true)
+  // Legacy automatic_tax_enabled is ignored when tax_mode is set
+  const automaticTaxEnabled = taxMode.value === 'stripe_tax'
   const taxId = resolveNullable(
     shopConfig?.tax_id_collection_enabled,
     process.env.STRIPE_SESSION_TAX_ID_COLLECTION_ENABLED,
@@ -131,7 +138,8 @@ export async function getCheckoutConfig(): Promise<CheckoutConfig> {
   }
 
   return {
-    automatic_tax: { enabled: autoTax.value },
+    tax_mode: taxMode.value,
+    automatic_tax: { enabled: automaticTaxEnabled },
     tax_id_collection: { enabled: taxId.value },
     billing_address_collection: billing.value as 'auto' | 'required',
     expires_hours: expires.value as number,
@@ -140,7 +148,7 @@ export async function getCheckoutConfig(): Promise<CheckoutConfig> {
     payment_method_types: paymentMethodTypes,
     stripePresetId,
     sources: {
-      automatic_tax: autoTax.source,
+      automatic_tax: taxMode.source,
       tax_id_collection: taxId.source,
       billing_address_collection: billing.source,
       expires_hours: expires.source,
@@ -148,7 +156,7 @@ export async function getCheckoutConfig(): Promise<CheckoutConfig> {
       payment_methods: pmSource,
     },
     envExists: {
-      automatic_tax: autoTax.envExists,
+      automatic_tax: taxMode.envExists,
       tax_id_collection: taxId.envExists,
       billing_address_collection: billing.envExists,
       expires_hours: expires.envExists,

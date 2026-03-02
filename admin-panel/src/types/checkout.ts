@@ -54,6 +54,9 @@ export interface ProductForCheckout {
   // Pay What You Want fields
   allow_custom_price?: boolean;
   custom_price_min?: number;
+  // VAT/Tax fields
+  vat_rate: number | null;
+  price_includes_vat: boolean;
 }
 
 // User access types

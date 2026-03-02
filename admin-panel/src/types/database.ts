@@ -1505,7 +1505,9 @@ export type Database = {
           privacy_policy_url: string | null
           secondary_color: string | null
           shop_name: string
+          stripe_tax_rate_cache: Json | null
           tax_id_collection_enabled: boolean | null
+          tax_mode: string | null
           tax_rate: number | null
           terms_of_service_url: string | null
           updated_at: string
@@ -1529,7 +1531,9 @@ export type Database = {
           privacy_policy_url?: string | null
           secondary_color?: string | null
           shop_name?: string
+          stripe_tax_rate_cache?: Json | null
           tax_id_collection_enabled?: boolean | null
+          tax_mode?: string | null
           tax_rate?: number | null
           terms_of_service_url?: string | null
           updated_at?: string
@@ -1553,7 +1557,9 @@ export type Database = {
           privacy_policy_url?: string | null
           secondary_color?: string | null
           shop_name?: string
+          stripe_tax_rate_cache?: Json | null
           tax_id_collection_enabled?: boolean | null
+          tax_mode?: string | null
           tax_rate?: number | null
           terms_of_service_url?: string | null
           updated_at?: string

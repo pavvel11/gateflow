@@ -21,6 +21,9 @@ export interface ValidatedProduct {
   // Pay What You Want fields
   allow_custom_price?: boolean;
   custom_price_min?: number;
+  // VAT/Tax fields
+  vat_rate: number | null;
+  price_includes_vat: boolean;
 }
 
 export interface UserAccessInfo {
@@ -46,7 +49,7 @@ export class ProductValidationService {
 
     const { data: product, error } = await this.supabase
       .from('products')
-      .select('id, slug, name, description, price, currency, is_active, available_from, available_until, auto_grant_duration_days, allow_custom_price, custom_price_min')
+      .select('id, slug, name, description, price, currency, is_active, available_from, available_until, auto_grant_duration_days, allow_custom_price, custom_price_min, vat_rate, price_includes_vat')
       .eq('id', productId)
       .eq('is_active', true)
       .single();
