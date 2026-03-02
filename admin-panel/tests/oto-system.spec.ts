@@ -1209,7 +1209,7 @@ test.describe('OTO Checkout Page E2E', () => {
     ).toBeVisible({ timeout: 10000 });
 
     // 5. Coupon should show verified state (green checkmark icon or success state)
-    const verifiedIndicator = page.locator('[data-testid="coupon-verified"], .text-green-500, .text-green-600');
+    const verifiedIndicator = page.locator('[data-testid="coupon-verified"], .text-sf-success');
     await expect(verifiedIndicator.first()).toBeVisible({ timeout: 10000 });
   });
 

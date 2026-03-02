@@ -67,8 +67,8 @@ test.describe('Smart Coupons System', () => {
     // Wait for verification to finish and success message to appear (PL locale)
     await expect(page.getByText(/zniżkę|discount applied/i)).toBeVisible({ timeout: 15000 });
 
-    // Check if applied state is active (green border)
-    await expect(page.locator('.border-green-500\\\/50')).toBeVisible(); 
+    // Check if applied state is active (success border)
+    await expect(page.locator('.border-sf-success\\/50')).toBeVisible();
   });
 
   test('should validate invalid coupon via URL', async ({ page }) => {

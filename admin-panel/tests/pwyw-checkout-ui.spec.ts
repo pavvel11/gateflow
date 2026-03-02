@@ -135,7 +135,7 @@ test.describe('PWYW Checkout UI', () => {
     await preset25.click();
 
     // Preset should be visually selected (has blue background when active)
-    await expect(preset25).toHaveClass(/bg-blue/);
+    await expect(preset25).toHaveClass(/bg-sf-accent/);
 
     // Custom input should show 25
     const customInput = page.locator('input[type="number"]').or(page.locator('input[inputmode="decimal"]'));
@@ -152,7 +152,7 @@ test.describe('PWYW Checkout UI', () => {
     await preset25.click();
 
     // Preset should be visually selected
-    await expect(preset25).toHaveClass(/bg-blue/);
+    await expect(preset25).toHaveClass(/bg-sf-accent/);
 
     // Custom input should reflect the selected preset amount
     const customInput = page.locator('input[type="number"]').or(page.locator('input[inputmode="decimal"]'));
@@ -185,7 +185,7 @@ test.describe('PWYW Checkout UI', () => {
     await customInput.first().blur();
 
     // Should show error message (look for red error text)
-    await expect(page.locator('.text-red-600, .text-red-400, .text-red-300').filter({ hasText: /co najmniej|at least/i }).first()).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.text-sf-danger, .text-red-600, .text-red-400, .text-red-300').filter({ hasText: /co najmniej|at least/i }).first()).toBeVisible({ timeout: 5000 });
   });
 
   test('should not show error when amount is at minimum', async ({ page }) => {
@@ -200,7 +200,7 @@ test.describe('PWYW Checkout UI', () => {
     await customInput.first().blur();
 
     // Should NOT show error message (no red error text)
-    await expect(page.locator('.text-red-400, .text-red-300').filter({ hasText: /co najmniej|at least/i })).toHaveCount(0);
+    await expect(page.locator('.text-sf-danger, .text-red-400, .text-red-300').filter({ hasText: /co najmniej|at least/i })).toHaveCount(0);
   });
 
   test('should not show error when amount is above minimum', async ({ page }) => {
@@ -215,7 +215,7 @@ test.describe('PWYW Checkout UI', () => {
     await customInput.first().blur();
 
     // Should NOT show error message (no red error text)
-    await expect(page.locator('.text-red-400, .text-red-300').filter({ hasText: /co najmniej|at least/i })).toHaveCount(0);
+    await expect(page.locator('.text-sf-danger, .text-red-400, .text-red-300').filter({ hasText: /co najmniej|at least/i })).toHaveCount(0);
   });
 
   test('should show error and hide checkout when amount is below minimum', async ({ page }) => {
@@ -229,7 +229,7 @@ test.describe('PWYW Checkout UI', () => {
     await customInput.first().blur();
 
     // Should show error message about minimum amount
-    await expect(page.locator('.text-red-600, .text-red-400, .text-red-300').filter({ hasText: /co najmniej|at least/i }).first()).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.text-sf-danger, .text-red-600, .text-red-400, .text-red-300').filter({ hasText: /co najmniej|at least/i }).first()).toBeVisible({ timeout: 5000 });
   });
 
   test('should show product price as default selected', async ({ page }) => {

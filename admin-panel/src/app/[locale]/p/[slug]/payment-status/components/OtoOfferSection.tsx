@@ -155,7 +155,7 @@ export default function OtoOfferSection({
                   ? 'bg-sf-danger-bg text-sf-inverse'
                   : isWarning
                     ? 'bg-sf-warning text-sf-inverse'
-                    : 'bg-sf-accent text-white'
+                    : 'bg-sf-accent-bg text-white'
                 }
               `}>
                 {formatTime(secondsRemaining)}
@@ -182,7 +182,7 @@ export default function OtoOfferSection({
                   ? 'bg-sf-danger-bg hover:bg-sf-danger/90'
                   : isWarning
                     ? 'bg-sf-warning hover:bg-sf-warning/90'
-                    : 'bg-sf-accent hover:bg-sf-accent-hover'
+                    : 'bg-sf-accent-bg hover:bg-sf-accent-hover'
                 }
                 active:scale-[0.98]
               `}

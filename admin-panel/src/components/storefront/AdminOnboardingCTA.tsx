@@ -45,7 +45,7 @@ export default function AdminOnboardingCTA({ shopName, shopEmail }: AdminOnboard
           {/* Main CTA Button */}
           <Link
             href="/dashboard/products?open=new"
-            className="inline-flex items-center px-8 py-4 border border-transparent rounded-full text-lg font-medium text-white bg-sf-accent hover:bg-sf-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sf-accent transition-all duration-200 shadow-[var(--sf-shadow-accent)] active:scale-[0.98]"
+            className="inline-flex items-center px-8 py-4 border border-transparent rounded-full text-lg font-medium text-white bg-sf-accent-bg hover:bg-sf-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sf-accent transition-all duration-200 shadow-[var(--sf-shadow-accent)] active:scale-[0.98]"
           >
             <svg className="-ml-1 mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -57,7 +57,7 @@ export default function AdminOnboardingCTA({ shopName, shopEmail }: AdminOnboard
         {/* Setup Progress Card */}
         <div className="bg-sf-base rounded-2xl shadow-[var(--sf-shadow-accent)] border border-sf-border overflow-hidden">
           {/* Card Header */}
-          <div className="bg-sf-accent px-8 py-6">
+          <div className="bg-sf-accent-bg px-8 py-6">
             <h2 className="text-2xl font-bold text-white">
               Setup Progress
             </h2>

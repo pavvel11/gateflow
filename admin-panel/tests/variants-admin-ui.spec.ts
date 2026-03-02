@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { acceptAllCookies } from './helpers/consent';
+import { setAuthSession } from './helpers/admin-auth';
 
 /**
  * Variant Admin UI Tests (M:N Schema)
@@ -32,16 +33,7 @@ test.describe('Variants Admin Page', () => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email: adminEmail,
-      password: adminPassword,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
+    await setAuthSession(page, adminEmail, adminPassword);
 
     await page.waitForTimeout(1000);
   };
@@ -225,7 +217,7 @@ test.describe('Variants Admin Page', () => {
       await modal.locator('.cursor-pointer').filter({ hasText: 'Admin UI Test 2' }).first().click();
 
       // Should show variant name inputs in the right panel
-      const rightPanel = modal.locator('[class*="bg-gray-50"]').or(modal.locator('[class*="bg-gray-900"]'));
+      const rightPanel = modal.locator('[class*="bg-sf-raised"]').last();
       const inputs = rightPanel.locator('input[type="text"]');
       expect(await inputs.count()).toBeGreaterThanOrEqual(2);
     });

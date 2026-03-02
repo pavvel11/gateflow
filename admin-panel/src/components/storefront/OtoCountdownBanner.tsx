@@ -136,7 +136,7 @@ export default function OtoCountdownBanner({
               ? 'bg-sf-danger-bg text-sf-inverse'
               : isWarning
                 ? 'bg-sf-warning text-sf-inverse'
-                : 'bg-sf-accent text-white'
+                : 'bg-sf-accent-bg text-white'
             }
           `}>
             {formatTime(secondsRemaining)}

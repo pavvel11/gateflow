@@ -257,7 +257,7 @@ test.describe('PWYW Free Option — Checkout UI', () => {
     // Should show free access section (green card with email input or "Odbierz za darmo")
     const freeUI = page.locator('text=Odbierz za darmo')
       .or(page.locator('text=Get for Free'))
-      .or(page.locator('.bg-green-50 input[type="email"]'));
+      .or(page.locator('.bg-sf-success-soft input[type="email"]'));
     await expect(freeUI.first()).toBeVisible({ timeout: 5000 });
   });
 
@@ -301,7 +301,7 @@ test.describe('PWYW Free Option — Checkout UI', () => {
     // Should show free access UI
     const freeUI = page.locator('text=Odbierz za darmo')
       .or(page.locator('text=Get for Free'))
-      .or(page.locator('.bg-green-50 input[type="email"]'));
+      .or(page.locator('.bg-sf-success-soft input[type="email"]'));
     await expect(freeUI.first()).toBeVisible({ timeout: 5000 });
   });
 
@@ -355,7 +355,7 @@ test.describe('PWYW Free Option — Checkout UI', () => {
     await freePreset.first().click();
 
     // Free UI should appear
-    const freeUI = page.locator('.bg-green-50');
+    const freeUI = page.locator('.bg-sf-success-soft');
     await expect(freeUI.first()).toBeVisible({ timeout: 5000 });
 
     // Now select paid preset (25 PLN)
@@ -387,7 +387,7 @@ test.describe('PWYW Free Option — Checkout UI', () => {
     await expect(getForFreeButton).toBeVisible({ timeout: 5000 });
 
     // Should NOT show email input (user is logged in)
-    const emailInputInFreeSection = page.locator('.bg-green-50 input[type="email"]');
+    const emailInputInFreeSection = page.locator('.bg-sf-success-soft input[type="email"]');
     await expect(emailInputInFreeSection).not.toBeVisible();
   });
 
@@ -401,7 +401,7 @@ test.describe('PWYW Free Option — Checkout UI', () => {
     await freePreset.first().click();
 
     // Should show email input (user is not logged in)
-    const emailInput = page.locator('.bg-green-50 input[type="email"]');
+    const emailInput = page.locator('.bg-sf-success-soft input[type="email"]');
     await expect(emailInput).toBeVisible({ timeout: 5000 });
 
     // Should show "Odbierz za darmo" label text
@@ -421,7 +421,7 @@ test.describe('PWYW Free Option — Checkout UI', () => {
     await freePreset.first().click();
 
     // Green card should be visible
-    const freeCard = page.locator('.bg-green-50').first();
+    const freeCard = page.locator('.bg-sf-success-soft').first();
     await expect(freeCard).toBeVisible({ timeout: 5000 });
 
     // Should show terms checkbox ("Zgadzam się z Regulaminem")
@@ -447,7 +447,7 @@ test.describe('PWYW Free Option — Checkout UI', () => {
     const freePreset = page.locator('button').filter({ hasText: /Za darmo/i });
     await freePreset.first().click();
 
-    const freeCard = page.locator('.bg-green-50').first();
+    const freeCard = page.locator('.bg-sf-success-soft').first();
     await expect(freeCard).toBeVisible({ timeout: 5000 });
 
     // Fill email but leave terms unchecked
@@ -475,7 +475,7 @@ test.describe('PWYW Free Option — Checkout UI', () => {
     const freePreset = page.locator('button').filter({ hasText: /Za darmo/i });
     await freePreset.first().click();
 
-    const freeCard = page.locator('.bg-green-50').first();
+    const freeCard = page.locator('.bg-sf-success-soft').first();
     await expect(freeCard).toBeVisible({ timeout: 5000 });
 
     // Accept terms but don't fill email
@@ -505,7 +505,7 @@ test.describe('PWYW Free Option — Checkout UI', () => {
     const freePreset = page.locator('button').filter({ hasText: /Za darmo/i });
     await freePreset.first().click();
 
-    const freeCard = page.locator('.bg-green-50').first();
+    const freeCard = page.locator('.bg-sf-success-soft').first();
     await expect(freeCard).toBeVisible({ timeout: 5000 });
 
     // Should show "Odbierz za darmo" button

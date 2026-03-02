@@ -100,7 +100,7 @@ export default function CheckoutThemeSettings() {
  {t(`${theme}Desc`)}
  </p>
 
- <p className="text-xs text-sf-muted/70 mt-3 border-t border-sf-border pt-3">
+ <p className="text-xs text-sf-muted mt-3 border-t border-sf-border pt-3">
  {t('hint')}
  </p>
  </div>
