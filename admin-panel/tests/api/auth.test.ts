@@ -51,7 +51,7 @@ describe('API Authentication', () => {
 
     it('returns 401 with non-existent API key', async () => {
       const response = await fetch(`${API_URL}/api/v1/products`, {
-        headers: { 'X-API-Key': 'gf_live_0000000000000000000000000000000000000000000000000000000000000000' },
+        headers: { 'X-API-Key': 'sf_live_0000000000000000000000000000000000000000000000000000000000000000' },
       });
       const data = await response.json();
 

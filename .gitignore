@@ -54,8 +54,8 @@ ecosystem.config.js
 # Claude AI local configuration
 .claude/
 
-# GateFlow license private key (NEVER commit!)
-scripts/.gateflow-private-key.pem
+# Sellf license private key (NEVER commit!)
+scripts/.sellf-private-key.pem
 
 # Bruno environments (may contain API keys)
 bruno/environments/*.bru

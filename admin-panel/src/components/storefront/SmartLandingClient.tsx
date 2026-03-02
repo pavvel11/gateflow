@@ -24,13 +24,13 @@ export default function SmartLandingClient({
   // Show loading spinner while auth is loading
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+      <div className="min-h-screen bg-sf-deep flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sf-accent"></div>
       </div>
     );
   }
 
-  const shopName = shopConfig?.shop_name || 'GateFlow';
+  const shopName = shopConfig?.shop_name || 'Sellf';
   const contactEmail = shopConfig?.contact_email || null;
 
   // SCENARIO 1: No products + Admin user → Show onboarding
@@ -48,7 +48,7 @@ export default function SmartLandingClient({
       <DashboardLayout 
         user={user ? { email: user.email || '', id: user.id || '' } : null} 
         shopConfig={shopConfig}
-        showGateFlowCTA={true}
+        showSellfCTA={true}
       >
         <ComingSoonEmptyState shopName={shopName} contactEmail={contactEmail} />
       </DashboardLayout>

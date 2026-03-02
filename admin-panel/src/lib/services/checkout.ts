@@ -1,13 +1,17 @@
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { getStripeServer } from '@/lib/stripe/server';
 import { ProductValidationService, type ValidatedProduct } from '@/lib/services/product-validation';
-import { 
-  CheckoutError, 
-  CheckoutErrorType, 
+import {
+  CheckoutError,
+  CheckoutErrorType,
   CheckoutSessionOptions,
-  CreateCheckoutRequest 
+  CreateCheckoutRequest
 } from '@/types/checkout';
 import { STRIPE_CONFIG, CHECKOUT_ERRORS, HTTP_STATUS } from '@/lib/stripe/config';
+import { getCheckoutConfig } from '@/lib/stripe/checkout-config';
+import { getOrCreateStripeTaxRate } from '@/lib/stripe/tax-rate-manager';
+import { sanitizeForLog } from '@/lib/logger';
 
 // Remove the local ProductForCheckout interface since we now use ValidatedProduct
 type ProductForCheckout = ValidatedProduct;
@@ -43,11 +47,12 @@ export class CheckoutService {
 
     // Enhanced email validation with disposable domain checking
     if (request.email) {
-      console.log(`🔍 Validating email: ${request.email}`);
+      const safeEmail = sanitizeForLog(request.email);
+      console.log(`🔍 Validating email: ${safeEmail}`);
       const isValidEmail = await ProductValidationService.validateEmail(request.email);
-      console.log(`✅ Email validation result for ${request.email}: ${isValidEmail}`);
+      console.log(`✅ Email validation result for ${safeEmail}: ${isValidEmail}`);
       if (!isValidEmail) {
-        console.log(`❌ Blocking disposable email: ${request.email}`);
+        console.log(`❌ Blocking disposable email: ${safeEmail}`);
         throw new CheckoutError(
           CheckoutErrorType.VALIDATION_ERROR,
           'Invalid or disposable email address not allowed',
@@ -61,7 +66,8 @@ export class CheckoutService {
    * Check rate limiting for checkout creation
    */
   async checkRateLimit(): Promise<void> {
-    const { data: rateLimitOk, error } = await this.supabase.rpc('check_rate_limit', {
+    const adminClient = createAdminClient();
+    const { data: rateLimitOk, error } = await adminClient.rpc('check_rate_limit', {
       function_name_param: STRIPE_CONFIG.rate_limit.action_type,
       max_calls: STRIPE_CONFIG.rate_limit.max_requests,
       time_window_seconds: STRIPE_CONFIG.rate_limit.window_minutes * 60,
@@ -149,7 +155,7 @@ export class CheckoutService {
       // Calculate base price - use customAmount if provided (Pay What You Want)
       let mainProductPrice = options.product.price;
       if (customAmount !== undefined && customAmount > 0) {
-        const minPrice = options.product.custom_price_min || 0.50;
+        const minPrice = options.product.custom_price_min ?? 0.50;
         if (customAmount < minPrice) {
           throw new CheckoutError(
             CheckoutErrorType.VALIDATION_ERROR,
@@ -170,8 +176,43 @@ export class CheckoutService {
         }
       }
 
+      // Resolve checkout config: DB > env var > default
+      const checkoutConfig = await getCheckoutConfig();
+
+      // --- Tax mode: resolve tax_behavior and tax_rates per line item ---
+      const isLocalTax = checkoutConfig.tax_mode === 'local';
+
+      // Resolve tax rates for local mode (per-product vat_rate)
+      let mainTaxRates: string[] | undefined;
+      let bumpTaxRates: string[] | undefined;
+
+      if (isLocalTax) {
+        if (options.product.vat_rate && options.product.vat_rate > 0) {
+          const txrId = await getOrCreateStripeTaxRate({
+            percentage: options.product.vat_rate,
+            inclusive: options.product.price_includes_vat,
+          });
+          mainTaxRates = [txrId];
+        }
+
+        if (options.bumpProduct?.vat_rate && options.bumpProduct.vat_rate > 0) {
+          const txrId = await getOrCreateStripeTaxRate({
+            percentage: options.bumpProduct.vat_rate,
+            inclusive: options.bumpProduct.price_includes_vat,
+          });
+          bumpTaxRates = [txrId];
+        }
+      }
+
+      // tax_behavior: tells Stripe how to interpret the price amount
+      // In stripe_tax mode: required for automatic tax calculation
+      // In local mode with vat_rate: tells Stripe the price is inclusive/exclusive of the attached tax rate
+      const mainTaxBehavior = (isLocalTax && mainTaxRates) || !isLocalTax
+        ? (options.product.price_includes_vat ? 'inclusive' : 'exclusive')
+        : undefined;
+
       // Build line items array (main product + optional bump)
-      const lineItems = [
+      const lineItems: Record<string, unknown>[] = [
         {
           price_data: {
             currency: options.product.currency.toLowerCase(),
@@ -180,7 +221,9 @@ export class CheckoutService {
               description: options.product.description || undefined,
             },
             unit_amount: Math.round(mainProductPrice * 100),
+            ...(mainTaxBehavior && { tax_behavior: mainTaxBehavior }),
           },
+          ...(mainTaxRates && { tax_rates: mainTaxRates }),
           quantity: 1,
         },
       ];
@@ -192,7 +235,11 @@ export class CheckoutService {
         if (coupon && coupon.discount_type === 'percentage' && !coupon.exclude_order_bumps) {
           bumpPrice = bumpPrice * (1 - coupon.discount_value / 100);
         }
-        
+
+        const bumpTaxBehavior = (isLocalTax && bumpTaxRates) || !isLocalTax
+          ? (options.bumpProduct.price_includes_vat ? 'inclusive' : 'exclusive')
+          : undefined;
+
         lineItems.push({
           price_data: {
             currency: options.bumpProduct.currency.toLowerCase(),
@@ -201,17 +248,18 @@ export class CheckoutService {
               description: options.bumpProduct.description || undefined,
             },
             unit_amount: Math.round(bumpPrice * 100),
+            ...(bumpTaxBehavior && { tax_behavior: bumpTaxBehavior }),
           },
+          ...(bumpTaxRates && { tax_rates: bumpTaxRates }),
           quantity: 1,
         });
       }
 
       // Prepare session configuration
       const sessionConfig: Record<string, unknown> = {
-        ui_mode: STRIPE_CONFIG.session.ui_mode,
-        payment_method_types: [...STRIPE_CONFIG.payment_method_types],
+        ui_mode: 'embedded' as const,
         line_items: lineItems,
-        mode: STRIPE_CONFIG.session.payment_mode,
+        mode: 'payment' as const,
         return_url: options.returnUrl,
         // Set redirect_on_completion to 'always' for proper server-side verification
         redirect_on_completion: 'always',
@@ -236,23 +284,31 @@ export class CheckoutService {
             is_pwyw: 'true'
           }),
         },
-        expires_at: Math.floor(Date.now() / 1000) + (STRIPE_CONFIG.session.expires_hours * 60 * 60),
-        automatic_tax: STRIPE_CONFIG.session.automatic_tax,
-        tax_id_collection: STRIPE_CONFIG.session.tax_id_collection,
-        billing_address_collection: 'auto',
+        expires_at: Math.floor(Date.now() / 1000) + (checkoutConfig.expires_hours * 60 * 60),
+        automatic_tax: checkoutConfig.automatic_tax,
+        tax_id_collection: checkoutConfig.tax_id_collection,
+        billing_address_collection: checkoutConfig.billing_address_collection,
       };
+
+      // Apply payment method config based on mode
+      if (checkoutConfig.paymentMethodMode === 'automatic') {
+        sessionConfig.automatic_payment_methods = { enabled: true };
+      } else if (checkoutConfig.paymentMethodMode === 'stripe_preset' && checkoutConfig.stripePresetId) {
+        sessionConfig.payment_method_configuration = checkoutConfig.stripePresetId;
+      } else {
+        sessionConfig.payment_method_types = [...checkoutConfig.payment_method_types];
+      }
 
       // Only add customer_email if it's a valid email
       if (options.email && options.email.trim() !== '') {
-        console.log(`📧 Passing customer_email to Stripe: ${options.email}`);
+        console.log(`📧 Passing customer_email to Stripe: ${sanitizeForLog(options.email)}`);
         sessionConfig.customer_email = options.email;
       } else {
         console.log('📧 No customer_email available for Stripe session');
       }
 
-      // Add terms of service collection if enabled
-      const collectTermsOfService = process.env.STRIPE_COLLECT_TERMS_OF_SERVICE === 'true' || process.env.STRIPE_COLLECT_TERMS_OF_SERVICE === '1';
-      if (collectTermsOfService) {
+      // Add terms of service collection if enabled (resolved via DB > env > default)
+      if (checkoutConfig.collect_terms_of_service) {
         sessionConfig.consent_collection = {
           terms_of_service: 'required',
         };
@@ -347,7 +403,7 @@ export class CheckoutService {
     // Handle coupon verification
     let couponInfo: any = undefined;
     if (request.couponCode) {
-      console.log(`🎟 Verifying coupon: ${request.couponCode} for email: ${request.email}`);
+      console.log(`🎟 Verifying coupon: ${sanitizeForLog(request.couponCode)} for email: ${sanitizeForLog(request.email || '')}`);
       try {
         const { data: vResult } = await this.supabase.rpc('verify_coupon', {
           code_param: request.couponCode.toUpperCase(),
@@ -376,7 +432,7 @@ export class CheckoutService {
 
     // Validate custom amount for Pay What You Want
     if (request.customAmount !== undefined && request.customAmount > 0) {
-      const minPrice = product.custom_price_min || 0.50;
+      const minPrice = product.custom_price_min ?? 0.50;
       if (request.customAmount < minPrice) {
         throw new CheckoutError(
           CheckoutErrorType.VALIDATION_ERROR,

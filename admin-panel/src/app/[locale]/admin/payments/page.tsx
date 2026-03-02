@@ -2,11 +2,13 @@
 // Admin payments management page
 
 import { Suspense } from 'react';
+import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import PaymentsDashboard from '@/components/admin/PaymentsDashboard';
 
 export default async function AdminPaymentsPage() {
+  const t = await getTranslations('admin.payments');
   const supabase = await createClient();
   
   // Check if user is authenticated
@@ -28,20 +30,20 @@ export default async function AdminPaymentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-sf-deep">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Payment Management
+          <h1 className="text-3xl font-bold text-sf-heading">
+            {t('title')}
           </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Manage all payment transactions, process refunds, and monitor payment activity.
+          <p className="mt-2 text-sf-body">
+            {t('subtitle')}
           </p>
         </div>
         
         <Suspense fallback={
           <div className="flex items-center justify-center h-64">
-            <div className="text-gray-500 dark:text-gray-400">Loading payment data...</div>
+            <div className="text-sf-muted">{t('loading')}</div>
           </div>
         }>
           <PaymentsDashboard />

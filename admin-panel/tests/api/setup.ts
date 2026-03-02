@@ -30,7 +30,7 @@ let testAdminUserId: string | null = null;
  * Generate API key (matching @/lib/api/api-keys.ts format)
  */
 function generateApiKey() {
-  const prefix = 'gf_test_';
+  const prefix = 'sf_test_';
   const randomPart = randomBytes(32).toString('hex');
   const plaintext = `${prefix}${randomPart}`;
   const hash = createHash('sha256').update(plaintext).digest('hex');

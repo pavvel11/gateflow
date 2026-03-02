@@ -1,5 +1,5 @@
 import { headers } from 'next/headers';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 
@@ -34,7 +34,12 @@ function getUpstashClient() {
 }
 
 /**
- * Get a unique identifier for rate limiting
+ * Get a unique identifier for rate limiting.
+ *
+ * SECURITY: Only trusts x-forwarded-for / x-real-ip headers when
+ * TRUSTED_PROXY=true (i.e., app runs behind a known reverse proxy).
+ * Otherwise, uses a fingerprint of request characteristics to avoid
+ * IP spoofing via client-set headers.
  */
 export async function getRateLimitIdentifier(userId?: string): Promise<string> {
   if (userId) {
@@ -42,11 +47,31 @@ export async function getRateLimitIdentifier(userId?: string): Promise<string> {
   }
 
   const headersList = await headers();
-  const forwarded = headersList.get('x-forwarded-for');
-  const realIp = headersList.get('x-real-ip');
-  const ip = forwarded?.split(',')[0] || realIp || 'unknown';
 
-  return `ip:${ip}`;
+  if (process.env.TRUSTED_PROXY === 'true') {
+    const forwarded = headersList.get('x-forwarded-for');
+    const realIp = headersList.get('x-real-ip');
+    const ip = forwarded?.split(',')[0]?.trim() || realIp || 'unknown';
+    return `ip:${ip}`;
+  }
+
+  // Without a trusted proxy, build a fingerprint from non-spoofable-for-rate-limiting
+  // characteristics. Not perfect, but prevents trivial bypass via header spoofing.
+  const ua = headersList.get('user-agent') || '';
+  const lang = headersList.get('accept-language') || '';
+  const accept = headersList.get('accept') || '';
+  const fingerprint = simpleHash(`${ua}|${lang}|${accept}`);
+  return `fp:${fingerprint}`;
+}
+
+/** Simple non-crypto hash for fingerprinting (FNV-1a) */
+function simpleHash(str: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    hash ^= str.charCodeAt(i);
+    hash = (hash * 0x01000193) >>> 0;
+  }
+  return hash.toString(36);
 }
 
 /**
@@ -84,7 +109,7 @@ async function checkRateLimitDatabase(
   windowMinutes: number,
   identifier: string
 ): Promise<boolean> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data: rateLimitOk, error } = await supabase.rpc('check_application_rate_limit', {
     identifier_param: identifier,
@@ -198,5 +223,11 @@ export const RATE_LIMITS = {
     maxRequests: 20,
     windowMinutes: 60,
     actionType: 'admin_coupon_create',
+  },
+  // WEBHOOK ENDPOINTS
+  STRIPE_WEBHOOK: {
+    maxRequests: 100,
+    windowMinutes: 1,
+    actionType: 'stripe_webhook',
   },
 } as const;

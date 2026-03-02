@@ -11,6 +11,7 @@ export interface ValidationResult {
 export interface IntegrationsInput {
   gtm_container_id?: string | null;
   gtm_server_container_url?: string | null;
+  gtm_ss_enabled?: boolean;
   google_ads_conversion_id?: string | null;
   google_ads_conversion_label?: string | null;
   facebook_pixel_id?: string | null;
@@ -22,7 +23,7 @@ export interface IntegrationsInput {
   umami_script_url?: string | null;
   cookie_consent_enabled?: boolean;
   consent_logging_enabled?: boolean;
-  gateflow_license?: string | null;
+  sellf_license?: string | null;
 }
 
 export interface CustomScriptInput {
@@ -70,9 +71,9 @@ export function validateIntegrations(data: IntegrationsInput): ValidationResult 
     addError('facebook_pixel_id', 'Facebook Pixel ID must be numeric');
   }
 
-  // GateFlow License format: GF-domain-expiry-signature
-  if (data.gateflow_license && !/^GF-[a-zA-Z0-9.*-]+-(?:UNLIMITED|\d{8})-[A-Za-z0-9_-]+$/.test(data.gateflow_license)) {
-    addError('gateflow_license', 'Invalid license format (expected: GF-domain-expiry-signature)');
+  // Sellf License format: SF-domain-expiry-signature
+  if (data.sellf_license && !/^SF-[a-zA-Z0-9.*-]+-(?:UNLIMITED|\d{8})-[A-Za-z0-9_-]+$/.test(data.sellf_license)) {
+    addError('sellf_license', 'Invalid license format (expected: SF-domain-expiry-signature)');
   }
 
   return { isValid: Object.keys(errors).length === 0, errors };

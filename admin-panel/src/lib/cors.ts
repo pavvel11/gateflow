@@ -1,5 +1,5 @@
 /**
- * CORS utilities for GateFlow API endpoints
+ * CORS utilities for Sellf API endpoints
  *
  * SECURITY: Only specific endpoints should allow cross-origin requests with credentials.
  * These are READ-ONLY endpoints that return non-sensitive data (access: true/false).
@@ -13,7 +13,7 @@ import { NextResponse } from 'next/server'
  */
 export const CROSS_ORIGIN_ALLOWED_PATHS = [
   '/api/access',      // Returns only true/false for product access (reads user from cookies)
-  '/api/gatekeeper',  // Serves the JS script (public, no auth needed)
+  '/api/sellf',  // Serves the JS script (public, no auth needed)
 ]
 
 /**
@@ -47,16 +47,35 @@ export function validateCrossOriginRequest(request: Request): NextResponse | nul
 /**
  * Get CORS headers for cross-origin access endpoints.
  * Only use this for endpoints in CROSS_ORIGIN_ALLOWED_PATHS.
+ *
+ * SECURITY: When ALLOWED_ORIGINS env var is set (comma-separated list),
+ * only those origins are reflected (strict mode). When unset, any origin
+ * is reflected (permissive mode) — required for cross-domain sellf feature.
+ * Vary: Origin is always set for correct caching behavior.
  */
 export function getCrossOriginHeaders(request: Request): Record<string, string> {
-  const origin = request.headers.get('origin') || '*'
+  const origin = request.headers.get('origin')
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL
+  const allowedOriginsEnv = process.env.ALLOWED_ORIGINS
+
+  let effectiveOrigin: string
+
+  if (allowedOriginsEnv) {
+    // Strict mode: only reflect origins from the whitelist
+    const allowedOrigins = allowedOriginsEnv.split(',').map(o => o.trim())
+    effectiveOrigin = (origin && allowedOrigins.includes(origin)) ? origin : (siteUrl || 'null')
+  } else {
+    // Permissive mode (cross-domain sellf feature): reflect origin
+    effectiveOrigin = origin || siteUrl || 'null'
+  }
 
   return {
-    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Origin': effectiveOrigin,
     'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, X-GateFlow-Origin, X-GateFlow-Version',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, X-Sellf-Origin, X-Sellf-Version',
     'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin',
   }
 }
 

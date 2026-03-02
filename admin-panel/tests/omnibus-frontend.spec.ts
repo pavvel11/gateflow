@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { acceptAllCookies } from './helpers/consent';
+import { setAuthSession } from './helpers/admin-auth';
 
 // Enforce single worker for database consistency
 test.describe.configure({ mode: 'serial' });
@@ -39,16 +40,7 @@ const loginAsAdmin = async (page: Page, adminEmail: string, adminPassword: strin
   let retries = 3;
   while (retries > 0) {
     try {
-      await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-        const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-        const supabase = createBrowserClient(supabaseUrl, anonKey);
-        await supabase.auth.signInWithPassword({ email, password });
-      }, {
-        email: adminEmail,
-        password: adminPassword,
-        supabaseUrl: SUPABASE_URL,
-        anonKey: ANON_KEY,
-      });
+      await setAuthSession(page, adminEmail, adminPassword);
       break; // Success, exit loop
     } catch (error) {
       retries--;
@@ -266,7 +258,8 @@ test.describe('Omnibus Frontend - Admin Side', () => {
         currency: 'USD',
         description: 'Product for admin testing',
         is_active: true,
-        omnibus_exempt: false
+        omnibus_exempt: false,
+        price_includes_vat: false
       })
       .select()
       .single();
@@ -293,18 +286,26 @@ test.describe('Omnibus Frontend - Admin Side', () => {
 
     // Find and edit the product
     const row = page.locator('tr', { hasText: 'Omnibus Admin Test Product' }).first();
-    await row.locator('button[aria-label*="Edit"]').first().click();
+    await row.locator('button[title*="Edit"], button[title*="Edytuj"]').first().click();
 
     // Wait for modal
-    const modal = page.locator('div.fixed').filter({ hasText: /Cancel|Anuluj/i });
+    const modal = page.locator('[role="dialog"]').first();
     await expect(modal).toBeVisible({ timeout: 5000 });
 
+    // Navigate to step 3 (Sales & Settings) where Advanced Settings lives
+    await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+    await page.waitForTimeout(500);
+    await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+    await page.waitForTimeout(500);
+
     // Expand Advanced Settings section (omnibus_exempt is inside)
-    const advancedSettingsButton = modal.locator('button', { hasText: /Advanced Settings|Zaawansowane/i });
+    const advancedSettingsButton = modal.locator('button', { hasText: /Advanced Settings|Ustawienia zaawansowane/i });
+    await advancedSettingsButton.scrollIntoViewIfNeeded();
     await advancedSettingsButton.click();
 
     // Find omnibus_exempt checkbox
     const omnibusCheckbox = modal.locator('input[name="omnibus_exempt"]');
+    await omnibusCheckbox.scrollIntoViewIfNeeded();
     await expect(omnibusCheckbox).toBeVisible();
 
     // Initially should be unchecked (false)
@@ -315,7 +316,7 @@ test.describe('Omnibus Frontend - Admin Side', () => {
     await expect(omnibusCheckbox).toBeChecked();
 
     // Save
-    await modal.locator('button[type="submit"]').click();
+    await page.getByRole('button', { name: /Aktualizuj produkt|Update product/i }).click();
     await expect(modal).not.toBeVisible({ timeout: 5000 });
 
     // Verify in database
@@ -328,16 +329,26 @@ test.describe('Omnibus Frontend - Admin Side', () => {
     expect(updatedProduct!.omnibus_exempt).toBe(true);
 
     // Reopen modal and verify checkbox is still checked
-    await row.locator('button[aria-label*="Edit"]').first().click();
+    await row.locator('button[title*="Edit"], button[title*="Edytuj"]').first().click();
     await expect(modal).toBeVisible({ timeout: 5000 });
 
-    // Expand Advanced Settings section again
-    await modal.locator('button', { hasText: /Advanced Settings|Zaawansowane/i }).click();
-    await expect(modal.locator('input[name="omnibus_exempt"]')).toBeChecked();
+    // Navigate to step 3 again
+    await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+    await page.waitForTimeout(500);
+    await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+    await page.waitForTimeout(500);
+
+    // Advanced Settings may already be expanded (defaultExpanded depends on omnibus_exempt=true)
+    const omnibusCheckbox2 = modal.locator('input[name="omnibus_exempt"]');
+    if (!(await omnibusCheckbox2.isVisible())) {
+      await modal.locator('button', { hasText: /Advanced Settings|Ustawienia zaawansowane/i }).click();
+    }
+    await omnibusCheckbox2.scrollIntoViewIfNeeded();
+    await expect(omnibusCheckbox2).toBeChecked();
 
     // Uncheck and save
-    await modal.locator('input[name="omnibus_exempt"]').uncheck();
-    await modal.locator('button[type="submit"]').click();
+    await omnibusCheckbox2.uncheck();
+    await page.getByRole('button', { name: /Aktualizuj produkt|Update product/i }).click();
     await expect(modal).not.toBeVisible({ timeout: 5000 });
 
     // Verify unchecked in database
@@ -354,21 +365,23 @@ test.describe('Omnibus Frontend - Admin Side', () => {
     await loginAsAdmin(page, adminEmail, adminPassword);
     await page.goto('/dashboard/settings');
 
-    // Wait for OmnibusSettings component to load
+    // Wait for OmnibusSettings component to load (heading appears after loading)
     await page.waitForSelector('text=/Dyrektywa Omnibus|EU Omnibus Directive/i', { timeout: 10000 });
 
-    // Find the toggle switch
-    const toggleSwitch = page.locator('button[role="switch"]').filter({ hasText: '' }); // Toggle has no text, just switch
-    const toggleContainer = page.locator('div', { hasText: /Włącz śledzenie|Enable Omnibus/i });
-    const actualToggle = toggleContainer.locator('button[role="switch"]').first();
+    // Target the specific Omnibus card by its unique heading
+    const omnibusCard = page.locator('h2', { hasText: /Dyrektywa Omnibus|EU Omnibus Directive/i }).locator('xpath=ancestor::div[contains(@class, "border-sf-border-medium")]');
+    const toggle = omnibusCard.locator('button[role="switch"]');
 
     // Get initial state
-    const initialState = await actualToggle.getAttribute('aria-checked');
+    const initialState = await toggle.getAttribute('aria-checked');
     const wasEnabled = initialState === 'true';
 
-    // Toggle it
-    await actualToggle.click();
-    await page.waitForTimeout(2000); // Wait for save
+    // Toggle and wait for the server action to persist
+    await toggle.click();
+    await page.waitForTimeout(3000);
+
+    // Verify toggle didn't revert (server action succeeded)
+    await expect(toggle).toHaveAttribute('aria-checked', wasEnabled ? 'false' : 'true');
 
     // Verify in database
     const { data: shopConfig1 } = await supabaseAdmin
@@ -378,13 +391,19 @@ test.describe('Omnibus Frontend - Admin Side', () => {
 
     expect(shopConfig1!.omnibus_enabled).toBe(!wasEnabled);
 
-    // Re-find toggle after state change
-    const toggleContainer2 = page.locator('div', { hasText: /Włącz śledzenie|Enable Omnibus/i });
-    const actualToggle2 = toggleContainer2.locator('button[role="switch"]').first();
+    // Reload page to get fresh session after revalidatePath
+    await page.reload();
+    await page.waitForSelector('text=/Dyrektywa Omnibus|EU Omnibus Directive/i', { timeout: 10000 });
 
-    // Toggle back
-    await actualToggle2.click();
-    await page.waitForTimeout(2000); // Wait for save
+    // Re-target toggle after reload
+    const omnibusCard2 = page.locator('h2', { hasText: /Dyrektywa Omnibus|EU Omnibus Directive/i }).locator('xpath=ancestor::div[contains(@class, "border-sf-border-medium")]');
+    const toggle2 = omnibusCard2.locator('button[role="switch"]');
+
+    // Toggle back and wait for server action to persist
+    await toggle2.click();
+    await page.waitForTimeout(3000);
+
+    await expect(toggle2).toHaveAttribute('aria-checked', wasEnabled ? 'true' : 'false');
 
     // Verify restored
     const { data: shopConfig2 } = await supabaseAdmin
@@ -409,17 +428,17 @@ test.describe('Omnibus Frontend - Admin Side', () => {
 
     // Edit product and change price
     const row = page.locator('tr', { hasText: 'Omnibus Admin Test Product' }).first();
-    await row.locator('button[aria-label*="Edit"]').first().click();
+    await row.locator('button[title*="Edit"], button[title*="Edytuj"]').first().click();
 
-    const modal = page.locator('div.fixed').filter({ hasText: /Cancel|Anuluj/i });
+    const modal = page.locator('[role="dialog"]').first();
     await expect(modal).toBeVisible({ timeout: 5000 });
 
-    // Change price
+    // Change price (price input is on step 1)
     const priceInput = modal.locator('input[name="price"]');
     await priceInput.fill('75.50');
 
     // Save
-    await modal.locator('button[type="submit"]').click();
+    await page.getByRole('button', { name: /Aktualizuj produkt|Update product/i }).click();
     await expect(modal).not.toBeVisible({ timeout: 5000 });
 
     // Wait for trigger to execute
@@ -439,8 +458,7 @@ test.describe('Omnibus Frontend - Admin Side', () => {
     expect(newHistory![0].effective_until).toBeNull(); // Current price
 
     // Verify the previous entry was closed
-    if (initialCount > 0) {
-      expect(newHistory![1].effective_until).not.toBeNull();
-    }
+    expect(initialCount, 'Expected at least one initial price history entry before the update').toBeGreaterThan(0);
+    expect(newHistory![1].effective_until).not.toBeNull();
   });
 });

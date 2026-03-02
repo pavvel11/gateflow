@@ -6,6 +6,7 @@
 
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { setAuthSession } from './helpers/admin-auth';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -23,18 +24,7 @@ const uniqueCode = () => `TEST-${Date.now()}-${Math.random().toString(36).substr
 async function loginAsAdmin(page: any, email: string, password: string) {
   await page.goto('/login');
 
-  await page.evaluate(async ({ email, password, url, anonKey }: { email: string; password: string; url: string; anonKey: string }) => {
-    // @ts-ignore
-    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-    const sb = createBrowserClient(url, anonKey);
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-  }, {
-    email,
-    password,
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  });
+  await setAuthSession(page, email, password);
 
   await page.reload();
 }
@@ -137,6 +127,7 @@ test.describe('Coupons API v1', () => {
       const body = await response.json();
 
       // All returned coupons should be active
+      expect(body.data.length).toBeGreaterThan(0);
       for (const coupon of body.data) {
         expect(coupon.is_active).toBe(true);
       }
@@ -559,20 +550,20 @@ test.describe('Coupons API v1', () => {
 
       expect(firstPage.data.length).toBe(2);
 
-      // Get next page if available
-      if (firstPage.pagination.next_cursor) {
-        const secondResponse = await page.request.get(
-          `/api/v1/coupons?limit=2&cursor=${firstPage.pagination.next_cursor}`
-        );
-        expect(secondResponse.status()).toBe(200);
-        const secondPage = await secondResponse.json();
+      // We created 5 coupons above with limit=2, so there must be more pages
+      expect(firstPage.pagination.next_cursor).toBeTruthy();
 
-        // Ensure no duplicates
-        const firstIds = firstPage.data.map((c: any) => c.id);
-        const secondIds = secondPage.data.map((c: any) => c.id);
-        const overlap = firstIds.filter((id: string) => secondIds.includes(id));
-        expect(overlap.length).toBe(0);
-      }
+      const secondResponse = await page.request.get(
+        `/api/v1/coupons?limit=2&cursor=${firstPage.pagination.next_cursor}`
+      );
+      expect(secondResponse.status()).toBe(200);
+      const secondPage = await secondResponse.json();
+
+      // Ensure no duplicates
+      const firstIds = firstPage.data.map((c: any) => c.id);
+      const secondIds = secondPage.data.map((c: any) => c.id);
+      const overlap = firstIds.filter((id: string) => secondIds.includes(id));
+      expect(overlap.length).toBe(0);
     });
   });
 });

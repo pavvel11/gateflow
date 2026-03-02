@@ -1,4 +1,4 @@
-# GateFlow - Feature List
+# Sellf - Feature List
 
 > **Generated**: 2026-01-06
 > **Version**: 1.0
@@ -226,7 +226,7 @@
 
 ### Protection Types
 - **Page-level protection** - Entire page requires access
-- **Element-level protection** - Specific elements (`.gateflow-protected` class)
+- **Element-level protection** - Specific elements (`.sellf-protected` class)
 - **Multi-product** - Different products on one page
 - **Free content** - Public content without login
 
@@ -236,8 +236,8 @@
 - **Graceful degradation** - Functioning during API errors
 
 ### JavaScript SDK
-- **gatekeeper.js** - Dynamic script for protection
-- **License validation** - GateFlow license verification
+- **sellf.js** - Dynamic script for protection
+- **License validation** - Sellf license verification
 - **Auto-detection** - Automatic detection of protected elements
 
 ---
@@ -471,8 +471,8 @@
 - **Zod schemas** - Type-safe validation and spec generation
 
 ### Authentication
-- **API Keys** - Format `gf_live_xxx` / `gf_test_xxx`
-- **Bearer token** - `Authorization: Bearer gf_live_xxx`
+- **API Keys** - Format `sf_live_xxx` / `sf_test_xxx`
+- **Bearer token** - `Authorization: Bearer sf_live_xxx`
 - **X-API-Key header** - Alternative method
 - **Scopes** - Granular permissions (`products:read`, `users:write`, `*`)
 - **Rate limiting** - Per-key limits (default 60/min)
@@ -514,10 +514,10 @@
 - **System** - 2 tools (health, api_usage)
 
 ### Resources (4 resources)
-- `gateflow://dashboard` - Dashboard data (5min refresh)
-- `gateflow://products/active` - Active products (1min refresh)
-- `gateflow://alerts` - Alerts (pending refunds, failed webhooks)
-- `gateflow://recent-sales` - Recent sales (1min refresh)
+- `sellf://dashboard` - Dashboard data (5min refresh)
+- `sellf://products/active` - Active products (1min refresh)
+- `sellf://alerts` - Alerts (pending refunds, failed webhooks)
+- `sellf://recent-sales` - Recent sales (1min refresh)
 
 ### Prompts (6 prompts)
 - `weekly-report` - Weekly sales summary
@@ -531,12 +531,12 @@
 ```json
 {
   "mcpServers": {
-    "gateflow": {
+    "sellf": {
       "command": "npx",
       "args": ["tsx", "/path/to/mcp-server/src/index.ts"],
       "env": {
-        "GATEFLOW_API_KEY": "gf_live_xxx...",
-        "GATEFLOW_API_URL": "https://app.example.com"
+        "SELLF_API_KEY": "sf_live_xxx...",
+        "SELLF_API_URL": "https://app.example.com"
       }
     }
   }

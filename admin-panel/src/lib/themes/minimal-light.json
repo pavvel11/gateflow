@@ -1,0 +1,54 @@
+{
+  "name": "Minimal",
+  "version": "1.0",
+  "author": "Sellf",
+  "colors": {
+    "accent": "#E4E4E7",
+    "accent-hover": "#D4D4D8",
+    "accent-soft": "rgba(228,228,231,0.08)",
+    "accent-med": "rgba(228,228,231,0.15)",
+    "accent-glow": "rgba(228,228,231,0.18)",
+    "bg-deep": "#09090B",
+    "bg-base": "#18181B",
+    "bg-raised": "#27272A",
+    "bg-float": "#1C1C1F",
+    "text-heading": "#FAFAFA",
+    "text-body": "#A1A1AA",
+    "text-muted": "#8B8B93",
+    "border": "rgba(255,255,255,0.06)",
+    "border-accent": "rgba(228,228,231,0.12)",
+    "success": "#10B981",
+    "warning": "#F59E0B",
+    "danger": "#EF4444"
+  },
+  "colors-light": {
+    "accent": "#18181B",
+    "accent-hover": "#3F3F46",
+    "accent-soft": "rgba(24,24,27,0.06)",
+    "accent-med": "rgba(24,24,27,0.12)",
+    "accent-glow": "rgba(24,24,27,0.15)",
+    "bg-deep": "#FFFFFF",
+    "bg-base": "#FAFAFA",
+    "bg-raised": "#F4F4F5",
+    "bg-float": "#FFFFFF",
+    "text-heading": "#18181B",
+    "text-body": "#52525B",
+    "text-muted": "#6B6B73",
+    "border": "rgba(0,0,0,0.06)",
+    "border-accent": "rgba(24,24,27,0.12)",
+    "success": "#059669",
+    "warning": "#D97706",
+    "danger": "#DC2626"
+  },
+  "typography": {
+    "font-family": "inherit",
+    "font-heading-weight": "600",
+    "font-body-weight": "400"
+  },
+  "shapes": {
+    "radius-sm": "4px",
+    "radius-md": "8px",
+    "radius-lg": "12px",
+    "radius-full": "9999px"
+  }
+}

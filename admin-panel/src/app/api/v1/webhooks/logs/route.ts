@@ -11,10 +11,13 @@ import {
   apiError,
   authenticate,
   handleApiError,
+  successResponse,
   API_SCOPES,
 } from '@/lib/api';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { parseLimit, applyCursorToQuery, createPaginationResponse, validateCursor } from '@/lib/api/pagination';
+import { validateUUID } from '@/lib/validations/product';
+import { isValidEventType } from '@/lib/validations/webhook';
 
 export async function OPTIONS(request: NextRequest) {
   return handleCorsPreFlight(request);
@@ -74,8 +77,12 @@ export async function GET(request: NextRequest) {
         )
       `);
 
-    // Filter by endpoint
+    // Filter by endpoint (validate UUID format)
     if (endpointId) {
+      const idValidation = validateUUID(endpointId);
+      if (!idValidation.isValid) {
+        return apiError(request, 'INVALID_INPUT', 'Invalid endpoint_id format');
+      }
       query = query.eq('endpoint_id', endpointId);
     }
 
@@ -89,8 +96,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Filter by event type
+    // Filter by event type (validate against whitelist)
     if (eventType) {
+      if (!isValidEventType(eventType)) {
+        return apiError(request, 'INVALID_INPUT', 'Invalid event_type filter');
+      }
       query = query.eq('event_type', eventType);
     }
 
@@ -138,13 +148,7 @@ export async function GET(request: NextRequest) {
       cursor
     );
 
-    return jsonResponse(
-      {
-        data: items,
-        pagination,
-      },
-      request
-    );
+    return jsonResponse(successResponse(items, pagination), request);
   } catch (error) {
     return handleApiError(error, request);
   }

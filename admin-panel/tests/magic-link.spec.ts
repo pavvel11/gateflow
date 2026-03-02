@@ -13,7 +13,7 @@ test.describe('Magic Link Authentication (Mailpit)', () => {
     // 1. Navigate to login page
     await acceptAllCookies(page);
     await page.goto('/login');
-    await expect(page.locator('h1').filter({ hasText: /GateFlow/i })).toBeVisible();
+    await expect(page.locator('h1').filter({ hasText: /Sellf/i })).toBeVisible();
 
     // 2. Fill email
     const emailInput = page.locator('input[type="email"]');
@@ -43,6 +43,8 @@ test.describe('Magic Link Authentication (Mailpit)', () => {
       await page.waitForTimeout(4000);
       await submitButton.click();
       await page.waitForTimeout(1500);
+      // Verify the error is resolved after retry
+      await expect(errorMessage).not.toBeVisible({ timeout: 5000 });
     }
 
     console.log(`Waiting for email to ${testEmail}...`);
@@ -73,14 +75,13 @@ test.describe('Magic Link Authentication (Mailpit)', () => {
 
     // Should see authenticated content (email or logout button)
     const bodyText = await page.locator('body').textContent();
-    const isAuthenticated =
-      bodyText?.includes(testEmail) ||
-      bodyText?.toLowerCase().includes('logout') ||
-      bodyText?.toLowerCase().includes('sign out') ||
-      bodyText?.toLowerCase().includes('my products') ||
-      bodyText?.toLowerCase().includes('dashboard');
+    const hasEmail = bodyText?.includes(testEmail);
+    const hasLogout = bodyText?.toLowerCase().includes('logout') || bodyText?.toLowerCase().includes('sign out');
+    const hasAuthPages = bodyText?.toLowerCase().includes('my products') || bodyText?.toLowerCase().includes('dashboard');
 
-    expect(isAuthenticated).toBeTruthy();
+    if (!hasEmail && !hasLogout && !hasAuthPages) {
+      expect.fail(`Expected authenticated content (email, logout, or dashboard) but page body did not contain any. URL: ${currentUrl}`);
+    }
   });
 
   test('should handle invalid credentials gracefully (mocked)', async ({ page }) => {
@@ -99,25 +100,19 @@ test.describe('Magic Link Authentication (Mailpit)', () => {
       email_confirm: true,
     });
 
-    await page.goto('/');
-
     // Try to sign in with wrong password (simulates invalid/expired magic link)
-    const signInResult = await page.evaluate(async ({ email, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password: 'WrongPassword123!'
-      });
-      return { hasError: !!error, errorMessage: error?.message };
-    }, {
+    // Use Node.js Supabase client with anon key (no browser import needed)
+    const anonSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    );
+    const { error: signInError } = await anonSupabase.auth.signInWithPassword({
       email: mockEmail,
-      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      password: 'WrongPassword123!',
     });
 
-    expect(signInResult.hasError).toBeTruthy();
-    expect(signInResult.errorMessage).toContain('Invalid');
+    expect(!!signInError).toBeTruthy();
+    expect(signInError?.message).toContain('Invalid');
 
     // Cleanup
     if (user) {

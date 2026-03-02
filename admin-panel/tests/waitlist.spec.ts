@@ -169,17 +169,32 @@ test.describe('Waitlist Feature', () => {
       await loginAsAdmin(page, adminEmail, adminPassword);
       await page.goto('/pl/dashboard/products');
 
-      // Click add product button
+      // Click add product button — opens wizard (step 1)
       await page.getByRole('button', { name: /Dodaj produkt|Add Product/i }).click();
 
-      // Wait for modal
       await page.waitForSelector('[role="dialog"]');
 
-      // Look for "Availability & Waitlist" section and expand it
-      const availabilitySection = page.locator('button, div').filter({ hasText: /Availability.*Waitlist|Dostępność.*Lista/i }).first();
-      await availabilitySection.click();
+      // Fill step 1 minimum required fields
+      await page.fill('input#name', 'Waitlist Test Temp');
+      await page.fill('textarea#description', 'Temp description');
+      await page.fill('input#price', '10');
 
-      // Look for waitlist checkbox label
+      // Uncheck "price includes VAT" to bypass VAT validation on step 1.
+      // Without this, clicking Dalej is a no-op until getShopConfig() resolves and
+      // auto-populates vat_rate — a race condition that causes flakiness.
+      const vatCheckbox = page.locator('input#price_includes_vat');
+      if (await vatCheckbox.isChecked()) {
+        await vatCheckbox.uncheck();
+      }
+
+      // Navigate to step 3 (Availability → Enable Waitlist is on step 3: Sales & Settings)
+      const nextButton = page.getByRole('dialog').getByRole('button', { name: /Dalej|Continue Setup/i });
+      await nextButton.click();
+      // Confirm step 1 actually left (validates that the click was accepted)
+      await expect(page.locator('input#name')).not.toBeVisible({ timeout: 5000 });
+      await nextButton.click();
+
+      // AvailabilitySection renders with defaultExpanded={true}, so content should be visible
       const waitlistLabel = page.locator('label').filter({ hasText: /Enable Waitlist|Włącz zapis na listę/i });
       await expect(waitlistLabel).toBeVisible({ timeout: 5000 });
     });
@@ -338,7 +353,6 @@ test.describe('Waitlist Feature', () => {
     });
 
     test('should successfully signup for waitlist', async ({ request }) => {
-      // test-oto-target has enable_waitlist = true
       const response = await request.post('/api/waitlist/signup', {
         data: {
           email: TEST_EMAIL,
@@ -346,14 +360,10 @@ test.describe('Waitlist Feature', () => {
         }
       });
 
-      // In dev/test mode without captcha, should succeed
-      if (response.status() === 200) {
-        const body = await response.json();
-        expect(body.success).toBe(true);
-      } else {
-        // May require captcha in production
-        console.log('Signup returned:', response.status());
-      }
+      // In dev/test mode without captcha, should succeed with 200
+      expect(response.status()).toBe(200);
+      const body = await response.json();
+      expect(body.success).toBe(true);
     });
   });
 
@@ -390,35 +400,26 @@ test.describe('Waitlist Feature', () => {
     });
   });
 
-  /**
-   * Debug test to check current state
-   */
-  test.describe('Debug - Check Waitlist Setup', () => {
-    test('check checkout page response', async ({ page, request }) => {
-      // Direct API check for product (use dynamically created product)
+  test.describe('Waitlist Product Setup Verification', () => {
+    test('should return waitlist product via API with correct flags', async ({ request }) => {
       const productResponse = await request.get(`/api/public/products/${testProductWithWaitlistSlug}`);
-      console.log('Product API response status:', productResponse.status());
-      if (productResponse.ok()) {
-        const product = await productResponse.json();
-        console.log('Product data:', JSON.stringify(product, null, 2));
-        console.log('is_active:', product.is_active);
-        console.log('enable_waitlist:', product.enable_waitlist);
-      }
+      expect(productResponse.status()).toBe(200);
 
-      // Check checkout page
+      const product = await productResponse.json();
+      expect(product.is_active).toBe(false);
+      expect(product.enable_waitlist).toBe(true);
+    });
+
+    test('should load checkout page for waitlist product without 404', async ({ page }) => {
       const checkoutResponse = await page.goto(`/pl/checkout/${testProductWithWaitlistSlug}`);
-      console.log('Checkout page status:', checkoutResponse?.status());
+      expect(checkoutResponse?.status()).toBe(200);
 
-      // Log page content
       const pageContent = await page.content();
-      console.log('Page title:', await page.title());
-
-      // Check for specific elements
-      const has404 = pageContent.includes('404') || pageContent.includes('Not Found');
+      const has404 = pageContent.includes('Product Not Found');
       const hasWaitlistForm = pageContent.includes('waitlist') || pageContent.includes('oczekujących');
 
-      console.log('Has 404:', has404);
-      console.log('Has waitlist form:', hasWaitlistForm);
+      expect(has404).toBe(false);
+      expect(hasWaitlistForm).toBe(true);
     });
   });
 
@@ -447,25 +448,47 @@ test.describe('Waitlist Feature', () => {
     });
 
     /**
+     * Helper to navigate wizard from step 1 to step 3 (Sales & Settings)
+     * Fills minimum required fields on step 1 so "Continue Setup" works
+     */
+    async function navigateWizardToStep3(page: import('@playwright/test').Page): Promise<void> {
+      // Fill step 1 minimum required fields
+      await page.fill('input#name', 'Waitlist Temp Product');
+      await page.fill('textarea#description', 'Temp description');
+      await page.fill('input#price', '10');
+
+      // Uncheck "price includes VAT" to bypass VAT validation on step 1.
+      // Without this, clicking Dalej is a no-op until getShopConfig() resolves — a race condition.
+      const vatCheckbox = page.locator('input#price_includes_vat');
+      if (await vatCheckbox.isChecked()) {
+        await vatCheckbox.uncheck();
+      }
+
+      // Step 1 → Step 2
+      const nextButton = page.getByRole('dialog').getByRole('button', { name: /Dalej|Continue Setup/i });
+      await nextButton.click();
+      await expect(page.locator('input#name')).not.toBeVisible({ timeout: 5000 });
+
+      // Step 2 → Step 3
+      await nextButton.click();
+    }
+
+    /**
      * Helper to ensure Availability & Waitlist section is expanded
      * Checks if section content is visible, clicks to expand if needed
      */
     async function ensureAvailabilitySectionExpanded(page: import('@playwright/test').Page): Promise<void> {
       const modal = page.locator('[role="dialog"]');
-      const sectionHeader = modal.locator('button').filter({ hasText: /Dostępność.*Lista|Availability.*Waitlist/i }).first();
       const waitlistLabel = modal.locator('label').filter({ hasText: /Włącz zapis na listę|Enable Waitlist/i });
 
-      // Check if section content is visible (expanded)
+      // If section is already expanded, nothing to do
       const isExpanded = await waitlistLabel.isVisible().catch(() => false);
+      if (isExpanded) return;
 
-      if (!isExpanded) {
-        // Section is collapsed, click to expand
-        await sectionHeader.click();
-        await page.waitForTimeout(300); // Wait for animation
-      }
-
-      // Wait for RPC check to complete
-      await page.waitForTimeout(1000);
+      // Section is collapsed — click header to expand and wait for content
+      const sectionHeader = modal.locator('button').filter({ hasText: /Dostępność.*Lista|Availability.*Waitlist/i }).first();
+      await sectionHeader.click();
+      await expect(waitlistLabel).toBeVisible({ timeout: 5000 });
     }
 
     test('should disable waitlist checkbox when no webhook configured', async ({ page }) => {
@@ -475,9 +498,12 @@ test.describe('Waitlist Feature', () => {
       await loginAsAdmin(page, adminEmail, adminPassword);
       await page.goto('/pl/dashboard/products');
 
-      // Click add product button
+      // Click add product button — opens wizard (step 1)
       await page.getByRole('button', { name: /Dodaj produkt|Add Product/i }).click();
       await page.waitForSelector('[role="dialog"]');
+
+      // Navigate wizard to step 3 where Availability section lives
+      await navigateWizardToStep3(page);
 
       // Ensure section is expanded (checks and clicks if needed)
       await ensureAvailabilitySectionExpanded(page);
@@ -498,15 +524,18 @@ test.describe('Waitlist Feature', () => {
       await loginAsAdmin(page, adminEmail, adminPassword);
       await page.goto('/pl/dashboard/products');
 
-      // Click add product button
+      // Click add product button — opens wizard (step 1)
       await page.getByRole('button', { name: /Dodaj produkt|Add Product/i }).click();
       await page.waitForSelector('[role="dialog"]');
+
+      // Navigate wizard to step 3 where Availability section lives
+      await navigateWizardToStep3(page);
 
       // Ensure section is expanded (checks and clicks if needed)
       await ensureAvailabilitySectionExpanded(page);
 
       // Should show warning about configuring webhook
-      const warningBox = page.locator('.bg-amber-50, .dark\\:bg-amber-900\\/20').filter({ hasText: /webhook/i });
+      const warningBox = page.locator('[data-testid="waitlist-webhook-warning"]');
       await expect(warningBox).toBeVisible({ timeout: 5000 });
     });
 
@@ -519,9 +548,12 @@ test.describe('Waitlist Feature', () => {
         await loginAsAdmin(page, adminEmail, adminPassword);
         await page.goto('/pl/dashboard/products');
 
-        // Click add product button
+        // Click add product button — opens wizard (step 1)
         await page.getByRole('button', { name: /Dodaj produkt|Add Product/i }).click();
         await page.waitForSelector('[role="dialog"]');
+
+        // Navigate wizard to step 3 where Availability section lives
+        await navigateWizardToStep3(page);
 
         // Ensure section is expanded (checks and clicks if needed)
         await ensureAvailabilitySectionExpanded(page);
@@ -548,15 +580,18 @@ test.describe('Waitlist Feature', () => {
         await loginAsAdmin(page, adminEmail, adminPassword);
         await page.goto('/pl/dashboard/products');
 
-        // Click add product button
+        // Click add product button — opens wizard (step 1)
         await page.getByRole('button', { name: /Dodaj produkt|Add Product/i }).click();
         await page.waitForSelector('[role="dialog"]');
+
+        // Navigate wizard to step 3 where Availability section lives
+        await navigateWizardToStep3(page);
 
         // Ensure section is expanded (checks and clicks if needed)
         await ensureAvailabilitySectionExpanded(page);
 
         // Should NOT show amber warning box
-        const warningBox = page.locator('.bg-amber-50, .dark\\:bg-amber-900\\/20').filter({ hasText: /webhook/i });
+        const warningBox = page.locator('[data-testid="waitlist-webhook-warning"]');
         await expect(warningBox).not.toBeVisible();
       } finally {
         // CLEANUP
@@ -594,7 +629,7 @@ test.describe('Waitlist Feature', () => {
         await page.waitForTimeout(500);
 
         // Should show waitlist warning (amber box with warning emoji)
-        const warningInModal = page.locator('[role="dialog"]').locator('.bg-amber-50');
+        const warningInModal = page.locator('[role="dialog"]').locator('[data-testid="waitlist-webhook-warning"]');
         await expect(warningInModal).toBeVisible({ timeout: 5000 });
 
         // Cancel to not actually delete
@@ -648,7 +683,7 @@ test.describe('Waitlist Feature', () => {
 
         // Should show warning modal with amber box
         await page.waitForTimeout(1000);
-        const warningBox = page.locator('.bg-amber-50').filter({ hasText: /waitlist/i });
+        const warningBox = page.locator('[data-testid="waitlist-webhook-warning"]');
         await expect(warningBox).toBeVisible({ timeout: 5000 });
 
         // Cancel the warning modal (click the last Cancel button which is in the warning modal)

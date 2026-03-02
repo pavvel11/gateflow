@@ -7,8 +7,9 @@ import ProductPurchaseView from './components/ProductPurchaseView';
 import { getEffectivePaymentMethodOrder } from '@/lib/utils/payment-method-helpers';
 import { extractExpressCheckoutConfig } from '@/types/payment-config';
 import type { PaymentMethodConfig } from '@/types/payment-config';
-import { getShopConfig } from '@/lib/actions/shop-config';
 import { validateLicense, extractDomainFromUrl } from '@/lib/license/verify';
+import { getShopConfig } from '@/lib/actions/shop-config';
+import type { TaxMode } from '@/lib/actions/shop-config';
 
 interface PageProps {
   params: Promise<{ slug: string; locale: string }>;
@@ -89,20 +90,20 @@ export default async function CheckoutPage({ params }: PageProps) {
     : undefined;
   const expressCheckoutConfig = extractExpressCheckoutConfig(paymentConfig);
 
-  // Get checkout theme override from shop config
-  const shopConfig = await getShopConfig();
-  const checkoutTheme = shopConfig?.checkout_theme || 'system';
-
-  // Check GateFlow license validity (controls "Powered by" branding)
+  // Check Sellf license validity (controls "Powered by" branding)
   const { data: integrationsConfig } = await adminSupabase
     .from('integrations_config')
-    .select('gateflow_license')
+    .select('sellf_license')
     .eq('id', 1)
-    .single() as { data: { gateflow_license: string | null } | null };
+    .single() as { data: { sellf_license: string | null } | null };
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL;
   const currentDomain = siteUrl ? extractDomainFromUrl(siteUrl) : null;
-  const licenseResult = validateLicense(integrationsConfig?.gateflow_license || '', currentDomain || undefined);
+  const licenseResult = validateLicense(integrationsConfig?.sellf_license || '', currentDomain || undefined);
   const licenseValid = licenseResult.valid;
+
+  // Get tax mode for conditional VAT display
+  const shopConfig = await getShopConfig();
+  const taxMode: TaxMode = (shopConfig?.tax_mode as TaxMode) || 'local';
 
   // ProductPurchaseView handles showing either checkout form or waitlist form
   return (
@@ -110,8 +111,8 @@ export default async function CheckoutPage({ params }: PageProps) {
       product={product}
       paymentMethodOrder={paymentMethodOrder}
       expressCheckoutConfig={expressCheckoutConfig}
-      checkoutTheme={checkoutTheme}
       licenseValid={licenseValid}
+      taxMode={taxMode}
     />
   );
 }

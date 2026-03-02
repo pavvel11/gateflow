@@ -1,4 +1,4 @@
-# GateFlow Admin Panel - Docker Compose
+# Sellf Admin Panel - Docker Compose
 
 services:
   # Production optimized build (single image for all environments)
@@ -10,7 +10,7 @@ services:
         NEXT_TELEMETRY_DISABLED: ${NEXT_TELEMETRY_DISABLED:-1}  # Default to 1 if not set
     environment:
       - PORT=${PORT:-3000}  # Default to 3000 if not set
-    container_name: gateflow-admin-${APP_ENV:-development}
+    container_name: sellf-admin-${APP_ENV:-development}
     env_file:
       - .env
     ports:
@@ -25,4 +25,4 @@ services:
 
 networks:
   default:
-    name: gateflow-network
+    name: sellf-network

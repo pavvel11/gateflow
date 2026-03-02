@@ -74,7 +74,7 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
       setIsScriptModalOpen(false)
       window.location.reload()
     } else {
-      addToast(result.error || 'Failed', 'error')
+      addToast(result.error || tCommon('error'), 'error')
     }
     setLoading(false)
   }
@@ -97,8 +97,8 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
       onClick={() => setActiveTab(id)}
       className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
         activeTab === id
-          ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-          : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+          ? 'border-sf-accent text-sf-accent'
+          : 'border-transparent text-sf-muted hover:text-sf-body'
       }`}
     >
       {label}
@@ -108,40 +108,40 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
   return (
     <div className="space-y-6">
       {/* General Quick Start Guide */}
-      <details className="group bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800">
+      <details className="group bg-gradient-to-r from-sf-success-soft to-sf-success-soft border border-sf-success/20">
         <summary className="px-6 py-4 cursor-pointer list-none flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-2xl">🚀</span>
             <div>
-              <h3 className="font-semibold text-green-800 dark:text-green-200">{t('guide.quickStart.title')}</h3>
-              <p className="text-xs text-green-600 dark:text-green-400">{t('guide.quickStart.subtitle')}</p>
+              <h3 className="font-semibold text-sf-success">{t('guide.quickStart.title')}</h3>
+              <p className="text-xs text-sf-success">{t('guide.quickStart.subtitle')}</p>
             </div>
           </div>
-          <svg className="w-5 h-5 text-green-600 dark:text-green-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          <svg className="w-5 h-5 text-sf-success transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
         </summary>
         <div className="px-6 pb-6 space-y-4">
           <div className="grid gap-4 md:grid-cols-3">
             {/* Step 1 - Analytics */}
-            <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div className="p-4 bg-sf-base border-2 border-sf-border-medium">
               <div className="flex items-center gap-2 mb-2">
-                <span className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 text-xs font-bold flex items-center justify-center">1</span>
-                <h4 className="font-medium text-gray-900 dark:text-white text-sm">{t('guide.quickStart.analytics.title')}</h4>
+                <span className="w-6 h-6 bg-sf-accent-soft text-sf-accent text-xs font-bold flex items-center justify-center">1</span>
+                <h4 className="font-medium text-sf-heading text-sm">{t('guide.quickStart.analytics.title')}</h4>
               </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{t('guide.quickStart.analytics.desc')}</p>
-              <div className="text-xs text-gray-500 dark:text-gray-500">
-                <div className="font-medium text-green-600 dark:text-green-400">{t('guide.quickStart.analytics.option1')}</div>
-                <div className="text-gray-400 dark:text-gray-500">{t('guide.quickStart.analytics.option2')}</div>
+              <p className="text-xs text-sf-body mb-2">{t('guide.quickStart.analytics.desc')}</p>
+              <div className="text-xs text-sf-muted">
+                <div className="font-medium text-sf-success">{t('guide.quickStart.analytics.option1')}</div>
+                <div className="text-sf-muted">{t('guide.quickStart.analytics.option2')}</div>
               </div>
             </div>
 
             {/* Step 2 - Marketing */}
-            <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div className="p-4 bg-sf-base border-2 border-sf-border-medium">
               <div className="flex items-center gap-2 mb-2">
-                <span className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400 text-xs font-bold flex items-center justify-center">2</span>
-                <h4 className="font-medium text-gray-900 dark:text-white text-sm">{t('guide.quickStart.marketing.title')}</h4>
+                <span className="w-6 h-6 bg-sf-accent-soft text-sf-accent text-xs font-bold flex items-center justify-center">2</span>
+                <h4 className="font-medium text-sf-heading text-sm">{t('guide.quickStart.marketing.title')}</h4>
               </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{t('guide.quickStart.marketing.desc')}</p>
-              <ul className="text-xs text-gray-500 dark:text-gray-500 space-y-1">
+              <p className="text-xs text-sf-body mb-2">{t('guide.quickStart.marketing.desc')}</p>
+              <ul className="text-xs text-sf-muted space-y-1">
                 <li>• {t('guide.quickStart.marketing.step1')}</li>
                 <li>• {t('guide.quickStart.marketing.step2')}</li>
                 <li>• {t('guide.quickStart.marketing.step3')}</li>
@@ -149,30 +149,30 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
             </div>
 
             {/* Step 3 - Consents */}
-            <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div className="p-4 bg-sf-base border-2 border-sf-border-medium">
               <div className="flex items-center gap-2 mb-2">
-                <span className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center justify-center">3</span>
-                <h4 className="font-medium text-gray-900 dark:text-white text-sm">{t('guide.quickStart.consents.title')}</h4>
+                <span className="w-6 h-6 bg-sf-warning-soft text-sf-warning text-xs font-bold flex items-center justify-center">3</span>
+                <h4 className="font-medium text-sf-heading text-sm">{t('guide.quickStart.consents.title')}</h4>
               </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{t('guide.quickStart.consents.desc')}</p>
-              <ul className="text-xs text-gray-500 dark:text-gray-500 space-y-1">
+              <p className="text-xs text-sf-body mb-2">{t('guide.quickStart.consents.desc')}</p>
+              <ul className="text-xs text-sf-muted space-y-1">
                 <li>• {t('guide.quickStart.consents.step1')}</li>
                 <li>• {t('guide.quickStart.consents.step2')}</li>
               </ul>
             </div>
           </div>
 
-          <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-            <p className="text-xs text-green-700 dark:text-green-300 text-center">
+          <div className="p-3 bg-sf-success-soft">
+            <p className="text-xs text-sf-success text-center">
               ✅ {t('guide.quickStart.result')}
             </p>
           </div>
         </div>
       </details>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="bg-sf-base border-2 border-sf-border-medium overflow-hidden">
         {/* Tabs Header */}
-        <div className="flex border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+        <div className="flex border-b border-sf-border overflow-x-auto">
           <TabButton id="analytics" label={t('tabs.analytics')} />
           <TabButton id="marketing" label={t('tabs.marketing')} />
           <TabButton id="consents" label={t('tabs.consents')} />
@@ -188,129 +188,138 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
             {activeTab === 'analytics' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-top-2">
                 {/* GTM Setup Guide */}
-                <details className="group border border-blue-200 dark:border-blue-800 rounded-lg bg-blue-50 dark:bg-blue-900/20">
-                  <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between text-sm font-medium text-blue-800 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors">
+                <details className="group border border-sf-accent/20 bg-sf-accent-soft">
+                  <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between text-sm font-medium text-sf-accent hover:bg-sf-accent-soft transition-colors">
                     <span className="flex items-center gap-2">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                       {t('guide.gtm.title')}
                     </span>
                     <svg className="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                   </summary>
-                  <div className="px-4 pb-4 text-sm text-gray-700 dark:text-gray-300 space-y-4">
-                    <div className="border-t border-blue-200 dark:border-blue-800 pt-4">
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{t('guide.gtm.whenNeeded')}</h4>
-                      <p className="text-gray-600 dark:text-gray-400">{t('guide.gtm.whenNeededDesc')}</p>
+                  <div className="px-4 pb-4 text-sm text-sf-body space-y-4">
+                    <div className="border-t border-sf-accent/20 pt-4">
+                      <h4 className="font-semibold text-sf-heading mb-2">{t('guide.gtm.whenNeeded')}</h4>
+                      <p className="text-sf-body">{t('guide.gtm.whenNeededDesc')}</p>
                     </div>
 
                     <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-3">{t('guide.gtm.scenarios')}</h4>
+                      <h4 className="font-semibold text-sf-heading mb-3">{t('guide.gtm.scenarios')}</h4>
 
                       <div className="space-y-3">
                         {/* Scenario 1 - Meta only */}
-                        <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800">
-                          <div className="font-medium text-green-700 dark:text-green-400 mb-2">1. {t('guide.gtm.scenario1.title')}</div>
+                        <div className="p-3 bg-sf-success-soft rounded border border-sf-success/20">
+                          <div className="font-medium text-sf-success mb-2">1. {t('guide.gtm.scenario1.title')}</div>
                           <div className="text-xs space-y-1 mb-2">
-                            <div className="text-gray-600 dark:text-gray-400">{t('guide.gtm.scenario1.gtm')}</div>
-                            <div className="text-gray-600 dark:text-gray-400">{t('guide.gtm.scenario1.gtmServer')}</div>
-                            <div className="text-gray-600 dark:text-gray-400">{t('guide.gtm.scenario1.capi')}</div>
+                            <div className="text-sf-body">{t('guide.gtm.scenario1.gtm')}</div>
+                            <div className="text-sf-body">{t('guide.gtm.scenario1.gtmServer')}</div>
+                            <div className="text-sf-body">{t('guide.gtm.scenario1.capi')}</div>
                           </div>
-                          <p className="text-xs text-green-600 dark:text-green-400">{t('guide.gtm.scenario1.desc')}</p>
+                          <p className="text-xs text-sf-success">{t('guide.gtm.scenario1.desc')}</p>
                         </div>
 
                         {/* Scenario 2 - Meta + Umami */}
-                        <div className="p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
-                          <div className="font-medium text-teal-700 dark:text-teal-400 mb-2">2. {t('guide.gtm.scenario2.title')}</div>
+                        <div className="p-3 bg-sf-base rounded border-2 border-sf-border-medium">
+                          <div className="font-medium text-teal-600 mb-2">2. {t('guide.gtm.scenario2.title')}</div>
                           <div className="text-xs space-y-1 mb-2">
-                            <div className="text-gray-600 dark:text-gray-400">{t('guide.gtm.scenario2.gtm')}</div>
-                            <div className="text-gray-600 dark:text-gray-400">{t('guide.gtm.scenario2.gtmServer')}</div>
-                            <div className="text-gray-600 dark:text-gray-400">{t('guide.gtm.scenario2.capi')}</div>
+                            <div className="text-sf-body">{t('guide.gtm.scenario2.gtm')}</div>
+                            <div className="text-sf-body">{t('guide.gtm.scenario2.gtmServer')}</div>
+                            <div className="text-sf-body">{t('guide.gtm.scenario2.capi')}</div>
                           </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{t('guide.gtm.scenario2.desc')}</p>
+                          <p className="text-xs text-sf-muted">{t('guide.gtm.scenario2.desc')}</p>
                         </div>
 
                         {/* Scenario 3 - GA4 standard */}
-                        <div className="p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
-                          <div className="font-medium text-blue-700 dark:text-blue-400 mb-2">3. {t('guide.gtm.scenario3.title')}</div>
+                        <div className="p-3 bg-sf-base rounded border-2 border-sf-border-medium">
+                          <div className="font-medium text-sf-accent mb-2">3. {t('guide.gtm.scenario3.title')}</div>
                           <div className="text-xs space-y-1 mb-2">
-                            <div className="text-gray-600 dark:text-gray-400">{t('guide.gtm.scenario3.gtm')}</div>
-                            <div className="text-gray-600 dark:text-gray-400">{t('guide.gtm.scenario3.gtmServer')}</div>
-                            <div className="text-gray-600 dark:text-gray-400">{t('guide.gtm.scenario3.capi')}</div>
+                            <div className="text-sf-body">{t('guide.gtm.scenario3.gtm')}</div>
+                            <div className="text-sf-body">{t('guide.gtm.scenario3.gtmServer')}</div>
+                            <div className="text-sf-body">{t('guide.gtm.scenario3.capi')}</div>
                           </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{t('guide.gtm.scenario3.desc')}</p>
+                          <p className="text-xs text-sf-muted">{t('guide.gtm.scenario3.desc')}</p>
                         </div>
 
                         {/* Scenario 4 - Full tracking */}
-                        <div className="p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
-                          <div className="font-medium text-purple-700 dark:text-purple-400 mb-2">4. {t('guide.gtm.scenario4.title')}</div>
+                        <div className="p-3 bg-sf-base rounded border-2 border-sf-border-medium">
+                          <div className="font-medium text-sf-accent mb-2">4. {t('guide.gtm.scenario4.title')}</div>
                           <div className="text-xs space-y-1 mb-2">
-                            <div className="text-gray-600 dark:text-gray-400">{t('guide.gtm.scenario4.gtm')}</div>
-                            <div className="text-gray-600 dark:text-gray-400">{t('guide.gtm.scenario4.gtmServer')}</div>
-                            <div className="text-gray-600 dark:text-gray-400">{t('guide.gtm.scenario4.capi')}</div>
+                            <div className="text-sf-body">{t('guide.gtm.scenario4.gtm')}</div>
+                            <div className="text-sf-body">{t('guide.gtm.scenario4.gtmServer')}</div>
+                            <div className="text-sf-body">{t('guide.gtm.scenario4.capi')}</div>
                           </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{t('guide.gtm.scenario4.desc')}</p>
+                          <p className="text-xs text-sf-muted">{t('guide.gtm.scenario4.desc')}</p>
                         </div>
 
                         {/* Scenario 5 - Google Ads */}
-                        <div className="p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
-                          <div className="font-medium text-amber-700 dark:text-amber-400 mb-2">5. {t('guide.gtm.scenario5.title')}</div>
+                        <div className="p-3 bg-sf-base rounded border-2 border-sf-border-medium">
+                          <div className="font-medium text-sf-warning mb-2">5. {t('guide.gtm.scenario5.title')}</div>
                           <div className="text-xs space-y-1 mb-2">
-                            <div className="text-gray-600 dark:text-gray-400">{t('guide.gtm.scenario5.gtm')}</div>
-                            <div className="text-gray-600 dark:text-gray-400">{t('guide.gtm.scenario5.gtmServer')}</div>
-                            <div className="text-gray-600 dark:text-gray-400">{t('guide.gtm.scenario5.capi')}</div>
+                            <div className="text-sf-body">{t('guide.gtm.scenario5.gtm')}</div>
+                            <div className="text-sf-body">{t('guide.gtm.scenario5.gtmServer')}</div>
+                            <div className="text-sf-body">{t('guide.gtm.scenario5.capi')}</div>
                           </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{t('guide.gtm.scenario5.desc')}</p>
+                          <p className="text-xs text-sf-muted">{t('guide.gtm.scenario5.desc')}</p>
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{t('guide.gtm.serverSetup')}</h4>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{t('guide.gtm.serverSetupDesc')}</p>
-                      <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 list-disc list-inside">
+                      <h4 className="font-semibold text-sf-heading mb-2">{t('guide.gtm.serverSetup')}</h4>
+                      <p className="text-xs text-sf-body mb-2">{t('guide.gtm.serverSetupDesc')}</p>
+                      <ul className="text-xs text-sf-body space-y-1 list-disc list-inside">
                         <li>{t('guide.gtm.serverOptions.stape')}</li>
                         <li>{t('guide.gtm.serverOptions.gcloud')}</li>
                         <li>{t('guide.gtm.serverOptions.aws')}</li>
                         <li>{t('guide.gtm.serverOptions.vps')}</li>
                       </ul>
-                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">{t('guide.gtm.serverNote')}</p>
+                      <p className="text-xs text-sf-accent mt-2">{t('guide.gtm.serverNote')}</p>
                     </div>
                   </div>
                 </details>
 
                 <div>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">{t('gtm.title')}</h3>
+                  <h3 className="text-lg font-medium text-sf-heading mb-4">{t('gtm.title')}</h3>
                   <div className="grid gap-6 md:grid-cols-2">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('gtm.containerId')}</label>
-                      <input type="text" placeholder="GTM-XXXXXX" value={formData.gtm_container_id || ''} onChange={(e) => handleChange('gtm_container_id', e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none" />
+                      <label className="block text-sm font-medium text-sf-body mb-1">{t('gtm.containerId')}</label>
+                      <input type="text" placeholder={t('gtm.containerIdPlaceholder')} value={formData.gtm_container_id || ''} onChange={(e) => handleChange('gtm_container_id', e.target.value)} className="w-full border-2 border-sf-border-medium px-3 py-2 bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent outline-none" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-sf-body mb-1">
                         {t('gtm.serverContainerUrl')}
-                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">(Advanced)</span>
+                        <span className="text-xs text-sf-muted ml-2">(Advanced)</span>
                       </label>
-                      <input type="text" placeholder="https://gtm.yourdomain.com" value={formData.gtm_server_container_url || ''} onChange={(e) => handleChange('gtm_server_container_url', e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none" />
-                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('gtm.serverContainerHelp')}</p>
+                      <input type="text" placeholder={t('gtm.serverContainerUrlPlaceholder')} value={formData.gtm_server_container_url || ''} onChange={(e) => handleChange('gtm_server_container_url', e.target.value)} className="w-full border-2 border-sf-border-medium px-3 py-2 bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent outline-none" />
+                      <p className="mt-1 text-xs text-sf-muted">{t('gtm.serverContainerHelp')}</p>
                     </div>
                   </div>
+                  {formData.gtm_server_container_url && (
+                    <div className="mt-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={formData.gtm_ss_enabled || false} onChange={(e) => handleChange('gtm_ss_enabled', e.target.checked)} className="rounded border-sf-border text-sf-accent focus:ring-sf-accent" />
+                        <span className="text-sm font-medium text-sf-body">{t('gtm.ssEnabled')}</span>
+                      </label>
+                      <p className="mt-1 text-xs text-sf-muted ml-6">{t('gtm.ssEnabledHelp')}</p>
+                    </div>
+                  )}
                 </div>
 
-                <div className="border-t border-gray-100 dark:border-gray-700 my-6"></div>
+                <div className="border-t border-sf-border my-6"></div>
 
                 <div>
                   <div className="flex items-center gap-2 mb-4">
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">{t('umami.title')}</h3>
-                    <span className="px-2 py-0.5 rounded text-xs bg-green-100 text-green-800 font-medium">{t('umami.privacyFocused')}</span>
+                    <h3 className="text-lg font-medium text-sf-heading">{t('umami.title')}</h3>
+                    <span className="px-2 py-0.5 rounded text-xs bg-sf-success-soft text-sf-success font-medium">{t('umami.privacyFocused')}</span>
                   </div>
                   <div className="grid gap-6 md:grid-cols-2">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('umami.websiteId')}</label>
-                      <input type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" value={formData.umami_website_id || ''} onChange={(e) => handleChange('umami_website_id', e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none" />
+                      <label className="block text-sm font-medium text-sf-body mb-1">{t('umami.websiteId')}</label>
+                      <input type="text" placeholder={t('umami.websiteIdPlaceholder')} value={formData.umami_website_id || ''} onChange={(e) => handleChange('umami_website_id', e.target.value)} className="w-full border-2 border-sf-border-medium px-3 py-2 bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent outline-none" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('umami.scriptUrl')}</label>
-                      <input type="text" placeholder="https://cloud.umami.is/script.js" value={formData.umami_script_url || ''} onChange={(e) => handleChange('umami_script_url', e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none" />
-                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('umami.default')}: https://cloud.umami.is/script.js</p>
+                      <label className="block text-sm font-medium text-sf-body mb-1">{t('umami.scriptUrl')}</label>
+                      <input type="text" placeholder={t('umami.scriptUrlPlaceholder')} value={formData.umami_script_url || ''} onChange={(e) => handleChange('umami_script_url', e.target.value)} className="w-full border-2 border-sf-border-medium px-3 py-2 bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent outline-none" />
+                      <p className="mt-1 text-xs text-sf-muted">{t('umami.default')}: https://cloud.umami.is/script.js</p>
                     </div>
                   </div>
                 </div>
@@ -321,41 +330,41 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
             {activeTab === 'marketing' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-top-2">
                 {/* Facebook CAPI Setup Guide */}
-                <details className="group border border-purple-200 dark:border-purple-800 rounded-lg bg-purple-50 dark:bg-purple-900/20">
-                  <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between text-sm font-medium text-purple-800 dark:text-purple-200 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg transition-colors">
+                <details className="group border border-sf-border-accent bg-sf-accent-soft">
+                  <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between text-sm font-medium text-sf-accent hover:bg-sf-accent-soft transition-colors">
                     <span className="flex items-center gap-2">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                       {t('guide.facebook.title')}
                     </span>
                     <svg className="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                   </summary>
-                  <div className="px-4 pb-4 text-sm text-gray-700 dark:text-gray-300 space-y-4">
+                  <div className="px-4 pb-4 text-sm text-sf-body space-y-4">
                     {/* Quick Start - highlighted section */}
-                    <div className="border-t border-purple-200 dark:border-purple-800 pt-4">
-                      <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                        <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2 flex items-center gap-2">
+                    <div className="border-t border-sf-border-accent pt-4">
+                      <div className="p-4 bg-sf-success-soft border border-sf-success/20">
+                        <h4 className="font-semibold text-sf-success mb-2 flex items-center gap-2">
                           <span className="text-lg">🚀</span> {t('guide.facebook.quickStart')}
                         </h4>
-                        <p className="text-xs text-green-700 dark:text-green-300 mb-3">{t('guide.facebook.quickStartDesc')}</p>
-                        <ol className="list-decimal list-inside space-y-2 text-green-700 dark:text-green-300 text-xs mb-3">
+                        <p className="text-xs text-sf-success mb-3">{t('guide.facebook.quickStartDesc')}</p>
+                        <ol className="list-decimal list-inside space-y-2 text-sf-success text-xs mb-3">
                           <li>{t('guide.facebook.quickStartSteps.step1')}</li>
                           <li>{t('guide.facebook.quickStartSteps.step2')}</li>
                           <li>{t('guide.facebook.quickStartSteps.step3')}</li>
                           <li>{t('guide.facebook.quickStartSteps.step4')}</li>
                         </ol>
-                        <p className="text-xs text-green-600 dark:text-green-400 font-medium mb-2">✅ {t('guide.facebook.quickStartResult')}</p>
-                        <p className="text-xs text-green-600 dark:text-green-400 italic">{t('guide.facebook.quickStartOptional')}</p>
+                        <p className="text-xs text-sf-success font-medium mb-2">✅ {t('guide.facebook.quickStartResult')}</p>
+                        <p className="text-xs text-sf-success italic">{t('guide.facebook.quickStartOptional')}</p>
                       </div>
                     </div>
 
                     <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{t('guide.facebook.whatIs')}</h4>
-                      <p className="text-gray-600 dark:text-gray-400 text-xs">{t('guide.facebook.whatIsDesc')}</p>
+                      <h4 className="font-semibold text-sf-heading mb-2">{t('guide.facebook.whatIs')}</h4>
+                      <p className="text-sf-body text-xs">{t('guide.facebook.whatIsDesc')}</p>
                     </div>
 
                     <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{t('guide.facebook.howToSetup')}</h4>
-                      <ol className="list-decimal list-inside space-y-2 text-gray-600 dark:text-gray-400 text-xs">
+                      <h4 className="font-semibold text-sf-heading mb-2">{t('guide.facebook.howToSetup')}</h4>
+                      <ol className="list-decimal list-inside space-y-2 text-sf-body text-xs">
                         <li>{t('guide.facebook.step1')}</li>
                         <li>{t('guide.facebook.step2')}</li>
                         <li>{t('guide.facebook.step3')}</li>
@@ -365,10 +374,10 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
                     </div>
 
                     <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{t('guide.facebook.deduplication')}</h4>
-                      <p className="text-gray-600 dark:text-gray-400 text-xs mb-2">{t('guide.facebook.deduplicationDesc')}</p>
-                      <div className="p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
-                        <pre className="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                      <h4 className="font-semibold text-sf-heading mb-2">{t('guide.facebook.deduplication')}</h4>
+                      <p className="text-sf-body text-xs mb-2">{t('guide.facebook.deduplicationDesc')}</p>
+                      <div className="p-3 bg-sf-base rounded border-2 border-sf-border-medium">
+                        <pre className="text-xs text-sf-body whitespace-pre-wrap">
 {`Browser → FB Pixel (event_id: abc-123)
        → CAPI     (event_id: abc-123)
               ↓
@@ -377,29 +386,29 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
                       </div>
                     </div>
 
-                    <div className="p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{t('guide.facebook.recommendation')}</h4>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">{t('guide.facebook.recommendationDesc')}</p>
+                    <div className="p-3 bg-sf-base rounded border-2 border-sf-border-medium">
+                      <h4 className="font-semibold text-sf-heading mb-2">{t('guide.facebook.recommendation')}</h4>
+                      <p className="text-xs text-sf-body mb-3">{t('guide.facebook.recommendationDesc')}</p>
                       <table className="w-full text-xs">
                         <thead>
-                          <tr className="border-b border-gray-200 dark:border-gray-700">
-                            <th className="text-left py-2 pr-2 text-gray-700 dark:text-gray-300">{t('guide.facebook.recommendationTable.feature')}</th>
-                            <th className="text-left py-2 pr-2 text-gray-700 dark:text-gray-300">{t('guide.facebook.recommendationTable.ourCapi')}</th>
-                            <th className="text-left py-2 text-gray-700 dark:text-gray-300">{t('guide.facebook.recommendationTable.gtmServer')}</th>
+                          <tr className="border-b border-sf-border">
+                            <th className="text-left py-2 pr-2 text-sf-body">{t('guide.facebook.recommendationTable.feature')}</th>
+                            <th className="text-left py-2 pr-2 text-sf-body">{t('guide.facebook.recommendationTable.ourCapi')}</th>
+                            <th className="text-left py-2 text-sf-body">{t('guide.facebook.recommendationTable.gtmServer')}</th>
                           </tr>
                         </thead>
-                        <tbody className="text-gray-600 dark:text-gray-400">
-                          <tr className="border-b border-gray-100 dark:border-gray-700">
+                        <tbody className="text-sf-body">
+                          <tr className="border-b border-sf-border">
                             <td className="py-2 pr-2">{t('guide.facebook.recommendationTable.consentIntegration')}</td>
                             <td className="py-2 pr-2">{t('guide.facebook.recommendationTable.consentOur')}</td>
                             <td className="py-2">{t('guide.facebook.recommendationTable.consentGtm')}</td>
                           </tr>
-                          <tr className="border-b border-gray-100 dark:border-gray-700">
+                          <tr className="border-b border-sf-border">
                             <td className="py-2 pr-2">{t('guide.facebook.recommendationTable.setup')}</td>
                             <td className="py-2 pr-2">{t('guide.facebook.recommendationTable.setupOur')}</td>
                             <td className="py-2">{t('guide.facebook.recommendationTable.setupGtm')}</td>
                           </tr>
-                          <tr className="border-b border-gray-100 dark:border-gray-700">
+                          <tr className="border-b border-sf-border">
                             <td className="py-2 pr-2">{t('guide.facebook.recommendationTable.cost')}</td>
                             <td className="py-2 pr-2">{t('guide.facebook.recommendationTable.costOur')}</td>
                             <td className="py-2">{t('guide.facebook.recommendationTable.costGtm')}</td>
@@ -411,41 +420,41 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
                           </tr>
                         </tbody>
                       </table>
-                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 italic">{t('guide.facebook.recommendationNote')}</p>
+                      <p className="text-xs text-sf-muted mt-2 italic">{t('guide.facebook.recommendationNote')}</p>
                     </div>
 
-                    <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded border border-amber-200 dark:border-amber-800">
-                      <h4 className="font-semibold text-amber-800 dark:text-amber-200 mb-1">{t('guide.facebook.gtmWarning')}</h4>
-                      <p className="text-xs text-amber-700 dark:text-amber-300">{t('guide.facebook.gtmWarningDesc')}</p>
+                    <div className="p-3 bg-sf-warning-soft rounded border border-sf-warning/20">
+                      <h4 className="font-semibold text-sf-warning mb-1">{t('guide.facebook.gtmWarning')}</h4>
+                      <p className="text-xs text-sf-warning">{t('guide.facebook.gtmWarningDesc')}</p>
                     </div>
 
                     <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{t('guide.facebook.trackedEvents')}</h4>
+                      <h4 className="font-semibold text-sf-heading mb-2">{t('guide.facebook.trackedEvents')}</h4>
                       <table className="w-full text-xs">
                         <thead>
-                          <tr className="border-b dark:border-gray-700">
+                          <tr className="border-b border-sf-border">
                             <th className="text-left py-2 pr-2">{t('guide.facebook.action')}</th>
                             <th className="text-left py-2 pr-2">{t('guide.facebook.event')}</th>
                             <th className="text-left py-2">{t('guide.facebook.location')}</th>
                           </tr>
                         </thead>
-                        <tbody className="text-gray-600 dark:text-gray-400">
-                          <tr className="border-b dark:border-gray-700">
+                        <tbody className="text-sf-body">
+                          <tr className="border-b border-sf-border">
                             <td className="py-2 pr-2">{t('guide.facebook.viewProduct')}</td>
                             <td className="py-2 pr-2">ViewContent</td>
                             <td className="py-2">{t('guide.facebook.checkoutPage')}</td>
                           </tr>
-                          <tr className="border-b dark:border-gray-700">
+                          <tr className="border-b border-sf-border">
                             <td className="py-2 pr-2">{t('guide.facebook.startCheckout')}</td>
                             <td className="py-2 pr-2">InitiateCheckout</td>
                             <td className="py-2">{t('guide.facebook.checkoutPage')}</td>
                           </tr>
-                          <tr className="border-b dark:border-gray-700">
+                          <tr className="border-b border-sf-border">
                             <td className="py-2 pr-2">{t('guide.facebook.addPayment')}</td>
                             <td className="py-2 pr-2">AddPaymentInfo</td>
                             <td className="py-2">{t('guide.facebook.paymentForm')}</td>
                           </tr>
-                          <tr className="border-b dark:border-gray-700">
+                          <tr className="border-b border-sf-border">
                             <td className="py-2 pr-2">{t('guide.facebook.purchase')}</td>
                             <td className="py-2 pr-2">Purchase</td>
                             <td className="py-2">{t('guide.facebook.successPage')}</td>
@@ -462,16 +471,16 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
                 </details>
 
                 <div>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">{t('facebook.title')}</h3>
+                  <h3 className="text-lg font-medium text-sf-heading mb-4">{t('facebook.title')}</h3>
                   <div className="grid gap-6 md:grid-cols-2">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('facebook.pixelId')}</label>
-                      <input type="text" placeholder="1234567890" value={formData.facebook_pixel_id || ''} onChange={(e) => handleChange('facebook_pixel_id', e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none" />
+                      <label className="block text-sm font-medium text-sf-body mb-1">{t('facebook.pixelId')}</label>
+                      <input type="text" placeholder={t('facebook.pixelIdPlaceholder')} value={formData.facebook_pixel_id || ''} onChange={(e) => handleChange('facebook_pixel_id', e.target.value)} className="w-full border-2 border-sf-border-medium px-3 py-2 bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent outline-none" />
                     </div>
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('facebook.capiToken')}</label>
-                        <input type="password" value={formData.facebook_capi_token || ''} onChange={(e) => handleChange('facebook_capi_token', e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none" />
-                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('facebook.capiTokenHelp')}</p>
+                        <label className="block text-sm font-medium text-sf-body mb-1">{t('facebook.capiToken')}</label>
+                        <input type="password" value={formData.facebook_capi_token || ''} onChange={(e) => handleChange('facebook_capi_token', e.target.value)} className="w-full border-2 border-sf-border-medium px-3 py-2 bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent outline-none" />
+                        <p className="mt-1 text-xs text-sf-muted">{t('facebook.capiTokenHelp')}</p>
                     </div>
                     <div className="md:col-span-2">
                       <div className="flex items-center gap-3">
@@ -481,9 +490,9 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
                           checked={formData.fb_capi_enabled ?? false}
                           onChange={(e) => handleChange('fb_capi_enabled', e.target.checked)}
                           disabled={!formData.facebook_capi_token}
-                          className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 disabled:opacity-50"
+                          className="w-4 h-4 text-sf-accent rounded border-sf-border focus:ring-sf-accent disabled:opacity-50"
                         />
-                        <label htmlFor="fb_capi_enabled" className={`text-sm font-medium ${!formData.facebook_capi_token ? 'text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                        <label htmlFor="fb_capi_enabled" className={`text-sm font-medium ${!formData.facebook_capi_token ? 'text-sf-muted' : 'text-sf-body'}`}>
                           {t('facebook.enableCAPI')}
                         </label>
                       </div>
@@ -500,37 +509,37 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
             {activeTab === 'consents' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-top-2">
                 {/* Consent Guide */}
-                <details className="group border border-amber-200 dark:border-amber-800 rounded-lg bg-amber-50 dark:bg-amber-900/20">
-                  <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between text-sm font-medium text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors">
+                <details className="group border border-sf-warning/20 bg-sf-warning-soft">
+                  <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between text-sm font-medium text-sf-warning hover:bg-sf-warning-soft transition-colors">
                     <span className="flex items-center gap-2">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                       {t('guide.consent.title')}
                     </span>
                     <svg className="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                   </summary>
-                  <div className="px-4 pb-4 text-sm text-gray-700 dark:text-gray-300 space-y-4">
-                    <div className="border-t border-amber-200 dark:border-amber-800 pt-4">
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{t('guide.consent.howItWorks')}</h4>
-                      <p className="text-gray-600 dark:text-gray-400 text-xs">{t('guide.consent.howItWorksDesc')}</p>
+                  <div className="px-4 pb-4 text-sm text-sf-body space-y-4">
+                    <div className="border-t border-sf-warning/20 pt-4">
+                      <h4 className="font-semibold text-sf-heading mb-2">{t('guide.consent.howItWorks')}</h4>
+                      <p className="text-sf-body text-xs">{t('guide.consent.howItWorksDesc')}</p>
                     </div>
 
                     <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{t('guide.consent.consentModes')}</h4>
+                      <h4 className="font-semibold text-sf-heading mb-2">{t('guide.consent.consentModes')}</h4>
                       <table className="w-full text-xs">
                         <thead>
-                          <tr className="border-b dark:border-gray-700">
+                          <tr className="border-b border-sf-border">
                             <th className="text-left py-2 pr-2">{t('guide.consent.scenario')}</th>
                             <th className="text-left py-2 pr-2">{t('guide.consent.clientSide')}</th>
                             <th className="text-left py-2">{t('guide.consent.serverSide')}</th>
                           </tr>
                         </thead>
-                        <tbody className="text-gray-600 dark:text-gray-400">
-                          <tr className="border-b dark:border-gray-700">
+                        <tbody className="text-sf-body">
+                          <tr className="border-b border-sf-border">
                             <td className="py-2 pr-2">{t('guide.consent.userAccepts')}</td>
                             <td className="py-2 pr-2">✅ {t('guide.consent.allEvents')}</td>
                             <td className="py-2">✅ {t('guide.consent.allEvents')}</td>
                           </tr>
-                          <tr className="border-b dark:border-gray-700">
+                          <tr className="border-b border-sf-border">
                             <td className="py-2 pr-2">{t('guide.consent.userDeclines')}</td>
                             <td className="py-2 pr-2">❌ {t('guide.consent.blocked')}</td>
                             <td className="py-2">❌ {t('guide.consent.blocked')}</td>
@@ -545,27 +554,27 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
                     </div>
 
                     <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{t('guide.consent.legitimateInterest')}</h4>
-                      <p className="text-gray-600 dark:text-gray-400 text-xs mb-2">{t('guide.consent.legitimateInterestDesc')}</p>
-                      <div className="p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
-                        <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('guide.consent.allowedWithoutConsent')}</p>
-                        <ul className="text-xs text-gray-600 dark:text-gray-400 list-disc list-inside">
+                      <h4 className="font-semibold text-sf-heading mb-2">{t('guide.consent.legitimateInterest')}</h4>
+                      <p className="text-sf-body text-xs mb-2">{t('guide.consent.legitimateInterestDesc')}</p>
+                      <div className="p-3 bg-sf-base rounded border-2 border-sf-border-medium">
+                        <p className="text-xs font-medium text-sf-body mb-1">{t('guide.consent.allowedWithoutConsent')}</p>
+                        <ul className="text-xs text-sf-body list-disc list-inside">
                           <li><strong>Purchase</strong> - {t('guide.consent.purchaseDesc')}</li>
                           <li><strong>Lead</strong> - {t('guide.consent.leadDesc')}</li>
                         </ul>
-                        <p className="text-xs text-red-600 dark:text-red-400 mt-2">{t('guide.consent.notAllowed')}</p>
+                        <p className="text-xs text-sf-danger mt-2">{t('guide.consent.notAllowed')}</p>
                       </div>
                     </div>
                   </div>
                 </details>
 
                  <div className="flex items-center h-5 gap-3">
-                    <input id="consent" type="checkbox" checked={formData.cookie_consent_enabled} onChange={(e) => handleChange('cookie_consent_enabled', e.target.checked)} className="w-4 h-4 text-blue-600 rounded" />
-                    <label htmlFor="consent" className="text-sm font-medium text-gray-900 dark:text-white">{t('cookieConsent.requireConsent')}</label>
+                    <input id="consent" type="checkbox" checked={formData.cookie_consent_enabled} onChange={(e) => handleChange('cookie_consent_enabled', e.target.checked)} className="w-4 h-4 text-sf-accent rounded" />
+                    <label htmlFor="consent" className="text-sm font-medium text-sf-heading">{t('cookieConsent.requireConsent')}</label>
                  </div>
 
                  {/* Server-side conversions without consent */}
-                 <div className="mt-6 p-4 border border-amber-200 dark:border-amber-800 rounded-lg bg-amber-50 dark:bg-amber-900/20">
+                 <div className="mt-6 p-4 border border-sf-warning/20 bg-sf-warning-soft">
                    <div className="flex items-start gap-3">
                      <input
                        id="send_conversions_without_consent"
@@ -576,21 +585,21 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
                        className="w-4 h-4 mt-0.5 text-amber-600 rounded border-gray-300 focus:ring-amber-500 disabled:opacity-50"
                      />
                      <div className="flex-1">
-                       <label htmlFor="send_conversions_without_consent" className={`text-sm font-medium ${!formData.fb_capi_enabled ? 'text-gray-400' : 'text-gray-900 dark:text-white'}`}>
+                       <label htmlFor="send_conversions_without_consent" className={`text-sm font-medium ${!formData.fb_capi_enabled ? 'text-sf-muted' : 'text-sf-heading'}`}>
                          {t('consent.sendConversionsWithoutConsent')}
                        </label>
-                       <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                       <p className="mt-1 text-xs text-sf-body">
                          {t('consent.sendConversionsWithoutConsentHelp')}
                        </p>
                        {!formData.fb_capi_enabled && (
                          <p className="mt-2 text-xs text-amber-600">{t('consent.requiresCAPI')}</p>
                        )}
-                       <div className="mt-2 p-2 bg-amber-100 dark:bg-amber-900/40 rounded text-xs text-amber-800 dark:text-amber-200">
+                       <div className="mt-2 p-2 bg-sf-warning-soft rounded text-xs text-sf-warning">
                          <strong>⚠️ {t('consent.legalWarning')}</strong>
                        </div>
-                       <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-700/50 rounded text-xs text-gray-700 dark:text-gray-300">
+                       <div className="mt-2 p-2 bg-sf-raised rounded text-xs text-sf-body">
                          <span>📄 {t('consent.documentsWarning')}</span>
-                         <a href="/dashboard/settings" className="ml-1 underline hover:no-underline font-medium text-gray-900 dark:text-white">
+                         <a href="/dashboard/settings" className="ml-1 underline hover:no-underline font-medium text-sf-heading">
                            {t('consent.documentsLink')} →
                          </a>
                        </div>
@@ -602,7 +611,7 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
 
             {!['scripts', 'currency', 'gus'].includes(activeTab) && (
                 <div className="mt-6 border-t pt-4 flex justify-end">
-                    <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">{loading ? t('messages.saving') : t('saveConfig')}</button>
+                    <button type="submit" disabled={loading} className="px-4 py-2 bg-sf-accent-bg hover:bg-sf-accent-hover text-white">{loading ? t('messages.saving') : t('saveConfig')}</button>
                 </div>
             )}
           </form>
@@ -611,13 +620,13 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
           {activeTab === 'scripts' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-top-2">
                 <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">{t('scripts.title')}</h3>
-                    <button onClick={() => setIsScriptModalOpen(true)} className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm">+ {t('scripts.addScript')}</button>
+                    <h3 className="text-lg font-medium text-sf-heading">{t('scripts.title')}</h3>
+                    <button onClick={() => setIsScriptModalOpen(true)} className="px-3 py-1.5 bg-sf-success hover:opacity-90 text-sf-inverse text-sm">+ {t('scripts.addScript')}</button>
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                    <table className="w-full text-sm text-left text-sf-muted">
+                        <thead className="text-xs text-sf-body uppercase bg-sf-raised">
                             <tr>
                                 <th className="px-4 py-3">{t('scripts.table.name')}</th>
                                 <th className="px-4 py-3">{t('scripts.table.location')}</th>
@@ -631,25 +640,25 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
                                 <tr><td colSpan={5} className="px-4 py-4 text-center">{t('scripts.noScripts')}</td></tr>
                             ) : (
                                 scripts.map(script => (
-                                    <tr key={script.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                        <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{script.name}</td>
+                                    <tr key={script.id} className="bg-sf-base border-b border-sf-border">
+                                        <td className="px-4 py-3 font-medium text-sf-heading">{script.name}</td>
                                         <td className="px-4 py-3 uppercase">{script.script_location}</td>
                                         <td className="px-4 py-3">
                                             <span className={`px-2 py-1 rounded text-xs ${
-                                                script.category === 'essential' ? 'bg-gray-100 text-gray-800' :
-                                                script.category === 'marketing' ? 'bg-purple-100 text-purple-800' :
-                                                'bg-blue-100 text-blue-800'
+                                                script.category === 'essential' ? 'bg-sf-raised text-sf-heading' :
+                                                script.category === 'marketing' ? 'bg-sf-accent-soft text-sf-accent' :
+                                                'bg-sf-accent-soft text-sf-accent'
                                             }`}>
                                                 {t(`scripts.categories.${script.category}`)}
                                             </span>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <button onClick={() => handleToggleScript(script.id, script.is_active)} className={`px-2 py-1 rounded text-xs font-bold ${script.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                            <button onClick={() => handleToggleScript(script.id, script.is_active)} className={`px-2 py-1 rounded text-xs font-bold ${script.is_active ? 'bg-sf-success-soft text-sf-success' : 'bg-sf-danger-soft text-sf-danger'}`}>
                                                 {script.is_active ? tCommon('active') : tCommon('inactive')}
                                             </button>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <button onClick={() => handleDeleteScript(script.id)} className="text-red-600 hover:underline">{tCommon('delete')}</button>
+                                            <button onClick={() => handleDeleteScript(script.id)} className="text-sf-danger hover:underline">{tCommon('delete')}</button>
                                         </td>
                                     </tr>
                                 ))
@@ -680,25 +689,25 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
       {/* ADD SCRIPT MODAL */}
       {isScriptModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('scripts.modal.title')}</h3>
+            <div className="bg-sf-base w-full max-w-lg p-6 space-y-4">
+                <h3 className="text-xl font-bold text-sf-heading">{t('scripts.modal.title')}</h3>
                 
                 <div>
-                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('scripts.modal.name')}</label>
-                    <input type="text" className="w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600" value={newScript.name} onChange={e => setNewScript({...newScript, name: e.target.value})} placeholder="e.g. Hotjar" />
+                    <label className="block text-sm font-medium mb-1 text-sf-body">{t('scripts.modal.name')}</label>
+                    <input type="text" className="w-full border-2 border-sf-border-medium rounded p-2 bg-sf-input text-sf-heading" value={newScript.name} onChange={e => setNewScript({...newScript, name: e.target.value})} placeholder={t('scripts.modal.namePlaceholder')} />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('scripts.modal.location')}</label>
-                        <select className="w-full border rounded p-2 dark:bg-gray-700" value={newScript.script_location} onChange={e => setNewScript({...newScript, script_location: e.target.value as any})}>
-                            <option value="head">HEAD</option>
-                            <option value="body">BODY</option>
+                        <label className="block text-sm font-medium mb-1 text-sf-body">{t('scripts.modal.location')}</label>
+                        <select className="w-full border-2 border-sf-border-medium rounded p-2 bg-sf-input text-sf-heading" value={newScript.script_location} onChange={e => setNewScript({...newScript, script_location: e.target.value as any})}>
+                            <option value="head">{t('scripts.location.head')}</option>
+                            <option value="body">{t('scripts.location.body')}</option>
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('scripts.modal.category')}</label>
-                        <select className="w-full border rounded p-2 dark:bg-gray-700" value={newScript.category} onChange={e => setNewScript({...newScript, category: e.target.value as any})}>
+                        <label className="block text-sm font-medium mb-1 text-sf-body">{t('scripts.modal.category')}</label>
+                        <select className="w-full border-2 border-sf-border-medium rounded p-2 bg-sf-input text-sf-heading" value={newScript.category} onChange={e => setNewScript({...newScript, category: e.target.value as any})}>
                             <option value="marketing">{t('scripts.categories.marketing')}</option>
                             <option value="analytics">{t('scripts.categories.analytics')}</option>
                             <option value="essential">{t('scripts.categories.essential')}</option>
@@ -707,13 +716,13 @@ Facebook: 1 konwersja (deduplikacja po event_id)`}
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('scripts.modal.code')}</label>
-                    <textarea rows={5} className="w-full border rounded p-2 font-mono text-sm dark:bg-gray-700" value={newScript.script_content} onChange={e => setNewScript({...newScript, script_content: e.target.value})} placeholder="<script>...</script>"></textarea>
+                    <label className="block text-sm font-medium mb-1 text-sf-body">{t('scripts.modal.code')}</label>
+                    <textarea rows={5} className="w-full border-2 border-sf-border-medium rounded p-2 font-mono text-sm bg-sf-input text-sf-heading" value={newScript.script_content} onChange={e => setNewScript({...newScript, script_content: e.target.value})} placeholder={t('scripts.modal.codePlaceholder')}></textarea>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-2">
-                    <button onClick={() => setIsScriptModalOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">{t('scripts.modal.cancel')}</button>
-                    <button onClick={handleAddScript} disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">{t('scripts.modal.add')}</button>
+                    <button onClick={() => setIsScriptModalOpen(false)} className="px-4 py-2 text-sf-body hover:bg-sf-hover rounded">{t('scripts.modal.cancel')}</button>
+                    <button onClick={handleAddScript} disabled={loading} className="px-4 py-2 bg-sf-accent-bg text-white rounded hover:bg-sf-accent-hover">{t('scripts.modal.add')}</button>
                 </div>
             </div>
         </div>

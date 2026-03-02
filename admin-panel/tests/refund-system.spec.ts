@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { acceptAllCookies } from './helpers/consent';
+import { setAuthSession } from './helpers/admin-auth';
 
 // Enforce single worker to avoid race conditions
 test.describe.configure({ mode: 'serial' });
@@ -33,23 +35,26 @@ async function closeCookieBanner(page: any) {
  * Helper: Sign in user in browser
  */
 async function signInUser(page: any, email: string, password: string) {
+  await acceptAllCookies(page);
+
+  // Aggressively hide Klaro via CSS to prevent click interception
+  await page.addInitScript(() => {
+    const addStyle = () => {
+      if (document.head) {
+        const style = document.createElement('style');
+        style.innerHTML = '#klaro { display: none !important; }';
+        document.head.appendChild(style);
+      } else {
+        setTimeout(addStyle, 10);
+      }
+    };
+    addStyle();
+  });
+
   await page.goto('/');
   await page.waitForLoadState('domcontentloaded');
 
-  // Close cookie banner if present
-  await closeCookieBanner(page);
-
-  await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-    const supabase = createBrowserClient(supabaseUrl, anonKey);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-  }, {
-    email,
-    password,
-    supabaseUrl: SUPABASE_URL,
-    anonKey: ANON_KEY,
-  });
+  await setAuthSession(page, email, password);
 
   await page.waitForTimeout(1000);
 }
@@ -85,9 +90,12 @@ async function createRefundableProduct(isRefundable: boolean = true, refundPerio
       slug: `refund-test-${Date.now()}`,
       price: 10000, // 100.00 in cents
       currency: 'PLN',
+      description: 'Test product for refund testing',
       is_active: true,
       is_refundable: isRefundable,
       refund_period_days: refundPeriodDays,
+      vat_rate: 23,
+      price_includes_vat: true,
     })
     .select()
     .single();
@@ -477,12 +485,18 @@ test.describe('Refund System - Admin Management', () => {
     await page.goto('/en/dashboard/refund-requests');
     await page.waitForLoadState('networkidle');
 
-    // Should be redirected or show access denied
+    // Should be redirected away OR show access denied message
     const url = page.url();
     const isRedirected = !url.includes('/dashboard/refund-requests');
-    const hasAccessDenied = await page.locator('text=/Access denied|Unauthorized|403/i').count() > 0;
 
-    expect(isRedirected || hasAccessDenied).toBeTruthy();
+    if (isRedirected) {
+      // Non-admin was redirected away from the refund requests page
+      expect(url).not.toContain('/dashboard/refund-requests');
+    } else {
+      // Page loaded but should show access denied
+      const hasAccessDenied = await page.locator('text=/Access denied|Unauthorized|403/i').count() > 0;
+      expect(hasAccessDenied).toBe(true);
+    }
   });
 
   test('admin should see refund requests list', async ({ page }) => {
@@ -710,11 +724,26 @@ test.describe('Refund System - Admin Product Form UI', () => {
 
     // Find the row with test product and click its edit button (pencil icon)
     const productRow = page.locator('tr').filter({ hasText: testProduct.name });
-    await productRow.locator('button[aria-label*="Edit"], button[title="Edit"]').click();
+    await expect(productRow).toBeVisible({ timeout: 10000 });
+    await productRow.locator('button[title*="Edit"], button[title*="Edytuj"]').click();
+
+    // Wait for wizard dialog to appear
+    const modal = page.locator('[role="dialog"]').first();
+    await expect(modal).toBeVisible({ timeout: 10000 });
+
+    // Navigate to step 3 (Sales & Settings) where Refund section lives
+    const continueBtn = modal.getByRole('button', { name: /Dalej|Continue Setup/i });
+    await expect(continueBtn).toBeVisible({ timeout: 5000 });
+    await continueBtn.click();
     await page.waitForTimeout(1000);
 
-    // Should see refund settings section
-    await expect(page.locator('text=/Refund Policy/i')).toBeVisible();
+    // Step 2 — click Continue again
+    await expect(continueBtn).toBeVisible({ timeout: 5000 });
+    await continueBtn.click();
+    await page.waitForTimeout(1000);
+
+    // Should see refund settings section on step 3
+    await expect(page.locator('text=/Refund Policy/i')).toBeVisible({ timeout: 10000 });
 
     // Should see the toggle for allowing refunds
     await expect(page.locator('text=/Allow customers to request refunds/i')).toBeVisible();
@@ -732,8 +761,14 @@ test.describe('Refund System - Admin Product Form UI', () => {
 
     // Find the row with test product and click its edit button
     const productRow = page.locator('tr').filter({ hasText: testProduct.name });
-    await productRow.locator('button[aria-label*="Edit"], button[title="Edit"]').click();
-    await page.waitForTimeout(1500);
+    await productRow.locator('button[title*="Edit"], button[title*="Edytuj"]').click();
+    await page.waitForTimeout(1000);
+
+    // Navigate to step 3 (Sales & Settings) where Refund section lives
+    await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+    await page.waitForTimeout(500);
+    await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
+    await page.waitForTimeout(500);
 
     // Scroll down to make sure refund settings are visible
     await page.locator('text=/Refund Policy/i').scrollIntoViewIfNeeded();

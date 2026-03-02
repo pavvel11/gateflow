@@ -1,5 +1,5 @@
--- Seed data for GateFlow Admin Panel
--- Sample products for testing different GateFlow protection modes
+-- Seed data for Sellf Admin Panel
+-- Sample products for testing different Sellf protection modes
 
 -- Enable pgcrypto extension for password hashing
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -9,7 +9,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- =====================================================
 -- Must be inserted FIRST so the handle_new_user_registration() trigger
 -- makes this user admin (first user in admin_users table).
--- Credentials: demo@gateflow.io / demo123
+-- Credentials: demo@sellf.app / demo123
 
 INSERT INTO auth.users (
   instance_id, id, aud, role, email, encrypted_password,
@@ -21,7 +21,7 @@ INSERT INTO auth.users (
   'dddddddd-0000-4000-a000-000000000000',
   'authenticated',
   'authenticated',
-  'demo@gateflow.io',
+  'demo@sellf.app',
   extensions.crypt('demo123', extensions.gen_salt('bf')),
   NOW(),
   '', '', '', '', '', '',
@@ -36,7 +36,7 @@ INSERT INTO auth.identities (
 ) VALUES (
   'dddddddd-0000-4000-a000-000000000000',
   'dddddddd-0000-4000-a000-000000000000',
-  jsonb_build_object('sub', 'dddddddd-0000-4000-a000-000000000000', 'email', 'demo@gateflow.io'),
+  jsonb_build_object('sub', 'dddddddd-0000-4000-a000-000000000000', 'email', 'demo@sellf.app'),
   'email',
   NOW(),
   NOW(),
@@ -53,6 +53,8 @@ INSERT INTO shop_config (
   default_currency,
   shop_name,
   tax_rate,
+  tax_mode,
+  stripe_tax_rate_cache,
   logo_url,
   primary_color,
   secondary_color,
@@ -61,12 +63,14 @@ INSERT INTO shop_config (
   custom_settings
 ) VALUES (
   'USD',
-  'GateFlow Demo Shop',
+  'Sellf Demo Shop',
   0.23, -- 23% VAT (Polish default)
+  'local', -- Default: Fixed VAT rate sent to Stripe per product
+  '{}'::jsonb, -- Empty cache, populated on first local-mode checkout
   NULL, -- Upload logo to imgbb.com
-  '#9333ea', -- purple-600
-  '#ec4899', -- pink-600
-  '#8b5cf6', -- violet-500
+  NULL, -- uses var(--sf-accent) fallback
+  NULL, -- uses var(--sf-accent-hover) fallback
+  NULL, -- uses var(--sf-accent) fallback
   'system',
   '{}'::jsonb
 )
@@ -88,6 +92,7 @@ INSERT INTO products (
   features,
   is_active,
   is_featured,
+  is_listed,
   auto_grant_duration_days,
   success_redirect_url,
   pass_params_to_redirect
@@ -105,6 +110,7 @@ INSERT INTO products (
     NULL,
     true,
     '[{"title": "What you''ll get", "items": ["30-minute video tutorial", "PDF guide", "Starter templates"]}]'::jsonb,
+    true,
     true,
     true,
     NULL,
@@ -140,6 +146,7 @@ Basic JavaScript knowledge required. Familiarity with HTML/CSS recommended.',
     '[{"title": "Course content", "items": ["12 hours of video", "20+ coding exercises", "Final capstone project", "Certificate of completion"]}, {"title": "Bonuses", "items": ["Source code access", "Private Discord community", "Monthly live Q&A"]}]'::jsonb,
     true,
     true,
+    true,
     NULL,
     NULL,
     false
@@ -159,6 +166,7 @@ Basic JavaScript knowledge required. Familiarity with HTML/CSS recommended.',
     '[{"title": "What''s included", "items": ["50+ React components", "10 complete templates", "Figma design system", "VS Code snippets"]}, {"title": "Updates", "items": ["Lifetime access", "Free future updates", "Priority support"]}]'::jsonb,
     true,
     false,
+    true,
     NULL,
     NULL,
     false
@@ -178,6 +186,7 @@ Basic JavaScript knowledge required. Familiarity with HTML/CSS recommended.',
     '[{"title": "Program details", "items": ["6 live sessions (2h each)", "Personal code reviews", "Career coaching", "Small group (max 10 people)"]}, {"title": "Bonus access", "items": ["All course materials", "Pro toolkit included", "Alumni network", "Job board access"]}]'::jsonb,
     true,
     true,
+    false,
     NULL,
     NULL,
     false
@@ -197,11 +206,65 @@ Basic JavaScript knowledge required. Familiarity with HTML/CSS recommended.',
     '[{"title": "Enterprise features", "items": ["Unlimited team seats", "Custom branding", "SSO integration", "Dedicated account manager"]}, {"title": "Support & SLA", "items": ["24/7 priority support", "99.9% uptime guarantee", "Custom integrations", "Quarterly business reviews"]}]'::jsonb,
     true,
     false,
+    true,
     3,
     NULL,
     false
   );
-  
+
+-- =====================================================
+-- PWYW (Pay What You Want) PRODUCTS
+-- =====================================================
+
+-- PWYW with free option (custom_price_min = 0) — customer can get it for $0
+INSERT INTO products (
+  name, slug, description, long_description, icon, price, currency,
+  vat_rate, price_includes_vat, features, is_active, is_featured, is_listed,
+  allow_custom_price, custom_price_min, show_price_presets, custom_price_presets
+) VALUES (
+  'Community Guide',
+  'community-guide',
+  'Pay what you want — or get it for free!',
+  E'## Community JavaScript Guide\n\nA community-driven guide to modern JavaScript patterns. **Pay what you think it''s worth** — even $0 is fine!\n\n### Why free?\n\nWe believe knowledge should be accessible. If you find value, consider supporting the project.\n\n- 📖 100+ pages of patterns\n- 🔄 Regular updates\n- 💬 Community forum access',
+  '🤝',
+  19.99,
+  'USD',
+  NULL,
+  true,
+  '[{"title": "What you get", "items": ["100+ page guide (PDF)", "Code examples repository", "Community forum access"]}, {"title": "Pay what you want", "items": ["Free option available", "Suggested price: $19.99", "Support the project if you can"]}]'::jsonb,
+  true,
+  true,
+  true,
+  true,
+  0,
+  true,
+  '[0, 10, 20]'
+);
+
+-- PWYW with minimum > 0 (standard PWYW, no free option)
+INSERT INTO products (
+  name, slug, description, long_description, icon, price, currency,
+  vat_rate, price_includes_vat, features, is_active, is_featured, is_listed,
+  allow_custom_price, custom_price_min, show_price_presets, custom_price_presets
+) VALUES (
+  'Design System Bundle',
+  'design-system-bundle',
+  'Pay what you want — minimum $5.',
+  E'## Complete Design System Bundle\n\nProfessional design system with Figma files, React components, and documentation.\n\n### Flexible pricing\n\nChoose your price starting from $5. The suggested price reflects the value we believe this bundle provides.\n\n- 🎨 Figma design tokens\n- ⚛️ React component library\n- 📐 Responsive grid system',
+  '🎨',
+  29.99,
+  'USD',
+  NULL,
+  true,
+  '[{"title": "Bundle includes", "items": ["Figma design system", "50+ React components", "Typography scale", "Color system"]}, {"title": "Pricing", "items": ["Minimum: $5.00", "Suggested: $29.99", "You choose the price"]}]'::jsonb,
+  true,
+  false,
+  true,
+  true,
+  5,
+  true,
+  '[5, 15, 30]'
+);
 
 -- Insert sample order bumps
 -- Bump 1: Add Pro Toolkit to Premium Course for $29.99 (Huge discount!)
@@ -264,7 +327,7 @@ VALUES ('COURSE20', 'Course Special 20%', 'percentage', 20, (SELECT jsonb_build_
 INSERT INTO webhook_endpoints (id, url, events, description, is_active, secret)
 VALUES (
   '88888888-8888-4888-a888-888888888888',
-  'https://webhook.site/gateflow-test-endpoint',
+  'https://webhook.site/sellf-test-endpoint',
   ARRAY['purchase.completed', 'lead.captured'],
   'Zapier CRM Integration',
   true,
@@ -498,7 +561,7 @@ BEGIN
   (user3_id, pro_toolkit_id, NOW() - INTERVAL '3 days'),
   (user3_id, vip_masterclass_id, NOW());
 
-  -- Note: demo@gateflow.io is the admin (inserted first in seed, trigger assigns admin role).
+  -- Note: demo@sellf.app is the admin (inserted first in seed, trigger assigns admin role).
   -- john.doe@example.com, maria.schmidt@example.com, anna.kowalska@example.com are regular users.
 
 END $$;

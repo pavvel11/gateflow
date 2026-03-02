@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 
 interface PaginationProps {
   currentPage: number;
@@ -8,11 +9,13 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-const Pagination: React.FC<PaginationProps> = ({ 
-  currentPage, 
-  totalPages, 
-  onPageChange 
+const Pagination: React.FC<PaginationProps> = ({
+  currentPage,
+  totalPages,
+  onPageChange
 }) => {
+  const t = useTranslations('common');
+
   // Don't render pagination if there's only one page
   if (totalPages <= 1) return null;
 
@@ -39,11 +42,10 @@ const Pagination: React.FC<PaginationProps> = ({
   const pageNumbers = getPageNumbers();
 
   return (
-    <nav className="flex items-center justify-between py-3" aria-label="Pagination">
+    <nav className="flex items-center justify-between py-3" aria-label={t('pagination')}>
       <div className="hidden sm:block">
-        <p className="text-sm text-gray-700 dark:text-gray-300">
-          Showing page <span className="font-medium">{currentPage}</span> of{' '}
-          <span className="font-medium">{totalPages}</span>
+        <p className="text-sm text-sf-body">
+          {t('showingPage', { current: currentPage, total: totalPages })}
         </p>
       </div>
       
@@ -51,16 +53,16 @@ const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className={`relative inline-flex items-center rounded-md px-3 py-2 text-sm font-medium
+          className={`relative inline-flex items-center px-3 py-2 text-sm font-medium
             ${currentPage === 1 
-              ? 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500 cursor-not-allowed' 
-              : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+              ? 'bg-sf-raised text-sf-muted cursor-not-allowed'
+              : 'bg-sf-base text-sf-body hover:bg-sf-hover'
             }`}
         >
           <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Previous
+          {t('previous')}
         </button>
         
         <div className="hidden md:flex space-x-1">
@@ -69,13 +71,13 @@ const Pagination: React.FC<PaginationProps> = ({
             <>
               <button 
                 onClick={() => onPageChange(1)}
-                className={`relative inline-flex items-center rounded-md px-3 py-2 text-sm font-medium
-                  bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600`}
+                className={`relative inline-flex items-center px-3 py-2 text-sm font-medium
+                  bg-sf-base text-sf-body hover:bg-sf-hover`}
               >
                 1
               </button>
               {pageNumbers[0] > 2 && (
-                <span className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                <span className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-sf-muted">
                   ...
                 </span>
               )}
@@ -87,10 +89,10 @@ const Pagination: React.FC<PaginationProps> = ({
             <button
               key={page}
               onClick={() => onPageChange(page)}
-              className={`relative inline-flex items-center rounded-md px-3 py-2 text-sm font-medium
+              className={`relative inline-flex items-center px-3 py-2 text-sm font-medium
                 ${currentPage === page
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+                  ? 'bg-sf-accent-bg text-white'
+                  : 'bg-sf-base text-sf-body hover:bg-sf-hover'
                 }`}
             >
               {page}
@@ -101,14 +103,14 @@ const Pagination: React.FC<PaginationProps> = ({
           {pageNumbers[pageNumbers.length - 1] < totalPages && (
             <>
               {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
-                <span className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                <span className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-sf-muted">
                   ...
                 </span>
               )}
               <button 
                 onClick={() => onPageChange(totalPages)}
-                className={`relative inline-flex items-center rounded-md px-3 py-2 text-sm font-medium
-                  bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600`}
+                className={`relative inline-flex items-center px-3 py-2 text-sm font-medium
+                  bg-sf-base text-sf-body hover:bg-sf-hover`}
               >
                 {totalPages}
               </button>
@@ -119,13 +121,13 @@ const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className={`relative inline-flex items-center rounded-md px-3 py-2 text-sm font-medium
+          className={`relative inline-flex items-center px-3 py-2 text-sm font-medium
             ${currentPage === totalPages 
-              ? 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500 cursor-not-allowed' 
-              : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+              ? 'bg-sf-raised text-sf-muted cursor-not-allowed'
+              : 'bg-sf-base text-sf-body hover:bg-sf-hover'
             }`}
         >
-          Next
+          {t('next')}
           <svg className="h-4 w-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>

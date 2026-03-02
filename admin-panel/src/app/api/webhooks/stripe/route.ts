@@ -19,6 +19,8 @@ import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import { verifyWebhookSignature, getStripeServer } from '@/lib/stripe/server';
 import { WebhookService } from '@/lib/services/webhook-service';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limiting';
+import { trackServerSideConversion, generatePurchaseEventId } from '@/lib/tracking';
 
 // Supabase service client for database operations
 const getServiceClient = () => {
@@ -91,7 +93,7 @@ async function handleCheckoutSessionCompleted(
 
   if (error) {
     console.error('[Stripe Webhook] Payment processing error:', error);
-    return { processed: false, message: `Database error: ${error.message}` };
+    return { processed: false, message: 'Payment processing failed' };
   }
 
   if (!result?.success) {
@@ -117,6 +119,25 @@ async function handleCheckoutSessionCompleted(
         .single();
        bumpProductDetails = bump;
     }
+
+    // Server-side Purchase tracking via Facebook CAPI
+    // Uses deterministic event_id for dedup with client-side (PaymentStatusView)
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || '';
+    trackServerSideConversion({
+      eventName: 'Purchase',
+      eventId: generatePurchaseEventId(sessionId),
+      eventSourceUrl: productDetails?.slug ? `${baseUrl}/p/${productDetails.slug}` : baseUrl,
+      value: (session.amount_total || 0) / 100,
+      currency: (session.currency || 'usd').toUpperCase(),
+      items: [{
+        item_id: productId,
+        item_name: productDetails?.name || 'Unknown Product',
+        price: (session.amount_total || 0) / 100,
+        quantity: 1,
+      }],
+      orderId: sessionId,
+      userEmail: customerEmail,
+    }).catch(err => console.error('[Stripe Webhook] FB CAPI Purchase tracking error:', err));
 
     WebhookService.trigger('purchase.completed', {
       customer: {
@@ -204,7 +225,7 @@ async function handlePaymentIntentSucceeded(
 
   if (error) {
     console.error('[Stripe Webhook] Payment intent processing error:', error);
-    return { processed: false, message: `Database error: ${error.message}` };
+    return { processed: false, message: 'Payment processing failed' };
   }
 
   if (!result?.success) {
@@ -230,6 +251,24 @@ async function handlePaymentIntentSucceeded(
         .single();
        bumpProductDetails = bump;
     }
+
+    // Server-side Purchase tracking via Facebook CAPI
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || '';
+    trackServerSideConversion({
+      eventName: 'Purchase',
+      eventId: generatePurchaseEventId(paymentIntent.id),
+      eventSourceUrl: productDetails?.slug ? `${baseUrl}/p/${productDetails.slug}` : baseUrl,
+      value: (paymentIntent.amount || 0) / 100,
+      currency: (paymentIntent.currency || 'usd').toUpperCase(),
+      items: [{
+        item_id: productId,
+        item_name: productDetails?.name || 'Unknown Product',
+        price: (paymentIntent.amount || 0) / 100,
+        quantity: 1,
+      }],
+      orderId: paymentIntent.id,
+      userEmail: customerEmail,
+    }).catch(err => console.error('[Stripe Webhook] FB CAPI Purchase tracking error:', err));
 
     WebhookService.trigger('purchase.completed', {
       customer: {
@@ -346,7 +385,26 @@ async function processRefundForTransaction(
 
     if (revokeError) {
       console.error('[Stripe Webhook] Failed to revoke access after refund:', revokeError);
-      // Don't fail - refund is already processed
+    }
+  }
+
+  // Also clean up guest purchases (session-based access)
+  if (transaction.id) {
+    const { data: txFull } = await supabase
+      .from('payment_transactions')
+      .select('session_id, product_id')
+      .eq('id', transaction.id)
+      .single();
+
+    if (txFull?.session_id && txFull?.product_id) {
+      const { error: guestRevokeError } = await supabase
+        .from('guest_purchases')
+        .delete()
+        .eq('session_id', txFull.session_id);
+
+      if (guestRevokeError) {
+        console.error('[Stripe Webhook] Failed to revoke guest purchase after refund:', guestRevokeError);
+      }
     }
   }
 
@@ -430,6 +488,14 @@ async function handleChargeDisputeCreated(
  * Main webhook handler
  */
 export async function POST(request: NextRequest) {
+  // Rate limit to prevent webhook endpoint flooding
+  const { maxRequests, windowMinutes, actionType } = RATE_LIMITS.STRIPE_WEBHOOK;
+  const allowed = await checkRateLimit(actionType, maxRequests, windowMinutes);
+  if (!allowed) {
+    // 429 tells Stripe to retry with exponential backoff
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   let event: Stripe.Event;
 
   // SECURITY: Get raw body for signature verification
@@ -544,7 +610,7 @@ export async function POST(request: NextRequest) {
       event_id: event.id,
       event_type: event.type,
       processed: false,
-      error: message,
+      error: 'Internal processing error',
     });
   }
 }

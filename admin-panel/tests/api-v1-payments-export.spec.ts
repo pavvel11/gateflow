@@ -6,6 +6,7 @@
 
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { setAuthSession } from './helpers/admin-auth';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -20,18 +21,7 @@ const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 async function loginAsAdmin(page: any, email: string, password: string) {
   await page.goto('/login');
 
-  await page.evaluate(async ({ email, password, url, anonKey }: { email: string; password: string; url: string; anonKey: string }) => {
-    // @ts-ignore
-    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-    const sb = createBrowserClient(url, anonKey);
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-  }, {
-    email,
-    password,
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  });
+  await setAuthSession(page, email, password);
 
   await page.reload();
 }
@@ -199,10 +189,10 @@ test.describe('Payments Export API v1', () => {
 
       const lines = csv.split('\n');
       const dataLines = lines.slice(1).filter(line => line.trim());
+      // We created a refunded transaction in beforeAll, so there must be data
+      expect(dataLines.length).toBeGreaterThan(0);
       // All data lines should contain 'refunded'
-      if (dataLines.length > 0) {
-        expect(dataLines.every(line => line.includes('refunded'))).toBe(true);
-      }
+      expect(dataLines.every(line => line.includes('refunded'))).toBe(true);
     });
 
     test('should filter by date range', async ({ page }) => {

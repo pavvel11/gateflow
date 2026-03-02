@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { acceptAllCookies } from './helpers/consent';
+import { setAuthSession } from './helpers/admin-auth';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -46,16 +47,7 @@ test.describe('Protection Code (Generate Protection Code)', () => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email: adminEmail,
-      password: password,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
+    await setAuthSession(page, adminEmail, password);
 
     await page.waitForTimeout(1000);
   };
@@ -65,16 +57,7 @@ test.describe('Protection Code (Generate Protection Code)', () => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email,
-      password,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
+    await setAuthSession(page, email, password);
 
     await page.waitForTimeout(1000);
   };
@@ -340,12 +323,12 @@ test.describe('Protection Code (Generate Protection Code)', () => {
       const generatedCode = await codeBlock.textContent();
 
       // Should contain script tag with productSlug
-      expect(generatedCode).toContain('/api/gatekeeper');
+      expect(generatedCode).toContain('/api/sellf');
       expect(generatedCode).toContain(`productSlug=${paidProduct.slug}`);
       expect(generatedCode).toContain('<script');
     });
 
-    test('Element mode generates code with data-gatekeeper-product attribute', async ({ page }) => {
+    test('Element mode generates code with data-sellf-product attribute', async ({ page }) => {
       await loginAsAdmin(page);
       await page.goto('/dashboard/products');
       await page.waitForLoadState('domcontentloaded');
@@ -376,14 +359,14 @@ test.describe('Protection Code (Generate Protection Code)', () => {
       const codeBlock = page.locator('pre').first();
       const generatedCode = await codeBlock.textContent();
 
-      // Should contain data-gatekeeper-product attribute
-      expect(generatedCode).toContain('data-gatekeeper-product');
+      // Should contain data-sellf-product attribute
+      expect(generatedCode).toContain('data-sellf-product');
       expect(generatedCode).toContain(paidProduct.slug);
       // Should contain data-no-access fallback example
       expect(generatedCode).toContain('data-no-access');
     });
 
-    test('Embed mode generates gateflow-embed.js script', async ({ page }) => {
+    test('Embed mode generates sellf-embed.js script', async ({ page }) => {
       await loginAsAdmin(page);
       await page.goto('/dashboard/products');
       await page.waitForLoadState('domcontentloaded');
@@ -414,9 +397,9 @@ test.describe('Protection Code (Generate Protection Code)', () => {
       const codeBlock = page.locator('pre').first();
       const generatedCode = await codeBlock.textContent();
 
-      // Should contain gateflow-embed script reference
-      expect(generatedCode).toContain('gateflow-embed');
-      expect(generatedCode).toContain('data-gateflow-product');
+      // Should contain sellf-embed script reference
+      expect(generatedCode).toContain('sellf-embed');
+      expect(generatedCode).toContain('data-sellf-product');
       expect(generatedCode).toContain(freeProduct.slug);
     });
 
@@ -463,26 +446,26 @@ test.describe('Protection Code (Generate Protection Code)', () => {
 
       // The code should have been copied - main success criteria
       expect(clipboardText).toBeTruthy();
-      expect(clipboardText).toContain('/api/gatekeeper');
+      expect(clipboardText).toContain('/api/sellf');
       expect(clipboardText).toContain(paidProduct.slug);
     });
   });
 
   // ============================================================================
-  // API /api/gatekeeper Tests
+  // API /api/sellf Tests
   // ============================================================================
 
-  test.describe('/api/gatekeeper Endpoint', () => {
+  test.describe('/api/sellf Endpoint', () => {
 
     test('Returns JavaScript content type', async ({ request }) => {
-      const response = await request.get('/api/gatekeeper');
+      const response = await request.get('/api/sellf');
 
       expect(response.ok()).toBeTruthy();
       expect(response.headers()['content-type']).toContain('application/javascript');
     });
 
     test('Returns CORS headers', async ({ request }) => {
-      const response = await request.get('/api/gatekeeper', {
+      const response = await request.get('/api/sellf', {
         headers: {
           'Origin': 'https://example.com'
         }
@@ -495,17 +478,17 @@ test.describe('Protection Code (Generate Protection Code)', () => {
     });
 
     test('Script contains Supabase configuration', async ({ request }) => {
-      const response = await request.get('/api/gatekeeper');
+      const response = await request.get('/api/sellf');
       const script = await response.text();
 
       // Should contain Supabase URL and anon key initialization
       expect(script).toContain('supabase');
-      // Script should be minified or contain GateFlow class
+      // Script should be minified or contain Sellf class
       expect(script.length).toBeGreaterThan(1000);
     });
 
     test('Script with productSlug contains page protection config', async ({ request }) => {
-      const response = await request.get(`/api/gatekeeper?productSlug=${paidProduct.slug}`);
+      const response = await request.get(`/api/sellf?productSlug=${paidProduct.slug}`);
       const script = await response.text();
 
       expect(response.ok()).toBeTruthy();
@@ -514,7 +497,7 @@ test.describe('Protection Code (Generate Protection Code)', () => {
     });
 
     test('OPTIONS request returns CORS preflight headers', async ({ request }) => {
-      const response = await request.fetch('/api/gatekeeper', {
+      const response = await request.fetch('/api/sellf', {
         method: 'OPTIONS',
         headers: {
           'Origin': 'https://example.com',
@@ -529,7 +512,7 @@ test.describe('Protection Code (Generate Protection Code)', () => {
     });
 
     test('Script includes ETag and caching headers', async ({ request }) => {
-      const response = await request.get('/api/gatekeeper');
+      const response = await request.get('/api/sellf');
 
       expect(response.ok()).toBeTruthy();
       const headers = response.headers();
@@ -630,10 +613,8 @@ test.describe('Protection Code (Generate Protection Code)', () => {
 
       const body = await response.json();
 
-      // Should either reject or return no access
-      if (response.ok()) {
-        expect(body.hasAccess).toBeFalsy();
-      }
+      expect(response.ok()).toBe(true);
+      expect(body.hasAccess).toBeFalsy();
     });
 
     test('Returns 400 for missing product slug', async ({ request }) => {
@@ -793,7 +774,7 @@ test.describe('Protection Code (Generate Protection Code)', () => {
 
       // Validate code structure
       expect(generatedCode).toMatch(/<script[^>]*src=/);
-      expect(generatedCode).toContain('/api/gatekeeper');
+      expect(generatedCode).toContain('/api/sellf');
       expect(generatedCode).toContain(`productSlug=${paidProduct.slug}`);
       expect(generatedCode).toMatch(/<\/script>/);
 
@@ -833,8 +814,8 @@ test.describe('Protection Code (Generate Protection Code)', () => {
 
       // Validate structure
       expect(generatedCode).toContain('<script');
-      expect(generatedCode).toContain('/api/gatekeeper');
-      expect(generatedCode).toContain(`data-gatekeeper-product="${paidProduct.slug}"`);
+      expect(generatedCode).toContain('/api/sellf');
+      expect(generatedCode).toContain(`data-sellf-product="${paidProduct.slug}"`);
       expect(generatedCode).toContain('data-no-access');
       expect(generatedCode).toContain('</div>');
     });

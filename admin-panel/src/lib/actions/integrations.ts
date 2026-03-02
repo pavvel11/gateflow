@@ -24,19 +24,19 @@ export async function updateIntegrationsConfig(values: IntegrationsInput) {
   const validation = validateIntegrations(values)
   if (!validation.isValid) return { error: 'Invalid fields', details: validation.errors }
 
-  // Validate GateFlow license if provided
-  if (values.gateflow_license) {
+  // Validate Sellf license if provided
+  if (values.sellf_license) {
     // Get current site URL from environment
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL;
     const currentDomain = siteUrl ? extractDomainFromUrl(siteUrl) : null;
 
-    const licenseValidation = validateLicense(values.gateflow_license, currentDomain || undefined);
+    const licenseValidation = validateLicense(values.sellf_license, currentDomain || undefined);
 
     if (!licenseValidation.valid) {
       return {
         error: 'Invalid license',
         details: {
-          gateflow_license: [licenseValidation.error || 'License validation failed']
+          sellf_license: [licenseValidation.error || 'License validation failed']
         }
       };
     }

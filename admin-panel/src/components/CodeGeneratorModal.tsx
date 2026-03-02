@@ -26,17 +26,17 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
     const domain = window.location.origin;
 
     if (options.mode === 'page') {
-      return `<script src="${domain}/api/gatekeeper?productSlug=${product.slug}"></script><noscript><meta http-equiv="refresh" content="0;url=${domain}/p/${product.slug}"></noscript>`;
+      return `<script src="${domain}/api/sellf?productSlug=${product.slug}"></script><noscript><meta http-equiv="refresh" content="0;url=${domain}/p/${product.slug}"></noscript>`;
     } else if (options.mode === 'embed') {
       // Embed widget mode - only for free products
-      return `<!-- GateFlow Free Product Embed -->
-<div data-gateflow-product="${product.slug}"></div>
-<script src="${domain}/api/gateflow-embed"></script>
+      return `<!-- Sellf Free Product Embed -->
+<div data-sellf-product="${product.slug}"></div>
+<script src="${domain}/api/sellf-embed"></script>
 
 <!-- Optional: Listen for success events -->
 <!--
 <script>
-  document.addEventListener('gateflow:success', function(e) {
+  document.addEventListener('sellf:success', function(e) {
     console.log('Claimed:', e.detail.productSlug, 'Email:', e.detail.email);
     // Reload page to show protected content
     location.reload();
@@ -45,10 +45,10 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
 -->`;
     } else {
       return `<!-- Add this to your page head -->
-<script src="${domain}/api/gatekeeper"></script><noscript><meta http-equiv="refresh" content="0;url=${domain}/p/${product.slug}"></noscript>
+<script src="${domain}/api/sellf"></script><noscript><meta http-equiv="refresh" content="0;url=${domain}/p/${product.slug}"></noscript>
 
 <!-- Then mark elements you want to protect -->
-<div data-gatekeeper-product="${product.slug}">
+<div data-sellf-product="${product.slug}">
   <h2>Protected Content</h2>
   <p>This content is only visible to users with access to ${product.name}.</p>
 
@@ -80,62 +80,62 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} size="lg" closeOnBackdropClick={false}>
       <div className="p-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+        <h2 className="text-2xl font-bold text-sf-heading mb-6">
           {t('title')}
         </h2>
         
         <div className="space-y-6">
           {/* Product Info */}
-          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{t('product')}: {product.name}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">{t('slug')}: {product.slug}</p>
+          <div className="bg-sf-raised p-4">
+            <h3 className="font-semibold text-sf-heading mb-2">{t('product')}: {product.name}</h3>
+            <p className="text-sm text-sf-body">{t('slug')}: {product.slug}</p>
           </div>
 
           {/* Options */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-sf-body mb-2">
                 {t('protectionMode')}
               </label>
               <div className={`grid gap-4 ${product.price === 0 ? 'grid-cols-3' : 'grid-cols-2'}`}>
                 <button
                   onClick={() => setOptions({...options, mode: 'page'})}
-                  className={`p-3 rounded-lg border text-left ${
+                  className={`p-3 border text-left ${
                     options.mode === 'page'
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                      ? 'border-sf-accent bg-sf-accent-soft text-sf-accent'
+                      : 'border-sf-border hover:border-sf-accent/50'
                   }`}
                 >
                   <div className="font-medium">🌐 {t('pageMode')}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <div className="text-sm text-sf-body">
                     {t('pageDescription')}
                   </div>
                 </button>
                 <button
                   onClick={() => setOptions({...options, mode: 'element'})}
-                  className={`p-3 rounded-lg border text-left ${
+                  className={`p-3 border text-left ${
                     options.mode === 'element'
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                      ? 'border-sf-accent bg-sf-accent-soft text-sf-accent'
+                      : 'border-sf-border hover:border-sf-accent/50'
                   }`}
                 >
                   <div className="font-medium">🎯 {t('elementMode')}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <div className="text-sm text-sf-body">
                     {t('elementDescription')}
                   </div>
                 </button>
                 {product.price === 0 && (
                   <button
                     onClick={() => setOptions({...options, mode: 'embed'})}
-                    className={`p-3 rounded-lg border text-left ${
+                    className={`p-3 border text-left ${
                       options.mode === 'embed'
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                        ? 'border-sf-accent bg-sf-accent-soft text-sf-accent'
+                        : 'border-sf-border hover:border-sf-accent/50'
                     }`}
                   >
-                    <div className="font-medium">🎁 Embed Widget</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Embeddable form for landing pages
+                    <div className="font-medium">🎁 {t('embedMode')}</div>
+                    <div className="text-sm text-sf-body">
+                      {t('embedDescription')}
                     </div>
                   </button>
                 )}
@@ -146,31 +146,31 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
           {/* Generated Code */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="block text-sm font-medium text-sf-body">
                 {t('generatedCode')}
               </label>
               <button
                 onClick={handleCopy}
-                className={`px-3 py-1 text-sm rounded-lg transition ${
+                className={`px-3 py-1 text-sm transition ${
                   copiedCode === generatedCode
-                    ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400'
-                    : 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/40'
+                    ? 'bg-sf-success-soft text-sf-success'
+                    : 'bg-sf-accent-soft text-sf-accent hover:bg-sf-accent-soft/80'
                 }`}
               >
                 {copiedCode === generatedCode ? t('copied') : t('copyCode')}
               </button>
             </div>
-            <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg text-sm whitespace-pre-wrap break-all">
+            <pre className="bg-gray-900 text-gray-100 p-4 text-sm whitespace-pre-wrap break-all">
               <code>{generatedCode}</code>
             </pre>
           </div>
 
           {/* Instructions */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-            <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">
+          <div className="bg-sf-accent-soft p-4">
+            <h4 className="font-semibold text-sf-accent mb-2">
               📋 {t('instructions')}
             </h4>
-            <div className="text-sm text-blue-800 dark:text-blue-400 space-y-1">
+            <div className="text-sm text-sf-accent space-y-1">
               {options.mode === 'page' ? (
                 <>
                   <p dangerouslySetInnerHTML={{ __html: t('pageInstructions.step1') }} />
@@ -179,10 +179,10 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
                 </>
               ) : options.mode === 'embed' ? (
                 <>
-                  <p>1. Paste the code anywhere in your landing page HTML</p>
-                  <p>2. The widget will auto-initialize and display a beautiful signup form</p>
-                  <p>3. Users enter their email → receive magic link → get instant access</p>
-                  <p>4. Perfect for AI-generated landing pages or custom websites</p>
+                  <p>{t('embedInstructions.step1')}</p>
+                  <p>{t('embedInstructions.step2')}</p>
+                  <p>{t('embedInstructions.step3')}</p>
+                  <p>{t('embedInstructions.step4')}</p>
                 </>
               ) : (
                 <>
@@ -196,11 +196,11 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
           </div>
 
           {/* Additional Information */}
-          <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg">
-            <h4 className="font-semibold text-amber-900 dark:text-amber-300 mb-2">
+          <div className="bg-sf-warning-soft p-4">
+            <h4 className="font-semibold text-sf-warning mb-2">
               ℹ️ {t('importantInfo')}
             </h4>
-            <div className="text-sm text-amber-800 dark:text-amber-400 space-y-2">
+            <div className="text-sm text-sf-warning space-y-2">
               {options.mode === 'page' ? (
                 <>
                   <p>
@@ -213,16 +213,16 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
               ) : options.mode === 'embed' ? (
                 <>
                   <p>
-                    <strong>🎁 Free Products Only:</strong> This embed widget only works for free products (price = $0)
+                    <strong>🎁 {t('embedInfoFreeOnlyTitle')}:</strong> {t('embedInfoFreeOnly')}
                   </p>
                   <p>
-                    <strong>🔒 Security:</strong> Rate limiting (3 req/5min), Turnstile CAPTCHA, disposable email filter
+                    <strong>🔒 {t('embedInfoSecurityTitle')}:</strong> {t('embedInfoSecurity')}
                   </p>
                   <p>
-                    <strong>🎨 Customizable:</strong> Beautiful gradient design, auto-responsive, works on any website
+                    <strong>🎨 {t('embedInfoCustomizableTitle')}:</strong> {t('embedInfoCustomizable')}
                   </p>
                   <p>
-                    <strong>✉️ Magic Link:</strong> Users receive instant access link via email - no password needed
+                    <strong>✉️ {t('embedInfoMagicLinkTitle')}:</strong> {t('embedInfoMagicLink')}
                   </p>
                 </>
               ) : (
@@ -245,13 +245,13 @@ export default function CodeGeneratorModal({ isOpen, onClose, product }: CodeGen
         <div className="flex justify-end space-x-3 mt-6">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+            className="px-4 py-2 text-sf-body hover:bg-sf-hover transition"
           >
             {t('close')}
           </button>
           <button
             onClick={handleCopy}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+            className="px-4 py-2 bg-sf-accent-bg text-white hover:bg-sf-accent-hover transition"
           >
             {t('copyCode')}
           </button>

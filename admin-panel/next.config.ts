@@ -60,8 +60,6 @@ function loadStripeEnvConfig(): Record<string, string> {
     NEXT_PUBLIC_STRIPE_LABELS: getConfig('STRIPE_LABELS', 'STRIPE_LABELS', 'floating'),
     NEXT_PUBLIC_STRIPE_PAYMENT_METHODS: getConfig('STRIPE_PAYMENT_METHODS', 'STRIPE_PAYMENT_METHODS', 'blik,p24,card'),
     NEXT_PUBLIC_STRIPE_BLIK_SETUP_FUTURE_USAGE: getConfig('STRIPE_BLIK_SETUP_FUTURE_USAGE', 'STRIPE_BLIK_SETUP_FUTURE_USAGE', 'off_session'),
-    NEXT_PUBLIC_STRIPE_SESSION_UI_MODE: getConfig('STRIPE_SESSION_UI_MODE', 'STRIPE_SESSION_UI_MODE', 'embedded'),
-    NEXT_PUBLIC_STRIPE_SESSION_PAYMENT_MODE: getConfig('STRIPE_SESSION_PAYMENT_MODE', 'STRIPE_SESSION_PAYMENT_MODE', 'payment'),
     NEXT_PUBLIC_STRIPE_SESSION_EXPIRES_HOURS: getConfig('STRIPE_SESSION_EXPIRES_HOURS', 'STRIPE_SESSION_EXPIRES_HOURS', '24'),
     NEXT_PUBLIC_STRIPE_SESSION_BILLING_ADDRESS_COLLECTION: getConfig('STRIPE_SESSION_BILLING_ADDRESS_COLLECTION', 'STRIPE_SESSION_BILLING_ADDRESS_COLLECTION', 'auto'),
     NEXT_PUBLIC_STRIPE_SESSION_AUTOMATIC_TAX_ENABLED: getConfig('STRIPE_SESSION_AUTOMATIC_TAX_ENABLED', 'STRIPE_SESSION_AUTOMATIC_TAX_ENABLED', 'true'),
@@ -100,7 +98,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  env: loadStripeEnvConfig(), // Inject Stripe config as environment variables
+  env: {
+    ...loadStripeEnvConfig(),
+    NEXT_PUBLIC_APP_VERSION: JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8')).version,
+  },
 
   // Security headers
   async headers() {
@@ -129,8 +130,21 @@ const nextConfig: NextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
-          // HSTS is now handled by middleware.ts for runtime control
-          // Set DISABLE_HSTS=true to disable (e.g., when behind reverse proxy)
+          // HSTS is handled by proxy.ts with DISABLE_HSTS env var support
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' js.stripe.com challenges.cloudflare.com cdn.kiprotect.com",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: blob: i.ibb.co *.stripe.com",
+              "font-src 'self' data:",
+              "frame-src js.stripe.com challenges.cloudflare.com *.youtube.com player.vimeo.com iframe.mediadelivery.net *.loom.com fast.wistia.net *.dailymotion.com player.twitch.tv",
+              "connect-src 'self' *.supabase.co *.stripe.com challenges.cloudflare.com http://127.0.0.1:* http://localhost:* ws://127.0.0.1:* ws://localhost:*",
+              "object-src 'none'",
+              "base-uri 'self'",
+            ].join('; '),
+          },
         ],
       },
       {

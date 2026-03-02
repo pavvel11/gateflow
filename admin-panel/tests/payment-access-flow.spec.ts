@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
+import { setAuthSession } from './helpers/admin-auth';
 
 // Enforce single worker to avoid race conditions
 test.describe.configure({ mode: 'serial' });
@@ -41,17 +42,7 @@ async function signInUser(page: any, email: string, password: string) {
   await page.goto('/');
   await page.waitForLoadState('domcontentloaded');
 
-  await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-    const supabase = createBrowserClient(supabaseUrl, anonKey);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-  }, {
-    email,
-    password,
-    supabaseUrl: SUPABASE_URL,
-    anonKey: ANON_KEY,
-  });
+  await setAuthSession(page, email, password);
 
   await page.waitForTimeout(1000);
 }
@@ -796,7 +787,7 @@ test.describe('Payment Flow - Failed Payments', () => {
 
     // Should show error message
     const bodyText = await page.locator('body').textContent();
-    expect(bodyText?.toLowerCase()).toContain('failed' || 'error' || 'declined');
+    expect(bodyText?.toLowerCase()).toMatch(/failed|error|declined/);
   });
 
   test('should NOT grant access when payment fails', async ({ page }) => {
@@ -874,7 +865,7 @@ test.describe('Payment Flow - Failed Payments', () => {
 
     // Should show processing message
     const bodyText = await page.locator('body').textContent();
-    expect(bodyText?.toLowerCase()).toContain('processing' || 'pending');
+    expect(bodyText?.toLowerCase()).toMatch(/processing|pending/);
   });
 
   test('should handle expired payment session', async ({ page }) => {

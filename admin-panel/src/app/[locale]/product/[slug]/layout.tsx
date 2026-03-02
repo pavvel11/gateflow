@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 export default function ProductClientRedirect() {
+  const t = useTranslations('productView');
   const router = useRouter();
 
   useEffect(() => {
@@ -17,10 +19,10 @@ export default function ProductClientRedirect() {
 
   // Return a loading indicator without wrapping in additional HTML elements
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-900">
+    <div className="flex justify-center items-center min-h-screen bg-sf-deep">
       <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-        <p className="text-white">Redirecting to product page...</p>
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-sf-accent mb-4"></div>
+        <p className="text-sf-heading">{t('redirectingToProductPage')}</p>
       </div>
     </div>
   );

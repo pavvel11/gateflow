@@ -202,7 +202,7 @@ export default function StatsOverview() {
         </svg>
       ),
       color: 'from-green-500 to-green-600',
-      bgColor: 'from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20',
+      bgColor: 'bg-sf-success-soft',
       change: revenueStats?.todayRevenue ? `+${formatMultiCurrency(revenueStats.todayRevenue, convertedRevenue?.today)} today` : null,
       changeType: 'positive'
     },
@@ -216,7 +216,7 @@ export default function StatsOverview() {
         </svg>
       ),
       color: 'from-blue-500 to-blue-600',
-      bgColor: 'from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20',
+      bgColor: 'bg-sf-accent-soft',
       change: revenueStats?.lastOrderAt ? `Last: ${timeAgo(revenueStats.lastOrderAt)}` : null,
     },
     {
@@ -228,8 +228,8 @@ export default function StatsOverview() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
         </svg>
       ),
-      color: 'from-purple-500 to-purple-600',
-      bgColor: 'from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20',
+      color: 'bg-sf-accent-bg',
+      bgColor: 'bg-sf-accent-soft',
     },
     {
       id: 'active-users',
@@ -241,18 +241,18 @@ export default function StatsOverview() {
         </svg>
       ),
       color: 'from-yellow-500 to-yellow-600',
-      bgColor: 'from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20',
+      bgColor: 'bg-sf-warning-soft',
     },
   ];
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-2 border-sf-border-medium">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div key={i} className={`p-6 sm:p-8 ${i < 3 ? 'lg:border-r border-sf-border-subtle' : ''} ${i % 2 === 1 ? 'bg-sf-row-alt' : 'bg-sf-base'} border-b-[3px] border-sf-border-medium`}>
             <div className="animate-pulse">
-              <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4 mb-4"></div>
-              <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
+              <div className="h-3 bg-sf-raised w-3/4 mb-4"></div>
+              <div className="h-12 bg-sf-raised w-1/2"></div>
             </div>
           </div>
         ))}
@@ -263,41 +263,39 @@ export default function StatsOverview() {
   return (
     <>
       {newOrder && (
-        <NewOrderNotification 
+        <NewOrderNotification
           key={newOrder.id}
-          amount={newOrder.amount} 
-          currency={newOrder.currency} 
-          onClose={() => setNewOrder(null)} 
+          amount={newOrder.amount}
+          currency={newOrder.currency}
+          onClose={() => setNewOrder(null)}
         />
       )}
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statItems.map((item) => (
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-2 border-sf-border-medium">
+        {statItems.map((item, index) => (
           <div
             key={item.id}
             data-testid={`stat-card-${item.id}`}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow relative overflow-hidden"
+            className={`p-6 sm:p-8 ${
+              index < statItems.length - 1 ? 'lg:border-r border-sf-border-subtle' : ''
+            } ${
+              index % 2 === 1 ? 'bg-sf-row-alt' : 'bg-sf-base'
+            } border-b-[3px] border-sf-border-medium`}
           >
-            <div className="flex items-center justify-between">
-              <div className="relative z-10">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  {item.name}
-                </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                  {item.value}
-                </p>
-                {item.change && (
-                   <p className={`text-xs font-medium mt-1 ${item.changeType === 'positive' ? 'text-green-600 dark:text-green-400' : 'text-gray-500'}`}>
-                     {item.change}
-                   </p>
-                )}
-              </div>
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${item.bgColor} flex items-center justify-center relative z-10`}>
-                <div className={`text-white bg-gradient-to-r ${item.color} rounded-lg p-2`}>
-                  {item.icon}
-                </div>
-              </div>
-            </div>
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-sf-muted mb-2">
+              {item.name}
+            </p>
+            <p
+              className="text-[52px] font-[800] text-sf-heading tracking-[-0.04em] leading-none motion-safe:animate-[stat-slide-up_0.6s_ease-out_both]"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              {item.value}
+            </p>
+            {item.change && (
+              <p className={`text-xs font-medium mt-2 ${item.changeType === 'positive' ? 'text-sf-success' : 'text-sf-muted'}`}>
+                {item.change}
+              </p>
+            )}
           </div>
         ))}
       </div>

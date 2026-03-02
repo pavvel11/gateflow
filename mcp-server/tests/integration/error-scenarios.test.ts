@@ -77,7 +77,7 @@ describe('Integration: Error Scenarios', () => {
     // Initialize API client
     initApiClient({
       baseUrl: `http://localhost:${mockServerPort}`,
-      apiKey: 'gf_test_error_scenarios',
+      apiKey: 'sf_test_error_scenarios',
     });
   });
 
@@ -93,7 +93,7 @@ describe('Integration: Error Scenarios', () => {
 
     // Create fresh MCP server and client
     mcpServer = new McpServer({
-      name: 'gateflow-error-test',
+      name: 'sellf-error-test',
       version: '1.0.0',
     });
 

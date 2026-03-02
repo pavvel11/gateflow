@@ -39,31 +39,33 @@ export default function DateRangeFilter({ startDate, endDate, onChange }: DateRa
 
   return (
     <div className="flex items-center gap-2">
-      <div className="flex items-center gap-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm">
-        <CalendarIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+      <div className="flex items-center gap-1 px-3 py-2 bg-sf-base border-2 border-sf-border-subtle">
+        <CalendarIcon className="w-4 h-4 text-sf-muted" />
         <input
           type="date"
           value={formatDateForInput(startDate)}
           onChange={handleStartChange}
           max={formatDateForInput(endDate || new Date())}
-          className="bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-300 w-[130px]"
+          aria-label={t('startDate', { defaultValue: 'Start date' })}
+          className="bg-transparent border-none outline-none text-sm text-sf-body w-[130px]"
         />
-        <span className="text-gray-500 dark:text-gray-400 text-sm">-</span>
+        <span className="text-sf-muted text-sm">-</span>
         <input
           type="date"
           value={formatDateForInput(endDate)}
           onChange={handleEndChange}
           min={formatDateForInput(startDate)}
           max={formatDateForInput(new Date())}
-          className="bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-300 w-[130px]"
+          aria-label={t('endDate', { defaultValue: 'End date' })}
+          className="bg-transparent border-none outline-none text-sm text-sf-body w-[130px]"
         />
       </div>
       {(startDate || endDate) && (
         <button
           onClick={handleClear}
-          className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          className="px-3 py-2 text-sm text-sf-muted hover:text-sf-body"
         >
-          Clear
+          {t('clear')}
         </button>
       )}
     </div>

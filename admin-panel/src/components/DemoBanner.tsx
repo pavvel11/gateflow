@@ -48,29 +48,26 @@ export default function DemoBanner() {
   }
 
   return (
-    <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-200">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <p>
-            <span className="font-medium">{timeLeft ? t('bannerWithCountdown', { time: timeLeft }) : t('banner')}</span>
+    <div className="mb-4 bg-sf-warning px-4 sm:px-8 py-3 text-sm text-sf-inverse font-semibold">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <svg className="w-[18px] h-[18px] flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" strokeWidth={2.5} />
+            <line x1="12" y1="17" x2="12.01" y2="17" strokeWidth={2.5} />
+          </svg>
+          <span>
+            {timeLeft ? t('bannerWithCountdown', { time: timeLeft }) : t('banner')}
             {' '}
-            <span className="text-amber-700 dark:text-amber-300">{t('readonlyNotice')}</span>
-          </p>
-          <p className="mt-1.5 flex flex-wrap gap-2">
-            <code className="rounded bg-amber-100 px-1.5 py-0.5 font-mono text-xs dark:bg-amber-900/50">
-              {t('credentials')}
-            </code>
-            <code className="rounded bg-amber-100 px-1.5 py-0.5 font-mono text-xs dark:bg-amber-900/50">
-              {t('testCard')}
-            </code>
-          </p>
+            {t('readonlyNotice')}
+          </span>
         </div>
         <button
           onClick={handleDismiss}
-          className="shrink-0 text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200"
+          className="shrink-0 text-sf-inverse/70 hover:text-sf-inverse transition-opacity"
           aria-label={t('dismiss')}
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>

@@ -15,7 +15,7 @@ import {
   API_SCOPES,
 } from '@/lib/api';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { validateProductId } from '@/lib/validations/product';
+import { validateUUID } from '@/lib/validations/product';
 import { getStripeServer } from '@/lib/stripe/server';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limiting';
 import Stripe from 'stripe';
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
 
     // Validate ID format
-    const idValidation = validateProductId(id);
+    const idValidation = validateUUID(id);
     if (!idValidation.isValid) {
       return apiError(request, 'INVALID_INPUT', 'Invalid payment ID format');
     }
@@ -68,8 +68,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Parse request body
-    let body: { amount?: number; reason?: string } = {};
+    // Parse request body (empty body = full refund)
+    let body: { amount?: unknown; reason?: string } = {};
     try {
       body = await request.json();
     } catch {
@@ -77,6 +77,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     const { amount, reason } = body;
+
+    // Validate amount type if provided
+    if (amount !== undefined && amount !== null) {
+      if (typeof amount !== 'number' || !Number.isFinite(amount)) {
+        return apiError(request, 'INVALID_INPUT', 'Refund amount must be a number');
+      }
+    }
 
     // Validate reason if provided
     const validReasons = ['duplicate', 'fraudulent', 'requested_by_customer'];
@@ -199,6 +206,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Revoke product access after successful refund
+    let accessRevocationFailed = false;
+
     if (payment.user_id && payment.product_id) {
       const { error: revokeError } = await adminClient
         .from('user_product_access')
@@ -207,7 +216,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         .eq('product_id', payment.product_id);
 
       if (revokeError) {
-        console.error('Warning: Failed to revoke product access after refund:', revokeError);
+        console.error('[refund] Failed to revoke product access:', revokeError);
+        accessRevocationFailed = true;
       }
     }
 
@@ -219,7 +229,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         .eq('session_id', payment.session_id);
 
       if (guestRevokeError) {
-        console.error('Warning: Failed to revoke guest purchase after refund:', guestRevokeError);
+        console.error('[refund] Failed to revoke guest purchase:', guestRevokeError);
+        accessRevocationFailed = true;
       }
     }
 
@@ -234,6 +245,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         amount: stripeRefund.amount,
         reason: reason || null,
         via_api: true,
+        access_revocation_failed: accessRevocationFailed,
       },
       created_at: new Date().toISOString(),
     });
@@ -251,6 +263,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         payment_status: newStatus,
         total_refunded: totalRefunded,
         created_at: new Date().toISOString(),
+        ...(accessRevocationFailed && {
+          warning: 'Refund processed but access revocation failed. Remove user access manually.',
+        }),
       }),
       request
     );
@@ -261,7 +276,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return apiError(
         request,
         'INVALID_INPUT',
-        `Stripe error: ${error.message}`
+        'Refund processing failed'
       );
     }
     return handleApiError(error, request);

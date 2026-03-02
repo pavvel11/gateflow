@@ -28,6 +28,14 @@ export function encodeCursor(data: CursorData): string {
   return Buffer.from(JSON.stringify(data)).toString('base64url');
 }
 
+// Allowed field names for cursor ordering (prevent filter injection via field name)
+const ALLOWED_CURSOR_FIELDS = new Set([
+  'created_at', 'updated_at', 'id', 'name', 'email', 'description',
+]);
+
+// PostgREST filter metacharacters — commas and parens can inject filter conditions
+const POSTGREST_INJECTION_REGEX = /[(),]/;
+
 /**
  * Decode cursor string to data
  */
@@ -43,6 +51,16 @@ export function decodeCursor(cursor: string): CursorData | null {
       typeof data.id !== 'string' ||
       (data.direction !== 'asc' && data.direction !== 'desc')
     ) {
+      return null;
+    }
+
+    // Validate field name against allowlist (defense-in-depth against filter injection)
+    if (!ALLOWED_CURSOR_FIELDS.has(data.field)) {
+      return null;
+    }
+
+    // Reject id or value containing PostgREST filter metacharacters
+    if (POSTGREST_INJECTION_REGEX.test(data.id) || POSTGREST_INJECTION_REGEX.test(data.value)) {
       return null;
     }
 

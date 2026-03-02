@@ -13,6 +13,7 @@ import { useSearchParams } from 'next/navigation';
 
 export default function RevenueGoal() {
   const t = useTranslations('admin.dashboard');
+  const tCommon = useTranslations('common');
   const searchParams = useSearchParams();
   const productId = searchParams.get('productId') || undefined;
   const { addRefreshListener, removeRefreshListener } = useRealtime();
@@ -208,97 +209,104 @@ export default function RevenueGoal() {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 h-[140px] animate-pulse">
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
-        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+      <div className="border-[3px] border-sf-border-medium h-[140px] animate-pulse p-6">
+        <div className="h-4 bg-sf-raised w-1/3 mb-4"></div>
+        <div className="h-8 bg-sf-raised w-full"></div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
-        <h3 className="font-semibold text-gray-900 dark:text-white text-lg">
-          {t('revenueGoal', { defaultValue: 'Revenue Goal' })}
-        </h3>
-        {isEditing ? (
-          <div className="flex flex-col items-end space-y-1">
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center space-x-1">
-                <input
-                  type="text"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder={hideValues ? '****' : (goal / 100).toString()}
-                  className="w-24 px-2 py-1 text-sm border rounded dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                  autoFocus
-                />
-                <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
-                  {goalCurrency}
-                </span>
-              </div>
-              <button
-                onClick={handleSave}
-                className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
-              >
-                Save
-              </button>
-              <button
-                onClick={handleResetGoal}
-                className="text-xs text-gray-500 dark:text-gray-400 hover:underline"
-                title="Reset progress (start counting from now)"
-              >
-                Reset
-              </button>
-            </div>
-            <span className="text-[10px] text-gray-500 dark:text-gray-500">
-              Goal is saved in shop's default currency
-            </span>
-          </div>
-        ) : (
-          <div className="flex items-center space-x-2">
-            <button 
-              onClick={() => {
-                setInputValue((goal / 100).toString());
-                setIsEditing(true);
-              }}
-              className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-            >
-              {t('setGoal', { defaultValue: 'Set Goal' })}
-            </button>
-             {goalStartDate && (
-              <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
-                ({t('stats.since', { date: new Date(goalStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) })})
-              </span>
-            )}
-          </div>
-        )}
+    <div className="border-[3px] border-sf-border-medium flex">
+      {/* Left panel - percentage */}
+      <div className="flex flex-col items-center justify-center px-6 py-6 border-r-[3px] border-sf-border-medium min-w-[120px]">
+        <span className={`text-[72px] font-[800] tracking-[-0.04em] leading-none ${
+          rawPercentage >= 100 ? 'text-sf-success' : 'text-sf-accent'
+        }`}>
+          {hideValues ? '**' : rawPercentage}
+        </span>
+        <span className="text-xs font-bold uppercase tracking-[0.08em] text-sf-muted mt-1">
+          %
+        </span>
       </div>
 
-      <div className="relative pt-1">
-        <div className="flex mb-2 items-center justify-between">
-          <div>
-            <span className={`text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full ${
-              rawPercentage >= 100 
-                ? 'text-green-600 bg-green-200 dark:bg-green-900 dark:text-green-200' 
-                : 'text-blue-600 bg-blue-200 dark:bg-blue-900 dark:text-blue-200'
-            }`}>
-              {hideValues ? '***%' : `${rawPercentage}%`}
-            </span>
-          </div>
-          <div className="text-right">
-            <span className="text-xs font-semibold inline-block text-blue-600 dark:text-blue-400">
-              {formatCurrency(currentRevenue)} / {formatCurrency(displayGoal)}
-            </span>
-          </div>
+      {/* Right panel - details */}
+      <div className="flex-1 px-6 py-5 flex flex-col justify-between">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-xs font-bold uppercase tracking-[0.08em] text-sf-muted">
+            {t('revenueGoal', { defaultValue: 'Revenue Goal' })}
+          </h3>
+          {isEditing ? (
+            <div className="flex flex-col items-end space-y-1">
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1">
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    placeholder={hideValues ? '****' : (goal / 100).toString()}
+                    className="w-24 px-2 py-1 text-sm border-2 border-sf-border-medium bg-sf-base text-sf-heading"
+                    autoFocus
+                  />
+                  <span className="text-xs font-bold text-sf-body">
+                    {goalCurrency}
+                  </span>
+                </div>
+                <button
+                  onClick={handleSave}
+                  className="text-xs bg-sf-accent-bg text-white px-2 py-1 hover:opacity-90"
+                >
+                  {tCommon('save')}
+                </button>
+                <button
+                  onClick={handleResetGoal}
+                  className="text-xs text-sf-muted hover:underline"
+                  title={t('resetProgressTitle')}
+                >
+                  {tCommon('reset')}
+                </button>
+              </div>
+              <span className="text-[10px] text-sf-muted">
+                {t('goalCurrencyNote')}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  setInputValue((goal / 100).toString());
+                  setIsEditing(true);
+                }}
+                className="text-xs text-sf-accent hover:underline font-medium"
+              >
+                {t('setGoal', { defaultValue: 'Set Goal' })}
+              </button>
+              {goalStartDate && (
+                <span className="text-xs text-sf-muted ml-2">
+                  ({t('stats.since', { date: new Date(goalStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) })})
+                </span>
+              )}
+            </div>
+          )}
         </div>
-        <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-200 dark:bg-gray-700">
-          <div 
-            style={{ width: `${visualPercentage}%` }} 
-            className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center transition-all duration-500 ${
-              rawPercentage >= 100 ? 'bg-green-500' : 'bg-blue-500'
-            }`}
-          ></div>
+
+        <div className="mt-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-semibold text-sf-heading">
+              {formatCurrency(currentRevenue)}
+            </span>
+            <span className="text-sm text-sf-muted">
+              / {formatCurrency(displayGoal)}
+            </span>
+          </div>
+          <div className="overflow-hidden h-3 border border-sf-border-medium bg-sf-raised">
+            <div
+              style={{ width: `${visualPercentage}%` }}
+              className={`h-full motion-safe:animate-[progress-fill_0.8s_ease-out_0.3s_both] ${
+                rawPercentage >= 100 ? 'bg-sf-success' : 'bg-sf-accent-bg'
+              }`}
+            ></div>
+          </div>
         </div>
       </div>
     </div>

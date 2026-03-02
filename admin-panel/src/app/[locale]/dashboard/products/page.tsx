@@ -2,7 +2,7 @@ import ProductsPageContent from '@/components/ProductsPageContent';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Products - GateFlow Admin',
+  title: 'Products - Sellf Admin',
 };
 
 export default function ProductsPage() {

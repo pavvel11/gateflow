@@ -114,26 +114,26 @@ export default function WaitlistForm({ product, unavailableReason }: WaitlistFor
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
-      <div className="max-w-4xl mx-auto p-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl">
+    <div className="flex justify-center items-center min-h-screen bg-sf-deep">
+      <div className="max-w-4xl mx-auto p-8 bg-sf-raised/80 backdrop-blur-md border border-sf-border rounded-2xl">
         <div className="flex">
           {/* Product Info */}
-          <div className="w-1/2 pr-8 border-r border-white/10">
+          <div className="w-1/2 pr-8 border-r border-sf-border">
             <div className="flex items-center mb-6">
               <div className="text-5xl mr-6">{product.icon}</div>
               <div>
-                <h1 className="text-2xl font-bold text-white">{product.name}</h1>
-                <p className="text-gray-300">{product.description}</p>
+                <h1 className="text-2xl font-bold text-sf-heading">{product.name}</h1>
+                <p className="text-sf-body">{product.description}</p>
               </div>
             </div>
 
             {/* Unavailable badge */}
-            <div className="bg-amber-500/20 border border-amber-500/30 rounded-lg px-4 py-3">
+            <div className="bg-sf-warning-soft border border-sf-warning/30 rounded-lg px-4 py-3">
               <div className="flex items-center">
-                <svg className="h-5 w-5 text-amber-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="h-5 w-5 text-sf-warning mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
-                <span className="text-amber-200 text-sm font-medium">
+                <span className="text-sf-warning text-sm font-medium">
                   {getUnavailableMessage()}
                 </span>
               </div>
@@ -142,19 +142,19 @@ export default function WaitlistForm({ product, unavailableReason }: WaitlistFor
 
           {/* Waitlist Form */}
           <div className="w-1/2 pl-8">
-            <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 border border-white/20">
-              <h2 className="text-xl font-semibold text-white mb-2">
+            <div className="bg-sf-raised backdrop-blur-md rounded-2xl p-6 border border-sf-border">
+              <h2 className="text-xl font-semibold text-sf-heading mb-2">
                 {t('joinWaitlist')}
               </h2>
-              <p className="text-gray-300 text-sm mb-4">
+              <p className="text-sf-body text-sm mb-4">
                 {t('waitlistDescription')}
               </p>
 
               {message.type && (
                 <div className={`mb-4 p-3 rounded-lg text-sm ${
-                  message.type === 'success' ? 'bg-green-800/30 border border-green-500/30 text-green-200' :
-                  message.type === 'error' ? 'bg-red-800/30 border border-red-500/30 text-red-200' :
-                  'bg-blue-800/30 border border-blue-500/30 text-blue-200'
+                  message.type === 'success' ? 'bg-sf-success-soft border border-sf-success/30 text-sf-success' :
+                  message.type === 'error' ? 'bg-sf-danger-soft border border-sf-danger/30 text-sf-danger' :
+                  'bg-sf-accent-soft border border-sf-accent/30 text-sf-accent'
                 }`}>
                   {message.text}
                 </div>
@@ -162,7 +162,7 @@ export default function WaitlistForm({ product, unavailableReason }: WaitlistFor
 
               <form onSubmit={handleWaitlistSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-sf-body mb-2">
                     {t('emailAddress')}
                   </label>
                   <input
@@ -170,7 +170,7 @@ export default function WaitlistForm({ product, unavailableReason }: WaitlistFor
                     id="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full p-3 border border-white/20 rounded-lg bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full p-3 border border-sf-border rounded-lg bg-sf-input text-sf-heading placeholder-sf-muted focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent"
                     placeholder={t('enterEmailPlaceholder')}
                     required
                     disabled={loading}
@@ -194,7 +194,7 @@ export default function WaitlistForm({ product, unavailableReason }: WaitlistFor
                     !termsAccepted ||
                     (process.env.NODE_ENV === 'production' && !captchaToken)
                   }
-                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  className="w-full bg-sf-accent-bg hover:bg-sf-accent-hover disabled:bg-sf-muted/30 disabled:cursor-not-allowed text-sf-heading font-semibold py-3 px-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-sf-accent focus:ring-offset-2 active:scale-[0.98]"
                 >
                   {loading || captchaLoading ? (
                     <div className="flex items-center justify-center">

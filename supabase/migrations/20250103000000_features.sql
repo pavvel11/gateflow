@@ -1,5 +1,5 @@
 -- =====================================================
--- GateFlow - Features & Extensions
+-- Sellf - Features & Extensions
 -- =====================================================
 -- Description: Advanced features including video tracking, order bumps,
 --              coupons, webhooks, analytics, revenue goals, and configurations
@@ -244,8 +244,8 @@ CREATE TABLE IF NOT EXISTS public.integrations_config (
   cookie_consent_enabled BOOLEAN DEFAULT true,
   consent_logging_enabled BOOLEAN DEFAULT false,
 
-  -- GateFlow License (removes watermark from GateKeeper script)
-  gateflow_license TEXT,
+  -- Sellf License (removes watermark from GateKeeper script)
+  sellf_license TEXT,
 
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
@@ -375,6 +375,15 @@ CREATE TABLE IF NOT EXISTS public.shop_config (
 
   -- Checkout appearance
   checkout_theme TEXT DEFAULT 'system' CHECK (checkout_theme IN ('system', 'light', 'dark')),
+
+  -- Stripe Tax toggles (NULL = use env var)
+  automatic_tax_enabled BOOLEAN DEFAULT NULL,
+  tax_id_collection_enabled BOOLEAN DEFAULT NULL,
+
+  -- Checkout session settings (NULL = use env var)
+  checkout_billing_address TEXT DEFAULT NULL CHECK (checkout_billing_address IN ('auto', 'required')),
+  checkout_expires_hours INTEGER DEFAULT NULL CHECK (checkout_expires_hours BETWEEN 1 AND 168),
+  checkout_collect_terms BOOLEAN DEFAULT NULL,
 
   -- Legal Documents
   terms_of_service_url TEXT,

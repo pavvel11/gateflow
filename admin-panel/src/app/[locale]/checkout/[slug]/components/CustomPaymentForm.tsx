@@ -12,6 +12,7 @@ import { validateTaxId, isPolishNIP, normalizeNIP } from '@/lib/validation/nip';
 import { useTracking } from '@/hooks/useTracking';
 import { usePricing } from '@/hooks/usePricing';
 import DemoCheckoutNotice from '@/components/DemoCheckoutNotice';
+import type { TaxMode } from '@/lib/actions/shop-config';
 
 interface AppliedCoupon {
   code: string;
@@ -33,6 +34,7 @@ interface CustomPaymentFormProps {
   clientSecret?: string; // Payment Intent client secret for metadata updates
   paymentMethodOrder?: string[]; // Custom payment method ordering from config
   expressCheckoutConfig?: ExpressCheckoutConfig; // Express Checkout visibility config
+  taxMode?: TaxMode;
 }
 
 export default function CustomPaymentForm({
@@ -47,7 +49,8 @@ export default function CustomPaymentForm({
   customAmountError,
   clientSecret,
   paymentMethodOrder,
-  expressCheckoutConfig
+  expressCheckoutConfig,
+  taxMode
 }: CustomPaymentFormProps) {
   const t = useTranslations('checkout');
   const stripe = useStripe();
@@ -222,21 +225,21 @@ export default function CustomPaymentForm({
         } else {
           // GUS API returned error
           if (result.code === 'RATE_LIMIT_EXCEEDED') {
-            setGusError('Zbyt wiele zapytań. Poczekaj chwilę i spróbuj ponownie.');
+            setGusError(t('gusRateLimitExceeded'));
           } else if (result.code === 'NOT_FOUND') {
-            setGusError('Nie znaleziono firmy w bazie GUS');
+            setGusError(t('gusNotFound'));
           } else if (result.code === 'NOT_CONFIGURED') {
             // Silent fail - GUS not configured, user can enter manually
             setGusError(null);
           } else if (result.code === 'INVALID_ORIGIN') {
-            setGusError('Błąd bezpieczeństwa. Odśwież stronę i spróbuj ponownie.');
+            setGusError(t('gusSecurityError'));
           } else {
-            setGusError('Nie udało się pobrać danych z GUS. Wprowadź dane ręcznie.');
+            setGusError(t('gusFetchError'));
           }
         }
       } catch (error) {
         console.error('GUS fetch error:', error);
-        setGusError('Nie udało się pobrać danych z GUS. Wprowadź dane ręcznie.');
+        setGusError(t('gusFetchError'));
       } finally {
         setIsLoadingGUS(false);
       }
@@ -280,7 +283,7 @@ export default function CustomPaymentForm({
     if (nip && nip.trim().length > 0) {
       const validation = validateTaxId(nip, true);
       if (!validation.isValid) {
-        setErrorMessage(validation.error || 'Invalid tax ID format');
+        setErrorMessage(validation.error || t('invalidTaxIdFormat'));
         return;
       }
     }
@@ -295,7 +298,7 @@ export default function CustomPaymentForm({
         // Submit the form to validate payment method
         const { error: submitError } = await elements.submit();
         if (submitError) {
-          setErrorMessage(submitError.message || 'Failed to prepare payment');
+          setErrorMessage(submitError.message || t('failedToPreparePayment'));
           setIsProcessing(false);
           return;
         }
@@ -335,7 +338,7 @@ export default function CustomPaymentForm({
       if (bumpSelected && bumpProduct) {
         items.push({
           item_id: bumpProduct.bump_product_id,
-          item_name: bumpProduct.bump_product_name || 'Additional Product',
+          item_name: bumpProduct.bump_product_name || t('additionalProduct'),
           price: bumpProduct.bump_price,
           quantity: 1,
         });
@@ -362,27 +365,27 @@ export default function CustomPaymentForm({
       });
 
       if (error) {
-        setErrorMessage(error.message || 'Payment failed');
+        setErrorMessage(error.message || t('paymentFailed'));
         setIsProcessing(false);
       }
     } catch (err: any) {
-      setErrorMessage(err.message || 'An unexpected error occurred');
+      setErrorMessage(err.message || t('unexpectedError'));
       setIsProcessing(false);
     }
   };
 
   if (paymentSuccess) {
     return (
-      <div className="p-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 border border-green-200 dark:border-green-500/40 rounded-xl">
+      <div className="p-6 bg-sf-success-soft border border-sf-success/20 rounded-xl">
         <div className="flex items-center">
-          <div className="flex-shrink-0 w-10 h-10 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center mr-4">
-            <svg className="w-5 h-5 text-green-500 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex-shrink-0 w-10 h-10 bg-sf-success-soft rounded-full flex items-center justify-center mr-4">
+            <svg className="w-5 h-5 text-sf-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-green-700 dark:text-green-300">{t('paymentSuccessful', { defaultValue: 'Payment Successful!' })}</h3>
-            <p className="text-green-600 dark:text-green-100/90 text-sm">{t('accessGranted')}</p>
+            <h3 className="text-lg font-semibold text-sf-success">{t('paymentSuccessful', { defaultValue: 'Payment Successful!' })}</h3>
+            <p className="text-sf-success text-sm">{t('accessGranted')}</p>
           </div>
         </div>
       </div>
@@ -399,7 +402,7 @@ export default function CustomPaymentForm({
             <button
               type="button"
               onClick={onChangeAccount}
-              className="text-blue-400 hover:text-blue-300 text-xs underline transition-colors"
+              className="text-sf-accent hover:text-sf-accent-hover text-xs underline transition-colors"
             >
               {t('changeAccount')}
             </button>
@@ -413,12 +416,12 @@ export default function CustomPaymentForm({
 
       {/* Email mismatch warning — logged-in user purchasing with a different email */}
       {emailMismatch && (
-        <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-600/30 rounded-lg">
+        <div className="p-3 bg-sf-warning-soft border border-sf-warning/20 rounded-lg">
           <div className="flex items-start gap-2">
-            <svg className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-4 h-4 text-sf-warning flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
-            <p className="text-xs text-yellow-700 dark:text-yellow-300/90">
+            <p className="text-xs text-sf-warning">
               {t('emailMismatchWarning', {
                 accountEmail: email,
                 purchaseEmail: linkEmail,
@@ -431,7 +434,7 @@ export default function CustomPaymentForm({
 
       {/* Full Name - single field */}
       <div>
-        <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label htmlFor="fullName" className="block text-sm font-medium text-sf-body mb-2">
           {t('fullName', { defaultValue: 'Imię i nazwisko' })}
         </label>
         <input
@@ -439,10 +442,10 @@ export default function CustomPaymentForm({
           id="fullName"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          placeholder="Jan Kowalski"
+          placeholder={t('fullNamePlaceholder')}
           required
           disabled={isLoadingProfile}
-          className="w-full px-3 py-2.5 bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full px-3 py-2.5 bg-sf-input border border-sf-border rounded-lg text-sf-heading placeholder-sf-muted focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed"
         />
       </div>
 
@@ -454,19 +457,19 @@ export default function CustomPaymentForm({
               type="checkbox"
               checked={termsAccepted}
               onChange={(e) => setTermsAccepted(e.target.checked)}
-              className="mt-0.5 w-4 h-4 text-blue-500 bg-white dark:bg-white/5 border border-gray-300 dark:border-white/20 rounded focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-colors"
+              className="mt-0.5 w-4 h-4 text-sf-accent bg-sf-input border border-sf-border rounded focus:ring-2 focus:ring-sf-accent/50 focus:border-sf-accent/50 transition-colors"
               required
             />
-            <span className="ml-3 text-sm text-gray-600 dark:text-gray-400">
+            <span className="ml-3 text-sm text-sf-body">
               {t('iAgree', { defaultValue: 'I agree to the' })}{' '}
-              <a href="/terms" target="_blank" className="text-blue-400 hover:text-blue-300 underline transition-colors">
+              <a href="/terms" target="_blank" className="text-sf-accent hover:text-sf-accent-hover underline transition-colors">
                 {t('termsOfService', { defaultValue: 'Terms of Service' })}
               </a>
               {' '}{t('and', { defaultValue: 'and' })}{' '}
-              <a href="/privacy" target="_blank" className="text-blue-400 hover:text-blue-300 underline transition-colors">
+              <a href="/privacy" target="_blank" className="text-sf-accent hover:text-sf-accent-hover underline transition-colors">
                 {t('privacyPolicy', { defaultValue: 'Privacy Policy' })}
               </a>
-              <span className="text-red-400 ml-1">*</span>
+              <span className="text-sf-danger ml-1">*</span>
             </span>
           </label>
         </div>
@@ -514,16 +517,16 @@ export default function CustomPaymentForm({
 
       {/* Error Message */}
       {errorMessage && (
-        <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-500/50 rounded-lg">
-          <p className="text-red-600 dark:text-red-300 text-sm">{errorMessage}</p>
+        <div className="p-4 bg-sf-danger-soft border border-sf-danger/20 rounded-lg">
+          <p className="text-sf-danger text-sm">{errorMessage}</p>
         </div>
       )}
 
       {/* NIP Field - Optional, triggers company fields */}
       <div className="space-y-3">
         <div>
-          <label htmlFor="nip" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {t('nipLabel')} <span className="text-gray-500 text-xs">({t('optional', { defaultValue: 'optional' })})</span>
+          <label htmlFor="nip" className="block text-sm font-medium text-sf-body mb-2">
+            {t('nipLabel')} <span className="text-sf-muted text-xs">({t('optional', { defaultValue: 'optional' })})</span>
           </label>
           <div className="relative">
             <input
@@ -538,17 +541,17 @@ export default function CustomPaymentForm({
                 setGusData(null);
               }}
               onBlur={handleNIPBlur}
-              placeholder="PL1234567890 or DE123456789"
+              placeholder={t('taxIdPlaceholder')}
               maxLength={20}
-              className={`w-full px-3 py-2.5 bg-white dark:bg-white/5 border ${
-                nipError ? 'border-red-500/50' : gusSuccess ? 'border-green-500/50' : 'border-gray-300 dark:border-white/10'
-              } rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+              className={`w-full px-3 py-2.5 bg-sf-input border ${
+                nipError ? 'border-sf-danger/50' : gusSuccess ? 'border-sf-success/50' : 'border-sf-border'
+              } rounded-lg text-sf-heading placeholder-sf-muted focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent ${
                 isLoadingGUS ? 'pr-10' : ''
               }`}
             />
             {isLoadingGUS && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <svg className="animate-spin h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-5 w-5 text-sf-accent" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
@@ -556,13 +559,13 @@ export default function CustomPaymentForm({
             )}
           </div>
           {nipError && (
-            <p className="mt-1 text-xs text-red-400">{nipError}</p>
+            <p className="mt-1 text-xs text-sf-danger">{nipError}</p>
           )}
           {gusError && (
-            <p className="mt-1 text-xs text-yellow-400">⚠️ {gusError}</p>
+            <p className="mt-1 text-xs text-sf-warning">⚠️ {gusError}</p>
           )}
           {gusSuccess && !isLoadingGUS && (
-            <p className="mt-1 text-xs text-green-400">✓ Dane pobrane z bazy GUS</p>
+            <p className="mt-1 text-xs text-sf-success">✓ {t('gusDataFetched')}</p>
           )}
         </div>
 
@@ -570,7 +573,7 @@ export default function CustomPaymentForm({
         {(nip.length === 10 || gusData || companyName) && (
           <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
             <div>
-              <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="companyName" className="block text-sm font-medium text-sf-body mb-2">
                 {t('companyNameLabel', { defaultValue: 'Company Name' })}
               </label>
               <input
@@ -578,48 +581,48 @@ export default function CustomPaymentForm({
                 id="companyName"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="Company Ltd."
-                className="w-full px-3 py-2.5 bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder={t('companyNamePlaceholder')}
+                className="w-full px-3 py-2.5 bg-sf-input border border-sf-border rounded-lg text-sf-heading placeholder-sf-muted focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent"
               />
             </div>
             <div>
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Adres
+              <label htmlFor="address" className="block text-sm font-medium text-sf-body mb-2">
+                {t('addressLabel')}
               </label>
               <input
                 type="text"
                 id="address"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                placeholder="ul. Przykładowa 123"
-                className="w-full px-3 py-2.5 bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder={t('addressPlaceholder')}
+                className="w-full px-3 py-2.5 bg-sf-input border border-sf-border rounded-lg text-sf-heading placeholder-sf-muted focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Kod pocztowy
+                <label htmlFor="postalCode" className="block text-sm font-medium text-sf-body mb-2">
+                  {t('postalCodeLabel')}
                 </label>
                 <input
                   type="text"
                   id="postalCode"
                   value={postalCode}
                   onChange={(e) => setPostalCode(e.target.value)}
-                  placeholder="00-000"
-                  className="w-full px-3 py-2.5 bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder={t('postalCodePlaceholder')}
+                  className="w-full px-3 py-2.5 bg-sf-input border border-sf-border rounded-lg text-sf-heading placeholder-sf-muted focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent"
                 />
               </div>
               <div>
-                <label htmlFor="city" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Miasto
+                <label htmlFor="city" className="block text-sm font-medium text-sf-body mb-2">
+                  {t('cityLabel')}
                 </label>
                 <input
                   type="text"
                   id="city"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  placeholder="Warszawa"
-                  className="w-full px-3 py-2.5 bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder={t('cityPlaceholder')}
+                  className="w-full px-3 py-2.5 bg-sf-input border border-sf-border rounded-lg text-sf-heading placeholder-sf-muted focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent"
                 />
               </div>
             </div>
@@ -628,52 +631,52 @@ export default function CustomPaymentForm({
       </div>
 
       {/* Order Summary - Compact (Zanfia/EasyCart-inspired) */}
-      <div className="space-y-2 py-4 border-t border-gray-200 dark:border-white/10">
+      <div className="space-y-2 py-4 border-t border-sf-border">
         {/* Show bump or coupon if present */}
         {(bumpSelected && bumpProduct) || (appliedCoupon && discountAmount > 0) ? (
           <>
             {/* Product Price */}
-            <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex justify-between text-sm text-sf-muted">
               <span>{product.name}</span>
               <span>{formatPrice(basePrice, product.currency)} {product.currency}</span>
             </div>
 
             {/* Bump Product */}
             {bumpSelected && bumpProduct && (
-              <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
-                <span>{bumpProduct.bump_product_name || 'Additional Product'}</span>
+              <div className="flex justify-between text-sm text-sf-muted">
+                <span>{bumpProduct.bump_product_name || t('additionalProduct')}</span>
                 <span>{formatPrice(bumpProduct.bump_price, product.currency)} {product.currency}</span>
               </div>
             )}
 
             {/* Coupon Discount */}
             {appliedCoupon && discountAmount > 0 && (
-              <div className="flex justify-between text-sm text-green-400">
+              <div className="flex justify-between text-sm text-sf-success">
                 <span>{t('couponDiscount', { defaultValue: 'Discount' })} ({appliedCoupon.code})</span>
                 <span>-{formatPrice(discountAmount, product.currency)} {product.currency}</span>
               </div>
             )}
 
-            <div className="border-t border-gray-200 dark:border-white/10 my-2" />
+            <div className="border-t border-sf-border my-2" />
           </>
         ) : null}
 
         {/* Total - Prominent */}
         <div className="flex justify-between items-baseline">
           <div>
-            <div className={`font-semibold ${customAmountError ? 'text-red-400' : 'text-gray-900 dark:text-white'}`}>
+            <div className={`font-semibold ${customAmountError ? 'text-sf-danger' : 'text-sf-heading'}`}>
               {t('total', { defaultValue: 'Total' })}
               {customAmountError && (
                 <span className="text-xs font-normal ml-2">({t('invalidAmount', { defaultValue: 'invalid amount' })})</span>
               )}
             </div>
-            {!customAmountError && product.vat_rate && product.vat_rate > 0 && (
-              <div className="text-xs text-gray-500">
+            {taxMode !== 'stripe_tax' && !customAmountError && product.vat_rate && product.vat_rate > 0 && (
+              <div className="text-xs text-sf-muted">
                 {t('netPrice')}: {formatPrice(totalNet, product.currency)} {product.currency} + {t('vat')} {vatRate}%
               </div>
             )}
           </div>
-          <div className={`text-2xl font-bold ${customAmountError ? 'text-red-400 line-through' : 'text-gray-900 dark:text-white'}`}>
+          <div className={`text-2xl font-bold ${customAmountError ? 'text-sf-danger line-through' : 'text-sf-heading'}`}>
             {formatPrice(totalGross, product.currency)} {product.currency}
           </div>
         </div>
@@ -687,9 +690,9 @@ export default function CustomPaymentForm({
               type="checkbox"
               checked={emailConfirmed}
               onChange={(e) => setEmailConfirmed(e.target.checked)}
-              className="mt-0.5 w-4 h-4 text-blue-500 bg-white dark:bg-white/5 border border-gray-300 dark:border-white/20 rounded focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-colors"
+              className="mt-0.5 w-4 h-4 text-sf-accent bg-sf-input border border-sf-border rounded focus:ring-2 focus:ring-sf-accent/50 focus:border-sf-accent/50 transition-colors"
             />
-            <span className="ml-3 text-sm text-gray-600 dark:text-gray-400">
+            <span className="ml-3 text-sm text-sf-body">
               {t('confirmEmailLabel', { accountEmail: email, purchaseEmail: linkEmail, defaultValue: `I confirm the product will be linked to my account (${email}). Receipt will be sent to ${linkEmail}.` })}
             </span>
           </label>
@@ -698,12 +701,12 @@ export default function CustomPaymentForm({
 
       {/* PWYW Validation Error Warning */}
       {customAmountError && (
-        <div className="p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-500/50 rounded-lg mb-4">
+        <div className="p-3 bg-sf-danger-soft border border-sf-danger/20 rounded-lg mb-4">
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-sf-danger flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
-            <p className="text-sm text-red-600 dark:text-red-300">{customAmountError}</p>
+            <p className="text-sm text-sf-danger">{customAmountError}</p>
           </div>
         </div>
       )}
@@ -712,10 +715,10 @@ export default function CustomPaymentForm({
       <button
         type="submit"
         disabled={!stripe || isProcessing || !!customAmountError || (emailMismatch && !emailConfirmed)}
-        className={`w-full px-6 py-4 text-white font-bold rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] ${
+        className={`w-full px-6 py-4 text-white font-bold rounded-full shadow-[var(--sf-shadow-accent)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] ${
           customAmountError
-            ? 'bg-gray-600 cursor-not-allowed'
-            : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:shadow-xl'
+            ? 'bg-sf-muted/30 cursor-not-allowed'
+            : 'bg-sf-accent-bg hover:bg-sf-accent-hover'
         }`}
       >
         {isProcessing ? (
@@ -733,8 +736,8 @@ export default function CustomPaymentForm({
         )}
       </button>
 
-      <p className="text-xs text-gray-500 text-center">
-        🔒 Secure payment powered by Stripe
+      <p className="text-xs text-sf-muted text-center">
+        🔒 {t('securePayment')}
       </p>
     </form>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import { convertLocalToUTC, convertUTCToLocal, addTimezoneInfo } from '@/lib/timezone';
 
 interface DateTimePickerProps {
@@ -20,7 +21,7 @@ interface DateTimePickerProps {
 export default function DateTimePicker({
   value,
   onChange,
-  placeholder = "Select date and time",
+  placeholder,
   label,
   description,
   error,
@@ -30,6 +31,8 @@ export default function DateTimePicker({
   minDate,
   maxDate
 }: DateTimePickerProps) {
+  const tCommon = useTranslations('common');
+  const displayPlaceholder = placeholder ?? tCommon('selectDateTime');
   // Convert UTC from database to local datetime-local format (YYYY-MM-DDTHH:mm)
   const formatForInput = (utcValue: string | undefined): string => {
     if (!utcValue) return '';
@@ -67,32 +70,37 @@ export default function DateTimePicker({
   return (
     <div className="space-y-2">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="block text-sm font-medium text-sf-body">
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
-          {!required && <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">(optional)</span>}
+          {required && <span className="text-sf-danger ml-1">*</span>}
+          {!required && <span className="text-xs text-sf-muted ml-1">({tCommon('optional')})</span>}
         </label>
       )}
 
-      <div className="relative flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <input
           type="datetime-local"
           value={formatForInput(value)}
           onChange={handleChange}
+          onClick={(e) => {
+            if (!disabled && 'showPicker' in e.currentTarget) {
+              try { (e.currentTarget as HTMLInputElement).showPicker(); } catch {}
+            }
+          }}
           min={formatMinMax(minDate)}
           max={formatMinMax(maxDate)}
           disabled={disabled}
-          placeholder={placeholder}
+          placeholder={displayPlaceholder}
           className={`
-            w-full px-3 py-2.5 border rounded-lg shadow-sm transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+            flex-1 min-w-0 px-3 py-2.5 border transition-all duration-200
+            focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent
             ${disabled
-              ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed'
-              : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:border-gray-400 dark:hover:border-gray-500'
+              ? 'bg-sf-raised text-sf-muted cursor-not-allowed'
+              : 'bg-sf-input text-sf-heading hover:border-sf-border'
             }
             ${error
-              ? 'border-red-300 dark:border-red-600'
-              : 'border-gray-300 dark:border-gray-600'
+              ? 'border-sf-danger'
+              : 'border-sf-border'
             }
           `}
         />
@@ -100,9 +108,10 @@ export default function DateTimePicker({
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-2 p-1 hover:bg-gray-100 dark:hover:bg-gray-600 rounded transition-colors"
+            className="flex-shrink-0 p-1.5 text-sf-muted hover:text-sf-body hover:bg-sf-hover transition-colors"
+            aria-label={tCommon('clearDate')}
           >
-            <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -110,13 +119,13 @@ export default function DateTimePicker({
       </div>
 
       {description && (
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-sf-muted">
           {addTimezoneInfo(description)}
         </p>
       )}
 
       {error && (
-        <p className="text-xs text-red-600 dark:text-red-400">
+        <p className="text-xs text-sf-danger">
           {error}
         </p>
       )}

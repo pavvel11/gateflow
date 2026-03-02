@@ -85,10 +85,10 @@ export default function RecentActivity() {
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
-    if (diffMins < 1) return 'Just now'
-    if (diffMins < 60) return `${diffMins}m ago`
-    if (diffHours < 24) return `${diffHours}h ago`
-    if (diffDays < 7) return `${diffDays}d ago`
+    if (diffMins < 1) return t('recentActivity.timeJustNow')
+    if (diffMins < 60) return t('recentActivity.timeMinutesAgo', { minutes: diffMins })
+    if (diffHours < 24) return t('recentActivity.timeHoursAgo', { hours: diffHours })
+    if (diffDays < 7) return t('recentActivity.timeDaysAgo', { days: diffDays })
     return past.toLocaleDateString()
   }
 
@@ -120,31 +120,33 @@ export default function RecentActivity() {
   const getColorClasses = (color: string) => {
     switch (color) {
       case 'green':
-        return 'bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400'
+        return 'bg-sf-success-soft text-sf-success'
       case 'blue':
-        return 'bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
+        return 'bg-sf-accent-soft text-sf-accent'
       case 'yellow':
-        return 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400'
+        return 'bg-sf-warning-soft text-sf-warning'
       default:
-        return 'bg-gray-100 text-gray-600 dark:bg-gray-900/20 dark:text-gray-400'
+        return 'bg-sf-raised text-sf-body'
     }
   }
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          {t('recentActivity.title')}
-        </h2>
-        <div className="space-y-3">
+      <div className="border-2 border-sf-border-medium">
+        <div className="px-6 py-4 border-b border-sf-border-subtle">
+          <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-sf-muted">
+            {t('recentActivity.title')}
+          </h2>
+        </div>
+        <div>
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center space-x-3 animate-pulse">
-              <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+            <div key={i} className={`flex items-center gap-3 px-6 py-4 animate-pulse ${i % 2 === 1 ? 'bg-sf-row-alt' : ''}`}>
+              <div className="w-8 h-8 bg-sf-raised flex-shrink-0"></div>
               <div className="flex-1">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-1"></div>
-                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                <div className="h-4 bg-sf-raised w-3/4 mb-1"></div>
+                <div className="h-3 bg-sf-raised w-1/2"></div>
               </div>
-              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+              <div className="h-3 bg-sf-raised w-16"></div>
             </div>
           ))}
         </div>
@@ -153,37 +155,44 @@ export default function RecentActivity() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-        {t('recentActivity.title')}
-      </h2>
-      <div className="space-y-3">
+    <div className="border-2 border-sf-border-medium">
+      <div className="px-6 py-4 border-b border-sf-border-subtle">
+        <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-sf-muted">
+          {t('recentActivity.title')}
+        </h2>
+      </div>
+      <div>
         {activities.length === 0 ? (
-          <div className="text-center py-8">
-            <div className="text-gray-400 dark:text-gray-500 mb-2">
+          <div className="text-center py-8 px-6">
+            <div className="text-sf-muted mb-2">
               <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{t('recentActivity.noActivity')}</p>
+            <p className="text-sm text-sf-muted">{t('recentActivity.noActivity')}</p>
           </div>
         ) : (
-          activities.map((activity) => (
-            <div key={activity.id} className="flex items-center space-x-3 group hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg p-2 -m-2 transition-colors">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getColorClasses(activity.color)}`}>
+          activities.map((activity, index) => (
+            <div
+              key={activity.id}
+              className={`flex items-center gap-3 px-6 py-4 transition-colors hover:bg-sf-hover ${
+                index % 2 === 1 ? 'bg-sf-row-alt' : ''
+              } ${index < activities.length - 1 ? 'border-b border-sf-border-subtle' : ''}`}
+            >
+              <div className={`w-8 h-8 flex-shrink-0 flex items-center justify-center ${getColorClasses(activity.color)}`}>
                 {getIcon(activity.icon)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                <p className="text-sm font-medium text-sf-heading truncate">
                   {activity.message}
                 </p>
                 {activity.user_email && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  <p className="text-xs text-sf-muted truncate">
                     {activity.user_email}
                   </p>
                 )}
               </div>
-              <span className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">
+              <span className="text-xs text-sf-muted flex-shrink-0 font-mono">
                 {formatTimeAgo(activity.timestamp)}
               </span>
             </div>

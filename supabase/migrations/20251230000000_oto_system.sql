@@ -1,5 +1,5 @@
 -- =====================================================
--- GateFlow - True OTO (One-Time Offer) System
+-- Sellf - True OTO (One-Time Offer) System
 -- =====================================================
 -- Description: Server-side validated one-time offers with time-limited,
 --              email-bound coupons that cannot be bypassed.

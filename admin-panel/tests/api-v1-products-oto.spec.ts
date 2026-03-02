@@ -8,6 +8,7 @@
 
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { setAuthSession } from './helpers/admin-auth';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -22,18 +23,7 @@ const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 async function loginAsAdmin(page: any, email: string, password: string) {
   await page.goto('/login');
 
-  await page.evaluate(async ({ email, password, url, anonKey }: { email: string; password: string; url: string; anonKey: string }) => {
-    // @ts-ignore
-    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-    const sb = createBrowserClient(url, anonKey);
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-  }, {
-    email,
-    password,
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  });
+  await setAuthSession(page, email, password);
 
   await page.reload();
 }
@@ -117,19 +107,23 @@ test.describe('Products OTO API v1', () => {
 
   test.describe('Authentication', () => {
     test('should return 401 for unauthenticated GET requests', async ({ request }) => {
-      const response = await request.get(`/api/v1/products/${sourceProduct?.id}/oto`);
+      expect(sourceProduct).toBeDefined();
+      const response = await request.get(`/api/v1/products/${sourceProduct.id}/oto`);
       expect(response.status()).toBe(401);
     });
 
     test('should return 401 for unauthenticated PUT requests', async ({ request }) => {
-      const response = await request.put(`/api/v1/products/${sourceProduct?.id}/oto`, {
-        data: { oto_product_id: otoProduct?.id }
+      expect(sourceProduct).toBeDefined();
+      expect(otoProduct).toBeDefined();
+      const response = await request.put(`/api/v1/products/${sourceProduct.id}/oto`, {
+        data: { oto_product_id: otoProduct.id }
       });
       expect(response.status()).toBe(401);
     });
 
     test('should return 401 for unauthenticated DELETE requests', async ({ request }) => {
-      const response = await request.delete(`/api/v1/products/${sourceProduct?.id}/oto`);
+      expect(sourceProduct).toBeDefined();
+      const response = await request.delete(`/api/v1/products/${sourceProduct.id}/oto`);
       expect(response.status()).toBe(401);
     });
   });

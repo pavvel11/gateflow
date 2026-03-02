@@ -1,7 +1,7 @@
--- Create initial database structure for GateFlow Admin Panel
+-- Create initial database structure for Sellf Admin Panel
 -- Migration: 20250709160000_initial_schema
 -- Updated: Consolidated all admin functionality into single migration
--- Based on existing gateflow_setup.sql and user_product_access_setup.sql
+-- Based on existing sellf_setup.sql and user_product_access_setup.sql
 
 -- Suppress NOTICE messages during migration (e.g., "relation already exists, skipping")
 SET client_min_messages = warning;
@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS products (
 
   is_active BOOLEAN NOT NULL DEFAULT true, -- Product availability toggle
   is_featured BOOLEAN NOT NULL DEFAULT false, -- Featured product flag
+  is_listed BOOLEAN NOT NULL DEFAULT true, -- Visible on store page (false = purchasable via direct link only)
   -- Temporal availability fields
   available_from TIMESTAMPTZ, -- Product becomes available from this date/time
   available_until TIMESTAMPTZ, -- Product is available until this date/time
@@ -77,9 +78,9 @@ CREATE TABLE IF NOT EXISTS products (
   CONSTRAINT check_availability_dates CHECK (available_from IS NULL OR available_until IS NULL OR available_from < available_until) -- Available from must be before available until
 );
 
-COMMENT ON TABLE products IS 'Products catalog with gatekeeper integration support';
-COMMENT ON COLUMN products.slug IS 'URL-safe unique identifier for gatekeeper system';
-COMMENT ON COLUMN products.content_config IS 'JSON configuration for content delivery and gatekeeper integration';
+COMMENT ON TABLE products IS 'Products catalog with sellf integration support';
+COMMENT ON COLUMN products.slug IS 'URL-safe unique identifier for sellf system';
+COMMENT ON COLUMN products.content_config IS 'JSON configuration for content delivery and sellf integration';
 COMMENT ON COLUMN products.tenant_id IS 'Multi-tenant support - allows product isolation by tenant';
 
 -- Create variant_groups table to store variant group metadata
@@ -812,6 +813,7 @@ CREATE TABLE IF NOT EXISTS rate_limits (
 CREATE INDEX IF NOT EXISTS idx_products_slug ON products(slug);
 CREATE INDEX IF NOT EXISTS idx_products_is_active ON products(is_active);
 CREATE INDEX IF NOT EXISTS idx_products_is_featured ON products(is_featured);
+CREATE INDEX IF NOT EXISTS idx_products_is_listed ON products(is_listed);
 CREATE INDEX IF NOT EXISTS idx_products_price ON products(price);
 CREATE INDEX IF NOT EXISTS idx_products_created_at ON products(created_at);
 CREATE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug);

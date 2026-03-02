@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   validateCrossOriginRequest,
   getCrossOriginHeaders,
@@ -43,7 +43,7 @@ describe('CORS/CSRF Security', () => {
       // 1. Do not modify data (read-only)
       // 2. Return non-sensitive information
       expect(CROSS_ORIGIN_ALLOWED_PATHS).toContain('/api/access');
-      expect(CROSS_ORIGIN_ALLOWED_PATHS).toContain('/api/gatekeeper');
+      expect(CROSS_ORIGIN_ALLOWED_PATHS).toContain('/api/sellf');
 
       // Should NOT contain admin endpoints
       expect(CROSS_ORIGIN_ALLOWED_PATHS).not.toContain('/api/admin/products');
@@ -118,18 +118,6 @@ describe('CORS/CSRF Security', () => {
         expect(result?.status).toBe(403);
       });
 
-      it('should block fetch without custom headers', () => {
-        // Simulates: fetch('/api/access', { method: 'POST', credentials: 'include' })
-        // Without explicitly setting X-Requested-With
-        const request = createMockRequest({
-          origin: 'https://attacker.com',
-          xRequestedWith: null,
-        });
-
-        const result = validateCrossOriginRequest(request);
-        expect(result?.status).toBe(403);
-      });
-
       it('should allow legitimate AJAX requests', () => {
         // Simulates: $.ajax() or fetch with X-Requested-With
         const request = createMockRequest({
@@ -176,25 +164,28 @@ describe('CORS/CSRF Security', () => {
 
     // Security concern: wildcard fallback
     describe('Wildcard Origin Handling', () => {
-      it('should fall back to * when no origin provided', () => {
-        // This is a potential security concern - documents it
+      it('should fall back to site URL when no origin provided', () => {
+        // When no origin header is present, fall back to SITE_URL
+        // instead of '*' (which is invalid with credentials anyway)
         const request = createMockRequest({
           origin: null,
         });
 
         const headers = getCrossOriginHeaders(request);
 
-        // Note: This combination (* with credentials) is actually
-        // blocked by browsers, so this is safe in practice
-        expect(headers['Access-Control-Allow-Origin']).toBe('*');
+        // Should use NEXT_PUBLIC_SITE_URL or SITE_URL, not '*'
+        expect(headers['Access-Control-Allow-Origin']).not.toBe('*');
+        expect(typeof headers['Access-Control-Allow-Origin']).toBe('string');
+        expect(headers['Access-Control-Allow-Origin'].length).toBeGreaterThan(0);
       });
 
       it('should not expose sensitive data via wildcard', () => {
         // Verify that endpoints using getCrossOriginHeaders
         // are read-only and non-sensitive
         // This is a documentation/awareness test
-        const nonSensitiveEndpoints = ['/api/access', '/api/gatekeeper'];
+        const nonSensitiveEndpoints = ['/api/access', '/api/sellf'];
 
+        expect(CROSS_ORIGIN_ALLOWED_PATHS.length).toBeGreaterThan(0);
         for (const endpoint of CROSS_ORIGIN_ALLOWED_PATHS) {
           expect(nonSensitiveEndpoints).toContain(endpoint);
         }
@@ -313,28 +304,61 @@ describe('CORS/CSRF Security', () => {
   });
 
   describe('Security Headers Completeness', () => {
-    it('getCrossOriginHeaders should include all necessary CORS headers', () => {
+    it('getCrossOriginHeaders should include all necessary CORS headers with correct values', () => {
       const request = createMockRequest({ origin: 'https://app.com' });
       const headers = getCrossOriginHeaders(request);
 
-      const requiredHeaders = [
-        'Access-Control-Allow-Origin',
-        'Access-Control-Allow-Credentials',
-        'Access-Control-Allow-Methods',
-        'Access-Control-Allow-Headers',
-      ];
-
-      for (const header of requiredHeaders) {
-        expect(headers[header]).toBeDefined();
-      }
+      expect(headers['Access-Control-Allow-Origin']).toBe('https://app.com');
+      expect(headers['Access-Control-Allow-Credentials']).toBe('true');
+      expect(headers['Access-Control-Allow-Methods']).toBe('GET, POST, OPTIONS');
+      expect(headers['Access-Control-Allow-Headers']).toContain('X-Requested-With');
+      expect(headers['Access-Control-Allow-Headers']).toContain('Content-Type');
+      expect(headers['Access-Control-Allow-Headers']).toContain('Authorization');
     });
 
-    it('should include caching header for preflight', () => {
+    it('should include caching header for preflight with numeric value', () => {
       const request = createMockRequest({ origin: 'https://app.com' });
       const headers = getCrossOriginHeaders(request);
 
-      // Access-Control-Max-Age allows caching of preflight response
-      expect(headers['Access-Control-Max-Age']).toBeDefined();
+      expect(headers['Access-Control-Max-Age']).toBe('86400');
+    });
+
+    it('should include Vary: Origin for correct caching', () => {
+      const request = createMockRequest({ origin: 'https://app.com' });
+      const headers = getCrossOriginHeaders(request);
+
+      expect(headers['Vary']).toBe('Origin');
+    });
+  });
+
+  describe('ALLOWED_ORIGINS strict mode', () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it('should reflect origin when it is in the whitelist', () => {
+      vi.stubEnv('ALLOWED_ORIGINS', 'https://app1.com, https://app2.com');
+      const request = createMockRequest({ origin: 'https://app1.com' });
+      const headers = getCrossOriginHeaders(request);
+
+      expect(headers['Access-Control-Allow-Origin']).toBe('https://app1.com');
+    });
+
+    it('should reject origin not in the whitelist', () => {
+      vi.stubEnv('ALLOWED_ORIGINS', 'https://app1.com, https://app2.com');
+      const request = createMockRequest({ origin: 'https://evil.com' });
+      const headers = getCrossOriginHeaders(request);
+
+      expect(headers['Access-Control-Allow-Origin']).not.toBe('https://evil.com');
+    });
+
+    it('should fall back to siteUrl when origin not whitelisted', () => {
+      vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://mysite.com');
+      vi.stubEnv('ALLOWED_ORIGINS', 'https://app1.com');
+      const request = createMockRequest({ origin: 'https://evil.com' });
+      const headers = getCrossOriginHeaders(request);
+
+      expect(headers['Access-Control-Allow-Origin']).toBe('https://mysite.com');
     });
   });
 });

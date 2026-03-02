@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { acceptAllCookies } from './helpers/consent';
+import { setAuthSession } from './helpers/admin-auth';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -37,16 +38,7 @@ test.describe('Stripe Configuration Wizard', () => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email: adminEmail,
-      password: adminPassword,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
+    await setAuthSession(page, adminEmail, adminPassword);
 
     await page.waitForTimeout(1000);
   };
@@ -359,15 +351,12 @@ test.describe('Stripe Configuration Wizard', () => {
     await page.goto('/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
-    // Should see info about two configuration methods - just check one element exists
+    // Should see info about two configuration methods
     const infoBox = page.locator('h4:has-text("Two Configuration Methods")');
     const currentlyUsing = page.locator('p:has-text("Currently using")').first();
 
-    // At least one should be visible
-    const infoBoxVisible = await infoBox.isVisible().catch(() => false);
-    const currentlyUsingVisible = await currentlyUsing.isVisible().catch(() => false);
-
-    expect(infoBoxVisible || currentlyUsingVisible).toBeTruthy();
+    // Verify configuration info is present on the settings page
+    await expect(infoBox.or(currentlyUsing).first()).toBeVisible({ timeout: 10000 });
 
     // Should mention .env and database methods
     const pageContent = await page.textContent('body');

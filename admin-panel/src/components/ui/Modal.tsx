@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import BaseModal from './BaseModal';
 
 interface ModalHeaderProps {
-  title: string;
-  subtitle?: string;
+  title: React.ReactNode;
+  subtitle?: React.ReactNode;
   icon?: React.ReactNode;
   badge?: {
     text: string;
@@ -40,34 +40,34 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({
   badge 
 }) => {
   const getBadgeClasses = (variant: string) => {
-    const baseClasses = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
+    const baseClasses = 'inline-flex items-center px-2.5 py-0.5 text-xs font-medium';
     
     switch (variant) {
       case 'success':
-        return `${baseClasses} bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300`;
+        return `${baseClasses} bg-sf-success-soft text-sf-success`;
       case 'warning':
-        return `${baseClasses} bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300`;
+        return `${baseClasses} bg-sf-warning-soft text-sf-warning`;
       case 'error':
-        return `${baseClasses} bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300`;
+        return `${baseClasses} bg-sf-danger-soft text-sf-danger`;
       case 'info':
-        return `${baseClasses} bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300`;
+        return `${baseClasses} bg-sf-accent-soft text-sf-accent`;
       default:
-        return `${baseClasses} bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300`;
+        return `${baseClasses} bg-sf-raised text-sf-muted`;
     }
   };
 
   return (
-    <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-t-2xl">
+    <div className="px-6 py-3 border-b border-sf-border bg-sf-raised">
       <div className="flex items-start justify-between">
         <div className="flex items-center space-x-3">
           {icon && (
-            <div className="flex-shrink-0 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+            <div className="flex-shrink-0 p-1.5 bg-sf-base">
               {icon}
             </div>
           )}
           <div>
             <div className="flex items-center space-x-3">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-sf-heading">
                 {title}
               </h3>
               {badge && (
@@ -77,7 +77,7 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({
               )}
             </div>
             {subtitle && (
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-sm text-sf-muted">
                 {subtitle}
               </p>
             )}
@@ -120,14 +120,14 @@ export const ModalSection: React.FC<ModalSectionProps> = ({
         <button
           type="button"
           onClick={() => collapsible && setIsExpanded(!isExpanded)}
-          className={`w-full flex items-center justify-between text-sm font-medium text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 mb-4 ${
-            collapsible ? 'cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors' : 'cursor-default'
+          className={`w-full flex items-center justify-between text-sm font-medium text-sf-heading border-b border-sf-border pb-2 mb-4 ${
+            collapsible ? 'cursor-pointer hover:text-sf-accent transition-colors' : 'cursor-default'
           }`}
         >
           <span>{title}</span>
           {collapsible && (
             <svg
-              className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+              className={`w-4 h-4 text-sf-muted transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -155,8 +155,8 @@ export const ModalFooter: React.FC<ModalFooterProps> = ({
 }) => {
   return (
     <div className={`
-      px-6 py-4 border-t border-gray-200 dark:border-gray-700 
-      bg-gray-50 dark:bg-gray-800/50 rounded-b-2xl
+      px-6 py-4 border-t border-sf-border
+      bg-sf-raised
       flex items-center justify-end space-x-3
       ${className}
     `}>
@@ -192,15 +192,15 @@ export const Button: React.FC<ButtonProps> = ({
   const getVariantClasses = () => {
     switch (variant) {
       case 'primary':
-        return 'bg-blue-600 hover:bg-blue-700 text-white border-transparent focus:ring-blue-500';
+        return 'bg-sf-accent-bg hover:bg-sf-accent-hover text-white border-transparent focus:ring-sf-accent';
       case 'secondary':
-        return 'bg-gray-200 hover:bg-gray-300 text-gray-900 border-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white dark:border-gray-600 focus:ring-gray-500';
+        return 'bg-sf-raised hover:bg-sf-hover text-sf-heading border-sf-border focus:ring-sf-accent';
       case 'danger':
-        return 'bg-red-600 hover:bg-red-700 text-white border-transparent focus:ring-red-500';
+        return 'bg-sf-danger-bg hover:opacity-90 text-sf-inverse border-transparent focus:ring-sf-danger';
       case 'ghost':
-        return 'bg-transparent hover:bg-gray-100 text-gray-700 border-gray-300 dark:hover:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:ring-gray-500';
+        return 'bg-transparent hover:bg-sf-hover text-sf-body border-sf-border focus:ring-sf-accent';
       default:
-        return 'bg-blue-600 hover:bg-blue-700 text-white border-transparent focus:ring-blue-500';
+        return 'bg-sf-accent-bg hover:bg-sf-accent-hover text-white border-transparent focus:ring-sf-accent';
     }
   };
 
@@ -225,7 +225,7 @@ export const Button: React.FC<ButtonProps> = ({
       disabled={disabled || loading}
       className={`
         inline-flex items-center justify-center
-        border font-medium rounded-lg
+        border font-medium
         transition-colors duration-200
         focus:outline-none focus:ring-2 focus:ring-offset-2
         disabled:opacity-50 disabled:cursor-not-allowed
@@ -262,15 +262,15 @@ export const Message: React.FC<MessageProps> = ({
   const getTypeClasses = () => {
     switch (type) {
       case 'error':
-        return 'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300';
+        return 'bg-sf-danger-soft border-sf-danger/20 text-sf-danger';
       case 'success':
-        return 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300';
+        return 'bg-sf-success-soft border-sf-success/20 text-sf-success';
       case 'warning':
-        return 'bg-yellow-50 border-yellow-200 text-yellow-700 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-300';
+        return 'bg-sf-warning-soft border-sf-warning/20 text-sf-warning';
       case 'info':
-        return 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300';
+        return 'bg-sf-accent-soft border-sf-accent/20 text-sf-accent';
       default:
-        return 'bg-gray-50 border-gray-200 text-gray-700 dark:bg-gray-900/20 dark:border-gray-800 dark:text-gray-300';
+        return 'bg-sf-raised border-sf-border text-sf-body';
     }
   };
 
@@ -304,7 +304,7 @@ export const Message: React.FC<MessageProps> = ({
   };
 
   return (
-    <div className={`border rounded-lg p-4 ${getTypeClasses()} ${className}`}>
+    <div className={`border p-4 ${getTypeClasses()} ${className}`}>
       <div className="flex">
         <div className="flex-shrink-0">
           {getIcon()}

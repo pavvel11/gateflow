@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getStripeServer } from '@/lib/stripe/server';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limiting';
 import { ProductValidationService } from '@/lib/services/product-validation';
-import { STRIPE_CONFIG } from '@/lib/stripe/config';
+import { getCheckoutConfig } from '@/lib/stripe/checkout-config';
 
 interface CreateEmbeddedCheckoutOptions {
   productId: string;
@@ -57,10 +57,12 @@ export async function fetchClientSecret(options: CreateEmbeddedCheckoutOptions):
 
     const stripe = await getStripeServer();
 
+    // Resolve checkout config: DB > env var > default
+    const checkoutConfig = await getCheckoutConfig();
+
     // Prepare session configuration
-    const sessionConfig = {
+    const sessionConfig: Record<string, unknown> = {
       ui_mode: 'embedded' as const,
-      payment_method_types: [...STRIPE_CONFIG.payment_method_types],
       customer_email: email || user?.email || undefined,
       line_items: [
         {
@@ -82,11 +84,20 @@ export async function fetchClientSecret(options: CreateEmbeddedCheckoutOptions):
         product_slug: product.slug,
         user_id: user?.id || '',
       },
-      expires_at: Math.floor(Date.now() / 1000) + (STRIPE_CONFIG.session.expires_hours * 60 * 60),
-      automatic_tax: STRIPE_CONFIG.session.automatic_tax,
-      tax_id_collection: STRIPE_CONFIG.session.tax_id_collection,
-      billing_address_collection: 'auto' as const,
+      expires_at: Math.floor(Date.now() / 1000) + (checkoutConfig.expires_hours * 60 * 60),
+      automatic_tax: checkoutConfig.automatic_tax,
+      tax_id_collection: checkoutConfig.tax_id_collection,
+      billing_address_collection: checkoutConfig.billing_address_collection,
     };
+
+    // Apply payment method config based on mode
+    if (checkoutConfig.paymentMethodMode === 'automatic') {
+      sessionConfig.automatic_payment_methods = { enabled: true };
+    } else if (checkoutConfig.paymentMethodMode === 'stripe_preset' && checkoutConfig.stripePresetId) {
+      sessionConfig.payment_method_configuration = checkoutConfig.stripePresetId;
+    } else {
+      sessionConfig.payment_method_types = checkoutConfig.payment_method_types as any;
+    }
 
     // Create embedded checkout session
     const session = await stripe.checkout.sessions.create(sessionConfig);

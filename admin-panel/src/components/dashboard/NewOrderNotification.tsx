@@ -70,7 +70,7 @@ export default function NewOrderNotification({ amount, currency, onClose }: NewO
           ${isVisible ? 'translate-x-0 opacity-100 scale-100' : 'translate-x-full opacity-0 scale-95'}
         `}
       >
-        <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl shadow-2xl overflow-hidden border border-green-400/50">
+        <div className="bg-gradient-to-br from-emerald-500 to-green-600 overflow-hidden border border-green-400/50">
           <div className="relative p-6 text-center">
             {/* Background pattern */}
             <div className="absolute top-0 left-0 w-full h-full opacity-10">
@@ -83,7 +83,7 @@ export default function NewOrderNotification({ amount, currency, onClose }: NewO
             </div>
 
             <div className="relative z-10">
-              <div className="inline-flex items-center justify-center p-3 bg-white/20 rounded-full mb-4 backdrop-blur-sm animate-bounce">
+              <div className="inline-flex items-center justify-center p-3 bg-white/20 mb-4 backdrop-blur-sm animate-bounce">
                 <span className="text-3xl">🎉</span>
               </div>
               
@@ -95,7 +95,7 @@ export default function NewOrderNotification({ amount, currency, onClose }: NewO
                 +{amount}
               </div>
               
-              <div className="inline-flex items-center text-emerald-100 text-xs font-medium bg-emerald-700/30 px-3 py-1 rounded-full">
+              <div className="inline-flex items-center text-emerald-100 text-xs font-medium bg-emerald-700/30 px-3 py-1">
                 Just now via Stripe
               </div>
             </div>

@@ -6,6 +6,7 @@
 
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { setAuthSession } from './helpers/admin-auth';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -20,18 +21,7 @@ const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 async function loginAsAdmin(page: any, email: string, password: string) {
   await page.goto('/login');
 
-  await page.evaluate(async ({ email, password, url, anonKey }: { email: string; password: string; url: string; anonKey: string }) => {
-    // @ts-ignore
-    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-    const sb = createBrowserClient(url, anonKey);
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-  }, {
-    email,
-    password,
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  });
+  await setAuthSession(page, email, password);
 
   await page.reload();
 }
@@ -109,7 +99,7 @@ test.describe('API Keys v1', () => {
       expect(body.data).toHaveProperty('id');
       expect(body.data).toHaveProperty('key');
       expect(body.data.name).toBe('Test Key');
-      expect(body.data.key).toMatch(/^gf_live_/);
+      expect(body.data.key).toMatch(/^sf_live_/);
       expect(body.data.scopes).toContain('*');
       expect(body.data).toHaveProperty('warning');
 
@@ -151,7 +141,8 @@ test.describe('API Keys v1', () => {
       expect(response.status()).toBe(201);
       const body = await response.json();
 
-      expect(body.data.expires_at).toBeTruthy();
+      expect(typeof body.data.expires_at).toBe('string');
+      expect(new Date(body.data.expires_at).getTime()).toBeGreaterThan(Date.now());
 
       createdKeyIds.push(body.data.id);
     });
@@ -361,8 +352,9 @@ test.describe('API Keys v1', () => {
 
       expect(body.data).toHaveProperty('new_key');
       expect(body.data).toHaveProperty('old_key');
-      expect(body.data.new_key.key).toMatch(/^gf_live_/);
-      expect(body.data.old_key.grace_until).toBeTruthy();
+      expect(body.data.new_key.key).toMatch(/^sf_live_/);
+      expect(typeof body.data.old_key.grace_until).toBe('string');
+      expect(new Date(body.data.old_key.grace_until).getTime()).toBeGreaterThan(Date.now());
 
       createdKeyIds.push(body.data.new_key.id);
     });
@@ -436,7 +428,7 @@ test.describe('API Keys v1', () => {
     test('should reject invalid API key', async ({ request }) => {
       const response = await request.get('/api/v1/products', {
         headers: {
-          'Authorization': 'Bearer gf_live_invalidkey123456789'
+          'Authorization': 'Bearer sf_live_invalidkey123456789'
         }
       });
 
@@ -797,8 +789,12 @@ test.describe('API Keys v1', () => {
       });
       const createBody = await createResponse.json();
 
-      // If key was created (API defaults to *), test it
-      if (createResponse.status() === 201 && createBody.data?.key) {
+      // API should either reject empty scopes (400) or create with defaults (201)
+      const status = createResponse.status();
+      expect([201, 400]).toContain(status);
+
+      if (status === 201) {
+        expect(createBody.data?.key).toBeDefined();
         const apiKey = createBody.data.key;
         createdKeyIds.push(createBody.data.id);
 
@@ -806,8 +802,8 @@ test.describe('API Keys v1', () => {
         const keyDetails = await page.request.get(`/api/v1/api-keys/${createBody.data.id}`);
         const detailsBody = await keyDetails.json();
 
-        // If empty scopes were stored, access should be denied
         if (detailsBody.data.scopes.length === 0) {
+          // Empty scopes stored — access should be denied
           const response = await request.get('/api/v1/products', {
             headers: { 'Authorization': `Bearer ${apiKey}` }
           });
@@ -817,8 +813,9 @@ test.describe('API Keys v1', () => {
           expect(detailsBody.data.scopes.length).toBeGreaterThan(0);
         }
       } else {
-        // API rejected empty scopes - that's also valid behavior
-        expect(createResponse.status()).toBe(400);
+        // API rejected empty scopes — verify error format
+        expect(createBody.error).toBeDefined();
+        expect(createBody.error.code).toBeDefined();
       }
     });
   });

@@ -70,9 +70,8 @@ export async function POST(request: NextRequest) {
     const host = request.headers.get('host');
 
     // Check if request is from same origin
+    // Only trust NEXT_PUBLIC_SITE_URL — never derive allowed origins from Host header
     const allowedOrigins = [
-      `https://${host}`,
-      `http://${host}`,
       process.env.NEXT_PUBLIC_SITE_URL,
     ].filter(Boolean);
 
@@ -222,7 +221,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to fetch company data',
+        error: 'Failed to fetch company data',
         code: 'UNKNOWN_ERROR'
       },
       { status: 500 }
@@ -235,12 +234,9 @@ export async function POST(request: NextRequest) {
  */
 export async function OPTIONS(request: NextRequest) {
   const origin = request.headers.get('origin');
-  const host = request.headers.get('host');
 
-  // Only allow same-origin
+  // Only trust NEXT_PUBLIC_SITE_URL — never derive from Host header
   const allowedOrigins = [
-    `https://${host}`,
-    `http://${host}`,
     process.env.NEXT_PUBLIC_SITE_URL,
   ].filter(Boolean);
 

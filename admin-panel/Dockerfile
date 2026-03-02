@@ -1,5 +1,5 @@
 # =============================================================================
-# GateFlow Admin Panel - Dockerfile (Bun)
+# Sellf Admin Panel - Dockerfile (Bun)
 # =============================================================================
 # This Dockerfile is compatible with TWO deployment scenarios:
 #

@@ -5,6 +5,17 @@
  */
 
 import { parseVideoUrl, isTrustedVideoPlatform } from '@/lib/videoUtils';
+import { SUPPORTED_CURRENCY_CODES } from '@/lib/constants';
+
+/**
+ * Explicit field list for Products API v1 responses.
+ * Excludes internal/sensitive fields: sale_price, sale_price_until,
+ * sale_quantity_limit, sale_quantity_sold, tenant_id, success_redirect_url,
+ * pass_params_to_redirect, vat_rate, price_includes_vat, omnibus_exempt
+ *
+ * @see supabase/migrations/20250101000000_core_schema.sql (products table)
+ */
+export const PRODUCT_API_FIELDS = `id, name, slug, description, long_description, icon, image_url, thumbnail_url, price, currency, features, layout_template, is_active, is_featured, is_listed, available_from, available_until, auto_grant_duration_days, content_delivery_type, content_config, is_refundable, refund_period_days, enable_waitlist, allow_custom_price, custom_price_min, show_price_presets, custom_price_presets, vat_rate, price_includes_vat, omnibus_exempt, sale_price, sale_price_until, sale_quantity_limit, success_redirect_url, pass_params_to_redirect, created_at, updated_at`;
 
 /**
  * SECURITY FIX (V13): Escape ILIKE special characters to prevent SQL pattern injection
@@ -192,8 +203,9 @@ function validateCurrency(currency: string): ValidationResult {
     errors.push('Currency must be exactly 3 characters');
   } else if (!/^[A-Z]{3}$/.test(currency)) {
     errors.push('Currency must be uppercase letters only');
+  } else if (!(SUPPORTED_CURRENCY_CODES as readonly string[]).includes(currency)) {
+    errors.push(`Unsupported currency code. Supported: ${SUPPORTED_CURRENCY_CODES.join(', ')}`);
   }
-  // Removed hardcoded currency list - let database be the source of truth
   
   return { isValid: errors.length === 0, errors };
 }
@@ -223,7 +235,7 @@ function validateIcon(icon: string): ValidationResult {
 
 function validateContentDeliveryType(type: string): ValidationResult {
   const errors: string[] = [];
-  const validTypes = ['content', 'redirect', 'download'];
+  const validTypes = ['content', 'redirect'];
   
   if (!type || typeof type !== 'string') {
     errors.push('Content delivery type is required');
@@ -274,9 +286,9 @@ function validateDuration(duration: number | null): ValidationResult {
   return { isValid: errors.length === 0, errors };
 }
 
-function validateUUID(uuid: string): ValidationResult {
+export function validateUUID(uuid: string): ValidationResult {
   const errors: string[] = [];
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
   if (!uuid || typeof uuid !== 'string') {
     errors.push('UUID is required');
@@ -451,6 +463,13 @@ export function validateCreateProduct(data: unknown): ValidationResult {
     errors.push(...durationResult.errors);
   }
 
+  // Validate long_description length
+  if (input.long_description !== undefined && input.long_description !== null) {
+    if (typeof input.long_description === 'string' && input.long_description.length > 50000) {
+      errors.push('Long description must be 50,000 characters or less');
+    }
+  }
+
   // Validate content config
   if (input.content_config) {
     const contentConfigResult = validateContentConfig(input.content_config);
@@ -523,6 +542,13 @@ export function validateUpdateProduct(data: unknown): ValidationResult {
   if (input.auto_grant_duration_days !== undefined) {
     const durationResult = validateDuration(input.auto_grant_duration_days);
     errors.push(...durationResult.errors);
+  }
+
+  // Validate long_description length
+  if (input.long_description !== undefined && input.long_description !== null) {
+    if (typeof input.long_description === 'string' && input.long_description.length > 50000) {
+      errors.push('Long description must be 50,000 characters or less');
+    }
   }
 
   // Validate content config
@@ -615,9 +641,10 @@ export function sanitizeProductData(data: Record<string, unknown>, setDefaults: 
 
   // Validate custom_price_min if provided
   if (sanitizedData.custom_price_min !== undefined) {
-    // Ensure minimum is at least 0.50 (Stripe requirement)
-    const minPrice = parseFloat(String(sanitizedData.custom_price_min)) || 5.00;
-    sanitizedData.custom_price_min = Math.max(0.50, minPrice);
+    // Allow 0 for PWYW-free products (nullish coalescing — 0 is valid)
+    const parsed = parseFloat(String(sanitizedData.custom_price_min));
+    const minPrice = isNaN(parsed) ? 5.00 : parsed;
+    sanitizedData.custom_price_min = Math.max(0, minPrice);
   }
 
   // Ensure custom_price_presets is a valid array if provided

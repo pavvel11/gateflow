@@ -1,22 +1,21 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
 import { Product } from '@/types';
 import { ExpressCheckoutConfig } from '@/types/payment-config';
+import type { TaxMode } from '@/lib/actions/shop-config';
 import FreeProductForm from './FreeProductForm';
 import PaidProductForm from './PaidProductForm';
 import WaitlistForm from '@/components/WaitlistForm';
 import FloatingToolbar from '@/components/FloatingToolbar';
 import { DemoResetCountdown } from '@/components/DemoCheckoutNotice';
-import GateFlowBranding from '@/components/GateFlowBranding';
-import { useTheme } from '@/components/providers/theme-provider';
+import SellfBranding from '@/components/SellfBranding';
 
 interface ProductPurchaseViewProps {
   product: Product;
   paymentMethodOrder?: string[];
   expressCheckoutConfig?: ExpressCheckoutConfig;
-  checkoutTheme?: string;
   licenseValid?: boolean;
+  taxMode?: TaxMode;
 }
 
 type UnavailableReason = 'not_started' | 'expired' | 'inactive' | null;
@@ -47,60 +46,8 @@ function getProductUnavailableReason(product: Product): UnavailableReason {
   return null; // Product is available
 }
 
-/**
- * Override theme on checkout page based on admin's shop_config.checkout_theme setting.
- *
- * Priority: user manual toggle (sessionStorage) > admin force > system default.
- * If user clicks the theme toggle on checkout, their choice persists for the session.
- * On next session (or cleared sessionStorage), admin's default applies again.
- */
-const CHECKOUT_USER_OVERRIDE_KEY = 'gf_checkout_theme_user';
-
-function useForceCheckoutTheme(checkoutTheme?: string) {
-  const { setTheme } = useTheme();
-  const skipNextEvent = useRef(false);
-
-  // Apply admin's default on mount — only if user hasn't overridden in this session
-  useEffect(() => {
-    if (!checkoutTheme || checkoutTheme === 'system') return;
-
-    const userOverride = sessionStorage.getItem(CHECKOUT_USER_OVERRIDE_KEY);
-    if (userOverride) {
-      // User already toggled manually in this session — respect their choice
-      skipNextEvent.current = true;
-      setTheme(userOverride as 'light' | 'dark' | 'system');
-      return;
-    }
-
-    // Mark next event as "ours" so the listener ignores it
-    skipNextEvent.current = true;
-    setTheme(checkoutTheme as 'light' | 'dark');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [checkoutTheme]);
-
-  // Track user manual toggles via custom event from theme-provider
-  useEffect(() => {
-    if (!checkoutTheme || checkoutTheme === 'system') return;
-
-    const handler = (e: Event) => {
-      if (skipNextEvent.current) {
-        skipNextEvent.current = false;
-        return; // This was our forced setTheme, not user action
-      }
-      const newTheme = (e as CustomEvent).detail;
-      if (newTheme) {
-        sessionStorage.setItem(CHECKOUT_USER_OVERRIDE_KEY, newTheme);
-      }
-    };
-
-    window.addEventListener('gf-theme-change', handler);
-    return () => window.removeEventListener('gf-theme-change', handler);
-  }, [checkoutTheme]);
-}
-
-export default function ProductPurchaseView({ product, paymentMethodOrder, expressCheckoutConfig, checkoutTheme, licenseValid }: ProductPurchaseViewProps) {
+export default function ProductPurchaseView({ product, paymentMethodOrder, expressCheckoutConfig, licenseValid, taxMode }: ProductPurchaseViewProps) {
   const unavailableReason = getProductUnavailableReason(product);
-  useForceCheckoutTheme(checkoutTheme);
 
   // Show waitlist form if product is unavailable AND waitlist is enabled
   const showWaitlist = unavailableReason !== null && product.enable_waitlist;
@@ -113,14 +60,14 @@ export default function ProductPurchaseView({ product, paymentMethodOrder, expre
 
       {showWaitlist ? (
         <WaitlistForm product={product} unavailableReason={unavailableReason} />
-      ) : product.price === 0 ? (
+      ) : product.price === 0 && !product.allow_custom_price ? (
         <FreeProductForm product={product} />
       ) : (
-        <PaidProductForm product={product} paymentMethodOrder={paymentMethodOrder} expressCheckoutConfig={expressCheckoutConfig} />
+        <PaidProductForm product={product} paymentMethodOrder={paymentMethodOrder} expressCheckoutConfig={expressCheckoutConfig} taxMode={taxMode} />
       )}
 
-      {/* GateFlow branding — hidden when a valid license is active */}
-      {!licenseValid && <GateFlowBranding />}
+      {/* Sellf branding — hidden when a valid license is active */}
+      {!licenseValid && <SellfBranding />}
     </div>
   );
 }

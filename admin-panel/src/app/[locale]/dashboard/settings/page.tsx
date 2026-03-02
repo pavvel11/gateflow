@@ -3,10 +3,12 @@ import ShopSettings from '@/components/settings/ShopSettings';
 import BrandingSettings from '@/components/settings/BrandingSettings';
 import CheckoutThemeSettings from '@/components/settings/CheckoutThemeSettings';
 import StripeSettings from '@/components/settings/StripeSettings';
+import StripeTaxSettings from '@/components/settings/StripeTaxSettings';
 import PaymentMethodSettingsWrapper from '@/components/settings/PaymentMethodSettingsWrapper';
 import OmnibusSettings from '@/components/settings/OmnibusSettings';
 import LegalDocumentsSettings from '@/components/settings/LegalDocumentsSettings';
 import LicenseSettings from '@/components/settings/LicenseSettings';
+import SystemUpdateSettings from '@/components/settings/SystemUpdateSettings';
 import { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 
@@ -17,10 +19,10 @@ export default async function SettingsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-[40px] font-[800] text-sf-heading tracking-[-0.03em] leading-[1.1]">
           {t('title')}
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
+        <p className="text-sf-body mt-2">
           {t('subtitle')}
         </p>
       </div>
@@ -37,9 +39,13 @@ export default async function SettingsPage() {
 
       <StripeSettings />
 
+      <StripeTaxSettings />
+
       <PaymentMethodSettingsWrapper />
 
       <LicenseSettings />
+
+      <SystemUpdateSettings />
     </div>
   );
 }

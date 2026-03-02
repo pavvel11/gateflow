@@ -22,6 +22,7 @@ interface ProductsTableProps {
   onGenerateCode: (product: Product) => void;
   onToggleStatus: (productId: string, currentStatus: boolean) => void;
   onToggleFeatured: (productId: string, currentFeatured: boolean) => void;
+  onToggleListed: (productId: string, currentListed: boolean) => void;
   currentPage: number;
   totalPages: number;
   totalItems: number;
@@ -44,6 +45,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
   onGenerateCode,
   onToggleStatus,
   onToggleFeatured,
+  onToggleListed,
   currentPage,
   totalPages,
   totalItems,
@@ -62,7 +64,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
   const SortableHeader = ({ column, title, className = "" }: { column: string; title: string; className?: string }) => (
     <th
       scope="col"
-      className={`px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer whitespace-nowrap ${className}`}
+      className={`px-3 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider cursor-pointer whitespace-nowrap ${className}`}
       onClick={() => onSort(column)}
     >
       <div className="flex items-center">
@@ -79,15 +81,15 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
   if (loading) {
     return (
       <div className="text-center py-10">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-        <p className="mt-4 text-gray-600 dark:text-gray-400">{t('loadingProducts')}</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sf-accent mx-auto"></div>
+        <p className="mt-4 text-sf-body">{t('loadingProducts')}</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg" role="alert">
+      <div className="bg-sf-danger-soft border border-sf-danger text-sf-danger px-4 py-3" role="alert">
         <strong className="font-bold">{t('error')}:</strong>
         <span className="block sm:inline"> {error}</span>
       </div>
@@ -96,9 +98,9 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
 
   if (products.length === 0) {
     return (
-      <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-lg shadow">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-white">{t('noProducts')}</h3>
-        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+      <div className="text-center py-10 bg-sf-base border-2 border-sf-border-medium">
+        <h3 className="text-lg font-semibold text-sf-heading">{t('noProducts')}</h3>
+        <p className="mt-2 text-sm text-sf-muted">
           {t('noProductsMessage')}
         </p>
       </div>
@@ -109,9 +111,9 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
     <div className="flex flex-col">
       <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
         <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-          <div className="shadow-lg overflow-hidden border-b border-gray-200 dark:border-gray-700 sm:rounded-lg bg-white dark:bg-gray-800">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-700">
+          <div className="overflow-hidden border-2 border-sf-border-medium sm:bg-sf-base">
+            <table className="min-w-full divide-y divide-sf-border-subtle">
+              <thead className="bg-sf-raised">
                 <tr>
                   <SortableHeader column="name" title={t('name')} />
                   <SortableHeader column="price" title={t('price')} />
@@ -125,37 +127,45 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
-                {products.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
+              <tbody className="divide-y divide-sf-border-subtle">
+                {products.map((product, index) => (
+                  <tr key={product.id} className={`hover:bg-sf-hover transition-colors duration-150 ${index % 2 === 1 ? 'bg-sf-row-alt' : ''}`}>
                     <td className="px-3 py-4">
                       <div className="flex items-center max-w-[300px]">
                         <div className="flex-shrink-0 h-8 w-8">
-                          <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-lg">
+                          <div className="h-8 w-8 bg-sf-raised flex items-center justify-center text-lg">
                             {product.icon?.length === 2 || product.icon?.match(/\p{Emoji}/u) ? product.icon : getIconEmoji(product.icon)}
                           </div>
                         </div>
                         <div className="ml-3 min-w-0 flex-1 overflow-hidden">
                           <div className="flex items-center gap-1">
-                            <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{product.name}</div>
+                            <div className="text-sm font-medium text-sf-heading truncate">{product.name}</div>
                             {product.is_featured && (
                               <span
-                                className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 flex-shrink-0"
+                                className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-sf-warning-soft text-sf-warning flex-shrink-0"
                                 title={t('featuredProduct')}
                               >
                                 ⭐
                               </span>
                             )}
+                            {product.is_listed === false && (
+                              <span
+                                className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-sf-info-soft text-sf-info flex-shrink-0"
+                                title={t('unlistedTooltip')}
+                              >
+                                {t('unlisted')}
+                              </span>
+                            )}
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <span className="text-xs text-gray-500 dark:text-gray-400 truncate">{product.slug}</span>
+                            <span className="text-xs text-sf-muted truncate">{product.slug}</span>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigator.clipboard.writeText(product.id);
                                 addToast(t('idCopied'), 'success', 2000);
                               }}
-                              className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[10px] font-mono text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                              className="inline-flex items-center gap-0.5 px-1 py-0.5 text-[10px] font-mono text-sf-muted hover:text-sf-body hover:bg-sf-raised transition-colors"
                               title={`${t('copyId')}: ${product.id}`}
                             >
                               <span className="hidden sm:inline">{product.id.slice(0, 8)}...</span>
@@ -169,21 +179,21 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap text-center">
                       {product.price === 0 ? (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-700 dark:text-blue-100">
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold bg-sf-accent-soft text-sf-accent">
                           {t('free')}
                         </span>
                       ) : (
-                        <div className="text-sm text-gray-900 dark:text-white">{formatPrice(product.price, product.currency)}</div>
+                        <div className="text-sm text-sf-heading">{formatPrice(product.price, product.currency)}</div>
                       )}
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap text-center">
                       <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() => onToggleStatus(product.id, product.is_active)}
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer transition-colors hover:opacity-80 ${
+                          className={`px-2 inline-flex text-xs leading-5 font-semibold cursor-pointer transition-colors hover:opacity-80 ${
                             product.is_active
-                              ? 'bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100'
-                              : 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100'
+                              ? 'bg-sf-success-soft text-sf-success'
+                              : 'bg-sf-danger-soft text-sf-danger'
                           }`}
                         >
                           {product.is_active ? t('active') : t('inactive')}
@@ -191,14 +201,14 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                         {!product.is_active && (
                           product.enable_waitlist ? (
                             <span
-                              className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"
+                              className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-sf-accent-soft text-sf-accent"
                               title={t('waitlistEnabled')}
                             >
                               📋
                             </span>
                           ) : (
                             <span
-                              className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
+                              className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-sf-raised text-sf-muted"
                               title={t('waitlistDisabled')}
                             >
                               🚫
@@ -207,30 +217,30 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                         )}
                       </div>
                     </td>
-                    <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 hidden 2xl:table-cell whitespace-nowrap">
+                    <td className="px-3 py-4 text-sm text-sf-muted hidden 2xl:table-cell whitespace-nowrap">
                       {product.available_from ? formatUTCForDisplay(product.available_from, {
                         year: '2-digit',
                         month: 'short',
                         day: 'numeric'
                       }) : '-'}
                     </td>
-                    <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 hidden 2xl:table-cell whitespace-nowrap">
+                    <td className="px-3 py-4 text-sm text-sf-muted hidden 2xl:table-cell whitespace-nowrap">
                       {product.available_until ? formatUTCForDisplay(product.available_until, {
                         year: '2-digit',
                         month: 'short',
                         day: 'numeric'
                       }) : '-'}
                     </td>
-                    <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 hidden 2xl:table-cell text-center whitespace-nowrap">
+                    <td className="px-3 py-4 text-sm text-sf-muted hidden 2xl:table-cell text-center whitespace-nowrap">
                       {product.auto_grant_duration_days ? (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-sf-accent-soft text-sf-accent">
                           {product.auto_grant_duration_days}d
                         </span>
                       ) : (
-                        <span className="text-gray-400">∞</span>
+                        <span className="text-sf-muted">∞</span>
                       )}
                     </td>
-                    <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 hidden xl:table-cell whitespace-nowrap">
+                    <td className="px-3 py-4 text-sm text-sf-muted hidden xl:table-cell whitespace-nowrap">
                       {formatUTCForDisplay(product.created_at, {
                         year: '2-digit',
                         month: 'short',
@@ -240,11 +250,31 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                     <td className="px-3 py-4 text-right text-sm font-medium whitespace-nowrap">
                       <div className="flex items-center justify-end space-x-1">
                         <button
+                          onClick={() => onToggleListed(product.id, product.is_listed !== false)}
+                          className={`p-1 transition-colors ${
+                            product.is_listed !== false
+                              ? 'text-sf-muted hover:text-sf-warning'
+                              : 'text-sf-warning hover:text-sf-warning'
+                          }`}
+                          title={product.is_listed !== false ? t('unlistedTooltip') : t('listedEnabled')}
+                        >
+                          {product.is_listed !== false ? (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                            </svg>
+                          )}
+                        </button>
+                        <button
                           onClick={() => onToggleFeatured(product.id, product.is_featured)}
-                          className={`p-1 transition-colors rounded ${
+                          className={`p-1 transition-colors ${
                             product.is_featured
-                              ? 'text-yellow-500 hover:text-yellow-600'
-                              : 'text-gray-400 hover:text-yellow-500'
+                              ? 'text-sf-warning hover:text-sf-warning'
+                              : 'text-sf-muted hover:text-sf-warning'
                           }`}
                           title={product.is_featured ? t('removeFeatured') : t('setFeatured')}
                         >
@@ -254,7 +284,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                         </button>
                         <button
                           onClick={() => onGenerateCode(product)}
-                          className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors p-1"
+                          className="text-sf-accent hover:text-sf-accent transition-colors p-1"
                           aria-label={t('generateCodeLabel', { name: product.name })}
                           title={t('generateCode')}
                         >
@@ -264,7 +294,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                         </button>
                         <button
                           onClick={() => onPreviewProduct(product)}
-                          className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 transition-colors p-1"
+                          className="text-sf-success hover:text-sf-success transition-colors p-1"
                           aria-label={t('previewLabel', { name: product.name })}
                           title={t('preview')}
                         >
@@ -275,7 +305,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                         </button>
                         <button
                           onClick={() => onPreviewRedirect(product)}
-                          className="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300 transition-colors p-1 hidden sm:block"
+                          className="text-sf-accent hover:text-sf-accent transition-colors p-1 hidden sm:block"
                           aria-label={t('previewRedirectLabel', { name: product.name })}
                           title={t('previewRedirect')}
                         >
@@ -284,8 +314,18 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                           </svg>
                         </button>
                         <button
+                          onClick={() => window.open(`/checkout/${product.slug}?funnel_test=1`, '_blank')}
+                          className="text-sf-warning hover:text-sf-warning transition-colors p-1 hidden sm:block"
+                          aria-label={t('testFunnelLabel', { name: product.name })}
+                          title={t('testFunnel')}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M5 14.5l-1.43 5.725a1.125 1.125 0 001.09 1.4h14.68a1.125 1.125 0 001.09-1.4L19 14.5" />
+                          </svg>
+                        </button>
+                        <button
                           onClick={() => onEditProduct(product)}
-                          className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors p-1"
+                          className="text-sf-accent hover:text-sf-accent transition-colors p-1"
                           aria-label={t('editLabel', { name: product.name })}
                           title={t('edit')}
                         >
@@ -295,7 +335,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                         </button>
                         <button
                           onClick={() => onDuplicateProduct(product)}
-                          className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 transition-colors p-1"
+                          className="text-sf-success hover:text-sf-success transition-colors p-1"
                           aria-label={t('duplicateLabel', { name: product.name })}
                           title={t('duplicate')}
                         >
@@ -305,7 +345,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                         </button>
                         <button
                           onClick={() => onDeleteProduct(product)}
-                          className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors p-1"
+                          className="text-sf-danger hover:text-sf-danger transition-colors p-1"
                           aria-label={t('deleteLabel', { name: product.name })}
                           title={t('delete')}
                         >
@@ -319,9 +359,9 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                 ))}
               </tbody>
             </table>
-            <div className="px-4 py-3 sm:px-6 border-t border-gray-200 dark:border-gray-700">
+            <div className="px-4 py-3 sm:px-6 border-t border-sf-border">
               <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-700 dark:text-gray-300">
+                <div className="text-sm text-sf-body">
                   {t('showing')} <span className="font-medium">{startIndex}</span> {t('to')} <span className="font-medium">{endIndex}</span> {t('of')} <span className="font-medium">{totalItems}</span> {t('results')}
                 </div>
                 <Pagination

@@ -88,8 +88,8 @@ const UsersPageContent: React.FC = () => {
   return (
     <div className="space-y-6">
        <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('title')}</h1>
-        <p className="text-gray-600 dark:text-gray-400">{t('description')}</p>
+        <h1 className="text-[40px] font-[800] text-sf-heading tracking-[-0.03em] leading-[1.1]">{t('title')}</h1>
+        <p className="text-sf-body">{t('description')}</p>
       </div>
       <UsersFilterBar
         searchTerm={searchTerm}

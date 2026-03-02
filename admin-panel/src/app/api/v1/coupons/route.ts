@@ -17,8 +17,18 @@ import {
   successResponse,
   API_SCOPES,
 } from '@/lib/api';
-import { createAdminClient } from '@/lib/supabase/admin';
 import { parseLimit, applyCursorToQuery, createPaginationResponse, validateCursor } from '@/lib/api/pagination';
+import { escapeIlikePattern, validateUUID } from '@/lib/validations/product';
+import { SUPPORTED_CURRENCY_CODES } from '@/lib/constants';
+
+const COUPON_API_FIELDS = `
+  id, code, name, discount_type, discount_value, currency,
+  is_active, is_public, starts_at, expires_at,
+  usage_limit_global, usage_limit_per_user, current_usage_count,
+  allowed_emails, allowed_product_ids, exclude_order_bumps,
+  is_oto_coupon, oto_offer_id, source_transaction_id,
+  created_at, updated_at
+`;
 
 export async function OPTIONS(request: NextRequest) {
   return handleCorsPreFlight(request);
@@ -38,9 +48,7 @@ export async function OPTIONS(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    await authenticate(request, [API_SCOPES.COUPONS_READ]);
-
-    const adminClient = createAdminClient();
+    const { supabase } = await authenticate(request, [API_SCOPES.COUPONS_READ]);
     const { searchParams } = request.nextUrl;
 
     // Parse params
@@ -57,46 +65,33 @@ export async function GET(request: NextRequest) {
     }
 
     // Build query
-    let query = adminClient
+    let query = supabase
       .from('coupons')
-      .select(`
-        id,
-        code,
-        name,
-        discount_type,
-        discount_value,
-        currency,
-        is_active,
-        is_public,
-        starts_at,
-        expires_at,
-        usage_limit_global,
-        usage_limit_per_user,
-        current_usage_count,
-        allowed_emails,
-        allowed_product_ids,
-        exclude_order_bumps,
-        is_oto_coupon,
-        created_at,
-        updated_at
-      `);
+      .select(COUPON_API_FIELDS);
 
     // Filter by status
-    if (status === 'active') {
-      query = query
-        .eq('is_active', true)
-        .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
-    } else if (status === 'inactive') {
-      query = query.eq('is_active', false);
-    } else if (status === 'expired') {
-      query = query
-        .not('expires_at', 'is', null)
-        .lt('expires_at', new Date().toISOString());
+    if (status !== 'all') {
+      const validStatuses = ['active', 'inactive', 'expired'];
+      if (!validStatuses.includes(status)) {
+        return apiError(request, 'INVALID_INPUT', `Invalid status. Valid values: all, ${validStatuses.join(', ')}`);
+      }
+      if (status === 'active') {
+        query = query
+          .eq('is_active', true)
+          .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+      } else if (status === 'inactive') {
+        query = query.eq('is_active', false);
+      } else if (status === 'expired') {
+        query = query
+          .not('expires_at', 'is', null)
+          .lt('expires_at', new Date().toISOString());
+      }
     }
 
     // Search by code or name
     if (search) {
-      query = query.or(`code.ilike.%${search}%,name.ilike.%${search}%`);
+      const escapedSearch = escapeIlikePattern(search);
+      query = query.or(`code.ilike.%${escapedSearch}%,name.ilike.%${escapedSearch}%`);
     }
 
     // Sorting
@@ -133,13 +128,7 @@ export async function GET(request: NextRequest) {
       cursor
     );
 
-    return jsonResponse(
-      {
-        data: items,
-        pagination,
-      },
-      request
-    );
+    return jsonResponse(successResponse(items, pagination), request);
   } catch (error) {
     return handleApiError(error, request);
   }
@@ -168,9 +157,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    await authenticate(request, [API_SCOPES.COUPONS_WRITE]);
-
-    const adminClient = createAdminClient();
+    const { supabase } = await authenticate(request, [API_SCOPES.COUPONS_WRITE]);
 
     const body = await parseJsonBody<{
       code?: string;
@@ -221,6 +208,9 @@ export async function POST(request: NextRequest) {
       if (!body.currency) {
         throw new ApiValidationError('Currency is required for fixed discount coupons');
       }
+      if (!(SUPPORTED_CURRENCY_CODES as readonly string[]).includes(body.currency.toUpperCase())) {
+        throw new ApiValidationError(`Unsupported currency code. Supported: ${SUPPORTED_CURRENCY_CODES.join(', ')}`);
+      }
     }
 
     // Validate code format (alphanumeric + hyphens/underscores)
@@ -255,30 +245,61 @@ export async function POST(request: NextRequest) {
       expiresAt = date.toISOString();
     }
 
+    // Validate name length
+    if (body.name && body.name.length > 200) {
+      throw new ApiValidationError('Coupon name must be 200 characters or less');
+    }
+
     // Validate usage limits (null means unlimited)
     if (body.usage_limit_global !== undefined && body.usage_limit_global !== null) {
-      if (!Number.isInteger(body.usage_limit_global) || body.usage_limit_global < 1) {
-        throw new ApiValidationError('usage_limit_global must be a positive integer');
+      if (!Number.isInteger(body.usage_limit_global) || body.usage_limit_global < 1 || body.usage_limit_global > 10000000) {
+        throw new ApiValidationError('usage_limit_global must be a positive integer up to 10,000,000');
       }
     }
 
     if (body.usage_limit_per_user !== undefined) {
-      if (!Number.isInteger(body.usage_limit_per_user) || body.usage_limit_per_user < 1) {
-        throw new ApiValidationError('usage_limit_per_user must be a positive integer');
+      if (!Number.isInteger(body.usage_limit_per_user) || body.usage_limit_per_user < 1 || body.usage_limit_per_user > 10000) {
+        throw new ApiValidationError('usage_limit_per_user must be a positive integer up to 10,000');
       }
     }
 
     // Validate arrays
-    if (body.allowed_emails !== undefined && !Array.isArray(body.allowed_emails)) {
-      throw new ApiValidationError('allowed_emails must be an array');
+    if (body.allowed_emails !== undefined) {
+      if (!Array.isArray(body.allowed_emails)) {
+        throw new ApiValidationError('allowed_emails must be an array');
+      }
+      if (body.allowed_emails.length > 500) {
+        throw new ApiValidationError('allowed_emails cannot exceed 500 entries');
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      for (const email of body.allowed_emails) {
+        if (typeof email !== 'string' || !emailRegex.test(email)) {
+          throw new ApiValidationError(`Invalid email format in allowed_emails: ${email}`);
+        }
+      }
     }
 
-    if (body.allowed_product_ids !== undefined && !Array.isArray(body.allowed_product_ids)) {
-      throw new ApiValidationError('allowed_product_ids must be an array');
+    if (body.allowed_product_ids !== undefined) {
+      if (!Array.isArray(body.allowed_product_ids)) {
+        throw new ApiValidationError('allowed_product_ids must be an array');
+      }
+      if (body.allowed_product_ids.length > 100) {
+        throw new ApiValidationError('allowed_product_ids cannot exceed 100 entries');
+      }
+    }
+
+    // Validate each product ID in allowed_product_ids
+    if (Array.isArray(body.allowed_product_ids)) {
+      for (const pid of body.allowed_product_ids) {
+        const pidValidation = validateUUID(String(pid));
+        if (!pidValidation.isValid) {
+          throw new ApiValidationError(`Invalid product ID format in allowed_product_ids: ${pid}`);
+        }
+      }
     }
 
     // Insert coupon
-    const { data: newCoupon, error: insertError } = await adminClient
+    const { data: newCoupon, error: insertError } = await supabase
       .from('coupons')
       .insert({
         code: body.code.toUpperCase().trim(),
@@ -296,7 +317,7 @@ export async function POST(request: NextRequest) {
         allowed_product_ids: body.allowed_product_ids || [],
         exclude_order_bumps: body.exclude_order_bumps ?? false,
       })
-      .select()
+      .select(COUPON_API_FIELDS)
       .single();
 
     if (insertError) {

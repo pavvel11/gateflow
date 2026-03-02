@@ -9,6 +9,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { acceptAllCookies } from './helpers/consent';
+import { setAuthSession } from './helpers/admin-auth';
 
 // Enforce single worker for database state consistency
 test.describe.configure({ mode: 'serial' });
@@ -49,16 +50,7 @@ test.describe('API Keys Management UI', () => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email: adminEmail,
-      password: adminPassword,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
+    await setAuthSession(page, adminEmail, adminPassword);
 
     await page.waitForTimeout(500);
   };
@@ -165,7 +157,7 @@ test.describe('API Keys Management UI', () => {
 
     // Get key value
     const keyValue = await keyInput.inputValue();
-    expect(keyValue).toMatch(/^gf_live_/);
+    expect(keyValue).toMatch(/^sf_live_/);
 
     // Close modal
     await page.getByRole('button', { name: /Done/i }).click();
@@ -224,7 +216,7 @@ test.describe('API Keys Management UI', () => {
 
     // Verify clipboard content
     const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
-    expect(clipboardText).toMatch(/^gf_live_/);
+    expect(clipboardText).toMatch(/^sf_live_/);
 
     await page.getByRole('button', { name: /Done/i }).click();
   });
@@ -272,7 +264,7 @@ test.describe('API Keys Management UI', () => {
     await expect(page.getByText('Test Key Default')).toBeVisible();
 
     // Should show key prefix with ellipsis
-    await expect(page.locator('code').filter({ hasText: /gf_live_.*\.\.\./ }).first()).toBeVisible();
+    await expect(page.locator('code').filter({ hasText: /sf_live_.*\.\.\./ }).first()).toBeVisible();
 
     // Should show Active status badge (green)
     await expect(page.locator('span').filter({ hasText: /Active/i }).first()).toBeVisible();
@@ -304,7 +296,7 @@ test.describe('API Keys Management UI', () => {
     // New key should be visible
     const keyInput = page.locator('input[readonly]').first();
     const newKey = await keyInput.inputValue();
-    expect(newKey).toMatch(/^gf_live_/);
+    expect(newKey).toMatch(/^sf_live_/);
 
     await page.getByRole('button', { name: /Done/i }).click();
 
@@ -355,11 +347,13 @@ test.describe('API Keys Management UI', () => {
     // Wait for table
     await expect(page.locator('table')).toBeVisible({ timeout: 10000 });
 
-    // Should have Active keys (green)
-    await expect(page.locator('span.bg-green-100, span.dark\\:bg-green-900\\/30').first()).toBeVisible();
+    // Should have Active keys
+    const activeCount = await page.locator('span').filter({ hasText: /^Active$/ }).count();
+    expect(activeCount).toBeGreaterThan(0);
 
-    // Should have Revoked key (red) - from previous test
-    await expect(page.locator('span.bg-red-100, span.dark\\:bg-red-900\\/30').first()).toBeVisible();
+    // Should have Revoked key - from previous test
+    const revokedCount = await page.locator('span').filter({ hasText: /^Revoked$/ }).count();
+    expect(revokedCount).toBeGreaterThan(0);
   });
 
   test('should access API keys page directly', async ({ page }) => {

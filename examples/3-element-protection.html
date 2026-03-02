@@ -240,7 +240,7 @@
         
         <div class="public-content">
             <h2>🌍 Public Content</h2>
-            <p>This section is visible to everyone. It demonstrates how you can mix public and protected content on the same page using GateFlow's <span class="highlight">element-level protection</span>.</p>
+            <p>This section is visible to everyone. It demonstrates how you can mix public and protected content on the same page using Sellf's <span class="highlight">element-level protection</span>.</p>
             
             <div class="tool-card">
                 <h3>🆓 Free Tools</h3>
@@ -256,7 +256,7 @@
         <div class="content-grid">
             <div class="content-section">
                 <h2>How Element Protection Works</h2>
-                <p>With GateFlow element protection, you can:</p>
+                <p>With Sellf element protection, you can:</p>
                 <ul>
                     <li>🎯 Protect specific elements</li>
                     <li>🔓 Keep other content public</li>
@@ -265,13 +265,13 @@
                 </ul>
                 
                 <div class="code-block">
-<span style="color: #68d391;">// Element protection with data-gatekeeper-product attribute</span>
-<span style="color: #63b3ed;">// Just use data-gatekeeper-product attribute on elements</span>
-<span style="color: #f6ad55;">&lt;div</span> <span style="color: #68d391;">data-gatekeeper-product</span>=<span style="color: #fbb6ce;">"pro-toolkit"</span><span style="color: #f6ad55;">&gt;</span>
+<span style="color: #68d391;">// Element protection with data-sellf-product attribute</span>
+<span style="color: #63b3ed;">// Just use data-sellf-product attribute on elements</span>
+<span style="color: #f6ad55;">&lt;div</span> <span style="color: #68d391;">data-sellf-product</span>=<span style="color: #fbb6ce;">"pro-toolkit"</span><span style="color: #f6ad55;">&gt;</span>
     Content only for pro-toolkit users
 <span style="color: #f6ad55;">&lt;/div&gt;</span>
 
-<span style="color: #f6ad55;">&lt;div</span> <span style="color: #68d391;">data-gatekeeper-product</span>=<span style="color: #fbb6ce;">"vip-masterclass"</span><span style="color: #f6ad55;">&gt;</span>
+<span style="color: #f6ad55;">&lt;div</span> <span style="color: #68d391;">data-sellf-product</span>=<span style="color: #fbb6ce;">"vip-masterclass"</span><span style="color: #f6ad55;">&gt;</span>
     Content only for vip-masterclass users
 <span style="color: #f6ad55;">&lt;/div&gt;</span>
 
@@ -281,7 +281,7 @@
 <span style="color: #f6ad55;">&lt;/div&gt;</span>
 
 <span style="color: #68d391;">// Script usage for element protection:</span>
-<span style="color: #68d391;">// &lt;script src="/api/gatekeeper"&gt;&lt;/script&gt;</span>
+<span style="color: #68d391;">// &lt;script src="/api/sellf"&gt;&lt;/script&gt;</span>
                 </div>
             </div>
 
@@ -297,7 +297,7 @@
                 
                 <div class="code-block">
 <span style="color: #68d391;">// Protection modes:</span>
-<span style="color: #68d391;">// - Elements with data-gatekeeper-product are protected</span>
+<span style="color: #68d391;">// - Elements with data-sellf-product are protected</span>
 <span style="color: #68d391;">// - Elements with data-no-access show when access denied</span>
 <span style="color: #68d391;">// - Just add the script and use data attributes</span>
                 </div>
@@ -310,7 +310,7 @@
         </div>
 
         <!-- This section is protected for pro-toolkit users -->
-        <div class="pro-only" data-gatekeeper-product="pro-toolkit" data-testid="pro-toolkit-section">
+        <div class="pro-only" data-sellf-product="pro-toolkit" data-testid="pro-toolkit-section">
             <!-- Content shown when user HAS access -->
             <div data-has-access data-testid="pro-toolkit-has-access">
                 <h2>🔧 YOU SEE THIS SECTION BECAUSE YOU HAVE ACCESS TO PRO-TOOLKIT</h2>
@@ -347,7 +347,7 @@ export default ${name};
         </div>
 
         <!-- This section is protected for vip-masterclass users -->
-        <div class="pro-only" data-gatekeeper-product="vip-masterclass" data-testid="vip-masterclass-section">
+        <div class="pro-only" data-sellf-product="vip-masterclass" data-testid="vip-masterclass-section">
             <!-- Content shown when user HAS access -->
             <div data-has-access data-testid="vip-masterclass-has-access">
                 <h2>👑 YOU SEE THIS SECTION BECAUSE YOU HAVE ACCESS TO VIP-MASTERCLASS</h2>
@@ -380,7 +380,7 @@ export default ${name};
         </div>
 
         <!-- This section is protected for free-tutorial users (free product example) -->
-        <div class="pro-only" style="border-left-color: #48bb78;" data-gatekeeper-product="free-tutorial" data-testid="free-tutorial-section">
+        <div class="pro-only" style="border-left-color: #48bb78;" data-sellf-product="free-tutorial" data-testid="free-tutorial-section">
             <!-- Content shown when user HAS access -->
             <div data-has-access data-testid="free-tutorial-has-access">
                 <h2>🎓 YOU SEE THIS SECTION BECAUSE YOU HAVE ACCESS TO FREE-TUTORIAL</h2>
@@ -390,7 +390,7 @@ export default ${name};
                     <h3>📚 Free Tutorial Content</h3>
                     <p>Welcome to your free tutorial! Here's what you'll learn:</p>
                     <ul style="text-align: left; margin-top: 15px;">
-                        <li>Getting started with GateFlow</li>
+                        <li>Getting started with Sellf</li>
                         <li>Basic content protection</li>
                         <li>Element-level access control</li>
                     </ul>
@@ -402,9 +402,9 @@ export default ${name};
                 <h2>🎁 Free Tutorial - Claim Your Access</h2>
                 <p>This is a <strong>free product</strong>. Claim it to unlock the tutorial content!</p>
 
-                <!-- GateFlow Embed Widget for free product -->
+                <!-- Sellf Embed Widget for free product -->
                 <div style="margin: 1.5rem 0;">
-                    <div data-gateflow-product="free-tutorial"></div>
+                    <div data-sellf-product="free-tutorial"></div>
                 </div>
 
                 <p style="color: #718096; font-size: 0.875rem; text-align: center;">
@@ -423,12 +423,12 @@ export default ${name};
             </ul>
             
             <div class="code-block">
-<span style="color: #68d391;">// Element protection with data-gatekeeper-product attribute</span>
-<span style="color: #f6ad55;">&lt;div</span> <span style="color: #68d391;">data-gatekeeper-product</span>=<span style="color: #fbb6ce;">"pro-toolkit"</span><span style="color: #f6ad55;">&gt;</span>
+<span style="color: #68d391;">// Element protection with data-sellf-product attribute</span>
+<span style="color: #f6ad55;">&lt;div</span> <span style="color: #68d391;">data-sellf-product</span>=<span style="color: #fbb6ce;">"pro-toolkit"</span><span style="color: #f6ad55;">&gt;</span>
     Content only for pro-toolkit users
 <span style="color: #f6ad55;">&lt;/div&gt;</span>
 
-<span style="color: #f6ad55;">&lt;div</span> <span style="color: #68d391;">data-gatekeeper-product</span>=<span style="color: #fbb6ce;">"vip-masterclass"</span><span style="color: #f6ad55;">&gt;</span>
+<span style="color: #f6ad55;">&lt;div</span> <span style="color: #68d391;">data-sellf-product</span>=<span style="color: #fbb6ce;">"vip-masterclass"</span><span style="color: #f6ad55;">&gt;</span>
     Content only for vip-masterclass users
 <span style="color: #f6ad55;">&lt;/div&gt;</span>
 
@@ -443,15 +443,15 @@ export default ${name};
     </div>
 
 
-    <!-- GateFlow Script - no productSlug needed for element protection -->
-    <script src="http://localhost:3000/api/gatekeeper?id=3"></script>
+    <!-- Sellf Script - no productSlug needed for element protection -->
+    <script src="http://localhost:3000/api/sellf?id=3"></script>
 
-    <!-- GateFlow Embed Widget (auto-configured via endpoint) -->
-    <script src="http://localhost:3000/api/gateflow-embed"></script>
+    <!-- Sellf Embed Widget (auto-configured via endpoint) -->
+    <script src="http://localhost:3000/api/sellf-embed"></script>
 
     <!-- Optional: Listen for success events -->
     <script>
-      document.addEventListener('gateflow:success', function(e) {
+      document.addEventListener('sellf:success', function(e) {
         console.log('Product claimed:', e.detail.productSlug, 'by:', e.detail.email);
         // Optionally refresh the page or update UI
         // location.reload();

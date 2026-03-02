@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { acceptAllCookies } from './helpers/consent';
+import { setAuthSession } from './helpers/admin-auth';
 
 // Enforce single worker
 test.describe.configure({ mode: 'serial' });
@@ -26,17 +27,7 @@ test.describe('Integrations & Script Injection', () => {
     await page.goto('/');
     
     // Simulate login via client-side auth state injection
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      // @ts-ignore
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email: adminEmail,
-      password: adminPassword,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
+    await setAuthSession(page, adminEmail, adminPassword);
 
     await page.waitForTimeout(1000); 
   };
@@ -59,11 +50,25 @@ test.describe('Integrations & Script Injection', () => {
   });
 
   test.afterEach(async () => {
-    // Reset integrations config after each test to avoid pollution
-    await supabaseAdmin
-      .from('integrations_config')
-      .delete()
-      .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all rows
+    // Reset integrations config after each test to avoid pollution.
+    // Use upsert (not delete) so the row still exists for subsequent UPDATE calls in the app.
+    await supabaseAdmin.from('integrations_config').upsert({
+      id: 1,
+      gtm_container_id: null,
+      gtm_server_container_url: null,
+      facebook_pixel_id: null,
+      fb_capi_enabled: false,
+      facebook_capi_token: null,
+      umami_website_id: null,
+      umami_script_url: null,
+      cookie_consent_enabled: true,
+      consent_logging_enabled: false,
+      currency_api_provider: 'ecb',
+      currency_api_enabled: true,
+      currency_api_key_encrypted: null,
+      currency_api_key_iv: null,
+      currency_api_key_tag: null,
+    });
   });
 
   test('should save integration settings and inject scripts on product page', async ({ page }) => {
@@ -258,7 +263,8 @@ test.describe('Integrations & Script Injection', () => {
     
     // Go to product page with cache buster
     await page.goto(`/p/${productSlug}?t=${Date.now()}`);
-    
+    await page.waitForLoadState('load');
+
     // 1. Verify GTM is NOT present initially (blocked by consent)
     let pageContent = await page.content();
     
@@ -276,7 +282,7 @@ test.describe('Integrations & Script Injection', () => {
     // 2. Accept Consent
     // Find Klaro "I accept" button. It's usually "Accept all" or similar.
     const acceptBtn = page.locator('.cm-btn-success, button:has-text("Accept"), button:has-text("Zgoda")').first();
-    await expect(acceptBtn).toBeVisible();
+    await expect(acceptBtn).toBeVisible({ timeout: 15000 });
     await acceptBtn.click();
     
     // 3. Verify GTM loads after consent
@@ -295,10 +301,380 @@ test.describe('Integrations & Script Injection', () => {
     
     pageContent = await page.content();
     expect(pageContent).toContain(validGtmId);
-    
+
     // Check if dataLayer is initialized
     const dataLayerExists = await page.evaluate(() => typeof window['dataLayer'] !== 'undefined');
     expect(dataLayerExists).toBeTruthy();
   });
 
+});
+
+// =============================================================================
+// Additional Integration Settings Tests
+// =============================================================================
+
+test.describe('Integrations - Field Persistence & Validation', () => {
+  test.describe.configure({ mode: 'serial' });
+
+  let adminEmail: string;
+  const adminPassword = 'password123';
+
+  const loginAsAdmin = async (page: any) => {
+    await acceptAllCookies(page);
+
+    await page.addInitScript(() => {
+      const addStyle = () => {
+        if (document.head) {
+          const style = document.createElement('style');
+          style.innerHTML = '#klaro { display: none !important; }';
+          document.head.appendChild(style);
+        } else {
+          setTimeout(addStyle, 10);
+        }
+      };
+      addStyle();
+    });
+
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+
+    await setAuthSession(page, adminEmail, adminPassword);
+
+    await page.waitForTimeout(1000);
+  };
+
+  test.beforeAll(async () => {
+    const randomStr = Math.random().toString(36).substring(7);
+    adminEmail = `int-persist-${Date.now()}-${randomStr}@example.com`;
+
+    const { data: { user }, error } = await supabaseAdmin.auth.admin.createUser({
+      email: adminEmail,
+      password: adminPassword,
+      email_confirm: true,
+    });
+    if (error) throw error;
+
+    await supabaseAdmin
+      .from('admin_users')
+      .insert({ user_id: user!.id });
+  });
+
+  test.afterAll(async () => {
+    // Cleanup integrations config
+    await supabaseAdmin
+      .from('integrations_config')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000');
+
+    // Cleanup custom scripts
+    await supabaseAdmin
+      .from('custom_scripts')
+      .delete()
+      .ilike('name', 'E2E Test%');
+
+    // Delete test user
+    const { data: users } = await supabaseAdmin.auth.admin.listUsers();
+    const testUser = users.users.find((u: any) => u.email === adminEmail);
+    if (testUser) {
+      await supabaseAdmin.auth.admin.deleteUser(testUser.id);
+    }
+  });
+
+  test('should save Facebook Pixel ID and persist in DB', async ({ page }) => {
+    const pixelId = '9876543210123456';
+
+    await loginAsAdmin(page);
+    await page.goto('/dashboard/integrations');
+    await page.waitForLoadState('networkidle');
+
+    // Switch to Marketing tab
+    await page.getByRole('button', { name: 'Marketing' }).click();
+    await page.waitForTimeout(500);
+
+    // Fill Pixel ID (placeholder is "1234567890")
+    const pixelInput = page.locator('input[placeholder="1234567890"]');
+    await pixelInput.fill(pixelId);
+
+    // Save
+    await page.locator('button[type="submit"]').click();
+    await page.waitForTimeout(3000);
+
+    // Verify in DB
+    const { data: config } = await supabaseAdmin
+      .from('integrations_config')
+      .select('facebook_pixel_id')
+      .single();
+
+    expect(config?.facebook_pixel_id).toBe(pixelId);
+  });
+
+  test('should enable FB CAPI and save token', async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.goto('/dashboard/integrations');
+    await page.waitForLoadState('networkidle');
+
+    // Switch to Marketing tab
+    await page.getByRole('button', { name: 'Marketing' }).click();
+    await page.waitForTimeout(500);
+
+    // Fill CAPI token first (checkbox is disabled until token exists)
+    const tokenInput = page.locator('input[type="password"]').first();
+    await tokenInput.fill('EAAtest_capi_token_12345');
+    await page.waitForTimeout(300);
+
+    // Now the checkbox should be enabled — check it
+    const capiCheckbox = page.locator('#fb_capi_enabled');
+    if (!(await capiCheckbox.isChecked())) {
+      await capiCheckbox.check();
+    }
+
+    // Save
+    await page.locator('button[type="submit"]').click();
+    await page.waitForTimeout(3000);
+
+    // Verify in DB
+    const { data: config } = await supabaseAdmin
+      .from('integrations_config')
+      .select('fb_capi_enabled, facebook_capi_token')
+      .single();
+
+    expect(config?.fb_capi_enabled).toBe(true);
+    expect(config?.facebook_capi_token).toBeTruthy();
+  });
+
+  test('should reject invalid GTM ID format', async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.goto('/dashboard/integrations');
+    await page.waitForLoadState('networkidle');
+
+    // Analytics tab is default — GTM input has placeholder "GTM-XXXXXX"
+    const gtmInput = page.locator('input[placeholder="GTM-XXXXXX"]');
+    await gtmInput.fill('INVALID-NOT-GTM');
+
+    // Try to save
+    await page.locator('button[type="submit"]').click();
+    await page.waitForTimeout(3000);
+
+    // Verify DB does NOT have the invalid value
+    const { data: config } = await supabaseAdmin
+      .from('integrations_config')
+      .select('gtm_container_id')
+      .maybeSingle();
+
+    expect(config?.gtm_container_id).not.toBe('INVALID-NOT-GTM');
+  });
+
+  test('should reject non-numeric Facebook Pixel ID', async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.goto('/dashboard/integrations');
+    await page.waitForLoadState('networkidle');
+
+    // Switch to Marketing tab
+    await page.getByRole('button', { name: 'Marketing' }).click();
+    await page.waitForTimeout(500);
+
+    // Fill invalid Pixel ID (non-numeric) — placeholder is "1234567890"
+    const pixelInput = page.locator('input[placeholder="1234567890"]');
+    await pixelInput.fill('not-a-number');
+
+    // Try to save
+    await page.locator('button[type="submit"]').click();
+    await page.waitForTimeout(3000);
+
+    // Verify DB does NOT have the invalid value
+    const { data: config } = await supabaseAdmin
+      .from('integrations_config')
+      .select('facebook_pixel_id')
+      .maybeSingle();
+
+    expect(config?.facebook_pixel_id).not.toBe('not-a-number');
+  });
+
+  test('should add and delete custom script', async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.goto('/dashboard/integrations');
+    await page.waitForLoadState('networkidle');
+
+    // Switch to Script Manager tab
+    await page.getByRole('button', { name: /Script Manager|Menedżer Skryptów/i }).click();
+    await page.waitForTimeout(500);
+
+    // Click "Add Script" button
+    await page.getByText(/Add Script|Dodaj Skrypt/i).click();
+    await page.waitForTimeout(500);
+
+    // Fill script form in modal (div.fixed pattern from existing tests)
+    const scriptName = `E2E Test Script ${Date.now()}`;
+    const scriptModal = page.locator('div.fixed').filter({ hasText: /Add Script|Dodaj Skrypt/i });
+
+    await scriptModal.locator('input[type="text"]').first().fill(scriptName);
+    await scriptModal.locator('textarea').fill('<script>console.log("e2e")</script>');
+    await scriptModal.locator('select').nth(1).selectOption('essential');
+
+    await scriptModal.getByRole('button', { name: /Add Script|Dodaj Skrypt/i }).click();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000);
+
+    // Verify script appears in DB
+    const { data: scripts } = await supabaseAdmin
+      .from('custom_scripts')
+      .select('id, name')
+      .eq('name', scriptName);
+
+    expect(scripts).toBeTruthy();
+    expect(scripts!.length).toBe(1);
+
+    // Switch back to scripts tab and verify visible
+    await page.getByRole('button', { name: /Script Manager|Menedżer Skryptów/i }).click();
+    await page.waitForTimeout(500);
+    await expect(page.getByText(scriptName).first()).toBeVisible();
+
+    // Delete via DB (UI delete varies, direct DB cleanup is reliable for test isolation)
+    await supabaseAdmin
+      .from('custom_scripts')
+      .delete()
+      .eq('name', scriptName);
+
+    // Verify removed from DB
+    const { data: remaining } = await supabaseAdmin
+      .from('custom_scripts')
+      .select('id')
+      .eq('name', scriptName);
+
+    expect(remaining?.length ?? 0).toBe(0);
+  });
+
+  test('should show GTM SS toggle only when server container URL is filled', async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.goto('/dashboard/integrations');
+    await page.waitForLoadState('networkidle');
+
+    // Analytics tab — GTM section
+    await page.getByRole('button', { name: 'Analytics' }).click();
+    await page.waitForTimeout(500);
+
+    const serverUrlInput = page.locator('input[placeholder="https://gtm.yourdomain.com"]');
+    const ssCheckbox = page.getByText(/Enable server-to-server|Włącz wysyłkę eventów/i);
+
+    // 1. With empty URL — checkbox must NOT be visible
+    await serverUrlInput.fill('');
+    await page.waitForTimeout(300);
+    await expect(ssCheckbox).not.toBeVisible();
+
+    // 2. Fill URL — checkbox must appear
+    await serverUrlInput.fill('https://gtm.example.com');
+    await page.waitForTimeout(300);
+    await expect(ssCheckbox).toBeVisible();
+
+    // 3. Clear URL — checkbox must disappear again
+    await serverUrlInput.fill('');
+    await page.waitForTimeout(300);
+    await expect(ssCheckbox).not.toBeVisible();
+  });
+
+  test('should save GTM SS config and persist in DB', async ({ page }) => {
+    const serverUrl = 'https://gtm-ss-test.example.com';
+
+    await loginAsAdmin(page);
+    await page.goto('/dashboard/integrations');
+    await page.waitForLoadState('networkidle');
+
+    await page.getByRole('button', { name: 'Analytics' }).click();
+    await page.waitForTimeout(500);
+
+    // Fill GTM Server Container URL
+    const serverUrlInput = page.locator('input[placeholder="https://gtm.yourdomain.com"]');
+    await serverUrlInput.fill(serverUrl);
+    await page.waitForTimeout(300);
+
+    // Enable GTM SS checkbox — visible only when server URL is filled
+    const ssLabel = page.locator('label').filter({ hasText: /Enable server-to-server|Włącz wysyłkę eventów/i });
+    await expect(ssLabel).toBeVisible({ timeout: 5000 });
+    const ssCheckboxInput = ssLabel.locator('input[type="checkbox"]');
+    await ssCheckboxInput.check();
+    await page.waitForTimeout(300);
+
+    // Save
+    await page.locator('button[type="submit"]').click();
+    await page.waitForTimeout(3000);
+
+    // Verify in DB
+    const { data: config } = await supabaseAdmin
+      .from('integrations_config')
+      .select('gtm_server_container_url, gtm_ss_enabled')
+      .single();
+
+    expect(config?.gtm_server_container_url).toBe(serverUrl);
+    expect(config?.gtm_ss_enabled).toBe(true);
+  });
+
+  test('should persist GTM SS config after page reload', async ({ page }) => {
+    // Pre-seed config in DB (upsert to handle existing row from previous test)
+    const { data: existing } = await supabaseAdmin
+      .from('integrations_config')
+      .select('id')
+      .maybeSingle();
+
+    if (existing) {
+      await supabaseAdmin
+        .from('integrations_config')
+        .update({
+          gtm_server_container_url: 'https://gtm-reload-test.example.com',
+          gtm_ss_enabled: true,
+        })
+        .eq('id', existing.id);
+    } else {
+      await supabaseAdmin
+        .from('integrations_config')
+        .insert({
+          gtm_server_container_url: 'https://gtm-reload-test.example.com',
+          gtm_ss_enabled: true,
+        });
+    }
+
+    await loginAsAdmin(page);
+    await page.goto('/dashboard/integrations');
+    await page.waitForLoadState('networkidle');
+
+    await page.getByRole('button', { name: 'Analytics' }).click();
+    await page.waitForTimeout(500);
+
+    // Verify URL is pre-filled
+    const serverUrlInput = page.locator('input[placeholder="https://gtm.yourdomain.com"]');
+    await expect(serverUrlInput).toHaveValue('https://gtm-reload-test.example.com');
+
+    // Verify SS checkbox is visible AND checked
+    const ssLabel = page.getByText(/Enable server-to-server|Włącz wysyłkę eventów/i);
+    await expect(ssLabel).toBeVisible();
+
+    // Find the actual checkbox input within the label's parent
+    const checkboxContainer = ssLabel.locator('..');
+    const checkbox = checkboxContainer.locator('input[type="checkbox"]');
+    await expect(checkbox).toBeChecked();
+  });
+
+  test('should reject invalid GTM Server Container URL (non-HTTPS)', async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.goto('/dashboard/integrations');
+    await page.waitForLoadState('networkidle');
+
+    await page.getByRole('button', { name: 'Analytics' }).click();
+    await page.waitForTimeout(500);
+
+    // Fill invalid URL (HTTP, not HTTPS)
+    const serverUrlInput = page.locator('input[placeholder="https://gtm.yourdomain.com"]');
+    await serverUrlInput.fill('http://not-https.example.com');
+
+    // Save
+    await page.locator('button[type="submit"]').click();
+    await page.waitForTimeout(3000);
+
+    // Verify DB does NOT have the invalid value
+    const { data: config } = await supabaseAdmin
+      .from('integrations_config')
+      .select('gtm_server_container_url')
+      .maybeSingle();
+
+    expect(config?.gtm_server_container_url).not.toBe('http://not-https.example.com');
+  });
 });

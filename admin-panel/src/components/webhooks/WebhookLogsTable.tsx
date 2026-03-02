@@ -29,31 +29,31 @@ export default function WebhookLogsTable({
   const getStatusBadge = (log: WebhookLog) => {
     if (log.status === 'success') {
       return (
-        <span className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 rounded text-xs font-medium border border-green-200 dark:border-green-800">
+        <span className="px-2 py-1 bg-sf-success-soft text-sf-success rounded text-xs font-medium border border-sf-success/20">
           HTTP {log.http_status}
         </span>
       );
     }
     if (log.status === 'retried') {
       return (
-        <span className="px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded text-xs font-medium border border-yellow-200 dark:border-yellow-800">
-          Retried
+        <span className="px-2 py-1 bg-sf-warning-soft text-sf-warning rounded text-xs font-medium border border-sf-warning/20">
+          {t('retried')}
         </span>
       );
     }
     if (log.status === 'archived') {
         return (
-          <span className="px-2 py-1 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 rounded text-xs font-medium border border-gray-200 dark:border-gray-600">
-            Archived
+          <span className="px-2 py-1 bg-sf-raised text-sf-body rounded text-xs font-medium border-2 border-sf-border-medium">
+            {t('archived')}
           </span>
         );
     }
     
     // Failed
     if (log.http_status === 0) {
-      return <span className="px-2 py-1 bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded text-xs font-medium border border-red-200 dark:border-red-800">Network Error</span>;
+      return <span className="px-2 py-1 bg-sf-danger-soft text-sf-danger rounded text-xs font-medium border border-sf-danger/20">{t('networkError')}</span>;
     }
-    return <span className="px-2 py-1 bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded text-xs font-medium border border-red-200 dark:border-red-800">HTTP {log.http_status}</span>;
+    return <span className="px-2 py-1 bg-sf-danger-soft text-sf-danger rounded text-xs font-medium border border-sf-danger/20">HTTP {log.http_status}</span>;
   };
 
   const handleRetryClick = (e: React.MouseEvent, logId: string) => {
@@ -69,64 +69,64 @@ export default function WebhookLogsTable({
         method: 'POST'
       });
       if (res.ok) {
-        addToast('Log archived', 'success');
+        addToast(t('logArchived'), 'success');
         onRefresh?.();
       }
     } catch {
-      addToast('Failed to archive log', 'error');
+      addToast(t('archiveError'), 'error');
     } finally {
       setArchivingId(null);
     }
   };
 
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800 shadow-sm">
-      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <thead className="bg-gray-50 dark:bg-gray-900/50">
+    <div className="border-2 border-sf-border-medium overflow-hidden bg-sf-base">
+      <table className="min-w-full divide-y divide-sf-border-subtle">
+        <thead className="bg-sf-raised">
           <tr>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('date')}</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">{t('date')}</th>
             {showEndpointColumn && (
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('endpoint')}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">{t('endpoint')}</th>
             )}
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('event')}</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('status')}</th>
-            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('duration')}</th>
-            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{tCommon('actions')}</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">{t('event')}</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-sf-muted uppercase tracking-wider">{t('status')}</th>
+            <th className="px-4 py-3 text-right text-xs font-medium text-sf-muted uppercase tracking-wider">{t('duration')}</th>
+            <th className="px-4 py-3 text-right text-xs font-medium text-sf-muted uppercase tracking-wider">{tCommon('actions')}</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+        <tbody className="divide-y divide-sf-border-subtle">
           {logs.map((log) => (
             <React.Fragment key={log.id}>
               <tr 
                 onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)}
                 className={`cursor-pointer transition-colors ${
-                  expandedLog === log.id 
-                    ? 'bg-blue-50 dark:bg-blue-900/10' 
-                    : 'hover:bg-gray-50 dark:hover:bg-gray-700/30'
+                  expandedLog === log.id
+                    ? 'bg-sf-accent-soft'
+                    : 'hover:bg-sf-hover'
                 }`}
               >
-                <td className="px-4 py-3 text-sm text-gray-900 dark:text-white whitespace-nowrap">
+                <td className="px-4 py-3 text-sm text-sf-heading whitespace-nowrap">
                   {new Date(log.created_at).toLocaleString()}
                 </td>
                 
                 {showEndpointColumn && (
                   <td className="px-4 py-3">
-                    <div className="text-sm font-medium text-gray-900 dark:text-white max-w-[200px] truncate">
+                    <div className="text-sm font-medium text-sf-heading max-w-[200px] truncate">
                       {log.endpoint?.description || 'Webhook'}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 font-mono truncate max-w-[200px]">
+                    <div className="text-xs text-sf-muted font-mono truncate max-w-[200px]">
                       {log.endpoint?.url}
                     </div>
                   </td>
                 )}
 
-                <td className="px-4 py-3 text-sm text-gray-900 dark:text-white font-mono text-[10px]">
+                <td className="px-4 py-3 text-sm text-sf-heading font-mono text-[10px]">
                   {log.event_type}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
                   {getStatusBadge(log)}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 text-right whitespace-nowrap">
+                <td className="px-4 py-3 text-sm text-sf-muted text-right whitespace-nowrap">
                   {log.duration_ms !== undefined ? `${log.duration_ms}ms` : '---'}
                 </td>
                 <td className="px-4 py-3 text-right whitespace-nowrap space-x-2">
@@ -137,8 +137,8 @@ export default function WebhookLogsTable({
                       disabled={retryingId === log.id}
                       className={`inline-flex items-center px-2.5 py-1.5 border text-xs font-medium rounded disabled:opacity-50 transition-all ${
                         log.status === 'failed'
-                          ? 'border-blue-300 dark:border-blue-800 text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40'
-                          : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/30 hover:bg-gray-100 dark:hover:bg-gray-700/50'
+                          ? 'border-sf-border text-sf-accent bg-sf-accent-soft hover:bg-sf-hover'
+                          : 'border-sf-border text-sf-body bg-sf-raised hover:bg-sf-hover'
                       }`}
                     >
                       {retryingId === log.id ? '...' : (log.status === 'failed' ? t('retry') : t('resend'))}
@@ -148,8 +148,8 @@ export default function WebhookLogsTable({
                     <button
                       onClick={(e) => handleArchive(e, log.id)}
                       disabled={archivingId === log.id}
-                      title="Archive/Dismiss"
-                      className="inline-flex items-center p-1.5 border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-md transition-colors"
+                      title={t('archiveDismiss')}
+                      className="inline-flex items-center p-1.5 border-2 border-sf-border-medium text-sf-muted hover:text-sf-danger transition-colors"
                     >
                       {archivingId === log.id ? (
                         <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -167,25 +167,25 @@ export default function WebhookLogsTable({
                 </td>
               </tr>
               {expandedLog === log.id && (
-                <tr className="bg-gray-50 dark:bg-gray-900/30">
+                <tr className="bg-sf-raised">
                   <td colSpan={showEndpointColumn ? 6 : 5} className="px-4 py-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">{t('payload')}</h4>
-                        <pre className="text-[10px] bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700 overflow-x-auto h-48 font-mono text-gray-800 dark:text-gray-200">
+                        <h4 className="text-xs font-bold text-sf-muted uppercase mb-2">{t('payload')}</h4>
+                        <pre className="text-[10px] bg-sf-base p-3 rounded border-2 border-sf-border-medium overflow-x-auto h-48 font-mono text-sf-body">
                           {JSON.stringify(log.payload, null, 2)}
                         </pre>
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">{t('response')}</h4>
-                        <div className="text-[10px] bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700 h-48 overflow-y-auto">
+                        <h4 className="text-xs font-bold text-sf-muted uppercase mb-2">{t('response')}</h4>
+                        <div className="text-[10px] bg-sf-base p-3 rounded border-2 border-sf-border-medium h-48 overflow-y-auto">
                           {log.error_message && (
-                            <div className="text-red-600 dark:text-red-400 font-medium mb-2 border-b border-red-100 dark:border-red-900/30 pb-2">
-                              Error: {log.error_message}
+                            <div className="text-sf-danger font-medium mb-2 border-b border-sf-danger/20 pb-2">
+                              {t('errorPrefix', { message: log.error_message })}
                             </div>
                           )}
-                          <pre className="whitespace-pre-wrap font-mono text-gray-800 dark:text-gray-200">
-                            {log.response_body || '(Empty response body)'}
+                          <pre className="whitespace-pre-wrap font-mono text-sf-body">
+                            {log.response_body || t('emptyResponse')}
                           </pre>
                         </div>
                       </div>

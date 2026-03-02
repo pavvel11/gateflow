@@ -13,6 +13,10 @@
 # testing
 /coverage
 
+# runtime data (theme files, etc.)
+/data/
+!/data/.gitkeep
+
 # next.js
 /.next/
 /out/
@@ -32,6 +36,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # stripe configuration (add .stripe to version control if needed)
 .stripe
@@ -52,4 +57,9 @@ next-env.d.ts
 # playwright
 /playwright-report/
 /test-results/
+
+# visual testing screenshots
+/screenshots/
+/screenshots-before/
+/screenshots-after/
 *.bak

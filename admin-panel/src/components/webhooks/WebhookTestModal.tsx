@@ -32,7 +32,7 @@ export default function WebhookTestModal({
   }, [endpoint, isOpen]);
 
   const getEventLabel = (eventValue: string) => {
-    if (eventValue === 'test.event') return 'Generic Test Event';
+    if (eventValue === 'test.event') return t('testModal.genericTestEvent');
     const key = eventValue.replace('.', '_');
     try {
       return t(`events_list.${key}`);
@@ -50,24 +50,24 @@ export default function WebhookTestModal({
       <ModalHeader title={t('test')} />
       <ModalBody>
         <div className="space-y-4">
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
-            Select an event type to send a mock payload to:
+          <p className="text-sf-body text-sm">
+            {t('testModal.selectInstruction')}
             <br />
-            <span className="font-mono text-xs mt-1 block p-2 bg-gray-100 dark:bg-gray-900 rounded">
+            <span className="font-mono text-xs mt-1 block p-2 bg-sf-raised rounded">
               {endpoint.url}
             </span>
           </p>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Event Type
+            <label className="block text-sm font-medium text-sf-body mb-2">
+              {t('testModal.eventTypeLabel')}
             </label>
             <select
               value={selectedEvent}
               onChange={(e) => setSelectedEvent(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 bg-sf-input text-sf-heading border-2 border-sf-border-medium"
             >
-              <option value="test.event">Generic Test Event</option>
+              <option value="test.event">{t('testModal.genericTestEvent')}</option>
               {endpoint.events.map((ev) => (
                 <option key={ev} value={ev}>
                   {getEventLabel(ev)}
@@ -77,10 +77,10 @@ export default function WebhookTestModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Example Payload
+            <label className="block text-sm font-medium text-sf-body mb-2">
+              {t('testModal.examplePayload')}
             </label>
-            <div className="bg-gray-900 dark:bg-gray-950 rounded-lg p-4 border border-gray-700 max-h-96 overflow-y-auto">
+            <div className="bg-gray-900 dark:bg-gray-950 p-4 border border-gray-700 max-h-96 overflow-y-auto">
               <pre className="text-xs font-mono text-gray-100">
                 <code>{JSON.stringify({
                   event: selectedEvent,
@@ -97,7 +97,7 @@ export default function WebhookTestModal({
           {tCommon('cancel')}
         </Button>
         <Button onClick={() => onTest(selectedEvent)} loading={isSending} variant="primary">
-          Send Test
+          {t('testModal.sendTest')}
         </Button>
       </ModalFooter>
     </BaseModal>

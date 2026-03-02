@@ -260,15 +260,15 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
       />
       {/* Modal */}
       <div
-        className="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col"
+        className="relative bg-sf-base w-full max-w-4xl max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <div className="p-6 border-b border-sf-border">
+          <h2 className="text-2xl font-bold text-sf-heading">
             {editingGroup ? t('editGroup') : t('createGroup')}
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-sf-body mt-1">
             {t('formDescription')}
           </p>
         </div>
@@ -276,9 +276,9 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
         {/* Content */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-hidden flex flex-col">
           {/* Group Name & Slug */}
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 space-y-4">
+          <div className="px-6 py-4 border-b border-sf-border space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-sf-body mb-2">
                 {t('groupName')}
               </label>
               <input
@@ -286,29 +286,29 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
                 placeholder={t('groupNamePlaceholder')}
                 value={groupName}
                 onChange={(e) => handleNameChange(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2 border-2 border-sf-border-medium focus:ring-2 focus:ring-sf-accent focus:border-sf-accent bg-sf-input text-sf-heading"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-sf-body mb-2">
                 {t('slug', { defaultValue: 'Slug (URL)' })}
               </label>
               <div className="flex space-x-2">
                 <div className="flex-1 relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">/v/</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sf-muted">/v/</span>
                   <input
                     type="text"
                     placeholder={t('slugPlaceholder', { defaultValue: 'e.g., subscription-plans' })}
                     value={groupSlug}
                     onChange={(e) => handleSlugChange(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white font-mono text-sm"
+                    className="w-full pl-10 pr-4 py-2 border-2 border-sf-border-medium focus:ring-2 focus:ring-sf-accent focus:border-sf-accent bg-sf-input text-sf-heading font-mono text-sm"
                   />
                 </div>
                 {slugManuallyEdited && groupName && (
                   <button
                     type="button"
                     onClick={regenerateSlug}
-                    className="px-3 py-2 text-sm text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
+                    className="px-3 py-2 text-sm text-sf-accent hover:bg-sf-accent-soft transition-colors"
                     title={t('regenerateSlug', { defaultValue: 'Regenerate from name' })}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -317,7 +317,7 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
                   </button>
                 )}
               </div>
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-xs text-sf-muted">
                 {t('slugHelp', { defaultValue: 'Optional. Leave empty to use UUID in URL.' })}
               </p>
             </div>
@@ -325,20 +325,20 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
 
           <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
             {/* Product List */}
-            <div className="flex-1 p-4 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
+            <div className="flex-1 p-4 border-r border-sf-border overflow-y-auto">
               <div className="mb-4">
                 <input
                   type="text"
                   placeholder={t('searchProducts')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-4 py-2 border-2 border-sf-border-medium focus:ring-2 focus:ring-sf-accent focus:border-sf-accent bg-sf-input text-sf-heading"
                 />
               </div>
 
               {loadingProducts ? (
                 <div className="flex justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sf-accent"></div>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -346,27 +346,27 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
                     <div
                       key={product.id}
                       onClick={() => toggleProduct(product)}
-                      className="p-3 rounded-lg transition-colors bg-gray-50 dark:bg-gray-700/50 border-2 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                      className="p-3 transition-colors bg-sf-raised border-2 border-transparent hover:bg-sf-hover cursor-pointer"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-lg">
+                          <div className="w-10 h-10 bg-sf-raised flex items-center justify-center text-lg">
                             {product.icon || '📦'}
                           </div>
                           <div>
-                            <div className="font-medium text-gray-900 dark:text-white">
+                            <div className="font-medium text-sf-heading">
                               {product.name}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                            <div className="text-xs text-sf-muted font-mono">
                               /{product.slug}
                             </div>
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          <span className="text-sm font-medium text-sf-body">
                             {formatPrice(product.price, product.currency)}
                           </span>
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-sf-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                           </svg>
                         </div>
@@ -375,7 +375,7 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
                   ))}
 
                   {availableProducts.length === 0 && (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <div className="text-center py-8 text-sf-muted">
                       {searchTerm ? t('noProductsFound') : t('allProductsSelected')}
                     </div>
                   )}
@@ -384,13 +384,13 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
             </div>
 
             {/* Selected Products with Variant Names */}
-            <div className="w-full md:w-96 p-4 bg-gray-50 dark:bg-gray-900/50 overflow-y-auto">
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+            <div className="w-full md:w-96 p-4 bg-sf-raised overflow-y-auto">
+              <h3 className="font-semibold text-sf-heading mb-3">
                 {t('selectedProducts')} ({selectedProducts.length})
               </h3>
 
               {selectedProducts.length === 0 ? (
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-sf-muted">
                   {t('selectAtLeastTwo')}
                 </p>
               ) : (
@@ -398,11 +398,11 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
                   {selectedProducts.map((product, index) => (
                     <div
                       key={product.product_id}
-                      className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
+                      className="bg-sf-base p-3 border-2 border-sf-border-medium"
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
-                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                          <span className="text-xs font-medium text-sf-muted">
                             #{index + 1}
                           </span>
                           {/* Reorder buttons */}
@@ -410,7 +410,7 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
                             type="button"
                             onClick={() => moveUp(index)}
                             disabled={index === 0}
-                            className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                            className="p-1 text-sf-muted hover:text-sf-body disabled:opacity-30"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -420,7 +420,7 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
                             type="button"
                             onClick={() => moveDown(index)}
                             disabled={index === selectedProducts.length - 1}
-                            className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                            className="p-1 text-sf-muted hover:text-sf-body disabled:opacity-30"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -435,7 +435,7 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
                             className={`p-1 transition-colors ${
                               product.is_featured
                                 ? 'text-yellow-500 hover:text-yellow-600'
-                                : 'text-gray-400 hover:text-yellow-500'
+                                : 'text-sf-muted hover:text-yellow-500'
                             }`}
                             title={product.is_featured ? t('removeFeatured') : t('setFeatured')}
                           >
@@ -455,16 +455,16 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
                           </button>
                         </div>
                       </div>
-                      <div className="text-sm font-medium text-gray-900 dark:text-white mb-2 truncate flex items-center space-x-2">
+                      <div className="text-sm font-medium text-sf-heading mb-2 truncate flex items-center space-x-2">
                         <span>{product.name}</span>
                         {product.is_featured && (
-                          <span className="px-1.5 py-0.5 text-xs rounded bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                          <span className="px-1.5 py-0.5 text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
                             {t('featured')}
                           </span>
                         )}
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+                        <label className="block text-xs text-sf-muted mb-1">
                           {t('variantLabel')}
                         </label>
                         <input
@@ -472,7 +472,7 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
                           placeholder={t('variantNamePlaceholder')}
                           value={product.variant_name}
                           onChange={(e) => updateVariantName(product.product_id, e.target.value)}
-                          className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
+                          className="w-full px-2 py-1.5 text-sm border-2 border-sf-border-medium focus:ring-sf-accent focus:border-sf-accent bg-sf-input text-sf-heading"
                         />
                       </div>
                     </div>
@@ -489,20 +489,20 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="p-4 border-t border-sf-border">
             <div className="flex justify-end space-x-3">
               <button
                 type="button"
                 onClick={onClose}
                 disabled={submitting}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                className="px-4 py-2 text-sf-body hover:bg-sf-hover transition-colors disabled:opacity-50"
               >
                 {t('cancel')}
               </button>
               <button
                 type="submit"
                 disabled={submitting || selectedProducts.length < 2}
-                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 shadow-sm"
+                className="px-6 py-2 bg-sf-accent-bg text-white hover:bg-sf-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 {submitting ? (
                   <>

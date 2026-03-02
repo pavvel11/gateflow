@@ -11,6 +11,7 @@
 
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { setAuthSession } from './helpers/admin-auth';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -32,7 +33,7 @@ function generateTestKey(): string {
   const randomHex = Array.from(crypto.getRandomValues(new Uint8Array(32)))
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
-  return `gf_live_${randomHex}`;
+  return `sf_live_${randomHex}`;
 }
 
 test.describe('API Keys Security - Hash Exposure Prevention', () => {
@@ -46,17 +47,7 @@ test.describe('API Keys Security - Hash Exposure Prevention', () => {
   // Helper to login via browser
   async function loginAsAdmin(page: any) {
     await page.goto('/login');
-    await page.evaluate(async ({ email, password, url, anonKey }: { email: string; password: string; url: string; anonKey: string }) => {
-      // @ts-ignore
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const sb = createBrowserClient(url, anonKey);
-      await sb.auth.signInWithPassword({ email, password });
-    }, {
-      email: adminEmail,
-      password: adminPassword,
-      url: SUPABASE_URL,
-      anonKey: ANON_KEY
-    });
+    await setAuthSession(page, adminEmail, adminPassword);
     await page.reload();
   }
 
@@ -121,12 +112,12 @@ test.describe('API Keys Security - Hash Exposure Prevention', () => {
     // Verify key_hash is not in the response
     expect(responseText).not.toContain('key_hash');
 
-    // Verify the response structure if there are keys
-    if (json.data && json.data.length > 0) {
-      const key = json.data[0];
-      expect(key).not.toHaveProperty('key_hash');
-      expect(key).toHaveProperty('key_prefix'); // Only prefix should be visible
-    }
+    // Verify the response structure — we created a key in beforeAll, so data must exist
+    expect(json.data).toBeDefined();
+    expect(json.data.length).toBeGreaterThan(0);
+    const key = json.data[0];
+    expect(key).not.toHaveProperty('key_hash');
+    expect(key).toHaveProperty('key_prefix'); // Only prefix should be visible
   });
 
   test('GET /api/v1/api-keys/:id should NOT return key_hash', async ({ page }) => {
@@ -157,7 +148,7 @@ test.describe('API Keys Security - Hash Exposure Prevention', () => {
     // Should have 'key' (plaintext) but NOT 'key_hash'
     expect(responseText).not.toContain('key_hash');
     expect(json.data).toHaveProperty('key'); // Plaintext key returned once
-    expect(json.data.key).toMatch(/^gf_live_[a-f0-9]{64}$/);
+    expect(json.data.key).toMatch(/^sf_live_[a-f0-9]{64}$/);
 
     // Cleanup
     if (json.data.id) {
@@ -195,17 +186,7 @@ test.describe('API Keys Security - IDOR Prevention', () => {
   // Helper to login via browser
   async function loginAsAdmin(page: any, email: string, pwd: string) {
     await page.goto('/login');
-    await page.evaluate(async ({ email, password, url, anonKey }: { email: string; password: string; url: string; anonKey: string }) => {
-      // @ts-ignore
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const sb = createBrowserClient(url, anonKey);
-      await sb.auth.signInWithPassword({ email, password });
-    }, {
-      email,
-      password: pwd,
-      url: SUPABASE_URL,
-      anonKey: ANON_KEY
-    });
+    await setAuthSession(page, email, pwd);
     await page.reload();
   }
 
@@ -340,9 +321,9 @@ test.describe('API Keys Security - Invalid Key Handling', () => {
   test('Malformed key should return 401 without revealing format expectations', async ({ request }) => {
     const malformedKeys = [
       'invalid_key',
-      'gf_xxx_1234567890',
-      'gf_live_short',
-      'gf_live_' + 'a'.repeat(100), // Too long
+      'sf_xxx_1234567890',
+      'sf_live_short',
+      'sf_live_' + 'a'.repeat(100), // Too long
       '',
       'null',
       '<script>alert(1)</script>',
@@ -361,7 +342,7 @@ test.describe('API Keys Security - Invalid Key Handling', () => {
 
       // Error message should NOT reveal expected format
       const json = await response.json();
-      expect(json.error.message).not.toContain('gf_live_');
+      expect(json.error.message).not.toContain('sf_live_');
       expect(json.error.message).not.toContain('64 characters');
       expect(json.error.message).not.toContain('hex');
     }
@@ -386,10 +367,10 @@ test.describe('API Keys Security - Invalid Key Handling', () => {
 
   test('SQL injection in key should be safely handled', async ({ request }) => {
     const sqlInjectionKeys = [
-      "gf_live_' OR '1'='1",
-      "gf_live_'; DROP TABLE api_keys;--",
-      "gf_live_\" OR \"1\"=\"1",
-      "gf_live_${malicious}",
+      "sf_live_' OR '1'='1",
+      "sf_live_'; DROP TABLE api_keys;--",
+      "sf_live_\" OR \"1\"=\"1",
+      "sf_live_${malicious}",
     ];
 
     for (const key of sqlInjectionKeys) {

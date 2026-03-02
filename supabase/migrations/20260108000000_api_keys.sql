@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
 
   -- Key identification
   name TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 100), -- Descriptive name
-  key_prefix TEXT NOT NULL CHECK (length(key_prefix) = 12), -- First 12 chars for display (e.g., "gf_live_abc1")
+  key_prefix TEXT NOT NULL CHECK (length(key_prefix) = 12), -- First 12 chars for display (e.g., "sf_live_abc1")
   key_hash TEXT NOT NULL, -- SHA-256 hash of the full key (never store plaintext)
 
   -- Ownership

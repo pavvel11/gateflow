@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     if (productsError) {
       databaseHealthy = false;
-      databaseError = productsError.message;
+      databaseError = 'Database connection error';
     }
 
     // Get user counts
@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
       timestamp: now.toISOString(),
       version: {
         api: 'v1',
-        service: 'gateflow-admin',
+        service: 'sellf-admin',
         build: process.env.VERCEL_GIT_COMMIT_SHA?.substring(0, 7) || 'development',
       },
       environment: process.env.NODE_ENV || 'development',

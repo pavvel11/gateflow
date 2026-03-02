@@ -1,7 +1,7 @@
 {
-  "name": "@gateflow/mcp-server",
+  "name": "@sellf/mcp-server",
   "version": "1.0.0",
-  "description": "MCP Server for GateFlow - enables AI assistants to manage products, users, payments, and analytics",
+  "description": "MCP Server for Sellf - enables AI assistants to manage products, users, payments, and analytics",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
@@ -17,11 +17,11 @@
   "keywords": [
     "mcp",
     "model-context-protocol",
-    "gateflow",
+    "sellf",
     "ai",
     "claude"
   ],
-  "author": "GateFlow",
+  "author": "Sellf",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.9.0",

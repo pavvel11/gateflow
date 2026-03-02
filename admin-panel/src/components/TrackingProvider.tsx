@@ -1,7 +1,31 @@
 'use client'
 
-import { useEffect } from 'react'
 import Script from 'next/script'
+
+/** Validate GTM container ID format (GTM-XXXXXXX) */
+function isValidGtmId(id: string): boolean {
+  return /^GTM-[A-Z0-9]{1,10}$/i.test(id)
+}
+
+/** Validate Facebook Pixel ID format (numeric) */
+function isValidFbPixelId(id: string): boolean {
+  return /^\d{10,20}$/.test(id)
+}
+
+/** Validate Umami website ID format (UUID) */
+function isValidUmamiId(id: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+}
+
+/** Validate URL for script sources */
+function isValidScriptUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
 
 interface CustomScript {
   id: string
@@ -23,6 +47,29 @@ interface PublicIntegrationsConfig {
   scripts?: CustomScript[]
 }
 
+// Consent banner translations — TrackingProvider lives in RootLayout outside
+// NextIntlClientProvider, so we cannot use useTranslations here.
+// Both locales are included; Klaro picks the right one via lang detection at runtime.
+const CONSENT_TRANSLATIONS: Record<string, {
+  consentModal: { title: string; description: string }
+  purposes: { analytics: string; marketing: string }
+}> = {
+  en: {
+    consentModal: {
+      title: 'We use cookies',
+      description: 'We use cookies to improve your experience and analyze traffic.',
+    },
+    purposes: { analytics: 'Analytics', marketing: 'Marketing' },
+  },
+  pl: {
+    consentModal: {
+      title: 'Używamy ciasteczek',
+      description: 'Używamy ciasteczek, aby poprawić Twoje doświadczenia i analizować ruch.',
+    },
+    purposes: { analytics: 'Analityka', marketing: 'Marketing' },
+  },
+}
+
 interface TrackingProviderProps {
   config: PublicIntegrationsConfig | null
 }
@@ -31,18 +78,25 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
   if (!config) return null
 
   const {
-    gtm_container_id,
-    gtm_server_container_url,
-    facebook_pixel_id,
-    umami_website_id,
-    umami_script_url = 'https://cloud.umami.is/script.js',
+    gtm_container_id: rawGtmId,
+    gtm_server_container_url: rawGtmServerUrl,
+    facebook_pixel_id: rawFbPixelId,
+    umami_website_id: rawUmamiId,
+    umami_script_url: rawUmamiScriptUrl = 'https://cloud.umami.is/script.js',
     cookie_consent_enabled,
+    consent_logging_enabled,
     scripts = []
   } = config
 
+  // Validate integration IDs to prevent script injection via DB config
+  const gtm_container_id = rawGtmId && isValidGtmId(rawGtmId) ? rawGtmId : null
+  const facebook_pixel_id = rawFbPixelId && isValidFbPixelId(rawFbPixelId) ? rawFbPixelId : null
+  const umami_website_id = rawUmamiId && isValidUmamiId(rawUmamiId) ? rawUmamiId : null
+  const umami_script_url = rawUmamiScriptUrl && isValidScriptUrl(rawUmamiScriptUrl) ? rawUmamiScriptUrl : 'https://cloud.umami.is/script.js'
+
   // GTM base URL - use server container if configured, otherwise default Google URL
-  const gtmBaseUrl = gtm_server_container_url
-    ? gtm_server_container_url.replace(/\/$/, '') // Remove trailing slash
+  const gtmBaseUrl = rawGtmServerUrl && isValidScriptUrl(rawGtmServerUrl)
+    ? rawGtmServerUrl.replace(/\/$/, '')
     : 'https://www.googletagmanager.com'
 
   // --- GOOGLE CONSENT MODE V2 DEFAULTS ---
@@ -69,41 +123,18 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
     embedded: false,
     groupByPurpose: true,
     storageMethod: 'cookie',
-    cookieName: 'gateflow_consent',
+    cookieName: 'sellf_consent',
     cookieExpiresAfterDays: 365,
     default: false,
     mustConsent: false,
     acceptAll: true,
     hideDeclineAll: false,
     hideLearnMore: false,
-    translations: {
-      en: {
-        consentModal: {
-          title: 'We use cookies',
-          description: 'We use cookies to improve your experience and analyze traffic.',
-        },
-        purposes: {
-          analytics: 'Analytics',
-          marketing: 'Marketing',
-        },
-      },
-    },
+    lang: 'en',
+    translations: CONSENT_TRANSLATIONS,
     services: [] as any[],
-    // Callback for Google Consent Mode V2 integration
-    callback: function(consent: Record<string, boolean>) {
-      // Update Google Consent Mode when user makes consent choices
-      if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
-        const analyticsGranted = consent['google-tag-manager'] === true;
-        const marketingGranted = consent['facebook-pixel'] === true;
-
-        (window as any).gtag('consent', 'update', {
-          'analytics_storage': analyticsGranted ? 'granted' : 'denied',
-          'ad_storage': marketingGranted ? 'granted' : 'denied',
-          'ad_user_data': marketingGranted ? 'granted' : 'denied',
-          'ad_personalization': marketingGranted ? 'granted' : 'denied',
-        });
-      }
-    },
+    // NOTE: callback is NOT included here because JSON.stringify drops functions.
+    // It is appended as raw JS after serialization — see klaroCallbackJs below.
   }
 
   // 1. Add Managed Services
@@ -143,6 +174,54 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
         })
     }
   })
+
+  // --- KLARO CALLBACK (raw JS, appended after JSON.stringify) ---
+  // JSON.stringify drops functions, so the callback must be a raw JS string.
+  //
+  // IMPORTANT: Klaro v0.7 calls config.callback(consent, service) once PER SERVICE,
+  // where consent is a BOOLEAN (true/false) and service is the service config object.
+  // It is NOT called once with an object of all consents.
+  // We accumulate consent state in window.__gfConsents and debounce the logging POST.
+  const klaroCallbackJs = `
+klaroConfig.callback = function(consent, service) {
+  // Accumulate per-service consent into a single object
+  window.__gfConsents = window.__gfConsents || {};
+  window.__gfConsents[service.name] = consent;
+
+  // Google Consent Mode V2 update (safe to call on each service change)
+  if (typeof window.gtag === 'function') {
+    var analyticsGranted = window.__gfConsents['google-tag-manager'] === true;
+    var marketingGranted = window.__gfConsents['facebook-pixel'] === true;
+    window.gtag('consent', 'update', {
+      'analytics_storage': analyticsGranted ? 'granted' : 'denied',
+      'ad_storage': marketingGranted ? 'granted' : 'denied',
+      'ad_user_data': marketingGranted ? 'granted' : 'denied',
+      'ad_personalization': marketingGranted ? 'granted' : 'denied'
+    });
+  }
+
+  // Debounced consent logging — fires once after all services are processed
+  if (window.__gfConsentLogging) {
+    clearTimeout(window.__gfConsentLogTimer);
+    window.__gfConsentLogTimer = setTimeout(function() {
+      try {
+        var anonId = localStorage.getItem('sf_anonymous_id');
+        if (!anonId) {
+          anonId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0;
+            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+          });
+          localStorage.setItem('sf_anonymous_id', anonId);
+        }
+        fetch('/api/consent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ anonymous_id: anonId, consents: window.__gfConsents, consent_version: '1' })
+        }).catch(function() {});
+      } catch (e) {}
+    }, 100);
+  }
+};`
 
   // --- RENDER HELPERS ---
 
@@ -185,7 +264,9 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
   return (
     <>
       {/* GOOGLE CONSENT MODE V2 DEFAULTS - Must be FIRST, before GTM */}
-      {gtm_container_id && (
+      {/* Only set denied defaults when cookie consent is enabled — Klaro callback will update to granted */}
+      {/* When consent is disabled, GTM runs unrestricted (no consent mode needed) */}
+      {gtm_container_id && cookie_consent_enabled && (
         <Script
           id="consent-mode-defaults"
           strategy="beforeInteractive"
@@ -196,11 +277,22 @@ export default function TrackingProvider({ config }: TrackingProviderProps) {
       {/* KLARO INIT */}
       {cookie_consent_enabled && (
         <>
+          {/* Consent logging flag — must be set before klaroConfig callback runs */}
+          {consent_logging_enabled && (
+            <Script
+              id="consent-logging-flag"
+              strategy="beforeInteractive"
+              dangerouslySetInnerHTML={{
+                __html: `window.__gfConsentLogging = true;`
+              }}
+            />
+          )}
           <Script
             id="klaro-config"
             strategy="beforeInteractive"
             dangerouslySetInnerHTML={{
-              __html: `var klaroConfig = ${JSON.stringify(klaroConfig)};`
+              // Escape </script> sequences to prevent HTML parser from closing the tag early (XSS via DB)
+              __html: `var klaroConfig = ${JSON.stringify(klaroConfig).replace(/<\//g, '<\\/')};\nklaroConfig.lang = document.documentElement.lang || 'en';\n${klaroCallbackJs}`
             }}
           />
           <Script

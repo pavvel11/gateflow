@@ -20,13 +20,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Get configuration from environment variables (runtime config)
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+    // Prefer NEXT_PUBLIC_ variants — they hold the public-facing URLs.
+    // Non-prefixed vars may point to internal service addresses in Docker setups.
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
       return NextResponse.json({
         error: 'Supabase configuration missing',
-        message: 'SUPABASE_URL and SUPABASE_ANON_KEY must be set in environment variables',
         timestamp: new Date().toISOString()
       }, { status: 500 });
     }
@@ -48,11 +49,14 @@ export async function GET(request: NextRequest) {
       customDomain
     });
 
-    // CORS headers
+    // CORS headers — config.js is loaded cross-origin by sellf but without credentials
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL;
+    const requestOrigin = request.headers.get('origin');
     const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': requestOrigin || siteUrl || '*',
       'Access-Control-Allow-Methods': 'GET',
       'Access-Control-Allow-Headers': 'Content-Type',
+      'Vary': 'Origin',
     };
 
     // Check for conditional request (ETag/If-None-Match)
@@ -75,15 +79,15 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({
       error: 'Failed to generate config',
-      message: error instanceof Error ? error.message : 'Unknown error',
       timestamp: new Date().toISOString()
     }, {
       status: 500,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type'
+        'Access-Control-Allow-Origin': request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || '*',
+        'Access-Control-Allow-Methods': 'GET',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Vary': 'Origin'
       }
     });
   }

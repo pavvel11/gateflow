@@ -6,12 +6,18 @@ import { cache } from 'react'
 import { cacheGet, cacheSet, cacheDel, CacheKeys, CacheTTL } from '@/lib/redis/cache'
 import { isDemoMode } from '@/lib/demo-guard'
 
+export type TaxMode = 'local' | 'stripe_tax'
+
 export interface ShopConfig {
   id: string
   default_currency: string
   shop_name: string
   contact_email?: string | null
   tax_rate?: number | null
+
+  // Dual tax mode
+  tax_mode: TaxMode
+  stripe_tax_rate_cache: Record<string, string>
 
   // Branding & Whitelabel
   logo_url?: string | null
@@ -22,6 +28,15 @@ export interface ShopConfig {
 
   // Checkout appearance
   checkout_theme?: 'system' | 'light' | 'dark' | null
+
+  // Stripe Tax toggles (null = use env var)
+  automatic_tax_enabled?: boolean | null
+  tax_id_collection_enabled?: boolean | null
+
+  // Checkout session settings (null = use env var)
+  checkout_billing_address?: 'auto' | 'required' | null
+  checkout_expires_hours?: number | null
+  checkout_collect_terms?: boolean | null
 
   // EU Omnibus Directive (2019/2161)
   omnibus_enabled: boolean

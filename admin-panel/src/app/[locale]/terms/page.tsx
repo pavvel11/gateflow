@@ -1,11 +1,12 @@
 import { redirect } from 'next/navigation'
 import { Metadata } from 'next'
+import { getTranslations } from 'next-intl/server'
 import { createPublicClient } from '@/lib/supabase/server'
 import { unstable_noStore as noStore } from 'next/cache'
 
 export const metadata: Metadata = {
-  title: 'Terms of Service - GateFlow',
-  description: 'Terms of Service for GateFlow platform',
+  title: 'Terms of Service - Sellf',
+  description: 'Terms of Service for Sellf platform',
   robots: 'index, follow'
 }
 
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 
 export default async function TermsPage() {
+  const t = await getTranslations('legalPages.terms');
   // Disable cache for this request
   noStore()
 
@@ -28,43 +30,40 @@ export default async function TermsPage() {
   const termsUrl = config?.terms_of_service_url || process.env.TERMS_OF_SERVICE_URL
 
   if (termsUrl) {
-    redirect(termsUrl)
+    // Validate: only allow http/https URLs or relative paths
+    const isRelative = termsUrl.startsWith('/') && !termsUrl.startsWith('//')
+    const isHttps = termsUrl.startsWith('https://') || termsUrl.startsWith('http://')
+    if (isRelative || isHttps) {
+      redirect(termsUrl)
+    }
   }
 
   // Fallback content if no URL is configured
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-12">
+    <div className="min-h-screen bg-sf-deep py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20">
+        <div className="bg-sf-raised/80 backdrop-blur-sm rounded-2xl p-8 shadow-[var(--sf-shadow-accent)] border border-sf-border">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-4">Terms of Service</h1>
-            <p className="text-gray-300">Configuration Required</p>
+            <h1 className="text-3xl font-bold text-sf-heading mb-4">{t('title')}</h1>
+            <p className="text-sf-body">{t('configRequired')}</p>
           </div>
-          
-          <div className="prose prose-invert max-w-none space-y-6 text-gray-300">
+
+          <div className="prose prose-invert max-w-none space-y-6 text-sf-body">
             <section>
-              <h2 className="text-xl font-semibold text-white mb-3">Configuration Required</h2>
-              <p>
-                To display Terms of Service, configure the URL in one of these ways:
-              </p>
+              <h2 className="text-xl font-semibold text-sf-heading mb-3">{t('configRequired')}</h2>
+              <p>{t('configDescription')}</p>
 
-              <div className="mt-4 p-4 bg-purple-900/30 border border-purple-500/30 rounded-lg">
-                <p className="text-purple-200 font-medium">Option 1: Admin Panel (Recommended)</p>
-                <p className="text-purple-300 text-sm mt-2">
-                  Go to <strong>Settings → Legal Documents</strong> and enter your Terms of Service URL.
-                </p>
+              <div className="mt-4 p-4 bg-sf-accent-soft border border-sf-border-accent rounded-xl">
+                <p className="text-sf-accent font-medium">{t('option1Title')}</p>
+                <p className="text-sf-accent text-sm mt-2">{t('option1Description')}</p>
               </div>
 
-              <div className="mt-4 p-4 bg-blue-900/30 border border-blue-500/30 rounded-lg">
-                <p className="text-blue-200 font-medium">Option 2: Environment Variable</p>
-                <p className="text-blue-300 text-sm font-mono mt-2">
-                  TERMS_OF_SERVICE_URL=https://example.com/terms.pdf
-                </p>
+              <div className="mt-4 p-4 bg-sf-accent-soft border border-sf-accent/30 rounded-xl">
+                <p className="text-sf-accent font-medium">{t('option2Title')}</p>
+                <p className="text-sf-accent text-sm font-mono mt-2">{t('option2EnvVar')}</p>
               </div>
 
-              <p className="mt-4 text-sm text-gray-400">
-                The URL should point to your complete Terms of Service document (PDF, webpage, etc.).
-              </p>
+              <p className="mt-4 text-sm text-sf-muted">{t('urlHelp')}</p>
             </section>
           </div>
         </div>

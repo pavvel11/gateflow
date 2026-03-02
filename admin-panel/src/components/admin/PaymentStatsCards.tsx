@@ -53,7 +53,7 @@ export default function PaymentStatsCards({ stats }: PaymentStatsCardsProps) {
       title: t('todayRevenue'),
       value: formatCurrency(stats.todayRevenue),
       icon: '📈',
-      color: 'bg-purple-500',
+      color: 'bg-sf-accent-bg',
       change: '+15.3%',
       changeType: 'positive' as const,
     },
@@ -86,33 +86,33 @@ export default function PaymentStatsCards({ stats }: PaymentStatsCardsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
       {statsCards.map((card, index) => (
-        <div key={index} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div key={index} className="bg-sf-base shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              <p className="text-sm font-medium text-sf-body">
                 {card.title}
               </p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">
+              <p className="text-2xl font-semibold text-sf-heading mt-1">
                 {card.value}
               </p>
             </div>
-            <div className={`w-12 h-12 ${card.color} rounded-lg flex items-center justify-center text-white text-xl`}>
+            <div className={`w-12 h-12 ${card.color} flex items-center justify-center text-white text-xl`}>
               {card.icon}
             </div>
           </div>
           <div className="mt-4 flex items-center">
             <span className={`text-sm font-medium ${
-              card.changeType === 'positive' 
-                ? 'text-green-600 dark:text-green-400'
+              card.changeType === 'positive'
+                ? 'text-sf-success'
                 : card.changeType === 'negative'
-                ? 'text-red-600 dark:text-red-400'
+                ? 'text-sf-danger'
                 : card.changeType === 'warning'
-                ? 'text-yellow-600 dark:text-yellow-400'
-                : 'text-gray-600 dark:text-gray-400'
+                ? 'text-sf-warning'
+                : 'text-sf-body'
             }`}>
               {card.change}
             </span>
-            <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
+            <span className="text-sm text-sf-muted ml-2">
               {t('vsLastPeriod')}
             </span>
           </div>

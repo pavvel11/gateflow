@@ -3,6 +3,8 @@
 
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
+import { getTranslations, getLocale } from 'next-intl/server';
+import { isSafeRedirectUrl } from '@/lib/validations/redirect';
 
 interface PaymentSuccessPageProps {
   searchParams: Promise<{
@@ -17,6 +19,8 @@ interface PaymentSuccessPageProps {
 
 async function PaymentSuccessContent({ searchParams }: PaymentSuccessPageProps) {
   const params = await searchParams;
+  const locale = await getLocale();
+  const t = await getTranslations({ locale, namespace: 'payment.success' });
 
   // Handle new PaymentIntent flow
   const paymentIntent = params.payment_intent;
@@ -28,8 +32,8 @@ async function PaymentSuccessContent({ searchParams }: PaymentSuccessPageProps) 
   const sessionId = params.session_id;
   const productSlug = params.product;
 
-  // If we have success_url from OTO/funnel, redirect there
-  if (successUrl && redirectStatus === 'succeeded') {
+  // If we have success_url from OTO/funnel, redirect there (with open redirect protection)
+  if (successUrl && redirectStatus === 'succeeded' && isSafeRedirectUrl(successUrl)) {
     redirect(successUrl);
   }
 
@@ -74,16 +78,16 @@ async function PaymentSuccessContent({ searchParams }: PaymentSuccessPageProps) 
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-      <div className="max-w-md mx-auto bg-gray-800 rounded-lg p-8 text-center">
-        <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div className="min-h-screen bg-sf-deep flex items-center justify-center">
+      <div className="max-w-md mx-auto bg-sf-raised/80 border border-sf-border rounded-2xl p-8 text-center">
+        <div className="w-16 h-16 bg-sf-success/20 border border-sf-success/30 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-sf-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
           </svg>
         </div>
-        <h1 className="text-2xl font-bold text-white mb-2">Payment Successful!</h1>
-        <p className="text-gray-400 mb-6">
-          Your payment has been processed successfully. You now have access to your purchased product.
+        <h1 className="text-2xl font-bold text-sf-heading mb-2">{t('title')}</h1>
+        <p className="text-sf-muted mb-6">
+          {t('description')}
         </p>
       </div>
     </div>
@@ -93,8 +97,8 @@ async function PaymentSuccessContent({ searchParams }: PaymentSuccessPageProps) 
 export default function PaymentSuccessPage(props: PaymentSuccessPageProps) {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+      <div className="min-h-screen bg-sf-deep flex items-center justify-center">
+        <div className="text-sf-heading">Loading...</div>
       </div>
     }>
       <PaymentSuccessContent {...props} />

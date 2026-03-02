@@ -20,7 +20,7 @@ export async function GET(
     try {
       await requireAdminApi(supabase);
     } catch (authError: any) {
-      return NextResponse.json({ error: authError.message || 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const adminClient = createAdminClient();
@@ -73,7 +73,7 @@ export async function POST(
     try {
       await requireAdminApi(supabase);
     } catch (authError: any) {
-      return NextResponse.json({ error: authError.message || 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -179,7 +179,7 @@ export async function DELETE(
     try {
       await requireAdminApi(supabase);
     } catch (authError: any) {
-      return NextResponse.json({ error: authError.message || 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const adminClient = createAdminClient();

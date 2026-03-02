@@ -54,13 +54,13 @@ export async function GET() {
       system: {
         status: 'ok',
         timestamp: new Date().toISOString(),
-        service: 'gateflow-admin',
+        service: 'sellf-admin',
         version: '1.0.0',
         environment: process.env.NODE_ENV || 'development'
       },
       api: {
         health: '/api/health',
-        gatekeeper: '/api/gatekeeper',
+        sellf: '/api/sellf',
         config: '/api/config',
         status: '/api/status'
       },
@@ -95,7 +95,7 @@ export async function GET() {
         system: {
           status: 'error',
           timestamp: new Date().toISOString(),
-          service: 'gateflow-admin',
+          service: 'sellf-admin',
           version: '1.0.0',
           environment: process.env.NODE_ENV || 'development'
         },

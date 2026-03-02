@@ -1115,12 +1115,12 @@ export function generateOpenApiDocument() {
   return generator.generateDocument({
     openapi: '3.1.0',
     info: {
-      title: 'GateFlow API',
+      title: 'Sellf API',
       version: '1.0.0',
       description: `
-# GateFlow API v1
+# Sellf API v1
 
-GateFlow is a self-hosted platform for selling and protecting digital products.
+Sellf is a self-hosted platform for selling and protecting digital products.
 This API allows you to manage products, users, payments, coupons, webhooks, and more.
 
 ## Authentication
@@ -1130,8 +1130,8 @@ All endpoints require authentication using an API key. You can create API keys i
 ### Using API Key
 
 Include your API key in either:
-- Header: \`X-API-Key: gf_live_xxx...\`
-- Bearer token: \`Authorization: Bearer gf_live_xxx...\`
+- Header: \`X-API-Key: sf_live_xxx...\`
+- Bearer token: \`Authorization: Bearer sf_live_xxx...\`
 
 ### Scopes
 
@@ -1172,8 +1172,8 @@ Response includes:
 \`\`\`
       `.trim(),
       contact: {
-        name: 'GateFlow Support',
-        url: 'https://github.com/gateflow/gateflow',
+        name: 'Sellf Support',
+        url: 'https://github.com/sellf/sellf',
       },
       license: {
         name: 'MIT',
@@ -1186,7 +1186,7 @@ Response includes:
         description: 'Local development',
       },
       {
-        url: 'https://app.gateflow.io',
+        url: 'https://demo.sellf.app',
         description: 'Production',
       },
     ],

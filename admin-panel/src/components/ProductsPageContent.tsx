@@ -5,7 +5,8 @@ import { Product } from '@/types';
 import FilterBar from './FilterBar';
 import ProductsTable from './ProductsTable';
 import { useToast } from '@/contexts/ToastContext';
-import ProductFormModal, { ProductFormData } from './ProductFormModal';
+import ProductCreationWizard from './ProductFormModal/wizard/ProductCreationWizard';
+import type { ProductFormData } from './ProductFormModal/types';
 import CodeGeneratorModal from './CodeGeneratorModal';
 import { exportProductsToCsv } from '@/utils/csvExport';
 import { useTranslations } from 'next-intl';
@@ -51,6 +52,7 @@ const ProductsPageContent: React.FC = () => {
     deleteProduct,
     toggleStatus,
     toggleFeatured,
+    toggleListed,
   } = useProducts({
     page: currentPage,
     limit,
@@ -239,6 +241,19 @@ const ProductsPageContent: React.FC = () => {
     }
   };
 
+  const handleToggleListed = async (productId: string, currentListed: boolean) => {
+    try {
+      await toggleListed(productId, currentListed);
+      await fetchProducts();
+      addToast(
+        !currentListed ? t('listedEnabled') : t('listedDisabled'),
+        'success'
+      );
+    } catch (err) {
+      addToast(t('listedToggleError'), 'error');
+    }
+  };
+
   const handleAddNewProduct = () => {
     setEditingProduct(null);
     setShowProductForm(true);
@@ -275,6 +290,7 @@ const ProductsPageContent: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <h1 className="text-[40px] font-[800] text-sf-heading tracking-[-0.03em] leading-[1.1]">{t('title')}</h1>
       <FilterBar
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
@@ -297,6 +313,7 @@ const ProductsPageContent: React.FC = () => {
         onGenerateCode={handleGenerateCode}
         onToggleStatus={handleToggleStatus}
         onToggleFeatured={handleToggleFeatured}
+        onToggleListed={handleToggleListed}
         currentPage={pagination.currentPage}
         totalPages={pagination.totalPages}
         totalItems={pagination.totalItems}
@@ -308,12 +325,11 @@ const ProductsPageContent: React.FC = () => {
       />
 
       {showProductForm && (
-        <ProductFormModal
+        <ProductCreationWizard
           isOpen={showProductForm}
           onClose={() => {
             setShowProductForm(false);
             setEditingProduct(null);
-            // Remove query param if present
             if (searchParams.get('open')) {
               router.replace('/dashboard/products');
             }
@@ -321,30 +337,30 @@ const ProductsPageContent: React.FC = () => {
           onSubmit={handleProductSubmit}
           product={editingProduct}
           isSubmitting={submitting}
-          error={null} // Pass error state if you have one for the form
+          error={null}
         />
       )}
 
       {productToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-md"
+            className="bg-sf-base p-6 w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('confirmDelete')}</h3>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            <h3 className="text-lg font-bold text-sf-heading">{t('confirmDelete')}</h3>
+            <p className="mt-2 text-sm text-sf-body">
               {t('deleteConfirmMessage', { name: productToDelete.name })}
             </p>
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 onClick={() => setProductToDelete(null)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:bg-gray-600"
+                className="px-4 py-2 text-sm font-medium text-sf-body bg-sf-base border-2 border-sf-border-medium hover:bg-sf-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sf-accent"
               >
                 {t('cancel')}
               </button>
               <button
                 onClick={confirmDelete}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
                 {t('delete')}
               </button>
@@ -356,23 +372,23 @@ const ProductsPageContent: React.FC = () => {
       {showExportConfirmation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-md"
+            className="bg-sf-base p-6 w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('confirmExport')}</h3>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            <h3 className="text-lg font-bold text-sf-heading">{t('confirmExport')}</h3>
+            <p className="mt-2 text-sm text-sf-body">
               {t('exportConfirmMessage', { count: products.length })}
             </p>
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 onClick={() => setShowExportConfirmation(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:bg-gray-600"
+                className="px-4 py-2 text-sm font-medium text-sf-body bg-sf-base border-2 border-sf-border-medium hover:bg-sf-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sf-accent"
               >
                 {t('cancel')}
               </button>
               <button
                 onClick={confirmExport}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="px-4 py-2 text-sm font-medium text-white bg-sf-accent-bg border border-transparent hover:bg-sf-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sf-accent"
               >
                 {t('export')}
               </button>

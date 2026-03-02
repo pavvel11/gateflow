@@ -1,15 +1,15 @@
 /**
- * GateFlow License Verification
+ * Sellf License Verification
  *
- * Verifies ECDSA-signed license keys for GateFlow installations.
- * License format: GF-{domain}-{expiry}-{signature}
+ * Verifies ECDSA-signed license keys for Sellf installations.
+ * License format: SF-{domain}-{expiry}-{signature}
  */
 
 import * as crypto from 'crypto';
 
-// GateFlow Public Key (ECDSA P-256)
+// Sellf Public Key (ECDSA P-256)
 // This key is used to verify license signatures
-const GATEFLOW_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
+const SELLF_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIENJbqxv7nmfxKjGCu98LTpekvLW
 bBv/FwWkjy1pnLiuFZDGNITxN6YC1L4628tXv1cPey6WcQqEC3jTWz2ZsQ==
 -----END PUBLIC KEY-----`;
@@ -44,7 +44,7 @@ export function parseLicense(licenseKey: string): {
   }
 
   const parts = licenseKey.split('-');
-  if (parts.length < 4 || parts[0] !== 'GF') {
+  if (parts.length < 4 || parts[0] !== 'SF') {
     return null;
   }
 
@@ -81,7 +81,7 @@ export function verifyLicenseSignature(licenseKey: string): boolean {
     const verify = crypto.createVerify('SHA256');
     verify.update(dataToVerify);
     verify.end();
-    return verify.verify(GATEFLOW_PUBLIC_KEY, signatureBuffer);
+    return verify.verify(SELLF_PUBLIC_KEY, signatureBuffer);
   } catch {
     return false;
   }
@@ -268,5 +268,5 @@ export function validateLicense(licenseKey: string, currentDomain?: string): Lic
  * Does NOT verify signature - use validateLicense for full verification
  */
 export function isValidLicenseFormat(licenseKey: string): boolean {
-  return /^GF-[a-zA-Z0-9.*-]+-(?:UNLIMITED|\d{8})-[A-Za-z0-9_-]+$/.test(licenseKey);
+  return /^SF-[a-zA-Z0-9.*-]+-(?:UNLIMITED|\d{8})-[A-Za-z0-9_-]+$/.test(licenseKey);
 }

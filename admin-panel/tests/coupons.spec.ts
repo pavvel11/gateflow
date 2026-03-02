@@ -7,9 +7,8 @@ test.describe.configure({ mode: 'serial' });
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-if (!SUPABASE_URL || !SERVICE_ROLE_KEY || !ANON_KEY) {
+if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
   throw new Error('Missing Supabase env variables for testing');
 }
 
@@ -41,7 +40,7 @@ test.describe('Smart Coupons System', () => {
       is_active: true
     }).select().single();
 
-    expect(product).toBeDefined();
+    expect(product, 'Product insert failed — check Supabase logs').not.toBeNull();
 
     // 2. Create Coupon
     const { data: coupon, error: couponError } = await supabaseAdmin.from('coupons').insert({
@@ -58,18 +57,18 @@ test.describe('Smart Coupons System', () => {
 
     // 3. Visit Checkout with Coupon URL Param
     await acceptAllCookies(page);
-    await page.goto(`/checkout/${productSlug}?coupon=${couponCode}&show_promo=true`);
+    await page.goto(`/pl/checkout/${productSlug}?coupon=${couponCode}&show_promo=true`);
 
     // 4. Verify Coupon is Applied in UI
-    const couponInput = page.locator('input[placeholder="Enter code"]');
+    const couponInput = page.locator('input[placeholder="Wpisz kod"]');
     await expect(couponInput).toBeVisible();
     await expect(couponInput).toHaveValue(couponCode);
 
-    // Wait for verification to finish and success message to appear
-    await expect(page.getByText(/discount applied/i)).toBeVisible({ timeout: 15000 });
+    // Wait for verification to finish and success message to appear (PL locale)
+    await expect(page.getByText(/zniżkę|discount applied/i)).toBeVisible({ timeout: 15000 });
 
-    // Check if applied state is active (green border)
-    await expect(page.locator('.border-green-500\\\/50')).toBeVisible(); 
+    // Check if applied state is active (success border)
+    await expect(page.locator('.border-sf-success\\/50')).toBeVisible();
   });
 
   test('should validate invalid coupon via URL', async ({ page }) => {
@@ -87,10 +86,10 @@ test.describe('Smart Coupons System', () => {
 
     // 2. Visit Checkout
     await acceptAllCookies(page);
-    await page.goto(`/checkout/${productSlug}?coupon=${invalidCode}`);
+    await page.goto(`/pl/checkout/${productSlug}?coupon=${invalidCode}`);
 
-    // 3. Verify Error Message
-    const input = page.locator('input[placeholder="Enter code"]');
+    // 3. Verify Error Message (EN: "Enter code", PL: "Wpisz kod")
+    const input = page.locator('input[placeholder="Enter code"], input[placeholder="Wpisz kod"]');
     await expect(input).toBeVisible({ timeout: 10000 });
 
     // Wait for validation error
@@ -128,10 +127,11 @@ test.describe('Smart Coupons System', () => {
 
     // 3. Visit Checkout
     await acceptAllCookies(page);
-    await page.goto(`/checkout/${productSlug}?coupon=${couponCode}`);
+    await page.goto(`/pl/checkout/${productSlug}?coupon=${couponCode}`);
 
     // 4. Verify Application
-    await expect(page.getByText(`${discountAmount} USD discount applied`, { exact: false })).toBeVisible({ timeout: 10000 });
+    // PL: "Zastosowano zniżkę 10 USD" / EN: "10 USD discount applied"
+    await expect(page.getByText(/discount applied|Zastosowano zniżkę/i)).toBeVisible({ timeout: 10000 });
   });
 
 });

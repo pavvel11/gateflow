@@ -6,42 +6,42 @@ export function getStatusInfo(paymentStatus: PaymentStatus, t: (key: string) => 
       return {
         emoji: '🎉',
         title: t('accessGranted'),
-        color: 'text-green-400',
+        color: 'text-sf-success',
         bgColor: 'from-green-900/20 to-green-800/20'
       };
     case 'failed':
       return {
         emoji: '❌',
         title: t('paymentFailed'),
-        color: 'text-red-400',
+        color: 'text-sf-danger',
         bgColor: 'from-red-900/20 to-red-800/20'
       };
     case 'email_validation_failed':
       return {
         emoji: '📧',
         title: 'Email Issue',
-        color: 'text-red-400',
+        color: 'text-sf-danger',
         bgColor: 'from-red-900/20 to-red-800/20'
       };
     case 'expired':
       return {
         emoji: '⏰',
         title: t('paymentExpired'),
-        color: 'text-orange-400',
+        color: 'text-sf-warning',
         bgColor: 'from-orange-900/20 to-orange-800/20'
       };
     case 'guest_purchase':
       return {
         emoji: '🔐',
         title: t('paymentCompleteAccountRequired'),
-        color: 'text-yellow-400',
+        color: 'text-sf-warning',
         bgColor: 'from-yellow-900/20 to-yellow-800/20'
       };
     case 'magic_link_sent':
       return {
         emoji: '🎉',
         title: t('paymentSuccessful'),
-        color: 'text-green-400',
+        color: 'text-sf-success',
         bgColor: 'from-green-900/20 to-green-800/20'
       };
     case 'processing':
@@ -49,7 +49,7 @@ export function getStatusInfo(paymentStatus: PaymentStatus, t: (key: string) => 
       return {
         emoji: '⏳',
         title: t('processingPayment'),
-        color: 'text-blue-400',
+        color: 'text-sf-accent',
         bgColor: 'from-blue-900/20 to-blue-800/20'
       };
   }

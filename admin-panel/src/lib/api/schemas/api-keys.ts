@@ -40,7 +40,7 @@ export const ApiKeySchema = z.object({
   name: z.string().openapi({ example: 'Production API Key' }),
   key_prefix: z.string().openapi({
     description: 'First 12 characters of the key',
-    example: 'gf_live_a1b2',
+    example: 'sf_live_a1b2',
   }),
   scopes: z.array(ApiScopeSchema).openapi({
     example: ['products:read', 'users:read'],
@@ -91,7 +91,7 @@ export const CreateApiKeyResponseSchema = z.object({
   data: ApiKeySchema.extend({
     key: z.string().openapi({
       description: 'Full API key - ONLY shown once at creation!',
-      example: 'gf_live_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6',
+      example: 'sf_live_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6',
     }),
     warning: z.string().openapi({
       example: 'Save this key now - it will not be shown again!',

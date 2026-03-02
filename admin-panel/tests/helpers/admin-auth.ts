@@ -59,6 +59,56 @@ export async function createTestAdmin(prefix: string = 'test-admin') {
 }
 
 /**
+ * Sets Supabase auth session cookies on a Playwright page context.
+ * Signs in server-side and injects cookies in @supabase/ssr format.
+ * No CDN dependency — works fully offline.
+ *
+ * @param page - Playwright page
+ * @param email - User email
+ * @param password - User password
+ */
+export async function setAuthSession(page: Page, email: string, password: string) {
+  const signInClient = createClient(SUPABASE_URL, ANON_KEY);
+  const { data: { session }, error: signInError } = await signInClient.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (signInError || !session) {
+    throw new Error(`Failed to sign in: ${signInError?.message || 'no session'}`);
+  }
+
+  const supabaseHostname = new URL(SUPABASE_URL).hostname;
+  const cookieKey = `sb-${supabaseHostname.split('.')[0]}-auth-token`;
+  const sessionJson = JSON.stringify(session);
+  const base64Value = Buffer.from(sessionJson).toString('base64url');
+  const cookieValue = `base64-${base64Value}`;
+
+  const baseUrl = new URL(process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000');
+
+  const CHUNK_SIZE = 3180;
+  if (cookieValue.length <= CHUNK_SIZE) {
+    await page.context().addCookies([{
+      name: cookieKey,
+      value: cookieValue,
+      domain: baseUrl.hostname,
+      path: '/',
+    }]);
+  } else {
+    const chunks: string[] = [];
+    for (let i = 0; i < cookieValue.length; i += CHUNK_SIZE) {
+      chunks.push(cookieValue.substring(i, i + CHUNK_SIZE));
+    }
+    await page.context().addCookies(chunks.map((chunk, idx) => ({
+      name: `${cookieKey}.${idx}`,
+      value: chunk,
+      domain: baseUrl.hostname,
+      path: '/',
+    })));
+  }
+}
+
+/**
  * Logs in as admin user
  * @param page - Playwright page
  * @param email - Admin email
@@ -81,24 +131,69 @@ export async function loginAsAdmin(page: Page, email: string, password: string) 
     addStyle();
   });
 
-  await page.goto('/');
-  await page.waitForLoadState('domcontentloaded');
-
-  await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-    // @ts-ignore - dynamic ESM import works in browser context
-    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-    const supabase = createBrowserClient(supabaseUrl, anonKey);
-    await supabase.auth.signInWithPassword({ email, password });
-  }, {
-    email,
-    password,
-    supabaseUrl: SUPABASE_URL,
-    anonKey: ANON_KEY,
-  });
+  await setAuthSession(page, email, password);
 
   await page.goto('/pl/dashboard');
   // Wait for dashboard to load - look for sidebar navigation
   await page.waitForSelector('nav, [role="navigation"], aside', { timeout: 15000 });
+}
+
+/**
+ * Get admin auth cookie header for API requests that require cookie-based auth.
+ *
+ * The v1 API endpoints use @supabase/ssr cookie-based auth. This function
+ * creates a test admin, signs in, and returns the Cookie header value
+ * in the format that @supabase/ssr expects (base64url-encoded session).
+ *
+ * @returns Cookie header string for use with Playwright request context
+ */
+export async function getAdminAuthCookie(): Promise<string> {
+  const randomStr = Math.random().toString(36).substring(7);
+  const email = `api-admin-${Date.now()}-${randomStr}@example.com`;
+  const password = 'password123';
+
+  const { data: { user }, error: createError } = await supabaseAdmin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  });
+  if (createError) throw createError;
+
+  await supabaseAdmin
+    .from('admin_users')
+    .insert({ user_id: user!.id });
+
+  const signInClient = createClient(SUPABASE_URL, ANON_KEY);
+  const { data: { session }, error: signInError } = await signInClient.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (signInError || !session) {
+    throw new Error('Failed to sign in admin user');
+  }
+
+  // Construct the cookie in @supabase/ssr format:
+  // Cookie name: sb-{hostname.split('.')[0]}-auth-token (per @supabase/supabase-js)
+  // Value: "base64-" + base64url-encoded JSON of the session
+  const supabaseHostname = new URL(SUPABASE_URL).hostname;
+  const cookieKey = `sb-${supabaseHostname.split('.')[0]}-auth-token`;
+  const sessionJson = JSON.stringify(session);
+  const base64Value = Buffer.from(sessionJson).toString('base64url');
+  const cookieValue = `base64-${base64Value}`;
+
+  // Supabase SSR chunks cookies at ~3180 chars. If under that limit, single cookie.
+  const CHUNK_SIZE = 3180;
+  if (cookieValue.length <= CHUNK_SIZE) {
+    return `${cookieKey}=${cookieValue}`;
+  }
+
+  // Chunked format: sb-127-auth-token.0, sb-127-auth-token.1, etc.
+  const chunks: string[] = [];
+  for (let i = 0; i < cookieValue.length; i += CHUNK_SIZE) {
+    chunks.push(cookieValue.substring(i, i + CHUNK_SIZE));
+  }
+  return chunks.map((chunk, i) => `${cookieKey}.${i}=${chunk}`).join('; ');
 }
 
 /**

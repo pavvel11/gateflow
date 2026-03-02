@@ -6,6 +6,7 @@
 
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { setAuthSession } from './helpers/admin-auth';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -20,18 +21,7 @@ const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 async function loginAsAdmin(page: any, email: string, password: string) {
   await page.goto('/login');
 
-  await page.evaluate(async ({ email, password, url, anonKey }: { email: string; password: string; url: string; anonKey: string }) => {
-    // @ts-ignore
-    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-    const sb = createBrowserClient(url, anonKey);
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-  }, {
-    email,
-    password,
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  });
+  await setAuthSession(page, email, password);
 
   await page.reload();
 }
@@ -173,7 +163,8 @@ test.describe('Order Bumps API v1', () => {
       expect(response.status()).toBe(200);
       const body = await response.json();
       expect(body.data.length).toBeGreaterThanOrEqual(1);
-      expect(body.data.some((ob: any) => ob.main_product_id === mainProduct.id)).toBe(true);
+      const matchingBumps = body.data.filter((ob: any) => ob.main_product_id === mainProduct.id);
+      expect(matchingBumps.length).toBeGreaterThanOrEqual(1);
     });
 
     test('should return 400 for invalid product_id format', async ({ page }) => {
@@ -794,7 +785,7 @@ test.describe('Order Bumps API v1 - IDOR Tests', () => {
   });
 
   test('both admins can view order bumps (shared resource)', async ({ page }) => {
-    // In GateFlow, order bumps are global admin resources, not per-user
+    // In Sellf, order bumps are global admin resources, not per-user
     // Both admins should be able to view them
     await loginAsAdmin(page, adminUser1.email, password);
 

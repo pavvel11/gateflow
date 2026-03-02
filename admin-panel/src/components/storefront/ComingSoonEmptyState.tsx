@@ -11,7 +11,7 @@ export default function ComingSoonEmptyState({ shopName, contactEmail }: ComingS
   const t = useTranslations('storefront.comingSoon');
 
   return (
-    <div data-testid="coming-soon" className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 flex items-center justify-center px-4 py-12">
+    <div data-testid="coming-soon" className="min-h-screen bg-sf-deep flex items-center justify-center px-4 py-12">
       <div className="max-w-2xl w-full text-center">
         {/* Animated Rocket */}
         <div className="mb-8 flex justify-center">
@@ -22,22 +22,22 @@ export default function ComingSoonEmptyState({ shopName, contactEmail }: ComingS
 
         {/* Shop Name Badge */}
         <div className="mb-6 inline-block">
-          <div className="px-6 py-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full border border-gray-200 dark:border-gray-700 shadow-lg">
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+          <div className="px-6 py-2 bg-sf-base/80 backdrop-blur-sm rounded-full border border-sf-border">
+            <span className="text-sm font-medium text-sf-muted">
               {shopName}
             </span>
           </div>
         </div>
 
         {/* Title */}
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600">
+        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-sf-heading mb-6">
+          <span className="text-sf-accent">
             {t('title')}
           </span>
         </h1>
 
         {/* Subtitle */}
-        <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
+        <p className="text-xl md:text-2xl text-sf-body mb-8 leading-relaxed">
           {t('subtitle')}
         </p>
 
@@ -45,7 +45,7 @@ export default function ComingSoonEmptyState({ shopName, contactEmail }: ComingS
         <div className="mb-12">
           <a 
             href="/about" 
-            className="inline-flex items-center px-6 py-3 rounded-full bg-gradient-to-r from-purple-600/10 to-blue-600/10 dark:from-purple-400/10 dark:to-blue-400/10 text-purple-600 dark:text-purple-400 font-bold hover:from-purple-600/20 hover:to-blue-600/20 transition-all group border border-purple-200 dark:border-purple-800"
+            className="inline-flex items-center px-6 py-3 rounded-full bg-sf-accent-soft text-sf-accent font-bold hover:bg-sf-accent-soft transition-all group border border-sf-border-accent"
           >
             <span className="mr-2">🚀</span>
             {t('learnMore')}
@@ -55,8 +55,8 @@ export default function ComingSoonEmptyState({ shopName, contactEmail }: ComingS
 
         {/* Contact Information */}
         {contactEmail && (
-          <div className="mt-12 p-6 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="mt-12 p-6 bg-sf-base/50 backdrop-blur-sm rounded-2xl border border-sf-border">
+            <p className="text-sm text-sf-muted">
               {t('contactUs', { email: contactEmail })}
             </p>
           </div>
@@ -64,9 +64,9 @@ export default function ComingSoonEmptyState({ shopName, contactEmail }: ComingS
 
         {/* Decorative Elements */}
         <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-200 dark:bg-purple-800 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-xl opacity-30 animate-blob"></div>
-          <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-blue-200 dark:bg-blue-800 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
-          <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-pink-200 dark:bg-pink-800 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-xl opacity-30 animate-blob animation-delay-4000"></div>
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-sf-accent-soft rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
+          <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-sf-accent-soft rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-sf-accent-soft rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000"></div>
         </div>
       </div>
 

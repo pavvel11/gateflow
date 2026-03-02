@@ -15,7 +15,7 @@ import {
   API_SCOPES,
 } from '@/lib/api';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { validateProductId } from '@/lib/validations/product';
+import { validateUUID } from '@/lib/validations/product';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -36,17 +36,17 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
 
     // Validate ID format (reuse UUID validation)
-    const idValidation = validateProductId(id);
+    const idValidation = validateUUID(id);
     if (!idValidation.isValid) {
       return apiError(request, 'INVALID_INPUT', 'Invalid user ID format');
     }
 
     const adminClient = createAdminClient();
 
-    // Get user stats
+    // Get user stats (explicit fields — avoid exposing full raw_user_meta_data)
     const { data: userStat, error: statsError } = await adminClient
       .from('user_access_stats')
-      .select('*')
+      .select('user_id, email, user_created_at, email_confirmed_at, last_sign_in_at, raw_user_meta_data, total_products, total_value, last_access_granted_at, first_access_granted_at')
       .eq('user_id', id)
       .single();
 
@@ -58,10 +58,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return apiError(request, 'INTERNAL_ERROR', 'Failed to fetch user');
     }
 
-    // Get user's product access
+    // Get user's product access (explicit fields)
     const { data: accessData, error: accessError } = await adminClient
       .from('user_product_access_detailed')
-      .select('*')
+      .select('id, user_id, product_id, product_slug, product_name, product_description, product_price, product_currency, product_icon, product_is_active, access_created_at, access_expires_at, access_duration_days')
       .eq('user_id', id)
       .order('access_created_at', { ascending: false });
 
@@ -91,7 +91,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       created_at: userStat.user_created_at,
       email_confirmed_at: userStat.email_confirmed_at,
       last_sign_in_at: userStat.last_sign_in_at,
-      raw_user_meta_data: userStat.raw_user_meta_data,
+      user_metadata: userStat.raw_user_meta_data ? {
+        full_name: (userStat.raw_user_meta_data as Record<string, unknown>).full_name,
+        avatar_url: (userStat.raw_user_meta_data as Record<string, unknown>).avatar_url,
+        name: (userStat.raw_user_meta_data as Record<string, unknown>).name,
+      } : null,
       product_access: productAccess,
       stats: {
         total_products: userStat.total_products,

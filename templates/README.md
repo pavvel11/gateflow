@@ -1,6 +1,6 @@
-# 🎨 GateFlow Landing Page Templates
+# 🎨 Sellf Landing Page Templates
 
-Professional, ready-to-use landing page templates for your GateFlow-protected products. Each template is designed for specific use cases and comes with comprehensive customization instructions.
+Professional, ready-to-use landing page templates for your Sellf-protected products. Each template is designed for specific use cases and comes with comprehensive customization instructions.
 
 ## 📋 Available Templates
 
@@ -64,24 +64,24 @@ Look for `<!-- EDIT: -->` comments throughout the HTML files. These mark all the
 <p>Your compelling description...</p>
 ```
 
-### Step 3: Configure GateFlow
+### Step 3: Configure Sellf
 
 1. Replace `'product-slug'` with your actual product slug:
 
 ```html
-<div class="gateflow-protect" data-product-slug="your-product-slug">
+<div class="sellf-protect" data-product-slug="your-product-slug">
 ```
 
 1. Replace `'yourdomain.com'` with your actual domain:
 
 ```html
-<script src="/api/gatekeeper?domain=yourdomain.com"></script>
+<script src="/api/sellf?domain=yourdomain.com"></script>
 ```
 
 ### Step 4: Upload and Test
 
 1. Upload the HTML file to your web server
-1. Test the GateFlow protection functionality
+1. Test the Sellf protection functionality
 1. Verify the purchase flow works correctly
 
 ## 🎯 Customization Areas
@@ -89,7 +89,7 @@ Look for `<!-- EDIT: -->` comments throughout the HTML files. These mark all the
 ### Required Changes
 
 - **Product Information**: Title, description, pricing
-- **GateFlow Configuration**: Product slug, domain
+- **Sellf Configuration**: Product slug, domain
 - **Contact Information**: Footer details, support links
 - **Branding**: Logo, company name, colors
 
@@ -171,14 +171,14 @@ Templates use CSS Grid and Flexbox for layouts. Common patterns:
 </div>
 ```
 
-## 🛡️ GateFlow Integration
+## 🛡️ Sellf Integration
 
 ### Content Protection
 
 Wrap any content you want to protect:
 
 ```html
-<div class="gateflow-protect" data-product-slug="your-product">
+<div class="sellf-protect" data-product-slug="your-product">
     <!-- Protected content here -->
 </div>
 ```
@@ -188,7 +188,7 @@ Wrap any content you want to protect:
 For free products that require email registration:
 
 ```html
-<div class="gateflow-protect" data-product-slug="free-ebook" data-price="0">
+<div class="sellf-protect" data-product-slug="free-ebook" data-price="0">
     <!-- Free content that requires email -->
 </div>
 ```
@@ -198,11 +198,11 @@ For free products that require email registration:
 You can protect different sections with different products:
 
 ```html
-<div class="gateflow-protect" data-product-slug="basic-course">
+<div class="sellf-protect" data-product-slug="basic-course">
     <!-- Basic course content -->
 </div>
 
-<div class="gateflow-protect" data-product-slug="premium-course">
+<div class="sellf-protect" data-product-slug="premium-course">
     <!-- Premium course content -->
 </div>
 ```
@@ -212,8 +212,8 @@ You can protect different sections with different products:
 Before going live, make sure you've:
 
 - [ ] Replaced all placeholder content with your actual content
-- [ ] Updated the product slug in GateFlow protection
-- [ ] Changed the domain in the GateFlow script
+- [ ] Updated the product slug in Sellf protection
+- [ ] Changed the domain in the Sellf script
 - [ ] Added your branding (logo, colors, company name)
 - [ ] Updated contact information in the footer
 - [ ] Tested the purchase flow
@@ -241,13 +241,13 @@ Before going live, make sure you've:
 
 - Optimize images before adding them
 - Test page load speed
-- Ensure GateFlow script loads properly
+- Ensure Sellf script loads properly
 
 ## 🆘 Troubleshooting
 
 ### Common Issues
 
-**GateFlow not working:**
+**Sellf not working:**
 
 - Check that the domain matches exactly
 - Verify the product slug exists in your dashboard
@@ -269,9 +269,9 @@ Before going live, make sure you've:
 
 Need help customizing your template?
 
-- 📧 Email: <support@gateflow.pl>
-- 📚 Documentation: <https://docs.gateflow.pl>
-- 💬 Community: <https://discord.gg/gateflow>
+- 📧 Email: <support@sellf.app>
+- 📚 Documentation: <https://docs.sellf.app>
+- 💬 Community: <https://discord.gg/sellf>
 
 ---
 

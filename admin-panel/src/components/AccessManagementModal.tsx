@@ -34,6 +34,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
   onAccessChange
 }) => {
   const t = useTranslations('admin.users.accessModal');
+  const tCommon = useTranslations('common');
   const [userAccess, setUserAccess] = useState<UserAccess[]>([]);
   const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
@@ -205,8 +206,8 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{t('loadingAccess')}</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sf-accent mb-4"></div>
+            <p className="text-sm text-sf-muted">{t('loadingAccess')}</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -215,17 +216,17 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                 <div className="space-y-3">
                   {userAccess.map((access) => (
                     <div key={access.id} className="group relative">
-                      <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                      <div className="flex items-center justify-between p-4 bg-sf-deep border-2 border-sf-border-medium hover:bg-sf-hover transition-colors">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-2">
-                            <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                            <h4 className="text-sm font-medium text-sf-heading truncate">
                               {access.product_name}
                             </h4>
                             <div className="flex items-center space-x-2 ml-4">
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                access.product_is_active 
-                                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                              <span className={`inline-flex items-center px-2 py-1 text-xs font-medium ${
+                                access.product_is_active
+                                  ? 'bg-sf-success-soft text-sf-success'
+                                  : 'bg-sf-raised text-sf-body'
                               }`}>
                                 {access.product_is_active ? t('active') : t('inactive')}
                               </span>
@@ -240,15 +241,15 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                               </Button>
                             </div>
                           </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                          <p className="text-xs text-sf-muted">
                             {t('granted')}: {formatDate(access.access_created_at)}
                             {access.access_expires_at && (
-                              <span className="block text-orange-600 dark:text-orange-400">
+                              <span className="block text-sf-info">
                                 {t('expires')}: {formatDate(access.access_expires_at)}
                               </span>
                             )}
                             {access.access_duration_days && (
-                              <span className="block text-blue-600 dark:text-blue-400">
+                              <span className="block text-sf-accent">
                                 {t('duration')}: {access.access_duration_days} {t('days')}
                               </span>
                             )}
@@ -260,31 +261,31 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-sf-raised flex items-center justify-center">
+                    <svg className="w-8 h-8 text-sf-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                   </div>
-                  <p className="text-gray-500 dark:text-gray-400 font-medium">No product access granted</p>
-                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">This user doesn&apos;t have access to any products yet.</p>
+                  <p className="text-sf-muted font-medium">{t('noAccessGranted')}</p>
+                  <p className="text-sm text-sf-muted mt-1">{t('noAccessYet')}</p>
                 </div>
               )}
             </ModalSection>
 
-            <ModalSection title="Grant New Access">
+            <ModalSection title={t('grantNewAccess')}>
               {showAddForm ? (
-                <div className="space-y-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                <div className="space-y-4 p-4 bg-sf-accent-soft border border-sf-accent/20">
                   <div>
-                    <label htmlFor="product-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Select Product
+                    <label htmlFor="product-select" className="block text-sm font-medium text-sf-body mb-2">
+                      {t('selectProductLabel')}
                     </label>
                     <select
                       id="product-select"
                       value={selectedProductId}
                       onChange={(e) => setSelectedProductId(e.target.value)}
-                      className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      className="w-full px-3 py-2.5 bg-sf-input text-sf-heading border-2 border-sf-border-medium focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent"
                     >
-                      <option value="">Choose a product to grant access...</option>
+                      <option value="">{t('chooseProductPlaceholder')}</option>
                       {getAvailableProductsForUser().map(product => (
                         <option key={product.id} value={product.id}>
                           {product.name} {product.price > 0 ? `(${product.currency} ${product.price})` : '(Free)'}
@@ -294,8 +295,8 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                   </div>
 
                   <div>
-                    <label htmlFor="access-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Access Type
+                    <label htmlFor="access-type" className="block text-sm font-medium text-sf-body mb-2">
+                      {t('accessTypeLabel')}
                     </label>
                     <div className="flex space-x-2">
                       <Button
@@ -303,52 +304,52 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                         variant={accessType === 'permanent' ? 'primary' : 'secondary'}
                         className="flex-1"
                       >
-                        Permanent
+                        {t('permanent')}
                       </Button>
                       <Button
                         onClick={() => setAccessType('duration')}
                         variant={accessType === 'duration' ? 'primary' : 'secondary'}
                         className="flex-1"
                       >
-                        Duration
+                        {t('duration')}
                       </Button>
                       <Button
                         onClick={() => setAccessType('expiration')}
                         variant={accessType === 'expiration' ? 'primary' : 'secondary'}
                         className="flex-1"
                       >
-                        Expiration
+                        {t('expiration')}
                       </Button>
                     </div>
                   </div>
 
                   {accessType === 'duration' && (
                     <div>
-                      <label htmlFor="access-duration" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Duration (in days)
+                      <label htmlFor="access-duration" className="block text-sm font-medium text-sf-body mb-2">
+                        {t('durationInDays')}
                       </label>
                       <input
                         id="access-duration"
                         type="number"
                         value={accessDuration}
                         onChange={(e) => setAccessDuration(Number(e.target.value))}
-                        className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                        placeholder="Enter duration in days"
+                        className="w-full px-3 py-2.5 bg-sf-input text-sf-heading border-2 border-sf-border-medium focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent"
+                        placeholder={t('enterDurationDays')}
                       />
                     </div>
                   )}
 
                   {accessType === 'expiration' && (
                     <div>
-                      <label htmlFor="access-expiration" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Expiration Date
+                      <label htmlFor="access-expiration" className="block text-sm font-medium text-sf-body mb-2">
+                        {t('expirationDate')}
                       </label>
                       <input
                         id="access-expiration"
                         type="date"
                         value={accessExpiration}
                         onChange={(e) => setAccessExpiration(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        className="w-full px-3 py-2.5 bg-sf-input text-sf-heading border-2 border-sf-border-medium focus:outline-none focus:ring-2 focus:ring-sf-accent focus:border-transparent"
                       />
                     </div>
                   )}
@@ -365,7 +366,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                       }}
                       variant="secondary"
                     >
-                      Cancel
+                      {tCommon('cancel')}
                     </Button>
                     <Button
                       onClick={handleGrantAccess}
@@ -373,7 +374,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                       loading={actionLoading === 'grant'}
                       variant="primary"
                     >
-                      Grant Access
+                      {t('grantAccess')}
                     </Button>
                   </div>
                 </div>
@@ -389,14 +390,14 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      No Products Available
+                      {t('noProductsAvailable')}
                     </>
                   ) : (
                     <>
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                       </svg>
-                      Add New Access
+                      {t('addNewAccess')}
                     </>
                   )}
                 </Button>
@@ -408,7 +409,7 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
 
       <ModalFooter>
         <Button onClick={onClose} variant="secondary">
-          Close
+          {tCommon('close')}
         </Button>
       </ModalFooter>
     </BaseModal>

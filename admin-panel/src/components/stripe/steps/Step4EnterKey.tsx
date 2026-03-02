@@ -173,10 +173,10 @@ export function Step4EnterKey() {
     <div className="max-w-3xl mx-auto">
       {/* Header */}
       <div className="text-center mb-8">
-        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        <h3 className="text-2xl font-bold text-sf-heading mb-2">
           {t('title', { defaultValue: 'Enter Your API Key' })}
         </h3>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-sf-body">
           {t('subtitle', {
             defaultValue: 'Enter your Stripe API Key (Restricted or Secret Key)',
           })}
@@ -184,10 +184,10 @@ export function Step4EnterKey() {
       </div>
 
       {/* Info Box - Key Type Explanation */}
-      <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+      <div className="mb-6 p-4 bg-sf-accent-soft border border-sf-accent/20">
         <div className="flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-blue-900 dark:text-blue-100">
+          <AlertTriangle className="w-5 h-5 text-sf-accent flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-sf-accent">
             <p className="font-semibold mb-2">
               {t('keyTypeInfo.title', { defaultValue: 'Choose Your Key Type' })}
             </p>
@@ -195,13 +195,13 @@ export function Step4EnterKey() {
               <li>
                 <strong>Restricted Key (rk_*):</strong>{' '}
                 {t('keyTypeInfo.restricted', {
-                  defaultValue: 'More secure, limited permissions. Recommended for production. Requires STRIPE_SECRET_KEY in .env for full functionality.',
+                  defaultValue: 'More secure — only grants permissions Sellf needs. Recommended for production.',
                 })}
               </li>
               <li>
                 <strong>Secret Key (sk_*):</strong>{' '}
                 {t('keyTypeInfo.secret', {
-                  defaultValue: 'Full access, single key setup. Easier to configure but less secure if leaked. Use for development or if you prefer single-key setup.',
+                  defaultValue: 'Full API access. Easier to set up, but less secure if leaked. Fine for development.',
                 })}
               </li>
             </ul>
@@ -211,7 +211,7 @@ export function Step4EnterKey() {
 
       {/* Key Input */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-sf-body mb-2">
           {t('input.label', { defaultValue: 'Stripe API Key' })}
           <span className="text-red-600 ml-1">*</span>
         </label>
@@ -227,13 +227,13 @@ export function Step4EnterKey() {
             placeholder={t('input.placeholder', {
               defaultValue: state.mode === 'test' ? 'rk_test_... or sk_test_...' : 'rk_live_... or sk_live_...',
             })}
-            className={`w-full px-4 py-3 pr-12 border rounded-lg font-mono text-sm resize-none ${
+            className={`w-full px-4 py-3 pr-12 border font-mono text-sm resize-none ${
               state.validationStatus === 'success'
-                ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20'
+                ? 'border-sf-success bg-sf-success-soft'
                 : state.validationStatus === 'error'
-                  ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20'
-                  : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
-            } text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent`}
+                  ? 'border-sf-danger bg-sf-danger-soft'
+                  : 'border-sf-border bg-sf-input'
+            } text-sf-heading focus:ring-2 focus:ring-sf-accent focus:border-transparent`}
             rows={3}
             style={{
               fontFamily: 'monospace',
@@ -242,13 +242,13 @@ export function Step4EnterKey() {
           />
           <button
             onClick={() => setShowKey(!showKey)}
-            className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+            className="absolute right-3 top-3 text-sf-muted hover:text-sf-body transition-colors"
             type="button"
           >
             {showKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
         </div>
-        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+        <p className="mt-2 text-xs text-sf-muted">
           {t('input.help', {
             defaultValue: 'Your key will be encrypted with AES-256-GCM before being stored.',
           })}
@@ -259,14 +259,14 @@ export function Step4EnterKey() {
       {state.validationResult &&
         !state.validationResult.formatValidation.isValid &&
         state.validationResult.formatValidation.errors.length > 0 && (
-          <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <div className="mb-6 bg-sf-danger-soft border border-sf-danger/20 p-4">
             <div className="flex items-start gap-3">
-              <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+              <XCircle className="w-5 h-5 text-sf-danger mt-0.5 flex-shrink-0" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                <p className="text-sm font-medium text-sf-heading mb-2">
                   {t('errors.format.title', { defaultValue: 'Invalid Format' })}
                 </p>
-                <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
+                <ul className="text-sm text-sf-body space-y-1">
                   {state.validationResult.formatValidation.errors.map((error, index) => (
                     <li key={index}>• {error}</li>
                   ))}
@@ -278,14 +278,14 @@ export function Step4EnterKey() {
 
       {/* Connection Test Result */}
       {state.validationResult?.connectionTest && !state.validationResult.connectionTest.success && (
-        <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <div className="mb-6 bg-sf-danger-soft border border-sf-danger/20 p-4">
           <div className="flex items-start gap-3">
-            <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+            <XCircle className="w-5 h-5 text-sf-danger mt-0.5 flex-shrink-0" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+              <p className="text-sm font-medium text-sf-heading mb-1">
                 {t('errors.connection.title', { defaultValue: 'Connection Failed' })}
               </p>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
+              <p className="text-sm text-sf-body">
                 {state.validationResult.connectionTest.error}
               </p>
             </div>
@@ -296,11 +296,11 @@ export function Step4EnterKey() {
       {/* Permission Verification Result */}
       {state.validationResult?.permissionVerification &&
         !state.validationResult.permissionVerification.allGranted && (
-          <div className="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+          <div className="mb-6 bg-sf-warning-soft border border-sf-warning/20 p-4">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+              <AlertTriangle className="w-5 h-5 text-sf-warning mt-0.5 flex-shrink-0" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                <p className="text-sm font-medium text-sf-heading mb-3">
                   {t('errors.permissions.title', {
                     defaultValue: 'Missing Required Permissions',
                   })}
@@ -310,20 +310,20 @@ export function Step4EnterKey() {
                     (perm, index) => (
                       <div
                         key={index}
-                        className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"
+                        className="flex items-center gap-2 text-sm text-sf-body"
                       >
                         <XCircle className="w-4 h-4 text-red-600" />
                         <span>
                           {perm.resource} - {perm.operation}
                         </span>
                         {perm.errorMessage && (
-                          <span className="text-xs text-gray-500">({perm.errorMessage})</span>
+                          <span className="text-xs text-sf-muted">({perm.errorMessage})</span>
                         )}
                       </div>
                     )
                   )}
                 </div>
-                <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+                <p className="mt-3 text-sm text-sf-body">
                   {t('errors.permissions.help', {
                     defaultValue: 'Go back to Stripe and update your key permissions.',
                   })}
@@ -335,21 +335,21 @@ export function Step4EnterKey() {
 
       {/* Success State */}
       {state.validationStatus === 'success' && state.validationResult?.isValid && (
-        <div className="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+        <div className="mb-6 bg-sf-success-soft border border-sf-success/20 p-4">
           <div className="flex items-start gap-3">
-            <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+            <CheckCircle2 className="w-5 h-5 text-sf-success mt-0.5 flex-shrink-0" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+              <p className="text-sm font-medium text-sf-heading mb-1">
                 {t('success.title', { defaultValue: 'API Key Validated Successfully!' })}
               </p>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
+              <p className="text-sm text-sf-body">
                 {keyType === 'secret' ? (
                   t('success.descriptionSecret', {
                     defaultValue: 'Your Secret Key has been verified with full API access. All payment functionality is now available.',
                   })
                 ) : keyType === 'restricted' ? (
                   t('success.descriptionRestricted', {
-                    defaultValue: 'Your Restricted Key has been verified. Remember to set STRIPE_SECRET_KEY in .env for full payment functionality.',
+                    defaultValue: 'Your Restricted Key has been verified with all required permissions.',
                   })
                 ) : (
                   t('success.description', {
@@ -358,7 +358,7 @@ export function Step4EnterKey() {
                 )}
               </p>
               {state.validationResult.connectionTest?.accountId && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                <p className="text-xs text-sf-muted mt-2">
                   Connected to: {state.validationResult.connectionTest.accountId}
                 </p>
               )}
@@ -373,10 +373,10 @@ export function Step4EnterKey() {
           <button
             onClick={handleValidate}
             disabled={!canValidate || state.validationStatus === 'validating'}
-            className={`w-full py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors ${
+            className={`w-full py-3 font-semibold flex items-center justify-center gap-2 transition-colors ${
               canValidate && state.validationStatus !== 'validating'
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                ? 'bg-sf-accent-bg text-white hover:bg-sf-accent-hover'
+                : 'bg-sf-raised text-sf-muted cursor-not-allowed'
             }`}
           >
             {state.validationStatus === 'validating' ? (
@@ -395,7 +395,7 @@ export function Step4EnterKey() {
       <div className="flex items-center justify-between">
         <button
           onClick={previousStep}
-          className="inline-flex items-center gap-2 px-5 py-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 text-sf-body hover:bg-sf-hover transition-colors"
           disabled={isSaving}
         >
           <ArrowLeft className="w-4 h-4" />
@@ -405,10 +405,10 @@ export function Step4EnterKey() {
         <button
           onClick={handleSaveAndContinue}
           disabled={!canSave || isSaving}
-          className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-lg font-semibold transition-colors ${
+          className={`inline-flex items-center gap-2 px-6 py-2.5 font-semibold transition-colors ${
             canSave && !isSaving
-              ? 'bg-green-600 text-white hover:bg-green-700'
-              : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+              ? 'bg-sf-success hover:opacity-90 text-sf-inverse'
+              : 'bg-sf-raised text-sf-muted cursor-not-allowed'
           }`}
         >
           {isSaving ? (

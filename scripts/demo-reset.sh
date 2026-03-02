@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# GateFlow Demo Instance — Database Reset Script
+# Sellf Demo Instance — Database Reset Script
 # =============================================================================
 #
 # Resets the demo database to seed data via Supabase RPC (no psql/CLI needed).
@@ -11,7 +11,7 @@
 #   2. SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in environment or .env.local
 #
 # Cron (reset every hour):
-#   0 * * * * /path/to/gateflow/scripts/demo-reset.sh >> /var/log/gateflow-demo-reset.log 2>&1
+#   0 * * * * /path/to/sellf/scripts/demo-reset.sh >> /var/log/sellf-demo-reset.log 2>&1
 
 set -euo pipefail
 

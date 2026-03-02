@@ -1,12 +1,12 @@
-# AGENTS.md — GateFlow AI Coding Agent Guide
+# AGENTS.md — Sellf AI Coding Agent Guide
 
-This file provides comprehensive guidance for AI coding agents (Claude Code, Gemini, etc.) working with the GateFlow repository.
+This file provides comprehensive guidance for AI coding agents (Claude Code, Gemini, etc.) working with the Sellf repository.
 
 ## Project Overview
 
-GateFlow is a professional content access control and monetization platform built on Next.js, Supabase, and Stripe. It consists of three main components:
+Sellf is a professional content access control and monetization platform built on Next.js, Supabase, and Stripe. It consists of three main components:
 
-1. **Client-side SDK** (`gatekeeper.js`): JavaScript library for content protection
+1. **Client-side SDK** (`sellf.js`): JavaScript library for content protection
 2. **Admin Panel** (`admin-panel/`): Next.js 16 dashboard for product/user management
 3. **Database Layer** (`supabase/`): PostgreSQL with Row Level Security (RLS)
 
@@ -122,10 +122,10 @@ bun run tttt       # = cd .. && npx supabase db reset && cd admin-panel && playw
 
 ### Three-Tier Architecture
 
-**1. Client SDK (gatekeeper.js)**
+**1. Client SDK (sellf.js)**
 - ~1700 lines of vanilla JavaScript
-- Dynamically loaded via `/api/gatekeeper?domain=...`
-- Key classes: `CacheManager`, `LicenseManager`, `SessionManager`, `AccessControl`, `GateFlow`
+- Dynamically loaded via `/api/sellf?domain=...`
+- Key classes: `CacheManager`, `LicenseManager`, `SessionManager`, `AccessControl`, `Sellf`
 - Implements three protection modes: page, element, hybrid
 - Features: caching (5min TTL), batch access checking, cross-domain sessions, license verification
 
@@ -136,7 +136,7 @@ bun run tttt       # = cd .. && npx supabase db reset && cd admin-panel && playw
   - Public: `/`, `/p/[slug]` (product pages), `/login`, `/terms`, `/privacy`
   - Protected: `/dashboard`, `/my-products`
   - Admin: `/admin/products`, `/admin/users`, `/admin/payments`, `/admin/analytics`
-- API endpoints: `/api/gatekeeper`, `/api/access`, `/api/runtime-config`, `/api/create-embedded-checkout`, `/api/verify-payment`
+- API endpoints: `/api/sellf`, `/api/access`, `/api/runtime-config`, `/api/create-embedded-checkout`, `/api/verify-payment`
 
 **3. Database (PostgreSQL + Supabase)**
 - Core tables: `products`, `user_product_access`, `payment_transactions`, `guest_purchases`, `rate_limits`, `audit_log`
@@ -156,7 +156,7 @@ bun run tttt       # = cd .. && npx supabase db reset && cd admin-panel && playw
 6. User redirected with `session_id` → `/api/verify-payment` confirms access
 
 **Access Check Flow:**
-1. `gatekeeper.js` loads → detects protection mode
+1. `sellf.js` loads → detects protection mode
 2. Gets Supabase session → batch checks access via `/api/access`
 3. API calls `batch_check_user_product_access()` with RLS enforcement
 4. Results cached (5min TTL) → DOM modified based on access
@@ -171,12 +171,12 @@ bun run tttt       # = cd .. && npx supabase db reset && cd admin-panel && playw
 
 ### Cross-Domain Architecture
 
-GateFlow supports protecting content across multiple domains:
+Sellf supports protecting content across multiple domains:
 
 - **Main Domain** (`MAIN_DOMAIN` env var): Hosts admin panel and API
-- **Protected Domains**: Load `gatekeeper.js` and make credentialed requests to main domain
+- **Protected Domains**: Load `sellf.js` and make credentialed requests to main domain
 - **Session Sharing**: Auth shared via CORS + `credentials: 'include'` on API endpoints
-- **Security**: X-Requested-With and X-GateFlow-Origin headers for verification
+- **Security**: X-Requested-With and X-Sellf-Origin headers for verification
 
 ## Critical Security Patterns
 
@@ -395,9 +395,9 @@ To execute SQL queries directly on the local database, use `docker exec` with th
 1. **Find the container name**: `docker ps` (look for `supabase_db_<project_name>`)
 2. **Execute SQL**:
    ```bash
-   docker exec -i supabase_db_gateflow psql -U postgres -c "SELECT * FROM users;"
+   docker exec -i supabase_db_sellf psql -U postgres -c "SELECT * FROM users;"
    ```
-   *Replace `supabase_db_gateflow` with your actual container name if different.*
+   *Replace `supabase_db_sellf` with your actual container name if different.*
 
 **CRITICAL MANDATES for DB Changes:**
 - **Representative Data**: Always add realistic sample data to `supabase/seed.sql` whenever the schema changes.
@@ -407,8 +407,8 @@ To execute SQL queries directly on the local database, use `docker exec` with th
 
 ### Dynamic Configuration System
 
-**GatekeeperGenerator** (`admin-panel/src/lib/gatekeeper-generator.ts`):
-- Reads `gatekeeper.js` and injects configuration at runtime
+**SellfGenerator** (`admin-panel/src/lib/sellf-generator.ts`):
+- Reads `sellf.js` and injects configuration at runtime
 - Template replacement: `{{SUPABASE_URL}}`, `{{SUPABASE_ANON_KEY}}`, etc.
 - Hash-based caching with 5-minute TTL
 - Production: minification + optional obfuscation
@@ -438,7 +438,7 @@ This pattern allows purchasing before account creation, critical for conversion 
 
 ### Original Content Preservation
 
-Before modifying DOM, `gatekeeper.js` stores:
+Before modifying DOM, `sellf.js` stores:
 ```javascript
 document.body.setAttribute('data-original-content', document.body.innerHTML)
 ```
@@ -450,7 +450,7 @@ This allows:
 
 ### Freemium Licensing Model
 
-- **Free Tier**: Full features + "Powered by GateFlow" watermark
+- **Free Tier**: Full features + "Powered by Sellf" watermark
 - **Pro Tier**: Watermark removal via domain licensing
 - **Domain Fingerprinting**: Combines protocol, hostname, port, userAgent, platform
 - **Anti-Tampering**: MutationObserver + periodic checks prevent watermark removal
@@ -490,7 +490,7 @@ To maintain Realtime functionality, the following "Golden Stack" of dependencies
 - Check browser console for auth errors
 
 ### Access Control Not Working
-- Open browser DevTools → Console for gatekeeper.js logs
+- Open browser DevTools → Console for sellf.js logs
 - Verify product slug matches database
 - Check RLS policies in Supabase Studio
 - Confirm user has active session
@@ -508,8 +508,8 @@ To maintain Realtime functionality, the following "Golden Stack" of dependencies
 ## File Structure Context
 
 ```
-gateflow/
-├── gatekeeper.js                  # Core SDK (dynamically served by /api/gatekeeper)
+sellf/
+├── sellf.js                  # Core SDK (dynamically served by /api/sellf)
 ├── index.html                     # Main landing page
 ├── templates/                     # 12+ pre-built HTML product pages
 ├── themes/                        # CSS themes (dark.css, light.css)
@@ -538,7 +538,7 @@ gateflow/
         │   │   ├── login/         # Magic link auth
         │   │   └── auth/          # Auth callback handling
         │   └── api/
-        │       ├── gatekeeper/route.ts       # Dynamic SDK generation
+        │       ├── sellf/route.ts       # Dynamic SDK generation
         │       ├── access/route.ts           # Access verification
         │       ├── runtime-config/route.ts   # Client config
         │       ├── create-embedded-checkout/route.ts
@@ -563,7 +563,7 @@ gateflow/
         │   │   ├── server.ts      # Server component client
         │   │   └── middleware.ts  # Middleware client
         │   ├── validations/       # Input validation schemas
-        │   ├── gatekeeper-generator.ts
+        │   ├── sellf-generator.ts
         │   ├── config-generator.ts
         │   ├── js-processor.ts    # Minification/obfuscation
         │   ├── rate-limiting.ts
@@ -613,7 +613,7 @@ CLOUDFLARE_TURNSTILE_SECRET_KEY=...
 
 ### Creating a release
 
-Releases are manual. CI builds the `gateflow-build.tar.gz` artifact automatically.
+Releases are manual. CI builds the `sellf-build.tar.gz` artifact automatically.
 
 **Before creating a release, bump the version in all these files:**
 
@@ -637,7 +637,7 @@ git add -A && git commit -m "chore: bump version to 1.0.2"
 git push
 
 # Create release → CI builds tar.gz and attaches to release
-gh release create v1.0.2 --title "GateFlow v1.0.2" --notes "Changelog"
+gh release create v1.0.2 --title "Sellf v1.0.2" --notes "Changelog"
 
 # Or trigger build without release tag
 gh workflow run build-release.yml -f version=v1.0.2
@@ -659,24 +659,24 @@ Deploy scripts live in a separate repo: `jurczykpawel/mikrus-toolbox`.
 
 ```bash
 # Fresh install
-./local/deploy.sh gateflow --ssh=mikrus --domain=example.com
+./local/deploy.sh sellf --ssh=mikrus --domain=example.com
 
 # Update (downloads latest release from GitHub automatically)
-./local/deploy.sh gateflow --ssh=mikrus --update
+./local/deploy.sh sellf --ssh=mikrus --update
 
 # Update with local build file (when no release exists yet)
-./local/deploy.sh gateflow --ssh=mikrus --update --build-file=~/gateflow-build.tar.gz
+./local/deploy.sh sellf --ssh=mikrus --update --build-file=~/sellf-build.tar.gz
 
 # Restart only (after .env.local changes, no file update)
-./local/deploy.sh gateflow --ssh=mikrus --update --restart
+./local/deploy.sh sellf --ssh=mikrus --update --restart
 ```
 
 ### Server instances
 
 | Instance | Directory | PM2 name | Port |
 |----------|-----------|----------|------|
-| Production | `/scripts/docker-compose/gateflow/` | `gateflow-tsa` | 3333 |
-| Demo | `/opt/stacks/gateflow-gateflow/` | `gateflow-gateflow` | 3334 |
+| Production | `/scripts/docker-compose/sellf/` | `sellf-tsa` | 3333 |
+| Demo | `/opt/stacks/sellf-sellf/` | `sellf-sellf` | 3334 |
 
 ## Deployment Policy
 

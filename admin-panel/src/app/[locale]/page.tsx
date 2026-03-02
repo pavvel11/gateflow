@@ -22,6 +22,7 @@ export default async function SmartLandingPage() {
     .from('products')
     .select('*')
     .eq('is_active', true)
+    .eq('is_listed', true)
     .order('is_featured', { ascending: false })
     .order('price', { ascending: true });
 

@@ -4,19 +4,19 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
-  GateFlowApiClient,
+  SellfApiClient,
   ApiClientError,
   initApiClient,
   getApiClient,
 } from '../../src/api-client.js';
 
-describe('GateFlowApiClient', () => {
-  let client: GateFlowApiClient;
+describe('SellfApiClient', () => {
+  let client: SellfApiClient;
 
   beforeEach(() => {
-    client = new GateFlowApiClient({
+    client = new SellfApiClient({
       baseUrl: 'https://api.example.com',
-      apiKey: 'gf_test_123456',
+      apiKey: 'sf_test_123456',
     });
   });
 
@@ -26,9 +26,9 @@ describe('GateFlowApiClient', () => {
 
   describe('constructor', () => {
     it('should remove trailing slash from baseUrl', () => {
-      const clientWithSlash = new GateFlowApiClient({
+      const clientWithSlash = new SellfApiClient({
         baseUrl: 'https://api.example.com/',
-        apiKey: 'gf_test_123456',
+        apiKey: 'sf_test_123456',
       });
       // We can't directly test private property, but we can test via a request
       expect(clientWithSlash).toBeDefined();
@@ -51,7 +51,7 @@ describe('GateFlowApiClient', () => {
         expect.objectContaining({
           method: 'GET',
           headers: {
-            'X-API-Key': 'gf_test_123456',
+            'X-API-Key': 'sf_test_123456',
             'Content-Type': 'application/json',
           },
         })
@@ -235,10 +235,10 @@ describe('initApiClient / getApiClient', () => {
   it('should initialize and retrieve client', () => {
     const client = initApiClient({
       baseUrl: 'https://test.com',
-      apiKey: 'gf_test_abc',
+      apiKey: 'sf_test_abc',
     });
 
-    expect(client).toBeInstanceOf(GateFlowApiClient);
+    expect(client).toBeInstanceOf(SellfApiClient);
     expect(getApiClient()).toBe(client);
   });
 });

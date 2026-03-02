@@ -12,11 +12,12 @@ import {
   apiError,
   authenticate,
   handleApiError,
+  parseJsonBody,
   successResponse,
   API_SCOPES,
 } from '@/lib/api';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { validateProductId } from '@/lib/validations/product';
+import { validateUUID } from '@/lib/validations/product';
 import { getStripeServer } from '@/lib/stripe/server';
 
 interface RouteParams {
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
 
     // Validate ID format
-    const idValidation = validateProductId(id);
+    const idValidation = validateUUID(id);
     if (!idValidation.isValid) {
       return apiError(request, 'INVALID_INPUT', 'Invalid refund request ID format');
     }
@@ -145,30 +146,30 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
 
     // Validate ID format
-    const idValidation = validateProductId(id);
+    const idValidation = validateUUID(id);
     if (!idValidation.isValid) {
       return apiError(request, 'INVALID_INPUT', 'Invalid refund request ID format');
     }
 
     const adminClient = createAdminClient();
 
-    // Parse body
-    let body: {
+    const body = await parseJsonBody<{
       action?: string;
       admin_response?: string;
-    };
-
-    try {
-      body = await request.json();
-    } catch {
-      return apiError(request, 'INVALID_INPUT', 'Invalid JSON body');
-    }
+    }>(request);
 
     const { action, admin_response } = body;
 
     // Validate action
     if (!action || !['approve', 'reject'].includes(action)) {
       return apiError(request, 'INVALID_INPUT', 'Action must be "approve" or "reject"');
+    }
+
+    // Validate admin_response length
+    if (admin_response !== undefined && admin_response !== null) {
+      if (typeof admin_response !== 'string' || admin_response.length > 2000) {
+        return apiError(request, 'VALIDATION_ERROR', 'admin_response must be a string of 2000 characters or less');
+      }
     }
 
     // Check refund request exists and is pending

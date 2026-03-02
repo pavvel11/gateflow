@@ -19,7 +19,7 @@ import {
   API_SCOPES,
 } from '@/lib/api';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { validateProductId } from '@/lib/validations/product';
+import { validateUUID } from '@/lib/validations/product';
 
 interface RouteParams {
   params: Promise<{ id: string; accessId: string }>;
@@ -40,8 +40,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { id: userId, accessId } = await params;
 
     // Validate IDs
-    const userIdValidation = validateProductId(userId);
-    const accessIdValidation = validateProductId(accessId);
+    const userIdValidation = validateUUID(userId);
+    const accessIdValidation = validateUUID(accessId);
 
     if (!userIdValidation.isValid) {
       return apiError(request, 'INVALID_INPUT', 'Invalid user ID format');
@@ -106,8 +106,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const { id: userId, accessId } = await params;
 
     // Validate IDs
-    const userIdValidation = validateProductId(userId);
-    const accessIdValidation = validateProductId(accessId);
+    const userIdValidation = validateUUID(userId);
+    const accessIdValidation = validateUUID(accessId);
 
     if (!userIdValidation.isValid) {
       return apiError(request, 'INVALID_INPUT', 'Invalid user ID format');
@@ -137,8 +137,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const updateData: Record<string, unknown> = {};
 
     if (body.extend_days !== undefined) {
-      const extendDays = Number(body.extend_days);
-      if (isNaN(extendDays) || extendDays < 1 || extendDays > 3650) {
+      if (typeof body.extend_days !== 'number' || !Number.isInteger(body.extend_days)) {
+        return apiError(request, 'VALIDATION_ERROR', 'extend_days must be an integer');
+      }
+      const extendDays = body.extend_days as number;
+      if (extendDays < 1 || extendDays > 3650) {
         return apiError(request, 'VALIDATION_ERROR', 'extend_days must be between 1 and 3650');
       }
 
@@ -155,7 +158,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       baseDate.setDate(baseDate.getDate() + extendDays);
       updateData.access_expires_at = baseDate.toISOString();
     } else if (body.access_expires_at !== undefined) {
-      const expiresAt = new Date(body.access_expires_at as string);
+      if (typeof body.access_expires_at !== 'string') {
+        return apiError(request, 'VALIDATION_ERROR', 'access_expires_at must be an ISO date string');
+      }
+      const expiresAt = new Date(body.access_expires_at);
       if (isNaN(expiresAt.getTime())) {
         return apiError(request, 'VALIDATION_ERROR', 'Invalid access_expires_at format');
       }
@@ -164,8 +170,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       }
       updateData.access_expires_at = expiresAt.toISOString();
     } else if (body.access_duration_days !== undefined) {
-      const durationDays = Number(body.access_duration_days);
-      if (isNaN(durationDays) || durationDays < 1 || durationDays > 3650) {
+      if (typeof body.access_duration_days !== 'number' || !Number.isInteger(body.access_duration_days)) {
+        return apiError(request, 'VALIDATION_ERROR', 'access_duration_days must be an integer');
+      }
+      const durationDays = body.access_duration_days as number;
+      if (durationDays < 1 || durationDays > 3650) {
         return apiError(request, 'VALIDATION_ERROR', 'access_duration_days must be between 1 and 3650');
       }
       updateData.access_duration_days = durationDays;
@@ -179,26 +188,43 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     // Update access
-    const { data: updatedAccess, error: updateError } = await adminClient
+    const { error: updateError } = await adminClient
       .from('user_product_access')
       .update(updateData)
-      .eq('id', accessId)
-      .select('id, product_id, created_at, access_expires_at, access_duration_days')
-      .single();
+      .eq('id', accessId);
 
     if (updateError) {
       console.error('Error updating access:', updateError);
       return apiError(request, 'INTERNAL_ERROR', 'Failed to update access');
     }
 
+    // Fetch enriched response from detailed view (matching GET shape)
+    const { data: enrichedAccess, error: fetchError } = await adminClient
+      .from('user_product_access_detailed')
+      .select('*')
+      .eq('id', accessId)
+      .eq('user_id', userId)
+      .single();
+
+    if (fetchError || !enrichedAccess) {
+      console.error('Error fetching updated access:', fetchError);
+      return apiError(request, 'INTERNAL_ERROR', 'Failed to fetch updated access');
+    }
+
     return jsonResponse(
       successResponse({
-        id: updatedAccess.id,
-        user_id: userId,
-        product_id: updatedAccess.product_id,
-        granted_at: updatedAccess.created_at,
-        expires_at: updatedAccess.access_expires_at,
-        duration_days: updatedAccess.access_duration_days,
+        id: enrichedAccess.id,
+        user_id: enrichedAccess.user_id,
+        product_id: enrichedAccess.product_id,
+        product_slug: enrichedAccess.product_slug,
+        product_name: enrichedAccess.product_name,
+        product_price: enrichedAccess.product_price,
+        product_currency: enrichedAccess.product_currency,
+        product_icon: enrichedAccess.product_icon,
+        product_is_active: enrichedAccess.product_is_active,
+        granted_at: enrichedAccess.access_created_at,
+        expires_at: enrichedAccess.access_expires_at,
+        duration_days: enrichedAccess.access_duration_days,
       }),
       request
     );
@@ -218,8 +244,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const { id: userId, accessId } = await params;
 
     // Validate IDs
-    const userIdValidation = validateProductId(userId);
-    const accessIdValidation = validateProductId(accessId);
+    const userIdValidation = validateUUID(userId);
+    const accessIdValidation = validateUUID(accessId);
 
     if (!userIdValidation.isValid) {
       return apiError(request, 'INVALID_INPUT', 'Invalid user ID format');

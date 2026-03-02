@@ -71,16 +71,16 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
     const validation = validateTaxId(taxId, true)
 
     if (!validation.isValid) {
-      setTaxIdError(validation.error || 'Invalid tax ID format')
+      setTaxIdError(validation.error || t('invalidTaxIdFormat'))
       setTaxIdSuccess(null)
       return
     }
 
     // Show success for valid tax ID
     if (validation.isPolish) {
-      setTaxIdSuccess(`✓ Valid Polish NIP${validation.countryCode ? ` (${validation.countryCode})` : ''}`)
+      setTaxIdSuccess(validation.countryCode ? t('validPolishNIPWithCode', { code: validation.countryCode }) : t('validPolishNIP'))
     } else {
-      setTaxIdSuccess(`✓ Valid tax ID${validation.countryCode ? ` (${validation.countryCode})` : ''}`)
+      setTaxIdSuccess(validation.countryCode ? t('validTaxIdWithCode', { code: validation.countryCode }) : t('validTaxId'))
     }
     setTaxIdError(null)
 
@@ -113,21 +113,21 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
         } else {
           // GUS API returned error
           if (result.code === 'RATE_LIMIT_EXCEEDED') {
-            setGusError('Too many requests. Please wait and try again.')
+            setGusError(t('gus.rateLimitError'))
           } else if (result.code === 'NOT_FOUND') {
-            setGusError('Company not found in GUS database')
+            setGusError(t('gus.notFound'))
           } else if (result.code === 'NOT_CONFIGURED') {
             // Silent fail - GUS not configured, user can enter manually
             setGusError(null)
           } else if (result.code === 'INVALID_ORIGIN') {
-            setGusError('Security error. Please refresh and try again.')
+            setGusError(t('gus.securityError'))
           } else {
-            setGusError('Failed to fetch data from GUS. Enter data manually.')
+            setGusError(t('gus.fetchError'))
           }
         }
       } catch (error) {
         console.error('GUS fetch error:', error)
-        setGusError('Failed to fetch data from GUS. Enter data manually.')
+        setGusError(t('gus.fetchError'))
       } finally {
         setIsLoadingGUS(false)
       }
@@ -137,51 +137,54 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       {/* 1. Personal Information */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+      <div className="bg-sf-base border-2 border-sf-border-medium overflow-hidden">
+        <div className="px-6 py-4 border-b border-sf-border">
+          <h3 className="text-lg font-bold text-sf-heading">
             {t('personalInfo.title')}
           </h3>
-          <p className="text-sm text-gray-500">{t('personalInfo.subtitle')}</p>
+          <p className="text-sm text-sf-muted">{t('personalInfo.subtitle')}</p>
         </div>
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="profile-email" className="block text-sm font-medium text-sf-body mb-1">
                 {t('fields.email')}
               </label>
               <input
+                id="profile-email"
                 type="text"
                 disabled
                 value={userEmail}
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 bg-gray-50 dark:bg-gray-900 text-gray-500 cursor-not-allowed"
+                className="w-full border-2 border-sf-border-medium px-3 py-2 bg-sf-deep text-sf-muted cursor-not-allowed"
               />
-              <p className="mt-1 text-xs text-gray-400">{t('fields.emailHelp')}</p>
+              <p className="mt-1 text-xs text-sf-muted">{t('fields.emailHelp')}</p>
             </div>
             
-            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-gray-100 dark:border-gray-700 pt-6">
+            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-sf-border pt-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="profile-first-name" className="block text-sm font-medium text-sf-body mb-1">
                   {t('fields.firstName')}
                 </label>
                 <input
+                  id="profile-first-name"
                   type="text"
                   value={formData.first_name || ''}
                   onChange={(e) => handleChange('first_name', e.target.value)}
                   placeholder={t('fields.firstNamePlaceholder')}
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className="w-full border-2 border-sf-border-medium px-3 py-2 bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent outline-none transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="profile-last-name" className="block text-sm font-medium text-sf-body mb-1">
                   {t('fields.lastName')}
                 </label>
                 <input
+                  id="profile-last-name"
                   type="text"
                   value={formData.last_name || ''}
                   onChange={(e) => handleChange('last_name', e.target.value)}
                   placeholder={t('fields.lastNamePlaceholder')}
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className="w-full border-2 border-sf-border-medium px-3 py-2 bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent outline-none transition-all"
                 />
               </div>
             </div>
@@ -190,45 +193,47 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
       </div>
 
       {/* 2. Billing / Company Information */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+      <div className="bg-sf-base border-2 border-sf-border-medium overflow-hidden">
+        <div className="px-6 py-4 border-b border-sf-border">
+          <h3 className="text-lg font-bold text-sf-heading">
             {t('billingInfo.title')}
           </h3>
-          <p className="text-sm text-gray-500">{t('billingInfo.subtitle')}</p>
+          <p className="text-sm text-sf-muted">{t('billingInfo.subtitle')}</p>
         </div>
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="profile-company-name" className="block text-sm font-medium text-sf-body mb-1">
                 {t('fields.companyName')}
               </label>
               <input
+                id="profile-company-name"
                 type="text"
                 value={formData.company_name || ''}
                 onChange={(e) => handleChange('company_name', e.target.value)}
                 placeholder={t('fields.companyNamePlaceholder')}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full border-2 border-sf-border-medium px-3 py-2 bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent outline-none"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="profile-tax-id" className="block text-sm font-medium text-sf-body mb-1">
                 {t('fields.taxId')}
               </label>
               <div className="relative">
                 <input
+                  id="profile-tax-id"
                   type="text"
                   value={formData.tax_id || ''}
                   onChange={(e) => handleChange('tax_id', e.target.value)}
                   onBlur={handleTaxIdBlur}
                   placeholder={t('fields.taxIdPlaceholder')}
-                  className={`w-full rounded-lg border px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all ${
+                  className={`w-full border px-3 py-2 bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent outline-none transition-all ${
                     taxIdError
-                      ? 'border-red-500 dark:border-red-500'
+                      ? 'border-red-500'
                       : taxIdSuccess
-                      ? 'border-green-500 dark:border-green-500'
-                      : 'border-gray-300 dark:border-gray-600'
+                      ? 'border-green-500'
+                      : 'border-sf-border'
                   } ${isLoadingGUS ? 'pr-10' : ''}`}
                 />
                 {isLoadingGUS && (
@@ -241,79 +246,85 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
                 )}
               </div>
               {taxIdError && (
-                <p className="mt-1 text-xs text-red-500 dark:text-red-400">{taxIdError}</p>
+                <p className="mt-1 text-xs text-sf-danger">{taxIdError}</p>
               )}
               {taxIdSuccess && !taxIdError && (
-                <p className="mt-1 text-xs text-green-500 dark:text-green-400">{taxIdSuccess}</p>
+                <p className="mt-1 text-xs text-sf-success">{taxIdSuccess}</p>
               )}
               {gusSuccess && !isLoadingGUS && (
-                <p className="mt-1 text-xs text-green-500 dark:text-green-400">✓ Company data loaded from GUS database</p>
+                <p className="mt-1 text-xs text-sf-success">{t('gus.dataLoaded')}</p>
               )}
               {gusError && (
-                <p className="mt-1 text-xs text-yellow-500 dark:text-yellow-400">⚠️ {gusError}</p>
+                <p className="mt-1 text-xs text-sf-warning">⚠️ {gusError}</p>
               )}
               {!taxIdError && !taxIdSuccess && !gusError && (
-                <p className="mt-1 text-xs text-gray-500">{t('fields.taxIdHelp')}</p>
+                <p className="mt-1 text-xs text-sf-muted">{t('fields.taxIdHelp')}</p>
               )}
             </div>
 
-            <div className="md:col-span-2 border-t border-gray-100 dark:border-gray-700 pt-6">
+            <div className="md:col-span-2 border-t border-sf-border pt-6">
               <h4 className="text-sm font-semibold mb-4">{t('billingInfo.addressTitle')}</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="profile-address1" className="block text-sm font-medium text-sf-body mb-1">
                     {t('fields.address')}
                   </label>
                   <input
+                    id="profile-address1"
                     type="text"
                     value={formData.address_line1 || ''}
                     onChange={(e) => handleChange('address_line1', e.target.value)}
                     placeholder={t('fields.addressPlaceholder')}
-                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none mb-2"
+                    className="w-full border-2 border-sf-border-medium px-3 py-2 bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent outline-none mb-2"
                   />
                   <input
+                    id="profile-address2"
                     type="text"
                     value={formData.address_line2 || ''}
                     onChange={(e) => handleChange('address_line2', e.target.value)}
                     placeholder={t('fields.address2Placeholder')}
-                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                    aria-label={t('fields.address2Placeholder')}
+                    className="w-full border-2 border-sf-border-medium px-3 py-2 bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent outline-none"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="profile-city" className="block text-sm font-medium text-sf-body mb-1">
                     {t('fields.city')}
                   </label>
                   <input
+                    id="profile-city"
                     type="text"
                     value={formData.city || ''}
                     onChange={(e) => handleChange('city', e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full border-2 border-sf-border-medium px-3 py-2 bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="profile-zip-code" className="block text-sm font-medium text-sf-body mb-1">
                     {t('fields.zipCode')}
                   </label>
                   <input
+                    id="profile-zip-code"
                     type="text"
                     value={formData.zip_code || ''}
                     onChange={(e) => handleChange('zip_code', e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full border-2 border-sf-border-medium px-3 py-2 bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="profile-country" className="block text-sm font-medium text-sf-body mb-1">
                     {t('fields.country')}
                   </label>
                   <input
+                    id="profile-country"
                     type="text"
                     value={formData.country || ''}
                     onChange={(e) => handleChange('country', e.target.value)}
-                    placeholder="e.g. Poland"
-                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder={t('fields.countryPlaceholder')}
+                    className="w-full border-2 border-sf-border-medium px-3 py-2 bg-sf-input text-sf-heading focus:ring-2 focus:ring-sf-accent outline-none"
                   />
                 </div>
               </div>
@@ -322,10 +333,10 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
         </div>
         
         {/* Footer */}
-        <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <div className="px-6 py-4 bg-sf-raised border-t border-sf-border flex items-center justify-between">
           <div className="flex-1">
             {message && (
-              <div className={`text-sm font-medium ${message.type === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+              <div className={`text-sm font-medium ${message.type === 'success' ? 'text-sf-success' : 'text-sf-danger'}`}>
                 {message.text}
               </div>
             )}
@@ -333,8 +344,8 @@ export default function ProfileForm({ initialData, userEmail }: ProfileFormProps
           <button
             type="submit"
             disabled={loading}
-            className={`px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-all shadow-sm ${
-              loading ? 'opacity-70 cursor-not-allowed' : 'hover:shadow-md active:scale-95'
+            className={`px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold transition-all ${
+              loading ? 'opacity-70 cursor-not-allowed' : ''
             }`}
           >
             {loading ? tCommon('loading') : tCommon('save')}

@@ -2,7 +2,7 @@
  * Script Cache Helper
  *
  * Provides in-memory caching with ETag support for serving JavaScript files.
- * Used by /api/gatekeeper, /api/gateflow-embed, and /api/config endpoints.
+ * Used by /api/sellf, /api/sellf-embed, and /api/config endpoints.
  */
 
 import { NextResponse } from 'next/server';

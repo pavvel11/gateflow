@@ -4,7 +4,7 @@ test.describe('Smoke Tests - Public Pages', () => {
   
   test('landing page should load and have no missing translations', async ({ page }) => {
     await page.goto('/');
-    await expect(page).toHaveTitle(/GateFlow/);
+    await expect(page).toHaveTitle(/Sellf/);
     
     // Check for "missing translation" markers common in next-intl
     const bodyText = await page.textContent('body');

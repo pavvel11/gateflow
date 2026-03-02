@@ -73,38 +73,40 @@ export default function PaymentFilters({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div className="bg-sf-base border-2 border-sf-border-medium p-6">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
         <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
           {/* Status Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="payment-status-filter" className="block text-sm font-medium text-sf-body mb-1">
               {t('status')}
             </label>
             <select
+              id="payment-status-filter"
               value={filters.status}
               onChange={(e) => handleFilterChange('status', e.target.value)}
-              className="w-full sm:w-auto px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              className="w-full sm:w-auto px-3 py-2 border-2 border-sf-border-medium focus:outline-none focus:ring-2 focus:ring-sf-accent bg-sf-input text-sf-heading"
             >
               <option value="all">{t('allStatuses')}</option>
-              <option value="pending">Pending</option>
-              <option value="completed">Completed</option>
-              <option value="failed">Failed</option>
-              <option value="cancelled">Cancelled</option>
-              <option value="refunded">Refunded</option>
-              <option value="disputed">Disputed</option>
+              <option value="pending">{t('pending')}</option>
+              <option value="completed">{t('completed')}</option>
+              <option value="failed">{t('failed')}</option>
+              <option value="cancelled">{t('cancelled')}</option>
+              <option value="refunded">{t('refunded')}</option>
+              <option value="disputed">{t('disputed')}</option>
             </select>
           </div>
 
           {/* Date Range Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="payment-date-range-filter" className="block text-sm font-medium text-sf-body mb-1">
               {t('dateRange')}
             </label>
             <select
+              id="payment-date-range-filter"
               value={filters.dateRange}
               onChange={(e) => handleFilterChange('dateRange', e.target.value)}
-              className="w-full sm:w-auto px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              className="w-full sm:w-auto px-3 py-2 border-2 border-sf-border-medium focus:outline-none focus:ring-2 focus:ring-sf-accent bg-sf-input text-sf-heading"
             >
               <option value="7">{t('last7Days')}</option>
               <option value="30">{t('last30Days')}</option>
@@ -116,15 +118,16 @@ export default function PaymentFilters({
 
           {/* Search */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Search
+            <label htmlFor="payment-search-filter" className="block text-sm font-medium text-sf-body mb-1">
+              {t('search')}
             </label>
             <input
+              id="payment-search-filter"
               type="text"
               placeholder={t('searchPlaceholder')}
               value={filters.searchTerm}
               onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
-              className="w-full sm:w-64 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              className="w-full sm:w-64 px-3 py-2 border-2 border-sf-border-medium focus:outline-none focus:ring-2 focus:ring-sf-accent bg-sf-input text-sf-heading"
             />
           </div>
         </div>
@@ -133,19 +136,19 @@ export default function PaymentFilters({
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
           <button
             onClick={handleReset}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="px-4 py-2 border-2 border-sf-border-medium text-sf-body hover:bg-sf-hover transition-colors"
           >
             {t('clear')}
           </button>
           <button
             onClick={onRefresh}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+            className="px-4 py-2 bg-sf-accent-bg hover:bg-sf-accent-hover text-white transition-colors"
           >
-            🔄 Refresh
+            🔄 {t('refresh')}
           </button>
           <button
             onClick={exportPayments}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors"
+            className="px-4 py-2 bg-sf-success hover:opacity-90 text-sf-inverse transition-colors"
           >
             📊 {t('exportCsv')}
           </button>
@@ -155,35 +158,35 @@ export default function PaymentFilters({
       {/* Active Filters Display */}
       {(filters.status !== 'all' || filters.searchTerm || filters.dateRange !== '30') && (
         <div className="mt-4 flex flex-wrap gap-2">
-          <span className="text-sm text-gray-600 dark:text-gray-400">Active filters:</span>
+          <span className="text-sm text-sf-body">{t('activeFilters')}</span>
           {filters.status !== 'all' && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
-              Status: {filters.status}
+            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-sf-accent-soft text-sf-accent">
+              {t('statusFilter', { status: filters.status })}
               <button
                 onClick={() => handleFilterChange('status', 'all')}
-                className="ml-1 text-blue-600 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-100"
+                className="ml-1 text-sf-accent hover:opacity-80"
               >
                 ×
               </button>
             </span>
           )}
           {filters.searchTerm && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100">
-              Search: {filters.searchTerm}
+            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-sf-accent-soft text-sf-accent">
+              {t('searchFilter', { term: filters.searchTerm })}
               <button
                 onClick={() => handleFilterChange('searchTerm', '')}
-                className="ml-1 text-purple-600 hover:text-purple-800 dark:text-purple-300 dark:hover:text-purple-100"
+                className="ml-1 text-sf-accent hover:text-sf-accent"
               >
                 ×
               </button>
             </span>
           )}
           {filters.dateRange !== '30' && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
-              Range: {filters.dateRange === 'all' ? 'All time' : `${filters.dateRange} days`}
+            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-sf-success-soft text-sf-success">
+              {filters.dateRange === 'all' ? t('rangeFilter', { range: t('allTime') }) : t('rangeFilter', { range: `${filters.dateRange} ${t('days')}` })}
               <button
                 onClick={() => handleFilterChange('dateRange', '30')}
-                className="ml-1 text-green-600 hover:text-green-800 dark:text-green-300 dark:hover:text-green-100"
+                className="ml-1 text-sf-success hover:opacity-80"
               >
                 ×
               </button>

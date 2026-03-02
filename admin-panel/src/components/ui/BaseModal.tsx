@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslations } from 'next-intl';
 
 interface BaseModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ const BaseModal: React.FC<BaseModalProps> = ({
   closeOnEscape = true,
   size = 'md'
 }) => {
+  const tCommon = useTranslations('common');
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Handle ESC key
@@ -128,8 +130,8 @@ const BaseModal: React.FC<BaseModalProps> = ({
         ref={modalRef}
         className={`
           relative w-full ${getSizeClasses()} 
-          bg-white dark:bg-gray-900 
-          rounded-2xl shadow-2xl 
+          bg-sf-base
+          
           transform transition-all duration-300 ease-out
           animate-[modalIn_0.3s_ease-out]
           max-h-[90vh] overflow-y-auto
@@ -141,8 +143,8 @@ const BaseModal: React.FC<BaseModalProps> = ({
         {showCloseButton && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
-            aria-label="Close modal"
+            className="absolute top-4 right-4 z-10 p-2 text-sf-muted hover:text-sf-heading hover:bg-sf-hover transition-colors duration-200"
+            aria-label={tCommon('closeModal')}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

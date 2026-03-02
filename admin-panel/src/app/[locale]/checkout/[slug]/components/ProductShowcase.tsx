@@ -8,12 +8,14 @@ import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
 import { useTranslations } from 'next-intl';
 import OmnibusPrice from '@/components/OmnibusPrice';
+import type { TaxMode } from '@/lib/actions/shop-config';
 
 interface ProductShowcaseProps {
   product: Product;
+  taxMode?: TaxMode;
 }
 
-export default function ProductShowcase({ product }: ProductShowcaseProps) {
+export default function ProductShowcase({ product, taxMode }: ProductShowcaseProps) {
   const t = useTranslations('checkout');
 
   // Check if sale price is active (considers both time and quantity limits)
@@ -39,10 +41,10 @@ export default function ProductShowcase({ product }: ProductShowcaseProps) {
   const vatAmount = grossPrice - netPrice;
 
   return (
-    <div className="w-full lg:w-1/2 lg:pr-8 lg:border-r border-gray-200 dark:border-white/10 mb-8 lg:mb-0">
+    <div className="w-full lg:w-1/2 lg:pr-8 lg:border-r border-sf-border mb-8 lg:mb-0">
       {/* Product Image */}
       {product.image_url ? (
-        <div className="relative w-full aspect-video mb-6 rounded-2xl overflow-hidden bg-gray-100 dark:bg-white/5">
+        <div className="relative w-full aspect-video mb-6 rounded-2xl overflow-hidden bg-sf-raised">
           <Image
             src={product.image_url}
             alt={product.name}
@@ -53,7 +55,7 @@ export default function ProductShowcase({ product }: ProductShowcaseProps) {
         </div>
       ) : (
         /* Placeholder when no image */
-        <div className="relative w-full aspect-video mb-6 rounded-2xl overflow-hidden bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-blue-500/10 flex items-center justify-center border border-gray-200 dark:border-white/10">
+        <div className="relative w-full aspect-video mb-6 rounded-2xl overflow-hidden bg-sf-accent-soft flex items-center justify-center border border-sf-border">
           <span className="text-9xl opacity-50">{product.icon}</span>
         </div>
       )}
@@ -63,12 +65,12 @@ export default function ProductShowcase({ product }: ProductShowcaseProps) {
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
             <span className="text-4xl">{product.icon}</span>
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white leading-tight">
+            <h1 className="text-2xl lg:text-3xl font-bold text-sf-heading leading-tight">
               {product.name}
             </h1>
           </div>
           {product.description && (
-            <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+            <p className="text-sf-body text-sm leading-relaxed">
               {product.description}
             </p>
           )}
@@ -80,24 +82,24 @@ export default function ProductShowcase({ product }: ProductShowcaseProps) {
         <div className="mb-8">
           {/* Strikethrough regular price if on sale */}
           {isSaleActive && (
-            <div className="text-2xl font-medium text-gray-500 line-through mb-1">
+            <div className="text-2xl font-medium text-sf-muted line-through mb-1">
               {formatPrice(product.price, product.currency)} {product.currency}
             </div>
           )}
 
-          <div className="text-5xl font-bold text-gray-900 dark:text-white mb-2 tracking-tight">
+          <div className="text-5xl font-bold text-sf-heading mb-2 tracking-tight">
             {formatPrice(grossPrice, product.currency)} {product.currency}
           </div>
 
-          {product.vat_rate && product.vat_rate > 0 && (
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+          {taxMode !== 'stripe_tax' && product.vat_rate && product.vat_rate > 0 && (
+            <div className="text-sm text-sf-muted">
               {t('includingVat', { defaultValue: 'including VAT' })} {vatRate}%
             </div>
           )}
 
           {/* Sale end date */}
           {isSaleActive && product.sale_price_until && (
-            <div className="text-sm text-yellow-400 mt-2 flex items-center gap-1">
+            <div className="text-sm text-sf-warning mt-2 flex items-center gap-1">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -115,7 +117,7 @@ export default function ProductShowcase({ product }: ProductShowcaseProps) {
 
           {/* Remaining quantity at sale price */}
           {isSaleActive && saleQuantityRemaining !== null && saleQuantityRemaining > 0 && (
-            <div className="text-sm text-orange-400 mt-2 flex items-center gap-1" data-testid="sale-quantity-remaining">
+            <div className="text-sm text-sf-warning mt-2 flex items-center gap-1" data-testid="sale-quantity-remaining">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
@@ -147,58 +149,58 @@ export default function ProductShowcase({ product }: ProductShowcaseProps) {
             components={{
               // Custom styling for Markdown elements
               h1: ({ children }) => (
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{children}</h1>
+                <h1 className="text-2xl font-bold text-sf-heading mb-4">{children}</h1>
               ),
               h2: ({ children }) => (
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3 mt-6">{children}</h2>
+                <h2 className="text-xl font-bold text-sf-heading mb-3 mt-6">{children}</h2>
               ),
               h3: ({ children }) => (
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 mt-4">{children}</h3>
+                <h3 className="text-lg font-semibold text-sf-heading mb-2 mt-4">{children}</h3>
               ),
               p: ({ children }) => (
-                <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-4">{children}</p>
+                <p className="text-sf-body leading-relaxed mb-4">{children}</p>
               ),
               ul: ({ children }) => (
-                <ul className="list-disc list-inside text-gray-600 dark:text-gray-300 space-y-2 mb-4">
+                <ul className="list-disc list-inside text-sf-body space-y-2 mb-4">
                   {children}
                 </ul>
               ),
               ol: ({ children }) => (
-                <ol className="list-decimal list-inside text-gray-600 dark:text-gray-300 space-y-2 mb-4">
+                <ol className="list-decimal list-inside text-sf-body space-y-2 mb-4">
                   {children}
                 </ol>
               ),
               li: ({ children }) => (
-                <li className="text-gray-600 dark:text-gray-300">{children}</li>
+                <li className="text-sf-body">{children}</li>
               ),
               a: ({ href, children }) => (
                 <a
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 underline transition-colors"
+                  className="text-sf-accent hover:opacity-80 underline transition-colors"
                 >
                   {children}
                 </a>
               ),
               strong: ({ children }) => (
-                <strong className="font-bold text-gray-900 dark:text-white">{children}</strong>
+                <strong className="font-bold text-sf-heading">{children}</strong>
               ),
               em: ({ children }) => (
-                <em className="italic text-gray-700 dark:text-gray-200">{children}</em>
+                <em className="italic text-sf-body">{children}</em>
               ),
               code: ({ children }) => (
-                <code className="px-1.5 py-0.5 bg-gray-100 dark:bg-white/10 rounded text-sm text-blue-600 dark:text-blue-300 font-mono">
+                <code className="px-1.5 py-0.5 bg-sf-raised rounded text-sm text-sf-accent font-mono">
                   {children}
                 </code>
               ),
               pre: ({ children }) => (
-                <pre className="p-4 bg-gray-100 dark:bg-black/40 rounded-lg overflow-x-auto mb-4 border border-gray-200 dark:border-white/10">
+                <pre className="p-4 bg-sf-raised rounded-lg overflow-x-auto mb-4 border border-sf-border">
                   {children}
                 </pre>
               ),
               blockquote: ({ children }) => (
-                <blockquote className="border-l-4 border-purple-500 pl-4 italic text-gray-600 dark:text-gray-300 my-4">
+                <blockquote className="border-l-4 border-sf-border-accent pl-4 italic text-sf-body my-4">
                   {children}
                 </blockquote>
               ),
@@ -214,17 +216,17 @@ export default function ProductShowcase({ product }: ProductShowcaseProps) {
         <div className="space-y-6">
           {product.features.map((featureSection, sectionIndex) => (
             <div key={sectionIndex} className="space-y-3">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+              <h3 className="text-xl font-bold text-sf-heading">
                 {featureSection.title}
               </h3>
               <ul className="space-y-2">
                 {featureSection.items.map((item, itemIndex) => (
                   <li
                     key={itemIndex}
-                    className="flex items-start gap-3 text-gray-600 dark:text-gray-300"
+                    className="flex items-start gap-3 text-sf-body"
                   >
                     <svg
-                      className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5"
+                      className="w-5 h-5 text-sf-success flex-shrink-0 mt-0.5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

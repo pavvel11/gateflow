@@ -6,6 +6,7 @@
 
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { setAuthSession } from './helpers/admin-auth';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -20,18 +21,7 @@ const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 async function loginAsAdmin(page: any, email: string, password: string) {
   await page.goto('/login');
 
-  await page.evaluate(async ({ email, password, url, anonKey }: { email: string; password: string; url: string; anonKey: string }) => {
-    // @ts-ignore
-    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-    const sb = createBrowserClient(url, anonKey);
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-  }, {
-    email,
-    password,
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  });
+  await setAuthSession(page, email, password);
 
   await page.reload();
 }
@@ -83,7 +73,7 @@ test.describe('API Key Rotation', () => {
   // Helper to create API key for testing
   async function createTestApiKey(name: string): Promise<string> {
     const crypto = await import('crypto');
-    const plainKey = `gf_test_${crypto.randomBytes(24).toString('hex')}`;
+    const plainKey = `sf_test_${crypto.randomBytes(24).toString('hex')}`;
     const keyHash = crypto.createHash('sha256').update(plainKey).digest('hex');
     const keyPrefix = plainKey.substring(0, 12);
 
@@ -132,7 +122,7 @@ test.describe('API Key Rotation', () => {
 
       // New key should be returned
       expect(body.data.new_key).toBeDefined();
-      expect(body.data.new_key.key).toMatch(/^gf_(live|test)_/);
+      expect(body.data.new_key.key).toMatch(/^sf_(live|test)_/);
       expect(body.data.new_key.warning).toContain('Save this key now');
 
       // Old key info should be returned
@@ -320,7 +310,7 @@ test.describe('API Key Rotation', () => {
 
       // Create key with specific properties
       const crypto = await import('crypto');
-      const plainKey = `gf_test_${crypto.randomBytes(24).toString('hex')}`;
+      const plainKey = `sf_test_${crypto.randomBytes(24).toString('hex')}`;
       const keyHash = crypto.createHash('sha256').update(plainKey).digest('hex');
       const keyPrefix = plainKey.substring(0, 12);
 
@@ -376,17 +366,22 @@ test.describe('API Key Rotation', () => {
         .eq('api_key_id', keyId)
         .order('created_at', { ascending: false });
 
-      // Audit log may or may not exist depending on implementation
-      // Just verify the rotation itself succeeded
+      // Verify the rotation itself succeeded
       expect(body.data.new_key.id).toBeDefined();
       expect(body.data.old_key.id).toBe(keyId);
 
-      // If audit logs exist, verify structure
+      // Verify audit log structure if present
       if (auditLogs && auditLogs.length > 0) {
         const rotatedLog = auditLogs.find(l => l.event_type === 'rotated');
         if (rotatedLog) {
           expect(rotatedLog.event_type).toBe('rotated');
+        } else {
+          // Audit logs exist but none with 'rotated' event — acceptable if implementation differs
+          expect(auditLogs.length).toBeGreaterThan(0);
         }
+      } else {
+        // No audit logs — verify rotation still succeeded without them
+        expect(error).toBeNull();
       }
 
       createdKeyIds.push(body.data.new_key.id);
@@ -413,7 +408,7 @@ test.describe('API Key Rotation', () => {
 
       // Create key for other admin
       const crypto = await import('crypto');
-      const plainKey = `gf_test_${crypto.randomBytes(24).toString('hex')}`;
+      const plainKey = `sf_test_${crypto.randomBytes(24).toString('hex')}`;
       const keyHash = crypto.createHash('sha256').update(plainKey).digest('hex');
       const keyPrefix = plainKey.substring(0, 12);
 

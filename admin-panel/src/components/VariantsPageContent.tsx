@@ -87,7 +87,7 @@ const VariantsPageContent: React.FC = () => {
       const groups = await api.getCustom<VariantGroup[]>('variant-groups');
       setGroups(groups || []);
     } catch (err) {
-      setError('Failed to load variant groups');
+      setError(t('loadError'));
       console.error('Error:', err);
     } finally {
       setLoading(false);
@@ -108,7 +108,7 @@ const VariantsPageContent: React.FC = () => {
       await fetchGroups();
       addToast(t('deleteSuccess'), 'success');
     } catch (err) {
-      addToast(err instanceof Error ? err.message : 'Failed to delete variant group', 'error');
+      addToast(err instanceof Error ? err.message : t('deleteGroupError'), 'error');
     }
   };
 
@@ -137,7 +137,7 @@ const VariantsPageContent: React.FC = () => {
       await fetchGroups();
       addToast(t('removeSuccess'), 'success');
     } catch (err) {
-      addToast(err instanceof Error ? err.message : 'Failed to remove product', 'error');
+      addToast(err instanceof Error ? err.message : t('removeProductError'), 'error');
     }
   };
 
@@ -156,7 +156,7 @@ const VariantsPageContent: React.FC = () => {
       await fetchGroups();
       addToast(t('featuredUpdated'), 'success');
     } catch (err) {
-      addToast(err instanceof Error ? err.message : 'Failed to update', 'error');
+      addToast(err instanceof Error ? err.message : t('updateError'), 'error');
     }
   };
 
@@ -177,10 +177,10 @@ const VariantsPageContent: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-[40px] font-[800] text-sf-heading tracking-[-0.03em] leading-[1.1]">
             {t('title')}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
+          <p className="text-sf-body mt-2">
             {t('description')}
           </p>
         </div>
@@ -191,7 +191,7 @@ const VariantsPageContent: React.FC = () => {
               setEditingGroup(null);
               setShowFormModal(true);
             }}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2 shadow-sm"
+            className="px-4 py-2 bg-sf-accent-bg text-white hover:bg-sf-accent-hover transition-colors flex items-center space-x-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -203,48 +203,48 @@ const VariantsPageContent: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-sf-base border-2 border-sf-border-medium p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{t('stats.totalGroups')}</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+              <p className="text-sm text-sf-body">{t('stats.totalGroups')}</p>
+              <p className="text-[40px] font-[800] text-sf-heading tracking-[-0.03em] leading-[1.1] mt-1">
                 {groups.length}
               </p>
             </div>
-            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-sf-accent-soft flex items-center justify-center">
+              <svg className="w-6 h-6 text-sf-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-sf-base border-2 border-sf-border-medium p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{t('stats.totalAssignments')}</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+              <p className="text-sm text-sf-body">{t('stats.totalAssignments')}</p>
+              <p className="text-[40px] font-[800] text-sf-heading tracking-[-0.03em] leading-[1.1] mt-1">
                 {totalProducts}
               </p>
             </div>
-            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-sf-accent-soft flex items-center justify-center">
+              <svg className="w-6 h-6 text-sf-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
               </svg>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-sf-base border-2 border-sf-border-medium p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{t('stats.uniqueProducts')}</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+              <p className="text-sm text-sf-body">{t('stats.uniqueProducts')}</p>
+              <p className="text-[40px] font-[800] text-sf-heading tracking-[-0.03em] leading-[1.1] mt-1">
                 {uniqueProductIds.size}
               </p>
             </div>
-            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-sf-success-soft flex items-center justify-center">
+              <svg className="w-6 h-6 text-sf-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
             </div>
@@ -255,27 +255,27 @@ const VariantsPageContent: React.FC = () => {
       {/* Variant Groups List */}
       <div className="space-y-4">
         {loading ? (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12">
+          <div className="bg-sf-base border-2 border-sf-border-medium p-12">
             <div className="flex items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sf-accent"></div>
             </div>
           </div>
         ) : error ? (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12">
+          <div className="bg-sf-base border-2 border-sf-border-medium p-12">
             <div className="text-center text-red-500">{error}</div>
           </div>
         ) : groups.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12">
+          <div className="bg-sf-base border-2 border-sf-border-medium p-12">
             <div className="text-center">
-              <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 bg-sf-raised flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-sf-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              <h3 className="text-lg font-medium text-sf-heading mb-2">
                 {t('noGroups')}
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-4">
+              <p className="text-sf-muted mb-4">
                 {t('noGroupsDescription')}
               </p>
               <button
@@ -283,7 +283,7 @@ const VariantsPageContent: React.FC = () => {
                   setEditingGroup(null);
                   setShowFormModal(true);
                 }}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm"
+                className="px-4 py-2 bg-sf-accent-bg text-white hover:bg-sf-accent-hover transition-colors"
               >
                 {t('createGroup')}
               </button>
@@ -293,21 +293,21 @@ const VariantsPageContent: React.FC = () => {
           groups.map((group) => (
             <div
               key={group.id}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+              className="bg-sf-base border-2 border-sf-border-medium overflow-hidden"
             >
               {/* Group Header */}
-              <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <div className="px-6 py-4 bg-sf-raised border-b border-sf-border flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-10 h-10 bg-sf-accent-soft flex items-center justify-center">
+                    <svg className="w-5 h-5 text-sf-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">
+                    <h3 className="font-semibold text-sf-heading">
                       {group.name || t('unnamedGroup')} ({group.products.length} {t('products')})
                     </h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                    <p className="text-xs text-sf-muted font-mono">
                       {group.slug ? `/v/${group.slug}` : `ID: ${group.id.slice(0, 8)}...`}
                     </p>
                   </div>
@@ -317,7 +317,7 @@ const VariantsPageContent: React.FC = () => {
                     href={`/v/${group.slug || group.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 transition-colors"
+                    className="p-2 text-sf-muted hover:text-sf-success transition-colors"
                     title={t('openLink')}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -326,7 +326,7 @@ const VariantsPageContent: React.FC = () => {
                   </a>
                   <button
                     onClick={() => copyVariantLink(group)}
-                    className="p-2 text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400 transition-colors"
+                    className="p-2 text-sf-muted hover:text-sf-accent transition-colors"
                     title={t('copyLink')}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -338,7 +338,7 @@ const VariantsPageContent: React.FC = () => {
                       setEditingGroup(group);
                       setShowFormModal(true);
                     }}
-                    className="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
+                    className="p-2 text-sf-muted hover:text-sf-accent transition-colors"
                     title={t('edit')}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -347,7 +347,7 @@ const VariantsPageContent: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setGroupToDelete(group)}
-                    className="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
+                    className="p-2 text-sf-muted hover:text-sf-danger transition-colors"
                     title={t('deleteGroup')}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -358,17 +358,17 @@ const VariantsPageContent: React.FC = () => {
               </div>
 
               {/* Products List */}
-              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+              <div className="divide-y divide-sf-border">
                 {group.products.map((item, index) => (
                   <div
                     key={item.id}
-                    className="px-6 py-4 flex items-center justify-between hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors"
+                    className={`px-6 py-4 flex items-center justify-between hover:bg-sf-hover transition-colors ${index % 2 === 1 ? 'bg-sf-row-alt' : ''}`}
                   >
                     <div className="flex items-center space-x-4">
-                      <span className="text-sm font-medium text-gray-400 dark:text-gray-500 w-6">
+                      <span className="text-sm font-medium text-sf-muted w-6">
                         #{index + 1}
                       </span>
-                      <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xl">
+                      <div className="w-10 h-10 bg-sf-raised flex items-center justify-center text-xl">
                         {item.product.icon || '📦'}
                       </div>
                       <div>
@@ -377,41 +377,41 @@ const VariantsPageContent: React.FC = () => {
                             href={`/p/${item.product.slug}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-medium text-gray-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                            className="font-medium text-sf-heading hover:text-sf-accent transition-colors"
                           >
                             {item.variant_name || item.product.name}
                           </a>
                           {item.variant_name && item.variant_name !== item.product.name && (
-                            <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                            <span className="px-2 py-0.5 text-xs bg-sf-raised text-sf-muted">
                               {item.product.name}
                             </span>
                           )}
                           {item.is_featured && (
-                            <span className="px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                            <span className="px-2 py-0.5 text-xs bg-sf-warning-soft text-sf-warning">
                               {t('featured')}
                             </span>
                           )}
                           {!item.product.is_active && (
-                            <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                            <span className="px-2 py-0.5 text-xs bg-sf-raised text-sf-muted">
                               {t('inactive')}
                             </span>
                           )}
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">
+                        <div className="text-sm text-sf-muted font-mono">
                           /{item.product.slug}
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-4">
-                      <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                      <span className="text-sm font-semibold text-sf-heading">
                         {formatPrice(item.product.price, item.product.currency)}
                       </span>
                       <button
                         onClick={() => handleToggleFeatured(group, item)}
-                        className={`p-1.5 transition-colors rounded ${
+                        className={`p-1.5 transition-colors ${
                           item.is_featured
                             ? 'text-yellow-500 hover:text-yellow-600'
-                            : 'text-gray-400 hover:text-yellow-500'
+                            : 'text-sf-muted hover:text-yellow-500'
                         }`}
                         title={item.is_featured ? t('removeFeatured') : t('setFeatured')}
                       >
@@ -421,7 +421,7 @@ const VariantsPageContent: React.FC = () => {
                       </button>
                       <button
                         onClick={() => setProductToRemove({ group, product: item })}
-                        className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors rounded"
+                        className="p-1.5 text-sf-muted hover:text-sf-danger transition-colors"
                         title={t('removeProduct')}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -462,23 +462,23 @@ const VariantsPageContent: React.FC = () => {
             className="fixed inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setGroupToDelete(null)}
           />
-          <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6 border border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+          <div className="relative bg-sf-base max-w-md w-full p-6 border-2 border-sf-border-medium">
+            <h3 className="text-lg font-bold text-sf-heading mb-4">
               {t('confirmDeleteGroup')}
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-sf-body mb-6">
               {t('deleteGroupMessage', { count: groupToDelete.products.length })}
             </p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setGroupToDelete(null)}
-                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="px-4 py-2 text-sf-body hover:bg-sf-hover transition-colors"
               >
                 {t('cancel')}
               </button>
               <button
                 onClick={() => handleDeleteGroup(groupToDelete)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-sm"
+                className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors"
               >
                 {t('delete')}
               </button>
@@ -494,11 +494,11 @@ const VariantsPageContent: React.FC = () => {
             className="fixed inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setProductToRemove(null)}
           />
-          <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6 border border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+          <div className="relative bg-sf-base max-w-md w-full p-6 border-2 border-sf-border-medium">
+            <h3 className="text-lg font-bold text-sf-heading mb-4">
               {t('confirmRemoveProduct')}
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-sf-body mb-6">
               {productToRemove.group.products.length <= 2
                 ? t('removeProductWillDeleteGroup', { name: productToRemove.product.product.name })
                 : t('removeProductMessage', { name: productToRemove.product.product.name })}
@@ -506,13 +506,13 @@ const VariantsPageContent: React.FC = () => {
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setProductToRemove(null)}
-                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="px-4 py-2 text-sf-body hover:bg-sf-hover transition-colors"
               >
                 {t('cancel')}
               </button>
               <button
                 onClick={() => handleRemoveProduct(productToRemove.group, productToRemove.product)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-sm"
+                className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors"
               >
                 {t('remove')}
               </button>

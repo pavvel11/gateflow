@@ -21,8 +21,9 @@ test.describe('Rate Limiting', () => {
 
   const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-  if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+  if (!SUPABASE_URL || !SERVICE_ROLE_KEY || !ANON_KEY) {
     throw new Error('Missing Supabase env variables for testing');
   }
 
@@ -154,6 +155,91 @@ test.describe('Rate Limiting', () => {
         window_minutes: 1,
       });
       expect(action2Allowed).toBe(true);
+    });
+  });
+
+  // ============================================
+  // RPC ACCESS CONTROL
+  // Verify that rate limit RPC cannot be called directly by anon/authenticated
+  // to prevent table pollution and rate limit exhaustion attacks
+  // ============================================
+
+  test.describe('RPC Access Control', () => {
+    const anonClient = createClient(SUPABASE_URL, ANON_KEY);
+
+    test('anon client should NOT be able to call check_application_rate_limit', async () => {
+      const { data, error } = await anonClient.rpc('check_application_rate_limit', {
+        identifier_param: 'attacker-probe',
+        action_type_param: 'test_action',
+        max_requests: 999,
+        window_minutes: 1,
+      });
+
+      // Should fail with permission denied
+      expect(error).not.toBeNull();
+      expect(data).not.toBe(true);
+
+      // Verify no row was created (attacker cannot pollute table)
+      const { data: rows } = await supabaseAdmin
+        .from('application_rate_limits')
+        .select('id')
+        .eq('identifier', 'attacker-probe');
+      expect(rows).toHaveLength(0);
+    });
+
+    test('authenticated client should NOT be able to call check_application_rate_limit', async () => {
+      // Create a temporary user to get an authenticated client
+      const email = `ratelimit-security-${Date.now()}@test.com`;
+      const { data: authData } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password: 'TestPassword123!',
+        email_confirm: true,
+      });
+
+      try {
+        const { data: session } = await anonClient.auth.signInWithPassword({
+          email,
+          password: 'TestPassword123!',
+        });
+
+        // Use authenticated session
+        const authedClient = createClient(SUPABASE_URL, ANON_KEY, {
+          global: { headers: { Authorization: `Bearer ${session.session!.access_token}` } },
+        });
+
+        const { data, error } = await authedClient.rpc('check_application_rate_limit', {
+          identifier_param: 'attacker-authenticated',
+          action_type_param: 'test_action',
+          max_requests: 999,
+          window_minutes: 1,
+        });
+
+        expect(error).not.toBeNull();
+        expect(data).not.toBe(true);
+
+        // Verify no row was created
+        const { data: rows } = await supabaseAdmin
+          .from('application_rate_limits')
+          .select('id')
+          .eq('identifier', 'attacker-authenticated');
+        expect(rows).toHaveLength(0);
+      } finally {
+        if (authData.user) {
+          await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+        }
+      }
+    });
+
+    test('service_role client CAN call check_application_rate_limit', async () => {
+      const { data, error } = await supabaseAdmin.rpc('check_application_rate_limit', {
+        identifier_param: `service-role-test-${Date.now()}`,
+        action_type_param: 'test_action',
+        max_requests: 5,
+        window_minutes: 1,
+      });
+
+      expect(error).toBeNull();
+      expect(data).toBe(true);
     });
   });
 
@@ -420,16 +506,8 @@ test.describe('Rate Limiting', () => {
       expect(result.successCount).toBeGreaterThan(0);
     });
 
-    test('runtime-config endpoint should be rate limited', async ({ request }) => {
-      const result = await makeRequestsUntilRateLimited(
-        request,
-        'get',
-        '/api/runtime-config'
-      );
-
-      expect(result.gotRateLimited).toBe(true);
-      expect(result.successCount).toBeGreaterThan(0);
-    });
+    // NOTE: /api/runtime-config intentionally has NO rate limiting
+    // (public, read-only, heavily cached endpoint) — no test needed
 
     test('products/[id] endpoint should be rate limited', async ({ request }) => {
       const result = await makeRequestsUntilRateLimited(
@@ -493,6 +571,7 @@ test.describe('Rate Limiting', () => {
 
     test('rate limited response should have proper error message', async ({ request }) => {
       // Exhaust rate limit
+      let got429 = false;
       for (let i = 0; i < 50; i++) {
         const response = await request.post('/api/consent', {
           data: {
@@ -502,6 +581,7 @@ test.describe('Rate Limiting', () => {
         });
 
         if (response.status() === 429) {
+          got429 = true;
           const body = await response.json();
           expect(body.error).toBeTruthy();
           // Error message should indicate rate limiting (either "rate" or "too many requests")
@@ -510,6 +590,8 @@ test.describe('Rate Limiting', () => {
           break;
         }
       }
+
+      expect(got429, 'Expected 429 response but never received one after 50 requests').toBe(true);
     });
   });
 
@@ -537,6 +619,8 @@ test.describe('Rate Limiting', () => {
 
       if (products && products.length > 0) {
         testProduct = products[0];
+      } else {
+        console.warn('No active products found for admin rate limit tests - tests will be skipped');
       }
     });
 

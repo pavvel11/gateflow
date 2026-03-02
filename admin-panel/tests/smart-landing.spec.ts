@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { acceptAllCookies } from './helpers/consent';
+import { setAuthSession } from './helpers/admin-auth';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -40,16 +41,7 @@ test.describe('Smart Landing Page', () => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email: adminEmail,
-      password: password,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
+    await setAuthSession(page, adminEmail, password);
 
     await page.waitForTimeout(1000);
   };
@@ -73,16 +65,7 @@ test.describe('Smart Landing Page', () => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email,
-      password: password,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
+    await setAuthSession(page, email, password);
 
     await page.waitForTimeout(1000);
   };
@@ -293,31 +276,32 @@ test.describe('Smart Landing Page', () => {
     await expect(setupProgress).not.toBeVisible();
   });
 
-  test('About page should display GateFlow marketing content', async ({ page }) => {
+  test('About page should display Sellf marketing content', async ({ page }) => {
     await acceptAllCookies(page);
     await page.goto('/about');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    // Should see main headline "Your Products. Your Rules."
-    const mainHeadline = page.locator('h1', { hasText: /Your Products.*Your Rules/i });
-    await expect(mainHeadline).toBeVisible({ timeout: 10000 });
+    // Should see main headline (TextReveal uses \u00A0 between words, so match with \s)
+    const mainHeadline = page.locator('h1');
+    await expect(mainHeadline.filter({ hasText: /Your\s+Products|Twoje\s+Produkty/i })).toBeVisible({ timeout: 10000 });
+    await expect(mainHeadline.filter({ hasText: /Your\s+Rules|Twoje\s+Zasady/i })).toBeVisible();
 
     // Should see "Self-Hosted" in subtitle
-    const subtitle = page.locator('text=/Self-hosted.*secure.*fully customizable/i').first();
+    const subtitle = page.locator('text=/Self-hosted/i').first();
     await expect(subtitle).toBeVisible();
 
     // Should see GitHub link in navigation or CTA section
-    const githubLink = page.locator('a[href*="github.com/jurczykpawel/gateflow"]');
+    const githubLink = page.locator('a[href*="github.com/jurczykpawel/sellf"]');
     await expect(githubLink.first()).toBeVisible();
 
     // Should see "Open Source" badge or text
     const openSourceBadge = page.locator('text=/Open Source/i').first();
     await expect(openSourceBadge).toBeVisible();
 
-    // Should see GateFlow branding in navigation
-    const gateflowBrand = page.locator('text=GateFlow').first();
-    await expect(gateflowBrand).toBeVisible();
+    // Should see Sellf branding in navigation
+    const sellfBrand = page.locator('text=Sellf').first();
+    await expect(sellfBrand).toBeVisible();
 
     // Should see "Start Free Demo" or similar CTA
     const ctaButton = page.locator('a', { hasText: /Start Free Demo|Get Started/i }).first();
@@ -341,9 +325,9 @@ test.describe('Smart Landing Page', () => {
     // Should be on about page
     expect(page.url()).toContain('/about');
 
-    // Should see marketing content with new headline
-    const mainHeadline = page.locator('h1', { hasText: /Your Products.*Your Rules/i });
-    await expect(mainHeadline).toBeVisible({ timeout: 10000 });
+    // Should see marketing content headline (TextReveal uses \u00A0 between words)
+    const mainHeadline = page.locator('h1');
+    await expect(mainHeadline.filter({ hasText: /Your\s+Products|Twoje\s+Produkty/i })).toBeVisible({ timeout: 10000 });
   });
 
   test('Onboarding CTA quick links should navigate correctly', async ({ page }) => {
@@ -417,22 +401,22 @@ test.describe('Smart Landing Page', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    // Find language switcher
+    // Language switcher must be present on the landing page
     const languageSwitcher = page.locator('button[aria-label*="language" i], button:has-text("EN"), button:has-text("PL")').first();
+    await expect(languageSwitcher).toBeVisible({ timeout: 10000 });
 
-    if (await languageSwitcher.isVisible()) {
-      // Switch to Polish
-      await languageSwitcher.click();
-      await page.waitForTimeout(500);
+    // Switch to Polish
+    await languageSwitcher.click();
+    await page.waitForTimeout(500);
 
-      const plOption = page.locator('button:has-text("PL"), a:has-text("PL")').first();
-      if (await plOption.isVisible()) {
-        await plOption.click();
-        await page.waitForTimeout(1000);
+    // Dropdown shows full language names (e.g., "Polski", "English")
+    const plOption = page.locator('button:has-text("Polski"), button:has-text("PL"), a:has-text("PL")').first();
+    await expect(plOption).toBeVisible({ timeout: 5000 });
 
-        // URL should contain /pl
-        expect(page.url()).toContain('/pl');
-      }
-    }
+    await plOption.click();
+    await page.waitForTimeout(1000);
+
+    // URL should contain /pl
+    expect(page.url()).toContain('/pl');
   });
 });

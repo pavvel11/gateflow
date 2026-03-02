@@ -6,6 +6,7 @@
 
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { setAuthSession } from './helpers/admin-auth';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -20,18 +21,7 @@ const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 async function loginAsAdmin(page: any, email: string, password: string) {
   await page.goto('/login');
 
-  await page.evaluate(async ({ email, password, url, anonKey }: { email: string; password: string; url: string; anonKey: string }) => {
-    // @ts-ignore
-    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-    const sb = createBrowserClient(url, anonKey);
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-  }, {
-    email,
-    password,
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  });
+  await setAuthSession(page, email, password);
 
   await page.reload();
 }
@@ -181,9 +171,10 @@ test.describe('Payments API v1', () => {
       const body = await response.json();
 
       // All returned payments should have completed status
-      body.data.forEach((p: any) => {
+      expect(body.data.length).toBeGreaterThan(0);
+      for (const p of body.data) {
         expect(p.status).toBe('completed');
-      });
+      }
     });
 
     test('should support product_id filter', async ({ page }) => {
@@ -195,9 +186,10 @@ test.describe('Payments API v1', () => {
       const body = await response.json();
 
       // All returned payments should have the test product
-      body.data.forEach((p: any) => {
+      expect(body.data.length).toBeGreaterThan(0);
+      for (const p of body.data) {
         expect(p.product.id).toBe(testProductId);
-      });
+      }
     });
 
     test('should support email filter', async ({ page }) => {
@@ -209,9 +201,10 @@ test.describe('Payments API v1', () => {
       const body = await response.json();
 
       // All returned payments should have email containing 'customer'
-      body.data.forEach((p: any) => {
+      expect(body.data.length).toBeGreaterThan(0);
+      for (const p of body.data) {
         expect(p.customer_email.toLowerCase()).toContain('customer');
-      });
+      }
     });
 
     test('should support limit parameter', async ({ page }) => {
@@ -233,11 +226,11 @@ test.describe('Payments API v1', () => {
       expect(response.status()).toBe(200);
       const body = await response.json();
 
+      // We created a transaction in beforeAll, so there should be data
+      expect(body.data.length).toBeGreaterThan(0);
       // Check amounts are descending
-      if (body.data.length > 1) {
-        for (let i = 0; i < body.data.length - 1; i++) {
-          expect(body.data[i].amount).toBeGreaterThanOrEqual(body.data[i + 1].amount);
-        }
+      for (let i = 0; i < body.data.length - 1; i++) {
+        expect(body.data[i].amount).toBeGreaterThanOrEqual(body.data[i + 1].amount);
       }
     });
 
@@ -261,10 +254,11 @@ test.describe('Payments API v1', () => {
       const body = await response.json();
 
       // All transactions should be from today or later
-      body.data.forEach((p: any) => {
+      expect(body.data.length).toBeGreaterThan(0);
+      for (const p of body.data) {
         const txDate = new Date(p.created_at).toISOString().split('T')[0];
         expect(txDate >= today).toBe(true);
-      });
+      }
     });
   });
 
@@ -297,11 +291,11 @@ test.describe('Payments API v1', () => {
       expect(response.status()).toBe(200);
       const body = await response.json();
 
+      // Transaction was created with user_id set, so user must be present
       expect(body.data).toHaveProperty('user');
-      if (body.data.user) {
-        expect(body.data.user).toHaveProperty('id');
-        expect(body.data.user).toHaveProperty('email');
-      }
+      expect(body.data.user).not.toBeNull();
+      expect(body.data.user).toHaveProperty('id');
+      expect(body.data.user).toHaveProperty('email');
     });
 
     test('should return 404 for non-existent payment', async ({ page }) => {
@@ -461,6 +455,9 @@ test.describe('Payments API v1', () => {
       expect(response1.status()).toBe(200);
       const body1 = await response1.json();
 
+      // We have test data, so first page should have items
+      expect(body1.data.length).toBeGreaterThan(0);
+
       if (body1.pagination.has_more && body1.pagination.next_cursor) {
         // Get second page using cursor
         const response2 = await page.request.get(
@@ -470,9 +467,11 @@ test.describe('Payments API v1', () => {
         const body2 = await response2.json();
 
         // Second page should have different items
-        if (body2.data.length > 0) {
-          expect(body2.data[0].id).not.toBe(body1.data[0].id);
-        }
+        expect(body2.data.length).toBeGreaterThan(0);
+        expect(body2.data[0].id).not.toBe(body1.data[0].id);
+      } else {
+        // Only one payment exists — pagination still works correctly with single item
+        expect(body1.pagination.has_more).toBe(false);
       }
     });
 

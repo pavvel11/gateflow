@@ -20,6 +20,11 @@
     "alreadyHasAccess": "You already have access to this product.",
     "autoRedirect": "Auto-redirecting in {seconds} seconds...",
     "goToProduct": "Go to Product",
+    "funnelTest": {
+      "banner": "FUNNEL TEST",
+      "description": "You are previewing this checkout as admin. No payment will be processed.",
+      "completeButton": "Complete Test"
+    },
     "loadError": "Failed to load checkout. Please try again later.",
     "createSessionError": "Failed to create checkout session",
     "netPrice": "Net price",
@@ -57,14 +62,43 @@
       "title": "Choose Your Amount",
       "minimum": "Minimum",
       "belowMinimum": "Amount must be at least {minimum}",
-      "aboveMaximum": "Amount must be no more than {maximum}"
+      "aboveMaximum": "Amount must be no more than {maximum}",
+      "freePreset": "Free",
+      "getForFree": "Get for Free"
     },
+    "enterEmail": "Enter your email address",
+    "sendMagicLink": "Send magic link",
+    "sendingMagicLink": "Sending magic link...",
+    "checkEmailForMagicLink": "Check your email — we sent a link to activate your access.",
     "orPayWith": "or pay with",
     "optional": "optional",
     "confirmEmailLabel": "I confirm the product will be linked to my account ({accountEmail}). Receipt will be sent to {purchaseEmail}.",
     "confirmEmailRequired": "Please confirm the product assignment to your account",
     "emailMismatchWarning": "You are purchasing with {purchaseEmail}, but you are logged in as {accountEmail}. The product will be linked to your account.",
-    "checkoutBranding": "This checkout is open-source →"
+    "checkoutBranding": "This checkout is open-source →",
+    "failedToGetAccess": "Failed to get access",
+    "unexpectedError": "An unexpected error occurred",
+    "invalidEmail": "Invalid email",
+    "invalidTaxIdFormat": "Invalid tax ID format",
+    "failedToPreparePayment": "Failed to prepare payment",
+    "paymentFailed": "Payment failed",
+    "additionalProduct": "Additional Product",
+    "gusRateLimitExceeded": "Too many requests. Please wait a moment and try again.",
+    "gusNotFound": "Company not found in GUS database",
+    "gusSecurityError": "Security error. Refresh the page and try again.",
+    "gusFetchError": "Failed to fetch data from GUS. Please enter details manually.",
+    "gusDataFetched": "Data fetched from GUS database",
+    "addressLabel": "Address",
+    "addressPlaceholder": "123 Example Street",
+    "postalCodeLabel": "Postal Code",
+    "postalCodePlaceholder": "00-000",
+    "cityLabel": "City",
+    "cityPlaceholder": "Warsaw",
+    "securePayment": "🔒 Secure payment powered by Stripe",
+    "fullNamePlaceholder": "Jan Kowalski",
+    "taxIdPlaceholder": "PL1234567890 or DE123456789",
+    "companyNamePlaceholder": "Company Ltd.",
+    "completeYourPurchase": "Complete Your Purchase"
   },
   "waitlist": {
     "joinWaitlist": "Join the Waitlist",
@@ -105,6 +139,8 @@
     "edit": "Edit",
     "create": "Create",
     "close": "Close",
+    "startDate": "Start date",
+    "endDate": "End date",
     "back": "Back",
     "next": "Next",
     "previous": "Previous",
@@ -125,8 +161,20 @@
     "confirmDelete": "Confirm Delete",
     "currency": {
       "grouped": "Grouped by Currency",
-      "convertTo": "Convert to"
-    }
+      "convertTo": "Convert to",
+      "selectCurrency": "Select Currency"
+    },
+    "showingPage": "Showing page {current} of {total}",
+    "closeModal": "Close modal",
+    "clearDate": "Clear date",
+    "optional": "optional",
+    "pagination": "Pagination",
+    "reset": "Reset",
+    "custom": "Custom",
+    "clear": "Clear",
+    "selectOption": "Select an option...",
+    "selectDateTime": "Select date and time",
+    "noResults": "No results found for \"{searchTerm}\""
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -148,11 +196,20 @@
     "myPurchases": "My Purchases",
     "refundRequests": "Refund Requests",
     "store": "Store",
-    "about": "About GateFlow",
-    "getGateflow": "Get GateFlow for Free"
+    "about": "About Sellf",
+    "getSellf": "Get Sellf",
+    "adminSection": "Admin",
+    "userSection": "User",
+    "roleAdmin": "Administrator",
+    "roleUser": "User",
+    "openSidebar": "Open sidebar",
+    "switchLanguage": "Switch language",
+    "languageTitle": "Language: {name}",
+    "themeLabel": "Theme: {theme}",
+    "userMenu": "User menu"
   },
   "about": {
-    "title": "About GateFlow",
+    "title": "About Sellf",
     "backToStore": "Back to Store"
   },
   "integrations": {
@@ -171,14 +228,20 @@
       "title": "Google Tag Manager",
       "containerId": "Container ID",
       "serverContainerUrl": "GTM Server Container URL",
-      "serverContainerHelp": "For server-side tracking. Leave empty for client-side only."
+      "serverContainerHelp": "For server-side tracking. Leave empty for client-side only.",
+      "ssEnabled": "Enable server-to-server event forwarding",
+      "ssEnabledHelp": "Send conversion events (Purchase, Lead) from backend directly to GTM SS container. Supports Facebook CAPI, TikTok Events API, and other tags configured in GTM.",
+      "containerIdPlaceholder": "GTM-XXXXXX",
+      "serverContainerUrlPlaceholder": "https://gtm.yourdomain.com"
     },
     "umami": {
       "title": "Umami Analytics (Open Source)",
       "privacyFocused": "Privacy Focused",
       "websiteId": "Website ID (UUID)",
       "scriptUrl": "Script URL (Optional)",
-      "default": "Default"
+      "default": "Default",
+      "websiteIdPlaceholder": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      "scriptUrlPlaceholder": "https://cloud.umami.is/script.js"
     },
     "facebook": {
       "title": "Meta (Facebook)",
@@ -188,7 +251,8 @@
       "testEventCode": "Test Event Code",
       "testEventCodeHelp": "For testing events in Events Manager. Remove in production.",
       "enableCAPI": "Enable Conversions API (Server-Side)",
-      "capiTokenRequired": "CAPI Token is required to enable this feature"
+      "capiTokenRequired": "CAPI Token is required to enable this feature",
+      "pixelIdPlaceholder": "1234567890"
     },
     "cookieConsent": {
       "requireConsent": "Require Consent (Recommended)"
@@ -383,7 +447,13 @@
         "category": "Category (GDPR)",
         "code": "Script Code",
         "cancel": "Cancel",
-        "add": "Add Script"
+        "add": "Add Script",
+        "namePlaceholder": "e.g. Hotjar",
+        "codePlaceholder": "<script>...</script>"
+      },
+      "location": {
+        "head": "HEAD",
+        "body": "BODY"
       }
     },
     "messages": {
@@ -421,11 +491,24 @@
       "address2Placeholder": "Suite 4",
       "city": "City",
       "zipCode": "ZIP / Postal Code",
-      "country": "Country"
+      "country": "Country",
+      "countryPlaceholder": "e.g. Poland"
     },
     "messages": {
       "saveSuccess": "Profile updated successfully",
       "saveError": "Error updating profile: {error}"
+    },
+    "invalidTaxIdFormat": "Invalid tax ID format",
+    "validPolishNIP": "✓ Valid Polish NIP",
+    "validPolishNIPWithCode": "✓ Valid Polish NIP ({code})",
+    "validTaxId": "✓ Valid tax ID",
+    "validTaxIdWithCode": "✓ Valid tax ID ({code})",
+    "gus": {
+      "rateLimitError": "Too many requests. Please wait and try again.",
+      "notFound": "Company not found in GUS database",
+      "securityError": "Security error. Please refresh and try again.",
+      "fetchError": "Failed to fetch data from GUS. Enter data manually.",
+      "dataLoaded": "✓ Company data loaded from GUS database"
     }
   },
   "auth": {
@@ -445,7 +528,12 @@
     "checkEmailAt": "Please check your email at {email} for the magic link.",
     "clickLinkToSignIn": "Click the link to sign in automatically.",
     "openEmailProvider": "Open {provider}",
-    "backToLogin": "Back to Login"
+    "backToLogin": "Back to Login",
+    "title": "Sellf Admin",
+    "disposableEmailBlocked": "Registration blocked: Disposable email addresses are not allowed. Please use a permanent email address.",
+    "emailValidationFailed": "Email validation failed. Please try again.",
+    "emailPlaceholder": "your@email.com",
+    "passwordPlaceholder": "demo123"
   },
   "products": {
     "title": "Products",
@@ -491,7 +579,7 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "welcome": "Welcome to GateFlow Admin",
+    "welcome": "Welcome to Sellf Admin",
     "overview": "Overview",
     "currency": {
       "dashboardInfo": "Exchange rates are used for approximate dashboard calculations only."
@@ -554,7 +642,7 @@
     },
     "elementInstructions": {
       "step1": "1. Add the script tag to your page &lt;head&gt;",
-      "step2": "2. Wrap content you want to protect with data-gatekeeper-product=\"{slug}\"",
+      "step2": "2. Wrap content you want to protect with data-sellf-product=\"{slug}\"",
       "step3": "3. Add fallback content with data-no-access for users without access",
       "step4": "4. The script will automatically show/hide content based on user access"
     },
@@ -566,9 +654,25 @@
     "selectiveDisplay": "Selective Content Display",
     "selectiveDisplayDescription": "This method allows you to show or hide specific sections of a page based on user access. It's particularly useful for sales pages where you want to display different content to paying customers versus prospects.",
     "implementation": "Implementation",
-    "implementationDescription": "Add data-gatekeeper-product=\"{slug}\" to content that should be visible to users with access, and data-no-access=\"true\" to fallback content for users without access. The script will automatically manage visibility.",
+    "implementationDescription": "Add data-sellf-product=\"{slug}\" to content that should be visible to users with access, and data-no-access=\"true\" to fallback content for users without access. The script will automatically manage visibility.",
     "commonUseCase": "Common Use Case",
     "elementModeUseCase": "Replace \"Buy Now\" buttons with \"Access Product\" buttons for existing customers, or show premium content sections only to subscribers.",
+    "embedMode": "Embed Widget",
+    "embedDescription": "Embeddable form for landing pages",
+    "embedInstructions": {
+      "step1": "1. Paste the code anywhere in your landing page HTML",
+      "step2": "2. The widget will auto-initialize and display a beautiful signup form",
+      "step3": "3. Users enter their email → receive magic link → get instant access",
+      "step4": "4. Perfect for AI-generated landing pages or custom websites"
+    },
+    "embedInfoFreeOnlyTitle": "🎁 Free Products Only",
+    "embedInfoFreeOnly": "This embed widget only works for free products (price = $0)",
+    "embedInfoSecurityTitle": "🔒 Security",
+    "embedInfoSecurity": "Rate limiting (3 req/5min), Turnstile CAPTCHA, disposable email filter",
+    "embedInfoCustomizableTitle": "🎨 Customizable",
+    "embedInfoCustomizable": "Beautiful gradient design, auto-responsive, works on any website",
+    "embedInfoMagicLinkTitle": "✉️ Magic Link",
+    "embedInfoMagicLink": "Users receive instant access link via email - no password needed",
     "close": "Close"
   },
   "messages": {
@@ -599,7 +703,7 @@
     "unableToLoad": "Unable to Load Products",
     "tryAgain": "Try Again",
     "navigation": {
-      "gateflow": "GateFlow",
+      "sellf": "Sellf",
       "myProducts": "My Products",
       "adminPanel": "Admin Panel",
       "login": "Login",
@@ -618,14 +722,15 @@
       "stats": {
         "products": "{count, plural, =0 {No products} one {1 Product} other {# Products}}",
         "customers": "{count, plural, =0 {No customers} one {1 Customer} other {# Customers}}",
-        "ready": "Ready to Launch"
+        "ready": "Ready to Launch",
+        "status": "Status"
       }
     },
     "comingSoon": {
       "title": "We're Setting Up Shop!",
       "subtitle": "Our store is being prepared with amazing products. Check back soon!",
       "contactUs": "Have questions? Reach out at {email}",
-      "learnMore": "Build your own digital empire with GateFlow"
+      "learnMore": "Build your own digital empire with Sellf"
     },
     "hero": {
       "title": "Discover Our",
@@ -658,7 +763,8 @@
     },
     "featured": {
       "title": "Featured Products",
-      "subtitle": "Our hand-picked selection for you"
+      "subtitle": "Our hand-picked selection for you",
+      "badge": "Featured"
     },
     "sections": {
       "viewAll": "View All Products",
@@ -733,8 +839,20 @@
       "browseAll": "Browse All Products",
       "poweredBy": "{count, plural, one {# product} other {# products}} available • Powered by {shopName}"
     },
+    "filters": {
+      "all": "All ({count})",
+      "featured": "Featured ({count})",
+      "free": "Free ({count})",
+      "premium": "Premium ({count})"
+    },
+    "brandMoment": {
+      "statsProducts": "Products",
+      "statsFree": "Free",
+      "statsPremium": "Premium"
+    },
     "footer": {
-      "copyright": "© 2025 Powered by GateFlow • Secure Product Access Management"
+      "copyright": "© 2025 Powered by Sellf • Secure Product Access Management",
+      "poweredBy": "Powered by {shopName}"
     }
   },
   "productView": {
@@ -754,7 +872,7 @@
     "getStarted": "Get Started",
     "enterEmailForFreeAccess": "Enter your email for free access to {productName}",
     "emailAddress": "Email Address",
-    "enterEmailAddress": "Enter your email address",
+    "enterEmailAddress": "Please enter your email address",
     "getFreeAccess": "Get Free Access",
     "purchaseAccess": "Purchase Access",
     "enterEmailForPurchase": "Enter your email to purchase {productName}",
@@ -799,7 +917,7 @@
       "continueToPayment": "Continue to Payment",
       "cancel": "Cancel"
     },
-    "securedBy": "Secured by GateFlow",
+    "securedBy": "Secured by Sellf",
     "accessGrantedOn": "Access granted on:",
     "expires": "Expires:",
     "contentReady": "Your Content is Ready!",
@@ -817,7 +935,33 @@
     "emailInvalidError": "Invalid email address. Please check your email and try logging in directly.",
     "captchaFailedError": "Captcha verification failed. Please try logging in directly.",
     "rateLimitError": "Too many requests. Please wait a moment and try logging in directly.",
-    "goToLoginPage": "Go to Login Page"
+    "goToLoginPage": "Go to Login Page",
+    "failedToRequestAccess": "Failed to request access",
+    "accessGrantedSuccessfully": "Access granted successfully!",
+    "invalidEmailDisposable": "Invalid or disposable email address not allowed",
+    "validEmailRequired": "Please enter a valid email address",
+    "loadingSecureContent": "Loading secure content...",
+    "accessError": "Access Error",
+    "refreshPage": "Refresh Page",
+    "noContentAvailable": "No content available",
+    "redirectingTitle": "Redirecting...",
+    "redirectingMessage": "You're being redirected to your content.",
+    "goToContent": "Go to Content",
+    "accessExpiredStatus": "Expired {date}",
+    "accessExpiresStatus": "Expires {date}",
+    "legacyAccess": "Legacy Access",
+    "productDescription": "Product Description",
+    "securedBySellf": "Secured by Sellf",
+    "notAvailableToNew": "This product is no longer available to new customers",
+    "accessGrantedStatus": "Access Granted",
+    "accessExpiredStatusLabel": "Access Expired",
+    "redirectingToProductPage": "Redirecting to product page...",
+    "accessDeniedOrExpired": "Access denied or expired",
+    "failedToLoadContent": "Failed to load content",
+    "loadingTimeoutTitle": "Loading is taking longer than expected",
+    "loadingTimeoutMessage": "We couldn't load your product information. This could be due to a temporary connection issue.",
+    "tryAgain": "Try Again",
+    "notFound": "Product Not Found"
   },
   "myProducts": {
     "title": "My Products",
@@ -842,7 +986,9 @@
     "freeResources": "Free Resources",
     "premiumSolutions": "Premium Solutions",
     "noProductsAvailable": "No Products Available",
-    "noProductsMessage": "It looks like there are no products here at the moment. Check back later!"
+    "noProductsMessage": "It looks like there are no products here at the moment. Check back later!",
+    "naLabel": "N/A",
+    "invalidPrice": "Invalid Price"
   },
   "paymentStatus": {
     "paymentSuccessful": "Payment Successful!",
@@ -934,7 +1080,7 @@
   "admin": {
     "dashboard": {
       "title": "Dashboard",
-      "welcome": "Welcome to GateFlow Admin",
+      "welcome": "Welcome to Sellf Admin",
       "overview": "Overview",
       "stats": {
         "totalRevenue": "Total Revenue",
@@ -946,7 +1092,11 @@
         "title": "Recent Activity",
         "accessGranted": "Access granted to {product}",
         "productCreated": "New product created: {product}",
-        "noActivity": "No recent activity"
+        "noActivity": "No recent activity",
+        "timeJustNow": "Just now",
+        "timeMinutesAgo": "{minutes}m ago",
+        "timeHoursAgo": "{hours}h ago",
+        "timeDaysAgo": "{days}d ago"
       },
       "totalProducts": "Total Products",
       "totalUsers": "Total Users",
@@ -972,7 +1122,11 @@
         "subtitle": "Last {days} days performance",
         "hourlyTitle": "Today's Revenue",
         "hourlySubtitle": "Hourly breakdown"
-      }
+      },
+      "showValues": "Show values",
+      "hideValues": "Hide values",
+      "resetProgressTitle": "Reset progress (start counting from now)",
+      "goalCurrencyNote": "Goal is saved in shop's default currency"
     },
     "products": {
       "title": "Products",
@@ -997,6 +1151,11 @@
       "removeFeatured": "Remove from featured",
       "waitlistEnabled": "Waitlist enabled for this product",
       "waitlistDisabled": "No waitlist - product is completely unavailable",
+      "unlisted": "Unlisted",
+      "unlistedTooltip": "Not shown on store page, available via direct link",
+      "listedEnabled": "Product is now listed on store",
+      "listedDisabled": "Product is now unlisted from store",
+      "listedToggleError": "Failed to toggle listed status",
       "noRedirectUrl": "This product does not have a redirect URL.",
       "noProductsToExport": "No products to export",
       "exportSuccess": "{count} products exported successfully",
@@ -1045,6 +1204,8 @@
       "preview": "Preview",
       "duplicate": "Duplicate",
       "previewRedirect": "Preview redirect",
+      "testFunnel": "Test Funnel",
+      "testFunnelLabel": "Test funnel for {name}",
       "showing": "Showing",
       "to": "to",
       "of": "of",
@@ -1071,9 +1232,18 @@
         "price": "Price",
         "productIcon": "Product Icon",
         "vatIncluded": "Price includes VAT",
+        "vatExcluded": "Price does not include VAT",
         "vatIncludedHelp": "If checked, the displayed price already contains VAT and the net amount will be calculated automatically.",
+        "vatStripeTaxInfo": "Tax calculated by Stripe",
+        "vatRateRequired": "VAT rate is required (no default set in Tax settings)",
         "vatRate": "VAT Rate",
         "vatRateHelp": "Leave empty to use the default rate from Shop Settings ({defaultRate}). Set per product to override.",
+        "longDescription": "Detailed Description (Markdown)",
+        "optional": "optional",
+        "expand": "Expand",
+        "collapse": "Collapse",
+        "markdownTip": "Tip: If you don't know Markdown syntax, ask any AI to create formatted content for you",
+        "visual": "Visual",
         "imageUrl": "Product Image URL",
         "imageUrlHelp": "Upload your product image to ImgBB or any image hosting service and paste the URL here.",
         "setToZeroForFree": "Set to 0 for free products. Use comma or dot for decimal separator.",
@@ -1101,7 +1271,6 @@
         },
         "autoGrantAccessSettings": "Auto-Grant Access Settings",
         "defaultAccessDuration": "Default Access Duration (days)",
-        "optional": "optional",
         "durationPlaceholder": "e.g., 30 for 30 days",
         "accessExpireAfter": "When users gain access to this product, their access will automatically expire after this many days. Leave empty for permanent access.",
         "autoGrantDurationTitle": "Auto-Grant Duration",
@@ -1121,6 +1290,8 @@
         "addContentItem": "Add Content Item",
         "advancedSettings": "Advanced Settings",
         "productActive": "Product is active and visible to users",
+        "productListed": "Listed on store page",
+        "productListedHelp": "Unlisted products can still be purchased via direct checkout link",
         "featuredProduct": "Featured product (highlighted in listings)",
         "omnibusExempt": "Exempt from Omnibus Directive",
         "omnibusExemptHelp": "(perishable goods, new products <30 days)",
@@ -1193,12 +1364,56 @@
           "allowCustomPrice": "Allow customer to choose price",
           "allowCustomPriceHelp": "Enable flexible pricing where customers decide how much to pay",
           "minimumPrice": "Minimum Price",
-          "stripeMinimum": "Stripe requires a minimum of 0.50 in any currency",
+          "suggestedPriceHint": "The price above becomes the suggested amount. Customer can enter any amount above the minimum.",
+          "stripeMinimum": "Stripe min. 0.50",
+          "freeOptionHint": "Customer can get this product for free",
           "showPresets": "Show buttons with predefined amounts",
           "showPresetsHelp": "Display suggested amounts as quick-select buttons on checkout",
           "presetAmount": "Amount"
         },
-        "enabled": "Enabled"
+        "enabled": "Enabled",
+        "wizard": {
+          "title": "Create New Product",
+          "subtitle": "Set up your product in a few quick steps",
+          "step1": "Essentials",
+          "step2": "Content & Details",
+          "step3": "Sales & Settings",
+          "stepOf": "Step {current} of {total}",
+          "createProduct": "Create Product",
+          "continueSetup": "Continue Setup",
+          "back": "Back",
+          "cancel": "Cancel",
+          "earlyCreateHint": "You can create your product now with just the essentials, or continue to configure content delivery, pricing promotions, and more.",
+          "exitTitle": "Discard changes?",
+          "exitMessage": "You have unsaved product data. Close without creating?",
+          "exitDiscard": "Discard",
+          "exitKeepEditing": "Keep Editing"
+        },
+        "description": "Description",
+        "descriptionPlaceholder": "Describe your product",
+        "descriptionRequired": "Description is required",
+        "nameRequired": "{name} is required",
+        "autoSlug": "Auto",
+        "supportedVideoPlatforms": "Supported Video Platforms",
+        "supportedVideoPlatformsDesc": "Paste any URL format - we'll convert it to the proper embed URL automatically!",
+        "supportedVideoPlatformsList": "📺 YouTube • 🎬 Vimeo • 🐰 Bunny.net • 🎥 Loom • 📹 Wistia • 🎞️ DailyMotion • 🎮 Twitch",
+        "trustedStorageProviders": "Trusted Storage Providers for Downloads",
+        "trustedStorageProvidersDesc": "Download URLs must use HTTPS and be from trusted storage providers for security.",
+        "storageCloudProviders": "☁️ Cloud: AWS S3, Google Cloud Storage, Supabase Storage",
+        "storagePersonalProviders": "📁 Personal: Google Drive, Dropbox, OneDrive, Box, SharePoint",
+        "storageCdnProviders": "🌐 CDN: Bunny CDN, Cloudinary, Imgix, Fastly",
+        "storageFileSharingProviders": "📤 File Sharing: Mega, MediaFire, WeTransfer, SendSpace",
+        "videoOptions": "Video Options",
+        "videoOptionsNote": "💡 Options support varies by platform (YouTube, Vimeo, Bunny.net, etc.)",
+        "controls": "Controls",
+        "autoplay": "Autoplay",
+        "loop": "Loop",
+        "muted": "Muted",
+        "preload": "Preload",
+        "longDescriptionPlaceholder": "## What's included?\n- Feature 1\n- Feature 2",
+        "slugPlaceholder": "product-url-slug",
+        "imageUrlPlaceholder": "https://i.ibb.co/...",
+        "salePricePlaceholder": "0.00"
       }
     },
     "categories": {
@@ -1300,7 +1515,21 @@
         "selectProduct": "Please select a product",
         "grantAccessError": "Failed to grant access",
         "removeAccessError": "Failed to remove access",
-        "errorFetch": "Failed to fetch user access"
+        "errorFetch": "Failed to fetch user access",
+        "noAccessGranted": "No product access granted",
+        "noAccessYet": "This user doesn't have access to any products yet.",
+        "grantNewAccess": "Grant New Access",
+        "selectProductLabel": "Select Product",
+        "chooseProductPlaceholder": "Choose a product to grant access...",
+        "accessTypeLabel": "Access Type",
+        "permanent": "Permanent",
+        "expiration": "Expiration",
+        "durationInDays": "Duration (in days)",
+        "enterDurationDays": "Enter duration in days",
+        "expirationDate": "Expiration Date",
+        "grantAccess": "Grant Access",
+        "noProductsAvailable": "No Products Available",
+        "addNewAccess": "Add New Access"
       }
     },
     "webhooks": {
@@ -1364,15 +1593,45 @@
         "retryAnyway": "Send Anyway",
         "failuresTitle": "Recent Delivery Failures",
         "errorDetails": "Error Details",
-        "endpoint": "Endpoint"
-      }
+        "endpoint": "Endpoint",
+        "retryFailed": "Retry failed",
+        "loadError": "Failed to load logs",
+        "logArchived": "Log archived",
+        "archiveError": "Failed to archive log",
+        "retried": "Retried",
+        "archived": "Archived",
+        "networkError": "Network Error",
+        "archiveDismiss": "Archive/Dismiss",
+        "errorPrefix": "Error: {message}",
+        "emptyResponse": "(Empty response body)"
+      },
+      "testModal": {
+        "selectInstruction": "Select an event type to send a mock payload to:",
+        "eventTypeLabel": "Event Type",
+        "genericTestEvent": "Generic Test Event",
+        "examplePayload": "Example Payload",
+        "sendTest": "Send Test"
+      },
+      "secretCopied": "Secret copied to clipboard",
+      "hide": "Hide",
+      "show": "Show",
+      "copy": "Copy",
+      "secretAutoGenerated": "Secret will be generated automatically upon creation",
+      "descriptionPlaceholder": "e.g. CRM Integration",
+      "eventTypeLabel": "Event type: {value}",
+      "logsButtonLabel": "Logs",
+      "hideSecret": "Hide Secret",
+      "revealSecret": "Reveal Secret",
+      "copySecret": "Copy Secret",
+      "pageDescription": "Manage outgoing webhooks for system events.",
+      "urlPlaceholder": "https://api.zapier.com/..."
     },
     "apiKeys": {
       "title": "API Keys",
       "subtitle": "Manage API keys for external integrations and MCP server access",
       "createKey": "Create API Key",
       "createKeyTitle": "Create New API Key",
-      "createKeySubtitle": "API keys allow external applications to access your GateFlow data",
+      "createKeySubtitle": "API keys allow external applications to access your Sellf data",
       "keyName": "Key Name",
       "keyNamePlaceholder": "e.g., Production API Key, MCP Server",
       "quickPresets": "Quick Presets",
@@ -1419,7 +1678,37 @@
       "rotateTitle": "Rotate API Key",
       "rotateConfirmation": "Are you sure you want to rotate the API key \"{name}\"?",
       "rotateGracePeriod": "The old key will remain valid for 24 hours to allow for a smooth transition.",
-      "rotateKey": "Rotate Key"
+      "rotateKey": "Rotate Key",
+      "scopes": {
+        "fullAccess": "Full Access",
+        "productsRead": "Products (Read)",
+        "productsWrite": "Products (Write)",
+        "usersRead": "Users (Read)",
+        "usersWrite": "Users (Write)",
+        "couponsRead": "Coupons (Read)",
+        "couponsWrite": "Coupons (Write)",
+        "analyticsRead": "Analytics (Read)",
+        "webhooksRead": "Webhooks (Read)",
+        "webhooksWrite": "Webhooks (Write)"
+      },
+      "scopeDescriptions": {
+        "fullAccess": "Access to all resources",
+        "productsRead": "View products",
+        "productsWrite": "Create, update, delete products",
+        "usersRead": "View users and their access",
+        "usersWrite": "Grant/revoke user access",
+        "couponsRead": "View coupons",
+        "couponsWrite": "Create, update, delete coupons",
+        "analyticsRead": "View analytics data",
+        "webhooksRead": "View webhook configurations",
+        "webhooksWrite": "Manage webhooks"
+      },
+      "presets": {
+        "fullAccess": "Full Access",
+        "readOnly": "Read Only",
+        "productsOnly": "Products Only",
+        "usersOnly": "Users Only"
+      }
     },
     "coupons": {
       "title": "Coupons",
@@ -1497,8 +1786,17 @@
         "add": "Add",
         "activeLabel": "Active",
         "creating": "Creating...",
-        "saving": "Saving..."
-      }
+        "saving": "Saving...",
+        "perUserLimit": "Per User Limit"
+      },
+      "loadError": "Failed to load coupons",
+      "createError": "Failed to create coupon",
+      "updateError": "Failed to update coupon",
+      "deleteError": "Failed to delete coupon",
+      "statusError": "Failed to update status",
+      "bulkDeleteError": "Failed to delete coupons",
+      "deleteExpiredError": "Failed to delete expired coupons",
+      "noActiveProducts": "No active products found."
     },
     "orderBumps": {
       "title": "Order Bumps",
@@ -1550,10 +1848,48 @@
         "cancel": "Cancel",
         "save": "Save Order Bump",
         "creating": "Creating...",
-        "saving": "Saving..."
-      }
+        "saving": "Saving...",
+        "accessDurationPlaceholder": "e.g. 30 days",
+        "defaultTitle": "Yes, add \"{name}\" for just {price} {currency}!"
+      },
+      "loadError": "Failed to load order bumps",
+      "createError": "Failed to create order bump",
+      "updateError": "Failed to update order bump",
+      "deleteError": "Failed to delete order bump",
+      "statusError": "Failed to toggle bump status"
     },
     "payments": {
+      "title": "Payment Management",
+      "subtitle": "Manage all payment transactions, process refunds, and monitor payment activity.",
+      "loading": "Loading payment data...",
+      "filters": {
+        "status": "Status",
+        "dateRange": "Date Range",
+        "search": "Search",
+        "allStatuses": "All Statuses",
+        "pending": "Pending",
+        "completed": "Completed",
+        "failed": "Failed",
+        "cancelled": "Cancelled",
+        "refunded": "Refunded",
+        "disputed": "Disputed",
+        "searchPlaceholder": "Search by email, transaction ID...",
+        "last7Days": "Last 7 days",
+        "last30Days": "Last 30 days",
+        "last90Days": "Last 90 days",
+        "lastYear": "Last year",
+        "allTime": "All time",
+        "clear": "Clear Filters",
+        "refresh": "Refresh",
+        "exportCsv": "Export CSV",
+        "exportSuccess": "Payments exported successfully",
+        "exportError": "Failed to export payments",
+        "activeFilters": "Active filters:",
+        "statusFilter": "Status: {status}",
+        "searchFilter": "Search: {term}",
+        "rangeFilter": "Range: {range}",
+        "days": "days"
+      },
       "transactions": {
         "title": "Payment Transactions",
         "transactionId": "Transaction ID",
@@ -1568,7 +1904,11 @@
           "pending": "Pending",
           "failed": "Failed",
           "refunded": "Refunded"
-        }
+        },
+        "refunded": "Refunded: {amount}"
+      },
+      "sessions": {
+        "title": "Checkout Sessions"
       },
       "refund": {
         "title": "Process Refund",
@@ -1584,6 +1924,24 @@
         "processing": "Processing...",
         "success": "Refund processed successfully",
         "error": "Failed to process refund"
+      },
+      "loadError": "Failed to load payment data",
+      "stats": {
+        "totalRevenue": "Total Revenue",
+        "totalTransactions": "Total Transactions",
+        "todayRevenue": "Today's Revenue",
+        "pendingSessions": "Pending Sessions",
+        "high": "High",
+        "normal": "Normal",
+        "thisMonthRevenue": "This Month",
+        "refundedAmount": "Refunded",
+        "vsLastPeriod": "vs last period"
+      },
+      "cancelSession": {
+        "label": "Cancel",
+        "loading": "Cancelling...",
+        "success": "Session cancelled",
+        "error": "Failed to cancel session"
       }
     },
     "variantsPage": {
@@ -1641,7 +1999,11 @@
       "removeProductWillDeleteGroup": "Removing \"{name}\" will delete the entire group (minimum 2 products required).",
       "removeProduct": "Remove from group",
       "setFeatured": "Set as featured",
-      "removeFeatured": "Remove featured"
+      "removeFeatured": "Remove featured",
+      "loadError": "Failed to load variant groups",
+      "deleteGroupError": "Failed to delete variant group",
+      "removeProductError": "Failed to remove product",
+      "updateError": "Failed to update"
     }
   },
   "config": {
@@ -1761,7 +2123,8 @@
       "saveButton": "Save Settings",
       "saving": "Saving...",
       "saveSuccess": "Settings saved successfully",
-      "saveError": "Failed to save settings"
+      "saveError": "Failed to save settings",
+      "defaultCurrencyHelp": "This currency will be used for revenue goals and as the default display currency for all admins."
     },
     "omnibus": {
       "title": "EU Omnibus Directive",
@@ -1778,6 +2141,13 @@
       "info2": "Price history is automatically tracked with every product price change",
       "info3": "Prices are displayed only when current price is lower than historical lowest"
     },
+    "configSource": {
+      "db": "DB",
+      "env": "ENV",
+      "default": "Default",
+      "overridesEnv": "overrides ENV",
+      "notConfigured": "Not configured"
+    },
     "stripe": {
       "title": "Stripe Configuration",
       "subtitle": "Manage your Stripe API keys and payment integration settings",
@@ -1791,6 +2161,10 @@
           "title": "Currently using: Database configuration",
           "description": "Your Stripe keys are securely encrypted with AES-256-GCM and stored in the database.",
           "alternative": "💡 Alternative: Developers can also configure Stripe via STRIPE_SECRET_KEY in .env file."
+        },
+        "notConfigured": {
+          "title": "Stripe not configured",
+          "description": "No Stripe API key found. Configure via .env file or use the wizard below."
         }
       },
       "activeConfigs": "Active Configurations",
@@ -1801,7 +2175,7 @@
       "verified": "Verified",
       "account": "Account",
       "created": "Created",
-      "rotationReminder": "Rotation reminder",
+      "rotationReminder": "Rotate by",
       "configureButton": "Configure Stripe",
       "configureAnother": "Configure Another Mode",
       "openDashboard": "Open Stripe Dashboard",
@@ -1812,42 +2186,119 @@
         "footer": "Both methods are equally supported. Choose what works best for you."
       }
     },
+    "stripeTax": {
+      "title": "Tax & Checkout",
+      "subtitle": "Tax calculation mode and checkout session settings",
+      "taxMode": {
+        "label": "Tax Calculation Mode",
+        "description": "Choose how taxes are calculated for checkout sessions.",
+        "local": "Fixed Rate",
+        "localDescription": "A fixed VAT rate is sent to Stripe for each product. Stripe displays the tax breakdown on checkout and receipts.",
+        "stripeTax": "Stripe Tax",
+        "stripeTaxDescription": "Stripe calculates taxes automatically based on customer location and your tax registrations.",
+        "vatRateLabel": "Default VAT Rate",
+        "vatRateHelp": "This rate is assigned to newly created products as their default. Each product stores its own VAT rate which can be changed individually. The rate sent to Stripe at checkout is always the product's own rate.",
+        "vatRatePlaceholder": "23",
+        "noRateWarning": "No default VAT rate set. Products created without an explicit rate will have no tax applied in checkout.",
+        "stripeTaxActiveWarning": "Stripe Tax is active on your Stripe account but is NOT used in Fixed Rate mode. Your fixed VAT rate takes priority in checkout sessions. To use automatic tax calculation, switch to Stripe Tax mode."
+      },
+      "status": {
+        "active": "Stripe Tax is active",
+        "activeDescription": "Taxes are being automatically calculated for your transactions.",
+        "pending": "Stripe Tax: Setup pending",
+        "pendingDescription": "Tax settings need to be completed in Stripe Dashboard.",
+        "noPermission": "Cannot check tax status",
+        "noPermissionDescription": "Your Stripe API key doesn't have permission to read tax settings.",
+        "stripeNotConfigured": "Stripe not configured",
+        "stripeNotConfiguredDescription": "Configure Stripe API keys first to check tax status."
+      },
+      "registrations": "Tax Registrations",
+      "noRegistrations": "No active tax registrations",
+      "headOffice": "Head office",
+      "toggles": {
+        "taxIdCollection": "Tax ID Collection",
+        "taxIdCollectionDescription": "Allow customers to provide their tax ID (e.g., VAT number) during checkout.",
+        "billingAddress": "Billing Address",
+        "billingAddressDescription": "Whether billing address is optional or required during checkout.",
+        "billingAuto": "Auto",
+        "billingRequired": "Required",
+        "expiresHours": "Session Expiry",
+        "expiresHoursDescription": "How many hours a checkout session remains valid (1–168).",
+        "expiresHoursSuffix": "hours",
+        "collectTerms": "Terms of Service Consent",
+        "collectTermsDescription": "Require customers to accept Terms of Service during checkout."
+      },
+      "saveSuccess": "Tax settings saved",
+      "saveError": "Failed to save tax settings",
+      "links": {
+        "taxSettings": "Tax Settings",
+        "taxRegistrations": "Registrations",
+        "taxReports": "Tax Reports"
+      },
+      "unknownError": "Unknown error",
+      "loadError": "Failed to load tax status"
+    },
     "branding": {
       "title": "Branding & Whitelabel",
       "livePreview": "Live Preview",
-      "resetToDefaults": "Reset to defaults",
-      "logoUrl": "Logo URL",
-      "logoUrlHelpPrefix": "Upload your logo to",
-      "logoUrlHelpSuffix": "or any image hosting service and paste the URL here.",
-      "imgbb": "ImgBB",
-      "brandColors": "Brand Colors",
-      "primary": "Primary",
-      "secondary": "Secondary",
-      "accent": "Accent",
-      "fontFamily": "Font Family",
-      "fontHelp": "System fonts load instantly and perform best across all devices.",
       "saving": "Saving...",
-      "saveBranding": "Save Branding",
-      "saveSuccess": "Branding updated successfully! Refresh to see changes.",
-      "saveError": "Failed to save branding settings.",
+      "saveTheme": "Save Theme",
+      "saveSuccess": "Theme saved! Changes will apply on next page load.",
+      "saveError": "Failed to save theme.",
       "errorOccurred": "An error occurred while saving.",
-      "logo": "Logo",
       "colorPalette": "Color Palette",
-      "buttons": "Buttons",
-      "primaryButton": "Primary Button",
-      "accentButton": "Accent Button",
-      "typography": "Typography",
-      "headingText": "Heading Text",
-      "bodyTextPreview": "This is how your body text will look with the {font} font."
+      "themePresets": "Theme Presets",
+      "importTheme": "Import",
+      "exportTheme": "Export",
+      "invalidThemeFile": "Invalid theme file. Please upload a valid JSON theme.",
+      "fileTooLarge": "Theme file is too large. Maximum size: 100KB.",
+      "themeImported": "Theme imported successfully. Save to apply.",
+      "themeName": "Theme Name",
+      "darkModeColors": "Dark Mode Colors",
+      "lightModeColors": "Light Mode Overrides",
+      "tabColors": "Colors",
+      "tabTypography": "Typography",
+      "tabShapes": "Shapes",
+      "fontFamilyLabel": "Font Family",
+      "fontFamilyHelp": "Use CSS font stack (e.g. Montserrat, system-ui, sans-serif). Use 'inherit' for system default.",
+      "headingWeight": "Heading Weight",
+      "bodyWeight": "Body Weight",
+      "letterSpacing": "Heading Letter Spacing",
+      "radiusSmall": "Small Radius",
+      "radiusMedium": "Medium Radius",
+      "radiusLarge": "Large Radius",
+      "radiusFull": "Full Radius",
+      "unsavedChanges": "You have unsaved changes",
+      "themeActive": "Theme is active",
+      "noThemeActive": "No custom theme active (using defaults)",
+      "activeTheme": "Active theme",
+      "removeTheme": "Remove theme",
+      "themeRemoved": "Theme removed. Default styling restored.",
+      "licenseRequired": "A valid Sellf Pro license is required to save themes.",
+      "licenseRequiredTitle": "Sellf Pro License Required",
+      "licenseRequiredDesc": "Theme customization requires a valid license. You can preview and configure themes, but saving is disabled.",
+      "previewHeading": "Product Title",
+      "previewBody": "This is how your store will look with this theme applied.",
+      "previewButton": "Buy Now",
+      "previewStatus": "Status colors",
+      "themeNamePlaceholder": "My Custom Theme",
+      "fontFamilyPlaceholder": "Montserrat, system-ui, sans-serif",
+      "letterSpacingPlaceholder": "-0.02em",
+      "demoProTitle": "Theme Editor — PRO Feature",
+      "demoProDesc": "This is a paid feature, unlocked for free in demo mode. Edit themes, pick presets, and see changes live."
     },
     "checkoutTheme": {
-      "title": "Checkout Theme",
-      "description": "Force a specific theme on checkout pages. 'System' follows the customer's device preference.",
+      "title": "Site Theme",
+      "description": "Control which color mode your visitors see on your storefront.",
       "system": "System",
+      "systemDesc": "Visitors see light or dark mode based on their device settings. They can switch freely using the theme toggle.",
       "light": "Light",
+      "lightDesc": "Forces light mode for all visitors. The theme toggle is hidden and visitor preferences are ignored.",
       "dark": "Dark",
-      "saveSuccess": "Checkout theme updated.",
-      "saveError": "Failed to save checkout theme."
+      "darkDesc": "Forces dark mode for all visitors. The theme toggle is hidden and visitor preferences are ignored.",
+      "hint": "Tip: Use Light or Dark if your brand requires a consistent look, e.g. a light storefront to match your website. System gives visitors the choice.",
+      "saveSuccess": "Site theme updated.",
+      "saveError": "Failed to save site theme."
     },
     "legal": {
       "title": "Legal Documents",
@@ -1861,13 +2312,15 @@
       "saving": "Saving...",
       "saveButton": "Save Documents",
       "saveSuccess": "Legal documents configuration saved successfully",
-      "saveError": "Failed to save legal documents configuration"
+      "saveError": "Failed to save legal documents configuration",
+      "termsPlaceholder": "https://example.com/terms-of-service.pdf",
+      "privacyPlaceholder": "https://example.com/privacy-policy.pdf"
     },
     "license": {
-      "title": "GateFlow License",
-      "subtitle": "Remove GateFlow branding from checkout and other pages",
+      "title": "Sellf License",
+      "subtitle": "Remove Sellf branding from checkout and other pages",
       "licenseKey": "License Key",
-      "formatHint": "Format: GF-domain-expiry-signature (e.g., GF-example.com-20271231-MEUCIQDx... or GF-example.com-UNLIMITED-MEUCIQDx...)",
+      "formatHint": "Format: SF-domain-expiry-signature (e.g., SF-example.com-20271231-MEUCIQDx... or SF-example.com-UNLIMITED-MEUCIQDx...)",
       "licenseDetails": "License Details",
       "domain": "Domain",
       "expires": "Expires",
@@ -1880,9 +2333,10 @@
       "saveError": "Failed to save license",
       "howItWorks": "How licensing works",
       "howItWorks1": "The license key is cryptographically signed and verified offline",
-      "howItWorks2": "Valid license removes GateFlow branding from checkout page",
+      "howItWorks2": "Valid license removes Sellf branding from checkout page",
       "howItWorks3": "License is bound to a specific domain",
-      "howItWorks4": "Get a license at"
+      "howItWorks4": "Get a license at",
+      "keyPlaceholder": "SF-yourdomain.com-UNLIMITED-xxxxxxxxxxxx"
     },
     "paymentMethods": {
       "title": "Payment Method Configuration",
@@ -2003,7 +2457,7 @@
         "subtitle": "Configure your Stripe API keys using Restricted API Keys (RAK) for maximum security",
         "whatIsRAK": {
           "title": "What are Restricted API Keys?",
-          "description": "Restricted API Keys (RAK) allow you to grant specific permissions to your application, following the principle of least privilege. Instead of using full access keys, you only grant the permissions GateFlow actually needs.",
+          "description": "Restricted API Keys (RAK) allow you to grant specific permissions to your application, following the principle of least privilege. Instead of using full access keys, you only grant the permissions Sellf actually needs.",
           "recommended": "Recommended by Stripe",
           "recommendedText": "for self-hosted integrations and production environments."
         },
@@ -2022,8 +2476,8 @@
             "description": "We automatically test your key and verify it has all required permissions."
           },
           "rotation": {
-            "title": "Key Rotation Reminders",
-            "description": "Get reminded every 90 days to rotate your keys for security best practices."
+            "title": "Key Rotation Tracking",
+            "description": "Tracks when your key was created so you know when to rotate it (recommended every 90 days)."
           }
         },
         "alternative": {
@@ -2081,9 +2535,9 @@
         },
         "step4": {
           "title": "Set Required Permissions",
-          "description": "Configure the following permissions for GateFlow to work properly:",
+          "description": "Configure the following permissions for Sellf to work properly:",
           "important": "Important",
-          "importantText": "Required permissions are marked with ⚠️. Without these, GateFlow will not function properly."
+          "importantText": "Required permissions are marked with ⚠️. Without these, Sellf will not function properly."
         },
         "step5": {
           "title": "Create & Copy the Key",
@@ -2091,15 +2545,17 @@
           "warning": "The key is only shown once! Make sure to copy it."
         },
         "backButton": "Back",
-        "nextButton": "I've Created the Key"
+        "nextButton": "I've Created the Key",
+        "test": "Test",
+        "live": "Live"
       },
       "step4": {
         "title": "Enter Your API Key",
         "subtitle": "Enter your Stripe API Key (Restricted or Secret Key)",
         "keyTypeInfo": {
           "title": "Choose Your Key Type",
-          "restricted": "More secure, limited permissions. Recommended for production. Requires STRIPE_SECRET_KEY in .env for full functionality.",
-          "secret": "Full access, single key setup. Easier to configure but less secure if leaked. Use for development or if you prefer single-key setup."
+          "restricted": "More secure — only grants permissions Sellf needs. Recommended for production.",
+          "secret": "Full API access. Easier to set up, but less secure if leaked. Fine for development."
         },
         "input": {
           "label": "Stripe API Key",
@@ -2122,7 +2578,7 @@
           "title": "API Key Validated Successfully!",
           "description": "Your key has been verified and all required permissions are granted.",
           "descriptionSecret": "Your Secret Key has been verified with full API access. All payment functionality is now available.",
-          "descriptionRestricted": "Your Restricted Key has been verified. Remember to set STRIPE_SECRET_KEY in .env for full payment functionality."
+          "descriptionRestricted": "Your Restricted Key has been verified with all required permissions."
         },
         "validateButton": {
           "validate": "Validate API Key",
@@ -2148,8 +2604,8 @@
           "description": "Your API key has been encrypted with AES-256-GCM and securely stored in the database."
         },
         "rotation": {
-          "title": "Rotation Reminder Set",
-          "description": "You'll receive a reminder in 90 days to rotate your API key as a security best practice."
+          "title": "Key Rotation",
+          "description": "We recommend rotating your API key every 90 days as a security best practice. You can do this anytime from Settings."
         },
         "nextSteps": {
           "title": "💡 Next Steps",
@@ -2181,7 +2637,10 @@
     "subtitle": "Select the option that best fits your needs",
     "popular": "Most Popular",
     "select": "Select",
-    "securePayment": "Secure payment • Instant access"
+    "securePayment": "Secure payment • Instant access",
+    "loadError": "Failed to load variants",
+    "noVariants": "No variants found",
+    "errorOccurred": "An error occurred"
   },
   "myPurchases": {
     "title": "My Purchases",
@@ -2207,7 +2666,10 @@
     "cancel": "Cancel",
     "submitting": "Submitting...",
     "submitRequest": "Submit Request",
-    "refundedAmount": "Refunded"
+    "refundedAmount": "Refunded",
+    "naLabel": "N/A",
+    "invalidPrice": "Invalid Price",
+    "refundSubmitError": "Failed to submit refund request"
   },
   "refundRequests": {
     "title": "Refund Requests",
@@ -2240,13 +2702,15 @@
     "cancel": "Cancel",
     "processing": "Processing...",
     "confirmApprove": "Approve & Refund",
-    "confirmReject": "Reject Request"
+    "confirmReject": "Reject Request",
+    "naLabel": "N/A",
+    "invalidPrice": "Invalid Price"
   },
   "demo": {
     "banner": "This is a demo instance. Data resets every hour.",
     "bannerWithCountdown": "This is a demo instance. Data resets in {time}.",
     "readonlyNotice": "All changes are read-only — edits will not be saved.",
-    "credentials": "Login: demo@gateflow.io / demo123",
+    "credentials": "Login: demo@sellf.app / demo123",
     "testCard": "Test card: 4242 4242 4242 4242",
     "actionBlocked": "This action is disabled in demo mode.",
     "dismiss": "Dismiss",
@@ -2257,5 +2721,452 @@
     "checkoutTestCardDetails": "any future date, any CVC",
     "resetCountdown": "Data resets in {time}",
     "resetImminent": "Data resetting soon"
+  },
+  "landing": {
+    "nav": {
+      "home": "Home",
+      "products": "Products",
+      "github": "GitHub",
+      "dashboard": "Dashboard",
+      "myProducts": "My Products",
+      "getStarted": "Get Started",
+      "toggleMenu": "Toggle menu"
+    },
+    "hero": {
+      "badge": "Open Source · Self-Hosted · Enterprise-Ready",
+      "headlineTop": "Your Products.",
+      "headlineBottom": "Your Rules.",
+      "metaDescription": "Sell digital products on your own terms. Self-hosted, secure, and fully yours. No monthly fees, no middlemen.",
+      "subtitle": "Sell digital products on your own terms - without giving away revenue to platforms. <selfHosted>Self-hosted</selfHosted>, <secure>secure</secure>, and <yours>fully yours</yours>.",
+      "subtitleSelfHosted": "Self-hosted",
+      "subtitleSecure": "secure",
+      "subtitleYours": "fully yours",
+      "subtitleBottom": "No monthly fees. No middlemen. Complete control from day one.",
+      "ctaDeploy": "Deploy for Free",
+      "ctaDemo": "Try Live Demo",
+      "ctaGithub": "View on GitHub",
+      "trustNoFees": "No monthly fees",
+      "trustOwnData": "Own your data",
+      "trustDeployAnywhere": "Deploy anywhere",
+      "trustSecurity": "Enterprise security"
+    },
+    "socialProof": {
+      "openSource": "Open Source",
+      "monthlyFees": "Monthly Fees",
+      "products": "Products",
+      "license": "License"
+    },
+    "feeComparison": {
+      "title": "See how much you really keep",
+      "subtitle": "Drag the slider to compare platform fees at your revenue level",
+      "monthlyRevenue": "Monthly Revenue",
+      "platformFees": "Platform Fees",
+      "youKeep": "You Keep",
+      "youSave": "You save {amount}/month vs Gumroad",
+      "sellfLabel": "Sellf + Stripe",
+      "sellfFeeNote": "~3.4% (Stripe only)",
+      "gumroadLabel": "Gumroad",
+      "gumroadFeeNote": "10% + 2.9% + $0.30",
+      "paddleLabel": "Paddle",
+      "paddleFeeNote": "5% + 3.5% + $0.30",
+      "lemonLabel": "LemonSqueezy",
+      "lemonFeeNote": "5% + 3.5% + $0.30",
+      "perMonth": "/month",
+      "annualSavings": "Annual savings vs Gumroad: {amount}",
+      "categoryLabel": "PRICING"
+    },
+    "features": {
+      "title": "Everything you need to sell digital products",
+      "subtitle": "Built-in features that other platforms charge hundreds per month for",
+      "dashboard": {
+        "title": "See your revenue at a glance",
+        "desc": "Revenue, sales, and trends in one dashboard. 20+ currencies, sales goals, and performance at your fingertips."
+      },
+      "payments": {
+        "title": "Accept payments everywhere",
+        "desc": "Customers pay without leaving your page. 20+ currencies, guest checkout, bank-level encryption."
+      },
+      "orderBumps": {
+        "title": "Earn 30% more per order",
+        "desc": "Show an extra offer at checkout. Buyer clicks 'Add' and the order value grows 30-50%."
+      },
+      "coupons": {
+        "title": "Run promos that sell",
+        "desc": "Create discount codes and automatic promos. Set usage limits and expiry dates to protect your margins."
+      },
+      "webhooks": {
+        "title": "Connect with your tools",
+        "desc": "Connect Sellf to Zapier, Make, or any tool. Automatic notifications after every sale, with retries on failure."
+      },
+      "leads": {
+        "title": "Build your audience for free",
+        "desc": "Offer a free product and collect emails. Buyers log in with one click from email, no passwords. Then sell them premium content."
+      },
+      "delivery": {
+        "title": "Deliver content your way",
+        "desc": "Serve files for download directly from Sellf, or redirect buyers to your course platform."
+      },
+      "omnibus": {
+        "title": "Stay EU-compliant automatically",
+        "desc": "Sellf automatically tracks price history as required by the Omnibus Directive. Zero manual work."
+      },
+      "saleLimits": {
+        "title": "Create real urgency",
+        "desc": "Set time or quantity limits. Live countdowns motivate faster purchases."
+      },
+      "funnels": {
+        "title": "Turn buyers into repeat customers",
+        "desc": "After purchase, offer the next product or a return coupon. Build a path from first-time buyer to loyal customer."
+      },
+      "refunds": {
+        "title": "Handle refunds without headaches",
+        "desc": "Set refund rules separately for each product. Customer fills a form, you approve with one click."
+      },
+      "gus": {
+        "title": "Auto-fill company data",
+        "desc": "Enter NIP. GUS API auto-fills company data."
+      },
+      "categoryLabel": "FEATURES"
+    },
+    "howItWorks": {
+      "title": "Up and running in 3 steps",
+      "subtitle": "From zero to selling in under 10 minutes",
+      "step1": {
+        "title": "Deploy",
+        "desc": "Clone the repo and deploy to any VPS or cloud provider. Docker or PM2, your choice."
+      },
+      "step2": {
+        "title": "Connect Stripe",
+        "desc": "Add your Stripe API keys. Payments go directly to your account. No middlemen."
+      },
+      "step3": {
+        "title": "Start Selling",
+        "desc": "Create products, set prices, share links. Your store is live."
+      },
+      "categoryLabel": "QUICK START"
+    },
+    "demo": {
+      "title": "See it in action",
+      "subtitle": "Explore the full admin panel, test checkout with Stripe test cards, and browse sample products. No setup required.",
+      "cta": "Try Live Demo",
+      "stripeTestMode": "Stripe test mode, no real charges"
+    },
+    "tax": {
+      "title": "Your Stripe account, your money",
+      "subtitle": "Merchant of Record platforms charge 5-10% and your customer data lives on their platform. With Sellf, payments go directly to your Stripe account.",
+      "morTitle": "Merchant of Record",
+      "morSubtitle": "Paddle, LemonSqueezy, Gumroad",
+      "morPlatformFees": "Platform fees",
+      "morFeeAmount": "5–10%",
+      "morDataOwnership": "Customer data belongs to the platform",
+      "morPlatformRisk": "Platform risk: account freezes, shutdowns",
+      "sellfTitle": "Sellf + Own Stripe",
+      "sellfSubtitle": "Direct payments to your account",
+      "sellfPlatformFees": "Platform fees",
+      "sellfFeeAmount": "$0",
+      "sellfStripeFees": "Only Stripe fees",
+      "sellfStripeAmount": "~2.9%",
+      "sellfDataOwnership": "You own all customer data",
+      "sellfTaxThresholds": "You use your own tax thresholds",
+      "sellfSelfHosted": "Self-hosted. No platform risk",
+      "taxGrowthTitle": "Tax compliance grows with your business",
+      "taxStep1Title": "Starting out",
+      "taxStep1Desc": "Below €10,000 EU cross-border sales. Handle VAT in your own country only",
+      "taxStep2Title": "Growing",
+      "taxStep2Desc": "Above €10,000. Register for EU OSS (one form) and add Stripe Tax (+0.5%) for automatic VAT calculation",
+      "taxStep3Title": "Scaling",
+      "taxStep3Desc": "Optional: Stripe Managed Payments (Stripe as MoR) or a tax accountant for full compliance",
+      "taxDisclaimer": "This is general information, not tax or legal advice. Tax obligations vary by country and business type. Consult a qualified tax professional for your specific situation.",
+      "recommended": "Recommended",
+      "categoryLabel": "PAYMENTS"
+    },
+    "selfHosted": {
+      "title": "Deploy anywhere, your way",
+      "subtitle": "From $3/month VPS for hobbyists to production-ready infrastructure",
+      "quickStart": {
+        "title": "Quick Start",
+        "subtitle": "mikr.us (free SSL) or any VPS + Caddy",
+        "pm2": "PM2 process manager",
+        "ssl": "Auto SSL included",
+        "supabase": "Supabase Cloud",
+        "price": "~$3/mo",
+        "ram": "~300MB RAM footprint"
+      },
+      "production": {
+        "badge": "RECOMMENDED",
+        "title": "Production",
+        "subtitle": "Best price/performance ratio",
+        "pm2": "PM2 or Docker",
+        "db": "Managed database",
+        "deploy": "Zero-downtime deploys",
+        "price": "~$4-14/mo",
+        "specs": "2-core CPU, 8GB RAM, 100GB NVMe"
+      },
+      "demoPrompt": "Want to see it in action first?",
+      "demoPromptSubtitle": "Explore the full admin panel, test checkout with Stripe test cards, and browse sample products. No setup required.",
+      "demoCta": "Try Live Demo",
+      "guideCta": "View deployment guides",
+      "categoryLabel": "DEPLOYMENT"
+    },
+    "techStack": {
+      "title": "Built on technology you can trust",
+      "subtitle": "Reliable, proven tools for performance, security, and growth",
+      "nextjs": {
+        "name": "Next.js 16",
+        "desc": "React framework with Turbopack"
+      },
+      "typescript": {
+        "name": "TypeScript",
+        "desc": "Type-safe development"
+      },
+      "supabase": {
+        "name": "Supabase",
+        "desc": "PostgreSQL + Auth + Realtime"
+      },
+      "tailwind": {
+        "name": "Tailwind CSS",
+        "desc": "Utility-first styling"
+      },
+      "stripe": {
+        "name": "Stripe",
+        "desc": "Payment processing"
+      },
+      "docker": {
+        "name": "Docker",
+        "desc": "Containerization"
+      },
+      "postgresql": {
+        "name": "PostgreSQL",
+        "desc": "Reliable database"
+      },
+      "bunny": {
+        "name": "Bunny.net",
+        "desc": "CDN & Video hosting"
+      },
+      "viewStack": "View full tech stack on GitHub",
+      "categoryLabel": "TECHNOLOGY"
+    },
+    "useCases": {
+      "title": "Built for creators, developers, and entrepreneurs",
+      "subtitle": "Whatever you sell, Sellf handles it",
+      "courses": {
+        "title": "Online Courses",
+        "desc": "Share video courses with time-limited access. Simple and effective content delivery.",
+        "feature1": "Video progress tracking (Coming Soon)",
+        "feature2": "Access for 30 or 90 days",
+        "feature3": "Fast video via Bunny.net"
+      },
+      "digital": {
+        "title": "Digital Products",
+        "desc": "Sell ebooks, templates, software licenses, or files. Better than Gumroad with zero commission.",
+        "feature1": "Instant delivery",
+        "feature2": "Unlimited products",
+        "feature3": "Coupon system"
+      },
+      "leads": {
+        "title": "Free Products & Sales Funnels",
+        "desc": "A free ebook collects emails, then you sell a premium course. One-click login from email, no passwords.",
+        "feature1": "Free products to collect contacts",
+        "feature2": "No forms, no passwords needed",
+        "feature3": "All in one database"
+      },
+      "categoryLabel": "USE CASES"
+    },
+    "donate": {
+      "title": "Support Open Source",
+      "subtitle": "Sellf is free and always will be. If it saves you money, consider supporting development.",
+      "cta": "Buy Us a Coffee",
+      "note": "Every contribution helps us ship new features faster."
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "items": [
+        {
+          "q": "Is it really free? What's the catch?",
+          "a": "Yes. The software is free forever (MIT license). You pay only for hosting ($3-14/mo) and Stripe processing (~2.9%). No platform fees, no subscriptions, no lock-in."
+        },
+        {
+          "q": "I already use Gumroad. Why should I switch?",
+          "a": "Gumroad takes 10% per sale. Teachable charges $39-665/mo. Sellf is free - you self-host it, own the code and data. The only cost is Stripe's processing fee."
+        },
+        {
+          "q": "I'm not a developer. Can I still set this up?",
+          "a": "Yes. If you can follow step-by-step instructions and type a few SSH commands, you can deploy Sellf. We provide Docker configs and detailed guides."
+        },
+        {
+          "q": "How much will I actually pay per sale?",
+          "a": "Only Stripe's processing fee: ~2.9% + 30¢ per transaction. No platform fees on top. MoR platforms charge 5-10% total - significantly more."
+        },
+        {
+          "q": "Can I customize it to match my brand?",
+          "a": "Yes. MIT license - change everything: branding, colors, domain, code. It's fully your platform."
+        },
+        {
+          "q": "Is it secure enough for real customers?",
+          "a": "Yes. Next.js + PostgreSQL + Supabase with RLS policies, HMAC webhooks, AES-256 key encryption, and input validation out of the box."
+        },
+        {
+          "q": "What if I get stuck during setup?",
+          "a": "Check the docs and GitHub issues. Any Next.js developer can customize or extend it for you."
+        },
+        {
+          "q": "Will it handle my traffic if I scale?",
+          "a": "Yes. Next.js 16 + PostgreSQL scale horizontally. Deploy on anything from a $3 VPS to Kubernetes. Supabase handles connection pooling."
+        },
+        {
+          "q": "Do I need a Merchant of Record?",
+          "a": "Most small creators don't. MoR platforms handle taxes but take 5-10% and tie your customer data to their platform. Below €10,000 EU cross-border, you handle VAT only in your country. Own Stripe = full control at ~2.9%. Add Stripe Tax (+0.5%) when you grow."
+        },
+        {
+          "q": "How do I handle VAT and taxes?",
+          "a": "Below €10,000/year EU cross-border B2C - handle VAT in your country only. Above that - register EU OSS (one form, all countries). Stripe Tax automates calculation for 0.5%. Consult a tax professional for your case."
+        }
+      ],
+      "githubIssues": "GitHub Issues →"
+    },
+    "finalCta": {
+      "title": "Ready to Start?",
+      "subtitle": "Deploy Sellf in 10 minutes. Start selling without monthly fees.",
+      "ctaDeploy": "Deploy for Free",
+      "ctaGithub": "View on GitHub",
+      "trust10min": "10-minute deployment",
+      "trustSourceCode": "Full source code",
+      "trustMIT": "MIT License"
+    },
+    "footer": {
+      "description": "Open source platform for digital product sales. Self-hosted, secure, and fully customizable.",
+      "product": "Product",
+      "features": "Features",
+      "documentation": "Documentation",
+      "products": "Products",
+      "resources": "Resources",
+      "github": "GitHub",
+      "deployGuide": "Deploy Guide",
+      "support": "Support",
+      "legal": "Legal",
+      "licenseMIT": "License (MIT)",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "copyright": "© {year} Sellf. Open source and self-hosted"
+    }
+  },
+  "notFound": {
+    "adminTitle": "Admin Gate Locked",
+    "adminDescription": "Even admins can't access pages that don't exist.",
+    "adminAction": "Return to Dashboard",
+    "userTitle": "Page Not Found",
+    "userDescription": "This page might be restricted or doesn't exist.",
+    "userAction": "Back to Dashboard",
+    "guestTitle": "Page Not Found",
+    "guestDescription": "This page doesn't exist or requires authentication.",
+    "guestAction": "Get Access",
+    "goBack": "Go Back",
+    "linkDashboard": "Dashboard",
+    "linkProducts": "Products",
+    "linkUsers": "Users",
+    "linkAccount": "Account",
+    "linkLogin": "Login",
+    "linkHome": "Home",
+    "linkLearnMore": "Learn More"
+  },
+  "legalPages": {
+    "privacy": {
+      "title": "Privacy Policy",
+      "configRequired": "Configuration Required",
+      "configDescription": "To display Privacy Policy, configure the URL in one of these ways:",
+      "option1Title": "Option 1: Admin Panel (Recommended)",
+      "option1Description": "Go to Settings → Legal Documents and enter your Privacy Policy URL.",
+      "option2Title": "Option 2: Environment Variable",
+      "option2EnvVar": "PRIVACY_POLICY_URL=https://example.com/privacy.pdf",
+      "urlHelp": "The URL should point to your complete Privacy Policy document (PDF, webpage, etc.)."
+    },
+    "terms": {
+      "title": "Terms of Service",
+      "configRequired": "Configuration Required",
+      "configDescription": "To display Terms of Service, configure the URL in one of these ways:",
+      "option1Title": "Option 1: Admin Panel (Recommended)",
+      "option1Description": "Go to Settings → Legal Documents and enter your Terms of Service URL.",
+      "option2Title": "Option 2: Environment Variable",
+      "option2EnvVar": "TERMS_OF_SERVICE_URL=https://example.com/terms.pdf",
+      "urlHelp": "The URL should point to your complete Terms of Service document (PDF, webpage, etc.)."
+    }
+  },
+  "payment": {
+    "error": {
+      "title": "Payment Failed",
+      "paymentFailed": "Your payment could not be processed. Please check your payment details and try again.",
+      "sessionNotFound": "Payment session not found. Please try starting the purchase process again.",
+      "cancelled": "Payment was cancelled. You can try again anytime.",
+      "genericError": "An error occurred during payment processing. Please try again.",
+      "tryAgain": "Try Again",
+      "goHome": "Go Home"
+    },
+    "success": {
+      "title": "Payment Successful!",
+      "description": "Your payment has been processed successfully. You now have access to your purchased product."
+    }
+  },
+  "digitalContent": {
+    "invalidVideoUrl": "Invalid Video URL",
+    "trustedPlatformsOnly": "Only trusted video platforms are allowed",
+    "unableToParseUrl": "Unable to parse video URL. Please check the format.",
+    "securityEmbedDisabled": "SECURITY: Raw HTML embed disabled for security reasons",
+    "useIframeInstead": "Use iframe embed_url instead for secure content embedding",
+    "invalidUrl": "Invalid URL",
+    "download": "Download",
+    "hostedVideoComingSoon": "Self-hosted video feature coming soon",
+    "hostedFileComingSoon": "Self-hosted file feature coming soon",
+    "noContent": "No Content Available",
+    "noContentMessage": "No digital content has been configured for this product yet.",
+    "sectionTitle": "Digital Content",
+    "accessYourContent": "Access your {productName} content below"
+  },
+  "consent": {
+    "modal": {
+      "title": "We use cookies",
+      "description": "We use cookies to improve your experience and analyze traffic."
+    },
+    "purposes": {
+      "analytics": "Analytics",
+      "marketing": "Marketing"
+    }
+  },
+  "systemUpdate": {
+    "modal": {
+      "title": "New version available: v{version}",
+      "currentVersion": "Current version: v{version}",
+      "published": "Published {date}",
+      "whatsNew": "What's new:",
+      "backupWarning": "We recommend backing up your database before upgrading.",
+      "upgradeNow": "Upgrade now",
+      "remindLater": "Remind me later"
+    },
+    "progress": {
+      "title": "Upgrading to v{version}",
+      "starting": "Initiating upgrade...",
+      "done": "Upgrade complete!",
+      "failed": "Upgrade failed",
+      "rolledBack": "The previous version has been automatically restored.",
+      "doNotClose": "Do not close this page during the upgrade.",
+      "reload": "Reload page",
+      "close": "Close"
+    },
+    "steps": {
+      "checking": "Checking latest release",
+      "downloading": "Downloading new version",
+      "backingUp": "Creating backup",
+      "extracting": "Extracting files",
+      "migrating": "Running database migrations",
+      "restarting": "Restarting server"
+    },
+    "settings": {
+      "title": "System Update",
+      "currentVersion": "Current version",
+      "checkForUpdates": "Check for updates",
+      "checking": "Checking...",
+      "upToDate": "You are running the latest version.",
+      "updateAvailable": "Version {version} is available.",
+      "upgradeNow": "Upgrade now"
+    }
   }
 }

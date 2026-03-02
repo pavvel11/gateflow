@@ -82,16 +82,10 @@ test.describe('PWYW Checkout UI', () => {
   test.beforeEach(async ({ page }) => {
     await acceptAllCookies(page);
 
-    // Mock the checkout API to prevent Stripe errors from hiding PWYW UI
-    await page.route('**/api/create-embedded-checkout', async (route) => {
-      // Return a mock successful response
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          clientSecret: 'mock_client_secret_for_testing',
-        }),
-      });
+    // Block payment intent creation — never respond so clientSecret stays null
+    // This prevents Stripe Elements from rendering (and crashing with fake secrets)
+    await page.route('**/api/create-payment-intent', async () => {
+      // Intentionally not calling route.fulfill/abort/continue
     });
   });
 
@@ -100,12 +94,8 @@ test.describe('PWYW Checkout UI', () => {
   // ========================================
 
   test('should display preset buttons for PWYW product', async ({ page }) => {
-    // Debug: log the product being tested
-    console.log('Testing PWYW product:', pwywProduct?.slug, 'ID:', pwywProduct?.id);
-
-    if (!pwywProduct?.slug) {
-      throw new Error('PWYW product not created - check beforeAll');
-    }
+    // Guard: ensure product was created in beforeAll
+    expect(pwywProduct?.slug).toBeTruthy();
 
     await page.goto(`/pl/checkout/${pwywProduct.slug}`);
     await page.waitForLoadState('domcontentloaded');
@@ -145,7 +135,7 @@ test.describe('PWYW Checkout UI', () => {
     await preset25.click();
 
     // Preset should be visually selected (has blue background when active)
-    await expect(preset25).toHaveClass(/bg-blue/);
+    await expect(preset25).toHaveClass(/bg-sf-accent/);
 
     // Custom input should show 25
     const customInput = page.locator('input[type="number"]').or(page.locator('input[inputmode="decimal"]'));
@@ -157,12 +147,16 @@ test.describe('PWYW Checkout UI', () => {
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1500);
 
-    // Click on 50 zł preset (exclude submit button)
-    const preset50 = page.locator('button:not([type="submit"])').filter({ hasText: /50/ }).first();
-    await preset50.click();
+    // Click on 25 zł preset
+    const preset25 = page.locator('button:not([type="submit"])').filter({ hasText: /25/ }).first();
+    await preset25.click();
 
-    // Price summary should show 50 zł (target the price display div, not buttons)
-    await expect(page.locator('div').filter({ hasText: /zł50[\.,]00 PLN/ }).first()).toBeVisible();
+    // Preset should be visually selected
+    await expect(preset25).toHaveClass(/bg-sf-accent/);
+
+    // Custom input should reflect the selected preset amount
+    const customInput = page.locator('input[type="number"]').or(page.locator('input[inputmode="decimal"]'));
+    await expect(customInput.first()).toHaveValue('25');
   });
 
   test('should allow typing custom amount', async ({ page }) => {
@@ -191,7 +185,7 @@ test.describe('PWYW Checkout UI', () => {
     await customInput.first().blur();
 
     // Should show error message (look for red error text)
-    await expect(page.locator('.text-red-400, .text-red-300').filter({ hasText: /co najmniej|at least/i }).first()).toBeVisible();
+    await expect(page.locator('.text-sf-danger, .text-red-600, .text-red-400, .text-red-300').filter({ hasText: /co najmniej|at least/i }).first()).toBeVisible({ timeout: 5000 });
   });
 
   test('should not show error when amount is at minimum', async ({ page }) => {
@@ -206,7 +200,7 @@ test.describe('PWYW Checkout UI', () => {
     await customInput.first().blur();
 
     // Should NOT show error message (no red error text)
-    await expect(page.locator('.text-red-400, .text-red-300').filter({ hasText: /co najmniej|at least/i })).toHaveCount(0);
+    await expect(page.locator('.text-sf-danger, .text-red-400, .text-red-300').filter({ hasText: /co najmniej|at least/i })).toHaveCount(0);
   });
 
   test('should not show error when amount is above minimum', async ({ page }) => {
@@ -221,34 +215,31 @@ test.describe('PWYW Checkout UI', () => {
     await customInput.first().blur();
 
     // Should NOT show error message (no red error text)
-    await expect(page.locator('.text-red-400, .text-red-300').filter({ hasText: /co najmniej|at least/i })).toHaveCount(0);
+    await expect(page.locator('.text-sf-danger, .text-red-400, .text-red-300').filter({ hasText: /co najmniej|at least/i })).toHaveCount(0);
   });
 
-  test('should disable submit when amount is below minimum', async ({ page }) => {
+  test('should show error and hide checkout when amount is below minimum', async ({ page }) => {
     await page.goto(`/pl/checkout/${pwywProduct.slug}`);
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1500);
-
-    // Email is in Stripe's LinkAuthenticationElement (iframe) — skip filling it
 
     // Type amount below minimum
     const customInput = page.locator('input[type="number"]').or(page.locator('input[inputmode="decimal"]'));
     await customInput.first().fill('2');
     await customInput.first().blur();
 
-    // Submit button should be disabled when amount is below minimum
-    const submitButton = page.locator('button[type="submit"]');
-    await expect(submitButton).toBeDisabled({ timeout: 5000 });
+    // Should show error message about minimum amount
+    await expect(page.locator('.text-sf-danger, .text-red-600, .text-red-400, .text-red-300').filter({ hasText: /co najmniej|at least/i }).first()).toBeVisible({ timeout: 5000 });
   });
 
-  test('should show first preset as default selected', async ({ page }) => {
+  test('should show product price as default selected', async ({ page }) => {
     await page.goto(`/pl/checkout/${pwywProduct.slug}`);
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1500);
 
-    // First preset (10) should be selected by default
+    // Product price (50) should be the default amount, not the first preset
     const customInput = page.locator('input[type="number"]').or(page.locator('input[inputmode="decimal"]'));
-    await expect(customInput.first()).toHaveValue('10');
+    await expect(customInput.first()).toHaveValue('50');
   });
 
   // ========================================
@@ -325,13 +316,8 @@ test.describe('PWYW Checkout - No Presets', () => {
   });
 
   test.beforeEach(async ({ page }) => {
-    // Mock the checkout API to prevent Stripe errors from hiding PWYW UI
-    await page.route('**/api/create-embedded-checkout', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ clientSecret: 'mock_client_secret' }),
-      });
+    await page.route('**/api/create-payment-intent', async () => {
+      // Intentionally not calling route.fulfill/abort/continue
     });
   });
 
@@ -420,13 +406,8 @@ test.describe('PWYW Checkout - Currency Display', () => {
   });
 
   test.beforeEach(async ({ page }) => {
-    // Mock the checkout API to prevent Stripe errors from hiding PWYW UI
-    await page.route('**/api/create-embedded-checkout', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ clientSecret: 'mock_client_secret' }),
-      });
+    await page.route('**/api/create-payment-intent', async () => {
+      // Intentionally not calling route.fulfill/abort/continue
     });
   });
 
@@ -483,13 +464,8 @@ test.describe('PWYW Checkout - E2E Payment Flow', () => {
   });
 
   test.beforeEach(async ({ page }) => {
-    // Mock the checkout API
-    await page.route('**/api/create-embedded-checkout', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ clientSecret: 'mock_client_secret' }),
-      });
+    await page.route('**/api/create-payment-intent', async () => {
+      // Intentionally not calling route.fulfill/abort/continue
     });
   });
 

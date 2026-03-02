@@ -37,7 +37,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
 
   test('Admin can view payment method configuration settings', async ({ page }) => {
     // Navigate to settings page
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Verify Payment Method Configuration section exists
@@ -51,7 +51,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('Admin can select automatic mode', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Select automatic mode
@@ -74,7 +74,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('Admin can select stripe preset mode', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Select Stripe preset mode
@@ -92,7 +92,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('Admin can select custom mode and enable payment methods', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Select custom mode
@@ -102,11 +102,12 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     // Verify payment methods list appears
     await expect(page.locator('text=Wybierz Metody Płatności')).toBeVisible();
 
-    // Enable Card (should be visible)
+    // Enable Card (should be visible) — ensure it ends up checked
     const cardCheckbox = page.locator('input[type="checkbox"]').first();
     if (!(await cardCheckbox.isChecked())) {
       await cardCheckbox.check();
     }
+    await expect(cardCheckbox).toBeChecked();
 
     // Verify payment method order section appears when methods are enabled
     // (This might be async, so wait a bit)
@@ -123,7 +124,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('E2E-ADMIN-003: Complete custom mode setup with drag & drop', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Select custom mode
@@ -138,18 +139,21 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     if (!(await cardCheckbox.isChecked())) {
       await cardCheckbox.check();
     }
+    await expect(cardCheckbox).toBeChecked();
 
     // Enable BLIK
     const blikCheckbox = page.locator('label:has-text("BLIK")').locator('input[type="checkbox"]');
     if (!(await blikCheckbox.isChecked())) {
       await blikCheckbox.check();
     }
+    await expect(blikCheckbox).toBeChecked();
 
     // Enable Przelewy24
     const p24Checkbox = page.locator('label:has-text("Przelewy24")').locator('input[type="checkbox"]');
     if (!(await p24Checkbox.isChecked())) {
       await p24Checkbox.check();
     }
+    await expect(p24Checkbox).toBeChecked();
 
     await page.waitForTimeout(1000);
 
@@ -170,7 +174,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('E2E-ADMIN-004: Refresh Stripe PMCs', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Select Stripe preset mode
@@ -187,11 +191,13 @@ test.describe('Payment Method Configuration - Admin UI', () => {
 
       // Wait for refresh to complete (spinner should appear and disappear)
       await page.waitForTimeout(1000);
+    } else {
+      expect(false, 'Refresh button should be visible in Stripe preset mode').toBeTruthy();
     }
   });
 
   test('E2E-ADMIN-005: Express Checkout configuration', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Find Express Checkout section
@@ -205,6 +211,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     if (!(await masterToggle.isChecked())) {
       await masterToggle.check();
     }
+    await expect(masterToggle).toBeChecked();
 
     await page.waitForTimeout(500);
 
@@ -217,6 +224,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     if (await applePayCheckbox.isChecked()) {
       await applePayCheckbox.uncheck();
     }
+    await expect(applePayCheckbox).not.toBeChecked();
 
     // Save configuration
     const saveButton = page.locator('button:has-text("Zapisz Konfigurację")');
@@ -236,7 +244,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('E2E-ADMIN-006: Mode transition automatic → custom', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Start with automatic mode
@@ -260,6 +268,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     if (!(await cardCheckbox.isChecked())) {
       await cardCheckbox.check();
     }
+    await expect(cardCheckbox).toBeChecked();
 
     // Save
     await saveButton.click();
@@ -276,7 +285,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('E2E-ADMIN-007: Mode transition custom → automatic', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Start with custom mode
@@ -289,6 +298,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     if (!(await cardCheckbox.isChecked())) {
       await cardCheckbox.check();
     }
+    await expect(cardCheckbox).toBeChecked();
 
     const saveButton = page.locator('button:has-text("Zapisz Konfigurację")');
     await saveButton.click();
@@ -314,7 +324,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('E2E-ADMIN-008: Reset configuration', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Make some changes without saving
@@ -334,7 +344,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('E2E-ADMIN-009: Validation error - Custom no methods', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Select custom mode
@@ -346,6 +356,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     // Make sure no payment methods are enabled (uncheck all visible checkboxes)
     const checkboxes = page.locator('input[type="checkbox"]:visible');
     const count = await checkboxes.count();
+    expect(count).toBeGreaterThan(0);
 
     for (let i = 0; i < count; i++) {
       const checkbox = checkboxes.nth(i);
@@ -366,7 +377,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('E2E-ADMIN-010: Validation error - Stripe no PMC', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
     // Select Stripe preset mode
@@ -395,7 +406,7 @@ test.describe('Payment Method Configuration - Security', () => {
     // Don't call setupAdminAuth - simulate non-admin or unauthenticated user
 
     // Try to access settings page directly
-    await page.goto('/dashboard/settings');
+    await page.goto('/pl/dashboard/settings');
 
     // Wait for redirect or page load (shorter timeout, don't require networkidle)
     await page.waitForLoadState('domcontentloaded');
@@ -413,6 +424,6 @@ test.describe('Payment Method Configuration - Security', () => {
                                     await page.locator('text=Brak dostępu').isVisible().catch(() => false);
 
     // Either redirected to login OR shows unauthorized message
-    expect(isLoginPage || hasUnauthorizedMessage).toBeTruthy();
+    expect(isLoginPage || hasUnauthorizedMessage, `Expected redirect to login or unauthorized message, but got URL: ${url}`).toBeTruthy();
   });
 });

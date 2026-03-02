@@ -39,7 +39,7 @@ export function withAdminAuth<T extends object>(Component: React.ComponentType<T
     if (error) {
       return (
         <div className="min-h-screen flex items-center justify-center">
-          <div className="bg-red-50 p-4 rounded-lg border border-red-200 max-w-md">
+          <div className="bg-red-50 p-4 border border-red-200 max-w-md">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -60,7 +60,7 @@ export function withAdminAuth<T extends object>(Component: React.ComponentType<T
     if (loading || !user || !isAdmin) {
       return (
         <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500"></div>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-sf-accent"></div>
         </div>
       )
     }

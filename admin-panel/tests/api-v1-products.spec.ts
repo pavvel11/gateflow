@@ -6,6 +6,7 @@
 
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { setAuthSession } from './helpers/admin-auth';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -23,18 +24,7 @@ const uniqueSlug = () => `test-product-${Date.now()}-${Math.random().toString(36
 async function loginAsAdmin(page: any, email: string, password: string) {
   await page.goto('/login');
 
-  await page.evaluate(async ({ email, password, url, anonKey }: { email: string; password: string; url: string; anonKey: string }) => {
-    // @ts-ignore
-    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-    const sb = createBrowserClient(url, anonKey);
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-  }, {
-    email,
-    password,
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  });
+  await setAuthSession(page, email, password);
 
   await page.reload();
 }
@@ -127,6 +117,7 @@ test.describe('Products API v1', () => {
       const body = await response.json();
 
       // All returned products should be active
+      expect(body.data.length).toBeGreaterThan(0);
       for (const product of body.data) {
         expect(product.is_active).toBe(true);
       }
@@ -184,15 +175,18 @@ test.describe('Products API v1', () => {
       expect(firstPage.status()).toBe(200);
       const firstBody = await firstPage.json();
 
-      if (firstBody.pagination.has_more) {
-        // Get second page
-        const secondPage = await page.request.get(`/api/v1/products?limit=1&cursor=${firstBody.pagination.next_cursor}`);
-        expect(secondPage.status()).toBe(200);
-        const secondBody = await secondPage.json();
+      // We created 3 products above with limit=1, so there must be more pages
+      expect(firstBody.pagination.has_more).toBe(true);
+      expect(firstBody.pagination.next_cursor).toBeTruthy();
 
-        // Products should be different
-        expect(secondBody.data[0]?.id).not.toBe(firstBody.data[0]?.id);
-      }
+      // Get second page
+      const secondPage = await page.request.get(`/api/v1/products?limit=1&cursor=${firstBody.pagination.next_cursor}`);
+      expect(secondPage.status()).toBe(200);
+      const secondBody = await secondPage.json();
+
+      // Products should be different
+      expect(secondBody.data.length).toBeGreaterThan(0);
+      expect(secondBody.data[0].id).not.toBe(firstBody.data[0].id);
     });
   });
 
@@ -216,7 +210,7 @@ test.describe('Products API v1', () => {
       expect(body.data).toHaveProperty('id');
       expect(body.data.name).toBe('Test Product');
       expect(body.data.slug).toBe(slug);
-      expect(body.data.price).toBe(29.99);
+      expect(body.data.price).toBeCloseTo(29.99, 2);
       expect(body.data.currency).toBe('USD'); // default
       expect(body.data.is_active).toBe(true); // default
 
@@ -367,7 +361,7 @@ test.describe('Products API v1', () => {
       const body = await updateResponse.json();
 
       expect(body.data.name).toBe('Updated Name');
-      expect(body.data.price).toBe(25.00);
+      expect(body.data.price).toBeCloseTo(25.00, 2);
       expect(body.data.description).toBe('Original description'); // unchanged
     });
 

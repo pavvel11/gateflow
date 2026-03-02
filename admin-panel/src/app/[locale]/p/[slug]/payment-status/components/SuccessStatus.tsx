@@ -15,11 +15,11 @@ export default function SuccessStatus({
 
   return (
     <>
-      <p className="text-gray-300 mb-6">
+      <p className="text-sf-body mb-6">
         {t('accessGrantedToProduct', { productName: product.name })}
       </p>
-      <div className="text-6xl font-bold text-white tabular-nums">{countdown}</div>
-      <p className="text-gray-400 mt-2">{t('redirectingToProduct')}</p>
+      <div className="text-6xl font-bold text-sf-heading tabular-nums">{countdown}</div>
+      <p className="text-sf-muted mt-2">{t('redirectingToProduct')}</p>
     </>
   );
 }

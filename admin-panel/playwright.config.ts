@@ -19,8 +19,19 @@ dotenv.config({ path: path.resolve(__dirname, '.env.local') });
  *   npx playwright test --project=chromium
  *   RATE_LIMIT_TEST_MODE=true npx playwright test --project=rate-limiting
  *   RATE_LIMIT_TEST_MODE=true npx playwright test --project=rate-limiting-v1
+ *
+ * Visual testing (screenshots at multiple viewports):
+ *   npx playwright test --project=visual-mobile --project=visual-tablet --project=visual-wide
+ *   bun run test:visual          # all visual projects
+ *   bun run test:visual:review   # capture + AI review
  */
 const isRateLimitTestMode = process.env.RATE_LIMIT_TEST_MODE === 'true';
+const quietMode = process.env.QUIET_MODE === '1';
+
+// Visual test projects run a subset of tests at different viewports with screenshots
+const VISUAL_TESTS = [
+  '**/visual-pages.spec.ts',
+];
 
 export default defineConfig({
   testDir: './tests',
@@ -34,8 +45,8 @@ export default defineConfig({
   retries: 1,
   /* Use single worker for test stability (avoids race conditions with shared database) */
   workers: 1,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'list',
+  /* Reporter: 'dot' in quiet mode (ttt/tttt), 'list' otherwise */
+  reporter: quietMode ? 'dot' : 'list',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -50,9 +61,8 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      // Rate-limiting tests are excluded here — they run in separate projects
-      // with RATE_LIMIT_TEST_MODE=true (see ttt/tttt scripts in package.json)
-      testIgnore: ['**/rate-limiting.spec.ts', '**/rate-limiting-v1.spec.ts'],
+      // Rate-limiting, visual, and accessibility tests are excluded here
+      testIgnore: ['**/rate-limiting.spec.ts', '**/rate-limiting-v1.spec.ts', '**/accessibility.spec.ts'],
     },
     {
       name: 'rate-limiting',
@@ -63,6 +73,70 @@ export default defineConfig({
       name: 'rate-limiting-v1',
       use: { ...devices['Desktop Chrome'] },
       testMatch: '**/rate-limiting-v1.spec.ts',
+    },
+
+    // Accessibility testing — WCAG 2.x AA via axe-core
+    {
+      name: 'accessibility',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: '**/accessibility.spec.ts',
+    },
+
+    // Visual testing projects — run subset of tests at different viewports with screenshots
+    // Usage: npx playwright test --project=visual-mobile --project=visual-tablet --project=visual-wide
+    {
+      name: 'visual-mobile',
+      use: {
+        viewport: { width: 375, height: 812 },
+        screenshot: 'on',
+      },
+      testMatch: VISUAL_TESTS,
+      outputDir: './screenshots/mobile',
+    },
+    {
+      name: 'visual-tablet',
+      use: {
+        viewport: { width: 768, height: 1024 },
+        screenshot: 'on',
+      },
+      testMatch: VISUAL_TESTS,
+      outputDir: './screenshots/tablet',
+    },
+    {
+      name: 'visual-laptop',
+      use: {
+        viewport: { width: 1366, height: 768 },
+        screenshot: 'on',
+      },
+      testMatch: VISUAL_TESTS,
+      outputDir: './screenshots/laptop',
+    },
+    {
+      name: 'visual-wide',
+      use: {
+        viewport: { width: 1920, height: 1080 },
+        screenshot: 'on',
+      },
+      testMatch: VISUAL_TESTS,
+      outputDir: './screenshots/wide',
+    },
+    {
+      name: 'visual-qhd',
+      use: {
+        viewport: { width: 2560, height: 1440 },
+        screenshot: 'on',
+      },
+      testMatch: VISUAL_TESTS,
+      outputDir: './screenshots/qhd',
+    },
+    {
+      name: 'visual-4k',
+      use: {
+        viewport: { width: 3840, height: 2160 },
+        screenshot: 'on',
+      },
+      testMatch: VISUAL_TESTS,
+      outputDir: './screenshots/4k',
     },
   ],
 
@@ -75,16 +149,16 @@ export default defineConfig({
       url: 'http://localhost:3000',
       // Don't reuse existing server for rate-limit tests (need fresh server with env var)
       reuseExistingServer: isRateLimitTestMode ? false : !process.env.CI,
-      stdout: 'pipe',
-      stderr: 'pipe',
+      stdout: quietMode ? 'ignore' : 'pipe',
+      stderr: quietMode ? 'ignore' : 'pipe',
       timeout: 60000,
     },
     {
       command: 'npx http-server ../examples/test-pages -p 3002 --cors -c-1',
       url: 'http://localhost:3002',
       reuseExistingServer: !process.env.CI,
-      stdout: 'pipe',
-      stderr: 'pipe',
+      stdout: quietMode ? 'ignore' : 'pipe',
+      stderr: quietMode ? 'ignore' : 'pipe',
       timeout: 30000,
     },
   ],

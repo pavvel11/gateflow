@@ -23,6 +23,7 @@ export async function createClient() {
               // For cross-origin support in production, use SameSite=None; Secure
               cookieStore.set(name, value, {
                 ...(options as object),
+                httpOnly: true,
                 sameSite: isProduction ? 'none' : ((options?.sameSite as 'lax' | 'strict' | 'none' | undefined) ?? 'lax'),
                 secure: isProduction ? true : ((options?.secure as boolean | undefined) ?? false),
               })

@@ -23,7 +23,7 @@ describe('Integrations Validation', () => {
         facebook_pixel_id: '1234567890',
         umami_website_id: '550e8400-e29b-41d4-a716-446655440000',
         umami_script_url: 'https://analytics.example.com/script.js',
-        gateflow_license: 'GF-example.com-UNLIMITED-abc123XYZ',
+        sellf_license: 'SF-example.com-UNLIMITED-abc123XYZ',
       };
       const result = validateIntegrations(input);
       expect(result.isValid).toBe(true);
@@ -129,30 +129,30 @@ describe('Integrations Validation', () => {
       });
     });
 
-    describe('GateFlow License', () => {
+    describe('Sellf License', () => {
       it('should accept valid unlimited license format', () => {
-        const result = validateIntegrations({ gateflow_license: 'GF-example.com-UNLIMITED-abc123XYZ_-' });
+        const result = validateIntegrations({ sellf_license: 'SF-example.com-UNLIMITED-abc123XYZ_-' });
         expect(result.isValid).toBe(true);
       });
 
       it('should accept valid dated license format', () => {
-        const result = validateIntegrations({ gateflow_license: 'GF-example.com-20251231-abc123XYZ' });
+        const result = validateIntegrations({ sellf_license: 'SF-example.com-20251231-abc123XYZ' });
         expect(result.isValid).toBe(true);
       });
 
       it('should accept wildcard domain license', () => {
-        const result = validateIntegrations({ gateflow_license: 'GF-*.example.com-UNLIMITED-signature' });
+        const result = validateIntegrations({ sellf_license: 'SF-*.example.com-UNLIMITED-signature' });
         expect(result.isValid).toBe(true);
       });
 
       it('should reject invalid license format', () => {
-        const result = validateIntegrations({ gateflow_license: 'invalid-license' });
+        const result = validateIntegrations({ sellf_license: 'invalid-license' });
         expect(result.isValid).toBe(false);
-        expect(result.errors.gateflow_license[0]).toContain('Invalid license format');
+        expect(result.errors.sellf_license[0]).toContain('Invalid license format');
       });
 
       it('should reject missing prefix', () => {
-        const result = validateIntegrations({ gateflow_license: 'example.com-UNLIMITED-abc123' });
+        const result = validateIntegrations({ sellf_license: 'example.com-UNLIMITED-abc123' });
         expect(result.isValid).toBe(false);
       });
     });
@@ -166,7 +166,7 @@ describe('Integrations Validation', () => {
           facebook_pixel_id: null,
           umami_website_id: null,
           umami_script_url: null,
-          gateflow_license: null,
+          sellf_license: null,
         };
         const result = validateIntegrations(input);
         expect(result.isValid).toBe(true);

@@ -121,10 +121,10 @@ test.describe('Variant Selector Page', () => {
     await page.goto(`/pl/v/${variantGroup.id}`);
     await page.waitForLoadState('networkidle');
 
-    // Check that prices are displayed with currency
-    await expect(page.getByText(/zł49[\.,]00/)).toBeVisible();
-    await expect(page.getByText(/zł99[\.,]00/)).toBeVisible();
-    await expect(page.getByText(/zł299[\.,]00/)).toBeVisible();
+    // Check that prices are displayed with currency (PLN uses comma or dot as decimal separator)
+    await expect(page.getByText(/zł49[.,]00/)).toBeVisible();
+    await expect(page.getByText(/zł99[.,]00/)).toBeVisible();
+    await expect(page.getByText(/zł299[.,]00/)).toBeVisible();
   });
 
   test('should display descriptions', async ({ page }) => {
@@ -205,9 +205,9 @@ test.describe('Variant Selector Page', () => {
     await page.goto(`/pl/v/${variantGroup.id}`);
     await page.waitForLoadState('networkidle');
 
-    // Featured variant should have purple border
+    // Featured variant should have accent border (sf-accent tokens)
     const basicVariant = page.locator('[class*="cursor-pointer"]').filter({ hasText: 'Basic' }).first();
-    await expect(basicVariant).toHaveClass(/border-purple-500|ring-purple/);
+    await expect(basicVariant).toHaveClass(/border-sf-accent|ring-sf-accent/);
   });
 
   test('should show loading spinner initially', async ({ page }) => {

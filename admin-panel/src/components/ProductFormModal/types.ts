@@ -19,6 +19,7 @@ export interface ProductFormData {
   currency: string;
   is_active: boolean;
   is_featured: boolean;
+  is_listed: boolean;
   icon: string;
   image_url?: string | null;
   // Temporal availability fields
@@ -111,6 +112,7 @@ export interface BasicInfoSectionProps extends SectionProps {
   setSlugModified: (value: boolean) => void;
   currentDomain: string;
   generateSlug: (name: string) => string;
+  fieldErrors?: Record<string, string>;
 }
 
 export interface PricingSectionProps extends SectionProps {
@@ -165,6 +167,7 @@ export const initialFormData: ProductFormData = {
   currency: 'USD',
   is_active: true,
   is_featured: false,
+  is_listed: true,
   icon: '🚀',
   image_url: null,
   available_from: '',

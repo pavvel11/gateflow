@@ -7,6 +7,12 @@
  * Supports TWO authentication methods:
  * 1. Session/JWT (for frontend admin panel)
  * 2. API Key (for external integrations, MCP server)
+ *
+ * CSRF Protection:
+ * - API Key auth: immune to CSRF (custom Authorization header cannot be set by forms/links)
+ * - Session/JWT auth: protected by SameSite=Lax cookies + strict CORS origin checks
+ *   in Next.js middleware. Browsers block cross-origin credentialed requests unless
+ *   CORS allows the origin, and SameSite prevents cookie attachment from foreign sites.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -76,19 +82,39 @@ export type AuthResult = SessionAuthResult | ApiKeyAuthResult;
 export function getApiCorsHeaders(origin: string | null): Record<string, string> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL;
 
-  const allowedOrigin = origin && (
+  const isAllowed = origin && (
     origin === siteUrl ||
     origin.startsWith('http://localhost:') ||
     origin.startsWith('http://127.0.0.1:')
-  ) ? origin : (siteUrl || '*');
+  );
 
-  return {
-    'Access-Control-Allow-Origin': allowedOrigin,
+  const headers: Record<string, string> = {
+    // CORS
     'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key',
     'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin',
+    // Security hardening — prevent caching of sensitive API responses
+    'Cache-Control': 'no-store, no-cache, must-revalidate',
+    'Pragma': 'no-cache',
+    // Defense-in-depth headers
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
   };
+
+  // Only set Access-Control-Allow-Origin when we have a valid origin to reflect.
+  // Omitting the header (instead of 'null' or '*') cleanly blocks the request
+  // per CORS spec — browser won't expose the response to JS.
+  if (isAllowed) {
+    headers['Access-Control-Allow-Origin'] = origin;
+  } else if (siteUrl) {
+    headers['Access-Control-Allow-Origin'] = siteUrl;
+  }
+  // If no siteUrl configured and origin not allowed: omit header entirely → CORS blocked
+
+  return headers;
 }
 
 /**
@@ -385,8 +411,10 @@ export function handleApiError(error: unknown, request: NextRequest): NextRespon
     }
   }
 
-  // Log unexpected errors
-  console.error('API Error:', error);
+  // Log unexpected errors — extract safe properties only to prevent log injection
+  const safeMessage = error instanceof Error ? error.message : 'Unknown error';
+  const safeName = error instanceof Error ? error.name : typeof error;
+  console.error('[handleApiError]', safeName, safeMessage);
 
   return apiError(request, 'INTERNAL_ERROR', 'An unexpected error occurred');
 }

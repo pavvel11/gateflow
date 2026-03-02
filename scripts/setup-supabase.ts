@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * GateFlow Supabase Setup Tool
+ * Sellf Supabase Setup Tool
  *
  * Automatically fetches Supabase API keys and generates .env.local
  *
@@ -14,7 +14,7 @@
 import { createInterface } from 'readline';
 import { writeFileSync, existsSync, readFileSync } from 'fs';
 import { join } from 'path';
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 
 const SUPABASE_API = 'https://api.supabase.com/v1';
 
@@ -46,20 +46,24 @@ function prompt(question: string): Promise<string> {
 
 function openBrowser(url: string) {
   const platform = process.platform;
-  let command: string;
+  let bin: string;
+  let args: string[];
 
   switch (platform) {
     case 'darwin': // macOS
-      command = `open "${url}"`;
+      bin = 'open';
+      args = [url];
       break;
     case 'win32': // Windows
-      command = `start "" "${url}"`;
+      bin = 'cmd';
+      args = ['/c', 'start', '', url];
       break;
     default: // Linux
-      command = `xdg-open "${url}"`;
+      bin = 'xdg-open';
+      args = [url];
   }
 
-  exec(command, (error) => {
+  execFile(bin, args, (error) => {
     if (error) {
       console.log(`   Could not open browser automatically.`);
       console.log(`   Please open manually: ${url}\n`);
@@ -151,7 +155,7 @@ PORT=3000
 async function main() {
   console.log(`
 ╔═══════════════════════════════════════════════════════════╗
-║         GateFlow Supabase Setup Tool                      ║
+║         Sellf Supabase Setup Tool                      ║
 ║                                                           ║
 ║  This tool will automatically fetch your Supabase         ║
 ║  API keys and generate .env.local                         ║
@@ -172,7 +176,7 @@ async function main() {
     openBrowser(tokenUrl);
 
     console.log('   1. Click "Generate new token"');
-    console.log('   2. Name it "GateFlow Setup"');
+    console.log('   2. Name it "Sellf Setup"');
     console.log('   3. Copy the token\n');
 
     token = await prompt('Paste your Personal Access Token: ');

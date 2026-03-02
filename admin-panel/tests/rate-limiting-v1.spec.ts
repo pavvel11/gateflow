@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { setAuthSession } from './helpers/admin-auth';
 
 /**
  * Rate Limiting Tests for V1 API
@@ -34,18 +35,7 @@ const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY!);
 async function loginAsAdmin(page: Page, email: string, password: string) {
   await page.goto('/login');
 
-  await page.evaluate(async ({ email, password, url, anonKey }: { email: string; password: string; url: string; anonKey: string }) => {
-    // @ts-ignore
-    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-    const sb = createBrowserClient(url, anonKey);
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-  }, {
-    email,
-    password,
-    url: SUPABASE_URL,
-    anonKey: ANON_KEY!
-  });
+  await setAuthSession(page, email, password);
 
   await page.reload();
   // Wait for page to fully load
@@ -143,17 +133,14 @@ test.describe('V1 API Rate Limiting', () => {
       expect(response.status()).toBe(201);
       const data = await response.json();
       expect(data.data.key).toBeDefined();
-      expect(data.data.key).toMatch(/^gf_(live|test)_/);
+      expect(data.data.key).toMatch(/^sf_(live|test)_/);
 
       testApiKey = data.data.key;
       testApiKeyId = data.data.id;
     });
 
     test('should enforce per-key rate limit (requests/minute)', async ({ request }) => {
-      if (!testApiKey) {
-        test.skip();
-        return;
-      }
+      expect(testApiKey, 'API key should have been created by previous test').toBeTruthy();
 
       let successCount = 0;
       let rateLimited = false;
@@ -182,12 +169,10 @@ test.describe('V1 API Rate Limiting', () => {
     });
 
     test('rate limit error should have proper format', async ({ request }) => {
-      if (!testApiKey) {
-        test.skip();
-        return;
-      }
+      expect(testApiKey, 'API key should have been created by previous test').toBeTruthy();
 
       // Exhaust rate limit
+      let rateLimitResponse: { error: { code: string; message: string } } | null = null;
       for (let i = 0; i < 10; i++) {
         const response = await request.get('/api/v1/products', {
           headers: {
@@ -196,16 +181,15 @@ test.describe('V1 API Rate Limiting', () => {
         });
 
         if (response.status() === 429) {
-          const data = await response.json();
-          expect(data.error).toBeDefined();
-          expect(data.error.code).toBe('RATE_LIMITED');
-          expect(data.error.message).toContain('Rate limit exceeded');
-          return;
+          rateLimitResponse = await response.json();
+          break;
         }
       }
 
-      // If we didn't get rate limited, fail
-      expect(true).toBe(false);
+      expect(rateLimitResponse, 'Expected to hit 429 rate limit within 10 requests').not.toBeNull();
+      expect(rateLimitResponse!.error).toBeDefined();
+      expect(rateLimitResponse!.error.code).toBe('RATE_LIMITED');
+      expect(rateLimitResponse!.error.message).toContain('Rate limit exceeded');
     });
 
     test('different API keys should have separate rate limits', async ({ page, request }) => {
@@ -471,10 +455,7 @@ test.describe('V1 API Rate Limiting', () => {
     });
 
     test('read-only key should be rate limited on allowed endpoints', async ({ request }) => {
-      if (!readOnlyApiKey) {
-        test.skip();
-        return;
-      }
+      expect(readOnlyApiKey, 'Read-only API key should have been created in beforeAll').toBeTruthy();
 
       let successCount = 0;
       let rateLimited = false;
@@ -548,10 +529,7 @@ test.describe('V1 API Rate Limiting', () => {
 
   test.describe('Rate Limit Behavior', () => {
     test('rate limited response should return 429 status', async ({ request }) => {
-      if (!testApiKey) {
-        test.skip();
-        return;
-      }
+      expect(testApiKey, 'API key should have been created by previous test').toBeTruthy();
 
       let got429 = false;
       for (let i = 0; i < 10; i++) {
@@ -571,11 +549,9 @@ test.describe('V1 API Rate Limiting', () => {
     });
 
     test('rate limited response should have proper error structure', async ({ request }) => {
-      if (!testApiKey) {
-        test.skip();
-        return;
-      }
+      expect(testApiKey, 'API key should have been created by previous test').toBeTruthy();
 
+      let rateLimitResponse: { error: { code: string; message: string } } | null = null;
       for (let i = 0; i < 10; i++) {
         const response = await request.get('/api/v1/products', {
           headers: {
@@ -584,15 +560,16 @@ test.describe('V1 API Rate Limiting', () => {
         });
 
         if (response.status() === 429) {
-          const data = await response.json();
-
-          expect(data.error).toBeDefined();
-          expect(data.error.code).toBe('RATE_LIMITED');
-          expect(data.error.message).toBeDefined();
-          expect(typeof data.error.message).toBe('string');
-          return;
+          rateLimitResponse = await response.json();
+          break;
         }
       }
+
+      expect(rateLimitResponse, 'Expected to hit 429 rate limit within 10 requests').not.toBeNull();
+      expect(rateLimitResponse!.error).toBeDefined();
+      expect(rateLimitResponse!.error.code).toBe('RATE_LIMITED');
+      expect(rateLimitResponse!.error.message).toBeDefined();
+      expect(typeof rateLimitResponse!.error.message).toBe('string');
     });
   });
 

@@ -1,15 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { createClient } from '@supabase/supabase-js';
-
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-if (!SUPABASE_URL || !SERVICE_ROLE_KEY || !ANON_KEY) {
-  throw new Error('Missing Supabase env variables for testing');
-}
-
-const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+import { supabaseAdmin, setAuthSession } from './helpers/admin-auth';
 
 test.describe('Access Control (Security)', () => {
   // Enforce single worker
@@ -19,23 +9,10 @@ test.describe('Access Control (Security)', () => {
   let userWithoutAccess: any;
   const password = 'TestPassword123!';
 
-  // Helper to login
   const loginAsUser = async (page: Page, email: string) => {
+    await setAuthSession(page, email, password);
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
-
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email,
-      password,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
-
-    await page.waitForTimeout(1000);
   };
 
   test.beforeAll(async () => {
@@ -104,54 +81,53 @@ test.describe('Access Control (Security)', () => {
     // Navigate to product page
     await page.goto(`/p/${testProduct.slug}`);
 
-    // Should see ProductAccessView (user has access)
-    // Look for content that indicates access granted
-    await expect(page.locator('body')).not.toContainText('Purchase Access');
-    await expect(page.locator('body')).not.toContainText('Checkout');
+    // Should stay on the product page (not redirected to checkout)
+    await expect(page).toHaveURL(new RegExp(`/p/${testProduct.slug}`), { timeout: 10000 });
 
-    // Should not show error or redirect to checkout
-    await expect(page).toHaveURL(new RegExp(`/p/${testProduct.slug}`));
+    // Positive assertion: the product name should be visible on the access view
+    await expect(page.locator('body')).toContainText(testProduct.name, { timeout: 10000 });
+
+    // Negative assertion: should NOT see purchase/checkout prompts
+    await expect(page.locator('body')).not.toContainText('Purchase Access');
+
+    // Verify via API that the user actually has access (data-level verification)
+    const apiResponse = await page.evaluate(async ({ slug }) => {
+      const response = await fetch('/api/access', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ productSlugs: [slug] })
+      });
+      return await response.json();
+    }, { slug: testProduct.slug });
+
+    expect(apiResponse.accessResults[testProduct.slug]).toBe(true);
   });
 
-  test('user WITHOUT access should be redirected or see checkout prompt', async ({ page }) => {
+  test('user WITHOUT access should be redirected to checkout page', async ({ page }) => {
     await loginAsUser(page, userWithoutAccess.email);
 
     // Navigate to product page
     await page.goto(`/p/${testProduct.slug}`);
 
-    // Wait for potential redirect
-    await page.waitForTimeout(2000);
+    // User without access should be redirected to checkout
+    await expect(page).toHaveURL(new RegExp(`/checkout/${testProduct.slug}`), { timeout: 10000 });
 
-    // Should either:
-    // 1. Be redirected to checkout page
-    // 2. See a message about no access
-    const currentUrl = page.url();
-    const bodyText = await page.locator('body').textContent();
-
-    const isRedirectedToCheckout = currentUrl.includes('/checkout/');
-    const showsNoAccessMessage = bodyText?.includes('Purchase') ||
-                                   bodyText?.includes('Get Access') ||
-                                   bodyText?.includes('Redirecting');
-
-    expect(isRedirectedToCheckout || showsNoAccessMessage).toBeTruthy();
+    // Verify the checkout page shows the product name and a purchase action
+    await expect(page.locator('body')).toContainText(testProduct.name, { timeout: 10000 });
   });
 
-  test('guest (not logged in) should not access protected product', async ({ page }) => {
+  test('guest (not logged in) should be redirected to checkout', async ({ page }) => {
     // Navigate as guest (no login)
     await page.goto(`/p/${testProduct.slug}`);
 
-    // Wait for redirect or message
-    await page.waitForTimeout(2000);
+    // Guest should be redirected to checkout (same as user without access)
+    await expect(page).toHaveURL(new RegExp(`/checkout/${testProduct.slug}`), { timeout: 10000 });
 
-    const currentUrl = page.url();
-    const bodyText = await page.locator('body').textContent();
-
-    // Should be redirected to checkout or login
-    const isRedirectedToCheckout = currentUrl.includes('/checkout/');
-    const isRedirectedToLogin = currentUrl.includes('/login');
-    const showsPrompt = bodyText?.includes('Purchase') || bodyText?.includes('Redirecting');
-
-    expect(isRedirectedToCheckout || isRedirectedToLogin || showsPrompt).toBeTruthy();
+    // Verify the checkout page renders with the correct product context
+    await expect(page.locator('body')).toContainText(testProduct.name, { timeout: 10000 });
   });
 
   test('API /api/access should enforce access control', async ({ page }) => {
@@ -219,14 +195,14 @@ test.describe('Access Control (Security)', () => {
       }
     });
 
-    // Should either reject or return no access
-    const body = await response.json();
-
+    // Should either reject with 401 or return explicit false for all products
     if (response.ok()) {
-      // If endpoint allows anonymous, should return false for all products
-      expect(body.accessResults[testProduct.slug]).toBeFalsy();
+      const body = await response.json();
+      // If endpoint allows anonymous requests, it must explicitly deny access
+      expect(body.accessResults).toBeDefined();
+      expect(body.accessResults[testProduct.slug]).toBe(false);
     } else {
-      // Or should reject with 401
+      // Should reject with 401 Unauthorized (not 403 or 500)
       expect(response.status()).toBe(401);
     }
   });
@@ -240,21 +216,9 @@ test.describe('Access Control - Inactive Product', () => {
   const password = 'TestPassword123!';
 
   const loginAsUser = async (page: Page, email: string) => {
+    await setAuthSession(page, email, password);
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
-
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email,
-      password,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
-
-    await page.waitForTimeout(1000);
   };
 
   test.beforeAll(async () => {
@@ -443,21 +407,9 @@ test.describe('Element Protection - data-has-access / data-no-access visibility'
   const password = 'TestPassword123!';
 
   const loginAsUser = async (page: Page, email: string) => {
+    await setAuthSession(page, email, password);
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
-
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email,
-      password,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
-
-    await page.waitForTimeout(1000);
   };
 
   test.beforeAll(async () => {
@@ -528,7 +480,7 @@ test.describe('Element Protection - data-has-access / data-no-access visibility'
       <html>
       <head><title>Element Protection Test</title></head>
       <body>
-        <div data-gatekeeper-product="${testProduct.slug}" data-testid="protected-section">
+        <div data-sellf-product="${testProduct.slug}" data-testid="protected-section">
           <div data-has-access data-testid="has-access-content">
             <h2>Premium Content - You have access!</h2>
           </div>
@@ -536,7 +488,7 @@ test.describe('Element Protection - data-has-access / data-no-access visibility'
             <h2>You need access to see this content</h2>
           </div>
         </div>
-        <script src="/api/gatekeeper"></script>
+        <script src="/api/sellf"></script>
       </body>
       </html>
     `;
@@ -544,7 +496,7 @@ test.describe('Element Protection - data-has-access / data-no-access visibility'
     // Navigate to test page served by http-server
     await page.goto(`http://localhost:3002/element-protection.html?testProduct=${testProduct.slug}&apiUrl=http://localhost:3000`);
 
-    // Wait for gatekeeper to process
+    // Wait for sellf to process
     await page.waitForTimeout(3000);
 
     // User WITH access should see data-has-access content
@@ -564,7 +516,7 @@ test.describe('Element Protection - data-has-access / data-no-access visibility'
     // Navigate to test page
     await page.goto(`http://localhost:3002/element-protection.html?testProduct=${testProduct.slug}&apiUrl=http://localhost:3000`);
 
-    // Wait for gatekeeper to process
+    // Wait for sellf to process
     await page.waitForTimeout(3000);
 
     const hasAccessContent = page.locator('[data-testid="has-access-content"]');
@@ -582,7 +534,7 @@ test.describe('Element Protection - data-has-access / data-no-access visibility'
 
     await page.goto(`http://localhost:3002/element-protection.html?testProduct=${testProduct.slug}&apiUrl=http://localhost:3000`);
 
-    // Wait for gatekeeper to process
+    // Wait for sellf to process
     await page.waitForTimeout(3000);
 
     const hasAccessContent = page.locator('[data-testid="has-access-content"]');

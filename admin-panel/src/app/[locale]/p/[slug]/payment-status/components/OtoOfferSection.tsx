@@ -88,18 +88,18 @@ export default function OtoOfferSection({
   // If expired, show expired message and skip button
   if (isExpired) {
     return (
-      <div className="mt-6 p-6 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+      <div className="mt-6 p-6 bg-sf-raised rounded-xl border border-sf-border">
         <div className="text-center">
           <div className="text-4xl mb-3">⏰</div>
-          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          <h3 className="text-lg font-semibold text-sf-body mb-2">
             {t('offerExpired')}
           </h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-sf-muted mb-4">
             {t('offerExpiredDesc')}
           </p>
           <button
             onClick={onSkip}
-            className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+            className="px-6 py-2 bg-sf-muted/30 hover:bg-sf-muted/40 text-sf-heading rounded-lg transition-colors"
           >
             {skipLabel || t('continue')}
           </button>
@@ -115,10 +115,10 @@ export default function OtoOfferSection({
         className={`
           relative overflow-hidden rounded-xl p-6 border-2 transition-all duration-300
           ${isUrgent
-            ? 'bg-red-50 dark:bg-red-900/20 border-red-500 animate-pulse'
+            ? 'bg-sf-danger-soft border-sf-danger animate-pulse'
             : isWarning
-              ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-500'
-              : 'bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-500'
+              ? 'bg-sf-warning-soft border-sf-warning'
+              : 'bg-sf-accent-soft border-sf-border-accent'
           }
         `}
       >
@@ -131,7 +131,7 @@ export default function OtoOfferSection({
             <div className="flex items-center gap-3">
               <div className={`
                 flex items-center justify-center w-12 h-12 rounded-full
-                ${isUrgent ? 'bg-red-500' : isWarning ? 'bg-orange-500' : 'bg-purple-500'}
+                ${isUrgent ? 'bg-sf-danger-bg' : isWarning ? 'bg-sf-warning' : 'bg-sf-accent'}
                 text-white
               `}>
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -139,8 +139,8 @@ export default function OtoOfferSection({
                 </svg>
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{t('exclusiveOffer')}</p>
-                <p className={`text-lg font-bold ${isUrgent ? 'text-red-600' : isWarning ? 'text-orange-600' : 'text-purple-600'}`}>
+                <p className="text-sm text-sf-body">{t('exclusiveOffer')}</p>
+                <p className={`text-lg font-bold ${isUrgent ? 'text-sf-danger' : isWarning ? 'text-sf-warning' : 'text-sf-accent'}`}>
                   {t('saveAmount', { amount: formatDiscount(otoOffer.discountType, otoOffer.discountValue, otoOffer.currency) })}
                 </p>
               </div>
@@ -148,14 +148,14 @@ export default function OtoOfferSection({
 
             {/* Timer */}
             <div className="text-center">
-              <span className="text-xs text-gray-500 dark:text-gray-400 block mb-1">{t('expiresIn')}</span>
+              <span className="text-xs text-sf-muted block mb-1">{t('expiresIn')}</span>
               <div className={`
                 px-4 py-2 rounded-lg font-mono text-2xl font-bold
                 ${isUrgent
-                  ? 'bg-red-500 text-white'
+                  ? 'bg-sf-danger-bg text-sf-inverse'
                   : isWarning
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-purple-600 text-white'
+                    ? 'bg-sf-warning text-sf-inverse'
+                    : 'bg-sf-accent-bg text-white'
                 }
               `}>
                 {formatTime(secondsRemaining)}
@@ -165,8 +165,8 @@ export default function OtoOfferSection({
 
           {/* Product info */}
           {otoOffer.otoProductName && (
-            <div className="mb-4 p-3 bg-white/50 dark:bg-black/20 rounded-lg">
-              <p className="text-gray-700 dark:text-gray-300">
+            <div className="mb-4 p-3 bg-sf-raised/50 rounded-lg">
+              <p className="text-sf-body">
                 <span className="font-medium">{t('product')}:</span> {otoOffer.otoProductName}
               </p>
             </div>
@@ -177,21 +177,21 @@ export default function OtoOfferSection({
             <button
               onClick={handleAccept}
               className={`
-                flex-1 px-6 py-3 rounded-lg font-semibold text-white transition-all
+                flex-1 px-6 py-3 rounded-full font-semibold text-white transition-all
                 ${isUrgent
-                  ? 'bg-red-500 hover:bg-red-600'
+                  ? 'bg-sf-danger-bg hover:bg-sf-danger/90'
                   : isWarning
-                    ? 'bg-orange-500 hover:bg-orange-600'
-                    : 'bg-purple-600 hover:bg-purple-700'
+                    ? 'bg-sf-warning hover:bg-sf-warning/90'
+                    : 'bg-sf-accent-bg hover:bg-sf-accent-hover'
                 }
-                transform hover:scale-[1.02] active:scale-[0.98]
+                active:scale-[0.98]
               `}
             >
               🎁 {t('acceptOffer')}
             </button>
             <button
               onClick={onSkip}
-              className="flex-1 sm:flex-none px-6 py-3 rounded-lg font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              className="flex-1 sm:flex-none px-6 py-3 rounded-full font-medium text-sf-body bg-sf-raised hover:bg-sf-hover transition-colors"
             >
               {skipLabel || t('noThanks')}
             </button>

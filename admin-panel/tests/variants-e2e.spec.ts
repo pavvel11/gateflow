@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { acceptAllCookies } from './helpers/consent';
+import { setAuthSession } from './helpers/admin-auth';
 
 /**
  * Product Variants E2E Flow Tests (M:N Schema)
@@ -34,16 +35,7 @@ test.describe('Product Variants E2E Flow', () => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email: adminEmail,
-      password: adminPassword,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
+    await setAuthSession(page, adminEmail, adminPassword);
 
     await page.waitForTimeout(1000);
   };
@@ -183,11 +175,7 @@ test.describe('Product Variants E2E Flow', () => {
     // Find any copy button (don't depend on specific group)
     const copyButtons = page.locator('button[title*="Kopiuj"]').or(page.locator('button[title*="Copy"]'));
     const buttonCount = await copyButtons.count();
-
-    if (buttonCount === 0) {
-      console.log('No copy buttons found');
-      return;
-    }
+    expect(buttonCount).toBeGreaterThan(0);
 
     await copyButtons.first().click();
 
@@ -200,42 +188,24 @@ test.describe('Product Variants E2E Flow', () => {
     expect(copiedUrl).toContain('/v/');
   });
 
-  test('E2E: Access variant selector page from copied link', async ({ page, request }) => {
+  test('E2E: Access variant selector page from copied link', async ({ page }) => {
+    test.skip(!createdGroupId, 'No variant group created — test #1 may have failed');
     await acceptAllCookies(page);
 
-    // Get the group ID/slug from API (don't depend on previous test state)
-    const response = await request.get('/api/v1/variant-groups');
-    const data = await response.json();
-    const group = data.data?.find((g: any) => g.products?.length >= 2);
-
-    if (!group) {
-      console.log('No variant groups with products found');
-      return;
-    }
-
-    // Navigate to variant selector
-    await page.goto(`/pl/v/${group.slug || group.id}`);
+    // Navigate to variant selector using group created by test #1
+    await page.goto(`/pl/v/${createdGroupSlug || createdGroupId}`);
     await page.waitForLoadState('networkidle');
 
     // Should show variant selector
     await expect(page.getByRole('heading', { name: 'Wybierz opcję' })).toBeVisible({ timeout: 10000 });
   });
 
-  test('E2E: Select variant and go to checkout', async ({ page, request }) => {
+  test('E2E: Select variant and go to checkout', async ({ page }) => {
+    test.skip(!createdGroupId, 'No variant group created — test #1 may have failed');
     await acceptAllCookies(page);
 
-    // Get the group ID/slug from API
-    const response = await request.get('/api/v1/variant-groups');
-    const data = await response.json();
-    const group = data.data?.find((g: any) => g.products?.length >= 2);
-
-    if (!group) {
-      console.log('No variant groups with products found');
-      return;
-    }
-
-    // Navigate to variant selector
-    await page.goto(`/pl/v/${group.slug || group.id}`);
+    // Navigate to variant selector using group created by test #1
+    await page.goto(`/pl/v/${createdGroupSlug || createdGroupId}`);
     await page.waitForLoadState('networkidle');
 
     // Click on first visible variant
@@ -255,11 +225,7 @@ test.describe('Product Variants E2E Flow', () => {
     // Find any edit button (don't depend on specific group name)
     const editButtons = page.locator('button[title*="Edytuj"]').or(page.locator('button[title*="Edit"]'));
     const buttonCount = await editButtons.count();
-
-    if (buttonCount === 0) {
-      console.log('No variant groups found to edit');
-      return;
-    }
+    expect(buttonCount).toBeGreaterThan(0);
 
     // Click first edit button
     await editButtons.first().click();
@@ -300,12 +266,7 @@ test.describe('Product Variants E2E Flow', () => {
     // Find any existing group (either E2E Updated Plans or E2E License Plans)
     const editButtons = page.locator('button[title*="Edytuj"]').or(page.locator('button[title*="Edit"]'));
     const buttonCount = await editButtons.count();
-
-    if (buttonCount === 0) {
-      // Skip if no groups exist
-      console.log('No variant groups found to edit');
-      return;
-    }
+    expect(buttonCount).toBeGreaterThan(0);
 
     // Click first edit button
     await editButtons.first().click();
@@ -333,12 +294,7 @@ test.describe('Product Variants E2E Flow', () => {
     // Find any delete button
     const deleteButtons = page.locator('button[title*="Usuń grupę"]').or(page.locator('button[title*="Delete group"]'));
     const buttonCount = await deleteButtons.count();
-
-    if (buttonCount === 0) {
-      // No groups to delete - skip
-      console.log('No variant groups found to delete');
-      return;
-    }
+    expect(buttonCount).toBeGreaterThan(0);
 
     // Get the group name before deletion
     const initialGroupCount = buttonCount;

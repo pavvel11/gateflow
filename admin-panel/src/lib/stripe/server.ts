@@ -114,3 +114,35 @@ export const isUsingEnvConfig = async (): Promise<boolean> => {
     return true; // If error retrieving DB key, assume env fallback
   }
 };
+
+export type StripeKeySource = {
+  activeSource: 'db' | 'env' | 'none'
+  dbConfigured: boolean
+  envConfigured: boolean
+}
+
+/**
+ * Richer detection of Stripe key source: DB, ENV, or none.
+ * Exposes whether both are configured so UI can show "overrides" info.
+ */
+export const getStripeKeySource = async (): Promise<StripeKeySource> => {
+  const mode = getStripeMode();
+  const envConfigured = !!process.env.STRIPE_SECRET_KEY;
+
+  let dbConfigured = false;
+  try {
+    const dbKey = await getDecryptedStripeKey(mode);
+    dbConfigured = !!dbKey;
+  } catch {
+    // DB not available — ignore
+  }
+
+  let activeSource: StripeKeySource['activeSource'] = 'none';
+  if (dbConfigured) {
+    activeSource = 'db';
+  } else if (envConfigured) {
+    activeSource = 'env';
+  }
+
+  return { activeSource, dbConfigured, envConfigured };
+};

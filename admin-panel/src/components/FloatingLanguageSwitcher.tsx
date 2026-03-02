@@ -1,6 +1,6 @@
 'use client'
 
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useRouter, usePathname } from 'next/navigation'
 import { useState, useTransition, useRef, useEffect } from 'react'
 import { locales } from '@/lib/locales'
@@ -24,6 +24,7 @@ export default function FloatingLanguageSwitcher({
   const locale = useLocale()
   const router = useRouter()
   const pathname = usePathname()
+  const t = useTranslations('navigation')
   const [isOpen, setIsOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -78,7 +79,7 @@ export default function FloatingLanguageSwitcher({
     // Floating style (dark overlay typically)
     ? 'bg-black/20 backdrop-blur-sm border-white/10 hover:bg-black/30 hover:border-white/20 text-white'
     // Static style (fits into layout, handles light/dark)
-    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200';
+    : 'bg-sf-base border-sf-border hover:bg-sf-hover text-sf-body';
 
   return (
     <div className={wrapperClasses} ref={containerRef}>
@@ -87,12 +88,12 @@ export default function FloatingLanguageSwitcher({
           onClick={() => setIsOpen(!isOpen)}
           disabled={isPending}
           className={`
-            group flex items-center justify-center gap-2 border rounded-lg transition-all duration-200 shadow-sm
+            group flex items-center justify-center gap-2 border-2 border-sf-border-subtle hover:border-sf-border-medium transition-all duration-200
             ${buttonBaseClasses}
-            ${isPending ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md'}
+            ${isPending ? 'opacity-50 cursor-not-allowed' : ''}
             ${variant === 'discrete' ? 'p-2' : 'px-3 py-2'}
           `}
-          aria-label="Switch language"
+          aria-label={t('switchLanguage')}
         >
           <span className="text-lg leading-none">{currentLanguage.flag}</span>
           {variant !== 'discrete' && (
@@ -112,10 +113,10 @@ export default function FloatingLanguageSwitcher({
 
         {isOpen && (
           <div className={`
-            absolute mt-2 w-32 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200
+            absolute mt-2 w-32 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200
             ${mode === 'floating' 
               ? 'top-full right-0 bg-black/40 backdrop-blur-md border border-white/20' 
-              : 'top-full right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'}
+              : 'top-full right-0 bg-sf-base border-2 border-sf-border-medium'}
           `}>
             <div className="p-1">
               {Object.entries(languages).map(([code, lang]) => (
@@ -123,10 +124,10 @@ export default function FloatingLanguageSwitcher({
                   key={code}
                   onClick={() => handleLanguageChange(code)}
                   className={`
-                    flex items-center gap-3 w-full px-3 py-2 text-sm rounded-lg transition-colors
+                    flex items-center gap-3 w-full px-3 py-2 text-sm transition-colors
                     ${mode === 'floating'
                       ? (locale === code ? 'bg-white/20 text-white' : 'text-white/80 hover:bg-white/10 hover:text-white')
-                      : (locale === code ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700')
+                      : (locale === code ? 'bg-sf-accent-soft text-sf-accent' : 'text-sf-body hover:bg-sf-hover')
                     }
                   `}
                 >

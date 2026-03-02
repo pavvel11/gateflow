@@ -19,7 +19,7 @@ import {
 } from '@/lib/api';
 import { createClient } from '@/lib/supabase/server';
 import { requireAdminApi } from '@/lib/auth-server';
-import { validateProductId } from '@/lib/validations/product';
+import { validateUUID } from '@/lib/validations/product';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
 
     // Validate ID format
-    const idValidation = validateProductId(id);
+    const idValidation = validateUUID(id);
     if (!idValidation.isValid) {
       return apiError(request, 'INVALID_INPUT', 'Invalid key ID format');
     }
@@ -99,7 +99,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
 
     // Validate ID format
-    const idValidation = validateProductId(id);
+    const idValidation = validateUUID(id);
     if (!idValidation.isValid) {
       return apiError(request, 'INVALID_INPUT', 'Invalid key ID format');
     }
@@ -155,8 +155,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     // Validate and add rate limit
     if (body.rate_limit_per_minute !== undefined) {
       const rateLimit = body.rate_limit_per_minute;
-      if (rateLimit < 1 || rateLimit > 1000) {
-        throw new ApiValidationError('Rate limit must be between 1 and 1000');
+      if (typeof rateLimit !== 'number' || !Number.isInteger(rateLimit) || rateLimit < 1 || rateLimit > 1000) {
+        throw new ApiValidationError('Rate limit must be an integer between 1 and 1000');
       }
       updateData.rate_limit_per_minute = rateLimit;
     }
@@ -219,7 +219,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
 
     // Validate ID format
-    const idValidation = validateProductId(id);
+    const idValidation = validateUUID(id);
     if (!idValidation.isValid) {
       return apiError(request, 'INVALID_INPUT', 'Invalid key ID format');
     }

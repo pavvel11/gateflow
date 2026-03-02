@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { acceptAllCookies } from './helpers/consent';
+import { setAuthSession } from './helpers/admin-auth';
 
 /**
  * PWYW Admin Panel Tests
@@ -53,16 +54,7 @@ test.describe('PWYW Admin Configuration', () => {
     let retries = 3;
     while (retries > 0) {
       try {
-        await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-          const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-          const supabase = createBrowserClient(supabaseUrl, anonKey);
-          await supabase.auth.signInWithPassword({ email, password });
-        }, {
-          email: adminEmail,
-          password: adminPassword,
-          supabaseUrl: SUPABASE_URL,
-          anonKey: ANON_KEY,
-        });
+        await setAuthSession(page, adminEmail, adminPassword);
         break;
       } catch (error) {
         retries--;
@@ -99,7 +91,8 @@ test.describe('PWYW Admin Configuration', () => {
         currency: 'PLN',
         description: 'Test product for PWYW admin',
         is_active: true,
-        allow_custom_price: false
+        allow_custom_price: false,
+        price_includes_vat: false
       })
       .select()
       .single();
@@ -120,16 +113,16 @@ test.describe('PWYW Admin Configuration', () => {
 
   test('should display PWYW toggle in product form', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/products');
+    await page.goto('/pl/dashboard/products');
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1500);
 
     // Click edit on the test product
     const productRow = page.locator('tr', { hasText: testProduct.name }).first();
-    await productRow.locator('button[aria-label*="Edit"]').first().click();
+    await productRow.locator('button[title*="Edytuj"], button[title*="Edit"]').first().click();
 
     // Wait for modal
-    const modal = page.locator('div.fixed').filter({ hasText: /Cancel|Anuluj/i });
+    const modal = page.locator('[role="dialog"], dialog').filter({ hasText: /Cancel|Anuluj/i });
     await expect(modal).toBeVisible({ timeout: 10000 });
 
     // Should show PWYW toggle
@@ -139,15 +132,15 @@ test.describe('PWYW Admin Configuration', () => {
 
   test('should show PWYW settings when toggle is enabled', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/products');
+    await page.goto('/pl/dashboard/products');
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1500);
 
     // Click edit
     const productRow = page.locator('tr', { hasText: testProduct.name }).first();
-    await productRow.locator('button[aria-label*="Edit"]').first().click();
+    await productRow.locator('button[title*="Edytuj"], button[title*="Edit"]').first().click();
 
-    const modal = page.locator('div.fixed').filter({ hasText: /Cancel|Anuluj/i });
+    const modal = page.locator('[role="dialog"], dialog').filter({ hasText: /Cancel|Anuluj/i });
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Enable PWYW
@@ -163,15 +156,15 @@ test.describe('PWYW Admin Configuration', () => {
 
   test('should show preset inputs when preset toggle is enabled', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/products');
+    await page.goto('/pl/dashboard/products');
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1500);
 
     // Click edit
     const productRow = page.locator('tr', { hasText: testProduct.name }).first();
-    await productRow.locator('button[aria-label*="Edit"]').first().click();
+    await productRow.locator('button[title*="Edytuj"], button[title*="Edit"]').first().click();
 
-    const modal = page.locator('div.fixed').filter({ hasText: /Cancel|Anuluj/i });
+    const modal = page.locator('[role="dialog"], dialog').filter({ hasText: /Cancel|Anuluj/i });
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Enable PWYW
@@ -181,23 +174,23 @@ test.describe('PWYW Admin Configuration', () => {
     const presetToggle = modal.locator('#show_price_presets');
     await expect(presetToggle).toBeChecked();
 
-    // Should show 3 preset inputs
-    const presetInputs = modal.locator('input[type="number"]').filter({ hasNotText: '' });
-    // At least 3 number inputs (min price + 3 presets)
-    expect(await presetInputs.count()).toBeGreaterThanOrEqual(3);
+    // Should show at least 4 number inputs (min price + 3 presets)
+    const numberInputs = modal.locator('input[type="number"]');
+    const count = await numberInputs.count();
+    expect(count).toBeGreaterThanOrEqual(4);
   });
 
   test('should hide preset inputs when preset toggle is disabled', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/products');
+    await page.goto('/pl/dashboard/products');
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1500);
 
     // Click edit
     const productRow = page.locator('tr', { hasText: testProduct.name }).first();
-    await productRow.locator('button[aria-label*="Edit"]').first().click();
+    await productRow.locator('button[title*="Edytuj"], button[title*="Edit"]').first().click();
 
-    const modal = page.locator('div.fixed').filter({ hasText: /Cancel|Anuluj/i });
+    const modal = page.locator('[role="dialog"], dialog').filter({ hasText: /Cancel|Anuluj/i });
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Enable PWYW
@@ -211,43 +204,43 @@ test.describe('PWYW Admin Configuration', () => {
     await expect(modal.getByText(/Kwota 1|Amount 1/i)).not.toBeVisible();
   });
 
-  test('should enforce minimum price of 0.50 (Stripe limit)', async ({ page }) => {
+  test('should enforce minimum price of 0 (allow free PWYW)', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/products');
+    await page.goto('/pl/dashboard/products');
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1500);
 
     // Click edit
     const productRow = page.locator('tr', { hasText: testProduct.name }).first();
-    await productRow.locator('button[aria-label*="Edit"]').first().click();
+    await productRow.locator('button[title*="Edytuj"], button[title*="Edit"]').first().click();
 
-    const modal = page.locator('div.fixed').filter({ hasText: /Cancel|Anuluj/i });
+    const modal = page.locator('[role="dialog"], dialog').filter({ hasText: /Cancel|Anuluj/i });
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Enable PWYW
     await modal.locator('#allow_custom_price').check();
 
-    // Try to set minimum below 0.50
+    // Try to set minimum below 0 (negative)
     const minPriceInput = modal.locator('#custom_price_min');
-    await minPriceInput.fill('0.25');
+    await minPriceInput.fill('-5');
     await minPriceInput.blur();
 
-    // Value should be corrected to at least 0.50
+    // Value should be corrected to at least 0
     const value = await minPriceInput.inputValue();
-    expect(parseFloat(value)).toBeGreaterThanOrEqual(0.50);
+    expect(parseFloat(value)).toBeGreaterThanOrEqual(0);
   });
 
   test('should save PWYW settings', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/products');
+    await page.goto('/pl/dashboard/products');
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1500);
 
     // Click edit
     const productRow = page.locator('tr', { hasText: testProduct.name }).first();
-    await productRow.locator('button[aria-label*="Edit"]').first().click();
+    await productRow.locator('button[title*="Edytuj"], button[title*="Edit"]').first().click();
 
-    const modal = page.locator('div.fixed').filter({ hasText: /Cancel|Anuluj/i });
+    const modal = page.locator('[role="dialog"], dialog').filter({ hasText: /Cancel|Anuluj/i });
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Enable PWYW
@@ -257,18 +250,17 @@ test.describe('PWYW Admin Configuration', () => {
     const minPriceInput = modal.locator('#custom_price_min');
     await minPriceInput.fill('10');
 
-    // Set presets
-    const presetInputs = modal.locator('input[type="number"]');
-    // Find preset inputs (after min price)
-    const allInputs = await presetInputs.all();
-    if (allInputs.length >= 4) {
-      await allInputs[1].fill('15');
-      await allInputs[2].fill('30');
-      await allInputs[3].fill('60');
+    // Set presets — target inputs with placeholder="0" and step="1" (preset-specific attributes)
+    const presetInputs = modal.locator('input[type="number"][placeholder="0"][step="1"]');
+    const allPresets = await presetInputs.all();
+    if (allPresets.length >= 3) {
+      await allPresets[0].fill('15');
+      await allPresets[1].fill('30');
+      await allPresets[2].fill('60');
     }
 
-    // Save
-    const saveButton = modal.locator('button[type="submit"]');
+    // Save — wizard uses "Aktualizuj produkt" / "Update product" button
+    const saveButton = modal.getByRole('button', { name: /Aktualizuj produkt|Update product/i });
     await saveButton.click();
 
     // Wait for save
@@ -298,15 +290,15 @@ test.describe('PWYW Admin Configuration', () => {
       .eq('id', testProduct.id);
 
     await loginAsAdmin(page);
-    await page.goto('/dashboard/products');
+    await page.goto('/pl/dashboard/products');
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1500);
 
     // Click edit
     const productRow = page.locator('tr', { hasText: testProduct.name }).first();
-    await productRow.locator('button[aria-label*="Edit"]').first().click();
+    await productRow.locator('button[title*="Edytuj"], button[title*="Edit"]').first().click();
 
-    const modal = page.locator('div.fixed').filter({ hasText: /Cancel|Anuluj/i });
+    const modal = page.locator('[role="dialog"], dialog').filter({ hasText: /Cancel|Anuluj/i });
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // PWYW toggle should be checked
@@ -321,15 +313,15 @@ test.describe('PWYW Admin Configuration', () => {
 
   test('should switch between fixed price and PWYW mode', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/products');
+    await page.goto('/pl/dashboard/products');
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1500);
 
     // Click edit
     const productRow = page.locator('tr', { hasText: testProduct.name }).first();
-    await productRow.locator('button[aria-label*="Edit"]').first().click();
+    await productRow.locator('button[title*="Edytuj"], button[title*="Edit"]').first().click();
 
-    const modal = page.locator('div.fixed').filter({ hasText: /Cancel|Anuluj/i });
+    const modal = page.locator('[role="dialog"], dialog').filter({ hasText: /Cancel|Anuluj/i });
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Initially PWYW is enabled (from previous test)
@@ -350,8 +342,8 @@ test.describe('PWYW Admin Configuration', () => {
     // Should show PWYW settings
     await expect(modal.locator('#custom_price_min')).toBeVisible();
 
-    // Should hide standard price input
-    await expect(modal.locator('#price')).not.toBeVisible();
+    // Price input stays visible (acts as suggested price in PWYW mode)
+    await expect(modal.locator('#price')).toBeVisible();
   });
 });
 
@@ -384,16 +376,7 @@ test.describe('PWYW Admin - Create New Product', () => {
     let retries = 3;
     while (retries > 0) {
       try {
-        await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-          const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-          const supabase = createBrowserClient(supabaseUrl, anonKey);
-          await supabase.auth.signInWithPassword({ email, password });
-        }, {
-          email: adminEmail,
-          password: adminPassword,
-          supabaseUrl: SUPABASE_URL,
-          anonKey: ANON_KEY,
-        });
+        await setAuthSession(page, adminEmail, adminPassword);
         break;
       } catch (error) {
         retries--;
@@ -432,33 +415,34 @@ test.describe('PWYW Admin - Create New Product', () => {
 
   test('should create new product with PWYW enabled', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/products');
+    await page.goto('/pl/dashboard/products');
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1500);
 
-    // Click add product button
+    // Click add product button — opens wizard (step 1: Essentials)
     const addButton = page.getByRole('button', { name: /Dodaj produkt|Add product/i });
     await addButton.click();
 
-    const modal = page.locator('div.fixed').filter({ hasText: /Cancel|Anuluj/i });
+    const modal = page.locator('[role="dialog"], dialog').filter({ hasText: /Cancel|Anuluj/i });
     await expect(modal).toBeVisible({ timeout: 5000 });
 
-    // Fill basic info
+    // Fill basic info (step 1 — Essentials: BasicInfo + Pricing)
     await modal.locator('input[name="name"]').fill(`New PWYW Product ${Date.now()}`);
-    await modal.locator('input[name="slug"]').fill(`new-pwyw-${Date.now()}`);
     await modal.locator('textarea[name="description"]').fill('New PWYW product description');
+    await modal.locator('input[name="price"]').fill('10');
 
-    // Enable PWYW
+    // Enable PWYW (PricingSection is on step 1)
     await modal.locator('#allow_custom_price').check();
+    await page.waitForTimeout(300);
 
     // Set minimum price
     await modal.locator('#custom_price_min').fill('5');
 
-    // Save
-    const saveButton = modal.locator('button[type="submit"]');
-    await saveButton.click();
+    // Save — wizard uses a regular button, not form submit
+    const createButton = page.getByRole('button', { name: /Utwórz produkt|Create Product/i });
+    await createButton.click();
 
-    // Wait for save and modal to close
+    // Wait for save and wizard to close
     await page.waitForTimeout(3000);
 
     // Verify product was created with PWYW
@@ -506,16 +490,7 @@ test.describe('PWYW Admin - Info Display', () => {
     let retries = 3;
     while (retries > 0) {
       try {
-        await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-          const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-          const supabase = createBrowserClient(supabaseUrl, anonKey);
-          await supabase.auth.signInWithPassword({ email, password });
-        }, {
-          email: adminEmail,
-          password: adminPassword,
-          supabaseUrl: SUPABASE_URL,
-          anonKey: ANON_KEY,
-        });
+        await setAuthSession(page, adminEmail, adminPassword);
         break;
       } catch (error) {
         retries--;
@@ -571,38 +546,39 @@ test.describe('PWYW Admin - Info Display', () => {
 
   test('should show Stripe minimum info when PWYW enabled', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/products');
+    await page.goto('/pl/dashboard/products');
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1500);
 
     // Click edit
     const productRow = page.locator('tr', { hasText: testProduct.name }).first();
-    await productRow.locator('button[aria-label*="Edit"]').first().click();
+    await productRow.locator('button[title*="Edytuj"], button[title*="Edit"]').first().click();
 
-    const modal = page.locator('div.fixed').filter({ hasText: /Cancel|Anuluj/i });
+    const modal = page.locator('[role="dialog"], dialog').filter({ hasText: /Cancel|Anuluj/i });
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Enable PWYW
     await modal.locator('#allow_custom_price').check();
 
-    // Should show Stripe minimum info
-    await expect(modal.getByText(/0[,.]50|Stripe/i)).toBeVisible();
+    // Should show Stripe minimum info (EN: "Stripe min. 0.50", PL: "Stripe min. 0,50")
+    await expect(modal.getByText(/Stripe min\.\s*0[,.]50/i)).toBeVisible();
   });
 
   test('should show PWYW help text', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/products');
+    await page.goto('/pl/dashboard/products');
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1500);
 
     // Click edit
     const productRow = page.locator('tr', { hasText: testProduct.name }).first();
-    await productRow.locator('button[aria-label*="Edit"]').first().click();
+    await productRow.locator('button[title*="Edytuj"], button[title*="Edit"]').first().click();
 
-    const modal = page.locator('div.fixed').filter({ hasText: /Cancel|Anuluj/i });
+    const modal = page.locator('[role="dialog"], dialog').filter({ hasText: /Cancel|Anuluj/i });
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Should show PWYW help text near the toggle
-    await expect(modal.getByText(/klient.*cen|customer.*price|wybr|choose/i)).toBeVisible();
+    // EN: "Allow customer to choose price", PL: "Pozwól klientowi wybrać cenę"
+    await expect(modal.getByText(/customer to choose price|klientowi wybrać cenę/i)).toBeVisible();
   });
 });

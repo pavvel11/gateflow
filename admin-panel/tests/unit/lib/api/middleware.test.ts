@@ -85,12 +85,18 @@ describe('API Middleware', () => {
       expect(headers['Access-Control-Allow-Origin']).toBe('https://backend.com');
     });
 
-    it('should fallback to * if no site URL configured', () => {
+    it('should omit Access-Control-Allow-Origin if no site URL configured and origin not allowed', () => {
       delete process.env.NEXT_PUBLIC_SITE_URL;
       delete process.env.SITE_URL;
 
       const headers = getApiCorsHeaders('https://unknown.com');
-      expect(headers['Access-Control-Allow-Origin']).toBe('*');
+      // Security: omitting the header entirely blocks CORS per spec
+      expect(headers['Access-Control-Allow-Origin']).toBeUndefined();
+    });
+
+    it('should include Vary: Origin header for proper caching', () => {
+      const headers = getApiCorsHeaders('http://localhost:3000');
+      expect(headers['Vary']).toBe('Origin');
     });
 
     it('should include all required CORS headers', () => {
@@ -334,7 +340,7 @@ describe('API Middleware', () => {
       expect(response.status).toBe(403);
     });
 
-    it('should handle unknown errors as INTERNAL_ERROR', async () => {
+    it('should handle unknown errors as INTERNAL_ERROR and log them', async () => {
       const request = createMockRequest();
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -344,17 +350,22 @@ describe('API Middleware', () => {
       const body = await response.json();
       expect(body.error.code).toBe('INTERNAL_ERROR');
       expect(body.error.message).toBe('An unexpected error occurred');
+      expect(consoleSpy).toHaveBeenCalledOnce();
+      expect(consoleSpy).toHaveBeenCalledWith('[handleApiError]', 'Error', 'Unknown');
 
       consoleSpy.mockRestore();
     });
 
-    it('should handle non-Error objects', async () => {
+    it('should handle non-Error objects and log them', async () => {
       const request = createMockRequest();
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       const response = handleApiError('string error', request);
 
       expect(response.status).toBe(500);
+      expect(consoleSpy).toHaveBeenCalledOnce();
+      expect(consoleSpy).toHaveBeenCalledWith('[handleApiError]', 'string', 'Unknown error');
+
       consoleSpy.mockRestore();
     });
   });

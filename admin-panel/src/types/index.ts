@@ -18,6 +18,7 @@ export interface Product {
   layout_template: string
   is_active: boolean
   is_featured: boolean
+  is_listed: boolean
   // EU Omnibus Directive (2019/2161)
   omnibus_exempt: boolean
   // Sale price (promotional pricing)

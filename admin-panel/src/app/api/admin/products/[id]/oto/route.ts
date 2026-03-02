@@ -83,7 +83,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
       if (error) {
         console.error('Failed to save OTO config:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to save OTO configuration' }, { status: 500 });
       }
 
       return NextResponse.json(data);
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
       if (error) {
         console.error('Failed to delete OTO config:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to delete OTO configuration' }, { status: 500 });
       }
 
       return NextResponse.json(data);
