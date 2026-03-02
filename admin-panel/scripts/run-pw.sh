@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run Playwright tests with colorized output (real-time).
+# Run Playwright tests with colorized, real-time output.
 # Passes (✓) are dimmed, failures (✘) are bold red, error details are red.
 # Usage: scripts/run-pw.sh [playwright args...]
 
@@ -11,10 +11,11 @@ RESET=$'\033[0m'
 _PW=$(mktemp)
 trap 'rm -f "$_PW"' EXIT
 
-# Single awk handles filtering + coloring + flushing in one process (no buffering issues)
-FORCE_COLOR=0 npx playwright test "$@" --reporter=list 2>&1 | tee "$_PW" | awk -v red="$RED" -v dim="$DIM" -v reset="$RESET" \
-  '/^\s*[0-9]*\s*✘/ {printf "%s%s%s\n", red, $0, reset; fflush(); next}
-   /^\s*[0-9]*\s*✓/ {printf "%s%s%s\n", dim, $0, reset; fflush(); next}'
+# Single awk replaces tee+grep+awk — writes raw lines to file, prints colored test results immediately
+FORCE_COLOR=0 npx playwright test "$@" --reporter=list 2>&1 | awk -v red="$RED" -v dim="$DIM" -v reset="$RESET" -v logfile="$_PW" \
+  '{print $0 >> logfile}
+   /^\s*✘/ {printf "%s%s%s\n", red, $0, reset; fflush(); next}
+   /^\s*✓/ {printf "%s%s%s\n", dim, $0, reset; fflush(); next}'
 
 # Print error details (lines after "  N) ...")
 ERRORS=$(awk '/^[[:space:]]+[0-9]+\) /{f=1} f' "$_PW")
