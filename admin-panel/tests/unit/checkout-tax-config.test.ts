@@ -42,6 +42,7 @@ const baseShopConfig = {
 describe('getCheckoutConfig', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    delete process.env.STRIPE_TAX_MODE
     delete process.env.STRIPE_SESSION_AUTOMATIC_TAX_ENABLED
     delete process.env.STRIPE_SESSION_TAX_ID_COLLECTION_ENABLED
     delete process.env.STRIPE_SESSION_BILLING_ADDRESS_COLLECTION
@@ -51,30 +52,43 @@ describe('getCheckoutConfig', () => {
     mockedGetPaymentMethodConfig.mockResolvedValue(null)
   })
 
-  describe('tax config (DB > env > default)', () => {
-    it('should use DB value when set', async () => {
+  describe('tax mode (DB > env > default)', () => {
+    it('should derive automatic_tax from tax_mode=local', async () => {
       mockedGetShopConfig.mockResolvedValue({
         ...baseShopConfig,
-        automatic_tax_enabled: false,
+        tax_mode: 'local',
         tax_id_collection_enabled: false,
       })
 
       const config = await getCheckoutConfig()
+      expect(config.tax_mode).toBe('local')
       expect(config.automatic_tax.enabled).toBe(false)
       expect(config.tax_id_collection.enabled).toBe(false)
       expect(config.sources.automatic_tax).toBe('db')
       expect(config.sources.tax_id_collection).toBe('db')
     })
 
-    it('should fall back to default when DB is null', async () => {
+    it('should derive automatic_tax from tax_mode=stripe_tax', async () => {
       mockedGetShopConfig.mockResolvedValue({
         ...baseShopConfig,
-        automatic_tax_enabled: null,
+        tax_mode: 'stripe_tax',
+      })
+
+      const config = await getCheckoutConfig()
+      expect(config.tax_mode).toBe('stripe_tax')
+      expect(config.automatic_tax.enabled).toBe(true)
+      expect(config.sources.automatic_tax).toBe('db')
+    })
+
+    it('should fall back to default local when DB tax_mode is null', async () => {
+      mockedGetShopConfig.mockResolvedValue({
+        ...baseShopConfig,
         tax_id_collection_enabled: null,
       })
 
       const config = await getCheckoutConfig()
-      expect(config.automatic_tax.enabled).toBe(true)
+      expect(config.tax_mode).toBe('local')
+      expect(config.automatic_tax.enabled).toBe(false)
       expect(config.sources.automatic_tax).toBe('default')
     })
   })
@@ -276,7 +290,8 @@ describe('getCheckoutConfig', () => {
       mockedGetShopConfig.mockResolvedValue(null)
 
       const config = await getCheckoutConfig()
-      expect(config.automatic_tax.enabled).toBe(true)
+      expect(config.tax_mode).toBe('local')
+      expect(config.automatic_tax.enabled).toBe(false)
       expect(config.billing_address_collection).toBe('auto')
       expect(config.expires_hours).toBe(24)
       expect(config.collect_terms_of_service).toBe(false)
@@ -289,7 +304,7 @@ describe('getCheckoutConfig', () => {
 
       mockedGetShopConfig.mockResolvedValue({
         ...baseShopConfig,
-        automatic_tax_enabled: false,
+        tax_mode: 'local',
         checkout_billing_address: 'required',
         checkout_expires_hours: null,
       })
@@ -307,7 +322,7 @@ describe('getCheckoutConfig', () => {
     it('getCheckoutTaxConfig should return only tax fields', async () => {
       mockedGetShopConfig.mockResolvedValue({
         ...baseShopConfig,
-        automatic_tax_enabled: true,
+        tax_mode: 'stripe_tax',
         tax_id_collection_enabled: false,
       })
 

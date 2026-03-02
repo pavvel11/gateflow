@@ -2,7 +2,9 @@
  * E2E Tests: Shop Settings
  *
  * Tests the ShopSettings component on /dashboard/settings page.
- * Covers: shop name, default currency, contact email, tax rate.
+ * Covers: shop name, default currency, contact email.
+ *
+ * Note: Tax rate (VAT) was moved to StripeTaxSettings — see stripe-tax-settings.spec.ts.
  *
  * @see admin-panel/src/components/settings/ShopSettings.tsx
  * @see admin-panel/src/lib/actions/shop-config.ts
@@ -11,6 +13,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { acceptAllCookies } from './helpers/consent';
+import { setAuthSession } from './helpers/admin-auth';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -51,16 +54,7 @@ test.describe('Shop Settings', () => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email: adminEmail,
-      password,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
+    await setAuthSession(page, adminEmail, password);
 
     await page.waitForTimeout(1000);
   };
@@ -98,7 +92,6 @@ test.describe('Shop Settings', () => {
         shop_name: config.shop_name,
         default_currency: config.default_currency,
         contact_email: config.contact_email,
-        tax_rate: config.tax_rate,
       };
     }
   });
@@ -132,7 +125,6 @@ test.describe('Shop Settings', () => {
         shop_name: 'Test Shop Display',
         default_currency: 'PLN',
         contact_email: 'display@test.com',
-        tax_rate: 0.23,
       })
       .eq('id', shopConfigId);
 
@@ -155,10 +147,6 @@ test.describe('Shop Settings', () => {
     // Contact email
     const emailInput = page.locator('input[type="email"]').first();
     await expect(emailInput).toHaveValue('display@test.com');
-
-    // Tax rate — stored 0.23 in DB, displayed as 23 in UI
-    const taxInput = page.locator('input[type="number"]').first();
-    await expect(taxInput).toHaveValue('23');
   });
 
   test('should update shop name and persist after refresh', async ({ page }) => {
@@ -240,35 +228,6 @@ test.describe('Shop Settings', () => {
     expect(config.contact_email).toBe(testEmail);
   });
 
-  test('should update tax rate with correct percentage to decimal conversion', async ({ page }) => {
-    await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-
-    const shopHeading = page.locator('h2', { hasText: /Shop Configuration|Shop Settings|Konfiguracja sklepu|Ustawienia sklepu/i });
-    await expect(shopHeading).toBeVisible({ timeout: 10000 });
-
-    // Enter 23 (percent) in UI
-    const taxInput = page.locator('input[type="number"]').first();
-    await taxInput.fill('23');
-
-    const saveBtn = page.locator('button[type="submit"]').first();
-    await saveBtn.click();
-    await page.waitForTimeout(2000);
-
-    // DB should store 0.23 (decimal)
-    const config = await getShopConfigFromDB();
-    expect(Number(config.tax_rate)).toBeCloseTo(0.23, 2);
-
-    // Reload — UI should show 23 again
-    await page.reload();
-    await page.waitForLoadState('networkidle');
-    await expect(shopHeading).toBeVisible({ timeout: 10000 });
-
-    const reloadedTax = page.locator('input[type="number"]').first();
-    await expect(reloadedTax).toHaveValue('23');
-  });
-
   test('should handle empty contact email (save as null)', async ({ page }) => {
     // First set a non-null email
     await supabaseAdmin
@@ -294,27 +253,6 @@ test.describe('Shop Settings', () => {
     // DB should have null, not empty string
     const config = await getShopConfigFromDB();
     expect(config.contact_email).toBeNull();
-  });
-
-  test('should handle tax rate 0', async ({ page }) => {
-    await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-
-    const shopHeading = page.locator('h2', { hasText: /Shop Configuration|Shop Settings|Konfiguracja sklepu|Ustawienia sklepu/i });
-    await expect(shopHeading).toBeVisible({ timeout: 10000 });
-
-    // Enter 0%
-    const taxInput = page.locator('input[type="number"]').first();
-    await taxInput.fill('0');
-
-    const saveBtn = page.locator('button[type="submit"]').first();
-    await saveBtn.click();
-    await page.waitForTimeout(2000);
-
-    // DB should have 0 — a 0% tax rate is a valid, distinct value (not the same as "no tax configured")
-    const config = await getShopConfigFromDB();
-    expect(config.tax_rate).toBe(0);
   });
 
   test('should deny access for non-admin users', async ({ page }) => {
@@ -345,16 +283,7 @@ test.describe('Shop Settings', () => {
       await page.goto('/');
       await page.waitForLoadState('domcontentloaded');
 
-      await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-        const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-        const supabase = createBrowserClient(supabaseUrl, anonKey);
-        await supabase.auth.signInWithPassword({ email, password });
-      }, {
-        email: nonAdminEmail,
-        password: 'password123',
-        supabaseUrl: SUPABASE_URL,
-        anonKey: ANON_KEY,
-      });
+      await setAuthSession(page, nonAdminEmail, 'password123');
 
       await page.waitForTimeout(1000);
 

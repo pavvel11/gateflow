@@ -2,8 +2,9 @@
  * E2E Tests: Stripe Tax Settings (Admin UI)
  *
  * Tests the StripeTaxSettings component on /dashboard/settings page.
- * Covers: automatic tax toggle, tax ID collection toggle, billing address,
- * session expires hours (with clamping), collect terms toggle.
+ * Covers: tax mode selector (local/stripe_tax), default VAT rate input,
+ * tax ID collection toggle, billing address, session expires hours (with clamping),
+ * collect terms toggle.
  *
  * Unit tests for the config resolution logic (DB > env > default) are in:
  * @see admin-panel/tests/unit/checkout-tax-config.test.ts
@@ -17,6 +18,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { acceptAllCookies } from './helpers/consent';
+import { setAuthSession } from './helpers/admin-auth';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -55,26 +57,17 @@ test.describe('Stripe Tax Settings Admin UI', () => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email: adminEmail,
-      password,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
+    await setAuthSession(page, adminEmail, password);
 
     await page.waitForTimeout(1000);
   };
 
-  /** Navigate to settings and return the Stripe Tax section container */
+  /** Navigate to settings and return the Tax & Checkout section container */
   async function goToStripeTaxSection(page: Page) {
     await page.goto('/dashboard/settings');
     await page.waitForLoadState('networkidle');
 
-    const heading = page.locator('h2', { hasText: /Stripe Tax|Tax/i }).first();
+    const heading = page.locator('h2', { hasText: /Tax & Checkout|Stripe Tax|Tax/i }).first();
     await expect(heading).toBeVisible({ timeout: 10000 });
 
     // h2 → div → div.flex → div.card (section container)
@@ -101,13 +94,14 @@ test.describe('Stripe Tax Settings Admin UI', () => {
     // Save original fields
     const { data: config } = await supabaseAdmin
       .from('shop_config')
-      .select('id, automatic_tax_enabled, tax_id_collection_enabled, checkout_billing_address, checkout_expires_hours, checkout_collect_terms')
+      .select('id, tax_mode, tax_rate, tax_id_collection_enabled, checkout_billing_address, checkout_expires_hours, checkout_collect_terms')
       .single();
 
     if (config) {
       shopConfigId = config.id;
       originalFields = {
-        automatic_tax_enabled: config.automatic_tax_enabled,
+        tax_mode: config.tax_mode,
+        tax_rate: config.tax_rate,
         tax_id_collection_enabled: config.tax_id_collection_enabled,
         checkout_billing_address: config.checkout_billing_address,
         checkout_expires_hours: config.checkout_expires_hours,
@@ -121,7 +115,7 @@ test.describe('Stripe Tax Settings Admin UI', () => {
     await supabaseAdmin
       .from('shop_config')
       .update({
-        automatic_tax_enabled: null,
+        tax_mode: 'local',
         tax_id_collection_enabled: null,
         checkout_billing_address: null,
         checkout_expires_hours: null,
@@ -151,14 +145,18 @@ test.describe('Stripe Tax Settings Admin UI', () => {
   // Tests
   // =========================================================================
 
-  test('should display all 5 checkout configuration fields', async ({ page }) => {
+  test('should display tax mode selector and checkout configuration fields', async ({ page }) => {
     await loginAsAdmin(page);
     const section = await goToStripeTaxSection(page);
 
-    // 3 toggles within the Stripe Tax section: automatic tax, tax ID, collect terms
+    // Tax mode selector: "Fixed Rate" and "Stripe Tax" buttons
+    await expect(section.locator('button', { hasText: /Fixed Rate|Stała stawka/i }).first()).toBeVisible();
+    await expect(section.locator('button', { hasText: /Stripe Tax/i }).first()).toBeVisible();
+
+    // 2 toggles: tax ID collection, collect terms (automatic_tax toggle was replaced by mode selector)
     const toggles = section.locator('button[role="switch"]');
     const toggleCount = await toggles.count();
-    expect(toggleCount).toBeGreaterThanOrEqual(3);
+    expect(toggleCount).toBeGreaterThanOrEqual(2);
 
     // Billing address buttons: "Auto" and "Required"
     await expect(section.locator('button', { hasText: /auto/i }).first()).toBeVisible();
@@ -168,41 +166,113 @@ test.describe('Stripe Tax Settings Admin UI', () => {
     await expect(section.locator('input[type="number"][min="1"][max="168"]')).toBeVisible();
   });
 
-  test('should toggle automatic tax and persist in DB', async ({ page }) => {
+  test('should switch tax mode to stripe_tax and persist in DB', async ({ page }) => {
+    // Start in local mode
+    await supabaseAdmin
+      .from('shop_config')
+      .update({ tax_mode: 'local' })
+      .eq('id', shopConfigId);
+
     await loginAsAdmin(page);
     const section = await goToStripeTaxSection(page);
 
-    // First toggle within Stripe Tax section = Automatic Tax
-    const firstToggle = section.locator('button[role="switch"]').first();
-
-    // Get current state
-    const initialState = await firstToggle.getAttribute('aria-checked');
-
-    // Click to toggle
-    await firstToggle.click();
+    // Click "Stripe Tax" button
+    const stripeTaxBtn = section.locator('button', { hasText: /Stripe Tax/i }).first();
+    await stripeTaxBtn.click();
     await page.waitForTimeout(2000);
 
     // Verify in DB
     const { data: config } = await supabaseAdmin
       .from('shop_config')
-      .select('automatic_tax_enabled')
+      .select('tax_mode')
       .eq('id', shopConfigId)
       .single();
 
-    const expectedValue = initialState !== 'true';
-    expect(config!.automatic_tax_enabled).toBe(expectedValue);
+    expect(config!.tax_mode).toBe('stripe_tax');
+  });
 
-    // Verify UI updated
-    const newState = await firstToggle.getAttribute('aria-checked');
-    expect(newState).toBe(String(expectedValue));
+  test('should switch tax mode to local and persist in DB', async ({ page }) => {
+    // Start in stripe_tax mode
+    await supabaseAdmin
+      .from('shop_config')
+      .update({ tax_mode: 'stripe_tax' })
+      .eq('id', shopConfigId);
+
+    await loginAsAdmin(page);
+    const section = await goToStripeTaxSection(page);
+
+    // Click "Fixed Rate" button
+    const localBtn = section.locator('button', { hasText: /Fixed Rate|Stała stawka/i }).first();
+    await localBtn.click();
+    await page.waitForTimeout(2000);
+
+    // Verify in DB
+    const { data: config } = await supabaseAdmin
+      .from('shop_config')
+      .select('tax_mode')
+      .eq('id', shopConfigId)
+      .single();
+
+    expect(config!.tax_mode).toBe('local');
+  });
+
+  test('should show default VAT rate input in local mode', async ({ page }) => {
+    await supabaseAdmin
+      .from('shop_config')
+      .update({ tax_mode: 'local', tax_rate: 0.23 })
+      .eq('id', shopConfigId);
+
+    await loginAsAdmin(page);
+    const section = await goToStripeTaxSection(page);
+
+    // VAT rate input should be visible in local mode
+    const vatInput = section.locator('input#default-vat-rate');
+    await expect(vatInput).toBeVisible();
+    await expect(vatInput).toHaveValue('23');
+  });
+
+  test('should hide VAT rate input in stripe_tax mode', async ({ page }) => {
+    await supabaseAdmin
+      .from('shop_config')
+      .update({ tax_mode: 'stripe_tax' })
+      .eq('id', shopConfigId);
+
+    await loginAsAdmin(page);
+    const section = await goToStripeTaxSection(page);
+
+    // VAT rate input should NOT be visible in stripe_tax mode
+    const vatInput = section.locator('input#default-vat-rate');
+    await expect(vatInput).not.toBeVisible();
+  });
+
+  test('should update default VAT rate on blur and persist in DB', async ({ page }) => {
+    await supabaseAdmin
+      .from('shop_config')
+      .update({ tax_mode: 'local', tax_rate: null })
+      .eq('id', shopConfigId);
+
+    await loginAsAdmin(page);
+    const section = await goToStripeTaxSection(page);
+
+    const vatInput = section.locator('input#default-vat-rate');
+    await vatInput.fill('8');
+    await vatInput.blur();
+    await page.waitForTimeout(2000);
+
+    // DB should store 0.08 (decimal)
+    const { data: config } = await supabaseAdmin
+      .from('shop_config')
+      .select('tax_rate')
+      .eq('id', shopConfigId)
+      .single();
+
+    expect(Number(config!.tax_rate)).toBeCloseTo(0.08, 2);
   });
 
   test('should toggle tax ID collection and persist in DB', async ({ page }) => {
-    // Set known state: automatic_tax = true (to distinguish from first toggle)
     await supabaseAdmin
       .from('shop_config')
       .update({
-        automatic_tax_enabled: true,
         tax_id_collection_enabled: false,
       })
       .eq('id', shopConfigId);
@@ -210,14 +280,14 @@ test.describe('Stripe Tax Settings Admin UI', () => {
     await loginAsAdmin(page);
     const section = await goToStripeTaxSection(page);
 
-    // Second toggle within Stripe Tax section = Tax ID Collection
-    const secondToggle = section.locator('button[role="switch"]').nth(1);
+    // First toggle = Tax ID Collection (automatic_tax toggle was removed)
+    const firstToggle = section.locator('button[role="switch"]').first();
 
     // Should be OFF initially (false)
-    await expect(secondToggle).toHaveAttribute('aria-checked', 'false');
+    await expect(firstToggle).toHaveAttribute('aria-checked', 'false');
 
     // Click to enable
-    await secondToggle.click();
+    await firstToggle.click();
     await page.waitForTimeout(2000);
 
     // Verify in DB
@@ -234,7 +304,7 @@ test.describe('Stripe Tax Settings Admin UI', () => {
     await loginAsAdmin(page);
     const section = await goToStripeTaxSection(page);
 
-    // Click "Required" button (billing address segment control) within Stripe Tax section
+    // Click "Required" button (billing address segment control) within section
     const requiredBtn = section.locator('button', { hasText: /required/i }).first();
     await requiredBtn.click();
     await page.waitForTimeout(2000);
@@ -296,7 +366,6 @@ test.describe('Stripe Tax Settings Admin UI', () => {
     await supabaseAdmin
       .from('shop_config')
       .update({
-        automatic_tax_enabled: true,
         tax_id_collection_enabled: true,
         checkout_collect_terms: false,
       })
@@ -305,14 +374,14 @@ test.describe('Stripe Tax Settings Admin UI', () => {
     await loginAsAdmin(page);
     const section = await goToStripeTaxSection(page);
 
-    // Third toggle within Stripe Tax section = Collect Terms
-    const thirdToggle = section.locator('button[role="switch"]').nth(2);
+    // Second toggle = Collect Terms (was third before automatic_tax toggle removal)
+    const secondToggle = section.locator('button[role="switch"]').nth(1);
 
     // Should be OFF (false)
-    await expect(thirdToggle).toHaveAttribute('aria-checked', 'false');
+    await expect(secondToggle).toHaveAttribute('aria-checked', 'false');
 
     // Click to enable
-    await thirdToggle.click();
+    await secondToggle.click();
     await page.waitForTimeout(2000);
 
     // Verify in DB

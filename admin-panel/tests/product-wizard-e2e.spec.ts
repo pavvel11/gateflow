@@ -219,6 +219,69 @@ test.describe('Product Creation Wizard', () => {
     // Should close immediately without confirmation
     await expect(page.getByText('Utwórz nowy produkt')).not.toBeVisible({ timeout: 3000 });
   });
+
+  test('should show VAT fields on step 1 in local tax mode', async ({ page }) => {
+    // Ensure local tax mode is set
+    const { error: localErr } = await supabaseAdmin
+      .from('shop_config')
+      .update({ tax_mode: 'local' })
+      .not('id', 'is', null);
+    if (localErr) throw localErr;
+
+    await goToProducts(page);
+    await openWizard(page);
+
+    // VAT checkbox should be visible (price_includes_vat)
+    const vatCheckbox = page.locator('input#price_includes_vat');
+    await expect(vatCheckbox).toBeVisible();
+
+    // VAT rate input should be visible when checkbox is checked (default: checked)
+    const vatInput = page.locator('input#vat_rate');
+    await expect(vatInput).toBeVisible();
+
+    // Close without saving
+    await page.locator('button[aria-label="Close modal"], button[aria-label="Zamknij okno"]').click();
+    const exitModal = page.getByText(/Odrzucić zmiany/i);
+    if (await exitModal.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await page.getByRole('button', { name: /Odrzuć/i }).click();
+    }
+  });
+
+  test('should show Stripe Tax info badge in stripe_tax mode', async ({ page }) => {
+    // Switch to stripe_tax mode
+    const { error: stripeErr } = await supabaseAdmin
+      .from('shop_config')
+      .update({ tax_mode: 'stripe_tax' })
+      .not('id', 'is', null);
+    if (stripeErr) throw stripeErr;
+
+    await goToProducts(page);
+    await openWizard(page);
+
+    // Wait for async getShopConfig() call to resolve and update taxMode state
+    await page.waitForTimeout(2000);
+
+    // Should show "Tax calculated by Stripe" info instead of VAT fields
+    await expect(page.getByText(/Tax calculated by Stripe|Podatek naliczany przez Stripe/i)).toBeVisible({ timeout: 10000 });
+
+    // VAT rate input should NOT be visible
+    const vatInput = page.locator('input#vat_rate');
+    await expect(vatInput).not.toBeVisible();
+
+    // Restore local mode
+    const { error: localErr2 } = await supabaseAdmin
+      .from('shop_config')
+      .update({ tax_mode: 'local' })
+      .not('id', 'is', null);
+    if (localErr2) throw localErr2;
+
+    // Close without saving
+    await page.locator('button[aria-label="Close modal"], button[aria-label="Zamknij okno"]').click();
+    const exitModal = page.getByText(/Odrzucić zmiany/i);
+    if (await exitModal.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await page.getByRole('button', { name: /Odrzuć/i }).click();
+    }
+  });
 });
 
 test.describe('Edit mode uses wizard', () => {
@@ -238,6 +301,8 @@ test.describe('Edit mode uses wizard', () => {
         description: 'Product for edit mode test',
         is_active: true,
         icon: '📦',
+        vat_rate: 23,
+        price_includes_vat: true,
       })
       .select()
       .single();
@@ -350,6 +415,8 @@ test.describe('Duplicate mode uses wizard', () => {
         description: 'Source product for duplicate test',
         is_active: true,
         icon: '🎯',
+        vat_rate: 23,
+        price_includes_vat: true,
       })
       .select()
       .single();

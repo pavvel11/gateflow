@@ -41,6 +41,8 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
         currency: 'PLN',
         description: 'Test product for payment config checkout tests',
         is_active: true,
+        vat_rate: 23,
+        price_includes_vat: true,
       });
     if (error) throw error;
     createdProductSlugs.push(testProductSlug);
@@ -411,14 +413,19 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
       timeout: 10000,
     });
 
-    // Visit checkout
+    // Visit checkout — the Pay button only renders after clientSecret is set, which
+    // requires /api/create-payment-intent to respond. Wait for that response directly
+    // instead of networkidle (which waits unnecessarily for all Stripe background requests).
     expect(testProductSlug).toBeTruthy();
+    const responsePromise = page.waitForResponse(
+      resp => resp.url().includes('/api/create-payment-intent') && resp.status() === 200,
+      { timeout: 15000 }
+    );
     await page.goto(`/checkout/${testProductSlug}`);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(3000);
+    await responsePromise;
 
     // Verify checkout loaded (no Express Checkout, only regular Payment Element)
-    await expect(page.getByRole('button', { name: /Pay|Zapłać/i })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('button', { name: /Pay|Zapłać/i })).toBeVisible({ timeout: 5000 });
   });
 
   test('E2E-CHECKOUT-011: Config fallback - No config', async ({ page }) => {

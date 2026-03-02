@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { acceptAllCookies } from './helpers/consent';
+import { setAuthSession } from './helpers/admin-auth';
 
 // Enforce single worker for database consistency
 test.describe.configure({ mode: 'serial' });
@@ -39,16 +40,7 @@ const loginAsAdmin = async (page: Page, adminEmail: string, adminPassword: strin
   let retries = 3;
   while (retries > 0) {
     try {
-      await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-        const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-        const supabase = createBrowserClient(supabaseUrl, anonKey);
-        await supabase.auth.signInWithPassword({ email, password });
-      }, {
-        email: adminEmail,
-        password: adminPassword,
-        supabaseUrl: SUPABASE_URL,
-        anonKey: ANON_KEY,
-      });
+      await setAuthSession(page, adminEmail, adminPassword);
       break; // Success, exit loop
     } catch (error) {
       retries--;
@@ -266,7 +258,8 @@ test.describe('Omnibus Frontend - Admin Side', () => {
         currency: 'USD',
         description: 'Product for admin testing',
         is_active: true,
-        omnibus_exempt: false
+        omnibus_exempt: false,
+        price_includes_vat: false
       })
       .select()
       .single();
@@ -306,7 +299,7 @@ test.describe('Omnibus Frontend - Admin Side', () => {
     await page.waitForTimeout(500);
 
     // Expand Advanced Settings section (omnibus_exempt is inside)
-    const advancedSettingsButton = modal.locator('button', { hasText: /Advanced Settings|Zaawansowane/i });
+    const advancedSettingsButton = modal.locator('button', { hasText: /Advanced Settings|Ustawienia zaawansowane/i });
     await advancedSettingsButton.scrollIntoViewIfNeeded();
     await advancedSettingsButton.click();
 
@@ -348,7 +341,7 @@ test.describe('Omnibus Frontend - Admin Side', () => {
     // Advanced Settings may already be expanded (defaultExpanded depends on omnibus_exempt=true)
     const omnibusCheckbox2 = modal.locator('input[name="omnibus_exempt"]');
     if (!(await omnibusCheckbox2.isVisible())) {
-      await modal.locator('button', { hasText: /Advanced Settings|Zaawansowane/i }).click();
+      await modal.locator('button', { hasText: /Advanced Settings|Ustawienia zaawansowane/i }).click();
     }
     await omnibusCheckbox2.scrollIntoViewIfNeeded();
     await expect(omnibusCheckbox2).toBeChecked();
@@ -376,9 +369,7 @@ test.describe('Omnibus Frontend - Admin Side', () => {
     await page.waitForSelector('text=/Dyrektywa Omnibus|EU Omnibus Directive/i', { timeout: 10000 });
 
     // Target the specific Omnibus card by its unique heading
-    const omnibusCard = page.locator('div.rounded-xl', {
-      has: page.locator('h2', { hasText: /Dyrektywa Omnibus|EU Omnibus Directive/i }),
-    });
+    const omnibusCard = page.locator('h2', { hasText: /Dyrektywa Omnibus|EU Omnibus Directive/i }).locator('xpath=ancestor::div[contains(@class, "border-sf-border-medium")]');
     const toggle = omnibusCard.locator('button[role="switch"]');
 
     // Get initial state
@@ -405,9 +396,7 @@ test.describe('Omnibus Frontend - Admin Side', () => {
     await page.waitForSelector('text=/Dyrektywa Omnibus|EU Omnibus Directive/i', { timeout: 10000 });
 
     // Re-target toggle after reload
-    const omnibusCard2 = page.locator('div.rounded-xl', {
-      has: page.locator('h2', { hasText: /Dyrektywa Omnibus|EU Omnibus Directive/i }),
-    });
+    const omnibusCard2 = page.locator('h2', { hasText: /Dyrektywa Omnibus|EU Omnibus Directive/i }).locator('xpath=ancestor::div[contains(@class, "border-sf-border-medium")]');
     const toggle2 = omnibusCard2.locator('button[role="switch"]');
 
     // Toggle back and wait for server action to persist

@@ -172,22 +172,29 @@ test.describe('Waitlist Feature', () => {
       // Click add product button — opens wizard (step 1)
       await page.getByRole('button', { name: /Dodaj produkt|Add Product/i }).click();
 
-      // Wait for wizard
       await page.waitForSelector('[role="dialog"]');
 
-      // Fill step 1 minimum required fields to enable navigation
+      // Fill step 1 minimum required fields
       await page.fill('input#name', 'Waitlist Test Temp');
       await page.fill('textarea#description', 'Temp description');
       await page.fill('input#price', '10');
 
-      // Navigate to step 3 (Availability is on step 3: Sales & Settings)
-      await page.getByRole('dialog').getByRole('button', { name: /Dalej|Continue Setup/i }).click();
-      await page.waitForTimeout(1000);
-      await page.getByRole('dialog').getByRole('button', { name: /Dalej|Continue Setup/i }).click();
-      await page.waitForTimeout(1000);
+      // Uncheck "price includes VAT" to bypass VAT validation on step 1.
+      // Without this, clicking Dalej is a no-op until getShopConfig() resolves and
+      // auto-populates vat_rate — a race condition that causes flakiness.
+      const vatCheckbox = page.locator('input#price_includes_vat');
+      if (await vatCheckbox.isChecked()) {
+        await vatCheckbox.uncheck();
+      }
+
+      // Navigate to step 3 (Availability → Enable Waitlist is on step 3: Sales & Settings)
+      const nextButton = page.getByRole('dialog').getByRole('button', { name: /Dalej|Continue Setup/i });
+      await nextButton.click();
+      // Confirm step 1 actually left (validates that the click was accepted)
+      await expect(page.locator('input#name')).not.toBeVisible({ timeout: 5000 });
+      await nextButton.click();
 
       // AvailabilitySection renders with defaultExpanded={true}, so content should be visible
-      // Look for waitlist checkbox label (no need to click section header — already expanded)
       const waitlistLabel = page.locator('label').filter({ hasText: /Enable Waitlist|Włącz zapis na listę/i });
       await expect(waitlistLabel).toBeVisible({ timeout: 5000 });
     });
@@ -450,13 +457,20 @@ test.describe('Waitlist Feature', () => {
       await page.fill('textarea#description', 'Temp description');
       await page.fill('input#price', '10');
 
+      // Uncheck "price includes VAT" to bypass VAT validation on step 1.
+      // Without this, clicking Dalej is a no-op until getShopConfig() resolves — a race condition.
+      const vatCheckbox = page.locator('input#price_includes_vat');
+      if (await vatCheckbox.isChecked()) {
+        await vatCheckbox.uncheck();
+      }
+
       // Step 1 → Step 2
-      await page.getByRole('dialog').getByRole('button', { name: /Dalej|Continue Setup/i }).click();
-      await page.waitForTimeout(1000);
+      const nextButton = page.getByRole('dialog').getByRole('button', { name: /Dalej|Continue Setup/i });
+      await nextButton.click();
+      await expect(page.locator('input#name')).not.toBeVisible({ timeout: 5000 });
 
       // Step 2 → Step 3
-      await page.getByRole('dialog').getByRole('button', { name: /Dalej|Continue Setup/i }).click();
-      await page.waitForTimeout(1000);
+      await nextButton.click();
     }
 
     /**
@@ -465,20 +479,16 @@ test.describe('Waitlist Feature', () => {
      */
     async function ensureAvailabilitySectionExpanded(page: import('@playwright/test').Page): Promise<void> {
       const modal = page.locator('[role="dialog"]');
-      const sectionHeader = modal.locator('button').filter({ hasText: /Dostępność.*Lista|Availability.*Waitlist/i }).first();
       const waitlistLabel = modal.locator('label').filter({ hasText: /Włącz zapis na listę|Enable Waitlist/i });
 
-      // Check if section content is visible (expanded)
+      // If section is already expanded, nothing to do
       const isExpanded = await waitlistLabel.isVisible().catch(() => false);
+      if (isExpanded) return;
 
-      if (!isExpanded) {
-        // Section is collapsed, click to expand
-        await sectionHeader.click();
-        await page.waitForTimeout(300); // Wait for animation
-      }
-
-      // Wait for RPC check to complete
-      await page.waitForTimeout(1000);
+      // Section is collapsed — click header to expand and wait for content
+      const sectionHeader = modal.locator('button').filter({ hasText: /Dostępność.*Lista|Availability.*Waitlist/i }).first();
+      await sectionHeader.click();
+      await expect(waitlistLabel).toBeVisible({ timeout: 5000 });
     }
 
     test('should disable waitlist checkbox when no webhook configured', async ({ page }) => {

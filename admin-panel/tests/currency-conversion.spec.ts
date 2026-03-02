@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { acceptAllCookies } from './helpers/consent';
+import { setAuthSession } from './helpers/admin-auth';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -39,21 +40,22 @@ test.describe('Currency Conversion Feature', () => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email: adminEmail,
-      password: adminPassword,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
+    await setAuthSession(page, adminEmail, adminPassword);
 
     await page.waitForTimeout(1000);
   };
 
   test.beforeAll(async () => {
+    // Ensure ECB (free, no key needed) is the currency provider for tests
+    await supabaseAdmin.from('integrations_config').upsert({
+      id: 1,
+      currency_api_provider: 'ecb',
+      currency_api_enabled: true,
+      currency_api_key_encrypted: null,
+      currency_api_key_iv: null,
+      currency_api_key_tag: null,
+    });
+
     const randomStr = Math.random().toString(36).substring(7);
     adminEmail = `test-currency-${Date.now()}-${randomStr}@example.com`;
 
@@ -143,7 +145,7 @@ test.describe('Currency Conversion Feature', () => {
     const revenueCard = page.getByTestId('stat-card-total-revenue');
     await expect(revenueCard).toBeVisible();
 
-    const revenueValue = revenueCard.locator('p.text-2xl').first();
+    const revenueValue = revenueCard.locator('p').nth(1);
     const revenueText = await revenueValue.textContent();
 
     // Should NOT contain + sign (single currency, converted mode)
@@ -176,7 +178,7 @@ test.describe('Currency Conversion Feature', () => {
 
     // Check revenue card now shows only USD
     const revenueCard = page.getByTestId('stat-card-total-revenue');
-    const revenueValue = revenueCard.locator('p.text-2xl').first();
+    const revenueValue = revenueCard.locator('p').nth(1);
     const revenueText = await revenueValue.textContent();
 
     // Should NOT contain + sign (single currency)
@@ -206,7 +208,7 @@ test.describe('Currency Conversion Feature', () => {
     await expect(page.locator('button', { hasText: /Convert to EUR/i }).first()).toBeVisible({ timeout: 5000 });
 
     const revenueCard = page.getByTestId('stat-card-total-revenue');
-    const revenueValue = revenueCard.locator('p.text-2xl').first();
+    const revenueValue = revenueCard.locator('p').nth(1);
     const revenueText = await revenueValue.textContent();
 
     expect(revenueText).not.toContain('+');
@@ -236,7 +238,7 @@ test.describe('Currency Conversion Feature', () => {
 
     // Revenue should still show €
     const revenueCard = page.getByTestId('stat-card-total-revenue');
-    const revenueValue = revenueCard.locator('p.text-2xl').first();
+    const revenueValue = revenueCard.locator('p').nth(1);
     const revenueText = await revenueValue.textContent();
     expect(revenueText).toContain('€');
   });
@@ -276,7 +278,7 @@ test.describe('Currency Conversion Feature', () => {
 
     // Revenue should show multiple currencies (+ sign between them)
     const revenueCard = page.getByTestId('stat-card-total-revenue');
-    const revenueValue = revenueCard.locator('p.text-2xl').first();
+    const revenueValue = revenueCard.locator('p').nth(1);
     await expect(revenueValue).toContainText('+', { timeout: 5000 });
   });
 
@@ -299,9 +301,11 @@ test.describe('Currency Conversion Feature', () => {
     await expect(chart).toBeVisible({ timeout: 10000 });
 
     // Find the chart's total revenue display specifically (not the stat card)
-    // The chart component has "Revenue Trend" heading followed by total revenue
-    const chartCard = page.locator('div.rounded-xl:has(h2:has-text("Revenue Trend"))').first();
-    const totalRevenueDisplay = chartCard.locator('div.text-2xl.font-bold').first();
+    // The chart component has "Revenue Trend" h2 followed by a large revenue value p (sibling)
+    const revenueHeading = page.locator('h2', { hasText: /Revenue Trend|Trend przychod/i }).first();
+    await expect(revenueHeading).toBeVisible({ timeout: 10000 });
+    // Navigate to parent div of h2, then find the p sibling (revenue value)
+    const totalRevenueDisplay = revenueHeading.locator('..').locator('p').first();
     const totalText = await totalRevenueDisplay.textContent();
 
     // Should show EUR and NOT contain + (which would indicate multiple currencies joined together)
@@ -316,7 +320,7 @@ test.describe('Currency Conversion Feature', () => {
 
     // Get initial grouped total
     const revenueCard = page.getByTestId('stat-card-total-revenue');
-    const initialValue = await revenueCard.locator('p.text-2xl').first().textContent();
+    const initialValue = await revenueCard.locator('p').nth(1).textContent();
     console.log('Grouped revenue:', initialValue);
 
     // Convert to USD
@@ -329,7 +333,7 @@ test.describe('Currency Conversion Feature', () => {
     await page.waitForTimeout(2000); // Wait for conversion
 
     // Get converted value
-    const convertedValue = await revenueCard.locator('p.text-2xl').first().textContent();
+    const convertedValue = await revenueCard.locator('p').nth(1).textContent();
     console.log('Converted to USD:', convertedValue);
 
     // Values should be different
