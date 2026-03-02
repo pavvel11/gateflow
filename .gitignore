@@ -27,6 +27,10 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# Private keys and certificates (NEVER commit!)
+*.pem
+*.key
+
 # Node modules
 node_modules/
 
