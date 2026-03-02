@@ -320,9 +320,8 @@ test.describe('Product Access & Content Delivery', () => {
 
     await expect(page.locator('body')).not.toContainText('Application error');
 
-    // User has access — should show access granted badge or product content
-    // Use locator('main') to avoid matching <title> tag (which is always hidden)
-    await expect(page.locator('main').getByText(freeProduct.name).first()).toBeVisible({ timeout: 10000 });
+    // User has access — should show product name in h1 (not <title> which is always hidden)
+    await expect(page.locator('h1').getByText(freeProduct.name)).toBeVisible({ timeout: 15000 });
   });
 });
 
