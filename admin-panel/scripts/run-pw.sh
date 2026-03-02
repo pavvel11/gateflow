@@ -9,13 +9,23 @@ DIM=$'\033[2m'
 RESET=$'\033[0m'
 
 _PW=$(mktemp)
-trap 'rm -f "$_PW"' EXIT
+trap 'rm -f "$_PW"; kill "$TAIL_PID" 2>/dev/null' EXIT
 
-# Single awk replaces tee+grep+awk — writes raw lines to file, prints colored test results immediately
-FORCE_COLOR=0 npx playwright test "$@" --reporter=list 2>&1 | awk -v red="$RED" -v dim="$DIM" -v reset="$RESET" -v logfile="$_PW" \
-  '{print $0 >> logfile}
-   /^\s*✘/ {printf "%s%s%s\n", red, $0, reset; fflush(); next}
-   /^\s*✓/ {printf "%s%s%s\n", dim, $0, reset; fflush(); next}'
+# Run Playwright writing to file (avoids pipe buffering)
+FORCE_COLOR=0 npx playwright test "$@" --reporter=list >"$_PW" 2>&1 &
+PW_PID=$!
+
+# Stream results in real-time via tail -f → awk (line-buffered)
+tail -f "$_PW" | awk -v red="$RED" -v dim="$DIM" -v reset="$RESET" \
+  '/^\s*✘/ {printf "%s%s%s\n", red, $0, reset; fflush(); next}
+   /^\s*✓/ {printf "%s%s%s\n", dim, $0, reset; fflush(); next}' &
+TAIL_PID=$!
+
+# Wait for Playwright to finish
+wait "$PW_PID" 2>/dev/null
+sleep 0.5
+kill "$TAIL_PID" 2>/dev/null
+wait "$TAIL_PID" 2>/dev/null
 
 # Print error details (lines after "  N) ...")
 ERRORS=$(awk '/^[[:space:]]+[0-9]+\) /{f=1} f' "$_PW")
