@@ -290,14 +290,18 @@ log "Files swapped"
 write_progress "migrating" 75 "Running database migrations..."
 log "Running migrations..."
 
-# Only run if supabase CLI is available and migrations exist
-if command -v npx &>/dev/null && [ -d "$INSTALL_DIR/supabase/migrations" ]; then
+# Read DATABASE_URL from .env.local (direct Postgres connection string)
+DB_URL=$(grep -E '^DATABASE_URL=' "$INSTALL_DIR/.env.local" 2>/dev/null | cut -d= -f2- || true)
+
+if [ -n "$DB_URL" ] && command -v npx &>/dev/null && [ -d "$INSTALL_DIR/supabase/migrations" ]; then
   cd "$INSTALL_DIR"
-  npx supabase db push --linked >> "$LOG_FILE" 2>&1 || {
+  npx supabase db push --db-url "$DB_URL" >> "$LOG_FILE" 2>&1 || {
     log "WARNING: Migration failed — check logs. Continuing with restart..."
     # Don't abort on migration failure — the new code may still work
   }
   log "Migrations complete"
+elif [ -z "$DB_URL" ]; then
+  log "Skipping migrations (no DATABASE_URL in .env.local)"
 else
   log "Skipping migrations (no supabase CLI or no migrations dir)"
 fi
