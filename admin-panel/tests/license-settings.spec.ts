@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { acceptAllCookies } from './helpers/consent';
+import { setAuthSession } from './helpers/admin-auth';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -48,16 +49,7 @@ test.describe('License Settings', () => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email: adminEmail,
-      password: password,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
+    await setAuthSession(page, adminEmail, password);
 
     await page.waitForTimeout(1000);
   };
@@ -343,7 +335,7 @@ test.describe('License Settings', () => {
     await page.waitForTimeout(500);
 
     // Signature should be truncated with "..." in the details section
-    const signatureSpan = page.locator('span.font-mono.text-gray-400', { hasText: '...' });
+    const signatureSpan = page.locator('span.font-mono.text-sf-muted', { hasText: '...' });
     await expect(signatureSpan).toBeVisible();
 
     // Full signature should NOT be visible (truncated for security/UI)

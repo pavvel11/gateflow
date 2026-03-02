@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { setAuthSession } from './helpers/admin-auth';
 
 /**
  * Comprehensive Gatekeeper Protection Tests
@@ -242,11 +243,7 @@ test.describe('Comprehensive Gatekeeper Protection Tests', () => {
     test('Logged in user can access free product page', async ({ page }) => {
       // Login
       await page.goto(NEXT_JS_URL);
-      await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-        const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-        const supabase = createBrowserClient(supabaseUrl, anonKey);
-        await supabase.auth.signInWithPassword({ email, password });
-      }, { email: userWithNoAccess.email, password, supabaseUrl: SUPABASE_URL, anonKey: ANON_KEY });
+      await setAuthSession(page, userWithNoAccess.email, password);
       await page.waitForTimeout(1000);
 
       await page.goto(`${NEXT_JS_URL}/p/${freeProduct.slug}`);
@@ -279,11 +276,7 @@ test.describe('Comprehensive Gatekeeper Protection Tests', () => {
     test('User WITH access can view paid product page', async ({ page }) => {
       // Login user with paid access
       await page.goto(NEXT_JS_URL);
-      await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-        const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-        const supabase = createBrowserClient(supabaseUrl, anonKey);
-        await supabase.auth.signInWithPassword({ email, password });
-      }, { email: userWithPaidAccess.email, password, supabaseUrl: SUPABASE_URL, anonKey: ANON_KEY });
+      await setAuthSession(page, userWithPaidAccess.email, password);
       await page.waitForTimeout(1000);
 
       await page.goto(`${NEXT_JS_URL}/p/${paidProduct.slug}`);
@@ -299,11 +292,7 @@ test.describe('Comprehensive Gatekeeper Protection Tests', () => {
     test('User WITHOUT access is redirected to checkout', async ({ page }) => {
       // Login user without paid access
       await page.goto(NEXT_JS_URL);
-      await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-        const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-        const supabase = createBrowserClient(supabaseUrl, anonKey);
-        await supabase.auth.signInWithPassword({ email, password });
-      }, { email: userWithNoAccess.email, password, supabaseUrl: SUPABASE_URL, anonKey: ANON_KEY });
+      await setAuthSession(page, userWithNoAccess.email, password);
       await page.waitForTimeout(1000);
 
       await page.goto(`${NEXT_JS_URL}/p/${paidProduct.slug}`);

@@ -1,15 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { createClient } from '@supabase/supabase-js';
-
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-if (!SUPABASE_URL || !SERVICE_ROLE_KEY || !ANON_KEY) {
-  throw new Error('Missing Supabase env variables for testing');
-}
-
-const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+import { supabaseAdmin, setAuthSession } from './helpers/admin-auth';
 
 test.describe('Access Control (Security)', () => {
   // Enforce single worker
@@ -19,23 +9,10 @@ test.describe('Access Control (Security)', () => {
   let userWithoutAccess: any;
   const password = 'TestPassword123!';
 
-  // Helper to login
   const loginAsUser = async (page: Page, email: string) => {
+    await setAuthSession(page, email, password);
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
-
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email,
-      password,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
-
-    await page.waitForTimeout(1000);
   };
 
   test.beforeAll(async () => {
@@ -239,21 +216,9 @@ test.describe('Access Control - Inactive Product', () => {
   const password = 'TestPassword123!';
 
   const loginAsUser = async (page: Page, email: string) => {
+    await setAuthSession(page, email, password);
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
-
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email,
-      password,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
-
-    await page.waitForTimeout(1000);
   };
 
   test.beforeAll(async () => {
@@ -442,21 +407,9 @@ test.describe('Element Protection - data-has-access / data-no-access visibility'
   const password = 'TestPassword123!';
 
   const loginAsUser = async (page: Page, email: string) => {
+    await setAuthSession(page, email, password);
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
-
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email,
-      password,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
-
-    await page.waitForTimeout(1000);
   };
 
   test.beforeAll(async () => {

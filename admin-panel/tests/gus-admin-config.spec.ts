@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { setAuthSession } from './helpers/admin-auth';
 
 // Enforce single worker for admin tests
 test.describe.configure({ mode: 'serial' });
@@ -23,16 +24,7 @@ test.describe('GUS API Admin Configuration', () => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email: adminEmail,
-      password: adminPassword,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
+    await setAuthSession(page, adminEmail, adminPassword);
 
     await page.waitForTimeout(1000);
   };
@@ -120,8 +112,8 @@ test.describe('GUS API Admin Configuration', () => {
     const gusInput = page.locator('input#gus-api-key');
     await expect(gusInput).toBeVisible({ timeout: 10000 });
 
-    // Check for heading text (may be in h2 or other element)
-    const gusText = page.locator('text=Integracja').or(page.locator('text=GUS')).first();
+    // Check for heading text in h2 element
+    const gusText = page.locator('h2', { hasText: /Integracja|GUS/i }).first();
     await expect(gusText).toBeVisible({ timeout: 5000 });
   });
 
@@ -238,8 +230,8 @@ test.describe('GUS API Admin Configuration', () => {
     const activeBanner = page.locator('text=/GUS API jest aktywny|GUS API is active/i');
     await expect(activeBanner).toBeVisible({ timeout: 10000 });
 
-    // Verify the green success banner container is visible
-    const greenBanner = page.locator('div.bg-green-50, div[class*="bg-green"]').filter({ hasText: /GUS API/i });
+    // Verify the success banner container is visible
+    const greenBanner = page.locator('div.bg-sf-success-soft').filter({ hasText: /GUS API/i });
     await expect(greenBanner).toBeVisible();
   });
 

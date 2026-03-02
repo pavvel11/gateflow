@@ -11,6 +11,7 @@
 
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { setAuthSession } from './helpers/admin-auth';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -46,17 +47,7 @@ test.describe('API Keys Security - Hash Exposure Prevention', () => {
   // Helper to login via browser
   async function loginAsAdmin(page: any) {
     await page.goto('/login');
-    await page.evaluate(async ({ email, password, url, anonKey }: { email: string; password: string; url: string; anonKey: string }) => {
-      // @ts-ignore
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const sb = createBrowserClient(url, anonKey);
-      await sb.auth.signInWithPassword({ email, password });
-    }, {
-      email: adminEmail,
-      password: adminPassword,
-      url: SUPABASE_URL,
-      anonKey: ANON_KEY
-    });
+    await setAuthSession(page, adminEmail, adminPassword);
     await page.reload();
   }
 
@@ -195,17 +186,7 @@ test.describe('API Keys Security - IDOR Prevention', () => {
   // Helper to login via browser
   async function loginAsAdmin(page: any, email: string, pwd: string) {
     await page.goto('/login');
-    await page.evaluate(async ({ email, password, url, anonKey }: { email: string; password: string; url: string; anonKey: string }) => {
-      // @ts-ignore
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const sb = createBrowserClient(url, anonKey);
-      await sb.auth.signInWithPassword({ email, password });
-    }, {
-      email,
-      password: pwd,
-      url: SUPABASE_URL,
-      anonKey: ANON_KEY
-    });
+    await setAuthSession(page, email, pwd);
     await page.reload();
   }
 

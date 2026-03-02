@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { supabaseAdmin } from './helpers/admin-auth';
+import { setAuthSession, supabaseAdmin } from './helpers/admin-auth';
 
 /**
  * Complete Payment Flow E2E Tests
@@ -163,16 +163,7 @@ async function loginAsTestUser(page: Page) {
   await page.goto('/');
   await page.waitForLoadState('domcontentloaded');
 
-  await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-    const supabase = createBrowserClient(supabaseUrl, anonKey);
-    await supabase.auth.signInWithPassword({ email, password });
-  }, {
-    email: TEST_USER.email,
-    password: TEST_USER.password,
-    supabaseUrl: SUPABASE_URL,
-    anonKey: ANON_KEY,
-  });
+  await setAuthSession(page, TEST_USER.email, TEST_USER.password);
 
   await page.reload();
   await page.waitForLoadState('networkidle');

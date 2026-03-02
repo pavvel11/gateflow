@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
+import { setAuthSession } from './helpers/admin-auth';
 
 // Enforce single worker to avoid race conditions
 test.describe.configure({ mode: 'serial' });
@@ -41,17 +42,7 @@ async function signInUser(page: any, email: string, password: string) {
   await page.goto('/');
   await page.waitForLoadState('domcontentloaded');
 
-  await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-    const supabase = createBrowserClient(supabaseUrl, anonKey);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-  }, {
-    email,
-    password,
-    supabaseUrl: SUPABASE_URL,
-    anonKey: ANON_KEY,
-  });
+  await setAuthSession(page, email, password);
 
   await page.waitForTimeout(1000);
 }

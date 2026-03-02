@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { setAuthSession } from './helpers/admin-auth';
 
 /**
  * Rate Limiting Tests for V1 API
@@ -34,18 +35,7 @@ const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY!);
 async function loginAsAdmin(page: Page, email: string, password: string) {
   await page.goto('/login');
 
-  await page.evaluate(async ({ email, password, url, anonKey }: { email: string; password: string; url: string; anonKey: string }) => {
-    // @ts-ignore
-    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-    const sb = createBrowserClient(url, anonKey);
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-  }, {
-    email,
-    password,
-    url: SUPABASE_URL,
-    anonKey: ANON_KEY!
-  });
+  await setAuthSession(page, email, password);
 
   await page.reload();
   // Wait for page to fully load

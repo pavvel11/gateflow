@@ -9,7 +9,7 @@
  * Review: bun run test:visual:review
  */
 import { test, Page } from '@playwright/test';
-import { createTestAdmin } from './helpers/admin-auth';
+import { setAuthSession, createTestAdmin } from './helpers/admin-auth';
 import { acceptAllCookies } from './helpers/consent';
 
 // Each test navigates many pages — need more time than default 30s
@@ -42,17 +42,7 @@ async function signIn(page: Page) {
   await acceptAllCookies(page);
   await page.goto('/', { waitUntil: 'domcontentloaded' });
 
-  await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-    // @ts-ignore - dynamic ESM import works in browser context
-    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-    const supabase = createBrowserClient(supabaseUrl, anonKey);
-    await supabase.auth.signInWithPassword({ email, password });
-  }, {
-    email: adminEmail,
-    password: adminPassword,
-    supabaseUrl: SUPABASE_URL,
-    anonKey: ANON_KEY,
-  });
+  await setAuthSession(page, adminEmail, adminPassword);
 }
 
 /** Navigate to a page and wait for it to render */
