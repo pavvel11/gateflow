@@ -20,6 +20,11 @@
     "alreadyHasAccess": "Masz już dostęp do tego produktu.",
     "autoRedirect": "Przekierowanie za {seconds} s...",
     "goToProduct": "Przejdź do Produktu",
+    "funnelTest": {
+      "banner": "TEST LEJKA",
+      "description": "Podgląd checkoutu jako administrator. Żadna płatność nie zostanie przetworzona.",
+      "completeButton": "Zakończ test"
+    },
     "loadError": "Nie udało się załadować płatności. Spróbuj ponownie później.",
     "createSessionError": "Nie udało się utworzyć sesji płatności",
     "netPrice": "Cena netto",
@@ -1214,6 +1219,8 @@
       "preview": "Podgląd",
       "duplicate": "Duplikuj",
       "previewRedirect": "Podgląd przekierowania",
+      "testFunnel": "Testuj lejek",
+      "testFunnelLabel": "Testuj lejek dla {name}",
       "showing": "Wyświetlanie",
       "to": "do",
       "of": "z",
@@ -1242,6 +1249,8 @@
         "vatIncluded": "Cena zawiera VAT",
         "vatExcluded": "Cena nie zawiera VAT",
         "vatIncludedHelp": "Jeśli zaznaczono, wyświetlana cena już zawiera VAT, a kwota netto zostanie obliczona automatycznie.",
+        "vatStripeTaxInfo": "Podatek naliczany przez Stripe",
+        "vatRateRequired": "Stawka VAT jest wymagana (brak domyślnej w ustawieniach podatków)",
         "vatRate": "Stawka VAT",
         "vatRateHelp": "Pozostaw puste, aby użyć domyślnej stawki z Ustawień sklepu ({defaultRate}). Ustaw per produkt, aby nadpisać.",
         "longDescription": "Szczegółowy opis (Markdown)",
@@ -2193,8 +2202,21 @@
       }
     },
     "stripeTax": {
-      "title": "Stripe Tax",
-      "subtitle": "Status automatycznego naliczania podatków i rejestracje",
+      "title": "Podatki i Checkout",
+      "subtitle": "Tryb naliczania podatków i ustawienia sesji checkout",
+      "taxMode": {
+        "label": "Tryb naliczania podatków",
+        "description": "Wybierz sposób naliczania podatków w sesjach checkout.",
+        "local": "Stała stawka",
+        "localDescription": "Stała stawka VAT jest przekazywana do Stripe dla każdego produktu. Stripe wyświetla podział podatku w checkout i na paragonach.",
+        "stripeTax": "Stripe Tax",
+        "stripeTaxDescription": "Stripe automatycznie oblicza podatki na podstawie lokalizacji klienta i Twoich rejestracji podatkowych.",
+        "vatRateLabel": "Domyślna stawka VAT",
+        "vatRateHelp": "Ta stawka jest przypisywana do nowo tworzonych produktów jako domyślna. Każdy produkt przechowuje własną stawkę VAT, którą można zmienić indywidualnie. Stawka wysyłana do Stripe przy checkout to zawsze stawka danego produktu.",
+        "vatRatePlaceholder": "23",
+        "noRateWarning": "Brak domyślnej stawki VAT. Produkty utworzone bez stawki nie będą miały naliczonego podatku w checkout.",
+        "stripeTaxActiveWarning": "Stripe Tax jest aktywny na Twoim koncie Stripe, ale NIE jest używany w trybie Stałej stawki. Twoja stała stawka VAT ma priorytet w sesjach checkout. Aby korzystać z automatycznego naliczania podatków, przełącz na tryb Stripe Tax."
+      },
       "status": {
         "active": "Stripe Tax jest aktywny",
         "activeDescription": "Podatki są automatycznie naliczane dla Twoich transakcji.",
@@ -2209,8 +2231,6 @@
       "noRegistrations": "Brak aktywnych rejestracji podatkowych",
       "headOffice": "Siedziba firmy",
       "toggles": {
-        "automaticTax": "Automatyczne naliczanie podatków",
-        "automaticTaxDescription": "Automatycznie obliczaj i naliczaj podatki w sesjach checkout.",
         "taxIdCollection": "Zbieranie numeru NIP",
         "taxIdCollectionDescription": "Pozwól klientom podać numer NIP (np. VAT) podczas checkout.",
         "billingAddress": "Adres rozliczeniowy",

@@ -5,6 +5,7 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
 import { Product } from '@/types';
 import { ExpressCheckoutConfig } from '@/types/payment-config';
+import type { TaxMode } from '@/lib/actions/shop-config';
 import { formatPrice } from '@/lib/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { signOutAndRedirectToCheckout } from '@/lib/actions/checkout';
@@ -28,13 +29,14 @@ interface PaidProductFormProps {
   product: Product;
   paymentMethodOrder?: string[];
   expressCheckoutConfig?: ExpressCheckoutConfig;
+  taxMode?: TaxMode;
 }
 
-export default function PaidProductForm({ product, paymentMethodOrder, expressCheckoutConfig }: PaidProductFormProps) {
+export default function PaidProductForm({ product, paymentMethodOrder, expressCheckoutConfig, taxMode }: PaidProductFormProps) {
   const t = useTranslations('checkout');
   const tSecurity = useTranslations('security');
   const tCompliance = useTranslations('compliance');
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { addToast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -42,7 +44,10 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
   const { resolvedTheme } = useTheme();
   const { track } = useTracking();
   const trackingFired = useRef(false);
-  
+
+  // Funnel test mode: admin-only visual preview (no Stripe, no backend calls)
+  const isFunnelTest = searchParams.get('funnel_test') === '1' && isAdmin;
+
   // Safe loading of Stripe to prevent crashes if key is missing
   const stripePromise = config.stripePublishableKey 
     ? loadStripe(config.stripePublishableKey) 
@@ -305,6 +310,9 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
   }, [product, t]);
 
   const fetchClientSecret = useCallback(async () => {
+    // Skip Stripe in funnel test mode — admin visual preview only
+    if (isFunnelTest) return;
+
     // Skip Stripe for PWYW-free ($0) — access granted via grant-access API instead
     if (product.allow_custom_price && customAmount === 0 && (product.custom_price_min ?? 0.50) === 0) {
       setClientSecret(null);
@@ -346,7 +354,7 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
       setError(t('loadError'));
       throw err;
     }
-  }, [product, email, bumpSelected, orderBump, appliedCoupon, searchParams, t, customAmount, validateCustomAmount]);
+  }, [product, email, bumpSelected, orderBump, appliedCoupon, searchParams, t, customAmount, validateCustomAmount, isFunnelTest]);
 
   // Fetch client secret when component mounts or dependencies change
   useEffect(() => {
@@ -469,6 +477,21 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
 
   const renderCheckoutForm = () => (
     <div className="w-full lg:w-1/2 lg:pl-8">
+      {/* Funnel Test Banner */}
+      {isFunnelTest && (
+        <div className="mb-6 p-4 bg-sf-warning-soft border border-sf-warning/30 rounded-xl">
+          <div className="flex items-center gap-3">
+            <svg className="w-5 h-5 text-sf-warning flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M5 14.5l-1.43 5.725a1.125 1.125 0 001.09 1.4h14.68a1.125 1.125 0 001.09-1.4L19 14.5" />
+            </svg>
+            <div>
+              <p className="text-sm font-bold text-sf-warning">{t('funnelTest.banner')}</p>
+              <p className="text-xs text-sf-warning/80">{t('funnelTest.description')}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* OTO Countdown Banner */}
       {isOtoMode && otoInfo?.valid && otoInfo.expires_at && !otoExpired && (
         <OtoCountdownBanner
@@ -861,7 +884,17 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
           </div>
         )}
         
-        {!error && !hasAccess && !isPwywFree && stripePromise && clientSecret && (
+        {/* Funnel test: show Complete Test button instead of Stripe */}
+        {isFunnelTest && !error && !hasAccess && (
+          <button
+            onClick={() => setHasAccess(true)}
+            className="w-full py-4 px-6 bg-sf-warning hover:bg-sf-warning/90 text-sf-inverse font-bold rounded-xl transition-all active:scale-[0.98] text-lg"
+          >
+            {t('funnelTest.completeButton')}
+          </button>
+        )}
+
+        {!isFunnelTest && !error && !hasAccess && !isPwywFree && stripePromise && clientSecret && (
           <Elements
             key={`${product.id}-${clientSecret}-${resolvedTheme}`}
             stripe={stripePromise}
@@ -895,6 +928,7 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
               clientSecret={clientSecret || undefined}
               paymentMethodOrder={paymentMethodOrder}
               expressCheckoutConfig={expressCheckoutConfig}
+              taxMode={taxMode}
             />
           </Elements>
         )}
@@ -907,7 +941,7 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-sf-deep to-sf-raised p-4 lg:p-8">
       <div className="w-full max-w-7xl mx-auto p-6 lg:p-8 bg-sf-base border border-sf-border shadow-[var(--sf-shadow-accent)] backdrop-blur-md rounded-2xl">
         <div className="flex flex-col lg:flex-row">
-          <ProductShowcase product={product} />
+          <ProductShowcase product={product} taxMode={taxMode} />
           {renderCheckoutForm()}
         </div>
       </div>

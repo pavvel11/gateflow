@@ -314,6 +314,16 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                           </svg>
                         </button>
                         <button
+                          onClick={() => window.open(`/checkout/${product.slug}?funnel_test=1`, '_blank')}
+                          className="text-sf-warning hover:text-sf-warning transition-colors p-1 hidden sm:block"
+                          aria-label={t('testFunnelLabel', { name: product.name })}
+                          title={t('testFunnel')}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M5 14.5l-1.43 5.725a1.125 1.125 0 001.09 1.4h14.68a1.125 1.125 0 001.09-1.4L19 14.5" />
+                          </svg>
+                        </button>
+                        <button
                           onClick={() => onEditProduct(product)}
                           className="text-sf-accent hover:text-sf-accent transition-colors p-1"
                           aria-label={t('editLabel', { name: product.name })}

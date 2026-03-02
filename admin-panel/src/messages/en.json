@@ -20,6 +20,11 @@
     "alreadyHasAccess": "You already have access to this product.",
     "autoRedirect": "Auto-redirecting in {seconds} seconds...",
     "goToProduct": "Go to Product",
+    "funnelTest": {
+      "banner": "FUNNEL TEST",
+      "description": "You are previewing this checkout as admin. No payment will be processed.",
+      "completeButton": "Complete Test"
+    },
     "loadError": "Failed to load checkout. Please try again later.",
     "createSessionError": "Failed to create checkout session",
     "netPrice": "Net price",
@@ -1199,6 +1204,8 @@
       "preview": "Preview",
       "duplicate": "Duplicate",
       "previewRedirect": "Preview redirect",
+      "testFunnel": "Test Funnel",
+      "testFunnelLabel": "Test funnel for {name}",
       "showing": "Showing",
       "to": "to",
       "of": "of",
@@ -1227,6 +1234,8 @@
         "vatIncluded": "Price includes VAT",
         "vatExcluded": "Price does not include VAT",
         "vatIncludedHelp": "If checked, the displayed price already contains VAT and the net amount will be calculated automatically.",
+        "vatStripeTaxInfo": "Tax calculated by Stripe",
+        "vatRateRequired": "VAT rate is required (no default set in Tax settings)",
         "vatRate": "VAT Rate",
         "vatRateHelp": "Leave empty to use the default rate from Shop Settings ({defaultRate}). Set per product to override.",
         "longDescription": "Detailed Description (Markdown)",
@@ -2178,8 +2187,21 @@
       }
     },
     "stripeTax": {
-      "title": "Stripe Tax",
-      "subtitle": "Automatic tax calculation status and registrations",
+      "title": "Tax & Checkout",
+      "subtitle": "Tax calculation mode and checkout session settings",
+      "taxMode": {
+        "label": "Tax Calculation Mode",
+        "description": "Choose how taxes are calculated for checkout sessions.",
+        "local": "Fixed Rate",
+        "localDescription": "A fixed VAT rate is sent to Stripe for each product. Stripe displays the tax breakdown on checkout and receipts.",
+        "stripeTax": "Stripe Tax",
+        "stripeTaxDescription": "Stripe calculates taxes automatically based on customer location and your tax registrations.",
+        "vatRateLabel": "Default VAT Rate",
+        "vatRateHelp": "This rate is assigned to newly created products as their default. Each product stores its own VAT rate which can be changed individually. The rate sent to Stripe at checkout is always the product's own rate.",
+        "vatRatePlaceholder": "23",
+        "noRateWarning": "No default VAT rate set. Products created without an explicit rate will have no tax applied in checkout.",
+        "stripeTaxActiveWarning": "Stripe Tax is active on your Stripe account but is NOT used in Fixed Rate mode. Your fixed VAT rate takes priority in checkout sessions. To use automatic tax calculation, switch to Stripe Tax mode."
+      },
       "status": {
         "active": "Stripe Tax is active",
         "activeDescription": "Taxes are being automatically calculated for your transactions.",
@@ -2194,8 +2216,6 @@
       "noRegistrations": "No active tax registrations",
       "headOffice": "Head office",
       "toggles": {
-        "automaticTax": "Automatic Tax Calculation",
-        "automaticTaxDescription": "Automatically calculate and apply taxes to checkout sessions.",
         "taxIdCollection": "Tax ID Collection",
         "taxIdCollectionDescription": "Allow customers to provide their tax ID (e.g., VAT number) during checkout.",
         "billingAddress": "Billing Address",
