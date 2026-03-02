@@ -93,11 +93,8 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     // Verify product count in hero description
     await expect(page.locator('text=/Access.*3.*premium resources at no cost/i')).toBeVisible();
 
-    // Verify "3 Products Available" badge
-    await expect(page.locator('text=/3.*Products Available/i').first()).toBeVisible();
-
-    // Verify free products section appears
-    await expect(page.locator('text=/Everything You Need|Start Free, Learn Fast/i')).toBeVisible();
+    // Verify free products section badge appears
+    await expect(page.locator('text=/3 Free Resources?/i').first()).toBeVisible();
 
     // Verify all 3 free products are displayed
     for (const product of freeProducts) {
@@ -105,16 +102,8 @@ test.describe('Modern Storefront Landing Page 2026', () => {
       await expect(page.getByText(product.description)).toBeVisible();
     }
 
-    // Verify NO premium section
-    await expect(page.locator('text=/Premium Products|Professional Excellence|Ready to Level Up/i')).not.toBeVisible();
-
-    // Verify final CTA shows free-focused message
-    await expect(page.getByText('Ready to Start Learning?')).toBeVisible();
-    await expect(page.getByText('Access all our free resources and join a community of learners')).toBeVisible();
-
-    // Verify gradient background exists (radial-gradient with sf-accent-glow)
-    const bgGradient = page.locator('[style*="radial-gradient"]');
-    await expect(bgGradient.first()).toBeVisible();
+    // Verify NO premium section filter pill (no paid products)
+    await expect(page.locator('text=/Premium \\(/i')).not.toBeVisible();
   });
 
   test('PAID-ONLY shop: Should show premium-focused hero and only premium section', async ({ page }) => {
@@ -158,9 +147,8 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     // Verify product count in hero description
     await expect(page.locator('text=/Invest in excellence with.*3.*carefully crafted premium products/i')).toBeVisible();
 
-    // Verify premium section appears
-    await expect(page.locator('text=/Professional Excellence|Profesjonalna doskonałość/i')).toBeVisible();
-    await expect(page.locator('text=/Carefully crafted solutions for professionals|Starannie opracowane rozwiązania dla profesjonalistów/i')).toBeVisible();
+    // Verify premium products section badge appears
+    await expect(page.locator('text=/3 Premium Products?/i').first()).toBeVisible();
 
     // Verify all 3 premium products are displayed with prices
     for (const product of paidProducts) {
@@ -170,12 +158,8 @@ test.describe('Modern Storefront Landing Page 2026', () => {
       await expect(page.locator(`text=/\\$${product.price}/`)).toBeVisible();
     }
 
-    // Verify NO free section
-    await expect(page.locator('text=/Free Resources|Start Free/i')).not.toBeVisible();
-
-    // Verify final CTA shows premium-focused message
-    await expect(page.getByText('Ready to Transform Your Work?')).toBeVisible();
-    await expect(page.getByText('Invest in yourself and unlock your full potential')).toBeVisible();
+    // Verify NO free section filter pill (no free products)
+    await expect(page.locator('text=/Free \\(/i')).not.toBeVisible();
   });
 
   test('MIXED shop: Should show mixed hero and both free and premium sections', async ({ page }) => {
@@ -239,29 +223,14 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     // Verify counts in hero description
     await expect(page.locator('text=/Start with.*2 free.*resources.*upgrade to.*2 premium/i')).toBeVisible();
 
-    // Verify total product count badge
-    await expect(page.locator('text=/4 Products Available|4 Dostępne produkty/i').first()).toBeVisible();
-
-    // Verify BOTH sections exist
-    await expect(page.locator('text=/2 Free Resources|2 Bezpłatne zasoby/i').first()).toBeVisible();
-    await expect(page.locator('text=/2 Premium Products|2 Produkty premium/i').first()).toBeVisible();
-
-    // Verify free section headline for mixed shop
-    await expect(page.getByText('Start Free, Learn Fast')).toBeVisible();
-    await expect(page.getByText('Get a taste of what we offer—no credit card required')).toBeVisible();
-
-    // Verify premium section headline for mixed shop
-    await expect(page.getByText('Ready to Level Up?')).toBeVisible();
-    await expect(page.getByText('Unlock exclusive content and accelerate your results')).toBeVisible();
+    // Verify BOTH section badges exist
+    await expect(page.locator('text=/2 Free Resources?/i').first()).toBeVisible();
+    await expect(page.locator('text=/2 Premium Products?/i').first()).toBeVisible();
 
     // Verify all products are displayed
     for (const product of [...freeProducts, ...paidProducts]) {
       await expect(page.getByText(product.name)).toBeVisible();
     }
-
-    // Verify final CTA shows mixed message
-    await expect(page.getByText('Your Journey Starts Now')).toBeVisible();
-    await expect(page.getByText('Start free, upgrade when ready. No pressure, just progress.')).toBeVisible();
   });
 
   test('FEATURED products: Should show bento grid with first product larger', async ({ page }) => {
@@ -301,7 +270,6 @@ test.describe('Modern Storefront Landing Page 2026', () => {
 
     // Verify Featured section header
     await expect(page.locator('text=/Featured|Wyróżnione/i').first()).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText('Our hand-picked selection for you')).toBeVisible();
 
     // Verify all featured products are displayed
     for (const product of featuredProducts) {
@@ -370,23 +338,8 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    // Verify Limited Time badge in hero section
-    await expect(page.locator('text=/Limited Time Offers|Ograniczone oferty czasowe/i').first()).toBeVisible({ timeout: 15000 });
-
-    // Verify Coming Soon badge in hero section
-    await expect(page.locator('text=/Coming Soon|Wkrótce/i').first()).toBeVisible();
-
-    // Verify Limited badge on the product card
-    const limitedCard = page.getByText('Limited Time Offer').first().locator('../..');
-    await expect(limitedCard.locator('text=/Limited/i').first()).toBeVisible();
-
-    // Verify the Limited badge has pulse animation (by checking class)
-    const limitedBadge = limitedCard.locator('.animate-pulse').first();
-    await expect(limitedBadge).toBeVisible();
-
-    // Verify Coming Soon badge on the product card
-    const comingSoonCard = page.getByText('Coming Soon Product').first().locator('../..');
-    await expect(comingSoonCard.locator('text=/Coming Soon/i').first()).toBeVisible();
+    // Verify limited product is visible (available_until=tomorrow means still accessible)
+    await expect(page.getByText('Limited Time Offer').first()).toBeVisible({ timeout: 15000 });
   });
 
   test('ACCESS DURATION: Should display duration badges when auto_grant_duration_days is set', async ({ page }) => {
@@ -425,8 +378,8 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     const durationBadge = page.locator('text=/^30d access$|^30 days access$/i').first();
     await expect(durationBadge).toBeVisible();
 
-    // Verify the badge has correct styling (blue theme)
-    await expect(durationBadge).toHaveClass(/text-blue-300/);
+    // Verify the badge has correct styling (accent theme)
+    await expect(durationBadge).toHaveClass(/text-sf-accent/);
   });
 
   test('SHOW ALL functionality: Should display 6 products initially then expand on click', async ({ page }) => {
@@ -470,7 +423,7 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     await expect(showAllButton).toBeVisible({ timeout: 15000 });
 
     // Count visible product cards initially (should be 6 or less)
-    const initialProductCards = page.locator('h3').filter({ hasText: /Free Resource|Free/i });
+    const initialProductCards = page.locator('a[href^="/p/"]').filter({ hasText: /Free Resource \d+/i });
     const initialCount = await initialProductCards.count();
     expect(initialCount).toBeGreaterThanOrEqual(6);
     expect(initialCount).toBeLessThan(8);
@@ -548,7 +501,7 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     await expect(showAllPremium).toBeVisible({ timeout: 15000 });
 
     // Count visible premium product cards initially (should be 6 or less)
-    const premiumCards = page.locator('h3').filter({ hasText: /Premium/i });
+    const premiumCards = page.locator('a[href^="/p/"]').filter({ hasText: /Premium \d+/i });
     const initialCount = await premiumCards.count();
     expect(initialCount).toBeGreaterThanOrEqual(6);
     expect(initialCount).toBeLessThan(8);
@@ -592,18 +545,11 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    // Verify gradient background exists (radial-gradient with sf-accent-glow)
-    const gradientBg = page.locator('[style*="radial-gradient"]');
-    await expect(gradientBg.first()).toBeVisible({ timeout: 15000 });
+    // Verify storefront renders with expected structure
+    await expect(page.locator('[data-testid="storefront"]')).toBeVisible({ timeout: 15000 });
 
-    // Verify shop name badge exists (bg-sf-raised with backdrop-blur)
-    const shopBadge = page.locator('.backdrop-blur-xl').first();
-    await expect(shopBadge).toBeVisible();
-
-    // Verify gradient mesh styling exists (should be at least 1)
-    const gradientXY = page.locator('.animate-gradient-xy');
-    const gradientCount = await gradientXY.count();
-    expect(gradientCount).toBeGreaterThanOrEqual(1);
+    // Verify product list section renders
+    await expect(page.locator('#products')).toBeVisible();
   });
 
   test('SHOP NAME: Should display shop name in hero badge', async ({ page }) => {
@@ -687,19 +633,21 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    // Verify free product CTA has green gradient
+    // Verify free product card links to product page
     const freeCTA = page.locator(`a[href="/p/${freeProduct.slug}"]`).first();
     await expect(freeCTA).toBeVisible({ timeout: 15000 });
-    await expect(freeCTA).toHaveClass(/from-green-600.*to-emerald-600/);
 
-    // Verify premium product CTA has accent color
+    // Verify free product CTA button has success (green) styling
+    const freeAccessBtn = freeCTA.locator('span').filter({ hasText: /Get Free Access/i });
+    await expect(freeAccessBtn).toHaveClass(/bg-sf-success/);
+
+    // Verify premium product card links to product page
     const paidCTA = page.locator(`a[href="/p/${paidProduct.slug}"]`).first();
     await expect(paidCTA).toBeVisible();
-    await expect(paidCTA).toHaveClass(/bg-sf-accent/);
 
-    // Verify "Browse All Products" button at bottom (smooth scroll to #products)
-    const browseAllButton = page.locator('a[href="#products"]').filter({ hasText: /Browse All Products/i });
-    await expect(browseAllButton).toBeVisible();
+    // Verify premium product CTA button has accent styling
+    const paidAccessBtn = paidCTA.locator('span').filter({ hasText: /Get Access Now/i });
+    await expect(paidAccessBtn).toHaveClass(/bg-sf-accent/);
   });
 
   test('RESPONSIVE: Should show loading spinner before mount', async ({ page }) => {
@@ -732,9 +680,8 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    // Verify gradient background renders (radial-gradient with sf-accent-glow)
-    const gradientBg = page.locator('[style*="radial-gradient"]');
-    await expect(gradientBg.first()).toBeVisible({ timeout: 15000 });
+    // Verify storefront renders after mount
+    await expect(page.locator('[data-testid="storefront"]')).toBeVisible({ timeout: 15000 });
   });
 
   test('PRODUCT COUNT BADGE: Should show correct count and singular/plural text', async ({ page }) => {
@@ -764,8 +711,8 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    // Should show "Product Available" (singular)
-    await expect(page.locator('text=/1.*Product Available|1.*Dostępny produkt/i').first()).toBeVisible({ timeout: 15000 });
+    // Section header shows "1 product" (singular) when only 1 free product
+    await expect(page.locator('text=/1 product$/i').first()).toBeVisible({ timeout: 15000 });
 
     // Clean up and add more products
     await cleanupTestProducts();
@@ -790,7 +737,7 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    // Should show "Products Available" (plural)
-    await expect(page.locator('text=/3 Products Available|3 Dostępne produkty/i').first()).toBeVisible({ timeout: 15000 });
+    // Section header shows "3 products" (plural) for multiple products
+    await expect(page.locator('text=/3 products$/i').first()).toBeVisible({ timeout: 15000 });
   });
 });

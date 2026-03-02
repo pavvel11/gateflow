@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { acceptAllCookies } from './helpers/consent';
+import { setAuthSession } from './helpers/admin-auth';
 
 // Enforce single worker
 test.describe.configure({ mode: 'serial' });
@@ -26,17 +27,7 @@ test.describe('Integrations & Script Injection', () => {
     await page.goto('/');
     
     // Simulate login via client-side auth state injection
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      // @ts-ignore
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email: adminEmail,
-      password: adminPassword,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
+    await setAuthSession(page, adminEmail, adminPassword);
 
     await page.waitForTimeout(1000); 
   };
@@ -59,11 +50,25 @@ test.describe('Integrations & Script Injection', () => {
   });
 
   test.afterEach(async () => {
-    // Reset integrations config after each test to avoid pollution
-    await supabaseAdmin
-      .from('integrations_config')
-      .delete()
-      .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all rows
+    // Reset integrations config after each test to avoid pollution.
+    // Use upsert (not delete) so the row still exists for subsequent UPDATE calls in the app.
+    await supabaseAdmin.from('integrations_config').upsert({
+      id: 1,
+      gtm_container_id: null,
+      gtm_server_container_url: null,
+      facebook_pixel_id: null,
+      fb_capi_enabled: false,
+      facebook_capi_token: null,
+      umami_website_id: null,
+      umami_script_url: null,
+      cookie_consent_enabled: true,
+      consent_logging_enabled: false,
+      currency_api_provider: 'ecb',
+      currency_api_enabled: true,
+      currency_api_key_encrypted: null,
+      currency_api_key_iv: null,
+      currency_api_key_tag: null,
+    });
   });
 
   test('should save integration settings and inject scripts on product page', async ({ page }) => {
@@ -258,7 +263,8 @@ test.describe('Integrations & Script Injection', () => {
     
     // Go to product page with cache buster
     await page.goto(`/p/${productSlug}?t=${Date.now()}`);
-    
+    await page.waitForLoadState('load');
+
     // 1. Verify GTM is NOT present initially (blocked by consent)
     let pageContent = await page.content();
     
@@ -276,7 +282,7 @@ test.describe('Integrations & Script Injection', () => {
     // 2. Accept Consent
     // Find Klaro "I accept" button. It's usually "Accept all" or similar.
     const acceptBtn = page.locator('.cm-btn-success, button:has-text("Accept"), button:has-text("Zgoda")').first();
-    await expect(acceptBtn).toBeVisible();
+    await expect(acceptBtn).toBeVisible({ timeout: 15000 });
     await acceptBtn.click();
     
     // 3. Verify GTM loads after consent
@@ -332,16 +338,7 @@ test.describe('Integrations - Field Persistence & Validation', () => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }: any) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email: adminEmail,
-      password: adminPassword,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
+    await setAuthSession(page, adminEmail, adminPassword);
 
     await page.waitForTimeout(1000);
   };
@@ -590,15 +587,11 @@ test.describe('Integrations - Field Persistence & Validation', () => {
     await serverUrlInput.fill(serverUrl);
     await page.waitForTimeout(300);
 
-    // Enable GTM SS checkbox (should now be visible)
-    const ssCheckbox = page.locator('input[type="checkbox"]').locator('near(:text("Enable server-to-server"), :text("Włącz wysyłkę eventów"))');
-    // Find the checkbox by its sibling label text
-    const ssLabel = page.getByText(/Enable server-to-server|Włącz wysyłkę eventów/i);
-    const ssCheckboxInput = ssLabel.locator('xpath=preceding-sibling::input | ancestor::label//input[type="checkbox"]');
-
-    await expect(ssLabel).toBeVisible();
-    // The checkbox is inside the same <label> — click the label to toggle
-    await ssLabel.click();
+    // Enable GTM SS checkbox — visible only when server URL is filled
+    const ssLabel = page.locator('label').filter({ hasText: /Enable server-to-server|Włącz wysyłkę eventów/i });
+    await expect(ssLabel).toBeVisible({ timeout: 5000 });
+    const ssCheckboxInput = ssLabel.locator('input[type="checkbox"]');
+    await ssCheckboxInput.check();
     await page.waitForTimeout(300);
 
     // Save

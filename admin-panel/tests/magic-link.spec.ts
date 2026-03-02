@@ -100,25 +100,19 @@ test.describe('Magic Link Authentication (Mailpit)', () => {
       email_confirm: true,
     });
 
-    await page.goto('/');
-
     // Try to sign in with wrong password (simulates invalid/expired magic link)
-    const signInResult = await page.evaluate(async ({ email, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password: 'WrongPassword123!'
-      });
-      return { hasError: !!error, errorMessage: error?.message };
-    }, {
+    // Use Node.js Supabase client with anon key (no browser import needed)
+    const anonSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    );
+    const { error: signInError } = await anonSupabase.auth.signInWithPassword({
       email: mockEmail,
-      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      password: 'WrongPassword123!',
     });
 
-    expect(signInResult.hasError).toBeTruthy();
-    expect(signInResult.errorMessage).toContain('Invalid');
+    expect(!!signInError).toBeTruthy();
+    expect(signInError?.message).toContain('Invalid');
 
     // Cleanup
     if (user) {

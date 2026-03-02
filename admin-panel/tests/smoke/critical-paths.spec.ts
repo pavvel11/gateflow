@@ -217,7 +217,7 @@ test.describe('Public Pages', () => {
 
 test.describe('Admin Dashboard Tabs', () => {
   const adminPages: { path: string; marker: RegExp }[] = [
-    { path: '/dashboard', marker: /Total Revenue|Przychód|Revenue|Dashboard/i },
+    { path: '/dashboard', marker: /Total Revenue|Przychody|Revenue|Dashboard|Panel administracyjny/i },
     { path: '/dashboard/products', marker: /Product|Produkt/i },
     { path: '/dashboard/variants', marker: /Variant|Wariant/i },
     { path: '/dashboard/categories', marker: /Categor|Kategori/i },

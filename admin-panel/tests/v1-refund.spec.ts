@@ -12,6 +12,7 @@ import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { acceptAllCookies } from './helpers/consent';
+import { setAuthSession } from './helpers/admin-auth';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -37,16 +38,7 @@ const loginAsAdmin = async (page: Page) => {
   await page.goto('/');
   await page.waitForLoadState('domcontentloaded');
 
-  await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-    const supabase = createBrowserClient(supabaseUrl, anonKey);
-    await supabase.auth.signInWithPassword({ email, password });
-  }, {
-    email: adminEmail,
-    password: adminPassword,
-    supabaseUrl: SUPABASE_URL,
-    anonKey: ANON_KEY,
-  });
+  await setAuthSession(page, adminEmail, adminPassword);
 
   await page.waitForTimeout(1000);
 };
@@ -227,16 +219,7 @@ test.describe('v1 API: Refund Tests', () => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email: regularEmail,
-      password: 'password123',
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
+    await setAuthSession(page, regularEmail, 'password123');
 
     await page.waitForTimeout(1000);
 

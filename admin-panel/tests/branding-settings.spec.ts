@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { acceptAllCookies } from './helpers/consent';
-import { createTestAdmin, loginAsAdmin, supabaseAdmin } from './helpers/admin-auth';
+import { setAuthSession, createTestAdmin, loginAsAdmin, supabaseAdmin } from './helpers/admin-auth';
 
 /**
  * Theme Editor (BrandingSettings) E2E Tests.
@@ -44,7 +44,7 @@ test.describe('Theme Editor (Branding Settings)', () => {
 
     // Should see preset cards (at least 5 built-in)
     const presetButtons = page.locator('button').filter({ has: page.locator('p') }).filter({
-      hasText: /Midnight Forge|Sunset|Ocean|Forest|Minimal Light/i,
+      hasText: /Midnight Forge|Sunset|Ocean|Forest|Minimal/i,
     });
     const presetCount = await presetButtons.count();
     expect(presetCount).toBeGreaterThanOrEqual(5);
@@ -293,17 +293,7 @@ test.describe('Theme Editor (Branding Settings)', () => {
       await acceptAllCookies(page);
       await page.goto('/');
 
-      await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-        // @ts-ignore
-        const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-        const supabase = createBrowserClient(supabaseUrl, anonKey);
-        await supabase.auth.signInWithPassword({ email, password });
-      }, {
-        email: regularEmail,
-        password: regularPassword,
-        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321',
-        anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
-      });
+      await setAuthSession(page, regularEmail, regularPassword);
 
       await page.waitForTimeout(1000);
       await page.goto('/dashboard/settings');

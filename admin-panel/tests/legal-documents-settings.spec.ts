@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { acceptAllCookies } from './helpers/consent';
+import { setAuthSession } from './helpers/admin-auth';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -44,16 +45,7 @@ test.describe('Legal Documents Settings', () => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email: adminEmail,
-      password: password,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
+    await setAuthSession(page, adminEmail, password);
 
     await page.waitForTimeout(1000);
   };
@@ -144,7 +136,7 @@ test.describe('Legal Documents Settings', () => {
     await expect(legalHeading).toBeVisible();
 
     // Get the card container that contains the legal heading
-    const legalSection = legalHeading.locator('xpath=ancestor::div[contains(@class, "rounded-xl")]');
+    const legalSection = legalHeading.locator('..');
 
     // Should see Terms of Service URL input
     const termsLabel = legalSection.locator('label', { hasText: /Terms of Service|Regulamin/i });
@@ -168,7 +160,7 @@ test.describe('Legal Documents Settings', () => {
 
     // Find the Legal Documents section
     const legalHeading = page.locator('h2:text-matches("Legal Documents|Dokumenty prawne", "i")');
-    const legalSection = legalHeading.locator('xpath=ancestor::div[contains(@class, "rounded-xl")]');
+    const legalSection = legalHeading.locator('..');
 
     // Get URL inputs
     const urlInputs = legalSection.locator('input[type="url"]');
@@ -214,7 +206,7 @@ test.describe('Legal Documents Settings', () => {
 
     // Find the Legal Documents section
     const legalHeading = page.locator('h2:text-matches("Legal Documents|Dokumenty prawne", "i")');
-    const legalSection = legalHeading.locator('xpath=ancestor::div[contains(@class, "rounded-xl")]');
+    const legalSection = legalHeading.locator('..');
     const urlInputs = legalSection.locator('input[type="url"]');
 
     // Check that values are pre-filled
@@ -242,7 +234,7 @@ test.describe('Legal Documents Settings', () => {
 
     // Find the Legal Documents section
     const legalHeading = page.locator('h2:text-matches("Legal Documents|Dokumenty prawne", "i")');
-    const legalSection = legalHeading.locator('xpath=ancestor::div[contains(@class, "rounded-xl")]');
+    const legalSection = legalHeading.locator('..');
     const urlInputs = legalSection.locator('input[type="url"]');
 
     // Update URLs
@@ -284,7 +276,7 @@ test.describe('Legal Documents Settings', () => {
 
     // Find the Legal Documents section
     const legalHeading = page.locator('h2:text-matches("Legal Documents|Dokumenty prawne", "i")');
-    const legalSection = legalHeading.locator('xpath=ancestor::div[contains(@class, "rounded-xl")]');
+    const legalSection = legalHeading.locator('..');
     const urlInputs = legalSection.locator('input[type="url"]');
 
     // Clear URLs
@@ -317,7 +309,7 @@ test.describe('Legal Documents Settings', () => {
 
     // Find the Legal Documents section
     const legalHeading = page.locator('h2:text-matches("Legal Documents|Dokumenty prawne", "i")');
-    const legalSection = legalHeading.locator('xpath=ancestor::div[contains(@class, "rounded-xl")]');
+    const legalSection = legalHeading.locator('..');
 
     // Should see info box with links
     const termsLink = legalSection.locator('a[href="/terms"]');
@@ -339,16 +331,7 @@ test.describe('Legal Documents Settings', () => {
     await acceptAllCookies(page);
     await page.goto('/');
 
-    await page.evaluate(async ({ email, password, supabaseUrl, anonKey }) => {
-      const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-      const supabase = createBrowserClient(supabaseUrl, anonKey);
-      await supabase.auth.signInWithPassword({ email, password });
-    }, {
-      email: regularEmail,
-      password: password,
-      supabaseUrl: SUPABASE_URL,
-      anonKey: ANON_KEY,
-    });
+    await setAuthSession(page, regularEmail, password);
 
     await page.waitForTimeout(1000);
 
@@ -589,7 +572,7 @@ test.describe('Legal Documents Settings', () => {
 
     // Find the Legal Documents section and set Terms URL
     const legalHeading = page.locator('h2:text-matches("Legal Documents|Dokumenty prawne", "i")');
-    const legalSection = legalHeading.locator('xpath=ancestor::div[contains(@class, "rounded-xl")]');
+    const legalSection = legalHeading.locator('..');
     const urlInputs = legalSection.locator('input[type="url"]');
 
     const uiSetUrl = 'https://ui-set-terms.example.com/terms.pdf';
@@ -638,7 +621,7 @@ test.describe('Legal Documents Settings', () => {
 
     // Find the Legal Documents section and set Privacy URL
     const legalHeading = page.locator('h2:text-matches("Legal Documents|Dokumenty prawne", "i")');
-    const legalSection = legalHeading.locator('xpath=ancestor::div[contains(@class, "rounded-xl")]');
+    const legalSection = legalHeading.locator('..');
     const urlInputs = legalSection.locator('input[type="url"]');
 
     const uiSetUrl = 'https://ui-set-privacy.example.com/privacy.pdf';
