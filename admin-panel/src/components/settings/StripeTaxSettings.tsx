@@ -89,6 +89,7 @@ export default function StripeTaxSettings() {
  // Tax mode state
  const [taxMode, setTaxMode] = useState<TaxMode>('stripe_tax')
  const [defaultVatRate, setDefaultVatRate] = useState('')
+ const [vatRateIsNull, setVatRateIsNull] = useState(false)
 
  // Toggle state
  const [taxIdCollection, setTaxIdCollection] = useState(true)
@@ -150,6 +151,7 @@ export default function StripeTaxSettings() {
  }
 
  if (shopConfig) {
+ setVatRateIsNull(shopConfig.tax_rate == null)
  setDefaultVatRate(
  shopConfig.tax_rate != null
  ? Math.round(shopConfig.tax_rate * 100).toString()
@@ -360,8 +362,8 @@ export default function StripeTaxSettings() {
  <span className="text-sm text-sf-muted">%</span>
  </div>
 
- {/* No rate warning */}
- {(!defaultVatRate || defaultVatRate === '0') && (
+ {/* No rate warning — only when tax_rate is NULL (never configured) */}
+ {vatRateIsNull && (
  <div className="flex items-start gap-2 p-2 bg-sf-warning-soft border border-sf-warning/20">
  <AlertCircle className="w-4 h-4 text-sf-warning mt-0.5 flex-shrink-0" />
  <p className="text-xs text-sf-warning">{t('taxMode.noRateWarning')}</p>
