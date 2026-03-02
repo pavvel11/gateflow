@@ -675,8 +675,8 @@ Deploy scripts live in a separate repo: `jurczykpawel/mikrus-toolbox`.
 
 | Instance | Directory | PM2 name | Port |
 |----------|-----------|----------|------|
-| Production | `/scripts/docker-compose/sellf/` | `sellf-tsa` | 3333 |
-| Demo | `/opt/stacks/sellf-sellf/` | `sellf-sellf` | 3334 |
+| Production (TSA) | `/opt/stacks/sellf-tsa/` | `sellf-tsa` | 3333 |
+| Demo | `/opt/stacks/sellf-demo/` | `sellf-demo` | 3334 |
 
 ## Deployment Policy
 

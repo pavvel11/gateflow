@@ -93,6 +93,9 @@ jobs:
           # Create release package
           mkdir -p ../release
 
+          # Write version file (used by update.sh for display)
+          node -p "require('./package.json').version" > ../release/version.txt
+
           # Copy built application
           cp -r .next ../release/
           cp package.json ../release/
