@@ -27,11 +27,37 @@ import { checkRateLimit } from '@/lib/rate-limiting';
 import { randomUUID } from 'crypto';
 import { spawn } from 'child_process';
 import { existsSync, openSync, closeSync } from 'fs';
+import { resolve } from 'path';
 
-const UPGRADE_SCRIPT_PATHS = [
-  '/opt/stacks/sellf/scripts/upgrade.sh',
-  '/opt/stacks/sellf/upgrade.sh',
-];
+/**
+ * Resolve upgrade script path dynamically based on process.cwd().
+ * Supports both standalone (production) and development layouts:
+ *   - Standalone: cwd = /opt/stacks/sellf-{name}/admin-panel/.next/standalone/admin-panel
+ *     → script at ../../scripts/upgrade.sh (relative to install root)
+ *   - Development: cwd = /path/to/admin-panel
+ *     → script at ./scripts/upgrade.sh
+ */
+function findUpgradeScript(): string | null {
+  const cwd = process.cwd();
+
+  // Candidate paths relative to cwd and common install roots
+  const candidates = [
+    // Standalone: script is alongside .next/ in the install dir
+    resolve(cwd, '..', '..', '..', 'scripts', 'upgrade.sh'),
+    // Standalone: script copied into standalone dir
+    resolve(cwd, 'scripts', 'upgrade.sh'),
+    // Development
+    resolve(cwd, '..', 'scripts', 'upgrade.sh'),
+  ];
+
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
 
 export async function OPTIONS(request: NextRequest) {
   return handleCorsPreFlight(request);
@@ -61,13 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find upgrade script
-    let scriptPath: string | null = null;
-    for (const path of UPGRADE_SCRIPT_PATHS) {
-      if (existsSync(path)) {
-        scriptPath = path;
-        break;
-      }
-    }
+    const scriptPath = findUpgradeScript();
 
     if (!scriptPath) {
       return jsonResponse(
