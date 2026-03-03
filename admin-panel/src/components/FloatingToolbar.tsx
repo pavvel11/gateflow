@@ -183,7 +183,7 @@ export default function FloatingToolbar({
                           setIsUserMenuOpen(false)
                           setIsAuthLoading(true)
                           try {
-                            await signOut()
+                            signOut()
                             window.location.reload()
                           } catch (error) {
                             console.error('Logout error:', error)

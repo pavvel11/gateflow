@@ -7,7 +7,7 @@ export default function AccessDenied() {
   const { signOut, user } = useAuth()
 
   const handleSignOut = async () => {
-    await signOut()
+    signOut()
   }
 
   return (

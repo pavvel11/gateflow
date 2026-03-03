@@ -90,25 +90,33 @@ test.describe('V5: IDOR - User Profile Access', () => {
 test.describe('V7: Open Redirect in Logout', () => {
   test('SECURITY: Logout should reject external URLs in returnUrl', async ({ request }) => {
     const externalUrl = 'https://evil-phishing-site.com/fake-login';
-    const response = await request.get(`/api/auth/logout?returnUrl=${encodeURIComponent(externalUrl)}`);
+    const response = await request.post('/api/auth/logout', {
+      data: { returnUrl: externalUrl },
+    });
 
-    const finalUrl = response.url();
-    expect(finalUrl).not.toContain('evil-phishing-site.com');
+    const body = await response.json();
+    expect(body.redirectUrl).not.toContain('evil-phishing-site.com');
   });
 
   test('SECURITY: Logout should reject protocol-relative URLs', async ({ request }) => {
     const protocolRelativeUrl = '//evil.com/phishing';
-    const response = await request.get(`/api/auth/logout?returnUrl=${encodeURIComponent(protocolRelativeUrl)}`);
+    const response = await request.post('/api/auth/logout', {
+      data: { returnUrl: protocolRelativeUrl },
+    });
 
-    const finalUrl = response.url();
-    expect(finalUrl).not.toContain('evil.com');
+    const body = await response.json();
+    expect(body.redirectUrl).not.toContain('evil.com');
   });
 
   test('SECURITY: Logout should allow relative paths', async ({ request }) => {
-    const relativePath = '/dashboard';
-    const response = await request.get(`/api/auth/logout?returnUrl=${encodeURIComponent(relativePath)}`);
+    const relativePath = '/login';
+    const response = await request.post('/api/auth/logout', {
+      data: { returnUrl: relativePath },
+    });
 
-    expect(response.status()).toBeLessThan(400);
+    expect(response.ok()).toBeTruthy();
+    const body = await response.json();
+    expect(body.redirectUrl).toBe('/login');
   });
 });
 

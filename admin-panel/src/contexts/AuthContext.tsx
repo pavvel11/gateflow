@@ -3,7 +3,6 @@
 import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { User, Session, AuthChangeEvent } from '@supabase/supabase-js'
-import { useRouter } from 'next/navigation'
 import { AuthContextType } from '@/types/auth'
 
 // Create context with default values
@@ -37,7 +36,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Performance and memory management refs
   const isMountedRef = useRef(true)
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
-  const router = useRouter()
 
   /**
    * Fetches admin status using cached function for better performance
@@ -169,30 +167,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   const signOut = async () => {
     try {
-      setLoading(true)
-      
-      const supabase = await createClient()
-      const { error } = await supabase.auth.signOut()
-      if (error) {
-        if (isMountedRef.current) {
-          setError('Failed to sign out')
-        }
-      }
-      
-      // Clear local state
-      setUser(null)
-      setIsAdmin(false)
-      
-      // Navigate to login after sign out
-      router.replace('/login')
+      // POST (not GET) to prevent logout CSRF via link/image injection.
+      // Server clears session cookies before redirect so the proxy doesn't
+      // see a valid JWT and 307 back to dashboard.
+      const res = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ returnUrl: '/login' }),
+      })
+      const data = await res.json()
+      window.location.href = data.redirectUrl ?? '/login'
     } catch {
-      if (isMountedRef.current) {
-        setError('Failed to sign out')
-      }
-    } finally {
-      if (isMountedRef.current) {
-        setLoading(false)
-      }
+      window.location.href = '/login'
     }
   }
 

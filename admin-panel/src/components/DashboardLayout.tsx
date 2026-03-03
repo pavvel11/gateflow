@@ -168,7 +168,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
   const secondaryColor = shopConfig?.secondary_color || 'var(--sf-accent-hover)'
 
   const handleSignOut = async () => {
-    await signOut()
+    signOut()
   }
 
   // Navigation Items Config
