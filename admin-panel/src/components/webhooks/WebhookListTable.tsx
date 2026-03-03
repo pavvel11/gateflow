@@ -58,7 +58,7 @@ const WebhookRow = ({
           {endpoint.events.map((ev) => (
             <span
               key={ev}
-              className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-sf-accent-soft text-sf-accent border-2 border-sf-border-medium"
+              className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-sf-accent-soft text-sf-accent border-2 border-sf-border-medium whitespace-nowrap"
             >
               {getEventLabel(ev)}
             </span>

@@ -61,6 +61,7 @@ export async function GET(request: NextRequest) {
         events,
         description,
         is_active,
+        secret,
         created_at,
         updated_at
       `);
@@ -163,7 +164,7 @@ export async function POST(request: NextRequest) {
         description: description || null,
         is_active,
       })
-      .select('id, url, events, description, is_active, created_at, updated_at')
+      .select('id, url, events, description, is_active, secret, created_at, updated_at')
       .single();
 
     if (error) {
@@ -181,6 +182,7 @@ export async function POST(request: NextRequest) {
         events: webhook.events,
         description: webhook.description,
         is_active: webhook.is_active,
+        secret: webhook.secret,
         created_at: webhook.created_at,
         updated_at: webhook.updated_at,
       }),
