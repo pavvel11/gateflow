@@ -9,7 +9,7 @@ export async function updateUserPreferences(preferences: {
   displayCurrency?: string | null;
   currencyViewMode?: 'grouped' | 'converted';
 }) {
-  if (isDemoMode()) throw new Error(DEMO_MODE_ERROR)
+  if (isDemoMode()) return { success: true }
   const supabase = await createClient();
 
   const { data: { user }, error: userError } = await supabase.auth.getUser();

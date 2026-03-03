@@ -104,8 +104,8 @@ export default function LoginPage() {
 
           {/* Demo mode credentials */}
           {demoMode && (
-            <div className="mt-4 p-4 rounded-xl text-sm bg-amber-500/10 text-amber-300 border border-amber-500/20">
-              <div className="font-medium text-amber-200 mb-1">{t('demo.banner')}</div>
+            <div className="mt-4 p-4 rounded-xl text-sm bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+              <div className="font-medium text-amber-800 dark:text-amber-200 mb-1">{t('demo.banner')}</div>
               <code className="text-xs font-mono">{t('demo.credentials')}</code>
             </div>
           )}

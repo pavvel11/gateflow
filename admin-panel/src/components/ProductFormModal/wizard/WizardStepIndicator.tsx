@@ -11,12 +11,14 @@ interface WizardStepIndicatorProps {
   steps: Step[];
   currentStep: number;
   onStepClick: (step: number) => void;
+  isEditMode?: boolean;
 }
 
 export const WizardStepIndicator: React.FC<WizardStepIndicatorProps> = ({
   steps,
   currentStep,
   onStepClick,
+  isEditMode = false,
 }) => {
   return (
     <div className="px-6 py-3 border-b border-sf-border">
@@ -25,7 +27,7 @@ export const WizardStepIndicator: React.FC<WizardStepIndicatorProps> = ({
         {steps.map((step, index) => {
           const isCompleted = step.number < currentStep;
           const isCurrent = step.number === currentStep;
-          const isClickable = step.number < currentStep;
+          const isClickable = isEditMode ? !isCurrent : step.number < currentStep;
 
           return (
             <React.Fragment key={step.number}>
@@ -90,7 +92,7 @@ export const WizardStepIndicator: React.FC<WizardStepIndicatorProps> = ({
           {steps.map((step, index) => {
             const isCompleted = step.number < currentStep;
             const isCurrent = step.number === currentStep;
-            const isClickable = step.number < currentStep;
+            const isClickable = isEditMode ? !isCurrent : step.number < currentStep;
 
             return (
               <React.Fragment key={step.number}>

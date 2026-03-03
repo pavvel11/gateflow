@@ -111,10 +111,10 @@ const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({
   }, [currentStep]);
 
   const handleStepClick = useCallback((step: number) => {
-    if (step < currentStep) {
+    if (isEditMode || step < currentStep) {
       setCurrentStep(step);
     }
-  }, [currentStep]);
+  }, [currentStep, isEditMode]);
 
   // Navigate to step 1 when field errors appear (required fields are on step 1)
   React.useEffect(() => {
@@ -183,6 +183,7 @@ const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({
           steps={steps}
           currentStep={currentStep}
           onStepClick={handleStepClick}
+          isEditMode={isEditMode}
         />
 
         <ModalBody>
