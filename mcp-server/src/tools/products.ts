@@ -6,7 +6,7 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getApiClient, PaginatedResponse } from '../api-client.js';
+import { getApiClient } from '../api-client.js';
 
 interface Product {
   id: string;
@@ -43,7 +43,7 @@ export function registerProductsTools(server: McpServer): void {
     },
     async ({ status, search, cursor, limit, sort_by, sort_order }) => {
       const api = getApiClient();
-      const result = await api.get<{ data: PaginatedResponse<Product> }>('/api/v1/products', {
+      const result = await api.get<{ data: Product[]; pagination: { cursor: string | null; next_cursor: string | null; has_more: boolean; limit: number; total?: number } }>('/api/v1/products', {
         status,
         search,
         cursor,
@@ -53,7 +53,7 @@ export function registerProductsTools(server: McpServer): void {
       });
 
       return {
-        content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }],
+        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
       };
     }
   );
@@ -228,14 +228,14 @@ export function registerProductsTools(server: McpServer): void {
       const productResult = await api.get<{ data: Product }>(`/api/v1/products/${product_id}`);
 
       // Fetch payments for this product
-      const paymentsResult = await api.get<{ data: PaginatedResponse<{ status: string; amount_total: number }> }>(
+      const paymentsResult = await api.get<{ data: { status: string; amount: number }[]; pagination: unknown }>(
         '/api/v1/payments',
         { product_id, limit: 100 }
       );
 
-      const payments = paymentsResult.data.items;
-      const successfulPayments = payments.filter((p) => p.status === 'succeeded');
-      const totalRevenue = successfulPayments.reduce((sum, p) => sum + p.amount_total, 0);
+      const payments = paymentsResult.data;
+      const successfulPayments = payments.filter((p) => p.status === 'completed');
+      const totalRevenue = successfulPayments.reduce((sum, p) => sum + p.amount, 0);
 
       const stats = {
         product: {

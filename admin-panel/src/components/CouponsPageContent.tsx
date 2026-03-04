@@ -14,7 +14,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Coupon } from '@/types/coupon';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import CouponFormModal from './CouponFormModal';
 import { Product } from '@/types';
 import { useTranslations } from 'next-intl';
@@ -52,7 +52,6 @@ const getRestrictedProducts = (coupon: Coupon, products: Product[]): string[] =>
 
 const CouponsPageContent: React.FC = () => {
   const t = useTranslations('admin.coupons');
-  const { addToast } = useToast();
   
   // State
   const [coupons, setCoupons] = useState<Coupon[]>([]);
@@ -121,12 +120,12 @@ const CouponsPageContent: React.FC = () => {
 
       await fetchData();
       setShowForm(false);
-      addToast(t('createSuccess'), 'success');
+      toast.success(t('createSuccess'));
     } catch (err) {
       if (err instanceof ApiError) {
-        addToast(err.message, 'error');
+        toast.error(err.message);
       } else {
-        addToast(t('createError'), 'error');
+        toast.error(t('createError'));
       }
     } finally {
       setIsSubmitting(false);
@@ -142,12 +141,12 @@ const CouponsPageContent: React.FC = () => {
       await fetchData();
       setShowForm(false);
       setEditingCoupon(null);
-      addToast(t('updateSuccess'), 'success');
+      toast.success(t('updateSuccess'));
     } catch (err) {
       if (err instanceof ApiError) {
-        addToast(err.message, 'error');
+        toast.error(err.message);
       } else {
-        addToast(t('updateError'), 'error');
+        toast.error(t('updateError'));
       }
     } finally {
       setIsSubmitting(false);
@@ -160,9 +159,9 @@ const CouponsPageContent: React.FC = () => {
 
       await fetchData();
       setCouponToDelete(null);
-      addToast(t('deleteSuccess'), 'success');
+      toast.success(t('deleteSuccess'));
     } catch (err) {
-      addToast(t('deleteError'), 'error');
+      toast.error(t('deleteError'));
     }
   };
 
@@ -171,9 +170,9 @@ const CouponsPageContent: React.FC = () => {
       await api.update<Coupon>('coupons', coupon.id, { is_active: !coupon.is_active });
 
       await fetchData();
-      addToast(t('toggleSuccess', { status: t(!coupon.is_active ? 'activated' : 'deactivated') }), 'success');
+      toast.success(t('toggleSuccess', { status: t(!coupon.is_active ? 'activated' : 'deactivated') }));
     } catch (err) {
-      addToast(t('statusError'), 'error');
+      toast.error(t('statusError'));
     }
   };
 
@@ -215,12 +214,12 @@ const CouponsPageContent: React.FC = () => {
       setShowBulkDeleteConfirm(false);
 
       if (failed > 0) {
-        addToast(t('bulkDeletePartial', { deleted: ids.length - failed, failed }), 'warning');
+        toast.warning(t('bulkDeletePartial', { deleted: ids.length - failed, failed }));
       } else {
-        addToast(t('bulkDeleteSuccess', { count: ids.length }), 'success');
+        toast.success(t('bulkDeleteSuccess', { count: ids.length }));
       }
     } catch (err) {
-      addToast(t('bulkDeleteError'), 'error');
+      toast.error(t('bulkDeleteError'));
     }
   };
 
@@ -242,12 +241,12 @@ const CouponsPageContent: React.FC = () => {
       setShowDeleteExpiredConfirm(false);
 
       if (failed > 0) {
-        addToast(t('deleteExpiredPartial', { deleted: expiredCoupons.length - failed, failed }), 'warning');
+        toast.warning(t('deleteExpiredPartial', { deleted: expiredCoupons.length - failed, failed }));
       } else {
-        addToast(t('deleteExpiredSuccess', { count: expiredCoupons.length }), 'success');
+        toast.success(t('deleteExpiredSuccess', { count: expiredCoupons.length }));
       }
     } catch (err) {
-      addToast(t('deleteExpiredError'), 'error');
+      toast.error(t('deleteExpiredError'));
     }
   };
 

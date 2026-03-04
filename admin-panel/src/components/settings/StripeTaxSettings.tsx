@@ -13,7 +13,7 @@ import type { StripeTaxStatus } from '@/lib/actions/stripe-tax'
 import type { ConfigSource } from '@/lib/stripe/checkout-config'
 import { getShopConfig, updateShopConfig } from '@/lib/actions/shop-config'
 import type { TaxMode } from '@/lib/actions/shop-config'
-import { useToast } from '@/contexts/ToastContext'
+import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import SourceBadge from '@/components/ui/SourceBadge'
 
@@ -81,7 +81,6 @@ function Toggle({
 
 export default function StripeTaxSettings() {
  const t = useTranslations('settings.stripeTax')
- const { addToast } = useToast()
  const [loading, setLoading] = useState(true)
  const [taxStatus, setTaxStatus] = useState<StripeTaxStatus | null>(null)
  const [error, setError] = useState<string | null>(null)
@@ -174,12 +173,12 @@ export default function StripeTaxSettings() {
  if (success) {
  setTaxMode(mode)
  setSources((s) => ({ ...s, automatic_tax: 'db' }))
- addToast(t('saveSuccess'), 'success')
+ toast.success(t('saveSuccess'))
  } else {
- addToast(t('saveError'), 'error')
+ toast.error(t('saveError'))
  }
  } catch {
- addToast(t('saveError'), 'error')
+ toast.error(t('saveError'))
  } finally {
  setSaving(false)
  }
@@ -191,12 +190,12 @@ export default function StripeTaxSettings() {
  try {
  const success = await updateShopConfig({ tax_rate: parsed })
  if (success) {
- addToast(t('saveSuccess'), 'success')
+ toast.success(t('saveSuccess'))
  } else {
- addToast(t('saveError'), 'error')
+ toast.error(t('saveError'))
  }
  } catch {
- addToast(t('saveError'), 'error')
+ toast.error(t('saveError'))
  } finally {
  setSaving(false)
  }
@@ -217,12 +216,12 @@ export default function StripeTaxSettings() {
  setCollectTerms(value)
  setSources((s) => ({ ...s, collect_terms: 'db' }))
  }
- addToast(t('saveSuccess'), 'success')
+ toast.success(t('saveSuccess'))
  } else {
- addToast(t('saveError'), 'error')
+ toast.error(t('saveError'))
  }
  } catch {
- addToast(t('saveError'), 'error')
+ toast.error(t('saveError'))
  } finally {
  setSaving(false)
  }
@@ -235,12 +234,12 @@ export default function StripeTaxSettings() {
  if (success) {
  setBillingAddress(value)
  setSources((s) => ({ ...s, billing_address_collection: 'db' }))
- addToast(t('saveSuccess'), 'success')
+ toast.success(t('saveSuccess'))
  } else {
- addToast(t('saveError'), 'error')
+ toast.error(t('saveError'))
  }
  } catch {
- addToast(t('saveError'), 'error')
+ toast.error(t('saveError'))
  } finally {
  setSaving(false)
  }
@@ -254,12 +253,12 @@ export default function StripeTaxSettings() {
  if (success) {
  setExpiresHours(clamped)
  setSources((s) => ({ ...s, expires_hours: 'db' }))
- addToast(t('saveSuccess'), 'success')
+ toast.success(t('saveSuccess'))
  } else {
- addToast(t('saveError'), 'error')
+ toast.error(t('saveError'))
  }
  } catch {
- addToast(t('saveError'), 'error')
+ toast.error(t('saveError'))
  } finally {
  setSaving(false)
  }

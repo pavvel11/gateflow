@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getShopConfig, updateShopConfig } from '@/lib/actions/shop-config';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 
 const THEME_OPTIONS = [
@@ -13,7 +13,6 @@ const THEME_OPTIONS = [
 
 export default function CheckoutThemeSettings() {
  const t = useTranslations('settings.checkoutTheme');
- const { addToast } = useToast();
  const [theme, setTheme] = useState<string>('system');
  const [loading, setLoading] = useState(true);
  const [saving, setSaving] = useState(false);
@@ -40,13 +39,13 @@ export default function CheckoutThemeSettings() {
  try {
  const success = await updateShopConfig({ checkout_theme: newTheme as any });
  if (success) {
- addToast(t('saveSuccess'), 'success');
+ toast.success(t('saveSuccess'));
  } else {
- addToast(t('saveError'), 'error');
+ toast.error(t('saveError'));
  }
  } catch (error) {
  console.error('Error saving checkout theme:', error);
- addToast(t('saveError'), 'error');
+ toast.error(t('saveError'));
  } finally {
  setSaving(false);
  }

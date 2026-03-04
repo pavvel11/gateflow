@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { WebhookLog } from '@/types/webhooks';
 import WebhookLogsTable from './webhooks/WebhookLogsTable';
@@ -15,7 +15,6 @@ interface WebhookFailuresPanelProps {
 export default function WebhookFailuresPanel({ refreshTrigger, onRefresh }: WebhookFailuresPanelProps) {
   const t = useTranslations('admin.webhooks.logs');
   const tCommon = useTranslations('common');
-  const { addToast } = useToast();
 
   const [failures, setFailures] = useState<WebhookLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,9 +68,9 @@ export default function WebhookFailuresPanel({ refreshTrigger, onRefresh }: Webh
 
       // Show appropriate toast based on result
       if (data.success) {
-        addToast(t('retrySuccess'), 'success');
+        toast.success(t('retrySuccess'));
       } else {
-        addToast(data.error || t('retryFailed'), 'error');
+        toast.error(data.error || t('retryFailed'));
       }
 
       // Always refresh, even if retry failed, because database was updated
@@ -80,7 +79,7 @@ export default function WebhookFailuresPanel({ refreshTrigger, onRefresh }: Webh
         onRefresh?.();
       }, 500);
     } catch {
-      addToast(tCommon('error'), 'error');
+      toast.error(tCommon('error'));
     } finally {
       setRetrying(null);
     }

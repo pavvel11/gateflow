@@ -11,7 +11,7 @@ import React, { useState, useEffect } from 'react';
 import { Product } from '@/types';
 import { formatPrice } from '@/lib/constants';
 import { useTranslations } from 'next-intl';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import { api } from '@/lib/api/client';
 
 interface ProductInGroup {
@@ -70,7 +70,6 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
   onSuccess,
 }) => {
   const t = useTranslations('admin.variantsPage');
-  const { addToast } = useToast();
 
   const [groupName, setGroupName] = useState('');
   const [groupSlug, setGroupSlug] = useState('');
@@ -202,7 +201,7 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
     e.preventDefault();
 
     if (selectedProducts.length < 2) {
-      addToast(t('minProductsRequired'), 'error');
+      toast.error(t('minProductsRequired'));
       return;
     }
 
@@ -224,7 +223,7 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
           products: productsData,
         });
 
-        addToast(t('updateSuccess'), 'success');
+        toast.success(t('updateSuccess'));
       } else {
         // Create new group using v1 API
         await api.create('variant-groups', {
@@ -233,7 +232,7 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
           products: productsData,
         });
 
-        addToast(t('createSuccess'), 'success');
+        toast.success(t('createSuccess'));
       }
 
       onSuccess();
@@ -241,9 +240,9 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
       const errorMessage = err instanceof Error ? err.message : 'Failed to save variant group';
       // Use translated message for slug exists error
       if (errorMessage === 'Slug already exists') {
-        addToast(t('slugExists'), 'error');
+        toast.error(t('slugExists'));
       } else {
-        addToast(errorMessage, 'error');
+        toast.error(errorMessage);
       }
     } finally {
       setSubmitting(false);

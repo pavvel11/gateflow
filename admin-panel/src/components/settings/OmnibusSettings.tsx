@@ -5,13 +5,12 @@
  * Global toggle for EU Omnibus Directive (2019/2161) compliance
  */
 
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import { getShopConfig, updateShopConfig, type ShopConfig } from '@/lib/actions/shop-config';
 import { useTranslations } from 'next-intl';
 
 export default function OmnibusSettings() {
- const { addToast } = useToast();
  const t = useTranslations('settings.omnibus');
  const [config, setConfig] = useState<ShopConfig | null>(null);
  const [loading, setLoading] = useState(true);
@@ -49,7 +48,7 @@ export default function OmnibusSettings() {
  const success = await updateShopConfig(updates);
 
  if (success) {
- addToast(t('saveSuccess'), 'success');
+ toast.success(t('saveSuccess'));
  // Reload config and sync state
  const newConfig = await getShopConfig();
  if (newConfig) {
@@ -57,13 +56,13 @@ export default function OmnibusSettings() {
  setOmnibusEnabled(newConfig.omnibus_enabled ?? true);
  }
  } else {
- addToast(t('saveError'), 'error');
+ toast.error(t('saveError'));
  // Revert on error
  setOmnibusEnabled(!newValue);
  }
  } catch (error) {
  console.error('Error saving omnibus settings:', error);
- addToast(t('saveError'), 'error');
+ toast.error(t('saveError'));
  // Revert on error
  setOmnibusEnabled(!newValue);
  } finally {

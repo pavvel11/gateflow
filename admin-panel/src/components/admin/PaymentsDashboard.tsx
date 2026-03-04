@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import PaymentStatsCards from './PaymentStatsCards';
 import PaymentTransactionsTable from './PaymentTransactionsTable';
 import PaymentSessionsTable from './PaymentSessionsTable';
@@ -24,7 +24,6 @@ interface PaymentStats {
 
 export default function PaymentsDashboard() {
   const t = useTranslations('admin.payments');
-  const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState<'transactions' | 'sessions'>('transactions');
   const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
   const [sessions, setSessions] = useState<PaymentSession[]>([]);
@@ -66,11 +65,11 @@ export default function PaymentsDashboard() {
         thisMonthRevenue: statsData.this_month_revenue,
       });
     } catch {
-      addToast(t('loadError'), 'error');
+      toast.error(t('loadError'));
     } finally {
       setLoading(false);
     }
-  }, [addToast]);
+  }, []);
 
   useEffect(() => {
     fetchPaymentData();

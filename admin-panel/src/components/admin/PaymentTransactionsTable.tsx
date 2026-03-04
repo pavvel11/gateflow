@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { processRefund } from '@/lib/actions/payment';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import type { PaymentTransaction } from '@/types/payment';
 
 interface PaymentTransactionsTableProps {
@@ -20,7 +20,6 @@ export default function PaymentTransactionsTable({
 }: PaymentTransactionsTableProps) {
   const t = useTranslations('admin.payments.transactions');
   const tRefund = useTranslations('admin.payments.refund');
-  const { addToast } = useToast();
   const [refundingId, setRefundingId] = useState<string | null>(null);
   const [refundReason, setRefundReason] = useState('');
   const [showRefundModal, setShowRefundModal] = useState<string | null>(null);
@@ -38,15 +37,15 @@ export default function PaymentTransactionsTable({
       });
       
       if (result.success) {
-        addToast(tRefund('success'), 'success');
+        toast.success(tRefund('success'));
         setShowRefundModal(null);
         setRefundReason('');
         onRefreshData?.();
       } else {
-        addToast(result.message, 'error');
+        toast.error(result.message);
       }
     } catch {
-      addToast(tRefund('error'), 'error');
+      toast.error(tRefund('error'));
     } finally {
       setRefundingId(null);
     }

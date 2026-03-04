@@ -18,7 +18,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import {
  getPaymentMethodConfig,
  updatePaymentMethodConfig,
@@ -40,7 +40,6 @@ import type { ConfigSource } from '@/lib/stripe/checkout-config';
 import { RefreshCw, AlertTriangle, Check, GripVertical, RotateCcw, ChevronDown, ChevronRight, Plus, Trash2, X } from 'lucide-react';
 
 export default function PaymentMethodSettings() {
- const { addToast } = useToast();
  const t = useTranslations('settings');
 
  // State
@@ -116,7 +115,7 @@ export default function PaymentMethodSettings() {
  }
  } catch (error) {
  console.error('Failed to load payment config:', error);
- addToast(t('paymentMethods.messages.error'), 'error');
+ toast.error(t('paymentMethods.messages.error'));
  } finally {
  setLoading(false);
  }
@@ -142,11 +141,11 @@ export default function PaymentMethodSettings() {
  if (result.success && result.data) {
  setStripePmcs(result.data);
  } else {
- addToast(result.error || t('paymentMethods.stripeConfig.error'), 'error');
+ toast.error(result.error || t('paymentMethods.stripeConfig.error'));
  }
  } catch (error) {
  console.error('Failed to load Stripe PMCs:', error);
- addToast(t('paymentMethods.stripeConfig.error'), 'error');
+ toast.error(t('paymentMethods.stripeConfig.error'));
  } finally {
  setStripePmcsLoading(false);
  }
@@ -159,13 +158,13 @@ export default function PaymentMethodSettings() {
  const result = await refreshStripePaymentMethodConfigs();
  if (result.success) {
  await loadStripePmcs();
- addToast(t('paymentMethods.messages.refreshSuccess'), 'success');
+ toast.success(t('paymentMethods.messages.refreshSuccess'));
  } else {
- addToast(result.error || t('paymentMethods.stripeConfig.error'), 'error');
+ toast.error(result.error || t('paymentMethods.stripeConfig.error'));
  }
  } catch (error) {
  console.error('Failed to refresh Stripe PMCs:', error);
- addToast(t('paymentMethods.stripeConfig.error'), 'error');
+ toast.error(t('paymentMethods.stripeConfig.error'));
  } finally {
  setRefreshing(false);
  }
@@ -178,7 +177,7 @@ export default function PaymentMethodSettings() {
 
  // Validation
  if (configMode === 'stripe_preset' && !stripePmcId) {
- addToast(t('paymentMethods.validation.noStripePMC'), 'error');
+ toast.error(t('paymentMethods.validation.noStripePMC'));
  return;
  }
 
@@ -186,7 +185,7 @@ export default function PaymentMethodSettings() {
  const enabledCount = customPaymentMethods.filter((pm) => pm.enabled).length;
  const hasExpressMethod = enableExpressCheckout && (enableLink || enableApplePay || enableGooglePay);
  if (enabledCount === 0 && !hasExpressMethod) {
- addToast(t('paymentMethods.validation.noMethods'), 'error');
+ toast.error(t('paymentMethods.validation.noMethods'));
  return;
  }
  }
@@ -206,13 +205,13 @@ export default function PaymentMethodSettings() {
 
  if (result.success) {
  setPmSource('db');
- addToast(t('paymentMethods.messages.saveSuccess'), 'success');
+ toast.success(t('paymentMethods.messages.saveSuccess'));
  } else {
- addToast(result.error || t('paymentMethods.messages.saveError'), 'error');
+ toast.error(result.error || t('paymentMethods.messages.saveError'));
  }
  } catch (error) {
  console.error('Failed to save payment config:', error);
- addToast(t('paymentMethods.messages.saveError'), 'error');
+ toast.error(t('paymentMethods.messages.saveError'));
  } finally {
  setSaving(false);
  }
@@ -221,7 +220,7 @@ export default function PaymentMethodSettings() {
  // Reset to current saved config
  function handleReset() {
  loadConfig();
- addToast(t('paymentMethods.messages.configReset'), 'info');
+ toast.info(t('paymentMethods.messages.configReset'));
  }
 
  // Reset to recommended configuration
@@ -230,14 +229,14 @@ export default function PaymentMethodSettings() {
  setResettingToRecommended(true);
  const result = await resetToRecommendedConfig();
  if (result.success) {
- addToast(t('paymentMethods.messages.resetSuccess'), 'success');
+ toast.success(t('paymentMethods.messages.resetSuccess'));
  await loadConfig();
  } else {
- addToast(result.error || t('paymentMethods.messages.error'), 'error');
+ toast.error(result.error || t('paymentMethods.messages.error'));
  }
  } catch (error) {
  console.error('Failed to reset to recommended config:', error);
- addToast(t('paymentMethods.messages.error'), 'error');
+ toast.error(t('paymentMethods.messages.error'));
  } finally {
  setResettingToRecommended(false);
  }

@@ -11,7 +11,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Product } from '@/types';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { formatPrice } from '@/lib/constants';
 import VariantGroupFormModal from './VariantGroupFormModal';
@@ -46,7 +46,6 @@ interface VariantGroup {
 }
 
 const VariantsPageContent: React.FC = () => {
-  const { addToast } = useToast();
   const t = useTranslations('admin.variantsPage');
 
   // State for variant groups and loading
@@ -106,9 +105,9 @@ const VariantsPageContent: React.FC = () => {
       await api.delete('variant-groups', group.id);
       setGroupToDelete(null);
       await fetchGroups();
-      addToast(t('deleteSuccess'), 'success');
+      toast.success(t('deleteSuccess'));
     } catch (err) {
-      addToast(err instanceof Error ? err.message : t('deleteGroupError'), 'error');
+      toast.error(err instanceof Error ? err.message : t('deleteGroupError'));
     }
   };
 
@@ -135,9 +134,9 @@ const VariantsPageContent: React.FC = () => {
 
       setProductToRemove(null);
       await fetchGroups();
-      addToast(t('removeSuccess'), 'success');
+      toast.success(t('removeSuccess'));
     } catch (err) {
-      addToast(err instanceof Error ? err.message : t('removeProductError'), 'error');
+      toast.error(err instanceof Error ? err.message : t('removeProductError'));
     }
   };
 
@@ -154,9 +153,9 @@ const VariantsPageContent: React.FC = () => {
       await api.update('variant-groups', group.id, { products: updatedProducts });
 
       await fetchGroups();
-      addToast(t('featuredUpdated'), 'success');
+      toast.success(t('featuredUpdated'));
     } catch (err) {
-      addToast(err instanceof Error ? err.message : t('updateError'), 'error');
+      toast.error(err instanceof Error ? err.message : t('updateError'));
     }
   };
 
@@ -165,7 +164,7 @@ const VariantsPageContent: React.FC = () => {
     const baseUrl = window.location.origin;
     const link = `${baseUrl}/v/${group.slug || group.id}`;
     navigator.clipboard.writeText(link);
-    addToast(t('linkCopied'), 'success');
+    toast.success(t('linkCopied'));
   };
 
   // Get stats

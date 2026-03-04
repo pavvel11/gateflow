@@ -310,6 +310,8 @@ See **[FEATURES.md](./FEATURES.md)** for details on all integrations.
 | **[Deployment Guide](./docs/DEPLOYMENT-MIKRUS.md)** | VPS/mikr.us with PM2 (recommended) |
 | **[Advanced Options](./docs/DEPLOYMENT.md)** | Docker, Full-Stack, PM2 Cluster |
 
+> **Server requirements:** Sellf runs on 384 MB RAM. Benchmarked at **0 errors under 30 concurrent users** on a [$9/year VPS](https://mikr.us/?r=pavvel). No Docker needed — plain Node.js + PM2.
+
 ---
 
 ## Documentation

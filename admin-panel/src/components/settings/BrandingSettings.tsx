@@ -11,7 +11,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import { useConfig } from '@/components/providers/config-provider';
 import {
  getActiveTheme,
@@ -76,7 +76,6 @@ function ColorField({
 
 export default function BrandingSettings() {
  const t = useTranslations('settings.branding');
- const { addToast } = useToast();
  const { demoMode } = useConfig();
 
  const [loading, setLoading] = useState(true);
@@ -183,7 +182,7 @@ export default function BrandingSettings() {
 
  const handleSave = async () => {
  if (!licenseValid) {
- addToast(t('licenseRequired'), 'error');
+ toast.error(t('licenseRequired'));
  return;
  }
 
@@ -193,13 +192,13 @@ export default function BrandingSettings() {
  if (result.success) {
  setActiveTheme(editTheme);
  setHasChanges(false);
- addToast(t('saveSuccess'), 'success');
+ toast.success(t('saveSuccess'));
  } else {
- addToast(result.error || t('saveError'), 'error');
+ toast.error(result.error || t('saveError'));
  }
  } catch (error) {
  console.error('[BrandingSettings] Save error:', error);
- addToast(t('errorOccurred'), 'error');
+ toast.error(t('errorOccurred'));
  } finally {
  setSaving(false);
  }
@@ -214,13 +213,13 @@ export default function BrandingSettings() {
  setEditTheme(DEFAULT_THEME);
  setSelectedPresetId(null);
  setHasChanges(false);
- addToast(t('themeRemoved'), 'success');
+ toast.success(t('themeRemoved'));
  } else {
- addToast(result.error || t('saveError'), 'error');
+ toast.error(result.error || t('saveError'));
  }
  } catch (error) {
  console.error('[BrandingSettings] Remove error:', error);
- addToast(t('errorOccurred'), 'error');
+ toast.error(t('errorOccurred'));
  } finally {
  setSaving(false);
  }
@@ -238,7 +237,7 @@ export default function BrandingSettings() {
  URL.revokeObjectURL(url);
  } catch (error) {
  console.error('[BrandingSettings] Export error:', error);
- addToast(t('errorOccurred'), 'error');
+ toast.error(t('errorOccurred'));
  }
  };
 
@@ -248,7 +247,7 @@ export default function BrandingSettings() {
 
  const MAX_THEME_FILE_SIZE = 100 * 1024; // 100KB
  if (file.size > MAX_THEME_FILE_SIZE) {
- addToast(t('fileTooLarge'), 'error');
+ toast.error(t('fileTooLarge'));
  return;
  }
 
@@ -258,15 +257,15 @@ export default function BrandingSettings() {
  const raw = JSON.parse(event.target?.result as string);
  const result = themeConfigSchema.safeParse(raw);
  if (!result.success) {
- addToast(t('invalidThemeFile'), 'error');
+ toast.error(t('invalidThemeFile'));
  return;
  }
  setEditTheme(result.data);
  setSelectedPresetId('custom');
  setHasChanges(true);
- addToast(t('themeImported'), 'success');
+ toast.success(t('themeImported'));
  } catch {
- addToast(t('invalidThemeFile'), 'error');
+ toast.error(t('invalidThemeFile'));
  }
  };
  reader.readAsText(file);

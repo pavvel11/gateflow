@@ -70,9 +70,9 @@ export async function POST(request: NextRequest) {
     const host = request.headers.get('host');
 
     // Check if request is from same origin
-    // Only trust NEXT_PUBLIC_SITE_URL — never derive allowed origins from Host header
+    // Use SITE_URL (server-side runtime env) — NEXT_PUBLIC_SITE_URL is baked at build time
     const allowedOrigins = [
-      process.env.NEXT_PUBLIC_SITE_URL,
+      process.env.SITE_URL,
     ].filter(Boolean);
 
     const isValidOrigin = origin && allowedOrigins.some(allowed =>
@@ -235,9 +235,9 @@ export async function POST(request: NextRequest) {
 export async function OPTIONS(request: NextRequest) {
   const origin = request.headers.get('origin');
 
-  // Only trust NEXT_PUBLIC_SITE_URL — never derive from Host header
+  // Use SITE_URL (server-side runtime env) — NEXT_PUBLIC_SITE_URL is baked at build time
   const allowedOrigins = [
-    process.env.NEXT_PUBLIC_SITE_URL,
+    process.env.SITE_URL,
   ].filter(Boolean);
 
   const isValidOrigin = origin && allowedOrigins.some(allowed =>

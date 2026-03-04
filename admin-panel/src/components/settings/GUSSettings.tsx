@@ -4,13 +4,12 @@ import { useState, useEffect } from 'react';
 import { Building2, ExternalLink, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { saveGUSAPIKey, getGUSConfig, deleteGUSAPIKey } from '@/lib/actions/gus-config';
 import { BaseModal, ModalHeader, ModalBody, ModalFooter, Button } from '@/components/ui/Modal';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 
 export default function GUSSettings() {
  const t = useTranslations('settings.gus');
  const tCommon = useTranslations('common');
- const { addToast } = useToast();
  const [apiKey, setApiKey] = useState('');
  const [enabled, setEnabled] = useState(false);
  const [hasKey, setHasKey] = useState(false);
@@ -40,7 +39,7 @@ export default function GUSSettings() {
 
  const handleSave = async () => {
  if (!apiKey.trim() && !hasKey) {
- addToast(t('errors.apiKeyRequired'), 'error');
+ toast.error(t('errors.apiKeyRequired'));
  return;
  }
 
@@ -53,14 +52,14 @@ export default function GUSSettings() {
  });
 
  if (result.success) {
- addToast(t('messages.saved'), 'success');
+ toast.success(t('messages.saved'));
  setApiKey('');
  await loadConfig();
  } else {
- addToast(result.error || t('errors.saveFailed'), 'error');
+ toast.error(result.error || t('errors.saveFailed'));
  }
  } catch (error) {
- addToast(t('errors.saveFailed'), 'error');
+ toast.error(t('errors.saveFailed'));
  } finally {
  setSaving(false);
  }
@@ -74,15 +73,15 @@ export default function GUSSettings() {
  const result = await deleteGUSAPIKey();
 
  if (result.success) {
- addToast(t('messages.deleted'), 'success');
+ toast.success(t('messages.deleted'));
  setApiKey('');
  setEnabled(false);
  await loadConfig();
  } else {
- addToast(result.error || t('errors.deleteFailed'), 'error');
+ toast.error(result.error || t('errors.deleteFailed'));
  }
  } catch (error) {
- addToast(t('errors.deleteFailed'), 'error');
+ toast.error(t('errors.deleteFailed'));
  } finally {
  setDeleting(false);
  }

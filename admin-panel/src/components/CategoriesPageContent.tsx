@@ -5,12 +5,11 @@ import { useTranslations } from 'next-intl'
 import { Category, deleteCategory } from '@/lib/actions/categories'
 import { Plus, Edit, Trash2 } from 'lucide-react'
 import CategoryFormModal from './CategoryFormModal'
-import { useToast } from '@/contexts/ToastContext'
+import { toast } from 'sonner'
 
 export default function CategoriesPageContent({ initialCategories }: { initialCategories: Category[] }) {
   const t = useTranslations('admin.categories') // Assuming we add this namespace later
   const commonT = useTranslations('common')
-  const { addToast } = useToast()
   
   const [categories, setCategories] = useState(initialCategories) // In real app, revalidatePath handles refresh, but optimistic update is nice
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -21,13 +20,13 @@ export default function CategoriesPageContent({ initialCategories }: { initialCa
     try {
       const result = await deleteCategory(category.id)
       if (result && !result.success) {
-        addToast(result.error || commonT('error', { defaultValue: 'Error' }), 'error')
+        toast.error(result.error || commonT('error', { defaultValue: 'Error' }))
         return
       }
-      addToast(commonT('success', { defaultValue: 'Success' }), 'success')
+      toast.success(commonT('success', { defaultValue: 'Success' }))
       setCategoryToDelete(null)
     } catch (error) {
-      addToast(commonT('error', { defaultValue: 'Error' }), 'error')
+      toast.error(commonT('error', { defaultValue: 'Error' }))
     }
   }
 

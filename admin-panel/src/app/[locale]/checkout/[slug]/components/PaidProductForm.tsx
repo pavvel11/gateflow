@@ -14,7 +14,7 @@ import { useConfig } from '@/components/providers/config-provider';
 import { useTheme } from '@/components/providers/theme-provider';
 import { useOrderBumps } from '@/hooks/useOrderBumps';
 import { useSearchParams } from 'next/navigation';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { useTracking } from '@/hooks/useTracking';
 import ProductShowcase from './ProductShowcase';
@@ -37,7 +37,6 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
   const tSecurity = useTranslations('security');
   const tCompliance = useTranslations('compliance');
   const { user, isAdmin } = useAuth();
-  const { addToast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
   const config = useConfig();
@@ -204,7 +203,7 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
         if (data.found) {
           setAppliedCoupon(data);
           setCouponCode(data.code);
-          addToast?.(t('discountApplied', { discount: '' }).replace('  ', ' '), 'success');
+          toast.success(t('discountApplied', { discount: '' }).replace('  ', ' '));
         }
       } catch (err) {
         // Silent fail
@@ -213,7 +212,7 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
 
     const timer = setTimeout(checkAutoApply, 500);
     return () => clearTimeout(timer);
-  }, [email, product.id, appliedCoupon, couponManuallyRemoved, addToast, t]);
+  }, [email, product.id, appliedCoupon, couponManuallyRemoved, t]);
 
   // Handle URL coupon param and OTO mode
   useEffect(() => {
@@ -274,8 +273,8 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
     setAppliedCoupon(null);
     setCouponCode('');
     setIsOtoMode(false);
-    addToast?.(t('otoExpired'), 'warning');
-  }, [addToast, t]);
+    toast.warning(t('otoExpired'));
+  }, [ t]);
 
   const handleSignOutAndCheckout = async () => {
     try {
@@ -314,14 +313,14 @@ export default function PaidProductForm({ product, paymentMethodOrder, expressCh
 
     // Priority 5: funnel test fallback — no redirect configured, end of chain
     if (isFunnelTest) {
-      addToast(t('funnelTest.endToast'), 'info');
+      toast.info(t('funnelTest.endToast'));
       router.push('/dashboard/products');
       return;
     }
 
     // Priority 6: default — product page
     router.push(`/p/${product.slug}`);
-  }, [product.slug, product.success_redirect_url, router, bumpSelected, searchParams, isFunnelTest, funnelTestOtoSlug, addToast, t]);
+  }, [product.slug, product.success_redirect_url, router, bumpSelected, searchParams, isFunnelTest, funnelTestOtoSlug, t]);
 
   useEffect(() => {
     if (hasAccess && countdown > 0) {

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Product } from '@/types';
 import FilterBar from './FilterBar';
 import ProductsTable from './ProductsTable';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import ProductCreationWizard from './ProductFormModal/wizard/ProductCreationWizard';
 import type { ProductFormData } from './ProductFormModal/types';
 import CodeGeneratorModal from './CodeGeneratorModal';
@@ -14,7 +14,6 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useProducts } from '@/hooks/useProducts';
 
 const ProductsPageContent: React.FC = () => {
-  const { addToast } = useToast();
   const addButtonRef = useRef<HTMLButtonElement>(null);
   const t = useTranslations('admin.products');
   const searchParams = useSearchParams();
@@ -108,12 +107,12 @@ const ProductsPageContent: React.FC = () => {
         router.replace('/dashboard/products');
       }
       await fetchProducts();
-      addToast(t('createSuccess', { name: formData.name }), 'success');
+      toast.success(t('createSuccess', { name: formData.name }));
       setTimeout(() => {
         addButtonRef.current?.focus();
       }, 0);
     } catch (err) {
-      addToast(err instanceof Error ? err.message : t('createError'), 'error');
+      toast.error(err instanceof Error ? err.message : t('createError'));
       return Promise.reject(err);
     } finally {
       setSubmitting(false);
@@ -130,9 +129,9 @@ const ProductsPageContent: React.FC = () => {
       setShowProductForm(false);
       setEditingProduct(null);
       await fetchProducts();
-      addToast(t('updateSuccess', { name: formData.name }), 'success');
+      toast.success(t('updateSuccess', { name: formData.name }));
     } catch (err) {
-      addToast(err instanceof Error ? err.message : t('updateError'), 'error');
+      toast.error(err instanceof Error ? err.message : t('updateError'));
       return Promise.reject(err);
     } finally {
       setSubmitting(false);
@@ -159,9 +158,9 @@ const ProductsPageContent: React.FC = () => {
       await fetchProducts();
       setProductToDelete(null);
 
-      addToast(t('deleteSuccess', { name: productName }), 'success');
+      toast.success(t('deleteSuccess', { name: productName }));
     } catch (err) {
-      addToast(err instanceof Error ? err.message : t('deleteError'), 'error');
+      toast.error(err instanceof Error ? err.message : t('deleteError'));
     }
   };
 
@@ -194,7 +193,7 @@ const ProductsPageContent: React.FC = () => {
     if (product.content_delivery_type === 'redirect' && product.content_config?.redirect_url) {
       window.open(product.content_config.redirect_url, '_blank');
     } else {
-      addToast(t('noRedirectUrl'), 'warning');
+      toast.warning(t('noRedirectUrl'));
     }
   };
 
@@ -215,12 +214,9 @@ const ProductsPageContent: React.FC = () => {
       // Refetch to get updated data
       await fetchProducts();
 
-      addToast(
-        !currentStatus ? t('statusActivated') : t('statusDeactivated'),
-        'success'
-      );
+      toast.success(!currentStatus ? t('statusActivated') : t('statusDeactivated'));
     } catch (err) {
-      addToast(t('statusToggleError'), 'error');
+      toast.error(t('statusToggleError'));
     }
   };
 
@@ -232,12 +228,9 @@ const ProductsPageContent: React.FC = () => {
       // Refetch to get updated data
       await fetchProducts();
 
-      addToast(
-        !currentFeatured ? t('featuredEnabled') : t('featuredDisabled'),
-        'success'
-      );
+      toast.success(!currentFeatured ? t('featuredEnabled') : t('featuredDisabled'));
     } catch (err) {
-      addToast(t('featuredToggleError'), 'error');
+      toast.error(t('featuredToggleError'));
     }
   };
 
@@ -245,12 +238,9 @@ const ProductsPageContent: React.FC = () => {
     try {
       await toggleListed(productId, currentListed);
       await fetchProducts();
-      addToast(
-        !currentListed ? t('listedEnabled') : t('listedDisabled'),
-        'success'
-      );
+      toast.success(!currentListed ? t('listedEnabled') : t('listedDisabled'));
     } catch (err) {
-      addToast(t('listedToggleError'), 'error');
+      toast.error(t('listedToggleError'));
     }
   };
 
@@ -275,17 +265,17 @@ const ProductsPageContent: React.FC = () => {
 
   const handleExportCsv = useCallback(() => {
     if (products.length === 0) {
-      addToast(t('noProductsToExport'), 'warning');
+      toast.warning(t('noProductsToExport'));
       return;
     }
     setShowExportConfirmation(true);
-  }, [products, addToast, t]);
+  }, [products, t]);
   
   const confirmExport = () => {
     const filename = `products_${new Date().toISOString().split('T')[0]}.csv`;
     exportProductsToCsv(products, filename);
     setShowExportConfirmation(false);
-    addToast(t('exportSuccess', { count: products.length }), 'success');
+    toast.success(t('exportSuccess', { count: products.length }));
   };
 
   return (

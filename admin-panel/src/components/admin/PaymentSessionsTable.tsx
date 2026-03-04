@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import type { PaymentSession } from '@/types/payment';
 
 interface PaymentSessionsTableProps {
@@ -18,7 +18,6 @@ export default function PaymentSessionsTable({
   onRefreshData 
 }: PaymentSessionsTableProps) {
   const tCancel = useTranslations('admin.payments.cancelSession');
-  const { addToast } = useToast();
   const [cancelingId, setCancelingId] = useState<string | null>(null);
 
   const handleCancelSession = async (sessionId: string) => {
@@ -32,14 +31,14 @@ export default function PaymentSessionsTable({
       });
       
       if (response.ok) {
-        addToast(tCancel('success'), 'success');
+        toast.success(tCancel('success'));
         onRefreshData?.();
       } else {
         const errorData = await response.json();
-        addToast(errorData.error || tCancel('error'), 'error');
+        toast.error(errorData.error || tCancel('error'));
       }
     } catch {
-      addToast(tCancel('error'), 'error');
+      toast.error(tCancel('error'));
     } finally {
       setCancelingId(null);
     }

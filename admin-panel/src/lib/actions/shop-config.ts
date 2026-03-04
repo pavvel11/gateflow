@@ -21,9 +21,6 @@ export interface ShopConfig {
 
   // Branding & Whitelabel
   logo_url?: string | null
-  primary_color?: string | null
-  secondary_color?: string | null
-  accent_color?: string | null
   font_family?: 'system' | 'inter' | 'roboto' | 'montserrat' | 'poppins' | 'playfair' | null
 
   // Checkout appearance

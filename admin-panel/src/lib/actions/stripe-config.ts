@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { encryptStripeKey, decryptStripeKey } from '@/lib/services/stripe-encryption'
+import { requireAdminApi } from '@/lib/auth-server'
 import Stripe from 'stripe'
 import { isDemoMode, DEMO_MODE_ERROR } from '@/lib/demo-guard'
 import type {
@@ -565,6 +566,59 @@ export async function deleteStripeConfig(id: string): Promise<DeleteConfigRespon
       errorCode: 'UNKNOWN_ERROR',
     }
   }
+}
+
+/**
+ * Returns the connected Stripe account name and ID by calling Stripe API live.
+ * Uses DB config if available, falls back to STRIPE_SECRET_KEY env var.
+ * Returns null in demo mode or when no key is configured.
+ */
+export async function getStripeAccountInfo(): Promise<{ accountId: string | null; accountName: string | null } | null> {
+  if (isDemoMode()) return null
+  try {
+    const supabase = await createClient()
+    await requireAdminApi(supabase)
+    const mode: StripeMode = process.env.NODE_ENV === 'production' ? 'live' : 'test'
+    const apiKey = await getDecryptedStripeKey(mode) || process.env.STRIPE_SECRET_KEY
+    if (!apiKey) return null
+
+    const stripe = new Stripe(apiKey, { apiVersion: '2025-12-15.clover' })
+    const account = await stripe.accounts.retrieve()
+    const anyAccount = account as { business_profile?: { name?: string | null }; email?: string | null }
+    return {
+      accountId: account.id,
+      accountName: anyAccount.business_profile?.name || anyAccount.email || null,
+    }
+  } catch (error) {
+    console.error('[getStripeAccountInfo] Error:', error)
+    return null
+  }
+}
+
+/**
+ * Detects the active Stripe key source (db, env, or none).
+ * Must live here (in a 'use server' file) so process.env is accessible
+ * when called from client components.
+ */
+export async function getStripeKeySource(): Promise<{ activeSource: 'db' | 'env' | 'none'; dbConfigured: boolean; envConfigured: boolean }> {
+  const supabase = await createClient()
+  await requireAdminApi(supabase)
+  const envConfigured = !!process.env.STRIPE_SECRET_KEY
+  const mode: StripeMode = process.env.NODE_ENV === 'production' ? 'live' : 'test'
+
+  let dbConfigured = false
+  try {
+    const dbKey = await getDecryptedStripeKey(mode)
+    dbConfigured = !!dbKey
+  } catch {
+    // DB not available — ignore
+  }
+
+  let activeSource: 'db' | 'env' | 'none' = 'none'
+  if (dbConfigured) activeSource = 'db'
+  else if (envConfigured) activeSource = 'env'
+
+  return { activeSource, dbConfigured, envConfigured }
 }
 
 /**

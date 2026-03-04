@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import { WebhookLog, WebhookEndpoint } from '@/types/webhooks';
 import { BaseModal, ModalHeader, ModalBody, ModalFooter, Button } from './ui/Modal';
 import { useTranslations } from 'next-intl';
@@ -18,7 +18,6 @@ interface WebhookLogsDrawerProps {
 export default function WebhookLogsDrawer({ endpoint, onClose, isOpen, onRefresh }: WebhookLogsDrawerProps) {
   const t = useTranslations('admin.webhooks.logs');
   const tCommon = useTranslations('common');
-  const { addToast } = useToast();
 
   const [logs, setLogs] = useState<WebhookLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +38,7 @@ export default function WebhookLogsDrawer({ endpoint, onClose, isOpen, onRefresh
       setLogs(response.data || []);
     } catch (err) {
       console.error(err);
-      addToast(t('loadError'), 'error');
+      toast.error(t('loadError'));
     } finally {
       setLoading(false);
     }
@@ -74,9 +73,9 @@ export default function WebhookLogsDrawer({ endpoint, onClose, isOpen, onRefresh
 
       // Show appropriate toast based on result
       if (data.success) {
-        addToast(t('retrySuccess'), 'success');
+        toast.success(t('retrySuccess'));
       } else {
-        addToast(data.error || t('retryFailed'), 'error');
+        toast.error(data.error || t('retryFailed'));
       }
 
       // Always refresh, even if retry failed, because database was updated
@@ -85,7 +84,7 @@ export default function WebhookLogsDrawer({ endpoint, onClose, isOpen, onRefresh
         onRefresh?.(); // Refresh main webhooks page (failures panel, etc.)
       }, 500);
     } catch {
-      addToast(tCommon('error'), 'error');
+      toast.error(tCommon('error'));
     } finally {
       setRetrying(null);
     }

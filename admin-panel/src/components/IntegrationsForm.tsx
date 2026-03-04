@@ -6,7 +6,7 @@ import { updateIntegrationsConfig, addScript, deleteScript, toggleScript } from 
 import { IntegrationsInput, CustomScriptInput } from '@/lib/validations/integrations'
 import CurrencySettings from '@/components/settings/CurrencySettings'
 import GUSSettings from '@/components/settings/GUSSettings'
-import { useToast } from '@/contexts/ToastContext'
+import { toast } from 'sonner'
 
 interface Script {
   id: string
@@ -26,7 +26,6 @@ interface IntegrationsFormProps {
 export default function IntegrationsForm({ initialData, initialScripts }: IntegrationsFormProps) {
   const t = useTranslations('integrations')
   const tCommon = useTranslations('common')
-  const { addToast } = useToast()
   const [formData, setFormData] = useState<IntegrationsInput>(initialData)
   const [scripts, setScripts] = useState<Script[]>(initialScripts)
 
@@ -50,12 +49,12 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
     try {
       const result = await updateIntegrationsConfig(formData)
       if (result.error) {
-        addToast(result.error, 'error')
+        toast.error(result.error)
       } else {
-        addToast(t('messages.saveSuccess'), 'success')
+        toast.success(t('messages.saveSuccess'))
       }
     } catch (err) {
-      addToast(t('messages.saveError', { error: 'Unknown' }), 'error')
+      toast.error(t('messages.saveError', { error: 'Unknown' }))
     } finally {
       setLoading(false)
     }
@@ -70,11 +69,11 @@ export default function IntegrationsForm({ initialData, initialScripts }: Integr
     setLoading(true)
     const result = await addScript(newScript)
     if (result.success) {
-      addToast(t('messages.saveSuccess'), 'success')
+      toast.success(t('messages.saveSuccess'))
       setIsScriptModalOpen(false)
       window.location.reload()
     } else {
-      addToast(result.error || tCommon('error'), 'error')
+      toast.error(result.error || tCommon('error'))
     }
     setLoading(false)
   }

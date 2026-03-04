@@ -22,9 +22,9 @@ export async function POST(request: NextRequest) {
     const referer = request.headers.get('referer');
     const host = request.headers.get('host');
 
-    // Only trust NEXT_PUBLIC_SITE_URL — never derive allowed origins from Host header
+    // Use SITE_URL (server-side runtime env) — NEXT_PUBLIC_SITE_URL is baked at build time
     const allowedOrigins = [
-      process.env.NEXT_PUBLIC_SITE_URL,
+      process.env.SITE_URL,
     ].filter(Boolean);
 
     const isValidOrigin = origin && allowedOrigins.some(allowed =>

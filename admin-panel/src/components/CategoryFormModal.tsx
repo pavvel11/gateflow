@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { createCategory, updateCategory, Category } from '@/lib/actions/categories'
-import { useToast } from '@/contexts/ToastContext'
+import { toast } from 'sonner'
 import { X } from 'lucide-react'
 
 interface CategoryFormModalProps {
@@ -15,7 +15,6 @@ interface CategoryFormModalProps {
 export default function CategoryFormModal({ isOpen, onClose, category }: CategoryFormModalProps) {
   const t = useTranslations('admin.categories') // To define
   const commonT = useTranslations('common')
-  const { addToast } = useToast()
   
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
@@ -59,14 +58,14 @@ export default function CategoryFormModal({ isOpen, onClose, category }: Categor
         : await createCategory({ name, slug, description })
 
       if (result && !result.success) {
-        addToast(result.error || commonT('error'), 'error')
+        toast.error(result.error || commonT('error'))
         return
       }
-      addToast(commonT('success'), 'success')
+      toast.success(commonT('success'))
       onClose()
     } catch (error) {
       console.error(error)
-      addToast(commonT('error'), 'error')
+      toast.error(commonT('error'))
     } finally {
       setIsLoading(false)
     }

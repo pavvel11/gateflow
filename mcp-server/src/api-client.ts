@@ -20,15 +20,6 @@ export interface ApiResponse<T> {
   error?: ApiError;
 }
 
-export interface PaginatedResponse<T> {
-  items: T[];
-  pagination: {
-    cursor: string | null;
-    next_cursor: string | null;
-    has_more: boolean;
-    limit: number;
-  };
-}
 
 export class SellfApiClient {
   private baseUrl: string;

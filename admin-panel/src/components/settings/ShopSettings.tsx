@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getShopConfig, updateShopConfig, type ShopConfig } from '@/lib/actions/shop-config';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 
 const CURRENCIES = [
@@ -17,7 +17,6 @@ const CURRENCIES = [
 
 export default function ShopSettings() {
  const t = useTranslations('settings.shop');
- const { addToast } = useToast();
  const [config, setConfig] = useState<ShopConfig | null>(null);
  const [loading, setLoading] = useState(true);
  const [saving, setSaving] = useState(false);
@@ -63,16 +62,16 @@ export default function ShopSettings() {
  const success = await updateShopConfig(updates);
 
  if (success) {
- addToast(t('saveSuccess'), 'success');
+ toast.success(t('saveSuccess'));
  // Reload config
  const newConfig = await getShopConfig();
  if (newConfig) setConfig(newConfig);
  } else {
- addToast(t('saveError'), 'error');
+ toast.error(t('saveError'));
  }
  } catch (error) {
  console.error('Error saving settings:', error);
- addToast(t('saveError'), 'error');
+ toast.error(t('saveError'));
  } finally {
  setSaving(false);
  }

@@ -154,6 +154,13 @@ jobs:
           cat > ../release/start.sh << 'EOF'
           #!/bin/bash
           cd "$(dirname "$0")"
+          # Load .env.local into shell so PM2 captures actual values.
+          # dotenv in server.js won't override vars already set by PM2, so we pre-load them here.
+          if [ -f .env.local ]; then
+            set -o allexport
+            source .env.local
+            set +o allexport
+          fi
           bun run start
           EOF
           chmod +x ../release/start.sh

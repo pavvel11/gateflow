@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { Key, Plus, RotateCw, Trash2, Copy, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import ApiKeyFormModal from './ApiKeyFormModal';
@@ -35,7 +35,6 @@ const SCOPE_KEY_MAP: Record<string, string> = {
 };
 
 export default function ApiKeysPageContent() {
-  const { addToast } = useToast();
   const t = useTranslations('admin.apiKeys');
   const tCommon = useTranslations('common');
 
@@ -91,9 +90,9 @@ export default function ApiKeysPageContent() {
       setNewKeySecret(data.data.key);
       await fetchApiKeys();
       setShowForm(false);
-      addToast(t('createSuccess'), 'success');
+      toast.success(t('createSuccess'));
     } catch (err) {
-      addToast(err instanceof Error ? err.message : t('createError'), 'error');
+      toast.error(err instanceof Error ? err.message : t('createError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -116,9 +115,9 @@ export default function ApiKeysPageContent() {
 
       await fetchApiKeys();
       setKeyToRevoke(null);
-      addToast(t('revokeSuccess'), 'success');
+      toast.success(t('revokeSuccess'));
     } catch (err) {
-      addToast(err instanceof Error ? err.message : t('revokeError'), 'error');
+      toast.error(err instanceof Error ? err.message : t('revokeError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -145,9 +144,9 @@ export default function ApiKeysPageContent() {
       setNewKeySecret(data.data.new_key.key);
       await fetchApiKeys();
       setKeyToRotate(null);
-      addToast(t('rotateSuccess'), 'success');
+      toast.success(t('rotateSuccess'));
     } catch (err) {
-      addToast(err instanceof Error ? err.message : t('rotateError'), 'error');
+      toast.error(err instanceof Error ? err.message : t('rotateError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -156,7 +155,7 @@ export default function ApiKeysPageContent() {
   // Copy to clipboard
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    addToast(t('copied'), 'success');
+    toast.success(t('copied'));
   };
 
   // Format date

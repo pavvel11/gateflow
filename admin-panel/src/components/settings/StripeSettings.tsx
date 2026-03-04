@@ -3,32 +3,42 @@
 import { useState, useEffect } from 'react'
 import { Shield, ExternalLink, Settings, CheckCircle2, AlertCircle, Info } from 'lucide-react'
 import { StripeConfigWizard } from '@/components/stripe/StripeConfigWizard'
-import { listStripeConfigs } from '@/lib/actions/stripe-config'
-import { getStripeKeySource } from '@/lib/stripe/server'
-import type { StripeKeySource } from '@/lib/stripe/server'
+import { listStripeConfigs, getStripeAccountInfo, getStripeKeySource } from '@/lib/actions/stripe-config'
 import type { StripeConfiguration } from '@/types/stripe-config'
 import { useTranslations } from 'next-intl'
 import SourceBadge from '@/components/ui/SourceBadge'
+
+// Session-level cache for Stripe account info — cleared on config change
+let _accountInfoCache: { accountId: string | null; accountName: string | null } | null | undefined = undefined
 
 export default function StripeSettings() {
  const t = useTranslations('settings.stripe')
  const [isWizardOpen, setIsWizardOpen] = useState(false)
  const [configs, setConfigs] = useState<StripeConfiguration[]>([])
- const [keySource, setKeySource] = useState<StripeKeySource>({ activeSource: 'none', dbConfigured: false, envConfigured: false })
+ const [keySource, setKeySource] = useState<{ activeSource: 'db' | 'env' | 'none'; dbConfigured: boolean; envConfigured: boolean }>({ activeSource: 'none', dbConfigured: false, envConfigured: false })
  const [loading, setLoading] = useState(true)
+ const [accountInfo, setAccountInfo] = useState<{ accountId: string | null; accountName: string | null } | null>(null)
 
- const loadConfigs = async () => {
+ const loadConfigs = async (invalidateAccountCache = false) => {
  setLoading(true)
+ if (invalidateAccountCache) _accountInfoCache = undefined
  try {
- const [configsResult, sourceResult] = await Promise.all([
+ const accountInfoPromise = _accountInfoCache !== undefined
+ ? Promise.resolve(_accountInfoCache)
+ : getStripeAccountInfo()
+
+ const [configsResult, sourceResult, accountInfoResult] = await Promise.all([
  listStripeConfigs(),
  getStripeKeySource(),
+ accountInfoPromise,
  ])
 
  if (configsResult.success && configsResult.data) {
  setConfigs(configsResult.data)
  }
  setKeySource(sourceResult)
+ _accountInfoCache = accountInfoResult
+ setAccountInfo(accountInfoResult)
  } catch (error) {
  console.error('Failed to load Stripe configs:', error)
  } finally {
@@ -102,6 +112,12 @@ export default function StripeSettings() {
  <p className="text-sm text-sf-body mb-3">
  {t('currentMethod.env.description')}
  </p>
+ {accountInfo?.accountName && (
+ <div className="inline-flex items-center gap-1.5 px-2.5 py-1 mb-3 bg-sf-base/60 border border-sf-accent/20 text-sf-heading text-sm font-medium">
+ <CheckCircle2 className="w-3.5 h-3.5 text-sf-accent flex-shrink-0" />
+ {accountInfo.accountName}
+ </div>
+ )}
  <p className="text-xs text-sf-muted">
  {t('currentMethod.env.alternative')}
  </p>
@@ -127,6 +143,12 @@ export default function StripeSettings() {
  key={config.id}
  className="bg-sf-base/50 p-3 border border-sf-success/20"
  >
+ {accountInfo?.accountName && (
+ <div className="inline-flex items-center gap-1.5 px-2.5 py-1 mb-2 bg-sf-base/60 border border-sf-success/20 text-sf-heading text-sm font-medium">
+ <CheckCircle2 className="w-3.5 h-3.5 text-sf-success flex-shrink-0" />
+ {accountInfo.accountName}
+ </div>
+ )}
  <div className="flex items-center gap-3 mb-1">
  <span
  className={`px-2 py-0.5 text-xs font-medium ${
@@ -146,7 +168,9 @@ export default function StripeSettings() {
  )}
  </div>
  <div className="text-xs text-sf-muted">
- {config.account_id && <span>{t('account')}: {config.account_id}</span>}
+ {config.account_id && (
+ <span>{t('account')}: {config.account_id}</span>
+ )}
  {config.account_id && ' · '}
  {t('created')}: {new Date(config.created_at).toLocaleDateString()}
  {config.expires_at && (
@@ -213,7 +237,7 @@ export default function StripeSettings() {
  onClose={() => setIsWizardOpen(false)}
  onComplete={() => {
  setIsWizardOpen(false)
- loadConfigs() // Reload configurations
+ loadConfigs(true) // Reload configurations, invalidate account cache
  }}
  />
  )}

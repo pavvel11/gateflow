@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Product } from '@/types';
 import { buildOtoRedirectUrl } from '@/lib/payment/oto-redirect';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { validateEmailAction } from '@/lib/actions/validate-email';
 import TurnstileWidget from '@/components/TurnstileWidget';
@@ -24,7 +24,6 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
   const tCompliance = useTranslations('compliance');
   const locale = useLocale();
   const { user } = useAuth();
-  const { addToast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
   const successUrl = searchParams.get('success_url');
@@ -82,12 +81,12 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
 
         if (!response.ok) {
           const errorData = await response.json();
-          addToast(errorData.error || t('failedToRequestAccess'), 'error');
+          toast.error(errorData.error || t('failedToRequestAccess'));
           return;
         }
 
         const data = await response.json();
-        addToast(data.message || t('accessGrantedSuccessfully'), 'success');
+        toast.success(data.message || t('accessGrantedSuccessfully'));
 
         // Track generate_lead event for free product
         await track('generate_lead', {
@@ -118,7 +117,7 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
         const redirectPath = `/p/${product.slug}/payment-status${successUrl ? `?success_url=${encodeURIComponent(successUrl)}` : ''}`;
         router.push(redirectPath);
       } catch {
-        addToast(t('unexpectedError'), 'error');
+        toast.error(t('unexpectedError'));
       } finally {
         setLoading(false);
       }

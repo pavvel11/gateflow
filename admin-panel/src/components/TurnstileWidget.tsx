@@ -105,7 +105,7 @@ export default function TurnstileWidget({
   if (!effectiveSiteKey) {
     return (
       <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-sm text-yellow-300">
-        ⚠️ {t('turnstileNotConfigured')}
+        {t('turnstileNotConfigured')}
       </div>
     )
   }

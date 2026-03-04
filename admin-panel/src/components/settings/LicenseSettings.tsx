@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { getIntegrationsConfig, updateIntegrationsConfig } from '@/lib/actions/integrations';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 
 export default function LicenseSettings() {
  const t = useTranslations('settings.license');
- const { addToast } = useToast();
  const [loading, setLoading] = useState(true);
  const [saving, setSaving] = useState(false);
  const [license, setLicense] = useState('');
@@ -43,17 +42,17 @@ export default function LicenseSettings() {
  const licenseError = result.details?.sellf_license?.[0];
  if (licenseError) {
  setValidationError(licenseError);
- addToast(licenseError, 'error');
+ toast.error(licenseError);
  } else {
- addToast(result.error, 'error');
+ toast.error(result.error);
  }
  } else {
  setValidationError(null);
- addToast(t('saveSuccess'), 'success');
+ toast.success(t('saveSuccess'));
  }
  } catch (error) {
  console.error('Error saving license:', error);
- addToast(t('saveError'), 'error');
+ toast.error(t('saveError'));
  } finally {
  setSaving(false);
  }

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { WebhookEndpoint, WEBHOOK_EVENTS } from '@/types/webhooks';
 import { BaseModal, ModalHeader, ModalBody, ModalFooter, Button } from '../ui/Modal';
 import { useTranslations } from 'next-intl';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 
 interface WebhookFormModalProps {
   isOpen: boolean;
@@ -23,7 +23,6 @@ export default function WebhookFormModal({
 }: WebhookFormModalProps) {
   const t = useTranslations('admin.webhooks');
   const tCommon = useTranslations('common');
-  const { addToast } = useToast();
 
   const [formData, setFormData] = useState({
     url: '',
@@ -67,7 +66,7 @@ export default function WebhookFormModal({
   const handleCopySecret = () => {
     if (editingEndpoint?.secret) {
       navigator.clipboard.writeText(editingEndpoint.secret);
-      addToast(t('secretCopied'), 'success');
+      toast.success(t('secretCopied'));
     }
   };
 

@@ -4,7 +4,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 
 interface PaymentFiltersProps {
   filters: {
@@ -26,7 +26,6 @@ export default function PaymentFilters({
   onRefresh 
 }: PaymentFiltersProps) {
   const t = useTranslations('admin.payments.filters');
-  const { addToast } = useToast();
   
   const handleFilterChange = (key: string, value: string) => {
     onFiltersChange({
@@ -63,12 +62,12 @@ export default function PaymentFilters({
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
-        addToast(t('exportSuccess'), 'success');
+        toast.success(t('exportSuccess'));
       } else {
-        addToast(t('exportError'), 'error');
+        toast.error(t('exportError'));
       }
     } catch {
-      addToast(t('exportError'), 'error');
+      toast.error(t('exportError'));
     }
   };
 

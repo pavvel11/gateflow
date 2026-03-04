@@ -397,6 +397,14 @@ fi
 # Delete old PM2 entry and start fresh
 pm2 delete "$PM2_NAME" >> "$LOG_FILE" 2>&1 || true
 cd "$(dirname "$SERVER_JS")"
+# Load .env.local into shell so PM2 captures actual values.
+# dotenv in server.js won't override vars already set by PM2, so we pre-load them here.
+if [ -f "$INSTALL_DIR/.env.local" ]; then
+  set -o allexport
+  # shellcheck source=/dev/null
+  source "$INSTALL_DIR/.env.local"
+  set +o allexport
+fi
 PORT="${PORT}" HOSTNAME="::" pm2 start "$(basename "$SERVER_JS")" --name "$PM2_NAME" >> "$LOG_FILE" 2>&1
 
 # Wait for app to start and verify
@@ -431,6 +439,12 @@ else
   [ ! -f "$OLD_SERVER_JS" ] && OLD_SERVER_JS="$INSTALL_DIR/.next/standalone/server.js"
   if [ -f "$OLD_SERVER_JS" ]; then
     cd "$(dirname "$OLD_SERVER_JS")"
+    if [ -f "$INSTALL_DIR/.env.local" ]; then
+      set -o allexport
+      # shellcheck source=/dev/null
+      source "$INSTALL_DIR/.env.local"
+      set +o allexport
+    fi
     PORT="${PORT}" HOSTNAME="::" pm2 start "$(basename "$OLD_SERVER_JS")" --name "$PM2_NAME" >> "$LOG_FILE" 2>&1 || true
     pm2 save >> "$LOG_FILE" 2>&1 || true
   fi

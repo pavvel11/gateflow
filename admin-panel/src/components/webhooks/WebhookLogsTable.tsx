@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { WebhookLog } from '@/types/webhooks';
 import { useTranslations } from 'next-intl';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 
 interface WebhookLogsTableProps {
   logs: WebhookLog[];
@@ -22,7 +22,6 @@ export default function WebhookLogsTable({
 }: WebhookLogsTableProps) {
   const t = useTranslations('admin.webhooks.logs');
   const tCommon = useTranslations('common');
-  const { addToast } = useToast();
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
   const [archivingId, setArchivingId] = useState<string | null>(null);
 
@@ -69,11 +68,11 @@ export default function WebhookLogsTable({
         method: 'POST'
       });
       if (res.ok) {
-        addToast(t('logArchived'), 'success');
+        toast.success(t('logArchived'));
         onRefresh?.();
       }
     } catch {
-      addToast(t('archiveError'), 'error');
+      toast.error(t('archiveError'));
     } finally {
       setArchivingId(null);
     }

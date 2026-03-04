@@ -7,13 +7,12 @@ import { getExchangeRates } from '@/lib/actions/currency';
 import { getDefaultCurrency } from '@/lib/actions/shop-config';
 import { type ExchangeRates } from '@/lib/services/currencyService';
 import { BaseModal, ModalHeader, ModalBody, ModalFooter, Button } from '@/components/ui/Modal';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import { useTranslations, useLocale } from 'next-intl';
 
 export default function CurrencySettings() {
  const t = useTranslations('settings.currency');
  const tCommon = useTranslations('common');
- const { addToast } = useToast();
  const locale = useLocale(); // 'pl' lub 'en'
  const [provider, setProvider] = useState<'exchangerate-api' | 'fixer' | 'ecb'>('ecb');
  const [apiKey, setApiKey] = useState('');
@@ -55,7 +54,7 @@ export default function CurrencySettings() {
  const handleSave = async () => {
  // Validate: exchangerate-api and fixer require API key
  if ((provider === 'exchangerate-api' || provider === 'fixer') && !apiKey.trim() && !config?.hasDatabaseConfig) {
- addToast(t('errors.apiKeyRequired'), 'error');
+ toast.error(t('errors.apiKeyRequired'));
  return;
  }
 
@@ -69,14 +68,14 @@ export default function CurrencySettings() {
  });
 
  if (result.success) {
- addToast(t('messages.saved'), 'success');
+ toast.success(t('messages.saved'));
  setApiKey('');
  await loadConfig();
  } else {
- addToast(result.error || t('errors.saveFailed'), 'error');
+ toast.error(result.error || t('errors.saveFailed'));
  }
  } catch (error) {
- addToast(t('errors.saveFailed'), 'error');
+ toast.error(t('errors.saveFailed'));
  } finally {
  setSaving(false);
  }
@@ -90,15 +89,15 @@ export default function CurrencySettings() {
  const result = await deleteCurrencyConfig();
 
  if (result.success) {
- addToast(t('messages.deleted'), 'success');
+ toast.success(t('messages.deleted'));
  setApiKey('');
  setProvider('ecb');
  await loadConfig();
  } else {
- addToast(result.error || t('errors.deleteFailed'), 'error');
+ toast.error(result.error || t('errors.deleteFailed'));
  }
  } catch (error) {
- addToast(t('errors.deleteFailed'), 'error');
+ toast.error(t('errors.deleteFailed'));
  } finally {
  setDeleting(false);
  }

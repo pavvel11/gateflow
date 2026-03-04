@@ -4,14 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { UserWithAccess } from '@/types';
 import UsersFilterBar from './UsersFilterBar';
 import UsersTable from './UsersTable';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import UserDetailsModal from './UserDetailsModal';
 import AccessManagementModal from './AccessManagementModal';
 import { useTranslations } from 'next-intl';
 import { useUsers } from '@/hooks/useUsers';
 
 const UsersPageContent: React.FC = () => {
-  const { addToast } = useToast();
   const t = useTranslations('admin.users');
 
   // State for modals
@@ -81,7 +80,7 @@ const UsersPageContent: React.FC = () => {
   };
 
   const handleAccessChange = async () => {
-    addToast(t('accessUpdated'), 'success');
+    toast.success(t('accessUpdated'));
     await fetchUsers();
   };
 

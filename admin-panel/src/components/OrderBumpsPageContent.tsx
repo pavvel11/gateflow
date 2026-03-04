@@ -13,7 +13,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Product } from '@/types';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import OrderBumpFormModal from './OrderBumpFormModal';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
@@ -47,7 +47,6 @@ interface OrderBumpWithDetails {
 }
 
 const OrderBumpsPageContent: React.FC = () => {
-  const { addToast } = useToast();
   const t = useTranslations('admin.orderBumps');
 
   // State for order bumps and loading status
@@ -110,9 +109,9 @@ const OrderBumpsPageContent: React.FC = () => {
 
       setShowBumpForm(false);
       await fetchOrderBumps();
-      addToast(t('createSuccess'), 'success');
+      toast.success(t('createSuccess'));
     } catch (err) {
-      addToast(err instanceof Error ? err.message : t('createError'), 'error');
+      toast.error(err instanceof Error ? err.message : t('createError'));
       return Promise.reject(err);
     } finally {
       setSubmitting(false);
@@ -129,9 +128,9 @@ const OrderBumpsPageContent: React.FC = () => {
       setShowBumpForm(false);
       setEditingBump(null);
       await fetchOrderBumps();
-      addToast(t('updateSuccess'), 'success');
+      toast.success(t('updateSuccess'));
     } catch (err) {
-      addToast(err instanceof Error ? err.message : t('updateError'), 'error');
+      toast.error(err instanceof Error ? err.message : t('updateError'));
       return Promise.reject(err);
     } finally {
       setSubmitting(false);
@@ -144,9 +143,9 @@ const OrderBumpsPageContent: React.FC = () => {
 
       setBumpToDelete(null);
       await fetchOrderBumps();
-      addToast(t('deleteSuccess'), 'success');
+      toast.success(t('deleteSuccess'));
     } catch (err) {
-      addToast(err instanceof Error ? err.message : t('deleteError'), 'error');
+      toast.error(err instanceof Error ? err.message : t('deleteError'));
     }
   };
 
@@ -155,12 +154,9 @@ const OrderBumpsPageContent: React.FC = () => {
       await api.update('order-bumps', bump.id, { is_active: !bump.is_active });
 
       await fetchOrderBumps();
-      addToast(
-        t('toggleSuccess', { status: t(!bump.is_active ? 'activated' : 'deactivated') }),
-        'success'
-      );
+      toast.success(t('toggleSuccess', { status: t(!bump.is_active ? 'activated' : 'deactivated') }));
     } catch (err) {
-      addToast(err instanceof Error ? err.message : t('statusError'), 'error');
+      toast.error(err instanceof Error ? err.message : t('statusError'));
     }
   };
 

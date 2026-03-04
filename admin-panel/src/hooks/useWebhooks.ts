@@ -6,14 +6,13 @@
 
 import { useState, useCallback } from 'react';
 import { WebhookEndpoint } from '@/types/webhooks';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { api, ApiError } from '@/lib/api/client';
 
 export function useWebhooks() {
   const t = useTranslations('admin.webhooks');
   const tCommon = useTranslations('common');
-  const { addToast } = useToast();
 
   const [endpoints, setEndpoints] = useState<WebhookEndpoint[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,24 +25,24 @@ export function useWebhooks() {
       setEndpoints(response.data || []);
     } catch (err) {
       console.error(err);
-      addToast(tCommon('error'), 'error');
+      toast.error(tCommon('error'));
     } finally {
       setLoading(false);
     }
-  }, [addToast, tCommon]);
+  }, [tCommon]);
 
   const createEndpoint = async (data: Partial<WebhookEndpoint>) => {
     setSubmitting(true);
     try {
       await api.create<WebhookEndpoint>('webhooks', data as Record<string, unknown>);
-      addToast(t('createSuccess'), 'success');
+      toast.success(t('createSuccess'));
       fetchEndpoints();
       return true;
     } catch (err) {
       if (err instanceof ApiError) {
-        addToast(err.message, 'error');
+        toast.error(err.message);
       } else {
-        addToast(tCommon('error'), 'error');
+        toast.error(tCommon('error'));
       }
       return false;
     } finally {
@@ -55,14 +54,14 @@ export function useWebhooks() {
     setSubmitting(true);
     try {
       await api.update<WebhookEndpoint>('webhooks', id, data as Record<string, unknown>);
-      addToast(t('updateSuccess'), 'success');
+      toast.success(t('updateSuccess'));
       fetchEndpoints();
       return true;
     } catch (err) {
       if (err instanceof ApiError) {
-        addToast(err.message, 'error');
+        toast.error(err.message);
       } else {
-        addToast(tCommon('error'), 'error');
+        toast.error(tCommon('error'));
       }
       return false;
     } finally {
@@ -73,14 +72,14 @@ export function useWebhooks() {
   const deleteEndpoint = async (id: string) => {
     try {
       await api.delete('webhooks', id);
-      addToast(tCommon('success'), 'success');
+      toast.success(tCommon('success'));
       fetchEndpoints();
       return true;
     } catch (err) {
       if (err instanceof ApiError) {
-        addToast(err.message, 'error');
+        toast.error(err.message);
       } else {
-        addToast(tCommon('error'), 'error');
+        toast.error(tCommon('error'));
       }
       return false;
     }
@@ -95,17 +94,17 @@ export function useWebhooks() {
       );
 
       if (response.success) {
-        addToast(t('testSuccess') + ` (HTTP ${response.status})`, 'success');
+        toast.success(t('testSuccess') + ` (HTTP ${response.status})`);
         return true;
       } else {
-        addToast(t('testFailed') + `: ${response.error}`, 'error');
+        toast.error(t('testFailed') + `: ${response.error}`);
         return false;
       }
     } catch (err) {
       if (err instanceof ApiError) {
-        addToast(t('testFailed') + `: ${err.message}`, 'error');
+        toast.error(t('testFailed') + `: ${err.message}`);
       } else {
-        addToast(tCommon('error'), 'error');
+        toast.error(tCommon('error'));
       }
       return false;
     }

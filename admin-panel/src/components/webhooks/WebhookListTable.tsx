@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { WebhookEndpoint } from '@/types/webhooks';
 import { useTranslations } from 'next-intl';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 
 interface WebhookListTableProps {
   endpoints: WebhookEndpoint[];
@@ -32,14 +32,13 @@ const WebhookRow = ({
   getEventLabel: (key: string) => string;
 }) => {
   const [showSecret, setShowSecret] = useState(false);
-  const { addToast } = useToast();
   const t = useTranslations('admin.webhooks');
   const tCommon = useTranslations('common');
 
   const handleCopySecret = () => {
     if (endpoint.secret) {
       navigator.clipboard.writeText(endpoint.secret);
-      addToast(t('secretCopied'), 'success');
+      toast.success(t('secretCopied'));
     }
   };
 

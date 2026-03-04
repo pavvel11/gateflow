@@ -8,7 +8,7 @@ import Pagination from './Pagination';
 import { getIconEmoji } from '@/utils/themeUtils';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 
 interface ProductsTableProps {
   products: Product[];
@@ -57,7 +57,6 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
 }) => {
   const t = useTranslations('admin.products');
   const locale = useLocale();
-  const { addToast } = useToast();
   const startIndex = (currentPage - 1) * limit + 1;
   const endIndex = Math.min(startIndex + products.length - 1, totalItems);
 
@@ -162,7 +161,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigator.clipboard.writeText(product.id);
-                                addToast(t('idCopied'), 'success', 2000);
+                                toast.success(t('idCopied'), { duration: 2000 });
                               }}
                               className="inline-flex items-center gap-0.5 px-1 py-0.5 text-[10px] font-mono text-sf-muted hover:text-sf-body hover:bg-sf-raised transition-colors"
                               title={`${t('copyId')}: ${product.id}`}
@@ -248,6 +247,39 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                     </td>
                     <td className="px-3 py-4 text-right text-sm font-medium whitespace-nowrap">
                       <div className="flex items-center justify-end space-x-1">
+                        {/* view */}
+                        <button
+                          onClick={() => onPreviewProduct(product)}
+                          className="text-sf-success hover:text-sf-success transition-colors p-1"
+                          aria-label={t('previewLabel', { name: product.name })}
+                          title={t('preview')}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" strokeWidth={2} />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => onPreviewRedirect(product)}
+                          className="text-sf-accent hover:text-sf-accent transition-colors p-1 hidden sm:block"
+                          aria-label={t('previewRedirectLabel', { name: product.name })}
+                          title={t('previewRedirect')}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => window.open(`/checkout/${product.slug}?funnel_test=1`, '_blank')}
+                          className="text-sf-warning hover:text-sf-warning transition-colors p-1 hidden sm:block"
+                          aria-label={t('testFunnelLabel', { name: product.name })}
+                          title={t('testFunnel')}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M5 14.5l-1.43 5.725a1.125 1.125 0 001.09 1.4h14.68a1.125 1.125 0 001.09-1.4L19 14.5" />
+                          </svg>
+                        </button>
+                        {/* toggle */}
                         <button
                           onClick={() => onToggleListed(product.id, product.is_listed !== false)}
                           className={`p-1 transition-colors ${
@@ -281,6 +313,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                           </svg>
                         </button>
+                        {/* developer */}
                         <button
                           onClick={() => onGenerateCode(product)}
                           className="text-sf-accent hover:text-sf-accent transition-colors p-1"
@@ -291,37 +324,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                           </svg>
                         </button>
-                        <button
-                          onClick={() => onPreviewProduct(product)}
-                          className="text-sf-success hover:text-sf-success transition-colors p-1"
-                          aria-label={t('previewLabel', { name: product.name })}
-                          title={t('preview')}
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="10" strokeWidth={2} />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => onPreviewRedirect(product)}
-                          className="text-sf-accent hover:text-sf-accent transition-colors p-1 hidden sm:block"
-                          aria-label={t('previewRedirectLabel', { name: product.name })}
-                          title={t('previewRedirect')}
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => window.open(`/checkout/${product.slug}?funnel_test=1`, '_blank')}
-                          className="text-sf-warning hover:text-sf-warning transition-colors p-1 hidden sm:block"
-                          aria-label={t('testFunnelLabel', { name: product.name })}
-                          title={t('testFunnel')}
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M5 14.5l-1.43 5.725a1.125 1.125 0 001.09 1.4h14.68a1.125 1.125 0 001.09-1.4L19 14.5" />
-                          </svg>
-                        </button>
+                        {/* crud */}
                         <button
                           onClick={() => onEditProduct(product)}
                           className="text-sf-accent hover:text-sf-accent transition-colors p-1"

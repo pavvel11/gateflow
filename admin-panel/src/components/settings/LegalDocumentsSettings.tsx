@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { getShopConfig, updateShopConfig, type ShopConfig } from '@/lib/actions/shop-config';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 
 export default function LegalDocumentsSettings() {
  const t = useTranslations('settings.legal');
- const { addToast } = useToast();
  const [config, setConfig] = useState<ShopConfig | null>(null);
  const [loading, setLoading] = useState(true);
  const [saving, setSaving] = useState(false);
@@ -50,15 +49,15 @@ export default function LegalDocumentsSettings() {
  const success = await updateShopConfig(updates);
 
  if (success) {
- addToast(t('saveSuccess'), 'success');
+ toast.success(t('saveSuccess'));
  const newConfig = await getShopConfig();
  if (newConfig) setConfig(newConfig);
  } else {
- addToast(t('saveError'), 'error');
+ toast.error(t('saveError'));
  }
  } catch (error) {
  console.error('Error saving legal documents:', error);
- addToast(t('saveError'), 'error');
+ toast.error(t('saveError'));
  } finally {
  setSaving(false);
  }

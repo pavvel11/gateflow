@@ -6,7 +6,7 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getApiClient, PaginatedResponse } from '../api-client.js';
+import { getApiClient } from '../api-client.js';
 
 interface ProductAccess {
   id: string;
@@ -52,7 +52,7 @@ export function registerUsersTools(server: McpServer): void {
     },
     async ({ search, cursor, limit, sort_by, sort_order }) => {
       const api = getApiClient();
-      const result = await api.get<{ data: PaginatedResponse<User> }>('/api/v1/users', {
+      const result = await api.get<{ data: User[]; pagination: { cursor: string | null; next_cursor: string | null; has_more: boolean; limit: number; total?: number } }>('/api/v1/users', {
         search,
         cursor,
         limit,
@@ -61,7 +61,7 @@ export function registerUsersTools(server: McpServer): void {
       });
 
       return {
-        content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }],
+        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
       };
     }
   );
@@ -92,13 +92,13 @@ export function registerUsersTools(server: McpServer): void {
     },
     async ({ email }) => {
       const api = getApiClient();
-      const result = await api.get<{ data: PaginatedResponse<User> }>('/api/v1/users', {
+      const result = await api.get<{ data: User[]; pagination: { cursor: string | null; next_cursor: string | null; has_more: boolean; limit: number; total?: number } }>('/api/v1/users', {
         search: email,
         limit: 20,
       });
 
       return {
-        content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }],
+        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
       };
     }
   );
@@ -223,22 +223,23 @@ export function registerUsersTools(server: McpServer): void {
     async ({ email }) => {
       const api = getApiClient();
       const result = await api.get<{
-        data: PaginatedResponse<{
+        data: {
           id: string;
           product_id: string;
           product_name: string;
-          amount_total: number;
+          amount: number;
           currency: string;
           status: string;
           created_at: string;
-        }>;
+        }[];
+        pagination: { cursor: string | null; next_cursor: string | null; has_more: boolean; limit: number };
       }>('/api/v1/payments', {
         email,
         limit: 100,
       });
 
       return {
-        content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }],
+        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
       };
     }
   );

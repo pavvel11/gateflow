@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { WebhookEndpoint } from '@/types/webhooks';
 import { useTranslations } from 'next-intl';
 import { useWebhooks } from '@/hooks/useWebhooks';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { BaseModal, ModalHeader, ModalBody, ModalFooter, Button } from './ui/Modal';
 
@@ -19,7 +19,6 @@ import WebhookFailuresPanel from './WebhookFailuresPanel';
 export default function WebhooksPageContent() {
   const t = useTranslations('admin.webhooks');
   const tCommon = useTranslations('common');
-  const { addToast } = useToast();
   const {
     endpoints,
     loading,
@@ -204,13 +203,10 @@ export default function WebhooksPageContent() {
 
       if (!res.ok) throw new Error('Failed');
 
-      addToast(
-        newStatus ? t('statusActivated') : t('statusDeactivated'),
-        'success'
-      );
+      toast.success(newStatus ? t('statusActivated') : t('statusDeactivated'));
       triggerGlobalRefresh();
     } catch {
-      addToast(t('statusToggleError'), 'error');
+      toast.error(t('statusToggleError'));
     }
   };
 
