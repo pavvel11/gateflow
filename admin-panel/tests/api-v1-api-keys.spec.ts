@@ -289,6 +289,130 @@ test.describe('API Keys v1', () => {
       const body = await response.json();
       expect(body.data.is_active).toBe(false);
     });
+
+    test('should reject patch on revoked key', async ({ page }) => {
+      await loginAsAdmin(page, adminEmail, adminPassword);
+
+      const createResponse = await page.request.post('/api/v1/api-keys', {
+        data: { name: 'Revoke Before Patch' }
+      });
+      const { data: key } = await createResponse.json();
+      createdKeyIds.push(key.id);
+
+      await page.request.delete(`/api/v1/api-keys/${key.id}`);
+
+      const response = await page.request.patch(`/api/v1/api-keys/${key.id}`, {
+        data: { name: 'Should Not Work' }
+      });
+
+      expect(response.status()).toBe(400);
+      const body = await response.json();
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+    });
+
+    test('should return 400 when only unknown fields sent (key_hash, expires_at)', async ({ page }) => {
+      await loginAsAdmin(page, adminEmail, adminPassword);
+
+      const createResponse = await page.request.post('/api/v1/api-keys', {
+        data: { name: 'Immutable Fields Test' }
+      });
+      const { data: key } = await createResponse.json();
+      createdKeyIds.push(key.id);
+
+      // key_hash alone — must not be accepted as a valid update field
+      const hashResponse = await page.request.patch(`/api/v1/api-keys/${key.id}`, {
+        data: { key_hash: 'hacked_hash' }
+      });
+      expect(hashResponse.status()).toBe(400);
+
+      // expires_at alone — not an editable field via PATCH
+      const expiresResponse = await page.request.patch(`/api/v1/api-keys/${key.id}`, {
+        data: { expires_at: new Date(Date.now() + 86400000).toISOString() }
+      });
+      expect(expiresResponse.status()).toBe(400);
+    });
+
+    test('should ignore key_hash when sent alongside a valid field', async ({ page }) => {
+      await loginAsAdmin(page, adminEmail, adminPassword);
+
+      const createResponse = await page.request.post('/api/v1/api-keys', {
+        data: { name: 'Mixed Fields Key' }
+      });
+      const { data: key, key: rawKey } = await createResponse.json();
+      createdKeyIds.push(key.id);
+
+      // Send a valid field + an immutable one
+      const response = await page.request.patch(`/api/v1/api-keys/${key.id}`, {
+        data: { name: 'Mixed Fields Key Updated', key_hash: 'tampered' }
+      });
+
+      expect(response.status()).toBe(200);
+      const body = await response.json();
+      expect(body.data.name).toBe('Mixed Fields Key Updated');
+      // key_prefix is derived from the hash — it must not change
+      expect(body.data.key_prefix).toBe(key.key_prefix);
+
+      // Original key must still authenticate (hash unchanged)
+      if (rawKey) {
+        const verifyResponse = await page.request.get('/api/v1/api-keys', {
+          headers: { Authorization: `Bearer ${rawKey}` }
+        });
+        // If the hash were changed, auth would fail with 401
+        expect(verifyResponse.status()).not.toBe(401);
+      }
+    });
+
+    test('should reject empty name', async ({ page }) => {
+      await loginAsAdmin(page, adminEmail, adminPassword);
+
+      const createResponse = await page.request.post('/api/v1/api-keys', {
+        data: { name: 'Empty Name Test' }
+      });
+      const { data: key } = await createResponse.json();
+      createdKeyIds.push(key.id);
+
+      const response = await page.request.patch(`/api/v1/api-keys/${key.id}`, {
+        data: { name: '' }
+      });
+
+      expect(response.status()).toBe(400);
+    });
+
+    test('should reject invalid scope', async ({ page }) => {
+      await loginAsAdmin(page, adminEmail, adminPassword);
+
+      const createResponse = await page.request.post('/api/v1/api-keys', {
+        data: { name: 'Invalid Scope Test' }
+      });
+      const { data: key } = await createResponse.json();
+      createdKeyIds.push(key.id);
+
+      const response = await page.request.patch(`/api/v1/api-keys/${key.id}`, {
+        data: { scopes: ['products:read', 'not:a:real:scope'] }
+      });
+
+      expect(response.status()).toBe(400);
+    });
+
+    test('should reject rate_limit out of range', async ({ page }) => {
+      await loginAsAdmin(page, adminEmail, adminPassword);
+
+      const createResponse = await page.request.post('/api/v1/api-keys', {
+        data: { name: 'Rate Limit Test' }
+      });
+      const { data: key } = await createResponse.json();
+      createdKeyIds.push(key.id);
+
+      const tooLow = await page.request.patch(`/api/v1/api-keys/${key.id}`, {
+        data: { rate_limit_per_minute: 0 }
+      });
+      expect(tooLow.status()).toBe(400);
+
+      const tooHigh = await page.request.patch(`/api/v1/api-keys/${key.id}`, {
+        data: { rate_limit_per_minute: 1001 }
+      });
+      expect(tooHigh.status()).toBe(400);
+    });
   });
 
   test.describe('DELETE /api/v1/api-keys/:id', () => {
