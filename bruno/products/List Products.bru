@@ -23,10 +23,24 @@ auth:bearer {
   token: {{API_KEY}}
 }
 
+script:after-response {
+  const body = res.getBody();
+  const nextCursor = body?.pagination?.next_cursor;
+  if (nextCursor) {
+    bru.setVar("products_next_cursor", nextCursor);
+  } else {
+    bru.setVar("products_next_cursor", "");
+  }
+}
+
 docs {
   # List Products
 
   Returns cursor-paginated list of products.
+
+  After the request, `products_next_cursor` is automatically saved
+  to a collection variable. Use "List Products - Next Page" to fetch
+  the next page.
 
   ## Query Parameters
   - `status`: active | inactive | all (default: all)
@@ -38,7 +52,7 @@ docs {
 
   ## Response
   Returns `data[]` with pagination metadata:
-  - `next_cursor`: pass as `cursor` for next page (null if no more)
+  - `next_cursor`: cursor for next page (null if no more)
   - `has_more`: boolean
   - `total`: total count matching current filters
 }

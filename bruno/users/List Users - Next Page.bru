@@ -1,0 +1,42 @@
+meta {
+  name: List Users - Next Page
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{BASE_URL}}/api/v1/users
+  body: none
+  auth: bearer
+}
+
+params:query {
+  cursor: {{users_next_cursor}}
+  ~limit: 20
+  ~sort_by: created_at
+  ~sort_order: desc
+}
+
+auth:bearer {
+  token: {{API_KEY}}
+}
+
+script:after-response {
+  const body = res.getBody();
+  const nextCursor = body?.pagination?.next_cursor;
+  if (nextCursor) {
+    bru.setVar("users_next_cursor", nextCursor);
+  } else {
+    bru.setVar("users_next_cursor", "");
+  }
+}
+
+docs {
+  # List Users - Next Page
+
+  Fetches the next page using the cursor saved by "List Users".
+  Run "List Users" first to populate `users_next_cursor`.
+
+  Re-run this request to keep advancing through pages.
+  When `has_more` is false, `users_next_cursor` will be empty.
+}
