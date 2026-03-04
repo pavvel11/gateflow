@@ -340,6 +340,62 @@ test.describe('API Keys Management UI', () => {
     await expect(page.locator('span').filter({ hasText: /Revoked/i })).toBeVisible({ timeout: 5000 });
   });
 
+  test('should open edit modal with pre-populated fields', async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.goto('/dashboard/api-keys');
+
+    // Find the default test key row and click edit (Pencil icon)
+    const keyRow = page.locator('tr').filter({ hasText: 'Test Key Default' });
+    await expect(keyRow).toBeVisible({ timeout: 10000 });
+
+    const editButton = keyRow.locator('button').filter({ has: page.locator('svg.lucide-pencil') });
+    await editButton.click();
+
+    // Edit modal should open with "Edit" title (not "Create")
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('dialog').getByText(/Edit API Key/i)).toBeVisible();
+
+    // Name field should be pre-populated with the current key name
+    const nameInput = page.getByRole('dialog').locator('input[type="text"]').first();
+    await expect(nameInput).toHaveValue('Test Key Default');
+
+    // Close without saving
+    await page.getByRole('dialog').getByRole('button', { name: /Cancel/i }).click();
+    await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 3000 });
+  });
+
+  test('should edit API key name', async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.goto('/dashboard/api-keys');
+
+    // Create a dedicated key for editing
+    await page.getByRole('button', { name: /Create/i }).click();
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 10000 });
+    await fillKeyName(page, 'Key To Edit');
+    await page.getByRole('dialog').getByRole('button', { name: /Create/i }).click();
+    await expect(page.getByRole('heading', { name: /API Key Created/i })).toBeVisible({ timeout: 15000 });
+    await page.getByRole('button', { name: /Done/i }).click();
+    await expect(page.getByText('Key To Edit')).toBeVisible({ timeout: 5000 });
+
+    // Click edit on the newly created key
+    const keyRow = page.locator('tr').filter({ hasText: 'Key To Edit' });
+    const editButton = keyRow.locator('button').filter({ has: page.locator('svg.lucide-pencil') });
+    await editButton.click();
+
+    // Clear name and type new one
+    const nameInput = page.getByRole('dialog').locator('input[type="text"]').first();
+    await nameInput.clear();
+    await nameInput.fill('Key To Edit (renamed)');
+
+    // Save
+    await page.getByRole('dialog').getByRole('button', { name: /Save/i }).click();
+    await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 5000 });
+
+    // Updated name should be visible in table, old name gone
+    await expect(page.getByText('Key To Edit (renamed)')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('tr').filter({ hasText: 'Key To Edit' }).filter({ hasNot: page.getByText('renamed') })).not.toBeVisible();
+  });
+
   test('should show correct status badges', async ({ page }) => {
     await loginAsAdmin(page);
     await page.goto('/dashboard/api-keys');
