@@ -15,30 +15,41 @@ import { supabaseAdmin } from './helpers/admin-auth';
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
 const CRON_SECRET = process.env.CRON_SECRET || 'dev-cron-secret-change-in-production';
 
-function cronUrl(job: string, secret = CRON_SECRET) {
-  return `${BASE_URL}/api/cron?job=${job}&secret=${encodeURIComponent(secret)}`;
+function cronUrl(job: string) {
+  return `${BASE_URL}/api/cron?job=${job}`;
+}
+
+function authHeader(secret = CRON_SECRET) {
+  return { Authorization: `Bearer ${secret}` };
 }
 
 test.describe('Cron endpoint: security', () => {
-  test('returns 401 with missing secret', async ({ request }) => {
+  test('returns 401 with no credentials', async ({ request }) => {
     const res = await request.get(`${BASE_URL}/api/cron?job=access-expired`);
     expect(res.status()).toBe(401);
   });
 
-  test('returns 401 with wrong secret', async ({ request }) => {
-    const res = await request.get(cronUrl('access-expired', 'wrong-secret'));
+  test('returns 401 with wrong bearer token', async ({ request }) => {
+    const res = await request.get(cronUrl('access-expired'), {
+      headers: { Authorization: 'Bearer wrong-secret' },
+    });
+    expect(res.status()).toBe(401);
+  });
+
+  test('returns 401 with wrong URL secret (fallback)', async ({ request }) => {
+    const res = await request.get(`${BASE_URL}/api/cron?job=access-expired&secret=wrong-secret`);
     expect(res.status()).toBe(401);
   });
 
   test('returns 400 with valid secret but missing job', async ({ request }) => {
-    const res = await request.get(`${BASE_URL}/api/cron?secret=${CRON_SECRET}`);
+    const res = await request.get(`${BASE_URL}/api/cron`, { headers: authHeader() });
     expect(res.status()).toBe(400);
     const body = await res.json();
     expect(body.available).toEqual(expect.arrayContaining(['access-expired', 'cleanup-webhook-logs']));
   });
 
   test('returns 400 for unknown job name', async ({ request }) => {
-    const res = await request.get(cronUrl('nonexistent-job'));
+    const res = await request.get(cronUrl('nonexistent-job'), { headers: authHeader() });
     expect(res.status()).toBe(400);
     const body = await res.json();
     expect(body.error).toContain('Unknown job');
@@ -79,7 +90,7 @@ test.describe('Cron job: access-expired', () => {
   });
 
   test('processes 0 rows when nothing is expired', async ({ request }) => {
-    const res = await request.get(cronUrl('access-expired'));
+    const res = await request.get(cronUrl('access-expired'), { headers: authHeader() });
     expect(res.status()).toBe(200);
     const body = await res.json();
     expect(body.job).toBe('access-expired');
@@ -107,7 +118,7 @@ test.describe('Cron job: access-expired', () => {
     testAccessId = accessData.id;
 
     // Run the cron job
-    const res = await request.get(cronUrl('access-expired'));
+    const res = await request.get(cronUrl('access-expired'), { headers: authHeader() });
     expect(res.status()).toBe(200);
     const body = await res.json();
     expect(body.job).toBe('access-expired');
@@ -134,7 +145,7 @@ test.describe('Cron job: access-expired', () => {
     expect(row?.expiry_notified_at).not.toBeNull();
 
     // Run job again
-    const res = await request.get(cronUrl('access-expired'));
+    const res = await request.get(cronUrl('access-expired'), { headers: authHeader() });
     expect(res.status()).toBe(200);
     const body = await res.json();
     // Processed count should not increase (row already has expiry_notified_at set)
@@ -213,7 +224,7 @@ test.describe('Cron job: cleanup-webhook-logs', () => {
   });
 
   test('deletes old logs and keeps recent ones', async ({ request }) => {
-    const res = await request.get(cronUrl('cleanup-webhook-logs'));
+    const res = await request.get(cronUrl('cleanup-webhook-logs'), { headers: authHeader() });
     expect(res.status()).toBe(200);
     const body = await res.json();
     expect(body.job).toBe('cleanup-webhook-logs');

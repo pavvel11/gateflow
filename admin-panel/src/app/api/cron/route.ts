@@ -1,18 +1,22 @@
 /**
  * Universal Cron Endpoint
  *
- * Secured with CRON_SECRET env var. Call via:
- *   GET /api/cron?job=<name>&secret=<CRON_SECRET>
+ * Secured with CRON_SECRET env var. Preferred: Authorization header.
+ * URL secret is a fallback for schedulers that don't support custom headers.
+ *
+ *   # Preferred (secret not in logs):
+ *   curl -H "Authorization: Bearer $CRON_SECRET" "https://yourdomain.com/api/cron?job=access-expired"
+ *
+ *   # Fallback (secret in URL — visible in access logs, avoid in production):
+ *   curl "https://yourdomain.com/api/cron?job=access-expired&secret=$CRON_SECRET"
  *
  * Jobs:
  *   access-expired        — dispatch access.expired webhooks for newly expired access records
  *   cleanup-webhook-logs  — delete webhook_logs older than WEBHOOK_LOG_RETENTION_DAYS (default: 30)
- *
- * Example cron invocation (external scheduler or pg_cron HTTP call):
- *   curl "https://yourdomain.com/api/cron?job=access-expired&secret=$CRON_SECRET"
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { WebhookService } from '@/lib/services/webhook-service';
 
@@ -27,10 +31,29 @@ interface CronJobResult {
 // ===== SECURITY =====
 
 function isAuthorized(request: NextRequest): boolean {
-  const secret = request.nextUrl.searchParams.get('secret');
   const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) return false;
-  return secret === cronSecret;
+  if (!cronSecret) {
+    console.error('[cron] CRON_SECRET env var is not set — all cron requests will be rejected');
+    return false;
+  }
+
+  // Prefer Authorization: Bearer <secret> (not logged by proxies/CDNs)
+  const authHeader = request.headers.get('Authorization');
+  const candidate = authHeader?.startsWith('Bearer ')
+    ? authHeader.slice(7)
+    : request.nextUrl.searchParams.get('secret'); // URL fallback
+
+  if (!candidate) return false;
+
+  // Timing-safe comparison (prevents secret length/content oracle attacks)
+  try {
+    const a = Buffer.from(candidate);
+    const b = Buffer.from(cronSecret);
+    // timingSafeEqual requires same length — check length separately
+    return a.length === b.length && timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
 }
 
 // ===== JOB: access-expired =====
@@ -61,17 +84,19 @@ async function handleAccessExpired(): Promise<CronJobResult> {
     return { processed: 0, errors: 0 };
   }
 
-  // Batch fetch user emails (auth.users is in a separate schema, can't join via PostgREST)
+  // Batch fetch user emails in parallel (auth.users is in a separate schema, can't join via PostgREST)
   const userIds = [...new Set(expiredRows.map(r => r.user_id))];
   const emailMap: Record<string, string | null> = {};
-  for (const userId of userIds) {
-    try {
-      const { data: { user } } = await supabase.auth.admin.getUserById(userId);
-      emailMap[userId] = user?.email ?? null;
-    } catch {
-      emailMap[userId] = null;
-    }
-  }
+  await Promise.all(
+    userIds.map(async (userId) => {
+      try {
+        const { data: { user } } = await supabase.auth.admin.getUserById(userId);
+        emailMap[userId] = user?.email ?? null;
+      } catch {
+        emailMap[userId] = null;
+      }
+    })
+  );
 
   let processed = 0;
   let errors = 0;
