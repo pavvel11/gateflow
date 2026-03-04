@@ -109,9 +109,10 @@ Sellf gives you **complete control** over your digital product business. No mont
 - 5 built-in theme presets (Midnight Forge, Sunset, Ocean, Forest, Minimal Light)
 - Visual Theme Editor with live preview
 - Import/export themes as JSON
-- Dark/Light/System mode (site-wide)
-- Two-layer design tokens: admin branding (gf-*) + public pages (wl-*)
+- Dark/Light/System mode with optional admin-enforced lock
+- Unified `sf-*` CSS design token system across all UI layers
 - Custom colors, typography, and border radius
+- Server-side license gate for theme customization (Pro)
 
 </details>
 
