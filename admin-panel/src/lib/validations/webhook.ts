@@ -96,6 +96,7 @@ export const WEBHOOK_EVENT_TYPES = [
   'purchase.completed',
   'lead.captured',
   'waitlist.signup',
+  'access.expired',
   // Legacy/future events
   'payment.completed',
   'payment.refunded',
