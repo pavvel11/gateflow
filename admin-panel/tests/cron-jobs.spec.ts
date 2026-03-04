@@ -62,6 +62,7 @@ test.describe('Cron job: access-expired', () => {
   let testUserId: string;
   let testProductId: string;
   let testAccessId: string;
+  let testEndpointId: string;
 
   test.beforeAll(async () => {
     // Create a test user
@@ -81,10 +82,25 @@ test.describe('Cron job: access-expired', () => {
       .single();
     if (productError) throw productError;
     testProductId = productData.id;
+
+    // Create a webhook endpoint subscribed to access.expired
+    // URL intentionally unreachable — dispatch will fail, but webhook_logs entry is always written
+    const { data: epData, error: epError } = await supabaseAdmin
+      .from('webhook_endpoints')
+      .insert({
+        url: 'http://localhost:19999/cron-test-hook',
+        events: ['access.expired'],
+        secret: 'test-secret',
+        is_active: true,
+      })
+      .select('id')
+      .single();
+    if (epError) throw epError;
+    testEndpointId = epData.id;
   });
 
   test.afterAll(async () => {
-    // Cleanup
+    if (testEndpointId) await supabaseAdmin.from('webhook_endpoints').delete().eq('id', testEndpointId);
     if (testUserId) await supabaseAdmin.auth.admin.deleteUser(testUserId);
     if (testProductId) await supabaseAdmin.from('products').delete().eq('id', testProductId);
   });
@@ -133,6 +149,25 @@ test.describe('Cron job: access-expired', () => {
       .single();
 
     expect(updatedRow?.expiry_notified_at).not.toBeNull();
+  });
+
+  test('dispatch attempt is recorded in webhook_logs', async () => {
+    // The previous test ran the cron which called WebhookService.trigger('access.expired').
+    // Even though the endpoint URL is unreachable, dispatchWebhook() always writes to
+    // webhook_logs in its finally block. Verify the log entry exists.
+    const { data: logs, error } = await supabaseAdmin
+      .from('webhook_logs')
+      .select('id, event_type, status, http_status')
+      .eq('endpoint_id', testEndpointId)
+      .eq('event_type', 'access.expired')
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    expect(error).toBeNull();
+    expect(logs).toHaveLength(1);
+    expect(logs![0].event_type).toBe('access.expired');
+    // Status is 'failed' because the endpoint URL is unreachable — that's expected
+    expect(['failed', 'success']).toContain(logs![0].status);
   });
 
   test('does not re-process already-notified records', async ({ request }) => {
