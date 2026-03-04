@@ -73,6 +73,16 @@ fi
 # ===== AUTO-DETECT INSTALL DIR =====
 
 if [ -z "$INSTALL_DIR" ]; then
+  # Derive from script location first (most reliable when called from standalone).
+  # Script lives at <install>/.next/standalone/admin-panel/scripts/upgrade.sh
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  DERIVED_DIR="$(cd "$SCRIPT_DIR/../../../.." && pwd 2>/dev/null)" || true
+  if [ -d "${DERIVED_DIR}/.next/standalone" ]; then
+    INSTALL_DIR="$DERIVED_DIR"
+  fi
+fi
+
+if [ -z "$INSTALL_DIR" ]; then
   for candidate in /opt/stacks/sellf /root/sellf; do
     if [ -d "$candidate/.next/standalone" ]; then
       INSTALL_DIR="$candidate"
