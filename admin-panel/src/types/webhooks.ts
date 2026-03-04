@@ -35,6 +35,7 @@ export const WEBHOOK_EVENTS = [
   { value: 'purchase.completed', label: 'Purchase Completed' },
   { value: 'lead.captured', label: 'Lead Captured (Free Product)' },
   { value: 'waitlist.signup', label: 'Waitlist Signup' },
+  { value: 'access.expired', label: 'Access Expired' },
   // { value: 'subscription.started', label: 'Subscription Started' }, // TODO: Implement when Subscriptions are ready
   // { value: 'refund.issued', label: 'Refund Issued' }, // TODO: Implement when Refunds are ready
 ];

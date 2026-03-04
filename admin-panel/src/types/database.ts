@@ -1511,7 +1511,6 @@ export type Database = {
       }
       shop_config: {
         Row: {
-          accent_color: string | null
           automatic_tax_enabled: boolean | null
           checkout_billing_address: string | null
           checkout_collect_terms: boolean | null
@@ -1525,9 +1524,7 @@ export type Database = {
           id: string
           logo_url: string | null
           omnibus_enabled: boolean
-          primary_color: string | null
           privacy_policy_url: string | null
-          secondary_color: string | null
           shop_name: string
           stripe_tax_rate_cache: Json | null
           tax_id_collection_enabled: boolean | null
@@ -1537,7 +1534,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          accent_color?: string | null
           automatic_tax_enabled?: boolean | null
           checkout_billing_address?: string | null
           checkout_collect_terms?: boolean | null
@@ -1551,9 +1547,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           omnibus_enabled?: boolean
-          primary_color?: string | null
           privacy_policy_url?: string | null
-          secondary_color?: string | null
           shop_name?: string
           stripe_tax_rate_cache?: Json | null
           tax_id_collection_enabled?: boolean | null
@@ -1563,7 +1557,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          accent_color?: string | null
           automatic_tax_enabled?: boolean | null
           checkout_billing_address?: string | null
           checkout_collect_terms?: boolean | null
@@ -1577,9 +1570,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           omnibus_enabled?: boolean
-          primary_color?: string | null
           privacy_policy_url?: string | null
-          secondary_color?: string | null
           shop_name?: string
           stripe_tax_rate_cache?: Json | null
           tax_id_collection_enabled?: boolean | null
@@ -1734,6 +1725,7 @@ export type Database = {
           access_expires_at: string | null
           access_granted_at: string
           created_at: string
+          expiry_notified_at: string | null
           id: string
           product_id: string
           tenant_id: string | null
@@ -1745,6 +1737,7 @@ export type Database = {
           access_expires_at?: string | null
           access_granted_at?: string
           created_at?: string
+          expiry_notified_at?: string | null
           id?: string
           product_id: string
           tenant_id?: string | null
@@ -1756,6 +1749,7 @@ export type Database = {
           access_expires_at?: string | null
           access_granted_at?: string
           created_at?: string
+          expiry_notified_at?: string | null
           id?: string
           product_id?: string
           tenant_id?: string | null

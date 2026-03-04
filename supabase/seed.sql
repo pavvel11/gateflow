@@ -56,9 +56,6 @@ INSERT INTO shop_config (
   tax_mode,
   stripe_tax_rate_cache,
   logo_url,
-  primary_color,
-  secondary_color,
-  accent_color,
   font_family,
   custom_settings
 ) VALUES (
@@ -68,9 +65,6 @@ INSERT INTO shop_config (
   'local', -- Default: Fixed VAT rate sent to Stripe per product
   '{}'::jsonb, -- Empty cache, populated on first local-mode checkout
   NULL, -- Upload logo to imgbb.com
-  NULL, -- uses var(--sf-accent) fallback
-  NULL, -- uses var(--sf-accent-hover) fallback
-  NULL, -- uses var(--sf-accent) fallback
   'system',
   '{}'::jsonb
 )

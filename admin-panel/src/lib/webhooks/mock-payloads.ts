@@ -51,6 +51,22 @@ export const WEBHOOK_MOCK_PAYLOADS: Record<string, any> = {
       icon: '📚'
     }
   },
+  'access.expired': {
+    customer: {
+      email: 'customer@example.com',
+      userId: 'user_123abc'
+    },
+    product: {
+      id: 'prod_12345678',
+      name: 'Premium Course',
+      slug: 'premium-course',
+      icon: '🎓'
+    },
+    access: {
+      grantedAt: '2026-01-01T00:00:00.000Z',
+      expiredAt: new Date().toISOString()
+    }
+  },
   'waitlist.signup': {
     customer: {
       email: 'interested@example.com'
