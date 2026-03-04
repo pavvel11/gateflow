@@ -60,6 +60,8 @@ export const WEBHOOK_MOCK_PAYLOADS: Record<string, any> = {
       id: 'prod_12345678',
       name: 'Premium Course',
       slug: 'premium-course',
+      price: 4999,
+      currency: 'usd',
       icon: '🎓'
     },
     access: {

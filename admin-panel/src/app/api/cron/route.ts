@@ -69,7 +69,7 @@ async function handleAccessExpired(): Promise<CronJobResult> {
       product_id,
       access_granted_at,
       access_expires_at,
-      products:product_id ( id, name, slug, icon )
+      products:product_id ( id, name, slug, price, currency, icon )
     `)
     .lt('access_expires_at', new Date().toISOString())
     .is('expiry_notified_at', null)
@@ -107,7 +107,7 @@ async function handleAccessExpired(): Promise<CronJobResult> {
 
   for (const row of expiredRows) {
     try {
-      const product = row.products as { id: string; name: string; slug: string; icon: string } | null;
+      const product = row.products as { id: string; name: string; slug: string; price: number; currency: string; icon: string } | null;
 
       await WebhookService.trigger('access.expired', {
         customer: {
@@ -118,6 +118,8 @@ async function handleAccessExpired(): Promise<CronJobResult> {
           id: product?.id ?? row.product_id,
           name: product?.name ?? null,
           slug: product?.slug ?? null,
+          price: product?.price ?? null,
+          currency: product?.currency ?? null,
           icon: product?.icon ?? null,
         },
         access: {
