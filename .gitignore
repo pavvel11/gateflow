@@ -73,3 +73,7 @@ Caddyfile
 
 # Private / internal docs (not for public repo)
 priv/
+
+# Local build artifacts
+release/
+sellf-build.tar.gz
