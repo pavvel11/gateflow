@@ -8,6 +8,7 @@ import { getCategories, getProductCategories, Category } from '@/lib/actions/cat
 import { getDefaultCurrency, getShopConfig } from '@/lib/actions/shop-config';
 import type { TaxMode } from '@/lib/actions/shop-config';
 import { parseVideoUrl, isTrustedVideoPlatform } from '@/lib/videoUtils';
+import { isTrustedDownloadUrl } from '@/lib/trustedDownloadProviders';
 import { createClient } from '@/lib/supabase/client';
 import { api } from '@/lib/api/client';
 import {
@@ -295,28 +296,7 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
       };
     } else if (type === 'download_link') {
       try {
-        const urlObj = new URL(url);
-
-        if (urlObj.protocol !== 'https:') {
-          return {
-            isValid: false,
-            message: 'Download URL must use HTTPS'
-          };
-        }
-
-        const trustedStorageProviders = [
-          'amazonaws.com', 'googleapis.com', 'supabase.co', 'cdn.', 'storage.',
-          'bunny.net', 'b-cdn.net', 'drive.google.com', 'docs.google.com',
-          'dropbox.com', 'dl.dropboxusercontent.com', 'onedrive.live.com',
-          '1drv.ms', 'sharepoint.com', 'box.com', 'mega.nz', 'mediafire.com',
-          'wetransfer.com', 'sendspace.com', 'cloudinary.com', 'imgix.net', 'fastly.net'
-        ];
-
-        const isTrustedStorage = trustedStorageProviders.some(provider =>
-          urlObj.hostname.includes(provider)
-        );
-
-        if (!isTrustedStorage) {
+        if (!isTrustedDownloadUrl(url)) {
           return {
             isValid: false,
             message: 'URL must be from a trusted storage provider (AWS, Google Drive, Dropbox, OneDrive, CDN, etc.)'
@@ -538,8 +518,11 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
     }
 
     // Include OTO data in the form submission
+    const isFreeProduct = formData.price === 0 && !formData.allow_custom_price;
     const submitData: ProductFormData = {
       ...formData,
+      // Free products cannot have price_includes_vat — reset even if UI hid the checkbox
+      ...(isFreeProduct && { price_includes_vat: false, vat_rate: null }),
       oto_enabled: oto.enabled,
       oto_product_id: oto.enabled && oto.productId ? oto.productId : null,
       oto_discount_type: oto.discountType,
