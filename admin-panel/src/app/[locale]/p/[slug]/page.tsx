@@ -142,11 +142,16 @@ export default async function ProductPage({ params, searchParams }: PageProps) {
   // from select('*'), but it must NOT leak in the RSC payload — unauthenticated
   // visitors could extract it from the page source / network tab.
   // Authenticated content delivery happens via /api/public/products/[slug]/content.
+  //
+  // Exception: admin preview mode — the server has already verified admin identity,
+  // so passing the full content_config is safe and lets admins see actual content.
   const safeProduct = {
     ...product,
-    content_config: product.content_delivery_type === 'redirect'
-      ? { redirect_url: product.content_config?.redirect_url }  // redirect URL needed client-side
-      : {},                                                       // content items served via auth API
+    content_config: previewMode
+      ? product.content_config                                    // admin preview: full config
+      : product.content_delivery_type === 'redirect'
+        ? { redirect_url: product.content_config?.redirect_url }  // redirect URL needed client-side
+        : {},                                                      // content items served via auth API
   };
 
   return <ProductView product={safeProduct as typeof product} licenseValid={licenseValid} previewMode={previewMode} />;

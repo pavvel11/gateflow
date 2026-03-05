@@ -56,12 +56,10 @@ export default function ProductAccessView({ product, licenseValid, previewMode =
       // Preview mode — build mock secureData directly from product prop
       if (previewMode) {
         setSecureData({
-          // content_items excluded from content_config: download URLs stored in the
-          // public product object may have null configs and crash DigitalContentRenderer.
-          // In preview mode the admin sees the product page structure without raw item data.
+          // In preview mode the server already verified admin identity and passed
+          // the full content_config — use it directly so admins see actual content.
           product: {
             ...product,
-            content_config: { ...product.content_config, content_items: [] },
           },
           branding: { shop_name: null },
           userAccess: {

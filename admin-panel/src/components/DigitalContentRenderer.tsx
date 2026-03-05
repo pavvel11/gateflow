@@ -3,7 +3,8 @@
 import React from 'react';
 import { useTranslations } from 'next-intl';
 import { ContentItem } from '@/types';
-import { parseVideoUrl, isTrustedVideoPlatform, addEmbedOptions } from '@/lib/videoUtils';
+import { parseVideoUrl, isTrustedVideoPlatform } from '@/lib/videoUtils';
+import { VideoPlayer } from '@/components/player';
 import { isTrustedDownloadUrl } from '@/lib/trustedDownloadProviders';
 
 interface DigitalContentRendererProps {
@@ -41,6 +42,8 @@ export default function DigitalContentRenderer({ contentItems, productName }: Di
     .sort((a, b) => a.order - b.order);
 
   const renderContentItem = (item: ContentItem, index: number) => {
+    if (!item.config) return null;
+
     switch (item.type) {
 
       // ── Video ──────────────────────────────────────────────────────────────
@@ -48,15 +51,7 @@ export default function DigitalContentRenderer({ contentItems, productName }: Di
         const url = item.config.embed_url;
         const parsed = url ? parseVideoUrl(url) : null;
         const platformLabel = parsed?.platform ? PLATFORM_LABELS[parsed.platform] : null;
-        const embedUrl = parsed?.isValid && parsed.embedUrl
-          ? addEmbedOptions(parsed.embedUrl, {
-              autoplay: item.config.autoplay,
-              loop: item.config.loop,
-              muted: item.config.muted,
-              preload: item.config.preload,
-              controls: item.config.controls,
-            })
-          : null;
+        const embedUrl = parsed?.isValid ? parsed.embedUrl : null;
 
         return (
           <div key={item.id} className="rounded-xl border border-sf-border bg-sf-float overflow-hidden">
@@ -94,15 +89,17 @@ export default function DigitalContentRenderer({ contentItems, productName }: Di
             {url && (
               <div className="px-5 pb-5">
                 <div className="aspect-video bg-black rounded-lg overflow-hidden">
-                  {embedUrl ? (
-                    <iframe
-                      src={embedUrl}
-                      className="w-full h-full"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
+                  {embedUrl && parsed ? (
+                    <VideoPlayer
+                      parsed={parsed}
                       title={item.title}
-                      sandbox="allow-scripts allow-same-origin allow-presentation"
+                      options={{
+                        autoplay: item.config.autoplay,
+                        loop: item.config.loop,
+                        muted: item.config.muted,
+                        preload: item.config.preload,
+                        controls: item.config.controls,
+                      }}
                     />
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full gap-2 text-center p-6">
