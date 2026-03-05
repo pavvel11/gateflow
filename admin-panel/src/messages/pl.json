@@ -83,6 +83,7 @@
       "invalidFormat": "Nieprawidłowy format numeru NIP"
     },
     "checkoutBranding": "Ten koszyk jest open-source →",
+    "productBranding": "Zabezpieczone przez →",
     "failedToGetAccess": "Nie udało się uzyskać dostępu",
     "unexpectedError": "Wystąpił nieoczekiwany błąd",
     "invalidEmail": "Nieprawidłowy adres e-mail",
@@ -1418,7 +1419,7 @@
         "trustedStorageProviders": "Zaufani dostawcy przechowywania plików",
         "trustedStorageProvidersDesc": "Adresy URL pobierania muszą używać HTTPS i pochodzić od zaufanych dostawców.",
         "storageCloudProviders": "☁️ Chmura: AWS S3, Google Cloud Storage, Supabase Storage",
-        "storagePersonalProviders": "📁 Osobiste: Google Drive, Dropbox, OneDrive, Box, SharePoint",
+        "storagePersonalProviders": "📁 Osobiste: Google Drive, Google Docs, Dropbox, OneDrive, Box, SharePoint",
         "storageCdnProviders": "🌐 CDN: Bunny CDN, Cloudinary, Imgix, Fastly",
         "storageFileSharingProviders": "📤 Udostępnianie: Mega, MediaFire, WeTransfer, SendSpace",
         "videoOptions": "Opcje wideo",
@@ -2200,6 +2201,24 @@
       "account": "Konto",
       "created": "Utworzono",
       "rotationReminder": "Rotacja do",
+      "webhook": {
+        "title": "Webhook Endpoint",
+        "description": "Zarejestruj ten endpoint w panelu Stripe, aby Sellf mógł przetwarzać zdarzenia płatności (zakupy, zwroty, spory).",
+        "endpointLabel": "URL endpointu",
+        "apiVersionLabel": "Wersja API",
+        "eventsLabel": "Zdarzenia do subskrypcji",
+        "copy": "Kopiuj",
+        "copied": "Skopiowano!",
+        "configure": "Otwórz Stripe Webhooks",
+        "registered": "Zarejestrowany",
+        "notRegistered": "Nie zarejestrowany",
+        "localDevNotice": "Automatyczna rejestracja webhooków nie działa na localhost. Użyj",
+        "localStep1": "Uruchom w terminalu. Skopiuj klucz podpisujący (webhook signing secret), który się pojawi:",
+        "localStep2": "Wklej skopiowany klucz do pliku .env.local i zrestartuj serwer:",
+        "createButton": "Utwórz webhook",
+        "reRegister": "Ponownie zarejestruj",
+        "registering": "Rejestrowanie..."
+      },
       "configureButton": "Skonfiguruj Stripe",
       "configureAnother": "Skonfiguruj inny tryb",
       "openDashboard": "Otwórz panel Stripe",
@@ -2462,6 +2481,12 @@
         "afterpay_clearpay": "Afterpay / Clearpay",
         "klarna": "Klarna"
       }
+    },
+    "tabs": {
+      "shop": "Sklep",
+      "payments": "Płatności",
+      "legal": "Prawne",
+      "system": "System"
     }
   },
   "stripe": {

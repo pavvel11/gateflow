@@ -327,8 +327,11 @@ function validateContentConfig(contentConfig: unknown): ValidationResult {
           if (typeof embedUrl !== 'string') {
             errors.push(`Content item ${index + 1}: Video embed URL must be a string`);
           } else {
-            // Check if it's from a trusted platform
-            if (!isTrustedVideoPlatform(embedUrl)) {
+            // Must use HTTPS
+            if (!embedUrl.startsWith('https://')) {
+              errors.push(`Content item ${index + 1}: Video embed URL must use HTTPS`);
+            } else if (!isTrustedVideoPlatform(embedUrl)) {
+              // Check if it's from a trusted platform
               errors.push(
                 `Content item ${index + 1}: Video URL must be from a trusted platform (YouTube, Vimeo, Bunny.net, Loom, Wistia, DailyMotion, Twitch)`
               );
