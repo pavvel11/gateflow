@@ -148,6 +148,7 @@ export function useYouTubeAdapter(
   // Gate flags — tryInit runs only when both are true
   const apiReadyRef    = useRef(false);
   const pendingPlayRef = useRef(false);
+  const mountedRef     = useRef(true);
 
   // Capture latest options in a ref so callbacks always see current values
   // without needing to be listed as useCallback dependencies
@@ -254,6 +255,7 @@ export function useYouTubeAdapter(
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      mountedRef.current = false;
       if (playerRef.current) {
         try { playerRef.current.destroy(); } catch { /* ignore */ }
         playerRef.current = null;
@@ -283,6 +285,7 @@ export function useYouTubeAdapter(
     // tryInit will be a no-op here and will fire again from the callback ref
     // once React flushes the render and the container div enters the DOM.
     loadYouTubeApi().then(() => {
+      if (!mountedRef.current) return;
       apiReadyRef.current = true;
       tryInit();
     });
