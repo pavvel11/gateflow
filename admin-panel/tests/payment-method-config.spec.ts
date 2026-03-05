@@ -12,8 +12,22 @@
  * Total: 11 admin UI test cases
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import { createTestAdmin, loginAsAdmin } from './helpers/admin-auth';
+
+const gotoPaymentsSettings = async (page: Page) => {
+  await page.goto('/pl/dashboard/settings');
+  await page.waitForLoadState('domcontentloaded');
+  await page.getByRole('button', { name: /^Payments$|^Płatności$/i }).click();
+  await page.waitForSelector('input[type="radio"][value="automatic"]', { timeout: 10000 });
+};
+
+const reloadPaymentsSettings = async (page: Page) => {
+  await page.reload();
+  await page.waitForLoadState('domcontentloaded');
+  await page.getByRole('button', { name: /^Payments$|^Płatności$/i }).click();
+  await page.waitForSelector('input[type="radio"][value="automatic"]', { timeout: 10000 });
+};
 
 test.describe('Payment Method Configuration - Admin UI', () => {
   let adminEmail: string;
@@ -37,8 +51,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
 
   test('Admin can view payment method configuration settings', async ({ page }) => {
     // Navigate to settings page
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     // Verify Payment Method Configuration section exists
     const heading = page.locator('text=Konfiguracja Metod Płatności');
@@ -51,8 +64,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('Admin can select automatic mode', async ({ page }) => {
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     // Select automatic mode
     const automaticRadio = page.locator('input[type="radio"][value="automatic"]').first();
@@ -74,8 +86,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('Admin can select stripe preset mode', async ({ page }) => {
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     // Select Stripe preset mode
     const stripePresetRadio = page.locator('input[name="config_mode"]').nth(1);
@@ -92,8 +103,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('Admin can select custom mode and enable payment methods', async ({ page }) => {
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     // Select custom mode
     const customRadio = page.locator('input[name="config_mode"]').nth(2);
@@ -124,38 +134,33 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('E2E-ADMIN-003: Complete custom mode setup with drag & drop', async ({ page }) => {
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     // Select custom mode
     const customRadio = page.locator('input[name="config_mode"]').nth(2);
     await customRadio.check();
 
-    // Enable multiple payment methods (Card, BLIK, Przelewy24)
-    await page.waitForTimeout(500);
-
-    // Enable Card
+    // Wait for custom mode UI to render (Card checkbox is a reliable indicator)
     const cardCheckbox = page.locator('label:has-text("Card")').locator('input[type="checkbox"]');
+    await expect(cardCheckbox).toBeVisible({ timeout: 8000 });
+
+    // Enable Card, BLIK, Przelewy24
     if (!(await cardCheckbox.isChecked())) {
       await cardCheckbox.check();
     }
     await expect(cardCheckbox).toBeChecked();
 
-    // Enable BLIK
     const blikCheckbox = page.locator('label:has-text("BLIK")').locator('input[type="checkbox"]');
     if (!(await blikCheckbox.isChecked())) {
       await blikCheckbox.check();
     }
     await expect(blikCheckbox).toBeChecked();
 
-    // Enable Przelewy24
     const p24Checkbox = page.locator('label:has-text("Przelewy24")').locator('input[type="checkbox"]');
     if (!(await p24Checkbox.isChecked())) {
       await p24Checkbox.check();
     }
     await expect(p24Checkbox).toBeChecked();
-
-    await page.waitForTimeout(1000);
 
     // Verify payment method order section appears
     await expect(page.getByText('Kolejność Metod Płatności', { exact: true })).toBeVisible();
@@ -174,8 +179,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('E2E-ADMIN-004: Refresh Stripe PMCs', async ({ page }) => {
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     // Select Stripe preset mode
     const stripePresetRadio = page.locator('input[name="config_mode"]').nth(1);
@@ -197,8 +201,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('E2E-ADMIN-005: Express Checkout configuration', async ({ page }) => {
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     // Find Express Checkout section
     const expressCheckoutSection = page.locator('text=Express Checkout').first();
@@ -236,16 +239,14 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     });
 
     // Verify config was saved - reload page and check
-    await page.reload();
-    await page.waitForLoadState('networkidle');
+    await reloadPaymentsSettings(page);
 
     const applePayCheckboxReload = page.locator('label:has-text("Apple Pay")').locator('input[type="checkbox"]');
     await expect(applePayCheckboxReload).not.toBeChecked();
   });
 
   test('E2E-ADMIN-006: Mode transition automatic → custom', async ({ page }) => {
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     // Start with automatic mode
     const automaticRadio = page.locator('input[type="radio"][value="automatic"]').first();
@@ -277,16 +278,14 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     });
 
     // Verify transition succeeded by reloading
-    await page.reload();
-    await page.waitForLoadState('networkidle');
+    await reloadPaymentsSettings(page);
 
     const customRadioReload = page.locator('input[name="config_mode"]').nth(2);
     await expect(customRadioReload).toBeChecked();
   });
 
   test('E2E-ADMIN-007: Mode transition custom → automatic', async ({ page }) => {
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     // Start with custom mode
     const customRadio = page.locator('input[name="config_mode"]').nth(2);
@@ -316,16 +315,14 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     });
 
     // Verify custom methods were cleared
-    await page.reload();
-    await page.waitForLoadState('networkidle');
+    await reloadPaymentsSettings(page);
 
     const automaticRadioReload = page.locator('input[type="radio"][value="automatic"]').first();
     await expect(automaticRadioReload).toBeChecked();
   });
 
   test('E2E-ADMIN-008: Reset configuration', async ({ page }) => {
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     // Make some changes without saving
     const customRadio = page.locator('input[name="config_mode"]').nth(2);
@@ -344,8 +341,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('E2E-ADMIN-009: Validation error - Custom no methods', async ({ page }) => {
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     // Select custom mode
     const customRadio = page.locator('input[name="config_mode"]').nth(2);
@@ -377,8 +373,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   });
 
   test('E2E-ADMIN-010: Validation error - Stripe no PMC', async ({ page }) => {
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     // Select Stripe preset mode
     const stripePresetRadio = page.locator('input[name="config_mode"]').nth(1);
@@ -386,9 +381,9 @@ test.describe('Payment Method Configuration - Admin UI', () => {
 
     await page.waitForTimeout(500);
 
-    // Don't select any PMC from dropdown (leave it empty)
-    const dropdown = page.locator('select').first();
-    await dropdown.selectOption({ index: 0 }); // Select first option (usually empty/placeholder)
+    // Dropdown may be disabled if no PMCs are available in Stripe account — that's fine,
+    // we just want to verify saving without a valid PMC selected shows an error.
+    // Don't interact with the dropdown — leave it as-is (no PMC selected).
 
     // Try to save
     const saveButton = page.locator('button:has-text("Zapisz Konfigurację")');

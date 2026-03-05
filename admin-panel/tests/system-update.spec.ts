@@ -294,6 +294,14 @@ test.describe('System Update Settings UI', () => {
   const adminPassword = 'TestPassword123!';
   const nonAdminPassword = 'TestPassword123!';
 
+
+  const gotoSystemSettings = async (page: any) => {
+    await page.goto('/dashboard/settings');
+    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole('button', { name: /^System$/i }).click();
+    await page.waitForSelector('text=System Update', { timeout: 10000 });
+  };
+
   test.beforeAll(async () => {
     const randomStr = Math.random().toString(36).substring(7);
     adminEmail = `update-ui-admin-${randomStr}@example.com`;
@@ -331,7 +339,7 @@ test.describe('System Update Settings UI', () => {
 
   test('should display system update section on settings page', async ({ page }) => {
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto('/dashboard/settings');
+    await gotoSystemSettings(page);
 
     // The SystemUpdateSettings component should be visible
     const updateSection = page.locator('text=System Update').first();
@@ -340,7 +348,7 @@ test.describe('System Update Settings UI', () => {
 
   test('should show current version', async ({ page }) => {
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto('/dashboard/settings');
+    await gotoSystemSettings(page);
 
     // Look for the version data-testid element
     const versionText = page.locator('[data-testid="current-version"]');
@@ -351,7 +359,7 @@ test.describe('System Update Settings UI', () => {
 
   test('should have check for updates button', async ({ page }) => {
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto('/dashboard/settings');
+    await gotoSystemSettings(page);
 
     // Find the "Check for updates" button
     const checkButton = page.getByRole('button', { name: /check for updates|sprawdź aktualizacje/i });
@@ -360,7 +368,7 @@ test.describe('System Update Settings UI', () => {
 
   test('should trigger update check on button click', async ({ page }) => {
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto('/dashboard/settings');
+    await gotoSystemSettings(page);
 
     // Wait for button to appear
     const checkButton = page.getByRole('button', { name: /check for updates|sprawdź aktualizacje/i });
@@ -380,7 +388,7 @@ test.describe('System Update Settings UI', () => {
 
   test('should show status message after update check', async ({ page }) => {
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto('/dashboard/settings');
+    await gotoSystemSettings(page);
 
     const checkButton = page.getByRole('button', { name: /check for updates|sprawdź aktualizacje/i });
     await expect(checkButton).toBeVisible({ timeout: 15000 });

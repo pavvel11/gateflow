@@ -50,6 +50,21 @@ test.describe('Legal Documents Settings', () => {
     await page.waitForTimeout(1000);
   };
 
+  // Helper: navigate to settings and activate the "Legal" tab
+  // (Settings page uses tabs since the tab refactor; Legal section lives under "legal" tab)
+  const gotoLegalSettings = async (page: Page) => {
+    await page.goto('/dashboard/settings');
+    await page.waitForLoadState('domcontentloaded');
+    // Click the "Legal" tab – label is "Legal" (EN) or "Prawne" (PL)
+    const legalTab = page.getByRole('button', { name: /^Legal$|^Prawne$/i });
+    await expect(legalTab).toBeVisible({ timeout: 10000 });
+    await legalTab.click();
+    // Wait for the legal section heading to actually render
+    await expect(
+      page.locator('h2', { hasText: /Legal Documents|Dokumenty prawne/i })
+    ).toBeVisible({ timeout: 10000 });
+  };
+
   test.beforeAll(async () => {
     const randomStr = Math.random().toString(36).substring(7);
     adminEmail = `test-legal-admin-${Date.now()}-${randomStr}@example.com`;
@@ -112,9 +127,7 @@ test.describe('Legal Documents Settings', () => {
 
   test('Admin can access legal documents settings section', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await gotoLegalSettings(page);
 
     // Should see "Legal Documents" heading
     const legalHeading = page.locator('h2', { hasText: /Legal Documents|Dokumenty prawne/i });
@@ -127,9 +140,7 @@ test.describe('Legal Documents Settings', () => {
 
   test('Legal documents form shows both URL inputs', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await gotoLegalSettings(page);
 
     // Find the Legal Documents section - use more specific selector
     const legalHeading = page.locator('h2:text-matches("Legal Documents|Dokumenty prawne", "i")');
@@ -154,9 +165,7 @@ test.describe('Legal Documents Settings', () => {
 
   test('Can enter and save legal document URLs', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await gotoLegalSettings(page);
 
     // Find the Legal Documents section
     const legalHeading = page.locator('h2:text-matches("Legal Documents|Dokumenty prawne", "i")');
@@ -200,9 +209,7 @@ test.describe('Legal Documents Settings', () => {
       .eq('id', shopConfigId);
 
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await gotoLegalSettings(page);
 
     // Find the Legal Documents section
     const legalHeading = page.locator('h2:text-matches("Legal Documents|Dokumenty prawne", "i")');
@@ -228,9 +235,7 @@ test.describe('Legal Documents Settings', () => {
       .eq('id', shopConfigId);
 
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await gotoLegalSettings(page);
 
     // Find the Legal Documents section
     const legalHeading = page.locator('h2:text-matches("Legal Documents|Dokumenty prawne", "i")');
@@ -270,9 +275,7 @@ test.describe('Legal Documents Settings', () => {
       .eq('id', shopConfigId);
 
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await gotoLegalSettings(page);
 
     // Find the Legal Documents section
     const legalHeading = page.locator('h2:text-matches("Legal Documents|Dokumenty prawne", "i")');
@@ -303,9 +306,7 @@ test.describe('Legal Documents Settings', () => {
 
   test('Info box shows links to /terms and /privacy pages', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await gotoLegalSettings(page);
 
     // Find the Legal Documents section
     const legalHeading = page.locator('h2:text-matches("Legal Documents|Dokumenty prawne", "i")');
@@ -566,9 +567,7 @@ test.describe('Legal Documents Settings', () => {
 
     // Login as admin and set URL via UI
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await gotoLegalSettings(page);
 
     // Find the Legal Documents section and set Terms URL
     const legalHeading = page.locator('h2:text-matches("Legal Documents|Dokumenty prawne", "i")');
@@ -615,9 +614,7 @@ test.describe('Legal Documents Settings', () => {
 
     // Login as admin and set URL via UI
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await gotoLegalSettings(page);
 
     // Find the Legal Documents section and set Privacy URL
     const legalHeading = page.locator('h2:text-matches("Legal Documents|Dokumenty prawne", "i")');

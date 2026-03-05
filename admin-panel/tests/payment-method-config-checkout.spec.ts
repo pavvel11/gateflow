@@ -13,8 +13,15 @@
  * Total: 12 checkout flow test cases
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import { createTestAdmin, loginAsAdmin, supabaseAdmin } from './helpers/admin-auth';
+
+const gotoPaymentsSettings = async (page: Page) => {
+  await page.goto('/dashboard/settings');
+  await page.waitForLoadState('domcontentloaded');
+  await page.getByRole('button', { name: /^Payments$|^Płatności$/i }).click();
+  await page.waitForSelector('input[type="radio"][value="automatic"]', { timeout: 10000 });
+};
 
 test.describe('Payment Method Configuration - Checkout Flow', () => {
   let testProductSlug: string;
@@ -59,8 +66,7 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
   test('E2E-CHECKOUT-001: Automatic mode - PLN product', async ({ page }) => {
     // Set payment config to automatic mode
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('domcontentloaded');
+    await gotoPaymentsSettings(page);
 
     const automaticRadio = page.locator('input[type="radio"][value="automatic"]').first();
     await automaticRadio.check();
@@ -113,8 +119,7 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
     // Skip if no valid PMC options are available
 
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('domcontentloaded');
+    await gotoPaymentsSettings(page);
 
     // Scroll to Payment Method Settings section
     await page.locator('h3:has-text("Konfiguracja Metod Płatności")').scrollIntoViewIfNeeded();
@@ -164,8 +169,7 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
   test('E2E-CHECKOUT-004: Custom mode - PLN methods', async ({ page }) => {
     // Configure custom mode — uses drag-and-drop list (all methods shown by default)
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('domcontentloaded');
+    await gotoPaymentsSettings(page);
 
     // Scroll to payment method section and select custom mode
     const customLabel = page.locator('text=/Niestandardowy|Custom/i').first();
@@ -223,8 +227,7 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
     // Custom mode uses a reorderable list (no checkboxes) — all methods are always enabled
 
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('domcontentloaded');
+    await gotoPaymentsSettings(page);
 
     // Select custom mode
     const customLabel = page.locator('text=/Niestandardowy|Custom/i').first();
@@ -257,8 +260,7 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
     // Verifies custom config is saved and checkout still works
 
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('domcontentloaded');
+    await gotoPaymentsSettings(page);
 
     // Select custom mode
     const customLabel = page.locator('text=/Niestandardowy|Custom/i').first();
@@ -289,8 +291,7 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
   test('E2E-CHECKOUT-008: Express Checkout - All enabled', async ({ page }) => {
     // Configure Express Checkout with all options enabled
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     // Scroll to Express Checkout section
     const expressSection = page.getByText(/Express Checkout/).first();
@@ -341,8 +342,7 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
   test('E2E-CHECKOUT-009: Express Checkout - Link only', async ({ page }) => {
     // Configure Express Checkout with only Link enabled
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     // Scroll to Express Checkout section
     const expressSection = page.getByText(/Express Checkout/).first();
@@ -393,8 +393,7 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
   test('E2E-CHECKOUT-010: Express Checkout - All disabled', async ({ page }) => {
     // Disable Express Checkout entirely
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('domcontentloaded');
+    await gotoPaymentsSettings(page);
 
     // Scroll to Express Checkout section
     const expressSection = page.getByText(/Express Checkout/).first();
@@ -433,8 +432,7 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
     // For now, just verify that automatic mode works as fallback
 
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('domcontentloaded');
+    await gotoPaymentsSettings(page);
 
     // Ensure automatic mode is selected
     const automaticRadio = page.locator('input[type="radio"][value="automatic"]').first();
@@ -459,8 +457,7 @@ test.describe('Payment Method Configuration - Checkout Flow', () => {
   test('E2E-CHECKOUT-012: Complete payment - Custom config', async ({ page }) => {
     // Configure custom mode — uses drag-and-drop list, no checkboxes
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('domcontentloaded');
+    await gotoPaymentsSettings(page);
 
     // Select custom mode
     const customLabel = page.locator('text=/Niestandardowy|Custom/i').first();

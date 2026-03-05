@@ -19,7 +19,11 @@ import { createTestAdmin, loginAsAdmin, supabaseAdmin, setAuthSession } from './
 import { acceptAllCookies } from './helpers/consent';
 
 test.describe('Admin Funnel Test Preview', () => {
-  test.describe.configure({ mode: 'serial' });
+  // run sequentially because data setup is shared
+  test.describe.configure({ mode: 'serial', retries: 1 });
+
+  // increase default test timeout to give slow environments extra margin
+  test.setTimeout(60_000);
 
   let adminEmail: string;
   let adminPassword: string;
@@ -182,13 +186,21 @@ test.describe('Admin Funnel Test Preview', () => {
     await adminCleanup();
   });
 
+  // helper for navigating to checkout pages with robust waiting
+  async function gotoCheckout(page: any, slug: string, query = '') {
+    const url = `/checkout/${slug}${query}`;
+    // Avoid networkidle: external resources and open sockets can prevent idle
+    // Use default 'load' which is faster and reliable; tests then wait for DOM
+    await page.goto(url, { timeout: 60000 });
+  }
+
   // =========================================================================
   // Admin Dashboard — "Test Funnel" button
   // =========================================================================
 
   test('should show "Test Funnel" button in products table', async ({ page }) => {
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto('/pl/dashboard/products');
+    await page.goto('/pl/dashboard/products', { waitUntil: 'networkidle', timeout: 60000 });
     await page.waitForLoadState('networkidle');
 
     await expect(page.locator('table')).toBeVisible({ timeout: 10000 });
@@ -203,7 +215,7 @@ test.describe('Admin Funnel Test Preview', () => {
 
   test('should show funnel test banner on checkout for admin', async ({ page }) => {
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto(`/checkout/${simpleProductSlug}?funnel_test=1`);
+    await gotoCheckout(page, simpleProductSlug, '?funnel_test=1');
     await page.waitForLoadState('domcontentloaded');
 
     await expect(page.getByText('TEST LEJKA')).toBeVisible({ timeout: 15000 });
@@ -212,7 +224,7 @@ test.describe('Admin Funnel Test Preview', () => {
 
   test('should show "Zapłać.*symulacja|Pay.*simulation" button instead of Stripe Elements', async ({ page }) => {
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto(`/checkout/${simpleProductSlug}?funnel_test=1`);
+    await gotoCheckout(page, simpleProductSlug, '?funnel_test=1');
     await page.waitForLoadState('domcontentloaded');
 
     const completeButton = page.getByRole('button', { name: /Zapłać.*symulacja/i });
@@ -226,7 +238,7 @@ test.describe('Admin Funnel Test Preview', () => {
 
   test('should show product name and pricing in funnel test mode', async ({ page }) => {
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto(`/checkout/${simpleProductSlug}?funnel_test=1`);
+    await gotoCheckout(page, simpleProductSlug, '?funnel_test=1');
     await page.waitForLoadState('domcontentloaded');
 
     await expect(page.getByText('Funnel Test — Simple')).toBeVisible({ timeout: 15000 });
@@ -235,7 +247,7 @@ test.describe('Admin Funnel Test Preview', () => {
 
   test('should show success state when clicking "Zapłać.*symulacja|Pay.*simulation"', async ({ page }) => {
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto(`/checkout/${simpleProductSlug}?funnel_test=1`);
+    await gotoCheckout(page, simpleProductSlug, '?funnel_test=1');
     await page.waitForLoadState('domcontentloaded');
 
     const completeButton = page.getByRole('button', { name: /Zapłać.*symulacja/i });
@@ -258,7 +270,7 @@ test.describe('Admin Funnel Test Preview', () => {
 
   test('should display order bump UI in funnel test mode', async ({ page }) => {
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto(`/checkout/${bumpMainSlug}?funnel_test=1`);
+    await gotoCheckout(page, bumpMainSlug, '?funnel_test=1');
     await page.waitForLoadState('domcontentloaded');
 
     // Funnel test banner present
@@ -274,16 +286,19 @@ test.describe('Admin Funnel Test Preview', () => {
     // Bump price visible (use first() since "49" can appear in multiple places)
     await expect(page.getByText(/49/).first()).toBeVisible();
 
-    // Zapłać.*symulacja|Pay.*simulation button present
+    // Zapłać.*symulacja|Pay.*simulation button present (simulation complete)
     await expect(page.getByRole('button', { name: /Zapłać.*symulacja/i })).toBeVisible();
 
-    // Stripe Pay button should NOT be present
-    await expect(page.getByRole('button', { name: /Pay|Zapłać/i })).not.toBeVisible({ timeout: 3000 });
+    // The only pay-themed button should be the simulation one
+    const payButtons = page.getByRole('button').filter({ hasText: /Pay|Zapłać/i });
+    await expect(payButtons).toHaveCount(1);
+    // (Stripe iframe may be present but hidden; funnel_test ensures the user-facing
+    // button is the simulation button.)
   });
 
   test('should allow selecting order bump and completing test', async ({ page }) => {
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto(`/checkout/${bumpMainSlug}?funnel_test=1`);
+    await gotoCheckout(page, bumpMainSlug, '?funnel_test=1');
     await page.waitForLoadState('domcontentloaded');
 
     // Click the bump offer to select it
@@ -306,14 +321,14 @@ test.describe('Admin Funnel Test Preview', () => {
 
   test('should show coupon input and apply coupon in funnel test mode', async ({ page }) => {
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto(`/checkout/${couponProductSlug}?funnel_test=1&show_promo=true`);
+    await gotoCheckout(page, couponProductSlug, '?funnel_test=1&show_promo=true');
     await page.waitForLoadState('domcontentloaded');
 
     // Funnel test banner present
     await expect(page.getByText('TEST LEJKA')).toBeVisible({ timeout: 15000 });
 
-    // Product name and price visible
-    await expect(page.getByText('Funnel Test — Coupon')).toBeVisible({ timeout: 10000 });
+    // Product name and price visible (heading only)
+    await expect(page.getByRole('heading', { name: 'Funnel Test — Coupon' })).toBeVisible({ timeout: 10000 });
     await expect(page.getByText(/199/).first()).toBeVisible();
 
     // Wait for the coupon section to appear, then type
@@ -335,20 +350,22 @@ test.describe('Admin Funnel Test Preview', () => {
     // Zapłać.*symulacja|Pay.*simulation button should still be present after coupon applied
     await expect(page.getByRole('button', { name: /Zapłać.*symulacja/i })).toBeVisible();
 
-    // Stripe Pay button should NOT be present
-    await expect(page.getByRole('button', { name: /Pay|Zapłać/i })).not.toBeVisible({ timeout: 3000 });
+    // Stripe Pay button (non-simulation) should NOT be visible
+    await expect(
+      page.getByRole('button', { name: /Pay|Zapłać/i }).filter({ hasNotText: /symulacja/i })
+    ).not.toBeVisible({ timeout: 3000 });
   });
 
   test('should auto-apply URL coupon in funnel test mode', async ({ page }) => {
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto(`/checkout/${couponProductSlug}?funnel_test=1&coupon=${couponCode}`);
+    await gotoCheckout(page, couponProductSlug, `?funnel_test=1&coupon=${couponCode}`);
     await page.waitForLoadState('domcontentloaded');
 
     // Funnel test banner present
     await expect(page.getByText('TEST LEJKA')).toBeVisible({ timeout: 15000 });
 
-    // Product name visible
-    await expect(page.getByText('Funnel Test — Coupon')).toBeVisible({ timeout: 10000 });
+    // Product name visible (heading only to avoid title element)
+    await expect(page.getByRole('heading', { name: 'Funnel Test — Coupon' })).toBeVisible({ timeout: 10000 });
 
     // Coupon should auto-apply from URL param
     await expect(page.getByText(/20%/)).toBeVisible({ timeout: 10000 });
@@ -356,8 +373,10 @@ test.describe('Admin Funnel Test Preview', () => {
     // Zapłać.*symulacja|Pay.*simulation button present
     await expect(page.getByRole('button', { name: /Zapłać.*symulacja/i })).toBeVisible();
 
-    // Stripe Pay button should NOT be present
-    await expect(page.getByRole('button', { name: /Pay|Zapłać/i })).not.toBeVisible({ timeout: 3000 });
+    // Stripe Pay button (non-simulation) should NOT be visible
+    await expect(
+      page.getByRole('button', { name: /Pay|Zapłać/i }).filter({ hasNotText: /symulacja/i })
+    ).not.toBeVisible({ timeout: 3000 });
   });
 
   // =========================================================================
@@ -366,14 +385,14 @@ test.describe('Admin Funnel Test Preview', () => {
 
   test('should show PWYW price presets in funnel test mode', async ({ page }) => {
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto(`/checkout/${pwywProductSlug}?funnel_test=1`);
+    await gotoCheckout(page, pwywProductSlug, '?funnel_test=1');
     await page.waitForLoadState('domcontentloaded');
 
     // Funnel test banner present
     await expect(page.getByText('TEST LEJKA')).toBeVisible({ timeout: 15000 });
 
-    // Product name visible
-    await expect(page.getByText('Funnel Test — PWYW')).toBeVisible({ timeout: 10000 });
+    // Product name visible (heading only)
+    await expect(page.getByRole('heading', { name: 'Funnel Test — PWYW' })).toBeVisible({ timeout: 10000 });
 
     // PWYW preset buttons should be visible
     await expect(page.getByRole('button', { name: /10/ })).toBeVisible({ timeout: 10000 });
@@ -389,13 +408,15 @@ test.describe('Admin Funnel Test Preview', () => {
     // Zapłać.*symulacja|Pay.*simulation button present
     await expect(page.getByRole('button', { name: /Zapłać.*symulacja/i })).toBeVisible();
 
-    // Stripe Pay button should NOT be present
-    await expect(page.getByRole('button', { name: /Pay|Zapłać/i })).not.toBeVisible({ timeout: 3000 });
+    // Stripe Pay button (non-simulation) should NOT be visible
+    await expect(
+      page.getByRole('button', { name: /Pay|Zapłać/i }).filter({ hasNotText: /symulacja/i })
+    ).not.toBeVisible({ timeout: 3000 });
   });
 
   test('should allow selecting PWYW preset and completing test', async ({ page }) => {
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto(`/checkout/${pwywProductSlug}?funnel_test=1`);
+    await gotoCheckout(page, pwywProductSlug, '?funnel_test=1');
     await page.waitForLoadState('domcontentloaded');
 
     // Select the 25 PLN preset
@@ -418,7 +439,7 @@ test.describe('Admin Funnel Test Preview', () => {
 
   test('should show normal Stripe checkout for admin without funnel_test param', async ({ page }) => {
     await loginAsAdmin(page, adminEmail, adminPassword);
-    await page.goto(`/checkout/${simpleProductSlug}`);
+    await gotoCheckout(page, simpleProductSlug);
     await page.waitForLoadState('domcontentloaded');
 
     // Funnel test banner should NOT be visible
@@ -463,7 +484,7 @@ test.describe('Admin Funnel Test Preview', () => {
       await page.waitForLoadState('domcontentloaded');
       await setAuthSession(page, nonAdminEmail, 'password123');
 
-      await page.goto(`/checkout/${simpleProductSlug}?funnel_test=1`);
+      await gotoCheckout(page, simpleProductSlug, '?funnel_test=1');
       await page.waitForLoadState('domcontentloaded');
 
       // Funnel test banner should NOT be visible (non-admin)

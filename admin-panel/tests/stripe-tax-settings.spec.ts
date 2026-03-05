@@ -62,10 +62,11 @@ test.describe('Stripe Tax Settings Admin UI', () => {
     await page.waitForTimeout(1000);
   };
 
-  /** Navigate to settings and return the Tax & Checkout section container */
+  /** Navigate to settings → Payments tab and return the Tax & Checkout section container */
   async function goToStripeTaxSection(page: Page) {
     await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole('button', { name: /^Payments$|^Płatności$/i }).click();
 
     const heading = page.locator('h2', { hasText: /Tax & Checkout|Stripe Tax|Tax/i }).first();
     await expect(heading).toBeVisible({ timeout: 10000 });

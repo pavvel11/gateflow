@@ -43,6 +43,14 @@ test.describe('Stripe Configuration Wizard', () => {
     await page.waitForTimeout(1000);
   };
 
+
+  const gotoPaymentsSettings = async (page: Page) => {
+    await page.goto('/dashboard/settings');
+    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole('button', { name: /^Payments$|^Płatności$/i }).click();
+    await page.waitForSelector('text=Stripe Configuration', { timeout: 10000 });
+  };
+
   test.beforeAll(async () => {
     const randomStr = Math.random().toString(36).substring(7);
     adminEmail = `test-stripe-wizard-${Date.now()}-${randomStr}@example.com`;
@@ -91,8 +99,7 @@ test.describe('Stripe Configuration Wizard', () => {
     await loginAsAdmin(page);
 
     // Navigate to Settings
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     // Should see Stripe Configuration section
     await expect(page.locator('text=Stripe Configuration')).toBeVisible({ timeout: 10000 });
@@ -109,8 +116,7 @@ test.describe('Stripe Configuration Wizard', () => {
 
   test('should show Step 1 - Welcome screen', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
     await configureButton.click();
@@ -127,8 +133,7 @@ test.describe('Stripe Configuration Wizard', () => {
 
   test('should navigate to Step 2 - Mode Selection', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
     await configureButton.click();
@@ -150,8 +155,7 @@ test.describe('Stripe Configuration Wizard', () => {
 
   test('should select Test Mode and proceed to Step 3', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
     await configureButton.click();
@@ -180,8 +184,7 @@ test.describe('Stripe Configuration Wizard', () => {
 
   test('should show instructions in Step 3 and proceed to Step 4', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
     await configureButton.click();
@@ -218,8 +221,7 @@ test.describe('Stripe Configuration Wizard', () => {
 
   test('should validate invalid API key format in Step 4', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
     await configureButton.click();
@@ -251,8 +253,7 @@ test.describe('Stripe Configuration Wizard', () => {
 
   test('should validate correct API key format (format only)', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
     await configureButton.click();
@@ -285,8 +286,7 @@ test.describe('Stripe Configuration Wizard', () => {
 
   test('should handle exit confirmation', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
     await configureButton.click();
@@ -318,8 +318,7 @@ test.describe('Stripe Configuration Wizard', () => {
 
   test('should navigate back through steps', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
     await configureButton.click();
@@ -348,8 +347,7 @@ test.describe('Stripe Configuration Wizard', () => {
 
   test('should show info banner about configuration methods', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     // Should see info about two configuration methods
     const infoBox = page.locator('h4:has-text("Two Configuration Methods")');
@@ -366,8 +364,7 @@ test.describe('Stripe Configuration Wizard', () => {
 
   test('should show key type explanation in Step 4', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
     await configureButton.click();
@@ -399,8 +396,7 @@ test.describe('Stripe Configuration Wizard', () => {
 
   test('should accept and validate restricted key (rk_*) with appropriate message', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
     await configureButton.click();
@@ -437,8 +433,7 @@ test.describe('Stripe Configuration Wizard', () => {
 
   test('should accept and validate secret key (sk_*) with appropriate message', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
     await configureButton.click();
@@ -475,8 +470,7 @@ test.describe('Stripe Configuration Wizard', () => {
 
   test('should reject keys that are not rk_* or sk_*', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/dashboard/settings');
-    await page.waitForLoadState('networkidle');
+    await gotoPaymentsSettings(page);
 
     const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
     await configureButton.click();

@@ -364,9 +364,11 @@ test.describe('Omnibus Frontend - Admin Side', () => {
   test('should be able to toggle Omnibus globally in Settings', async ({ page }) => {
     await loginAsAdmin(page, adminEmail, adminPassword);
     await page.goto('/dashboard/settings');
+    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole('button', { name: /^Legal$|^Prawne$/i }).click();
 
-    // Wait for OmnibusSettings component to load (heading appears after loading)
-    await page.waitForSelector('text=/Dyrektywa Omnibus|EU Omnibus Directive/i', { timeout: 10000 });
+    // Wait for OmnibusSettings component to load (heading appears after tab is selected)
+    await page.waitForSelector('h2:text-matches("Dyrektywa Omnibus|EU Omnibus Directive", "i")', { timeout: 10000 });
 
     // Target the specific Omnibus card by its unique heading
     const omnibusCard = page.locator('h2', { hasText: /Dyrektywa Omnibus|EU Omnibus Directive/i }).locator('xpath=ancestor::div[contains(@class, "border-sf-border-medium")]');
@@ -393,7 +395,9 @@ test.describe('Omnibus Frontend - Admin Side', () => {
 
     // Reload page to get fresh session after revalidatePath
     await page.reload();
-    await page.waitForSelector('text=/Dyrektywa Omnibus|EU Omnibus Directive/i', { timeout: 10000 });
+    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole('button', { name: /^Legal$|^Prawne$/i }).click();
+    await page.waitForSelector('h2:text-matches("Dyrektywa Omnibus|EU Omnibus Directive", "i")', { timeout: 10000 });
 
     // Re-target toggle after reload
     const omnibusCard2 = page.locator('h2', { hasText: /Dyrektywa Omnibus|EU Omnibus Directive/i }).locator('xpath=ancestor::div[contains(@class, "border-sf-border-medium")]');

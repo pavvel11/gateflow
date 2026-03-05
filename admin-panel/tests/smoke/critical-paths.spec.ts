@@ -9,7 +9,10 @@
  * 2. Admin tabs: all dashboard pages render correctly
  * 3. User tabs: my-products, my-purchases, profile
  * 4. Product access: different content delivery types
- * 5. API health
+ * 5. Video player: thumbnail → click → iframe mount
+ * 6. API health
+ * 7. Auth redirects
+ * 8. Internationalization
  */
 
 import { test, expect, Page } from '@playwright/test';
@@ -325,9 +328,42 @@ test.describe('Product Access & Content Delivery', () => {
   });
 });
 
-// ===== 5. API HEALTH =====
+// ===== 5. VIDEO PLAYER =====
+
+test.describe('Video Player', () => {
+  test('thumbnail visible before play, iframe mounts after click', async ({ page }) => {
+    await login(page);
+    await page.goto(`/p/${contentProduct.slug}`);
+
+    // Wait for content to load
+    await expect(page.getByText(/Welcome Video/i).first()).toBeVisible({ timeout: 15000 });
+
+    // Thumbnail should be visible before play
+    const thumbnail = page.getByTestId('player-thumbnail');
+    await expect(thumbnail).toBeVisible({ timeout: 10000 });
+
+    // iframe should NOT yet exist
+    await expect(page.getByTestId('player-iframe')).toHaveCount(0);
+
+    // Block YouTube requests to prevent flakiness — we only care about DOM changes
+    await page.route('https://*.youtube.com/**', (route) => route.abort());
+    await page.route('https://img.youtube.com/**', (route) => route.abort());
+
+    // Click play
+    await thumbnail.click();
+
+    // After clicking, the iframe should be mounted
+    await expect(page.getByTestId('player-iframe')).toBeVisible({ timeout: 5000 });
+
+    // Thumbnail should no longer be visible
+    await expect(page.getByTestId('player-thumbnail')).toHaveCount(0);
+  });
+});
+
+// ===== 6. API HEALTH =====
 
 test.describe('API Health', () => {
+
   test('health endpoint responds', async ({ request }) => {
     const response = await request.get('/api/health');
     expect(response.status()).toBe(200);
@@ -349,7 +385,7 @@ test.describe('API Health', () => {
   });
 });
 
-// ===== 6. AUTH REDIRECTS =====
+// ===== 7. AUTH REDIRECTS =====
 
 test.describe('Auth Redirects', () => {
   test('unauthenticated user is redirected from dashboard', async ({ page }) => {
@@ -369,7 +405,7 @@ test.describe('Auth Redirects', () => {
   });
 });
 
-// ===== 7. INTERNATIONALIZATION =====
+// ===== 8. INTERNATIONALIZATION =====
 
 test.describe('Internationalization', () => {
   test('English locale works', async ({ page }) => {

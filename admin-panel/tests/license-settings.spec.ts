@@ -54,6 +54,17 @@ test.describe('License Settings', () => {
     await page.waitForTimeout(1000);
   };
 
+  const clickSystemTab = async (page: Page) => {
+    await page.getByRole('button', { name: /^System$/i }).click();
+    await page.waitForSelector('h2:text-matches("Sellf License|Licencja Sellf", "i")', { timeout: 10000 });
+  };
+
+  const gotoSystemSettings = async (page: Page) => {
+    await page.goto('/pl/dashboard/settings');
+    await page.waitForLoadState('domcontentloaded');
+    await clickSystemTab(page);
+  };
+
   test.beforeAll(async () => {
     const randomStr = Math.random().toString(36).substring(7);
     adminEmail = `test-license-admin-${Date.now()}-${randomStr}@example.com`;
@@ -93,9 +104,7 @@ test.describe('License Settings', () => {
 
   test('Admin can access license settings on settings page', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await gotoSystemSettings(page);
 
     // Should see Sellf License section (matches both EN and PL)
     const licenseHeading = page.locator('h2', { hasText: /Sellf License|Licencja Sellf/i });
@@ -112,9 +121,7 @@ test.describe('License Settings', () => {
 
   test('Can enter unlimited license and see parsed details', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await gotoSystemSettings(page);
 
     // Enter unlimited license
     const licenseInput = page.locator('input[placeholder*="SF-"]');
@@ -137,9 +144,7 @@ test.describe('License Settings', () => {
 
   test('Can enter time-limited license and see formatted expiry date', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await gotoSystemSettings(page);
 
     // Enter future license (2030-12-31)
     const licenseInput = page.locator('input[placeholder*="SF-"]');
@@ -158,9 +163,7 @@ test.describe('License Settings', () => {
 
   test('Invalid license format shows error message', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await gotoSystemSettings(page);
 
     // Enter invalid license
     const licenseInput = page.locator('input[placeholder*="SF-"]');
@@ -175,9 +178,7 @@ test.describe('License Settings', () => {
 
   test('License with wrong prefix shows error', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await gotoSystemSettings(page);
 
     // Enter license with wrong prefix
     const licenseInput = page.locator('input[placeholder*="SF-"]');
@@ -192,9 +193,7 @@ test.describe('License Settings', () => {
 
   test('Too short license shows error', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await gotoSystemSettings(page);
 
     // Enter too short license
     const licenseInput = page.locator('input[placeholder*="SF-"]');
@@ -209,9 +208,7 @@ test.describe('License Settings', () => {
 
   test('Can save license successfully', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await gotoSystemSettings(page);
 
     // Enter valid license
     const licenseInput = page.locator('input[placeholder*="SF-"]');
@@ -244,9 +241,7 @@ test.describe('License Settings', () => {
       .eq('id', 1);
 
     await loginAsAdmin(page);
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await gotoSystemSettings(page);
 
     // Should see the saved license details
     const domainText = page.locator('text=localhost');
@@ -258,8 +253,8 @@ test.describe('License Settings', () => {
 
     // Refresh page
     await page.reload();
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('domcontentloaded');
+    await clickSystemTab(page);
 
     // License should still be visible
     await expect(domainText).toBeVisible();
@@ -268,9 +263,7 @@ test.describe('License Settings', () => {
 
   test('Expired license still displays correctly (expiry shown)', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await gotoSystemSettings(page);
 
     // Enter expired license (2025-12-31)
     const licenseInput = page.locator('input[placeholder*="SF-"]');
@@ -295,9 +288,7 @@ test.describe('License Settings', () => {
       .eq('id', 1);
 
     await loginAsAdmin(page);
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await gotoSystemSettings(page);
 
     // Clear the license input
     const licenseInput = page.locator('input[placeholder*="SF-"]');
@@ -324,9 +315,7 @@ test.describe('License Settings', () => {
 
   test('Signature is partially displayed (truncated)', async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto('/pl/dashboard/settings');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await gotoSystemSettings(page);
 
     // Enter valid license
     const licenseInput = page.locator('input[placeholder*="SF-"]');
