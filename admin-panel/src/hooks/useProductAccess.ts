@@ -15,7 +15,8 @@ export interface AccessResponse {
   };
 }
 
-export function useProductAccess(product: Product) {
+export function useProductAccess(product: Product, options?: { previewMode?: boolean }) {
+  const previewMode = options?.previewMode ?? false;
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -42,6 +43,13 @@ export function useProductAccess(product: Product) {
     const controller = new AbortController();
 
     const checkUserAccess = async () => {
+      // Preview mode — skip all access checks, grant instant access
+      if (previewMode) {
+        setAccessData({ hasAccess: true });
+        setLoading(false);
+        return;
+      }
+
       // Don't do anything while auth is still loading
       if (authLoading) {
         return;
@@ -123,7 +131,7 @@ export function useProductAccess(product: Product) {
     return () => {
       controller.abort();
     };
-  }, [user, product.slug, product.is_active, product.available_from, product.available_until, router, authLoading]);
+  }, [previewMode, user, product.slug, product.is_active, product.available_from, product.available_until, router, authLoading]);
 
   return {
     accessData,

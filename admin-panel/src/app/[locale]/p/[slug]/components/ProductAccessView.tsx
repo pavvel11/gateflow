@@ -18,6 +18,7 @@ interface ProductAccessViewProps {
     access_granted_at: string;
   } | null;
   licenseValid: boolean;
+  previewMode?: boolean;
 }
 
 interface SecureProductData {
@@ -36,7 +37,7 @@ interface SecureProductData {
   };
 }
 
-export default function ProductAccessView({ product, licenseValid }: ProductAccessViewProps) {
+export default function ProductAccessView({ product, licenseValid, previewMode = false }: ProductAccessViewProps) {
   const t = useTranslations('productView');
   const tContent = useTranslations('digitalContent');
   
@@ -47,11 +48,35 @@ export default function ProductAccessView({ product, licenseValid }: ProductAcce
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch secure product data from API
+  // Fetch secure product data from API (skipped in preview mode)
   useEffect(() => {
     const controller = new AbortController();
 
     const fetchSecureData = async () => {
+      // Preview mode — build mock secureData directly from product prop
+      if (previewMode) {
+        setSecureData({
+          // content_items excluded from content_config: download URLs stored in the
+          // public product object may have null configs and crash DigitalContentRenderer.
+          // In preview mode the admin sees the product page structure without raw item data.
+          product: {
+            ...product,
+            content_config: { ...product.content_config, content_items: [] },
+          },
+          branding: { shop_name: null },
+          userAccess: {
+            access_expires_at: null,
+            access_duration_days: null,
+            access_granted_at: new Date().toISOString(),
+            is_expired: false,
+            is_expiring_soon: false,
+            days_until_expiration: null,
+          },
+        });
+        setLoading(false);
+        return;
+      }
+
       try {
         const response = await fetchWithTimeout(
           `/api/public/products/${product.slug}/content`,
@@ -93,21 +118,23 @@ export default function ProductAccessView({ product, licenseValid }: ProductAcce
       }
     };
 
-    // Only fetch if not showing confetti
-    if (!showConfetti) {
+    // Only fetch if not showing confetti (preview mode always fetches — it short-circuits internally)
+    if (!showConfetti || previewMode) {
       fetchSecureData();
     }
 
     return () => {
       controller.abort();
     };
-  }, [product.slug, showConfetti, t]);
+  }, [product, previewMode, showConfetti, t]);
 
   // Handle redirect type products.
   // Note: redirect_url is admin-configured and intentionally allows cross-origin URLs
   // (e.g. external course platforms, membership sites). Protocol validation prevents
   // javascript:/data: injection if the DB value is compromised.
   useEffect(() => {
+    // In preview mode, never actually redirect — admin sees redirect screen as-is
+    if (previewMode) return;
     if (secureData?.product.content_delivery_type === 'redirect') {
       const redirectUrl = secureData.product.content_config?.redirect_url;
       if (redirectUrl) {
@@ -118,7 +145,7 @@ export default function ProductAccessView({ product, licenseValid }: ProductAcce
         }
       }
     }
-  }, [secureData]);
+  }, [secureData, previewMode]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -240,43 +267,50 @@ export default function ProductAccessView({ product, licenseValid }: ProductAcce
   if (secureProduct.content_delivery_type === 'redirect') {
     const redirectUrl = secureProduct.content_config?.redirect_url;
     return (
-      <div className="flex justify-center items-center min-h-screen bg-sf-deep overflow-hidden relative font-sans">
-        <div 
-          className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_20%_20%,var(--sf-accent-glow)_0%,transparent_40%),radial-gradient(circle_at_80%_70%,var(--sf-accent-glow)_0%,transparent_40%)]"
-          style={{
-            animation: 'aurora 20s infinite linear',
-          }}
-        />
-        
-        <style jsx>{`
-          @keyframes aurora {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-        `}</style>
-        
-        <div className="max-w-md mx-auto p-8 bg-sf-raised/80 backdrop-blur-md border border-sf-border rounded-2xl shadow-[var(--sf-shadow-accent)] z-10 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sf-accent mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-sf-heading mb-2">{t('redirectingTitle')}</h2>
-          <p className="text-sf-muted text-sm mb-4">{t('redirectingMessage')}</p>
-          {redirectUrl && (
-            <a
-              href={redirectUrl}
-              className="inline-flex items-center px-4 py-2 bg-sf-accent-bg hover:bg-sf-accent-hover text-white font-medium rounded-full transition-colors active:scale-[0.98]"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-              {t('goToContent')}
-            </a>
-          )}
+      <>
+        <div className="flex justify-center items-center min-h-screen bg-sf-deep overflow-hidden relative font-sans">
+          <div 
+            className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_20%_20%,var(--sf-accent-glow)_0%,transparent_40%),radial-gradient(circle_at_80%_70%,var(--sf-accent-glow)_0%,transparent_40%)]"
+            style={{
+              animation: 'aurora 20s infinite linear',
+            }}
+          />
+          
+          <style jsx>{`
+            @keyframes aurora {
+              0% { background-position: 0% 50%; }
+              50% { background-position: 100% 50%; }
+              100% { background-position: 0% 50%; }
+            }
+          `}</style>
+          
+          <div className="max-w-md mx-auto p-8 bg-sf-raised/80 backdrop-blur-md border border-sf-border rounded-2xl shadow-[var(--sf-shadow-accent)] z-10 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sf-accent mx-auto mb-4"></div>
+            <h2 className="text-xl font-semibold text-sf-heading mb-2">{t('redirectingTitle')}</h2>
+            <p className="text-sf-muted text-sm mb-4">{t('redirectingMessage')}</p>
+            {redirectUrl && (
+              <a
+                href={redirectUrl}
+                className="inline-flex items-center px-4 py-2 bg-sf-accent-bg hover:bg-sf-accent-hover text-white font-medium rounded-full transition-colors active:scale-[0.98]"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                {t('goToContent')}
+              </a>
+            )}
+          </div>
         </div>
-      </div>
+        {previewMode && (
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sf-raised/90 backdrop-blur-sm border border-sf-border shadow text-xs text-sf-body select-none pointer-events-none">
+            <span className="w-1.5 h-1.5 rounded-full bg-orange-400 shrink-0" />
+            Tryb podglądu
+          </div>
+        )}
+      </>
     );
   }
 
-  // Show the actual product content
   const shopName = secureData?.branding?.shop_name ?? null;
   const contentItems = secureProduct.content_config.content_items?.filter(i => i.is_active) ?? [];
 
@@ -376,6 +410,14 @@ export default function ProductAccessView({ product, licenseValid }: ProductAcce
       </main>
 
       {!licenseValid && <SellfBranding variant="product" />}
+
+      {/* Discrete preview mode indicator */}
+      {previewMode && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sf-raised/90 backdrop-blur border border-sf-border shadow-md text-xs text-sf-muted pointer-events-none select-none">
+          <span className="w-1.5 h-1.5 rounded-full bg-sf-warning shrink-0" />
+          Tryb podglądu
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,6 @@
-import { createPublicClient } from '@/lib/supabase/server';
+import { createPublicClient, createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { validateLicense, extractDomainFromUrl } from '@/lib/license/verify';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { cache } from 'react';
@@ -6,10 +8,12 @@ import ProductView from './components/ProductView';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-// Enable ISR - cache for 60 seconds
-export const revalidate = 60;
+// Product page is per-user: access check, personalized content, preview mode.
+// ISR would cache access state across users — force dynamic instead.
+export const dynamic = 'force-dynamic';
 
 // OPTIMIZED: Cached data fetcher - React cache() deduplicates requests in the same render cycle
 // This eliminates duplicate queries between generateMetadata() and ProductPage()
@@ -41,13 +45,76 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function ProductPage({ params }: PageProps) {
+export default async function ProductPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
-  const { product, error } = await getProduct(slug); // DEDUPED - same request as generateMetadata()
+  const resolvedSearch = searchParams ? await searchParams : {};
 
-  if (error || !product) {
+  // Determine preview mode early — needed before product fetch for inactive products.
+  // Admin preview can see inactive products that the public view hides (RLS).
+  let previewMode = false;
+  if (resolvedSearch?.preview === '1') {
+    try {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: admin } = await supabase
+          .from('admin_users')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (admin) previewMode = true;
+      }
+    } catch {
+      // Auth failure — preview mode stays false, normal flow applies
+    }
+  }
+
+  // For admin preview, use the service-role client to bypass RLS and see inactive products.
+  // For regular users, use the public (anon) client which respects visibility rules.
+  let product = null;
+  let fetchError = null;
+
+  if (previewMode) {
+    const adminSupabase = createAdminClient();
+    const { data, error } = await adminSupabase
+      .from('products')
+      .select('*')
+      .eq('slug', slug)
+      .single();
+    product = data;
+    fetchError = error;
+  } else {
+    const { product: pub, error } = await getProduct(slug);
+    product = pub;
+    fetchError = error;
+  }
+
+  if (fetchError || !product) {
     return notFound();
   }
 
-  return <ProductView product={product} />;
+  // Check license server-side
+  let licenseValid = false;
+  try {
+    const adminSupabase = createAdminClient();
+    const { data: integrations } = await adminSupabase
+      .from('integrations_config')
+      .select('sellf_license')
+      .eq('id', 1)
+      .single();
+
+    if (integrations?.sellf_license) {
+      const domain = extractDomainFromUrl(process.env.NEXT_PUBLIC_APP_URL ?? '') ?? undefined;
+      const result = validateLicense(integrations.sellf_license, domain);
+      licenseValid = result.valid;
+    }
+  } catch {
+    // License check failure is non-fatal — branding watermark stays visible
+  }
+
+  // Preview mode: server-side admin check — no client-side race conditions.
+  // Only active when ?preview=1 AND the requester is a verified admin.
+  // (previewMode already determined above, before product fetch)
+
+  return <ProductView product={product} licenseValid={licenseValid} previewMode={previewMode} />;
 }

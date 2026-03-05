@@ -17,11 +17,13 @@ const LOADING_SAFETY_TIMEOUT_MS = 15_000;
 interface ProductViewProps {
   product: Product;
   licenseValid: boolean;
+  /** Verified server-side: true only when the requester is a confirmed admin */
+  previewMode?: boolean;
 }
 
-export default function ProductView({ product, licenseValid }: ProductViewProps) {
+export default function ProductView({ product, licenseValid, previewMode = false }: ProductViewProps) {
   const t = useTranslations('productView');
-  const { accessData, loading, error: accessError } = useProductAccess(product);
+  const { accessData, loading, error: accessError } = useProductAccess(product, { previewMode });
   const [redirecting, setRedirecting] = useState(false);
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -49,7 +51,9 @@ export default function ProductView({ product, licenseValid }: ProductViewProps)
 
   // For redirect products with access — redirect immediately without extra content fetch.
   // The redirect URL is already in the product props from the server.
+  // In preview mode, skip redirect — ProductAccessView shows a non-redirecting redirect screen.
   useEffect(() => {
+    if (previewMode) return;
     if (accessData?.hasAccess && product.content_delivery_type === 'redirect') {
       const redirectUrl = product.content_config?.redirect_url;
       if (redirectUrl) {
@@ -61,7 +65,7 @@ export default function ProductView({ product, licenseValid }: ProductViewProps)
         }
       }
     }
-  }, [accessData, product.content_delivery_type, product.content_config?.redirect_url]);
+  }, [previewMode, accessData, product.content_delivery_type, product.content_config?.redirect_url]);
 
   // Loading timed out or access check error — show error with retry
   if (loadingTimedOut || accessError) {
@@ -89,7 +93,8 @@ export default function ProductView({ product, licenseValid }: ProductViewProps)
   }
 
   // Redirect in progress — show redirect UI instead of mounting ProductAccessView
-  if (redirecting || (accessData?.hasAccess && product.content_delivery_type === 'redirect')) {
+  // In preview mode, skip this block — let ProductAccessView render and handle it
+  if (!previewMode && (redirecting || (accessData?.hasAccess && product.content_delivery_type === 'redirect'))) {
     const redirectUrl = product.content_config?.redirect_url;
 
     // Missing redirect URL — show error instead of spinner forever
@@ -137,7 +142,7 @@ export default function ProductView({ product, licenseValid }: ProductViewProps)
 
   // Check if user has access (non-redirect products)
   if (accessData?.hasAccess) {
-    return <ProductAccessView product={product} licenseValid={licenseValid} />;
+    return <ProductAccessView product={product} licenseValid={licenseValid} previewMode={previewMode} />;
   }
 
   // Handle different reasons for lack of access

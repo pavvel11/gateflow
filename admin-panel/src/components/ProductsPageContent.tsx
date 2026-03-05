@@ -186,7 +186,7 @@ const ProductsPageContent: React.FC = () => {
   };
 
   const handlePreviewProduct = (product: Product) => {
-    window.open(`/p/${product.slug}`, '_blank');
+    window.open(`/p/${product.slug}?preview=1`, '_blank');
   };
 
   const handlePreviewRedirect = (product: Product) => {
