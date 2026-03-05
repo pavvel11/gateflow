@@ -23,6 +23,12 @@ test.describe('Product Duplication', () => {
   let testProductSlug: string;
 
   // Helper to login as admin
+  // Opens the ⋯ dropdown on a product row and clicks the Duplicate item
+  const clickDuplicateInDropdown = async (productRow: any, page: Page) => {
+    await productRow.locator('button[aria-expanded]').click();
+    await page.locator('button').filter({ hasText: /^Duplikuj$|^Duplicate$/i }).first().click();
+  };
+
   const loginAsAdmin = async (page: Page) => {
     await acceptAllCookies(page);
 
@@ -114,13 +120,13 @@ test.describe('Product Duplication', () => {
     await page.goto('/pl/dashboard/products');
     await page.waitForLoadState('networkidle');
 
-    // Find the product row and duplicate button
+    // Find the product row
     const productRow = page.locator('tr').filter({ hasText: 'Original Product' });
     await expect(productRow).toBeVisible({ timeout: 10000 });
 
-    // Find the duplicate button by aria-label (using regex to match both EN and PL)
-    const duplicateButton = productRow.getByRole('button', { name: /Duplikuj Original Product|Duplicate Original Product/i });
-    await expect(duplicateButton).toBeVisible({ timeout: 5000 });
+    // Open ⋯ dropdown and check Duplicate option is visible
+    await productRow.locator('button[aria-expanded]').click();
+    await expect(page.locator('button').filter({ hasText: /^Duplikuj$|^Duplicate$/i }).first()).toBeVisible({ timeout: 5000 });
   });
 
   test('should open wizard with duplicated data when clicking duplicate', async ({ page }) => {
@@ -128,10 +134,9 @@ test.describe('Product Duplication', () => {
     await page.goto('/pl/dashboard/products');
     await page.waitForLoadState('networkidle');
 
-    // Click duplicate button
+    // Click duplicate from ⋯ dropdown
     const productRow = page.locator('tr').filter({ hasText: 'Original Product' });
-    const duplicateButton = productRow.getByRole('button', { name: /Duplikuj Original Product|Duplicate Original Product/i });
-    await duplicateButton.click();
+    await clickDuplicateInDropdown(productRow, page);
 
     // Wait for wizard to open (step 1)
     await page.waitForTimeout(500);
@@ -172,10 +177,9 @@ test.describe('Product Duplication', () => {
     await page.goto('/pl/dashboard/products');
     await page.waitForLoadState('networkidle');
 
-    // Click duplicate button (Duplikuj in Polish, Duplicate in English)
+    // Click duplicate from ⋯ dropdown
     const productRow = page.locator('tr').filter({ hasText: 'Original Product' });
-    const duplicateButton = productRow.getByRole('button', { name: /Duplikuj Original Product|Duplicate Original Product/i });
-    await duplicateButton.click();
+    await clickDuplicateInDropdown(productRow, page);
 
     await page.waitForTimeout(500);
 

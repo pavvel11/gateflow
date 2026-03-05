@@ -28,6 +28,12 @@ test.describe('Protection Code (Generate Protection Code)', () => {
   let userWithAccess: any;
   let userWithoutAccess: any;
 
+  // Opens the ⋯ dropdown on a product row and clicks "Generate Code"
+  const openCodeGenerator = async (productRow: any, page: Page) => {
+    await productRow.locator('button[aria-expanded]').click();
+    await page.locator('button').filter({ hasText: /Generuj kod|Generate Code/i }).first().click();
+  };
+
   const loginAsAdmin = async (page: Page) => {
     await acceptAllCookies(page);
 
@@ -185,29 +191,8 @@ test.describe('Protection Code (Generate Protection Code)', () => {
       const productRow = page.locator('tr, [data-testid="product-row"]').filter({ hasText: paidProduct.name }).first();
       await expect(productRow).toBeVisible({ timeout: 10000 });
 
-      // Click the code generator button (code icon)
-      const codeButton = productRow.locator('button[title*="code" i], button:has(svg[class*="code"])').first();
-
-      // If specific button not found, look for button with code-related icon
-      if (await codeButton.count() === 0) {
-        // Try to find by looking for button with specific aria-label or tooltip
-        const allButtons = productRow.locator('button');
-        const buttonCount = await allButtons.count();
-
-        // Click each button and check if modal opens
-        for (let i = 0; i < buttonCount; i++) {
-          const button = allButtons.nth(i);
-          const buttonText = await button.textContent();
-          const buttonTitle = await button.getAttribute('title');
-
-          if (buttonTitle?.toLowerCase().includes('code') || buttonText?.toLowerCase().includes('code')) {
-            await button.click();
-            break;
-          }
-        }
-      } else {
-        await codeButton.click();
-      }
+      // Open code generator from ⋯ dropdown
+      await openCodeGenerator(productRow, page);
 
       await page.waitForTimeout(1000);
 
@@ -226,18 +211,8 @@ test.describe('Protection Code (Generate Protection Code)', () => {
       const productRow = page.locator('tr, [data-testid="product-row"]').filter({ hasText: paidProduct.name }).first();
       await expect(productRow).toBeVisible({ timeout: 10000 });
 
-      // Look for code generator button - could be identified by icon or title
-      const buttons = productRow.locator('button');
-      const buttonCount = await buttons.count();
-
-      for (let i = 0; i < buttonCount; i++) {
-        const button = buttons.nth(i);
-        const title = await button.getAttribute('title') || '';
-        if (title.toLowerCase().includes('code') || title.toLowerCase().includes('kod')) {
-          await button.click();
-          break;
-        }
-      }
+      // Open code generator from ⋯ dropdown
+      await openCodeGenerator(productRow, page);
 
       await page.waitForTimeout(1000);
 
@@ -264,18 +239,8 @@ test.describe('Protection Code (Generate Protection Code)', () => {
       const productRow = page.locator('tr, [data-testid="product-row"]').filter({ hasText: freeProduct.name }).first();
       await expect(productRow).toBeVisible({ timeout: 10000 });
 
-      // Open code generator
-      const buttons = productRow.locator('button');
-      const buttonCount = await buttons.count();
-
-      for (let i = 0; i < buttonCount; i++) {
-        const button = buttons.nth(i);
-        const title = await button.getAttribute('title') || '';
-        if (title.toLowerCase().includes('code') || title.toLowerCase().includes('kod')) {
-          await button.click();
-          break;
-        }
-      }
+      // Open code generator from ⋯ dropdown
+      await openCodeGenerator(productRow, page);
 
       await page.waitForTimeout(1000);
 
@@ -297,19 +262,9 @@ test.describe('Protection Code (Generate Protection Code)', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
-      // Open code generator for paid product
+      // Open code generator from ⋯ dropdown
       const productRow = page.locator('tr, [data-testid="product-row"]').filter({ hasText: paidProduct.name }).first();
-      const buttons = productRow.locator('button');
-      const buttonCount = await buttons.count();
-
-      for (let i = 0; i < buttonCount; i++) {
-        const button = buttons.nth(i);
-        const title = await button.getAttribute('title') || '';
-        if (title.toLowerCase().includes('code') || title.toLowerCase().includes('kod')) {
-          await button.click();
-          break;
-        }
-      }
+      await openCodeGenerator(productRow, page);
 
       await page.waitForTimeout(1000);
 
@@ -334,19 +289,9 @@ test.describe('Protection Code (Generate Protection Code)', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
-      // Open code generator
+      // Open code generator from ⋯ dropdown
       const productRow = page.locator('tr, [data-testid="product-row"]').filter({ hasText: paidProduct.name }).first();
-      const buttons = productRow.locator('button');
-      const buttonCount = await buttons.count();
-
-      for (let i = 0; i < buttonCount; i++) {
-        const button = buttons.nth(i);
-        const title = await button.getAttribute('title') || '';
-        if (title.toLowerCase().includes('code') || title.toLowerCase().includes('kod')) {
-          await button.click();
-          break;
-        }
-      }
+      await openCodeGenerator(productRow, page);
 
       await page.waitForTimeout(1000);
 
@@ -372,19 +317,9 @@ test.describe('Protection Code (Generate Protection Code)', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
-      // Open code generator for FREE product
+      // Open code generator from ⋯ dropdown
       const productRow = page.locator('tr, [data-testid="product-row"]').filter({ hasText: freeProduct.name }).first();
-      const buttons = productRow.locator('button');
-      const buttonCount = await buttons.count();
-
-      for (let i = 0; i < buttonCount; i++) {
-        const button = buttons.nth(i);
-        const title = await button.getAttribute('title') || '';
-        if (title.toLowerCase().includes('code') || title.toLowerCase().includes('kod')) {
-          await button.click();
-          break;
-        }
-      }
+      await openCodeGenerator(productRow, page);
 
       await page.waitForTimeout(1000);
 
@@ -412,19 +347,9 @@ test.describe('Protection Code (Generate Protection Code)', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
-      // Open code generator
+      // Open code generator from ⋯ dropdown
       const productRow = page.locator('tr, [data-testid="product-row"]').filter({ hasText: paidProduct.name }).first();
-      const buttons = productRow.locator('button');
-      const buttonCount = await buttons.count();
-
-      for (let i = 0; i < buttonCount; i++) {
-        const button = buttons.nth(i);
-        const title = await button.getAttribute('title') || '';
-        if (title.toLowerCase().includes('code') || title.toLowerCase().includes('kod')) {
-          await button.click();
-          break;
-        }
-      }
+      await openCodeGenerator(productRow, page);
 
       await page.waitForTimeout(1000);
 
@@ -748,19 +673,9 @@ test.describe('Protection Code (Generate Protection Code)', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
-      // Open code generator
+      // Open code generator from ⋯ dropdown
       const productRow = page.locator('tr, [data-testid="product-row"]').filter({ hasText: paidProduct.name }).first();
-      const buttons = productRow.locator('button');
-      const buttonCount = await buttons.count();
-
-      for (let i = 0; i < buttonCount; i++) {
-        const button = buttons.nth(i);
-        const title = await button.getAttribute('title') || '';
-        if (title.toLowerCase().includes('code') || title.toLowerCase().includes('kod')) {
-          await button.click();
-          break;
-        }
-      }
+      await openCodeGenerator(productRow, page);
 
       await page.waitForTimeout(1000);
 
@@ -788,19 +703,9 @@ test.describe('Protection Code (Generate Protection Code)', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
-      // Open code generator
+      // Open code generator from ⋯ dropdown
       const productRow = page.locator('tr, [data-testid="product-row"]').filter({ hasText: paidProduct.name }).first();
-      const buttons = productRow.locator('button');
-      const buttonCount = await buttons.count();
-
-      for (let i = 0; i < buttonCount; i++) {
-        const button = buttons.nth(i);
-        const title = await button.getAttribute('title') || '';
-        if (title.toLowerCase().includes('code') || title.toLowerCase().includes('kod')) {
-          await button.click();
-          break;
-        }
-      }
+      await openCodeGenerator(productRow, page);
 
       await page.waitForTimeout(1000);
 
@@ -829,17 +734,7 @@ test.describe('Protection Code (Generate Protection Code)', () => {
       // Test with both products
       for (const product of [paidProduct, freeProduct]) {
         const productRow = page.locator('tr, [data-testid="product-row"]').filter({ hasText: product.name }).first();
-        const buttons = productRow.locator('button');
-        const buttonCount = await buttons.count();
-
-        for (let i = 0; i < buttonCount; i++) {
-          const button = buttons.nth(i);
-          const title = await button.getAttribute('title') || '';
-          if (title.toLowerCase().includes('code') || title.toLowerCase().includes('kod')) {
-            await button.click();
-            break;
-          }
-        }
+        await openCodeGenerator(productRow, page);
 
         await page.waitForTimeout(1000);
 
