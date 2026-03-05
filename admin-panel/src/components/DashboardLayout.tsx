@@ -453,7 +453,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
     <div className="min-h-screen bg-sf-deep sf-dashboard">
       {/* Desktop Sidebar — Collapsible Icon Rail */}
       <aside
-        className="hidden lg:flex fixed inset-y-0 left-0 flex-col bg-sf-sidebar-bg border-r border-sf-border-subtle z-40 overflow-hidden"
+        className="hidden lg:flex fixed top-14 bottom-0 left-0 flex-col bg-sf-sidebar-bg border-r border-sf-border-subtle z-40 overflow-hidden"
         style={{
           width: isExpanded ? 'var(--sf-sidebar-width-expanded)' : 'var(--sf-sidebar-width-collapsed)',
           transition: 'width var(--sf-duration-slow) var(--sf-ease-out)',
