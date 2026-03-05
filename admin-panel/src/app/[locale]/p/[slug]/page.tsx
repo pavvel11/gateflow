@@ -116,5 +116,17 @@ export default async function ProductPage({ params, searchParams }: PageProps) {
   // Only active when ?preview=1 AND the requester is a verified admin.
   // (previewMode already determined above, before product fetch)
 
-  return <ProductView product={product} licenseValid={licenseValid} previewMode={previewMode} />;
+  // SECURITY: Strip sensitive content_config before sending to client component.
+  // The full content_config (with download_url, video URLs etc.) is in the DB row
+  // from select('*'), but it must NOT leak in the RSC payload — unauthenticated
+  // visitors could extract it from the page source / network tab.
+  // Authenticated content delivery happens via /api/public/products/[slug]/content.
+  const safeProduct = {
+    ...product,
+    content_config: product.content_delivery_type === 'redirect'
+      ? { redirect_url: product.content_config?.redirect_url }  // redirect URL needed client-side
+      : {},                                                       // content items served via auth API
+  };
+
+  return <ProductView product={safeProduct as typeof product} licenseValid={licenseValid} previewMode={previewMode} />;
 }
