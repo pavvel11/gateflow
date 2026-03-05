@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { cache } from 'react';
 import ProductView from './components/ProductView';
+import type { Product } from '@/types';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -46,7 +47,7 @@ const getProduct = cache(async (slug: string) => {
     .eq('slug', slug)
     .single();
 
-  return { product, error };
+  return { product: product as Product | null, error };
 });
 
 // Generate metadata for the page based on the product data
@@ -102,7 +103,7 @@ export default async function ProductPage({ params, searchParams }: PageProps) {
       .select(PRODUCT_FIELDS)
       .eq('slug', slug)
       .single();
-    product = data;
+    product = data as Product | null;
     fetchError = error;
   } else {
     const { product: pub, error } = await getProduct(slug);
