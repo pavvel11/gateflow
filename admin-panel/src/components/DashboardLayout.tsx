@@ -592,8 +592,8 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
       )}
 
       {/* Main Content Area */}
-      <div className={`min-h-screen sf-main-content ${isPinned ? 'sf-pinned' : ''}`}>
-        <main className="pt-14 flex-1 overflow-y-auto bg-sf-deep p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
+      <div className={`min-h-screen pt-14 sf-main-content ${isPinned ? 'sf-pinned' : ''}`}>
+        <main className="bg-sf-deep p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
           <DemoBanner />
           <div className="max-w-7xl mx-auto">
             {children}
