@@ -110,7 +110,6 @@ function loadYouTubeApi(): Promise<void> {
 
       const timeout = setTimeout(() => {
         window._ytApiLoading = false;
-        window._ytApiCallbacks?.forEach((cb) => cb()); // resolve as no-op; adapter won't init without YT global
         window._ytApiCallbacks = [];
         reject(new Error('YouTube IFrame API failed to load within timeout'));
       }, YT_API_TIMEOUT_MS);

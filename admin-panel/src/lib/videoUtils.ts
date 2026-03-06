@@ -247,7 +247,7 @@ export function parseVideoUrl(url: string): ParsedVideoUrl {
         return {
           platform: 'twitch',
           videoId,
-          embedUrl: `https://player.twitch.tv/?video=${videoId}&parent=${window.location.hostname}`,
+          embedUrl: `https://player.twitch.tv/?video=${videoId}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}`,
           isValid: true
         };
       }

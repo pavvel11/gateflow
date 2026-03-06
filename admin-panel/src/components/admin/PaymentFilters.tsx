@@ -61,6 +61,7 @@ export default function PaymentFilters({
         a.download = `payments-${new Date().toISOString().split('T')[0]}.csv`;
         document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
         toast.success(t('exportSuccess'));
       } else {

@@ -204,7 +204,7 @@ async function getProcessedPaymentFromDatabase(
     status: 'complete',
     payment_status: 'paid',
     customer_email: transaction.customer_email,
-    amount_total: Math.round(transaction.amount * 100), // Convert to cents for consistency
+    amount_total: transaction.amount, // Already in cents (DB stores cents, same as Stripe amount_total)
     currency: transaction.currency,
     metadata: {
       product_id: transaction.product_id

@@ -24,23 +24,23 @@ export function useProductAccess(product: Product, options?: { previewMode?: boo
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<'timeout' | 'error' | null>(null);
 
-  // Build checkout URL preserving OTO params
-  const buildCheckoutUrl = (slug: string) => {
-    const params = new URLSearchParams();
-    const email = searchParams.get('email');
-    const coupon = searchParams.get('coupon');
-    const oto = searchParams.get('oto');
-
-    if (email) params.set('email', email);
-    if (coupon) params.set('coupon', coupon);
-    if (oto) params.set('oto', oto);
-
-    const queryString = params.toString();
-    return `/checkout/${slug}${queryString ? `?${queryString}` : ''}`;
-  };
-
   useEffect(() => {
     const controller = new AbortController();
+
+    // Build checkout URL preserving OTO params (inside effect to capture current searchParams)
+    const buildCheckoutUrl = (slug: string) => {
+      const params = new URLSearchParams();
+      const email = searchParams.get('email');
+      const coupon = searchParams.get('coupon');
+      const oto = searchParams.get('oto');
+
+      if (email) params.set('email', email);
+      if (coupon) params.set('coupon', coupon);
+      if (oto) params.set('oto', oto);
+
+      const queryString = params.toString();
+      return `/checkout/${slug}${queryString ? `?${queryString}` : ''}`;
+    };
 
     const checkUserAccess = async () => {
       // Preview mode — skip all access checks, grant instant access
@@ -131,7 +131,7 @@ export function useProductAccess(product: Product, options?: { previewMode?: boo
     return () => {
       controller.abort();
     };
-  }, [previewMode, user, product.slug, product.is_active, product.available_from, product.available_until, router, authLoading]);
+  }, [previewMode, user, product.slug, product.is_active, product.available_from, product.available_until, router, authLoading, searchParams]);
 
   return {
     accessData,
