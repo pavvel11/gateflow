@@ -113,7 +113,7 @@ export function useProducts(params: UseProductsParams = {}): UseProductsResult {
       const cursor = cursorMapRef.current.get(page) ?? null;
 
       const response = await api.list<Product>('products', {
-        limit: limit + 1,
+        limit,
         search: search || undefined,
         status: status === 'all' ? undefined : status,
         sort_by: sortBy,
@@ -122,8 +122,8 @@ export function useProducts(params: UseProductsParams = {}): UseProductsResult {
       });
 
       const allProducts = response.data;
-      const hasMore = allProducts.length > limit;
-      const pageProducts = allProducts.slice(0, limit);
+      const hasMore = response.pagination?.has_more ?? allProducts.length > limit;
+      const pageProducts = allProducts;
 
       // Store cursor for the next page so forward navigation works.
       const nextCursor = response.pagination?.next_cursor;

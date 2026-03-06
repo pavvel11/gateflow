@@ -256,6 +256,136 @@ describe('Pagination', () => {
     });
   });
 
+  describe('no items skipped between pages', () => {
+    // Regression: hooks previously sent limit+1 to the API, but the API
+    // already fetches limit+1 internally. The double +1 caused one item
+    // per page boundary to be skipped (never shown on either page).
+
+    function simulatePagination(allItems: Record<string, unknown>[], pageSize: number, orderField: string, orderDirection: 'asc' | 'desc') {
+      const seen: string[] = [];
+      let cursor: string | null = null;
+      let pages = 0;
+      const maxPages = 100;
+
+      while (pages < maxPages) {
+        // Simulate what the API does: filter by cursor, fetch limit+1
+        let filtered = [...allItems];
+        if (cursor) {
+          const cursorData = decodeCursor(cursor);
+          if (cursorData) {
+            filtered = filtered.filter(item => {
+              const val = String(item[orderField] ?? '');
+              const id = String(item['id']);
+              if (orderDirection === 'desc') {
+                return val < cursorData.value || (val === cursorData.value && id < cursorData.id);
+              } else {
+                return val > cursorData.value || (val === cursorData.value && id > cursorData.id);
+              }
+            });
+          }
+        }
+
+        // Sort
+        filtered.sort((a, b) => {
+          const aVal = String(a[orderField] ?? '');
+          const bVal = String(b[orderField] ?? '');
+          const aId = String(a['id']);
+          const bId = String(b['id']);
+          if (aVal !== bVal) return orderDirection === 'desc' ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
+          return orderDirection === 'desc' ? bId.localeCompare(aId) : aId.localeCompare(bId);
+        });
+
+        // Take limit+1 (what the API does internally)
+        const fetched = filtered.slice(0, pageSize + 1);
+        const { items, pagination } = createPaginationResponse(fetched, pageSize, orderField, orderDirection, cursor);
+
+        for (const item of items) {
+          seen.push(String(item['id']));
+        }
+
+        cursor = pagination.next_cursor;
+        pages++;
+
+        if (!pagination.has_more) break;
+      }
+
+      return { seen, pages };
+    }
+
+    it('should not skip items when many rows share the same sort value', () => {
+      // 16 products, 13 share the same created_at (mimics seeded data)
+      const sharedTimestamp = '2026-03-06T09:29:43.378612+00';
+      const items = [
+        { id: 'a5fe44ed', name: 'Stats-Test', created_at: '2026-03-06T09:30:35+00' },
+        { id: 'ce0e7dbf', name: 'Bump', created_at: '2026-03-06T09:30:34+00' },
+        { id: 'a749b687', name: 'Main', created_at: '2026-03-06T09:30:34+00' },
+        { id: 'f1909203', name: 'Design System', created_at: sharedTimestamp },
+        { id: 'edf55900', name: 'Test OTO Active', created_at: sharedTimestamp },
+        { id: 'ebead6ef', name: 'Enterprise', created_at: sharedTimestamp },
+        { id: 'c5365527', name: 'Test OTO Owned', created_at: sharedTimestamp },
+        { id: 'b86a81ad', name: 'VIP Masterclass', created_at: sharedTimestamp },
+        { id: 'a0ca02d1', name: 'Community Guide', created_at: sharedTimestamp },
+        { id: '7db7e3ee', name: 'Test No Redirect', created_at: sharedTimestamp },
+        { id: '73e47f30', name: 'Premium Course', created_at: sharedTimestamp },
+        { id: '6fc4b6f0', name: 'Pro Toolkit', created_at: sharedTimestamp },
+        { id: '3786354f', name: 'Free Tutorial', created_at: sharedTimestamp },
+        { id: '2fd6727d', name: 'Test Custom Redirect', created_at: sharedTimestamp },
+        { id: '0910b4e3', name: 'Test OTO Target', created_at: sharedTimestamp },
+        { id: '06fbb8cf', name: 'Test Product Redirect', created_at: sharedTimestamp },
+      ];
+
+      const { seen, pages } = simulatePagination(items, 10, 'created_at', 'desc');
+
+      expect(pages).toBe(2);
+      expect(seen).toHaveLength(16);
+      // Every item must appear exactly once
+      const uniqueSeen = new Set(seen);
+      expect(uniqueSeen.size).toBe(16);
+      // Specifically verify the item at the page boundary
+      expect(seen).toContain('73e47f30'); // Premium Course
+    });
+
+    it('should not skip items with small page size', () => {
+      const items = Array.from({ length: 25 }, (_, i) => ({
+        id: String(i).padStart(3, '0'),
+        name: `Item ${i}`,
+        created_at: `2024-01-01T00:00:00Z`,
+      }));
+
+      const { seen } = simulatePagination(items, 3, 'created_at', 'desc');
+
+      expect(seen).toHaveLength(25);
+      expect(new Set(seen).size).toBe(25);
+    });
+
+    it('should not skip items with ascending sort', () => {
+      const items = Array.from({ length: 15 }, (_, i) => ({
+        id: String(i).padStart(3, '0'),
+        name: `Item ${i}`,
+        price: '10.00',
+      }));
+
+      const { seen } = simulatePagination(items, 5, 'price', 'asc');
+
+      expect(seen).toHaveLength(15);
+      expect(new Set(seen).size).toBe(15);
+    });
+
+    it('should handle exact multiple of page size', () => {
+      const items = Array.from({ length: 20 }, (_, i) => ({
+        id: String(i).padStart(3, '0'),
+        name: `Item ${i}`,
+        created_at: `2024-01-${String(i + 1).padStart(2, '0')}`,
+      }));
+
+      const { seen, pages } = simulatePagination(items, 10, 'created_at', 'desc');
+
+      expect(pages).toBe(2);
+      expect(seen).toHaveLength(20);
+      expect(new Set(seen).size).toBe(20);
+    });
+  });
+
   describe('constants', () => {
     it('should have reasonable DEFAULT_LIMIT', () => {
       expect(DEFAULT_LIMIT).toBeGreaterThan(0);

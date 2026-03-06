@@ -80,7 +80,7 @@ export function useUsers(params: UseUsersParams = {}): UseUsersResult {
       const cursor = cursorMapRef.current.get(page) ?? null;
 
       const response = await api.list<UserWithAccess>('users', {
-        limit: limit + 1,
+        limit,
         search: search || undefined,
         sort_by: sortBy,
         sort_order: sortOrder,
@@ -88,8 +88,8 @@ export function useUsers(params: UseUsersParams = {}): UseUsersResult {
       });
 
       const allUsers = response.data;
-      const hasMore = allUsers.length > limit;
-      const pageUsers = allUsers.slice(0, limit);
+      const hasMore = response.pagination?.has_more ?? allUsers.length > limit;
+      const pageUsers = allUsers;
 
       // Store cursor for the next page so forward navigation works.
       const nextCursor = response.pagination?.next_cursor;
