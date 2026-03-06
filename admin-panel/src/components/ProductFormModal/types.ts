@@ -22,6 +22,7 @@ export interface ProductFormData {
   is_listed: boolean;
   icon: string;
   image_url?: string | null;
+  preview_video_url?: string | null;
   // Temporal availability fields
   available_from?: string | null;
   available_until?: string | null;
@@ -77,6 +78,8 @@ export interface OtoState {
 export interface UrlValidation {
   isValid: boolean;
   message: string;
+  /** Detected platform name (e.g. 'youtube', 'vimeo') — used for conditional UI */
+  platform?: string;
 }
 
 export interface ProductFormState {
@@ -96,8 +99,7 @@ export interface ProductFormState {
 }
 
 // Translation function type - compatible with next-intl
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type TranslationFunction = (key: string, values?: Record<string, any>) => string;
+export type TranslationFunction = (key: string, values?: Record<string, string | number | Date>) => string;
 
 // Section props - common interface for all sections
 export interface SectionProps {
@@ -170,6 +172,7 @@ export const initialFormData: ProductFormData = {
   is_listed: true,
   icon: '🚀',
   image_url: null,
+  preview_video_url: null,
   available_from: '',
   available_until: '',
   auto_grant_duration_days: null,

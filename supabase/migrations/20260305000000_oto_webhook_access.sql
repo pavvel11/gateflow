@@ -291,3 +291,10 @@ COMMENT ON COLUMN public.stripe_configurations.webhook_signing_iv
   IS 'AES-256-GCM IV for webhook signing secret. Base64 encoded.';
 COMMENT ON COLUMN public.stripe_configurations.webhook_signing_tag
   IS 'AES-256-GCM auth tag for webhook signing secret. Base64 encoded.';
+
+-- ── Product preview video ──────────────────────────────────────────────
+-- Optional video URL shown on checkout/product pages (YouTube, Vimeo, etc.).
+-- Parsed client-side by videoUtils.parseVideoUrl() and rendered by VideoPlayer.
+
+ALTER TABLE public.products
+  ADD COLUMN IF NOT EXISTS preview_video_url TEXT;

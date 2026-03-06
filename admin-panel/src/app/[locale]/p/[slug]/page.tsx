@@ -24,7 +24,7 @@ export const dynamic = 'force-dynamic';
 // but is sanitized via safeProduct before being sent to the client.
 const PRODUCT_FIELDS = [
   'id', 'name', 'slug', 'description', 'long_description',
-  'icon', 'image_url', 'thumbnail_url',
+  'icon', 'image_url', 'thumbnail_url', 'preview_video_url',
   'price', 'currency', 'vat_rate', 'price_includes_vat',
   'features', 'layout_template',
   'is_active', 'is_featured', 'is_listed',

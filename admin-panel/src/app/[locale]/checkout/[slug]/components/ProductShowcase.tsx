@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Product } from '@/types';
 import { formatPrice } from '@/lib/constants';
 import Image from 'next/image';
@@ -9,6 +10,8 @@ import rehypeSanitize from 'rehype-sanitize';
 import { useTranslations } from 'next-intl';
 import OmnibusPrice from '@/components/OmnibusPrice';
 import type { TaxMode } from '@/lib/actions/shop-config';
+import { parseVideoUrl } from '@/lib/videoUtils';
+import VideoPlayer from '@/components/player/VideoPlayer';
 
 interface ProductShowcaseProps {
   product: Product;
@@ -40,10 +43,19 @@ export default function ProductShowcase({ product, taxMode }: ProductShowcasePro
     : grossPrice;
   const vatAmount = grossPrice - netPrice;
 
+  const parsedVideo = useMemo(
+    () => product.preview_video_url ? parseVideoUrl(product.preview_video_url) : null,
+    [product.preview_video_url]
+  );
+
   return (
     <div className="w-full lg:w-1/2 lg:pr-8 lg:border-r border-sf-border mb-8 lg:mb-0">
-      {/* Product Image */}
-      {product.image_url ? (
+      {/* Product Video / Image */}
+      {parsedVideo ? (
+        <div className="relative w-full aspect-video mb-6 rounded-2xl overflow-hidden bg-black">
+          <VideoPlayer parsed={parsedVideo} title={product.name} />
+        </div>
+      ) : product.image_url ? (
         <div className="relative w-full aspect-video mb-6 rounded-2xl overflow-hidden bg-sf-raised">
           <Image
             src={product.image_url}
@@ -51,10 +63,11 @@ export default function ProductShowcase({ product, taxMode }: ProductShowcasePro
             fill
             className="object-cover"
             priority
+            unoptimized
           />
         </div>
       ) : (
-        /* Placeholder when no image */
+        /* Placeholder when no image or video */
         <div className="relative w-full aspect-video mb-6 rounded-2xl overflow-hidden bg-sf-accent-soft flex items-center justify-center border border-sf-border">
           <span className="text-9xl opacity-50">{product.icon}</span>
         </div>

@@ -1197,6 +1197,7 @@ export type Database = {
           name: string
           omnibus_exempt: boolean
           pass_params_to_redirect: boolean
+          preview_video_url: string | null
           price: number
           price_includes_vat: boolean
           refund_period_days: number | null
@@ -1238,6 +1239,7 @@ export type Database = {
           name: string
           omnibus_exempt?: boolean
           pass_params_to_redirect?: boolean
+          preview_video_url?: string | null
           price?: number
           price_includes_vat?: boolean
           refund_period_days?: number | null
@@ -1279,6 +1281,7 @@ export type Database = {
           name?: string
           omnibus_exempt?: boolean
           pass_params_to_redirect?: boolean
+          preview_video_url?: string | null
           price?: number
           price_includes_vat?: boolean
           refund_period_days?: number | null

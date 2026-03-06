@@ -13,6 +13,7 @@ import TermsCheckbox from '@/components/TermsCheckbox';
 import { createClient } from '@/lib/supabase/client';
 import { useTracking } from '@/hooks/useTracking';
 import DemoCheckoutNotice from '@/components/DemoCheckoutNotice';
+import ProductShowcase from './ProductShowcase';
 
 interface FreeProductFormProps {
   product: Product;
@@ -213,18 +214,7 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
   };
 
   const renderProductInfo = () => (
-    <div className="w-1/2 pr-8 border-r border-sf-border">
-      <div className="flex items-center mb-6">
-        <div className="text-5xl mr-6">{product.icon}</div>
-        <div>
-          <h1 className="text-2xl font-bold text-sf-heading">{product.name}</h1>
-          <p className="text-sf-body">{product.description}</p>
-        </div>
-      </div>
-      <div className="text-3xl font-bold text-sf-success">
-        {t('free')}
-      </div>
-    </div>
+    <ProductShowcase product={product} />
   );
 
   const renderForm = () => (

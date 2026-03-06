@@ -5,9 +5,10 @@ export interface Product {
   description: string
   long_description?: string | null
   icon: string
-  // Product images for enhanced checkout
+  // Product images and video for enhanced checkout
   image_url?: string | null
   thumbnail_url?: string | null
+  preview_video_url?: string | null
   price: number
   currency: string
   // VAT/Tax configuration
@@ -87,6 +88,8 @@ export interface ContentItemConfig {
   muted?: boolean
   preload?: boolean
   controls?: boolean
+  /** When false, skip custom player and render a plain iframe with native platform UI */
+  useCustomPlayer?: boolean
   // For download_link
   download_url?: string
   file_name?: string

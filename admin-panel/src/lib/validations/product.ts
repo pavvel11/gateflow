@@ -15,7 +15,7 @@ import { SUPPORTED_CURRENCY_CODES } from '@/lib/constants';
  *
  * @see supabase/migrations/20250101000000_core_schema.sql (products table)
  */
-export const PRODUCT_API_FIELDS = `id, name, slug, description, long_description, icon, image_url, thumbnail_url, price, currency, features, layout_template, is_active, is_featured, is_listed, available_from, available_until, auto_grant_duration_days, content_delivery_type, content_config, is_refundable, refund_period_days, enable_waitlist, allow_custom_price, custom_price_min, show_price_presets, custom_price_presets, vat_rate, price_includes_vat, omnibus_exempt, sale_price, sale_price_until, sale_quantity_limit, success_redirect_url, pass_params_to_redirect, created_at, updated_at`;
+export const PRODUCT_API_FIELDS = `id, name, slug, description, long_description, icon, image_url, thumbnail_url, preview_video_url, price, currency, features, layout_template, is_active, is_featured, is_listed, available_from, available_until, auto_grant_duration_days, content_delivery_type, content_config, is_refundable, refund_period_days, enable_waitlist, allow_custom_price, custom_price_min, show_price_presets, custom_price_presets, vat_rate, price_includes_vat, omnibus_exempt, sale_price, sale_price_until, sale_quantity_limit, success_redirect_url, pass_params_to_redirect, created_at, updated_at`;
 
 /**
  * SECURITY FIX (V13): Escape ILIKE special characters to prevent SQL pattern injection
@@ -118,7 +118,7 @@ export interface UpdateProductInput {
 }
 
 // Validation functions
-function validateSlug(slug: string): ValidationResult {
+function validateSlug(slug: unknown): ValidationResult {
   const errors: string[] = [];
   
   if (!slug || typeof slug !== 'string') {
@@ -142,7 +142,7 @@ function validateSlug(slug: string): ValidationResult {
   return { isValid: errors.length === 0, errors };
 }
 
-function validateName(name: string): ValidationResult {
+function validateName(name: unknown): ValidationResult {
   const errors: string[] = [];
   
   if (!name || typeof name !== 'string') {
@@ -160,7 +160,7 @@ function validateName(name: string): ValidationResult {
   return { isValid: errors.length === 0, errors };
 }
 
-function validateDescription(description: string): ValidationResult {
+function validateDescription(description: unknown): ValidationResult {
   const errors: string[] = [];
   
   if (!description || typeof description !== 'string') {
@@ -178,7 +178,7 @@ function validateDescription(description: string): ValidationResult {
   return { isValid: errors.length === 0, errors };
 }
 
-function validatePrice(price: number): ValidationResult {
+function validatePrice(price: unknown): ValidationResult {
   const errors: string[] = [];
   
   if (typeof price !== 'number') {
@@ -194,7 +194,7 @@ function validatePrice(price: number): ValidationResult {
   return { isValid: errors.length === 0, errors };
 }
 
-function validateCurrency(currency: string): ValidationResult {
+function validateCurrency(currency: unknown): ValidationResult {
   const errors: string[] = [];
   
   if (!currency || typeof currency !== 'string') {
@@ -210,7 +210,7 @@ function validateCurrency(currency: string): ValidationResult {
   return { isValid: errors.length === 0, errors };
 }
 
-function validateIcon(icon: string): ValidationResult {
+function validateIcon(icon: unknown): ValidationResult {
   const errors: string[] = [];
 
   if (!icon || typeof icon !== 'string') {
@@ -233,7 +233,7 @@ function validateIcon(icon: string): ValidationResult {
   return { isValid: errors.length === 0, errors };
 }
 
-function validateContentDeliveryType(type: string): ValidationResult {
+function validateContentDeliveryType(type: unknown): ValidationResult {
   const errors: string[] = [];
   const validTypes = ['content', 'redirect'];
   
@@ -246,7 +246,7 @@ function validateContentDeliveryType(type: string): ValidationResult {
   return { isValid: errors.length === 0, errors };
 }
 
-function validateDate(date: string | null): ValidationResult {
+function validateDate(date: unknown): ValidationResult {
   const errors: string[] = [];
   
   if (date !== null && date !== undefined && date !== '') {
@@ -268,7 +268,7 @@ function validateDate(date: string | null): ValidationResult {
   return { isValid: errors.length === 0, errors };
 }
 
-function validateDuration(duration: number | null): ValidationResult {
+function validateDuration(duration: unknown): ValidationResult {
   const errors: string[] = [];
   
   if (duration !== null && duration !== undefined) {
@@ -302,8 +302,7 @@ export function validateUUID(uuid: string): ValidationResult {
 function validateContentConfig(contentConfig: unknown): ValidationResult {
   const errors: string[] = [];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const config = contentConfig as any;
+  const config = contentConfig as Record<string, unknown>;
 
   if (!config || typeof config !== 'object') {
     return { isValid: true, errors }; // Content config is optional
@@ -311,17 +310,18 @@ function validateContentConfig(contentConfig: unknown): ValidationResult {
 
   // Validate content items if present
   if (config.content_items && Array.isArray(config.content_items)) {
-    config.content_items.forEach((item: any, index: number) => {
+    config.content_items.forEach((item: Record<string, unknown>, index: number) => {
       if (!item || typeof item !== 'object') {
         errors.push(`Content item ${index + 1}: Invalid format`);
         return;
       }
 
       const itemType = item.type;
+      const itemConfig = item.config as Record<string, unknown> | undefined;
 
       // Validate video embed URLs
       if (itemType === 'video_embed') {
-        const embedUrl = item.config?.embed_url;
+        const embedUrl = itemConfig?.embed_url;
 
         if (embedUrl) {
           if (typeof embedUrl !== 'string') {
@@ -348,7 +348,7 @@ function validateContentConfig(contentConfig: unknown): ValidationResult {
 
       // Validate download link URLs
       else if (itemType === 'download_link') {
-        const downloadUrl = item.config?.download_url;
+        const downloadUrl = itemConfig?.download_url;
 
         if (downloadUrl) {
           if (typeof downloadUrl !== 'string') {
@@ -424,8 +424,7 @@ function validateContentConfig(contentConfig: unknown): ValidationResult {
 // Main validation functions
 export function validateCreateProduct(data: unknown): ValidationResult {
   const errors: string[] = [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const input = data as any;
+  const input = data as Record<string, unknown>;
   
   // Validate required fields
   const nameResult = validateName(input.name);
@@ -479,8 +478,17 @@ export function validateCreateProduct(data: unknown): ValidationResult {
     errors.push(...contentConfigResult.errors);
   }
 
+  // Validate preview_video_url platform
+  if (typeof input.preview_video_url === 'string' && input.preview_video_url) {
+    const parsed = parseVideoUrl(input.preview_video_url);
+    const allowedPlatforms = ['youtube', 'vimeo', 'wistia', 'bunny', 'loom'];
+    if (!allowedPlatforms.includes(parsed.platform)) {
+      errors.push('Preview video URL must be from a supported platform: YouTube, Vimeo, Wistia, Bunny, or Loom');
+    }
+  }
+
   // Validate date range
-  if (input.available_from && input.available_until) {
+  if (typeof input.available_from === 'string' && typeof input.available_until === 'string') {
     const fromDate = new Date(input.available_from);
     const untilDate = new Date(input.available_until);
     if (fromDate >= untilDate) {
@@ -489,7 +497,7 @@ export function validateCreateProduct(data: unknown): ValidationResult {
   }
 
   // VAT rate is only relevant for paid products (or PWYW where customer always pays > 0)
-  if (input.price_includes_vat === true && (input.price == null || input.price <= 0) && !input.allow_custom_price) {
+  if (input.price_includes_vat === true && (input.price == null || Number(input.price) <= 0) && !input.allow_custom_price) {
     errors.push('price_includes_vat cannot be true for free products (price must be greater than 0)');
   }
 
@@ -498,8 +506,7 @@ export function validateCreateProduct(data: unknown): ValidationResult {
 
 export function validateUpdateProduct(data: unknown): ValidationResult {
   const errors: string[] = [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const input = data as any;
+  const input = data as Record<string, unknown>;
   
   // Validate fields only if provided
   if (input.name !== undefined) {
@@ -565,8 +572,17 @@ export function validateUpdateProduct(data: unknown): ValidationResult {
     errors.push(...contentConfigResult.errors);
   }
 
+  // Validate preview_video_url platform
+  if (typeof input.preview_video_url === 'string' && input.preview_video_url) {
+    const parsed = parseVideoUrl(input.preview_video_url);
+    const allowedPlatforms = ['youtube', 'vimeo', 'wistia', 'bunny', 'loom'];
+    if (!allowedPlatforms.includes(parsed.platform)) {
+      errors.push('Preview video URL must be from a supported platform: YouTube, Vimeo, Wistia, Bunny, or Loom');
+    }
+  }
+
   // Validate date range if both are provided
-  if (input.available_from && input.available_until) {
+  if (typeof input.available_from === 'string' && typeof input.available_until === 'string') {
     const fromDate = new Date(input.available_from);
     const untilDate = new Date(input.available_until);
     if (fromDate >= untilDate) {
@@ -576,7 +592,7 @@ export function validateUpdateProduct(data: unknown): ValidationResult {
 
   // VAT rate is only relevant for paid products (when both fields are provided together)
   // Exception: PWYW (allow_custom_price) products always have a payment, so price_includes_vat is allowed
-  if (input.price_includes_vat === true && input.price !== undefined && input.price <= 0 && !input.allow_custom_price) {
+  if (input.price_includes_vat === true && input.price !== undefined && Number(input.price) <= 0 && !input.allow_custom_price) {
     errors.push('price_includes_vat cannot be true for free products (price must be greater than 0)');
   }
 

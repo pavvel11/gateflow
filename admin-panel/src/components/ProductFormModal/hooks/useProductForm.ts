@@ -143,6 +143,7 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
         is_listed: product.is_listed !== false,
         icon: product.icon || getIconEmoji('rocket'),
         image_url: product.image_url || null,
+        preview_video_url: product.preview_video_url || null,
         available_from: product.available_from || '',
         available_until: product.available_until || '',
         auto_grant_duration_days: product.auto_grant_duration_days || null,
@@ -271,52 +272,58 @@ export function useProductForm({ product, isOpen, onSubmit }: UseProductFormProp
   }, []);
 
   // Validate content item URL
+  // Returns i18n message keys in `message` field — translated in ContentDeliverySection
+  const platformLabels: Record<string, string> = {
+    youtube: 'YouTube', vimeo: 'Vimeo', bunny: 'Bunny.net',
+    loom: 'Loom', wistia: 'Wistia', dailymotion: 'DailyMotion', twitch: 'Twitch',
+  };
+
   const validateContentItemUrl = useCallback((url: string, type: 'video_embed' | 'download_link'): UrlValidation => {
     if (!url || url.trim() === '') {
-      return { isValid: false, message: 'URL is required' };
+      return { isValid: false, message: 'urlRequired' };
     }
 
     if (type === 'video_embed') {
       const parsed = parseVideoUrl(url);
       if (!parsed.isValid) {
         if (!isTrustedVideoPlatform(url)) {
-          return {
-            isValid: false,
-            message: 'Untrusted platform. Supported: YouTube, Vimeo, Bunny.net, Loom, Wistia, DailyMotion, Twitch'
-          };
+          return { isValid: false, message: 'untrustedPlatform' };
         }
-        return {
-          isValid: false,
-          message: 'Invalid video URL format. Please check the URL.'
-        };
+        return { isValid: false, message: 'invalidVideoUrl' };
       }
+      const label = platformLabels[parsed.platform] ?? parsed.platform;
       return {
         isValid: true,
-        message: `✓ ${parsed.platform === 'youtube' ? 'YouTube' : parsed.platform === 'vimeo' ? 'Vimeo' : parsed.platform === 'bunny' ? 'Bunny.net' : parsed.platform === 'loom' ? 'Loom' : parsed.platform === 'wistia' ? 'Wistia' : parsed.platform === 'dailymotion' ? 'DailyMotion' : parsed.platform === 'twitch' ? 'Twitch' : 'Valid'} video detected`
+        message: 'videoDetected',
+        platform: label,
       };
     } else if (type === 'download_link') {
       try {
         if (!isTrustedDownloadUrl(url)) {
-          return {
-            isValid: false,
-            message: 'URL must be from a trusted storage provider (AWS, Google Drive, Dropbox, OneDrive, CDN, etc.)'
-          };
+          return { isValid: false, message: 'untrustedDownloadUrl' };
         }
-
-        return {
-          isValid: true,
-          message: '✓ Valid download URL'
-        };
+        return { isValid: true, message: 'validDownloadUrl' };
       } catch {
-        return {
-          isValid: false,
-          message: 'Invalid URL format'
-        };
+        return { isValid: false, message: 'invalidUrlFormat' };
       }
     }
 
-    return { isValid: false, message: 'Unknown type' };
+    return { isValid: false, message: 'unknownType' };
   }, []);
+
+  // Auto-validate existing content item URLs when modal opens with existing product
+  useEffect(() => {
+    if (!isOpen || !product) return;
+    const items = (product.content_config as ProductContentConfig)?.content_items || [];
+    const initial: Record<number, UrlValidation> = {};
+    items.forEach((item, index) => {
+      const url = item.type === 'video_embed' ? item.config?.embed_url : item.config?.download_url;
+      if (url) {
+        initial[index] = validateContentItemUrl(url, item.type as 'video_embed' | 'download_link');
+      }
+    });
+    setUrlValidation(initial);
+  }, [isOpen, product, validateContentItemUrl]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
