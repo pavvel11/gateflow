@@ -482,14 +482,7 @@ export async function trackServerSideConversion(
       eventSourceUrl: data.eventSourceUrl,
     }, supabase).catch(() => {});
 
-    if (result.success) {
-      console.log(`[Tracking Server] ${data.eventName} sent to ${result.destination}:`, {
-        eventId,
-        value: data.value,
-        currency: data.currency,
-        ...(result.eventsReceived !== undefined && { eventsReceived: result.eventsReceived }),
-      });
-    } else {
+    if (!result.success) {
       console.error(`[Tracking Server] ${result.destination} error:`, result.error);
     }
   }

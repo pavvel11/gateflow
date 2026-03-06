@@ -71,11 +71,9 @@ export async function getExchangeRates(baseCurrency: string = 'USD'): Promise<Ex
     // Check cache first
     const cached = getCachedRates(config.provider, baseCurrency)
     if (cached) {
-      console.log(`[getExchangeRates] Cache HIT for ${baseCurrency} (${config.provider})`)
       return cached
     }
 
-    console.log(`[getExchangeRates] Cache MISS for ${baseCurrency} (${config.provider}) - fetching from API`)
     const currencyService = createCurrencyService(config.provider, config.apiKey || undefined)
     const rates = await currencyService.fetchRates(baseCurrency)
 
@@ -111,8 +109,6 @@ export async function convertCurrencyAmount(
       return null
     }
 
-    console.log(`[convertCurrencyAmount] Converting ${amount} from ${fromCurrency} to ${toCurrency} using ${config.provider}`)
-
     // Use cached getExchangeRates instead of direct fetch
     const rates = await getExchangeRates(fromCurrency)
 
@@ -128,7 +124,6 @@ export async function convertCurrencyAmount(
 
     const currencyService = createCurrencyService(config.provider, config.apiKey || undefined)
     const convertedAmount = currencyService.convert(amount, fromCurrency, toCurrency, rates)
-    console.log(`[convertCurrencyAmount] Converted ${amount} ${fromCurrency} → ${Math.round(convertedAmount)} ${toCurrency} (rate: ${rates.rates[toCurrency]})`)
     return Math.round(convertedAmount) // Round to nearest cent
   } catch (error: any) {
     console.error(`[convertCurrencyAmount] Error converting ${amount} from ${fromCurrency} to ${toCurrency}:`, error.message)

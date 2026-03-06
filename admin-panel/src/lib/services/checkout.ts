@@ -47,12 +47,8 @@ export class CheckoutService {
 
     // Enhanced email validation with disposable domain checking
     if (request.email) {
-      const safeEmail = sanitizeForLog(request.email);
-      console.log(`🔍 Validating email: ${safeEmail}`);
       const isValidEmail = await ProductValidationService.validateEmail(request.email);
-      console.log(`✅ Email validation result for ${safeEmail}: ${isValidEmail}`);
       if (!isValidEmail) {
-        console.log(`❌ Blocking disposable email: ${safeEmail}`);
         throw new CheckoutError(
           CheckoutErrorType.VALIDATION_ERROR,
           'Invalid or disposable email address not allowed',
@@ -301,10 +297,7 @@ export class CheckoutService {
 
       // Only add customer_email if it's a valid email
       if (options.email && options.email.trim() !== '') {
-        console.log(`📧 Passing customer_email to Stripe: ${sanitizeForLog(options.email)}`);
         sessionConfig.customer_email = options.email;
-      } else {
-        console.log('📧 No customer_email available for Stripe session');
       }
 
       // Add terms of service collection if enabled (resolved via DB > env > default)
@@ -403,15 +396,12 @@ export class CheckoutService {
     // Handle coupon verification
     let couponInfo: any = undefined;
     if (request.couponCode) {
-      console.log(`🎟 Verifying coupon: ${sanitizeForLog(request.couponCode)} for email: ${sanitizeForLog(request.email || '')}`);
       try {
         const { data: vResult } = await this.supabase.rpc('verify_coupon', {
           code_param: request.couponCode.toUpperCase(),
           product_id_param: product.id,
           customer_email_param: request.email || null
         });
-
-        console.log(`🎟 Coupon verification result:`, JSON.stringify(vResult, null, 2));
 
         if (vResult && vResult.valid) {
           couponInfo = {
@@ -421,13 +411,10 @@ export class CheckoutService {
             discount_value: vResult.discount_value,
             exclude_order_bumps: vResult.exclude_order_bumps
           };
-          console.log(`🎟 Discount applied: ${couponInfo.discount_type} ${couponInfo.discount_value}`);
         }
       } catch (error) {
         console.error('Error verifying coupon during checkout:', error);
       }
-    } else {
-      console.log('🎟 No coupon code provided in request');
     }
 
     // Validate custom amount for Pay What You Want

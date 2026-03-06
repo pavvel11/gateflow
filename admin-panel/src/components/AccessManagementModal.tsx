@@ -73,12 +73,10 @@ const AccessManagementModal: React.FC<AccessManagementModalProps> = ({
         limit: 100,
         sort: 'name',
       });
-      console.log('[AccessManagementModal] Fetched products:', response.data?.length || 0);
       setAvailableProducts(response.data || []);
     } catch (err) {
       // Retry on auth errors (session might not be ready yet)
       if (retryCount < 2) {
-        console.log('[AccessManagementModal] Error fetching, retrying in 500ms...');
         setTimeout(() => fetchAvailableProducts(retryCount + 1), 500);
         return;
       }

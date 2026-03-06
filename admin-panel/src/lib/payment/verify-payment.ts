@@ -59,8 +59,6 @@ async function updateProfileWithCompanyData(
 
       if (error) {
         console.error('Failed to update profile with customer data:', error);
-      } else {
-        console.log('Successfully updated profile with customer data for user:', userId);
       }
     }
   } catch (error) {
@@ -360,14 +358,8 @@ export async function verifyPaymentSession(
             coupon_id_param: hasCoupon && couponId ? couponId : null
           };
           
-          console.log('Calling process_stripe_payment_completion_with_bump with:', JSON.stringify(rpcParams, null, 2));
-
           const { data: paymentResult, error: paymentError } = await serviceClient
             .rpc('process_stripe_payment_completion_with_bump', rpcParams);
-
-          if (paymentResult) {
-             console.log('Raw DB paymentResult:', JSON.stringify(paymentResult, null, 2));
-          }
 
           if (paymentError) {
             console.error(
@@ -493,11 +485,9 @@ export async function verifyPaymentSession(
                   console.error('OTO generation error:', otoError);
                 } else if (otoResult?.has_oto) {
                   otoInfo = otoResult as OtoInfo;
-                  console.log('Generated OTO coupon:', otoInfo.coupon_code);
                 } else if (otoResult?.reason) {
                   // Pass through skipped OTO info (e.g., user already owns the product)
                   otoInfo = otoResult as OtoInfo;
-                  console.log('OTO skipped:', otoResult.reason, 'slug:', otoResult.skipped_oto_product_slug);
                 }
               }
             } catch (otoErr) {
@@ -670,14 +660,8 @@ export async function verifyPaymentIntent(
             coupon_id_param: couponId || null
           };
 
-          console.log('Calling process_stripe_payment_completion_with_bump for PaymentIntent:', JSON.stringify(rpcParams, null, 2));
-
           const { data: paymentResult, error: paymentError } = await serviceClient
             .rpc('process_stripe_payment_completion_with_bump', rpcParams);
-
-          if (paymentResult) {
-            console.log('Raw DB paymentResult for PaymentIntent:', JSON.stringify(paymentResult, null, 2));
-          }
 
           if (paymentError) {
             console.error(
@@ -809,11 +793,9 @@ export async function verifyPaymentIntent(
                   console.error('OTO generation error:', otoError);
                 } else if (otoResult?.has_oto) {
                   otoInfo = otoResult as OtoInfo;
-                  console.log('Generated OTO coupon:', otoInfo.coupon_code);
                 } else if (otoResult?.reason) {
                   // Pass through skipped OTO info (e.g., user already owns the product)
                   otoInfo = otoResult as OtoInfo;
-                  console.log('OTO skipped:', otoResult.reason, 'slug:', otoResult.skipped_oto_product_slug);
                 }
               }
             } catch (otoErr) {

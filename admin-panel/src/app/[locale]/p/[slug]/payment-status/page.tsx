@@ -27,8 +27,6 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
   
   // Get authenticated user (optional for guest purchases)
   const { data: { user } } = await supabase.auth.getUser();
-  console.log('Payment status page - user:', user ? { id: user.id, email: user.email } : null);
-  
   // For free products, user must be logged in
   if (!isStripePayment && !user) {
     redirect('/login');
@@ -59,16 +57,6 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
       const result = await verifyPaymentSession(session_id, user);
       customerEmail = result.customer_email || '';
       
-      console.log('Payment verification result:', {
-        scenario: result.scenario,
-        access_granted: result.access_granted,
-        send_magic_link: result.send_magic_link,
-        requires_login: result.requires_login,
-        is_guest_purchase: result.is_guest_purchase,
-        user_id: user?.id || 'null',
-        oto_info: result.oto_info
-      });
-
       // Capture OTO info (both active and skipped)
       if (result.oto_info?.has_oto || result.oto_info?.reason) {
         otoInfo = result.oto_info;
@@ -110,16 +98,6 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
       // Handle Payment Intent flow (custom payment form)
       const result = await verifyPaymentIntent(payment_intent, user);
       customerEmail = result.customer_email || '';
-
-      console.log('Payment Intent verification result:', {
-        status: result.status,
-        access_granted: result.access_granted,
-        send_magic_link: result.send_magic_link,
-        requires_login: result.requires_login,
-        is_guest_purchase: result.is_guest_purchase,
-        user_id: user?.id || 'null',
-        oto_info: result.oto_info
-      });
 
       // Capture OTO info (both active and skipped)
       if (result.oto_info?.has_oto || result.oto_info?.reason) {
@@ -237,7 +215,7 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
     }
 
     if (customerHasOtoAccess) {
-      console.log('Customer already has access to OTO product, skipping OTO offer');
+      // Customer already owns OTO product - skip OTO offer
     } else {
       // Build OTO checkout URL
       const otoRedirect = buildOtoRedirectUrl({
@@ -268,7 +246,6 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
       if (!otoRedirect.hasAllRequiredParams) {
         console.warn('OTO Redirect missing params:', otoRedirect.missingParams, '- OTO countdown may not work');
       }
-      console.log('OTO Offer configured:', otoOfferInfo.checkoutUrl, 'Expires:', otoInfo.expires_at);
     }
   }
 
@@ -276,14 +253,6 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
   // 1. OTO active → handled above (otoOfferInfo is set)
   // 2. OTO skipped (user owns product) → NO redirect
   // 3. No OTO → use success_redirect_url
-  console.log('Redirect logic check:', {
-    accessGranted,
-    paymentStatus,
-    hasOtoOfferInfo: !!otoOfferInfo,
-    otoInfoHasOto: otoInfo?.has_oto,
-    otoInfoReason: otoInfo?.reason,
-    productSuccessRedirectUrl: product.success_redirect_url
-  });
 
   // Include magic_link_sent as a success scenario (guest purchase)
   const isSuccessfulPayment = (accessGranted && paymentStatus === 'completed') || paymentStatus === 'magic_link_sent';
@@ -293,7 +262,7 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
     const otoWasSkipped = otoInfo?.reason === 'already_owns_oto_product';
 
     if (otoWasSkipped) {
-      console.log('OTO was skipped (user owns product) - no redirect');
+      // OTO was skipped (user owns product) - no redirect
     } else {
       // No OTO configured - use regular success_redirect_url
       // SECURITY FIX (V11): Validate success_url to prevent open redirect
@@ -311,8 +280,6 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
       }
       const targetUrl = overrideRedirectUrl || product.success_redirect_url;
 
-      console.log('No OTO - checking success_redirect_url:', { overrideRedirectUrl, targetUrl });
-
       if (targetUrl) {
         const redirectResult = buildSuccessRedirectUrl({
           targetUrl,
@@ -325,9 +292,6 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
         });
 
         finalRedirectUrl = redirectResult.url;
-        console.log('Success Redirect configured:', finalRedirectUrl);
-      } else {
-        console.log('No targetUrl - redirect will not happen');
       }
     }
   }

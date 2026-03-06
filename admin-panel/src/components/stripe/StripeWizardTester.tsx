@@ -36,7 +36,6 @@ export function StripeWizardTester() {
         <StripeConfigWizard
           onClose={() => setIsOpen(false)}
           onComplete={() => {
-            console.log('✅ Wizard completed!')
             setIsOpen(false)
             // You can add a toast notification here
           }}

@@ -23,11 +23,8 @@ export function useCurrencyConversion() {
     // Check client-side cache first
     const cached = ratesCache.current.get(targetCurrency);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      console.log(`[useCurrencyConversion] Client cache HIT for ${targetCurrency}`);
       return cached.rates;
     }
-
-    console.log(`[useCurrencyConversion] Client cache MISS for ${targetCurrency} - fetching from server`);
 
     // Fetch from server (which has its own cache)
     const rates = await getExchangeRates(targetCurrency);
