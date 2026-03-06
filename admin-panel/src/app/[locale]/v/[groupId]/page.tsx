@@ -1,208 +1,26 @@
-'use client';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { validateLicense, extractDomainFromUrl } from '@/lib/license/verify';
+import VariantSelectorClient from './VariantSelectorClient';
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
-import { useTranslations, useLocale } from 'next-intl';
-import { formatPrice } from '@/lib/constants';
-import { useConfig } from '@/components/providers/config-provider';
-
-interface Variant {
-  id: string;
-  name: string;
-  slug: string;
-  variant_name: string | null;
-  display_order: number;
-  is_featured: boolean;
-  price: number;
-  currency: string;
-  description: string | null;
-  image_url: string | null;
-  is_active: boolean;
+interface PageProps {
+  params: Promise<{ groupId: string; locale: string }>;
 }
 
-// Check if string is a valid UUID
-const isUUID = (str: string): boolean => {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  return uuidRegex.test(str);
-};
+export default async function VariantSelectorPage({ params }: PageProps) {
+  const { groupId } = await params;
 
-export default function VariantSelectorPage() {
-  const params = useParams();
-  const router = useRouter();
-  const locale = useLocale();
-  const t = useTranslations('variants');
-  const config = useConfig();
+  // Check Sellf license validity (controls "Powered by" branding)
+  const adminSupabase: any = createAdminClient();
+  const { data: integrationsConfig } = await adminSupabase
+    .from('integrations_config')
+    .select('sellf_license')
+    .eq('id', 1)
+    .single() as { data: { sellf_license: string | null } | null };
 
-  const groupIdOrSlug = params.groupId as string;
+  const siteUrl = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL;
+  const currentDomain = siteUrl ? extractDomainFromUrl(siteUrl) : null;
+  const licenseResult = validateLicense(integrationsConfig?.sellf_license || '', currentDomain || undefined);
+  const licenseValid = licenseResult.valid;
 
-  const [variants, setVariants] = useState<Variant[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchVariants = async () => {
-      try {
-        const supabase = createBrowserClient(
-          config.supabaseUrl,
-          config.supabaseAnonKey
-        );
-
-        // Use UUID function if it's a UUID, otherwise use slug function
-        const isId = isUUID(groupIdOrSlug);
-        const { data, error: fetchError } = isId
-          ? await supabase.rpc('get_variant_group', { p_group_id: groupIdOrSlug })
-          : await supabase.rpc('get_variant_group_by_slug', { p_slug: groupIdOrSlug });
-
-        if (fetchError) {
-          console.error('Error fetching variants:', fetchError);
-          setError(t('loadError'));
-          return;
-        }
-
-        // Filter to only show active variants for public selector
-        const activeVariants = data.filter((v: Variant) => v.is_active);
-
-        if (!activeVariants || activeVariants.length === 0) {
-          setError(t('noVariants'));
-          return;
-        }
-
-        setVariants(activeVariants);
-      } catch (err) {
-        console.error('Error:', err);
-        setError(t('errorOccurred'));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (groupIdOrSlug) {
-      fetchVariants();
-    }
-  }, [groupIdOrSlug, config.supabaseUrl, config.supabaseAnonKey]);
-
-  const handleSelectVariant = (slug: string) => {
-    router.push(`/${locale}/checkout/${slug}`);
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-sf-deep flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sf-accent"></div>
-      </div>
-    );
-  }
-
-  if (error || variants.length === 0) {
-    return (
-      <div className="min-h-screen bg-sf-deep flex items-center justify-center">
-        <div className="bg-sf-base rounded-2xl shadow-[var(--sf-shadow-accent)] p-8 max-w-md mx-4">
-          <div className="text-center">
-            <div className="text-6xl mb-4">😕</div>
-            <h1 className="text-2xl font-bold text-sf-heading mb-2">
-              {t('notFound.title', { defaultValue: 'Variants Not Found' })}
-            </h1>
-            <p className="text-sf-body">
-              {t('notFound.description', { defaultValue: 'The requested product variants could not be found.' })}
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Get the first variant's name as the product name
-  const productName = variants[0]?.name || 'Product';
-
-  return (
-    <div className="min-h-screen bg-sf-deep py-12 px-4">
-      <div className="max-w-3xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <h1 className="text-3xl md:text-4xl font-bold text-sf-heading mb-3">
-            {t('title', { defaultValue: 'Choose Your Option' })}
-          </h1>
-          <p className="text-lg text-sf-body">
-            {t('subtitle', { defaultValue: 'Select the option that best fits your needs' })}
-          </p>
-        </div>
-
-        {/* Variants Grid */}
-        <div className="space-y-4">
-          {variants.map((variant) => (
-            <div
-              key={variant.id}
-              onClick={() => handleSelectVariant(variant.slug)}
-              className={`
-                relative bg-sf-base rounded-2xl shadow-[var(--sf-shadow-accent)]
-                transition-all duration-300 cursor-pointer border-2
-                ${variant.is_featured
-                  ? 'border-sf-accent ring-2 ring-sf-accent-soft'
-                  : 'border-transparent hover:border-sf-border-accent'
-                }
-              `}
-            >
-              {/* Featured badge */}
-              {variant.is_featured && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-sf-accent-bg text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider shadow-[var(--sf-shadow-accent)]">
-                    {t('popular', { defaultValue: 'Most Popular' })}
-                  </span>
-                </div>
-              )}
-
-              <div className="p-6 flex flex-col md:flex-row items-center gap-6">
-                {/* Variant Image */}
-                {variant.image_url && (
-                  <div className="flex-shrink-0">
-                    <img
-                      src={variant.image_url}
-                      alt={variant.variant_name || variant.name}
-                      className="w-24 h-24 object-cover rounded-xl"
-                    />
-                  </div>
-                )}
-
-                {/* Variant Info */}
-                <div className="flex-grow text-center md:text-left">
-                  <h3 className="text-xl font-bold text-sf-heading mb-1">
-                    {variant.variant_name || variant.name}
-                  </h3>
-                  {variant.description && (
-                    <p className="text-sf-body text-sm line-clamp-2">
-                      {variant.description}
-                    </p>
-                  )}
-                </div>
-
-                {/* Price and CTA */}
-                <div className="flex-shrink-0 text-center md:text-right">
-                  <div className="text-2xl md:text-3xl font-bold text-sf-heading mb-2">
-                    {formatPrice(variant.price, variant.currency)} {variant.currency}
-                  </div>
-                  <button
-                    className={`
-                      px-6 py-2.5 rounded-full font-semibold transition-all duration-200 active:scale-[0.98]
-                      ${variant.is_featured
-                        ? 'bg-sf-accent-bg text-white hover:bg-sf-accent-hover shadow-[var(--sf-shadow-accent)]'
-                        : 'bg-sf-raised text-sf-heading hover:bg-sf-hover'
-                      }
-                    `}
-                  >
-                    {t('select', { defaultValue: 'Select' })}
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Footer note */}
-        <p className="text-center text-sm text-sf-muted mt-8">
-          {t('securePayment', { defaultValue: 'Secure payment • Instant access' })}
-        </p>
-      </div>
-    </div>
-  );
+  return <VariantSelectorClient groupId={groupId} licenseValid={licenseValid} />;
 }

@@ -172,8 +172,8 @@ test.describe('Variant Selector Page', () => {
     await page.goto(`/pl/v/${fakeGroupId}`);
     await page.waitForLoadState('networkidle');
 
-    // Should show error message
-    await expect(page.locator('.text-6xl').filter({ hasText: '😕' })).toBeVisible();
+    await expect(page.getByTestId('variant-not-found')).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Nie znaleziono wariantów|Variants Not Found/i })).toBeVisible();
   });
 
   test('should show secure payment footer', async ({ page }) => {
@@ -354,8 +354,7 @@ test.describe('Variant Selector - All Inactive Variants', () => {
     await page.goto(`/pl/v/${inactiveGroup.id}`);
     await page.waitForLoadState('networkidle');
 
-    // Should show not found/error since no active variants
-    await expect(page.locator('.text-6xl').filter({ hasText: '😕' })).toBeVisible();
+    await expect(page.getByTestId('variant-not-found')).toBeVisible();
   });
 });
 
@@ -458,5 +457,150 @@ test.describe('Variant Selector - Locale Handling', () => {
     // Default locale doesn't include prefix with 'as-needed' strategy
     await page.waitForURL(/\/checkout\//);
     expect(page.url()).toContain('/checkout/');
+  });
+});
+
+test.describe('Variant Selector - PWYW, Icon and Branding', () => {
+  let pwywProduct: any;
+  let fixedProduct: any;
+  let iconProduct: any;
+  let variantGroup: any;
+
+  test.beforeAll(async () => {
+    // PWYW product with min price and suggested price
+    const { data: pwyw, error: pwywError } = await supabaseAdmin
+      .from('products')
+      .insert({
+        name: 'PWYW Product',
+        slug: `pwyw-variant-${Date.now()}`,
+        price: 29,
+        currency: 'USD',
+        description: 'Pay what you want',
+        is_active: true,
+        icon: '💰',
+        allow_custom_price: true,
+        custom_price_min: 9,
+      })
+      .select()
+      .single();
+
+    if (pwywError) throw pwywError;
+    pwywProduct = pwyw;
+
+    // Fixed price product
+    const { data: fixed, error: fixedError } = await supabaseAdmin
+      .from('products')
+      .insert({
+        name: 'Fixed Price Product',
+        slug: `fixed-variant-${Date.now()}`,
+        price: 99,
+        currency: 'USD',
+        description: 'Standard fixed price',
+        is_active: true,
+        icon: null,
+        allow_custom_price: false,
+      })
+      .select()
+      .single();
+
+    if (fixedError) throw fixedError;
+    fixedProduct = fixed;
+
+    // Product with emoji icon
+    const { data: withIcon, error: iconError } = await supabaseAdmin
+      .from('products')
+      .insert({
+        name: 'Icon Product',
+        slug: `icon-variant-${Date.now()}`,
+        price: 49,
+        currency: 'USD',
+        description: 'Has an emoji icon',
+        is_active: true,
+        icon: '🚀',
+        allow_custom_price: false,
+      })
+      .select()
+      .single();
+
+    if (iconError) throw iconError;
+    iconProduct = withIcon;
+
+    const { data: group, error: groupError } = await supabaseAdmin
+      .from('variant_groups')
+      .insert({
+        name: 'PWYW Feature Test Group',
+        slug: `pwyw-feature-group-${Date.now()}`
+      })
+      .select()
+      .single();
+
+    if (groupError) throw groupError;
+    variantGroup = group;
+
+    await supabaseAdmin.from('product_variant_groups').insert([
+      { group_id: variantGroup.id, product_id: pwywProduct.id, variant_name: 'PWYW Option', display_order: 0, is_featured: false },
+      { group_id: variantGroup.id, product_id: fixedProduct.id, variant_name: 'Fixed Option', display_order: 1, is_featured: false },
+      { group_id: variantGroup.id, product_id: iconProduct.id, variant_name: 'Icon Option', display_order: 2, is_featured: false },
+    ]);
+  });
+
+  test.afterAll(async () => {
+    if (variantGroup) {
+      await supabaseAdmin.from('variant_groups').delete().eq('id', variantGroup.id);
+    }
+    for (const p of [pwywProduct, fixedProduct, iconProduct]) {
+      if (p) await supabaseAdmin.from('products').delete().eq('id', p.id);
+    }
+  });
+
+  test.beforeEach(async ({ page }) => {
+    await acceptAllCookies(page);
+    await page.goto(`/pl/v/${variantGroup.id}`);
+    await page.waitForLoadState('networkidle');
+  });
+
+  test('should display PWYW badge for pay-what-you-want products', async ({ page }) => {
+    await expect(page.getByText(/Zapłac ile chcesz|Pay What You Want/i)).toBeVisible();
+  });
+
+  test('should display "suggested" label for PWYW product price', async ({ page }) => {
+    await expect(page.getByText(/sugerowana|suggested/i)).toBeVisible();
+  });
+
+  test('should display minimum price for PWYW product', async ({ page }) => {
+    // "od $9.00 USD" or "from $9.00 USD"
+    await expect(page.getByText(/od \$9|from \$9/i)).toBeVisible();
+  });
+
+  test('should NOT display PWYW badge for fixed-price products', async ({ page }) => {
+    const fixedCard = page.locator('[class*="cursor-pointer"]').filter({ hasText: 'Fixed Option' });
+    await expect(fixedCard.getByText(/Zapłac ile chcesz|Pay What You Want/i)).not.toBeVisible();
+  });
+
+  test('should display emoji icon for product with icon set', async ({ page }) => {
+    const iconCard = page.locator('[class*="cursor-pointer"]').filter({ hasText: 'Icon Option' });
+    await expect(iconCard.getByText('🚀')).toBeVisible();
+  });
+
+  test('should display emoji icon for PWYW product', async ({ page }) => {
+    const pwywCard = page.locator('[class*="cursor-pointer"]').filter({ hasText: 'PWYW Option' });
+    await expect(pwywCard.getByText('💰')).toBeVisible();
+  });
+
+  test('should display Sellf branding footer in test environment (no license)', async ({ page }) => {
+    // In test env there is no valid Sellf license, so branding should be visible
+    await expect(page.getByText(/Sellf/i).last()).toBeVisible();
+  });
+
+  test('should display improved not-found state with SVG icon', async ({ page }) => {
+    const fakeId = crypto.randomUUID();
+    await page.goto(`/pl/v/${fakeId}`);
+    await page.waitForLoadState('networkidle');
+
+    const notFound = page.getByTestId('variant-not-found');
+    await expect(notFound).toBeVisible();
+    // SVG icon container present
+    await expect(notFound.locator('svg')).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Nie znaleziono wariantów/i })).toBeVisible();
   });
 });

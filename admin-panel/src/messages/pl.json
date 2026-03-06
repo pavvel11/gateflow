@@ -2068,7 +2068,13 @@
       "loadError": "Nie udało się załadować grup wariantów",
       "deleteGroupError": "Nie udało się usunąć grupy wariantów",
       "removeProductError": "Nie udało się usunąć produktu",
-      "updateError": "Nie udało się zaktualizować"
+      "updateError": "Nie udało się zaktualizować",
+      "activateGroup": "Aktywuj grupę",
+      "deactivateGroup": "Dezaktywuj grupę",
+      "groupActivated": "Grupa wariantów aktywowana",
+      "groupDeactivated": "Grupa wariantów dezaktywowana",
+      "toggleActiveError": "Nie udało się zmienić statusu grupy",
+      "inactiveGroup": "Nieaktywna"
     }
   },
   "config": {
@@ -2729,7 +2735,10 @@
     "securePayment": "Bezpieczna płatność • Natychmiastowy dostęp",
     "loadError": "Nie udało się załadować wariantów",
     "noVariants": "Nie znaleziono wariantów",
-    "errorOccurred": "Wystąpił błąd"
+    "errorOccurred": "Wystąpił błąd",
+    "payWhatYouWant": "Zapłac ile chcesz",
+    "suggestedPrice": "sugerowana",
+    "minimumFrom": "od {price}"
   },
   "myPurchases": {
     "title": "Moje Zakupy",

@@ -40,6 +40,7 @@ interface VariantGroup {
   id: string;
   name: string | null;
   slug: string | null;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
   products: ProductInGroup[];
@@ -137,6 +138,17 @@ const VariantsPageContent: React.FC = () => {
       toast.success(t('removeSuccess'));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t('removeProductError'));
+    }
+  };
+
+  // Toggle group active status using v1 API
+  const handleToggleGroupActive = async (group: VariantGroup) => {
+    try {
+      await api.update('variant-groups', group.id, { is_active: !group.is_active });
+      await fetchGroups();
+      toast.success(group.is_active ? t('groupDeactivated') : t('groupActivated'));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('toggleActiveError'));
     }
   };
 
@@ -292,20 +304,27 @@ const VariantsPageContent: React.FC = () => {
           groups.map((group) => (
             <div
               key={group.id}
-              className="bg-sf-base border-2 border-sf-border-medium overflow-hidden"
+              className={`bg-sf-base border-2 overflow-hidden ${group.is_active ? 'border-sf-border-medium' : 'border-sf-border opacity-75'}`}
             >
               {/* Group Header */}
               <div className="px-6 py-4 bg-sf-raised border-b border-sf-border flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-sf-accent-soft flex items-center justify-center">
-                    <svg className="w-5 h-5 text-sf-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className={`w-10 h-10 flex items-center justify-center ${group.is_active ? 'bg-sf-accent-soft' : 'bg-sf-raised'}`}>
+                    <svg className={`w-5 h-5 ${group.is_active ? 'text-sf-accent' : 'text-sf-muted'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-sf-heading">
-                      {group.name || t('unnamedGroup')} ({group.products.length} {t('products')})
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-sf-heading">
+                        {group.name || t('unnamedGroup')} ({group.products.length} {t('products')})
+                      </h3>
+                      {!group.is_active && (
+                        <span className="px-2 py-0.5 text-xs bg-sf-raised text-sf-muted border border-sf-border">
+                          {t('inactiveGroup')}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-sf-muted font-mono">
                       {group.slug ? `/v/${group.slug}` : `ID: ${group.id.slice(0, 8)}...`}
                     </p>
@@ -331,6 +350,21 @@ const VariantsPageContent: React.FC = () => {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
+                  </button>
+                  <button
+                    onClick={() => handleToggleGroupActive(group)}
+                    className={`p-2 transition-colors ${group.is_active ? 'text-sf-muted hover:text-sf-warning' : 'text-sf-success hover:text-sf-success'}`}
+                    title={group.is_active ? t('deactivateGroup') : t('activateGroup')}
+                  >
+                    {group.is_active ? (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    )}
                   </button>
                   <button
                     onClick={() => {

@@ -47,7 +47,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     // Get the variant group
     const { data: group, error: groupError } = await supabase
       .from('variant_groups')
-      .select('id, name, slug, created_at, updated_at')
+      .select('id, name, slug, is_active, created_at, updated_at')
       .eq('id', groupId)
       .single();
 
@@ -138,9 +138,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
 
     const body = await parseJsonBody<Record<string, unknown>>(request);
-    const { name, slug, products } = body as {
+    const { name, slug, is_active, products } = body as {
       name?: string;
       slug?: string;
+      is_active?: boolean;
       products?: Array<{
         product_id: string;
         variant_name?: string;
@@ -170,11 +171,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       });
     }
 
-    // Update group name and/or slug if provided
-    if (name !== undefined || slug !== undefined) {
-      const updates: { name?: string | null; slug?: string | null } = {};
+    // Update group name, slug and/or is_active if provided
+    if (name !== undefined || slug !== undefined || is_active !== undefined) {
+      const updates: { name?: string | null; slug?: string | null; is_active?: boolean } = {};
       if (name !== undefined) updates.name = name || null;
       if (slug !== undefined) updates.slug = slug || null;
+      if (is_active !== undefined) updates.is_active = is_active;
 
       const { error: updateError } = await supabase
         .from('variant_groups')
@@ -257,7 +259,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     // Fetch updated group with products (matching GET response shape)
     const { data: updatedGroup, error: refetchError } = await supabase
       .from('variant_groups')
-      .select('id, name, slug, created_at, updated_at')
+      .select('id, name, slug, is_active, created_at, updated_at')
       .eq('id', groupId)
       .single();
 

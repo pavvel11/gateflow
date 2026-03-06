@@ -2053,7 +2053,13 @@
       "loadError": "Failed to load variant groups",
       "deleteGroupError": "Failed to delete variant group",
       "removeProductError": "Failed to remove product",
-      "updateError": "Failed to update"
+      "updateError": "Failed to update",
+      "activateGroup": "Activate group",
+      "deactivateGroup": "Deactivate group",
+      "groupActivated": "Variant group activated",
+      "groupDeactivated": "Variant group deactivated",
+      "toggleActiveError": "Failed to update group status",
+      "inactiveGroup": "Inactive"
     }
   },
   "config": {
@@ -2714,7 +2720,10 @@
     "securePayment": "Secure payment • Instant access",
     "loadError": "Failed to load variants",
     "noVariants": "No variants found",
-    "errorOccurred": "An error occurred"
+    "errorOccurred": "An error occurred",
+    "payWhatYouWant": "Pay What You Want",
+    "suggestedPrice": "suggested",
+    "minimumFrom": "from {price}"
   },
   "myPurchases": {
     "title": "My Purchases",

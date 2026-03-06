@@ -45,6 +45,7 @@ interface VariantGroupWithProducts {
   id: string;
   name: string | null;
   slug: string | null;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
   products: ProductInGroup[];
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest) {
     // Build paginated query for groups
     let query = supabase
       .from('variant_groups')
-      .select('id, name, slug, created_at, updated_at');
+      .select('id, name, slug, is_active, created_at, updated_at');
 
     query = applyCursorToQuery(query, cursor, 'created_at', 'desc');
     query = query.order('created_at', { ascending: false });
@@ -174,9 +175,10 @@ export async function POST(request: NextRequest) {
     const { supabase } = await authenticate(request, [API_SCOPES.PRODUCTS_WRITE]);
 
     const body = await parseJsonBody<Record<string, unknown>>(request);
-    const { name, slug, products } = body as {
+    const { name, slug, is_active, products } = body as {
       name?: string;
       slug?: string;
+      is_active?: boolean;
       products: Array<{
         product_id: string;
         variant_name?: string;
@@ -240,8 +242,8 @@ export async function POST(request: NextRequest) {
     // Create the variant group
     const { data: newGroup, error: groupError } = await supabase
       .from('variant_groups')
-      .insert({ name: name || null, slug: slug || null })
-      .select('id, name, slug, created_at, updated_at')
+      .insert({ name: name || null, slug: slug || null, is_active: is_active !== false })
+      .select('id, name, slug, is_active, created_at, updated_at')
       .single();
 
     if (groupError || !newGroup) {
