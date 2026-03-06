@@ -52,6 +52,10 @@
   --sf-shadow: 0 4px 24px -4px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
   --sf-shadow-accent: 0 4px 30px -4px rgba(0,120,187,0.30);
 
+  /* Tooltip — inverted from main theme for contrast */
+  --sf-tooltip-bg: #F0F4FA;
+  --sf-tooltip-text: #0B1120;
+
   /* Brutalist border tiers */
   --sf-border-subtle: rgba(255,255,255,0.06);
   --sf-border-medium: rgba(255,255,255,0.12);
@@ -102,6 +106,10 @@
   --sf-text-body: #3E5068;
   --sf-text-muted: #5b6578;
   --sf-text-inverse: #ffffff;
+
+  /* Tooltip — inverted from main theme for contrast */
+  --sf-tooltip-bg: #0B1120;
+  --sf-tooltip-text: #F0F4FA;
 
   --sf-border: rgba(0,0,0,0.10);
   --sf-border-accent: rgba(0,112,184,0.18);
@@ -198,6 +206,8 @@
   --color-sf-row-alt: var(--sf-bg-row-alt);
   --color-sf-input: var(--sf-bg-input);
   --color-sf-inverse: var(--sf-text-inverse);
+  --color-sf-tooltip-bg: var(--sf-tooltip-bg);
+  --color-sf-tooltip-text: var(--sf-tooltip-text);
   --color-sf-sidebar-bg: var(--sf-sidebar-bg);
   --color-sf-sidebar-text: var(--sf-sidebar-text);
   --color-sf-sidebar-text-active: var(--sf-sidebar-text-active);
