@@ -3260,5 +3260,17 @@
       "updateAvailable": "Dostępna wersja {version}.",
       "upgradeNow": "Aktualizuj teraz"
     }
+  },
+  "securityAudit": {
+    "title": "Audyt bezpieczeństwa",
+    "description": "Sprawdź konfigurację Supabase i aplikacji pod kątem bezpieczeństwa produkcyjnego. Wszystkie testy są tylko do odczytu.",
+    "runAudit": "Uruchom audyt",
+    "runAgain": "Uruchom ponownie",
+    "running": "Sprawdzanie...",
+    "passed": "OK",
+    "warnings": "ostrzeżenia",
+    "issues": "problemy",
+    "lastRun": "Ostatnie uruchomienie",
+    "notRunYet": "Kliknij \"Uruchom audyt\" aby sprawdzić konfigurację Supabase pod kątem bezpieczeństwa."
   }
 }

@@ -3245,5 +3245,17 @@
       "updateAvailable": "Version {version} is available.",
       "upgradeNow": "Upgrade now"
     }
+  },
+  "securityAudit": {
+    "title": "Security Audit",
+    "description": "Check your Supabase and app configuration for production security issues. All checks are read-only.",
+    "runAudit": "Run audit",
+    "runAgain": "Run again",
+    "running": "Running...",
+    "passed": "passed",
+    "warnings": "warnings",
+    "issues": "issues",
+    "lastRun": "Last run",
+    "notRunYet": "Click \"Run audit\" to check your Supabase configuration for security issues."
   }
 }

@@ -13,6 +13,7 @@ import LegalDocumentsSettings from './LegalDocumentsSettings'
 import OmnibusSettings from './OmnibusSettings'
 import LicenseSettings from './LicenseSettings'
 import SystemUpdateSettings from './SystemUpdateSettings'
+import SecurityAuditSettings from './SecurityAuditSettings'
 
 type TabId = 'shop' | 'payments' | 'legal' | 'system'
 
@@ -78,6 +79,7 @@ export default function SettingsTabs({ siteUrl }: { siteUrl: string }) {
           <>
             <LicenseSettings />
             <SystemUpdateSettings />
+            <SecurityAuditSettings />
           </>
         )}
       </div>
