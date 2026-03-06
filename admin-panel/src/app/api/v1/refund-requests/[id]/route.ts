@@ -201,7 +201,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     // Get transaction details for Stripe refund
     const { data: transaction, error: txError } = await adminClient
       .from('payment_transactions')
-      .select('id, stripe_payment_intent_id, amount, user_id, product_id')
+      .select('id, stripe_payment_intent_id, amount, refunded_amount, user_id, product_id')
       .eq('id', refundRequest.transaction_id)
       .single();
 
@@ -244,12 +244,15 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
           },
         });
 
-        // Update the transaction status to refunded
+        // Update the transaction status
+        const totalRefunded = (transaction.refunded_amount || 0) + refundRequest.requested_amount;
+        const isFullRefund = totalRefunded >= transaction.amount;
+
         await adminClient
           .from('payment_transactions')
           .update({
-            refunded_amount: refundRequest.requested_amount,
-            status: 'refunded',
+            refunded_amount: totalRefunded,
+            status: isFullRefund ? 'refunded' : 'completed',
             refunded_at: new Date().toISOString(),
             refunded_by: adminUserId,
             refund_reason: admin_response || 'Customer request approved',
@@ -257,8 +260,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
           })
           .eq('id', transaction.id);
 
-        // Revoke product access
-        if (transaction.user_id) {
+        // Only revoke access on full refund
+        if (isFullRefund && transaction.user_id) {
           await adminClient
             .from('user_product_access')
             .delete()

@@ -376,11 +376,14 @@ async function processRefundForTransaction(
     return { processed: true, message: 'Already refunded' };
   }
 
+  // Determine if this is a full or partial refund
+  const isFullRefund = charge.amount_refunded >= charge.amount;
+
   // Update transaction status
   const { error: updateError } = await supabase
     .from('payment_transactions')
     .update({
-      status: 'refunded',
+      status: isFullRefund ? 'refunded' : 'completed',
       refund_id: charge.refunds?.data?.[0]?.id || null,
       refunded_amount: charge.amount_refunded,
       refunded_at: new Date().toISOString(),
@@ -393,7 +396,12 @@ async function processRefundForTransaction(
     return { processed: false, message: 'Failed to update transaction status' };
   }
 
-  // SECURITY: Revoke product access
+  // Only revoke access on full refund
+  if (!isFullRefund) {
+    return { processed: true, message: `Partial refund recorded (${charge.amount_refunded}/${charge.amount} cents)` };
+  }
+
+  // SECURITY: Revoke product access on full refund
   if (transaction.user_id && transaction.product_id) {
     const { error: revokeError } = await supabase
       .from('user_product_access')
@@ -426,7 +434,7 @@ async function processRefundForTransaction(
     }
   }
 
-  return { processed: true, message: 'Refund processed and access revoked' };
+  return { processed: true, message: 'Full refund processed and access revoked' };
 }
 
 /**

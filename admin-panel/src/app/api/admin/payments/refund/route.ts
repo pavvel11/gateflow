@@ -127,13 +127,17 @@ export async function POST(request: NextRequest) {
 
     const refund = await stripe.refunds.create(refundData);
 
+    // Determine if this is a full or partial refund
+    const totalRefunded = alreadyRefunded + (refund.amount ?? refundAmount);
+    const isFullRefund = totalRefunded >= transaction.amount;
+
     // Update transaction status in database
     const { error: updateError } = await supabase
       .from('payment_transactions')
       .update({
-        status: 'refunded',
+        status: isFullRefund ? 'refunded' : 'completed',
         refund_id: refund.id,
-        refunded_amount: refund.amount,
+        refunded_amount: totalRefunded,
         refunded_at: new Date().toISOString(),
         refunded_by: user.id,
         refund_reason: reason || null,
@@ -149,34 +153,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // SECURITY: Revoke product access after successful refund
-    // This prevents users from keeping access after getting their money back
-    if (transaction.user_id && transaction.product_id) {
-      // Authenticated user - revoke from user_product_access
-      const { error: revokeError } = await supabase
-        .from('user_product_access')
-        .delete()
-        .eq('user_id', transaction.user_id)
-        .eq('product_id', transaction.product_id);
+    // Only revoke access on full refund
+    if (isFullRefund) {
+      if (transaction.user_id && transaction.product_id) {
+        const { error: revokeError } = await supabase
+          .from('user_product_access')
+          .delete()
+          .eq('user_id', transaction.user_id)
+          .eq('product_id', transaction.product_id);
 
-      if (revokeError) {
-        console.error('Warning: Failed to revoke product access after refund:', revokeError);
-        // Don't fail the refund - it's already processed, just log the issue
+        if (revokeError) {
+          console.error('Warning: Failed to revoke product access after refund:', revokeError);
+        }
       }
-    }
 
-    // SECURITY FIX (V16): Also revoke guest purchases after refund
-    // Guest purchases are stored in guest_purchases table, keyed by session_id
-    // Without this, refunded guests could later create an account and claim the product
-    if (transaction.session_id && transaction.product_id) {
-      const { error: guestRevokeError } = await supabase
-        .from('guest_purchases')
-        .delete()
-        .eq('session_id', transaction.session_id);
+      // Also revoke guest purchases after full refund
+      if (transaction.session_id && transaction.product_id) {
+        const { error: guestRevokeError } = await supabase
+          .from('guest_purchases')
+          .delete()
+          .eq('session_id', transaction.session_id);
 
-      if (guestRevokeError) {
-        console.error('Warning: Failed to revoke guest purchase after refund:', guestRevokeError);
-        // Don't fail the refund - it's already processed, just log the issue
+        if (guestRevokeError) {
+          console.error('Warning: Failed to revoke guest purchase after refund:', guestRevokeError);
+        }
       }
     }
 

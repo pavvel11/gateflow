@@ -179,13 +179,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Determine new status - partial or full refund
     const totalRefunded = alreadyRefunded + stripeRefund.amount!;
-    const newStatus = totalRefunded >= payment.amount ? 'refunded' : 'partially_refunded';
+    const isFullRefund = totalRefunded >= payment.amount;
 
     // Update transaction in database
     const { error: updateError } = await adminClient
       .from('payment_transactions')
       .update({
-        status: newStatus,
+        status: isFullRefund ? 'refunded' : 'completed',
         refund_id: stripeRefund.id,
         refunded_amount: totalRefunded,
         refunded_at: new Date().toISOString(),
@@ -205,32 +205,34 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Revoke product access after successful refund
+    // Only revoke access on full refund
     let accessRevocationFailed = false;
 
-    if (payment.user_id && payment.product_id) {
-      const { error: revokeError } = await adminClient
-        .from('user_product_access')
-        .delete()
-        .eq('user_id', payment.user_id)
-        .eq('product_id', payment.product_id);
+    if (isFullRefund) {
+      if (payment.user_id && payment.product_id) {
+        const { error: revokeError } = await adminClient
+          .from('user_product_access')
+          .delete()
+          .eq('user_id', payment.user_id)
+          .eq('product_id', payment.product_id);
 
-      if (revokeError) {
-        console.error('[refund] Failed to revoke product access:', revokeError);
-        accessRevocationFailed = true;
+        if (revokeError) {
+          console.error('[refund] Failed to revoke product access:', revokeError);
+          accessRevocationFailed = true;
+        }
       }
-    }
 
-    // Revoke guest purchases after refund
-    if (payment.session_id && payment.product_id) {
-      const { error: guestRevokeError } = await adminClient
-        .from('guest_purchases')
-        .delete()
-        .eq('session_id', payment.session_id);
+      // Revoke guest purchases after full refund
+      if (payment.session_id && payment.product_id) {
+        const { error: guestRevokeError } = await adminClient
+          .from('guest_purchases')
+          .delete()
+          .eq('session_id', payment.session_id);
 
-      if (guestRevokeError) {
-        console.error('[refund] Failed to revoke guest purchase:', guestRevokeError);
-        accessRevocationFailed = true;
+        if (guestRevokeError) {
+          console.error('[refund] Failed to revoke guest purchase:', guestRevokeError);
+          accessRevocationFailed = true;
+        }
       }
     }
 
@@ -260,7 +262,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           status: stripeRefund.status,
           reason: stripeRefund.reason,
         },
-        payment_status: newStatus,
+        payment_status: isFullRefund ? 'refunded' : 'completed',
         total_refunded: totalRefunded,
         created_at: new Date().toISOString(),
         ...(accessRevocationFailed && {

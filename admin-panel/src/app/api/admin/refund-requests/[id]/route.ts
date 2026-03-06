@@ -70,13 +70,21 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
           },
         });
 
-        // Update the transaction status to refunded
-        const newRefundedAmount = processResult.amount;
+        // Get current transaction to check existing refunded amount
+        const { data: transaction } = await supabase
+          .from('payment_transactions')
+          .select('user_id, product_id, amount, refunded_amount')
+          .eq('id', processResult.transaction_id)
+          .single();
+
+        const totalRefunded = (transaction?.refunded_amount || 0) + processResult.amount;
+        const isFullRefund = transaction ? totalRefunded >= transaction.amount : true;
+
         await supabase
           .from('payment_transactions')
           .update({
-            refunded_amount: newRefundedAmount,
-            status: 'refunded',
+            refunded_amount: totalRefunded,
+            status: isFullRefund ? 'refunded' : 'completed',
             refunded_at: new Date().toISOString(),
             refunded_by: user.id,
             refund_reason: admin_response || 'Customer request approved',
@@ -84,14 +92,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
           })
           .eq('id', processResult.transaction_id);
 
-        // Revoke product access
-        const { data: transaction } = await supabase
-          .from('payment_transactions')
-          .select('user_id, product_id')
-          .eq('id', processResult.transaction_id)
-          .single();
-
-        if (transaction?.user_id) {
+        // Only revoke access on full refund
+        if (isFullRefund && transaction?.user_id) {
           await supabase
             .from('user_product_access')
             .delete()

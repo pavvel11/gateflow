@@ -50,17 +50,18 @@ export async function processRefund(data: RefundRequest): Promise<RefundResponse
   const stripe = await getStripeServer();
 
   try {
-    // Calculate refund amount
+    // Calculate refund amount (amounts in DB are already in cents)
     const refundAmount = data.amount || transaction.amount;
+    const alreadyRefunded = transaction.refunded_amount || 0;
 
-    if (refundAmount > (transaction.amount - transaction.refunded_amount)) {
+    if (refundAmount > (transaction.amount - alreadyRefunded)) {
       throw new Error('Refund amount exceeds available amount');
     }
 
-    // Create refund in Stripe
+    // Create refund in Stripe (amount is already in cents)
     const refund = await stripe.refunds.create({
       payment_intent: transaction.stripe_payment_intent_id!,
-      amount: Math.round(refundAmount * 100), // Convert to cents
+      amount: refundAmount,
       reason: (data.reason as 'duplicate' | 'fraudulent' | 'requested_by_customer') || 'requested_by_customer',
       metadata: {
         refunded_by: user.id,
@@ -69,16 +70,17 @@ export async function processRefund(data: RefundRequest): Promise<RefundResponse
     });
 
     // Update transaction in database
-    const newRefundedAmount = transaction.refunded_amount + refundAmount;
-    const newStatus = newRefundedAmount >= transaction.amount ? 'refunded' : 'completed';
+    const totalRefunded = alreadyRefunded + (refund.amount ?? refundAmount);
+    const isFullRefund = totalRefunded >= transaction.amount;
 
     const { error: updateError } = await supabase
       .from('payment_transactions')
       .update({
-        refunded_amount: newRefundedAmount,
-        status: newStatus,
+        refunded_amount: totalRefunded,
+        status: isFullRefund ? 'refunded' : 'completed',
         refunded_at: new Date().toISOString(),
         refunded_by: user.id,
+        refund_id: refund.id,
         refund_reason: data.reason,
         updated_at: new Date().toISOString(),
       })
@@ -88,8 +90,8 @@ export async function processRefund(data: RefundRequest): Promise<RefundResponse
       throw new Error('Failed to update transaction status');
     }
 
-    // If fully refunded, revoke product access
-    if (newStatus === 'refunded') {
+    // Only revoke access on full refund
+    if (isFullRefund) {
       await supabase
         .from('user_product_access')
         .delete()
@@ -104,8 +106,8 @@ export async function processRefund(data: RefundRequest): Promise<RefundResponse
     return {
       success: true,
       refundId: refund.id,
-      amount: refundAmount,
-      message: 'Refund processed successfully',
+      amount: refund.amount ?? refundAmount,
+      message: isFullRefund ? 'Full refund processed' : 'Partial refund processed',
     };
 
   } catch (error) {
