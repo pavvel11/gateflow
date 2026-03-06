@@ -94,8 +94,15 @@ export default function VideoPlayer({ parsed, title, options }: VideoPlayerProps
       className="relative w-full h-full overflow-hidden bg-black"
       data-testid="video-player"
     >
+      {/* Error overlay */}
+      {adapter.error && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/80">
+          <p className="text-white/70 text-sm text-center px-4">Video unavailable</p>
+        </div>
+      )}
+
       {/* Thumbnail overlay — shown before first play */}
-      {showThumbnail && parsed.videoId && (
+      {showThumbnail && parsed.videoId && !adapter.error && (
         <div className="absolute inset-0 z-10">
           <PlayerThumbnail
             videoId={parsed.videoId}

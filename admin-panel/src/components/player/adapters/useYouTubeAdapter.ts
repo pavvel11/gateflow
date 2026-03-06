@@ -95,19 +95,29 @@ declare namespace YT {
 
 // ── Singleton YT API loader ───────────────────────────────────────────────────
 
+const YT_API_TIMEOUT_MS = 15_000;
+
 function loadYouTubeApi(): Promise<void> {
   // Already loaded
   if (window._ytApiReady) return Promise.resolve();
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     if (!window._ytApiCallbacks) window._ytApiCallbacks = [];
     window._ytApiCallbacks.push(resolve);
 
     if (!window._ytApiLoading) {
       window._ytApiLoading = true;
 
+      const timeout = setTimeout(() => {
+        window._ytApiLoading = false;
+        window._ytApiCallbacks?.forEach((cb) => cb()); // resolve as no-op; adapter won't init without YT global
+        window._ytApiCallbacks = [];
+        reject(new Error('YouTube IFrame API failed to load within timeout'));
+      }, YT_API_TIMEOUT_MS);
+
       const prevReady = window.onYouTubeIframeAPIReady;
       window.onYouTubeIframeAPIReady = () => {
+        clearTimeout(timeout);
         window._ytApiReady = true;
         if (prevReady) prevReady();
         window._ytApiCallbacks?.forEach((cb) => cb());
@@ -117,6 +127,13 @@ function loadYouTubeApi(): Promise<void> {
       const script = document.createElement('script');
       script.src = 'https://www.youtube.com/iframe_api';
       script.async = true;
+      script.onerror = () => {
+        clearTimeout(timeout);
+        window._ytApiLoading = false;
+        window._ytApiCallbacks?.forEach((cb) => cb());
+        window._ytApiCallbacks = [];
+        reject(new Error('Failed to load YouTube IFrame API script'));
+      };
       document.head.appendChild(script);
     }
   });
@@ -156,6 +173,7 @@ export function useYouTubeAdapter(
   useEffect(() => { optionsRef.current = options; });
 
   const [state, setState] = useState<PlayerState>('unstarted');
+  const [error, setError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [muted, setMuted] = useState(options.muted ?? false);
@@ -293,6 +311,11 @@ export function useYouTubeAdapter(
       if (!mountedRef.current) return;
       apiReadyRef.current = true;
       tryInit();
+    }).catch((err) => {
+      if (!mountedRef.current) return;
+      pendingPlayRef.current = false;
+      setError(err instanceof Error ? err.message : 'Failed to load YouTube player');
+      setState('ended');
     });
   }, [tryInit]);
 
@@ -331,6 +354,7 @@ export function useYouTubeAdapter(
     currentTime,
     duration,
     muted,
+    error,
     supportsControl: true,
     useNativeControls: options.controls === true,
     play,

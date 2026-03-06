@@ -6,6 +6,7 @@ import { encryptStripeKey, decryptStripeKey } from '@/lib/services/stripe-encryp
 import { requireAdminApi } from '@/lib/auth-server'
 import Stripe from 'stripe'
 import { isDemoMode, DEMO_MODE_ERROR } from '@/lib/demo-guard'
+import { invalidateStripeCache } from '@/lib/stripe/server'
 import type {
   StripeConfiguration,
   StripeMode,
@@ -463,6 +464,9 @@ export async function saveStripeConfig(input: CreateStripeConfigInput): Promise<
         errorCode: 'DATABASE_ERROR',
       }
     }
+
+    // Invalidate cached Stripe instance so the new key is used immediately
+    invalidateStripeCache()
 
     revalidatePath('/dashboard/settings')
 

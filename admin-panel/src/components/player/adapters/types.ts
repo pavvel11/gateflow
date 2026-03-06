@@ -53,6 +53,9 @@ export interface PlayerAdapter {
    */
   useNativeControls?: boolean;
 
+  /** Error message if the player failed to load (e.g. script blocked, timeout) */
+  error?: string | null;
+
   // ── Playback controls (no-op when supportsControl === false) ──────────────
   play: () => void;
   pause: () => void;

@@ -8,6 +8,10 @@ import type { StripeMode } from '@/types/stripe-config';
 
 let stripe: Stripe | null = null;
 let stripeInitPromise: Promise<Stripe> | null = null;
+let stripeInitTimestamp = 0;
+
+/** Max age of cached Stripe instance (1 hour). After key rotation the new key is picked up within this window. */
+const STRIPE_CACHE_TTL_MS = 60 * 60 * 1000;
 
 /**
  * Determines the Stripe mode based on environment
@@ -32,15 +36,17 @@ function getStripeMode(): StripeMode {
  * @throws {Error} if Stripe is not configured
  */
 export const getStripeServer = async (): Promise<Stripe> => {
-  // Return cached instance if available
-  if (stripe) {
-    return stripe;
+  // Invalidate stale cache (e.g. after key rotation)
+  if (stripe && (Date.now() - stripeInitTimestamp) >= STRIPE_CACHE_TTL_MS) {
+    stripe = null;
+    stripeInitPromise = null;
   }
 
+  // Return cached instance if available
+  if (stripe) return stripe;
+
   // Return existing initialization promise if in progress
-  if (stripeInitPromise) {
-    return stripeInitPromise;
-  }
+  if (stripeInitPromise) return stripeInitPromise;
 
   // Create new initialization promise
   stripeInitPromise = (async () => {
@@ -55,6 +61,7 @@ export const getStripeServer = async (): Promise<Stripe> => {
           apiVersion: STRIPE_API_VERSION,
           typescript: true,
         });
+        stripeInitTimestamp = Date.now();
         return stripe;
       }
     } catch (error) {
@@ -70,6 +77,7 @@ export const getStripeServer = async (): Promise<Stripe> => {
         apiVersion: STRIPE_API_VERSION,
         typescript: true,
       });
+      stripeInitTimestamp = Date.now();
       return stripe;
     }
 
@@ -81,6 +89,16 @@ export const getStripeServer = async (): Promise<Stripe> => {
 
   return stripeInitPromise;
 };
+
+/**
+ * Invalidate the cached Stripe instance immediately.
+ * Call after saving new Stripe API keys in Settings.
+ */
+export function invalidateStripeCache(): void {
+  stripe = null;
+  stripeInitPromise = null;
+  stripeInitTimestamp = 0;
+}
 
 /**
  * Verify webhook signature for security
