@@ -360,7 +360,7 @@ export function ContentDeliverySection({
 
             <div className="space-y-3">
               {contentItems.map((item, index) => (
-                <div key={index} className="p-3 bg-sf-raised border-2 border-sf-border-medium">
+                <div key={index} data-testid="content-item" className="p-3 bg-sf-raised border-2 border-sf-border-medium">
                   {/* Item header: type, title, URL, remove */}
                   <div className="flex items-center space-x-2 mb-2">
                     <select
