@@ -2736,6 +2736,7 @@
   "refundRequests": {
     "title": "Prośby o Zwrot",
     "subtitle": "Przeglądaj i rozpatruj prośby klientów o zwrot",
+    "filterByStatus": "Filtruj po statusie",
     "allStatuses": "Wszystkie statusy",
     "pending": "Oczekujące",
     "approved": "Zatwierdzone",

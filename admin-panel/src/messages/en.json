@@ -2721,6 +2721,7 @@
   "refundRequests": {
     "title": "Refund Requests",
     "subtitle": "Review and process customer refund requests",
+    "filterByStatus": "Filter by status",
     "allStatuses": "All Statuses",
     "pending": "Pending",
     "approved": "Approved",
