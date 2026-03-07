@@ -6,8 +6,9 @@ We release patches for security vulnerabilities in the following versions:
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.0.x   | :white_check_mark: |
-| < 1.0   | :x:                |
+| 1.3.x   | :white_check_mark: |
+| 1.2.x   | :white_check_mark: |
+| < 1.2   | :x:                |
 
 ## Reporting a Vulnerability
 
@@ -70,7 +71,7 @@ When deploying Sellf:
 
 ## Past Security Issues
 
-All identified security vulnerabilities have been addressed. For the security posture of the current version, see our test suite (981+ tests with 100% pass rate).
+All identified security vulnerabilities have been addressed. For the security posture of the current version, see our test suite (1500+ tests with 100% pass rate).
 
 ## Scope
 
@@ -78,8 +79,8 @@ This security policy applies to:
 - Sellf Admin Panel (`admin-panel/`)
 - MCP Server (`mcp-server/`)
 - Database migrations (`supabase/migrations/`)
-- Gatekeeper SDK (`sellf.js`)
+- Sellf SDK (`sellf.js`)
 
 ---
 
-**Last Updated**: 2026-02-13
+**Last Updated**: 2026-03-07
