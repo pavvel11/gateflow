@@ -786,6 +786,109 @@ INSERT INTO oto_offers (
   1
 );
 
+-- =====================================================
+-- VARIANT GROUP DEMO: PWYW + Standard
+-- =====================================================
+-- A variant selector group for manual testing of the /v/[groupId] page.
+-- Includes 2 PWYW products and 1 fixed-price product.
+
+INSERT INTO products (
+  name, slug, description, long_description, icon, price, currency,
+  vat_rate, price_includes_vat, features, is_active, is_featured, is_listed,
+  allow_custom_price, custom_price_min, show_price_presets, custom_price_presets
+) VALUES (
+  'Starter Pack',
+  'variant-demo-starter',
+  'Świetny punkt startowy — zapłać ile chcesz.',
+  E'## Starter Pack\n\nIdealne wprowadzenie do naszych zasobów. Zapłać ile chcesz, minimum $5.\n\n- 📚 Wprowadzenie do kursu\n- 🎯 Checklisty PDF\n- 💬 Dostęp do społeczności',
+  '🌱',
+  19.00,
+  'PLN',
+  NULL,
+  true,
+  '[{"title": "Zawiera", "items": ["Materiały PDF", "Checklisty", "Dostęp do grupy"]}]'::jsonb,
+  true,
+  false,
+  true,
+  true,
+  5,
+  true,
+  '[5, 10, 19]'
+);
+
+INSERT INTO products (
+  name, slug, description, long_description, icon, price, currency,
+  vat_rate, price_includes_vat, features, is_active, is_featured, is_listed,
+  allow_custom_price, custom_price_min, show_price_presets, custom_price_presets
+) VALUES (
+  'Pro Pack',
+  'variant-demo-pro',
+  'Pełny pakiet dla zaawansowanych — zapłać ile chcesz.',
+  E'## Pro Pack\n\nKompletny zestaw dla profesjonalistów. Zapłać od $15 — sugerowana cena to $49.\n\n- 🎓 Pełny kurs wideo\n- 🛠️ Szablony projektów\n- 🔐 Dożywotni dostęp\n- 👥 Mentoring Q&A',
+  '🚀',
+  49.00,
+  'PLN',
+  NULL,
+  true,
+  '[{"title": "Zawiera", "items": ["Kurs wideo (8h)", "Szablony projektów", "Q&A z mentorem", "Dożywotni dostęp"]}]'::jsonb,
+  true,
+  true,
+  true,
+  true,
+  15,
+  true,
+  '[15, 30, 49]'
+);
+
+INSERT INTO products (
+  name, slug, description, long_description, icon, price, currency,
+  vat_rate, price_includes_vat, features, is_active, is_featured, is_listed,
+  allow_custom_price, custom_price_min
+) VALUES (
+  'Enterprise Pack',
+  'variant-demo-enterprise',
+  'Licencja zespołowa — stała cena.',
+  E'## Enterprise Pack\n\nLicencja dla zespołów do 10 osób. Stała cena, bez niespodzianek.\n\n- 🏢 10 stanowisk\n- 📊 Panel analityczny\n- 🔧 Wsparcie techniczne\n- 📑 Faktura VAT',
+  '🏢',
+  199.00,
+  'PLN',
+  NULL,
+  true,
+  '[{"title": "Zawiera", "items": ["10 licencji", "Panel analityczny", "Wsparcie email", "Faktura VAT"]}]'::jsonb,
+  true,
+  false,
+  true,
+  false,
+  NULL
+);
+
+INSERT INTO variant_groups (name, slug, is_active)
+VALUES ('Pakiety dostępu', 'pakiety-dostepu', true);
+
+INSERT INTO product_variant_groups (group_id, product_id, variant_name, display_order, is_featured)
+VALUES
+  (
+    (SELECT id FROM variant_groups WHERE slug = 'pakiety-dostepu'),
+    (SELECT id FROM products WHERE slug = 'variant-demo-starter'),
+    'Starter',
+    0,
+    false
+  ),
+  (
+    (SELECT id FROM variant_groups WHERE slug = 'pakiety-dostepu'),
+    (SELECT id FROM products WHERE slug = 'variant-demo-pro'),
+    'Pro',
+    1,
+    true
+  ),
+  (
+    (SELECT id FROM variant_groups WHERE slug = 'pakiety-dostepu'),
+    (SELECT id FROM products WHERE slug = 'variant-demo-enterprise'),
+    'Enterprise',
+    2,
+    false
+  );
+
 -- Give john.doe access to test-oto-target (so OTO will be skipped for test-oto-owned)
 INSERT INTO user_product_access (user_id, product_id, access_granted_at)
 VALUES (

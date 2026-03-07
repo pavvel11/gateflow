@@ -7,6 +7,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { formatPrice } from '@/lib/constants';
 import { useConfig } from '@/components/providers/config-provider';
 import SellfBranding from '@/components/SellfBranding';
+import FloatingToolbar from '@/components/FloatingToolbar';
 
 interface Variant {
   id: string;
@@ -123,7 +124,8 @@ export default function VariantSelectorClient({ groupId, licenseValid }: Variant
 
   return (
     <div className="min-h-screen bg-sf-deep py-12 px-4">
-      <div className="max-w-3xl mx-auto">
+      <FloatingToolbar position="top-right" />
+      <main className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="text-center mb-10">
           <h1 className="text-3xl md:text-4xl font-bold text-sf-heading mb-3">
@@ -141,11 +143,11 @@ export default function VariantSelectorClient({ groupId, licenseValid }: Variant
               key={variant.id}
               onClick={() => handleSelectVariant(variant.slug)}
               className={`
-                relative bg-sf-base rounded-2xl shadow-[var(--sf-shadow-accent)]
+                relative bg-sf-base rounded-2xl
                 transition-all duration-300 cursor-pointer border-2
                 ${variant.is_featured
-                  ? 'border-sf-accent ring-2 ring-sf-accent-soft'
-                  : 'border-transparent hover:border-sf-border-accent'
+                  ? 'border-sf-accent ring-2 ring-sf-accent-soft shadow-[var(--sf-shadow-accent)]'
+                  : 'border-sf-border-medium hover:border-sf-border-strong shadow-sm'
                 }
               `}
             >
@@ -178,9 +180,9 @@ export default function VariantSelectorClient({ groupId, licenseValid }: Variant
 
                 {/* Variant Info */}
                 <div className="flex-grow min-w-0 text-center sm:text-left">
-                  <h3 className="text-lg font-bold text-sf-heading mb-1 leading-snug">
+                  <h2 className="text-lg font-bold text-sf-heading mb-1 leading-snug">
                     {variant.variant_name || variant.name}
-                  </h3>
+                  </h2>
                   {variant.description && (
                     <p className="text-sf-body text-sm line-clamp-2 mb-2">
                       {variant.description}
@@ -188,9 +190,9 @@ export default function VariantSelectorClient({ groupId, licenseValid }: Variant
                   )}
                   {/* PWYW badge */}
                   {variant.allow_custom_price && (
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-sf-accent-soft text-sf-accent border border-sf-border-accent">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-sf-accent-soft text-sf-accent border border-sf-accent/30">
+                      <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14.93V18h-2v-1.07C9.39 16.57 8 15.4 8 14h2c0 .66.9 1 2 1s2-.34 2-1c0-.66-.9-1-2-1-2.21 0-4-1.12-4-3 0-1.4 1.39-2.57 3-2.93V6h2v1.07c1.61.36 3 1.53 3 2.93h-2c0-.66-.9-1-2-1s-2 .34-2 1c0 .66.9 1 2 1 2.21 0 4 1.12 4 3 0 1.4-1.39 2.57-3 2.93z"/>
                       </svg>
                       {t('payWhatYouWant')}
                     </span>
@@ -202,24 +204,22 @@ export default function VariantSelectorClient({ groupId, licenseValid }: Variant
                   {variant.allow_custom_price ? (
                     /* PWYW pricing */
                     <div className="text-center sm:text-right">
-                      <div className="flex items-baseline gap-1.5 justify-center sm:justify-end">
-                        <span className="text-2xl md:text-3xl font-bold text-sf-heading">
-                          {formatPrice(variant.price, variant.currency)} {variant.currency}
-                        </span>
-                      </div>
-                      <div className="text-xs text-sf-muted mt-0.5">
+                      <div className="text-xs text-sf-muted mb-0.5">
                         {t('suggestedPrice')}
+                      </div>
+                      <div className="text-2xl md:text-3xl font-bold text-sf-heading">
+                        {formatPrice(variant.price, variant.currency)}
                       </div>
                       {variant.custom_price_min !== null && (
                         <div className="text-xs text-sf-body mt-1 font-medium">
-                          {t('minimumFrom', { price: `${formatPrice(variant.custom_price_min, variant.currency)} ${variant.currency}` })}
+                          {t('minimumFrom', { price: formatPrice(variant.custom_price_min, variant.currency) })}
                         </div>
                       )}
                     </div>
                   ) : (
                     /* Fixed pricing */
                     <div className="text-2xl md:text-3xl font-bold text-sf-heading text-center sm:text-right">
-                      {formatPrice(variant.price, variant.currency)} {variant.currency}
+                      {formatPrice(variant.price, variant.currency)}
                     </div>
                   )}
 
@@ -244,7 +244,7 @@ export default function VariantSelectorClient({ groupId, licenseValid }: Variant
         <p className="text-center text-sm text-sf-muted mt-8 pb-10">
           {t('securePayment')}
         </p>
-      </div>
+      </main>
 
       {/* Sellf branding — hidden when a valid license is active */}
       {!licenseValid && <SellfBranding />}

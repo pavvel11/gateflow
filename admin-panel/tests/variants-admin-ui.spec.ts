@@ -136,7 +136,7 @@ test.describe('Variants Admin Page', () => {
       await createButton.click();
 
       // Modal should appear
-      const modal = page.locator('.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
+      const modal = page.getByTestId('variant-group-modal');
       await expect(modal).toBeVisible({ timeout: 5000 });
     });
 
@@ -148,11 +148,8 @@ test.describe('Variants Admin Page', () => {
       const createButton = page.getByRole('button', { name: /Utwórz grupę|Create Group/i }).first();
       await createButton.click();
 
-      const modal = page.locator('.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
+      const modal = page.getByTestId('variant-group-modal');
       await expect(modal).toBeVisible();
-
-      // Wait for products to load
-      await page.waitForTimeout(1000);
 
       // Should show test products
       for (const product of testProducts) {
@@ -168,16 +165,17 @@ test.describe('Variants Admin Page', () => {
       const createButton = page.getByRole('button', { name: /Utwórz grupę|Create Group/i }).first();
       await createButton.click();
 
-      const modal = page.locator('.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
+      const modal = page.getByTestId('variant-group-modal');
+      await expect(modal.getByText(testProducts[0].name)).toBeVisible({ timeout: 10000 });
+
       const searchInput = modal.locator('input[placeholder*="Szukaj produktów"]').or(modal.locator('input[placeholder*="Search products"]'));
       await expect(searchInput).toBeVisible();
 
       // Search for specific product
       await searchInput.fill('Admin UI Test 1');
-      await page.waitForTimeout(500);
 
-      // Should filter products
-      await expect(modal.getByText('Admin UI Test 1')).toBeVisible();
+      // Wait for filter to apply, then check results
+      await expect(modal.getByText('Admin UI Test 1')).toBeVisible({ timeout: 5000 });
       await expect(modal.getByText('Admin UI Test 2')).not.toBeVisible();
     });
 
@@ -189,8 +187,8 @@ test.describe('Variants Admin Page', () => {
       const createButton = page.getByRole('button', { name: /Utwórz grupę|Create Group/i }).first();
       await createButton.click();
 
-      const modal = page.locator('.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
-      await page.waitForTimeout(1000);
+      const modal = page.getByTestId('variant-group-modal');
+      await expect(modal.getByText(testProducts[0].name)).toBeVisible({ timeout: 10000 });
 
       // Click on first product to select
       const firstProduct = modal.locator('.cursor-pointer').filter({ hasText: 'Admin UI Test 1' }).first();
@@ -208,12 +206,11 @@ test.describe('Variants Admin Page', () => {
       const createButton = page.getByRole('button', { name: /Utwórz grupę|Create Group/i }).first();
       await createButton.click();
 
-      const modal = page.locator('.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
-      await page.waitForTimeout(1000);
+      const modal = page.getByTestId('variant-group-modal');
+      await expect(modal.getByText(testProducts[0].name)).toBeVisible({ timeout: 10000 });
 
       // Select two products
       await modal.locator('.cursor-pointer').filter({ hasText: 'Admin UI Test 1' }).first().click();
-      await page.waitForTimeout(200);
       await modal.locator('.cursor-pointer').filter({ hasText: 'Admin UI Test 2' }).first().click();
 
       // Should show variant name inputs in the right panel
@@ -230,14 +227,14 @@ test.describe('Variants Admin Page', () => {
       const createButton = page.getByRole('button', { name: /Utwórz grupę|Create Group/i }).first();
       await createButton.click();
 
-      const modal = page.locator('.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
+      const modal = page.getByTestId('variant-group-modal');
 
-      // With no products selected, submit should be disabled
+      // Wait for products to load, then check submit is disabled
+      await expect(modal.getByText(testProducts[0].name)).toBeVisible({ timeout: 10000 });
       const submitButton = modal.getByRole('button', { name: /Utwórz grupę|Create Group/i }).last();
       await expect(submitButton).toBeDisabled();
 
       // Select one product
-      await page.waitForTimeout(500);
       await modal.locator('.cursor-pointer').filter({ hasText: 'Admin UI Test 1' }).first().click();
 
       // Still should be disabled with only 1 product
@@ -252,12 +249,11 @@ test.describe('Variants Admin Page', () => {
       const createButton = page.getByRole('button', { name: /Utwórz grupę|Create Group/i }).first();
       await createButton.click();
 
-      const modal = page.locator('.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
-      await page.waitForTimeout(1000);
+      const modal = page.getByTestId('variant-group-modal');
+      await expect(modal.getByText(testProducts[0].name)).toBeVisible({ timeout: 10000 });
 
       // Select two products
       await modal.locator('.cursor-pointer').filter({ hasText: 'Admin UI Test 1' }).first().click();
-      await page.waitForTimeout(200);
       await modal.locator('.cursor-pointer').filter({ hasText: 'Admin UI Test 2' }).first().click();
 
       const submitButton = modal.locator('button[type="submit"]');
@@ -272,7 +268,7 @@ test.describe('Variants Admin Page', () => {
       const createButton = page.getByRole('button', { name: /Utwórz grupę|Create Group/i }).first();
       await createButton.click();
 
-      const modal = page.locator('.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
+      const modal = page.getByTestId('variant-group-modal');
       await expect(modal).toBeVisible();
 
       const cancelButton = modal.getByRole('button', { name: /Anuluj|Cancel/i });
@@ -289,8 +285,8 @@ test.describe('Variants Admin Page', () => {
       const createButton = page.getByRole('button', { name: /Utwórz grupę|Create Group/i }).first();
       await createButton.click();
 
-      const modal = page.locator('.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
-      await page.waitForTimeout(1000);
+      const modal = page.getByTestId('variant-group-modal');
+      await expect(modal.getByText(testProducts[0].name)).toBeVisible({ timeout: 10000 });
 
       // Enter group name (unique)
       const nameInput = modal.locator('input').first();
@@ -298,17 +294,13 @@ test.describe('Variants Admin Page', () => {
 
       // Select two products
       await modal.locator('.cursor-pointer').filter({ hasText: 'Admin UI Test 1' }).first().click();
-      await page.waitForTimeout(200);
       await modal.locator('.cursor-pointer').filter({ hasText: 'Admin UI Test 2' }).first().click();
 
       // Submit
       const submitButton = modal.locator('button[type="submit"]');
       await submitButton.click();
 
-      // Wait for API call and modal to close
-      await page.waitForTimeout(2000);
-
-      // Modal should close
+      // Modal should close after successful creation
       await expect(modal).not.toBeVisible({ timeout: 15000 });
 
       // Success toast should appear
@@ -323,21 +315,21 @@ test.describe('Variants Admin Page', () => {
       const createButton = page.getByRole('button', { name: /Utwórz grupę|Create Group/i }).first();
       await createButton.click();
 
-      const modal = page.locator('.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
-      await page.waitForTimeout(1000);
+      const modal = page.getByTestId('variant-group-modal');
+      await expect(modal.getByText(testProducts[2].name)).toBeVisible({ timeout: 10000 });
 
       // Select a product
       await modal.locator('.cursor-pointer').filter({ hasText: 'Admin UI Test 3' }).first().click();
 
       // Count should be 1
-      await expect(modal.getByText(/Wybrane produkty \(1\)|Selected Products \(1\)/i)).toBeVisible();
+      await expect(modal.locator('h3', { hasText: /Wybrane produkty \(1\)|Selected Products \(1\)/i })).toBeVisible();
 
-      // Click remove button (X icon) in selected list
-      const removeButton = modal.locator('button').filter({ has: page.locator('svg[viewBox="0 0 24 24"]') }).filter({ hasText: '' }).last();
-      await removeButton.click();
+      // Click remove button via data-testid
+      const selectedItem = modal.getByTestId('selected-product-item').filter({ hasText: 'Admin UI Test 3' });
+      await selectedItem.getByTestId('remove-product-btn').click();
 
       // Count should be 0
-      await expect(modal.getByText(/Wybrane produkty \(0\)|Selected Products \(0\)/i)).toBeVisible();
+      await expect(modal.locator('h3', { hasText: /Wybrane produkty \(0\)|Selected Products \(0\)/i })).toBeVisible();
     });
 
     test('should auto-generate slug from group name', async ({ page }) => {
@@ -348,7 +340,7 @@ test.describe('Variants Admin Page', () => {
       const createButton = page.getByRole('button', { name: /Utwórz grupę|Create Group/i }).first();
       await createButton.click();
 
-      const modal = page.locator('.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
+      const modal = page.getByTestId('variant-group-modal');
 
       // Enter group name
       const nameInput = modal.locator('input').first();
@@ -484,11 +476,100 @@ test.describe('Variants Admin Page', () => {
       // Click first star button
       await starButtons.first().click();
 
-      // Wait for update
-      await page.waitForTimeout(1000);
-
       // Verify page didn't crash and heading is still visible
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    });
+  });
+
+  test.describe('Group is_active Toggle', () => {
+    let toggleGroup: any;
+
+    test.beforeAll(async () => {
+      const { data: group, error } = await supabaseAdmin
+        .from('variant_groups')
+        .insert({
+          name: 'Toggle Active Test Group',
+          slug: `toggle-active-${Date.now()}`,
+          is_active: true
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      toggleGroup = group;
+
+      await supabaseAdmin.from('product_variant_groups').insert([
+        { group_id: toggleGroup.id, product_id: testProducts[0].id, variant_name: 'Toggle V1', display_order: 0 },
+        { group_id: toggleGroup.id, product_id: testProducts[1].id, variant_name: 'Toggle V2', display_order: 1 }
+      ]);
+    });
+
+    test.afterAll(async () => {
+      if (toggleGroup) {
+        await supabaseAdmin.from('variant_groups').delete().eq('id', toggleGroup.id);
+      }
+    });
+
+    test('should show deactivate button for active group', async ({ page }) => {
+      await loginAsAdmin(page);
+      await page.goto('/pl/dashboard/variants');
+      await page.waitForLoadState('networkidle');
+
+      await expect(page.getByText('Toggle Active Test Group')).toBeVisible({ timeout: 10000 });
+
+      const deactivateBtn = page.locator('button[title="Dezaktywuj grupę"]').or(page.locator('button[title="Deactivate group"]')).first();
+      await expect(deactivateBtn).toBeVisible();
+    });
+
+    test('should deactivate group and show inactive badge', async ({ page }) => {
+      await loginAsAdmin(page);
+      await page.goto('/pl/dashboard/variants');
+      await page.waitForLoadState('networkidle');
+
+      await expect(page.getByText('Toggle Active Test Group')).toBeVisible({ timeout: 10000 });
+
+      // Click deactivate
+      const deactivateBtn = page.locator('button[title="Dezaktywuj grupę"]').or(page.locator('button[title="Deactivate group"]')).first();
+      await deactivateBtn.click();
+
+      // Inactive badge should appear
+      await expect(page.getByText(/Nieaktywna|Inactive/).first()).toBeVisible({ timeout: 5000 });
+    });
+
+    test('should show activate button for inactive group', async ({ page }) => {
+      // Ensure group is inactive for this test
+      await supabaseAdmin.from('variant_groups').update({ is_active: false }).eq('id', toggleGroup.id);
+
+      await loginAsAdmin(page);
+      await page.goto('/pl/dashboard/variants');
+      await page.waitForLoadState('networkidle');
+
+      await expect(page.getByText('Toggle Active Test Group')).toBeVisible({ timeout: 10000 });
+
+      const activateBtn = page.locator('button[title="Aktywuj grupę"]').or(page.locator('button[title="Activate group"]')).first();
+      await expect(activateBtn).toBeVisible();
+    });
+
+    test('should activate inactive group', async ({ page }) => {
+      // Ensure group is inactive
+      await supabaseAdmin.from('variant_groups').update({ is_active: false }).eq('id', toggleGroup.id);
+
+      await loginAsAdmin(page);
+      await page.goto('/pl/dashboard/variants');
+      await page.waitForLoadState('networkidle');
+
+      await expect(page.getByText('Toggle Active Test Group')).toBeVisible({ timeout: 10000 });
+
+      // Click activate
+      const activateBtn = page.locator('button[title="Aktywuj grupę"]').or(page.locator('button[title="Activate group"]')).first();
+      await activateBtn.click();
+
+      // Success toast
+      await expect(page.getByText(/Grupa wariantów aktywowana|Variant group activated/i)).toBeVisible({ timeout: 5000 });
+
+      // Verify in DB
+      const { data } = await supabaseAdmin.from('variant_groups').select('is_active').eq('id', toggleGroup.id).single();
+      expect(data!.is_active).toBe(true);
     });
   });
 
@@ -559,18 +640,16 @@ test.describe('Variants Admin Page', () => {
       const createButton = page.getByRole('button', { name: /Utwórz grupę|Create Group/i }).first();
       await createButton.click();
 
-      const modal = page.locator('.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
-      await page.waitForTimeout(1000);
-
+      const modal = page.getByTestId('variant-group-modal');
       // testProducts[0] is already in two groups - should still be selectable
       const productCard = modal.locator('.cursor-pointer').filter({ hasText: testProducts[0].name }).first();
-      await expect(productCard).toBeVisible({ timeout: 5000 });
+      await expect(productCard).toBeVisible({ timeout: 10000 });
 
       // Click to select it
       await productCard.click();
 
       // Should be added to selection
-      await expect(modal.getByText(/Wybrane produkty \(1\)|Selected Products \(1\)/i)).toBeVisible();
+      await expect(modal.locator('h3', { hasText: /Wybrane produkty \(1\)|Selected Products \(1\)/i })).toBeVisible();
     });
   });
 });

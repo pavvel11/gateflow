@@ -460,6 +460,73 @@ test.describe('Variant Selector - Locale Handling', () => {
   });
 });
 
+test.describe('Variant Selector - Inactive Group', () => {
+  let products: any[] = [];
+  let inactiveGroup: any;
+
+  test.beforeAll(async () => {
+    for (let i = 0; i < 2; i++) {
+      const { data, error } = await supabaseAdmin
+        .from('products')
+        .insert({
+          name: `Inactive Group Product ${i + 1}`,
+          slug: `inactive-grp-product-${Date.now()}-${i}`,
+          price: 50,
+          currency: 'PLN',
+          description: `Product ${i + 1}`,
+          is_active: true,
+          icon: '📦',
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      products.push(data);
+    }
+
+    const { data: group, error: groupError } = await supabaseAdmin
+      .from('variant_groups')
+      .insert({
+        name: 'Inactive Variant Group',
+        slug: `inactive-vg-${Date.now()}`,
+        is_active: false
+      })
+      .select()
+      .single();
+
+    if (groupError) throw groupError;
+    inactiveGroup = group;
+
+    for (let i = 0; i < products.length; i++) {
+      await supabaseAdmin.from('product_variant_groups').insert({
+        group_id: inactiveGroup.id,
+        product_id: products[i].id,
+        variant_name: `Option ${i + 1}`,
+        display_order: i,
+        is_featured: false
+      });
+    }
+  });
+
+  test.afterAll(async () => {
+    if (inactiveGroup) {
+      await supabaseAdmin.from('variant_groups').delete().eq('id', inactiveGroup.id);
+    }
+    for (const p of products) {
+      await supabaseAdmin.from('products').delete().eq('id', p.id);
+    }
+  });
+
+  test('should show not-found when variant group is_active=false', async ({ page }) => {
+    await acceptAllCookies(page);
+    await page.goto(`/pl/v/${inactiveGroup.id}`);
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByTestId('variant-not-found')).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Nie znaleziono wariantów|Variants Not Found/i })).toBeVisible();
+  });
+});
+
 test.describe('Variant Selector - PWYW, Icon and Branding', () => {
   let pwywProduct: any;
   let fixedProduct: any;
@@ -560,7 +627,9 @@ test.describe('Variant Selector - PWYW, Icon and Branding', () => {
   });
 
   test('should display PWYW badge for pay-what-you-want products', async ({ page }) => {
-    await expect(page.getByText(/Zapłac ile chcesz|Pay What You Want/i)).toBeVisible();
+    // Match the badge span exactly — the description text "Pay what you want" would also match a loose regex
+    const badge = page.locator('span').filter({ hasText: /Zapłac ile chcesz|Pay What You Want/ }).first();
+    await expect(badge).toBeVisible();
   });
 
   test('should display "suggested" label for PWYW product price', async ({ page }) => {

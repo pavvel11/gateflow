@@ -268,6 +268,7 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
       <div className="flex min-h-full items-center justify-center p-4">
       {/* Modal */}
       <div
+        data-testid="variant-group-modal"
         className="relative bg-sf-base w-full max-w-4xl max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
@@ -432,6 +433,7 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
                   {selectedProducts.map((product, index) => (
                     <div
                       key={product.product_id}
+                      data-testid="selected-product-item"
                       className="bg-sf-base p-3 border-2 border-sf-border-medium"
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -480,6 +482,7 @@ const VariantGroupFormModal: React.FC<VariantGroupFormModalProps> = ({
                           {/* Remove button */}
                           <button
                             type="button"
+                            data-testid="remove-product-btn"
                             onClick={() => removeProduct(product.product_id)}
                             className="p-1 text-red-500 hover:text-red-700"
                           >

@@ -2738,7 +2738,7 @@
     "errorOccurred": "Wystąpił błąd",
     "payWhatYouWant": "Zapłac ile chcesz",
     "suggestedPrice": "sugerowana",
-    "minimumFrom": "od {price}"
+    "minimumFrom": "min. {price}"
   },
   "myPurchases": {
     "title": "Moje Zakupy",

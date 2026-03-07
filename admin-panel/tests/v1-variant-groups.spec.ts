@@ -380,6 +380,30 @@ test.describe('v1 API: Variant Groups', () => {
       expect(group!.name).toBe('V1 Updated Subscription Plans');
     });
 
+    test('should update is_active to false and persist to DB', async ({ page }) => {
+      await loginAsAdmin(page);
+
+      const response = await page.request.patch(`/api/v1/variant-groups/${createdGroupId}`, {
+        data: { is_active: false }
+      });
+
+      expect(response.status()).toBe(200);
+      const json = await response.json();
+      expect(json.data.is_active).toBe(false);
+
+      // Verify in DB
+      const { data: group } = await supabaseAdmin
+        .from('variant_groups')
+        .select('is_active')
+        .eq('id', createdGroupId)
+        .single();
+
+      expect(group!.is_active).toBe(false);
+
+      // Re-activate so subsequent tests are not affected
+      await supabaseAdmin.from('variant_groups').update({ is_active: true }).eq('id', createdGroupId);
+    });
+
     test('should update products and their order', async ({ page }) => {
       await loginAsAdmin(page);
 

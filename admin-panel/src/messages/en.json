@@ -2723,7 +2723,7 @@
     "errorOccurred": "An error occurred",
     "payWhatYouWant": "Pay What You Want",
     "suggestedPrice": "suggested",
-    "minimumFrom": "from {price}"
+    "minimumFrom": "min. {price}"
   },
   "myPurchases": {
     "title": "My Purchases",
