@@ -70,34 +70,29 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify Turnstile token (in production)
-    if (process.env.NODE_ENV === 'production' && !turnstileToken) {
-      return corsResponse(
-        { error: 'Security verification required' },
-        400,
-        origin
-      );
-    }
+    if (process.env.NODE_ENV === 'production') {
+      if (!turnstileToken) {
+        return corsResponse({ error: 'Security verification required' }, 400, origin);
+      }
 
-    if (turnstileToken && process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY) {
+      const turnstileSecret = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY;
+      if (!turnstileSecret) {
+        console.error('[claim-free] CLOUDFLARE_TURNSTILE_SECRET_KEY is not set — rejecting request to prevent unverified captcha bypass');
+        return corsResponse({ error: 'Service misconfiguration. Please contact support.' }, 500, origin);
+      }
+
       const turnstileResponse = await fetch(
         'https://challenges.cloudflare.com/turnstile/v0/siteverify',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            secret: process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY,
-            response: turnstileToken,
-          }),
+          body: JSON.stringify({ secret: turnstileSecret, response: turnstileToken }),
         }
       );
 
       const turnstileData = await turnstileResponse.json();
       if (!turnstileData.success) {
-        return corsResponse(
-          { error: 'Security verification failed. Please try again.' },
-          400,
-          origin
-        );
+        return corsResponse({ error: 'Security verification failed. Please try again.' }, 400, origin);
       }
     }
 

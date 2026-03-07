@@ -473,7 +473,7 @@ test.describe('Protection Code (Generate Protection Code)', () => {
 
       expect(response.ok).toBeTruthy();
       expect(response.body.hasAccess).toBe(true);
-      expect(response.body.userId).toBe(userWithAccess.id);
+      expect(response.body.authenticated).toBe(true);
     });
 
     test('Single product access check for authenticated user WITHOUT access', async ({ page }) => {

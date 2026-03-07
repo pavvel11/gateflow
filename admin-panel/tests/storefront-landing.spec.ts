@@ -216,6 +216,10 @@ test.describe('Modern Storefront Landing Page 2026', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
+    // Force reveal animations to completed state — IntersectionObserver can be unreliable
+    // in headless Chromium, causing opacity:0 elements to never become visible
+    await page.addStyleTag({ content: '.reveal { opacity: 1 !important; transform: none !important; transition: none !important; }' });
+
     // Verify mixed hero
     await expect(page.getByText('From Free')).toBeVisible({ timeout: 15000 });
     await expect(page.getByText('To Professional')).toBeVisible();

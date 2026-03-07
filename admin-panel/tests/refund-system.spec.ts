@@ -223,8 +223,8 @@ test.describe('Refund System - Customer Purchase History', () => {
     // Should see "Request Refund" button
     await expect(page.locator('button:has-text("Request Refund")')).toBeVisible();
 
-    // Should see remaining days
-    await expect(page.locator('text=/days left/i')).toBeVisible();
+    // Should see remaining time (e.g., "13d 23h left" or "14 days left")
+    await expect(page.locator('text=/\\d+d.*left/i')).toBeVisible();
   });
 
   test('should open refund modal when clicking request refund', async ({ page }) => {

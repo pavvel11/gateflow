@@ -82,6 +82,7 @@ function loadStripeEnvConfig(): Record<string, string> {
 const nextConfig: NextConfig = {
   /* config options here */
   output: 'standalone',
+  poweredByHeader: false,
   experimental: {
     // Enable if you need server actions
     serverActions: {
@@ -162,12 +163,12 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' js.stripe.com challenges.cloudflare.com cdn.kiprotect.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' js.stripe.com challenges.cloudflare.com cdn.kiprotect.com www.youtube.com s.ytimg.com",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: i.ibb.co *.stripe.com img.youtube.com vumbnail.com embed-ssl.wistia.com fast.wistia.com",
+              "img-src 'self' data: blob: https: i.ibb.co *.stripe.com img.youtube.com vumbnail.com embed-ssl.wistia.com fast.wistia.com placehold.co",
               "font-src 'self' data:",
               "frame-src js.stripe.com challenges.cloudflare.com *.youtube.com player.vimeo.com iframe.mediadelivery.net *.loom.com fast.wistia.net *.dailymotion.com player.twitch.tv",
-              "connect-src 'self' *.supabase.co *.stripe.com challenges.cloudflare.com http://127.0.0.1:* http://localhost:* ws://127.0.0.1:* ws://localhost:*",
+              "connect-src 'self' *.supabase.co *.stripe.com challenges.cloudflare.com www.youtube.com s.ytimg.com",
               "object-src 'none'",
               "base-uri 'self'",
             ].join('; '),

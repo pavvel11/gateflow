@@ -113,7 +113,7 @@ test.describe('Product Variants E2E Flow', () => {
     const createButton = page.getByRole('button', { name: /Utwórz grupę|Create Group/i });
     await createButton.click();
 
-    const modal = page.locator('.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
+    const modal = page.locator('[data-testid="variant-group-modal"]');
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Wait for products to load
@@ -231,11 +231,11 @@ test.describe('Product Variants E2E Flow', () => {
     await editButtons.first().click();
 
     // Modal should open with existing data
-    const modal = page.locator('.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
+    const modal = page.locator('[data-testid="variant-group-modal"]');
     await expect(modal).toBeVisible({ timeout: 5000 });
 
-    // Should show products selected
-    await expect(modal.getByText(/Wybrane produkty \(\d+\)|Selected Products \(\d+\)/i)).toBeVisible();
+    // Should show products selected (h3 heading, visible on desktop)
+    await expect(modal.locator('h3', { hasText: /Wybrane produkty \(\d+\)|Selected Products \(\d+\)/i })).toBeVisible({ timeout: 10000 });
 
     // Modify group name
     const nameInput = modal.locator('input').first();
@@ -255,7 +255,7 @@ test.describe('Product Variants E2E Flow', () => {
     // Verify name changed on page
     await page.reload();
     await page.waitForLoadState('networkidle');
-    await expect(page.getByText('E2E Updated Plans')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('E2E Updated Plans').first()).toBeVisible({ timeout: 10000 });
   });
 
   test('E2E: Remove product from variant group via edit modal', async ({ page }) => {
@@ -272,11 +272,11 @@ test.describe('Product Variants E2E Flow', () => {
     await editButtons.first().click();
 
     // Modal should open
-    const modal = page.locator('.fixed').filter({ hasText: /Wybrane produkty|Selected Products/i });
+    const modal = page.locator('[data-testid="variant-group-modal"]');
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Verify modal opened with products
-    await expect(modal.getByText(/Wybrane produkty|Selected Products/i)).toBeVisible();
+    await expect(modal.locator('h3', { hasText: /Wybrane produkty|Selected Products/i })).toBeVisible();
 
     // Close modal
     const cancelButton = modal.getByRole('button', { name: /Anuluj|Cancel/i });

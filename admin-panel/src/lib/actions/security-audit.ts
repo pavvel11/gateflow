@@ -96,6 +96,11 @@ async function executeAudit(): Promise<SecurityAuditResult> {
     checkAppUrl(),
     checkAllowedOrigins(),
     checkCookieSecure(siteUrl),
+    // Environment variable checks
+    checkAppEncryptionKey(),
+    checkTurnstile(),
+    checkCronSecret(),
+    checkStripeWebhookSecret(),
   ]);
 
   for (const result of results) {
@@ -347,6 +352,125 @@ async function checkAllowedOrigins(): Promise<SecurityCheckResult> {
       : 'ALLOWED_ORIGINS is not set. Cross-domain API access (/api/access) is limited to your own domain. If you embed Sellf on external sites, add their origins.',
     fix: hasOrigins ? undefined
       : 'If you use Sellf cross-domain (sellf.js on external sites), set ALLOWED_ORIGINS in .env.local to a comma-separated list of customer domains: ALLOWED_ORIGINS=https://site1.com,https://site2.com',
+  };
+}
+
+// ===== Environment Variable Checks =====
+
+async function checkAppEncryptionKey(): Promise<SecurityCheckResult> {
+  const key = process.env.APP_ENCRYPTION_KEY || process.env.STRIPE_ENCRYPTION_KEY;
+
+  if (!key) {
+    return {
+      id: 'app-encryption-key',
+      name: 'App encryption key',
+      status: 'fail',
+      message: 'APP_ENCRYPTION_KEY is not set. Stripe keys and webhook secrets stored in the database cannot be decrypted — payments and webhooks will fail.',
+      fix: 'Generate a key with: openssl rand -base64 32, then add APP_ENCRYPTION_KEY=<value> to .env.local and restart.',
+    };
+  }
+
+  try {
+    const buf = Buffer.from(key, 'base64');
+    if (buf.length !== 32) {
+      return {
+        id: 'app-encryption-key',
+        name: 'App encryption key',
+        status: 'fail',
+        message: `APP_ENCRYPTION_KEY is set but invalid: decoded length is ${buf.length} bytes, expected 32. Database-stored secrets cannot be decrypted.`,
+        fix: 'Generate a valid key with: openssl rand -base64 32',
+      };
+    }
+  } catch {
+    return {
+      id: 'app-encryption-key',
+      name: 'App encryption key',
+      status: 'fail',
+      message: 'APP_ENCRYPTION_KEY is not valid base64.',
+      fix: 'Generate a valid key with: openssl rand -base64 32',
+    };
+  }
+
+  return {
+    id: 'app-encryption-key',
+    name: 'App encryption key',
+    status: 'pass',
+    message: 'APP_ENCRYPTION_KEY is set and valid.',
+  };
+}
+
+async function checkTurnstile(): Promise<SecurityCheckResult> {
+  const siteKey = process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY;
+  const secretKey = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY;
+
+  if (!siteKey && !secretKey) {
+    return {
+      id: 'turnstile',
+      name: 'Cloudflare Turnstile (CAPTCHA)',
+      status: 'warn',
+      message: 'Turnstile is not configured. Bot protection on signup and free product claim endpoints is disabled.',
+      fix: 'Add CLOUDFLARE_TURNSTILE_SITE_KEY and CLOUDFLARE_TURNSTILE_SECRET_KEY to .env.local. Get keys at dash.cloudflare.com → Turnstile.',
+    };
+  }
+
+  if (siteKey && !secretKey) {
+    return {
+      id: 'turnstile',
+      name: 'Cloudflare Turnstile (CAPTCHA)',
+      status: 'fail',
+      message: 'CLOUDFLARE_TURNSTILE_SITE_KEY is set but CLOUDFLARE_TURNSTILE_SECRET_KEY is missing. The captcha widget appears for users but server-side token verification is silently skipped — bots can bypass it freely.',
+      fix: 'Add CLOUDFLARE_TURNSTILE_SECRET_KEY to .env.local. Note: the correct name is SECRET_KEY, not SERVER_KEY.',
+    };
+  }
+
+  return {
+    id: 'turnstile',
+    name: 'Cloudflare Turnstile (CAPTCHA)',
+    status: 'pass',
+    message: 'Turnstile site key and secret key are both configured.',
+  };
+}
+
+async function checkCronSecret(): Promise<SecurityCheckResult> {
+  const secret = process.env.CRON_SECRET;
+
+  if (!secret) {
+    return {
+      id: 'cron-secret',
+      name: 'Cron job secret',
+      status: 'warn',
+      message: 'CRON_SECRET is not set. All requests to /api/cron are rejected, so scheduled jobs (access-expired webhooks, webhook log cleanup) are not running.',
+      fix: 'Generate a secret with: openssl rand -base64 32, add CRON_SECRET=<value> to .env.local, restart the app, and configure your cron scheduler to call /api/cron with Authorization: Bearer <secret>.',
+    };
+  }
+
+  return {
+    id: 'cron-secret',
+    name: 'Cron job secret',
+    status: 'pass',
+    message: 'CRON_SECRET is configured. Scheduled jobs are protected and callable.',
+  };
+}
+
+async function checkStripeWebhookSecret(): Promise<SecurityCheckResult> {
+  const envSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  if (envSecret) {
+    return {
+      id: 'stripe-webhook-secret',
+      name: 'Stripe webhook secret',
+      status: 'pass',
+      message: 'STRIPE_WEBHOOK_SECRET is set in environment variables.',
+    };
+  }
+
+  // Not in env — may still work via DB (which has priority anyway)
+  return {
+    id: 'stripe-webhook-secret',
+    name: 'Stripe webhook secret',
+    status: 'warn',
+    message: 'STRIPE_WEBHOOK_SECRET is not set in environment variables. The app uses the encrypted value from the database (Settings → Integrations) as the primary source. If neither is configured, Stripe webhooks will fail signature verification and purchases will not be confirmed.',
+    fix: 'Configure the webhook secret in Settings → Integrations → Stripe (preferred), or set STRIPE_WEBHOOK_SECRET in .env.local as a fallback. Ensure APP_ENCRYPTION_KEY is valid for DB-stored secrets to work.',
   };
 }
 

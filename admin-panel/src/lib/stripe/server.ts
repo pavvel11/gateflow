@@ -107,11 +107,12 @@ export const verifyWebhookSignature = async (
   body: string | Buffer,
   signature: string
 ): Promise<Stripe.Event> => {
-  // Prefer env var; fall back to DB-stored secret (set by createStripeWebhookEndpoint)
-  let webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  // Priority 1: DB-stored secret (set via Settings → Integrations or auto-registered webhook)
+  let webhookSecret = await getDecryptedWebhookSecret() ?? undefined;
 
+  // Priority 2: env var fallback
   if (!webhookSecret) {
-    webhookSecret = await getDecryptedWebhookSecret() ?? undefined;
+    webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   }
 
   if (!webhookSecret) {

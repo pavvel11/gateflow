@@ -152,16 +152,9 @@ test.describe('Smart Landing Page', () => {
       .update({ is_active: false })
       .neq('id', '00000000-0000-0000-0000-000000000000'); // Update all
 
-    await page.waitForTimeout(1000);
-
     await loginAsAdmin(page);
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(3000);
-
-    // Debug: log page content
-    const bodyText = await page.locator('body').textContent();
-    console.log('Page contains:', bodyText?.substring(0, 500));
 
     // Check if we see admin onboarding
     const hasOnboarding = await page.locator('[data-testid="admin-onboarding"]').count();

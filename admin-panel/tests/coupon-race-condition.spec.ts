@@ -61,6 +61,12 @@ test.describe('Coupon Race Condition Security', () => {
     console.log(`Created coupon: ${couponCode} (limit=1, id=${couponId})`);
   });
 
+  test.beforeEach(async () => {
+    // Clear DB-level rate limits for verify_coupon to prevent cross-test interference
+    // The DB function check_rate_limit('verify_coupon', 20, 60) limits to 20/min
+    await supabaseAdmin.from('rate_limits').delete().in('function_name', ['verify_coupon', 'global_verify_coupon']);
+  });
+
   test.afterAll(async () => {
     // Cleanup test data
     if (couponId) {

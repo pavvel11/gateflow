@@ -16,13 +16,18 @@ const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
 test.describe('Smart Coupons System', () => {
 
-  // Clear rate limit before each test to prevent "Too many requests" errors
+  // Clear rate limits before each test to prevent "Too many requests" errors
   test.beforeEach(async () => {
     // Clear application-level rate limits (used by coupon verify API)
     await supabaseAdmin
       .from('application_rate_limits')
       .delete()
       .neq('id', '00000000-0000-0000-0000-000000000000');
+    // Clear DB-level rate limits (used by verify_coupon DB function)
+    await supabaseAdmin
+      .from('rate_limits')
+      .delete()
+      .in('function_name', ['verify_coupon', 'global_verify_coupon']);
   });
 
   test('should apply coupon via URL and calculate price correctly', async ({ page }) => {

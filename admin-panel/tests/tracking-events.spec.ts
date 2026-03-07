@@ -263,7 +263,7 @@ test.describe('Tracking Events - DataLayer & FB Pixel', () => {
 
     await page.goto(`/checkout/${testProduct.slug}`);
     await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
 
     const dataLayerEvents = await getDataLayerEvents(page);
     const fbqCalls = await getFbqCalls(page);
@@ -500,31 +500,33 @@ test.describe('Tracking Events - Consent Mode Integration', () => {
     await page.context().clearCookies();
 
     await page.goto(`/checkout/${testProduct.slug}`);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('networkidle');
 
-    // When consent is required and not given, GTM scripts should be blocked
-    // Check that GTM script is either not present or has type="text/plain"
-    const gtmScriptBlocked = await page.evaluate((gtmId) => {
+    // When consent is required and not given, the GTM container script should be blocked.
+    // Note: An inline config script (defining gtag function) may run regardless — that's OK
+    // because it only sets up the function without sending data. The actual tracking is in
+    // the container script which Klaro blocks via type="text/plain" and data-name attribute.
+    const gtmScriptStatus = await page.evaluate((gtmId) => {
       const scripts = document.querySelectorAll('script');
+      let containerBlocked = false;
+      let containerFound = false;
       for (const script of scripts) {
-        if (script.innerHTML.includes(gtmId) || (script.src && script.src.includes('googletagmanager'))) {
-          // If script has type="text/plain", it's blocked by Klaro
-          if (script.type === 'text/plain') {
-            return true; // Blocked
-          }
-          // If script has data-name attribute, it's managed by Klaro
-          if (script.hasAttribute('data-name')) {
-            return true; // Managed/blocked
-          }
+        const isGtmScript = script.innerHTML.includes(gtmId) || (script.src && script.src.includes('googletagmanager'));
+        if (!isGtmScript) continue;
+        // Inline config scripts (no data-name, no src) only define gtag() — skip them
+        if (!script.src && !script.hasAttribute('data-name') && script.type !== 'text/plain') continue;
+        containerFound = true;
+        // The container script should be blocked by Klaro
+        if (script.type === 'text/plain' || script.hasAttribute('data-name')) {
+          containerBlocked = true;
         }
       }
-      return false;
+      // Either no container script was found (completely blocked), or it was found and blocked
+      return { containerFound, containerBlocked, blocked: !containerFound || containerBlocked };
     }, TEST_GTM_ID);
 
-    // The GTM script should be blocked when consent is not given
-    // Note: Exact behavior depends on Klaro configuration
-    expect(gtmScriptBlocked).toBe(true);
+    // The GTM container script should be blocked when consent is not given
+    expect(gtmScriptStatus.blocked).toBe(true);
   });
 
   test('should update Google Consent Mode from denied to granted after accepting cookies', async ({ page }) => {

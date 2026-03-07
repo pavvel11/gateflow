@@ -358,7 +358,7 @@ test.describe('Gatekeeper Integration Tests', () => {
       expect(response.status()).toBe(400);
     });
 
-    test('Returns userId for authenticated requests', async ({ page }) => {
+    test('Returns authenticated flag for authenticated requests', async ({ page }) => {
       await loginAsUser(page, userWithAccess.email);
 
       const response = await page.evaluate(async ({ slug }) => {
@@ -373,8 +373,7 @@ test.describe('Gatekeeper Integration Tests', () => {
         return await res.json();
       }, { slug: paidProduct.slug });
 
-      expect(response.userId).toBeDefined();
-      expect(response.userId).toBe(userWithAccess.id);
+      expect(response.authenticated).toBe(true);
     });
   });
 

@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
       .select(
         'facebook_pixel_id, facebook_capi_token, facebook_test_event_code, fb_capi_enabled, send_conversions_without_consent, gtm_ss_enabled, gtm_server_container_url'
       )
-      .single();
+      .maybeSingle();
 
     if (configError) {
       console.error('[Tracking Proxy] Config fetch error:', configError);
@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
     // Determine which destinations are configured
     const destinations = resolveDestinations(config);
 
-    if (!destinations.fbCAPI && !destinations.gtmSS) {
+    if (!config || (!destinations.fbCAPI && !destinations.gtmSS)) {
       logTrackingEvent({
         eventName,
         eventId,

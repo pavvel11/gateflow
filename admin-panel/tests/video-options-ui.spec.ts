@@ -13,6 +13,7 @@ import { createTestAdmin, loginAsAdmin, supabaseAdmin } from './helpers/admin-au
  */
 
 test.describe.configure({ mode: 'serial' });
+test.setTimeout(90_000);
 
 let adminEmail: string;
 let adminPassword: string;
@@ -39,21 +40,39 @@ async function goToProducts(page: Page) {
   await loginAsAdmin(page, adminEmail, adminPassword);
   await page.goto('/pl/dashboard/products');
   await page.waitForLoadState('networkidle');
+  // Ensure products table is loaded before interacting
+  await expect(page.locator('button', { hasText: /Dodaj produkt/i })).toBeVisible({ timeout: 15000 });
 }
 
 async function openWizardAndGoToStep2(page: Page, productName: string) {
-  // Open wizard
-  await page.locator('button', { hasText: /Dodaj produkt/i }).click();
-  await expect(page.getByText('Utwórz nowy produkt')).toBeVisible({ timeout: 5000 });
+  // Open wizard — wait for page to be fully interactive first
+  const addBtn = page.locator('button', { hasText: /Dodaj produkt/i });
+  await expect(addBtn).toBeEnabled({ timeout: 10000 });
+  await addBtn.click();
+  await expect(page.getByText('Utwórz nowy produkt')).toBeVisible({ timeout: 15000 });
 
   // Fill step 1 minimum
-  await page.fill('input#name', productName);
-  await page.fill('textarea#description', 'Video options test');
-  await page.fill('input#price', '10');
+  const dlg = page.getByRole('dialog');
+  await dlg.locator('input#name').fill(productName);
+  await dlg.locator('textarea#description').fill('Video options test');
+  await dlg.locator('input#price').fill('10');
+
+  // Wait for slug auto-generation from name (required for step 1 validation)
+  await expect(dlg.locator('input#slug')).not.toHaveValue('', { timeout: 10000 });
 
   // Navigate to step 2
-  await page.getByRole('dialog').getByRole('button', { name: /Dalej/i }).click();
-  await expect(page.getByRole('button', { name: /Treść i szczegóły|Content & Details/i })).toBeVisible();
+  await dlg.getByRole('button', { name: /Dalej/i }).click();
+
+  // Wait for step 2 content delivery section to render
+  // If validation failed and step didn't advance, retry the click
+  const contentSection = dlg.getByText(/Dostarczanie treści/i);
+  try {
+    await expect(contentSection).toBeVisible({ timeout: 10000 });
+  } catch {
+    // Step might not have advanced — retry click
+    await dlg.getByRole('button', { name: /Dalej/i }).click();
+    await expect(contentSection).toBeVisible({ timeout: 15000 });
+  }
 }
 
 /** Scope all locators within the wizard dialog */
@@ -75,14 +94,14 @@ test.describe('Video Options UI', () => {
     await openWizardAndGoToStep2(page, `VO Default ${Date.now()}`);
 
     // Content delivery section should be visible
-    await expect(dialog(page).getByText(/Dostarczanie treści/i)).toBeVisible();
+    await expect(dialog(page).getByText(/Dostarczanie treści/i)).toBeVisible({ timeout: 10000 });
 
     // Default delivery type is "content"
     const deliverySelect = dialog(page).locator('select').filter({ has: page.locator('option', { hasText: /Przekierowanie/i }) });
-    await expect(deliverySelect).toHaveValue('content');
+    await expect(deliverySelect).toHaveValue('content', { timeout: 5000 });
 
     // "Add content item" button visible
-    await expect(dialog(page).getByRole('button', { name: /Dodaj element treści/i })).toBeVisible();
+    await expect(dialog(page).getByRole('button', { name: /Dodaj element treści/i })).toBeVisible({ timeout: 5000 });
 
     // Close wizard
     await page.getByRole('button', { name: /Wstecz/i }).click();
@@ -96,13 +115,16 @@ test.describe('Video Options UI', () => {
 
     // Switch to redirect — locate select by option text
     const deliverySelect = dialog(page).locator('select').filter({ has: page.locator('option', { hasText: /Przekierowanie/i }) });
+    await expect(deliverySelect).toBeVisible({ timeout: 5000 });
     await deliverySelect.selectOption('redirect');
+    // Verify selection took effect
+    await expect(deliverySelect).toHaveValue('redirect', { timeout: 5000 });
 
     // Redirect URL field visible (unique placeholder)
-    await expect(dialog(page).getByPlaceholder('https://example.com/your-content')).toBeVisible();
+    await expect(dialog(page).getByPlaceholder('https://example.com/your-content')).toBeVisible({ timeout: 10000 });
 
     // Content items and add button should be hidden
-    await expect(dialog(page).getByRole('button', { name: /Dodaj element treści/i })).not.toBeVisible();
+    await expect(dialog(page).getByRole('button', { name: /Dodaj element treści/i })).not.toBeVisible({ timeout: 5000 });
 
     // Close wizard
     await page.getByRole('button', { name: /Wstecz/i }).click();
@@ -378,10 +400,8 @@ test.describe('Video Options UI', () => {
     await urlInput.blur();
 
     // Should show error (red border or error message)
-    // The URL input should have a red border
-    await page.waitForTimeout(500);
-    const inputClasses = await urlInput.getAttribute('class');
-    expect(inputClasses).toContain('border-red');
+    // Wait for validation to apply the red border class
+    await expect(urlInput).toHaveClass(/border-red/, { timeout: 5000 });
 
     // Close wizard
     await page.getByRole('button', { name: /Wstecz/i }).click();

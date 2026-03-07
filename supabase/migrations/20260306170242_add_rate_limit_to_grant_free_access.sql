@@ -9,7 +9,7 @@ CREATE OR REPLACE FUNCTION public.grant_free_product_access(
 DECLARE
     product_record RECORD;
     current_user_id UUID;
-    access_expires_at TIMESTAMPTZ;
+    v_access_expires_at TIMESTAMPTZ;
     clean_slug TEXT;
 BEGIN
     -- Input validation and sanitization
@@ -59,16 +59,16 @@ BEGIN
 
     -- Calculate access expiration
     IF access_duration_days_param IS NOT NULL THEN
-        access_expires_at := NOW() + INTERVAL '1 day' * access_duration_days_param;
+        v_access_expires_at := NOW() + INTERVAL '1 day' * access_duration_days_param;
     ELSIF product_record.auto_grant_duration_days IS NOT NULL THEN
-        access_expires_at := NOW() + INTERVAL '1 day' * product_record.auto_grant_duration_days;
+        v_access_expires_at := NOW() + INTERVAL '1 day' * product_record.auto_grant_duration_days;
     ELSE
-        access_expires_at := NULL;
+        v_access_expires_at := NULL;
     END IF;
 
     -- Insert or update user access
     INSERT INTO public.user_product_access (user_id, product_id, access_expires_at, access_duration_days)
-    VALUES (current_user_id, product_record.id, access_expires_at, COALESCE(access_duration_days_param, product_record.auto_grant_duration_days))
+    VALUES (current_user_id, product_record.id, v_access_expires_at, COALESCE(access_duration_days_param, product_record.auto_grant_duration_days))
     ON CONFLICT (user_id, product_id)
     DO UPDATE SET
         access_expires_at = EXCLUDED.access_expires_at,
@@ -89,7 +89,7 @@ CREATE OR REPLACE FUNCTION public.grant_pwyw_free_access(
 DECLARE
     product_record RECORD;
     current_user_id UUID;
-    access_expires_at TIMESTAMPTZ;
+    v_access_expires_at TIMESTAMPTZ;
     clean_slug TEXT;
 BEGIN
     -- Input validation and sanitization
@@ -127,10 +127,10 @@ BEGIN
     END IF;
 
     -- Early return if user already has active (non-expired) access
-    PERFORM 1 FROM public.user_product_access
-    WHERE user_id = current_user_id
-      AND product_id = product_record.id
-      AND (access_expires_at IS NULL OR access_expires_at > NOW());
+    PERFORM 1 FROM public.user_product_access upa
+    WHERE upa.user_id = current_user_id
+      AND upa.product_id = product_record.id
+      AND (upa.access_expires_at IS NULL OR upa.access_expires_at > NOW());
     IF FOUND THEN
         RETURN TRUE;
     END IF;
@@ -142,16 +142,16 @@ BEGIN
 
     -- Calculate access expiration
     IF access_duration_days_param IS NOT NULL THEN
-        access_expires_at := NOW() + INTERVAL '1 day' * access_duration_days_param;
+        v_access_expires_at := NOW() + INTERVAL '1 day' * access_duration_days_param;
     ELSIF product_record.auto_grant_duration_days IS NOT NULL THEN
-        access_expires_at := NOW() + INTERVAL '1 day' * product_record.auto_grant_duration_days;
+        v_access_expires_at := NOW() + INTERVAL '1 day' * product_record.auto_grant_duration_days;
     ELSE
-        access_expires_at := NULL;
+        v_access_expires_at := NULL;
     END IF;
 
     -- Insert or update user access
     INSERT INTO public.user_product_access (user_id, product_id, access_expires_at, access_duration_days)
-    VALUES (current_user_id, product_record.id, access_expires_at, COALESCE(access_duration_days_param, product_record.auto_grant_duration_days))
+    VALUES (current_user_id, product_record.id, v_access_expires_at, COALESCE(access_duration_days_param, product_record.auto_grant_duration_days))
     ON CONFLICT (user_id, product_id)
     DO UPDATE SET
         access_expires_at = EXCLUDED.access_expires_at,

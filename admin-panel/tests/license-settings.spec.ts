@@ -134,7 +134,7 @@ test.describe('License Settings', () => {
     await expect(detailsSection).toBeVisible();
 
     // Should show domain
-    const domainText = page.locator('text=localhost');
+    const domainText = page.getByText('localhost', { exact: true });
     await expect(domainText).toBeVisible();
 
     // Should show "Never" for unlimited
@@ -157,7 +157,7 @@ test.describe('License Settings', () => {
     await expect(dateText).toBeVisible();
 
     // Should show domain
-    const domainText = page.locator('text=localhost');
+    const domainText = page.getByText('localhost', { exact: true });
     await expect(domainText).toBeVisible();
   });
 
@@ -244,7 +244,7 @@ test.describe('License Settings', () => {
     await gotoSystemSettings(page);
 
     // Should see the saved license details
-    const domainText = page.locator('text=localhost');
+    const domainText = page.getByText('localhost', { exact: true });
     await expect(domainText).toBeVisible();
 
     // Should see the expiry date
@@ -276,7 +276,7 @@ test.describe('License Settings', () => {
     await expect(dateText).toBeVisible();
 
     // Should show domain
-    const domainText = page.locator('text=localhost');
+    const domainText = page.getByText('localhost', { exact: true });
     await expect(domainText).toBeVisible();
   });
 

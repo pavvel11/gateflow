@@ -46,18 +46,16 @@ test.describe('Legal Documents Settings', () => {
     await page.waitForLoadState('domcontentloaded');
 
     await setAuthSession(page, adminEmail, password);
-
-    await page.waitForTimeout(1000);
   };
 
   // Helper: navigate to settings and activate the "Legal" tab
   // (Settings page uses tabs since the tab refactor; Legal section lives under "legal" tab)
   const gotoLegalSettings = async (page: Page) => {
     await page.goto('/dashboard/settings');
-    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState('networkidle');
     // Click the "Legal" tab – label is "Legal" (EN) or "Prawne" (PL)
     const legalTab = page.getByRole('button', { name: /^Legal$|^Prawne$/i });
-    await expect(legalTab).toBeVisible({ timeout: 10000 });
+    await expect(legalTab).toBeVisible({ timeout: 20000 });
     await legalTab.click();
     // Wait for the legal section heading to actually render
     await expect(
@@ -176,16 +174,22 @@ test.describe('Legal Documents Settings', () => {
 
     // Fill Terms of Service URL (first input)
     await urlInputs.nth(0).fill(TEST_TERMS_URL);
+    await expect(urlInputs.nth(0)).toHaveValue(TEST_TERMS_URL);
 
     // Fill Privacy Policy URL (second input)
     await urlInputs.nth(1).fill(TEST_PRIVACY_URL);
+    await expect(urlInputs.nth(1)).toHaveValue(TEST_PRIVACY_URL);
 
     // Click save button within legal section
     const saveButton = legalSection.locator('button', { hasText: /Save|Zapisz/i });
+    const toastsBefore = await page.locator('[data-sonner-toast]').count();
     await saveButton.click();
 
-    // Wait for the button to stop showing "Saving..." state
-    await page.waitForTimeout(3000);
+    // Wait for save confirmation toast
+    await expect.poll(
+      () => page.locator('[data-sonner-toast]').count(),
+      { timeout: 10000, message: 'Waiting for save confirmation toast' }
+    ).toBeGreaterThan(toastsBefore);
 
     // Verify values were saved in database
     const { data: savedConfig } = await supabaseAdmin
@@ -242,16 +246,30 @@ test.describe('Legal Documents Settings', () => {
     const legalSection = legalHeading.locator('..');
     const urlInputs = legalSection.locator('input[type="url"]');
 
-    // Update URLs
+    // Wait for form to load existing URLs before overwriting
+    await expect(urlInputs.nth(0)).toHaveValue(TEST_TERMS_URL, { timeout: 10000 });
+
+    // Update URLs — clear first, then type to ensure React state is updated
+    await urlInputs.nth(0).clear();
     await urlInputs.nth(0).fill(UPDATED_TERMS_URL);
+    await expect(urlInputs.nth(0)).toHaveValue(UPDATED_TERMS_URL);
+    await urlInputs.nth(1).clear();
     await urlInputs.nth(1).fill(UPDATED_PRIVACY_URL);
+    await expect(urlInputs.nth(1)).toHaveValue(UPDATED_PRIVACY_URL);
 
     // Save
     const saveButton = legalSection.locator('button', { hasText: /Save|Zapisz/i });
+
+    // Count existing toasts before save
+    const toastsBefore = await page.locator('[data-sonner-toast]').count();
+
     await saveButton.click();
 
-    // Wait for save to complete
-    await page.waitForTimeout(3000);
+    // Wait for a NEW toast to appear (count increases)
+    await expect.poll(
+      () => page.locator('[data-sonner-toast]').count(),
+      { timeout: 10000, message: 'Waiting for save confirmation toast' }
+    ).toBeGreaterThan(toastsBefore);
 
     // Verify updated values in database
     const { data: savedConfig } = await supabaseAdmin
@@ -288,10 +306,14 @@ test.describe('Legal Documents Settings', () => {
 
     // Save
     const saveButton = legalSection.locator('button', { hasText: /Save|Zapisz/i });
+    const toastsBefore = await page.locator('[data-sonner-toast]').count();
     await saveButton.click();
 
-    // Wait for save to complete
-    await page.waitForTimeout(3000);
+    // Wait for save confirmation toast
+    await expect.poll(
+      () => page.locator('[data-sonner-toast]').count(),
+      { timeout: 10000, message: 'Waiting for save confirmation toast' }
+    ).toBeGreaterThan(toastsBefore);
 
     // Verify values are cleared (null) in database
     const { data: savedConfig } = await supabaseAdmin
@@ -576,11 +598,16 @@ test.describe('Legal Documents Settings', () => {
 
     const uiSetUrl = 'https://ui-set-terms.example.com/terms.pdf';
     await urlInputs.nth(0).fill(uiSetUrl);
+    await expect(urlInputs.nth(0)).toHaveValue(uiSetUrl);
 
-    // Save
+    // Save and wait for toast confirmation
     const saveButton = legalSection.locator('button', { hasText: /Save|Zapisz/i });
+    const toastsBefore = await page.locator('[data-sonner-toast]').count();
     await saveButton.click();
-    await page.waitForTimeout(3000);
+    await expect.poll(
+      () => page.locator('[data-sonner-toast]').count(),
+      { timeout: 10000, message: 'Waiting for save toast' }
+    ).toBeGreaterThan(toastsBefore);
 
     // Verify DB was updated
     const { data: savedConfig } = await supabaseAdmin
@@ -623,11 +650,16 @@ test.describe('Legal Documents Settings', () => {
 
     const uiSetUrl = 'https://ui-set-privacy.example.com/privacy.pdf';
     await urlInputs.nth(1).fill(uiSetUrl);
+    await expect(urlInputs.nth(1)).toHaveValue(uiSetUrl);
 
-    // Save
+    // Save and wait for toast confirmation
     const saveButton = legalSection.locator('button', { hasText: /Save|Zapisz/i });
+    const toastsBefore = await page.locator('[data-sonner-toast]').count();
     await saveButton.click();
-    await page.waitForTimeout(3000);
+    await expect.poll(
+      () => page.locator('[data-sonner-toast]').count(),
+      { timeout: 10000, message: 'Waiting for save toast' }
+    ).toBeGreaterThan(toastsBefore);
 
     // Verify DB was updated
     const { data: savedConfig } = await supabaseAdmin

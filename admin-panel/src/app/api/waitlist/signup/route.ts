@@ -36,30 +36,26 @@ export async function POST(request: Request) {
     }
 
     // Verify captcha in production
-    if (process.env.NODE_ENV === 'production' && !captchaToken) {
-      return NextResponse.json(
-        { error: 'Security verification required' },
-        { status: 400 }
-      );
-    }
+    if (process.env.NODE_ENV === 'production') {
+      if (!captchaToken) {
+        return NextResponse.json({ error: 'Security verification required' }, { status: 400 });
+      }
 
-    // Verify the captcha token with Cloudflare
-    if (captchaToken && process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY) {
+      const turnstileSecret = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY;
+      if (!turnstileSecret) {
+        console.error('[waitlist/signup] CLOUDFLARE_TURNSTILE_SECRET_KEY is not set — rejecting request to prevent unverified captcha bypass');
+        return NextResponse.json({ error: 'Service misconfiguration. Please contact support.' }, { status: 500 });
+      }
+
       const verifyResponse = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          secret: process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY,
-          response: captchaToken,
-        }),
+        body: new URLSearchParams({ secret: turnstileSecret, response: captchaToken }),
       });
 
       const verifyResult = await verifyResponse.json();
       if (!verifyResult.success) {
-        return NextResponse.json(
-          { error: 'Security verification failed' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Security verification failed' }, { status: 400 });
       }
     }
 

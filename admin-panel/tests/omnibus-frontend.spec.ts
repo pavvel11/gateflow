@@ -284,8 +284,9 @@ test.describe('Omnibus Frontend - Admin Side', () => {
     await loginAsAdmin(page, adminEmail, adminPassword);
     await page.goto('/dashboard/products');
 
-    // Find and edit the product
+    // Find and edit the product — wait for table to fully render first
     const row = page.locator('tr', { hasText: 'Omnibus Admin Test Product' }).first();
+    await expect(row).toBeVisible({ timeout: 15000 });
     await row.locator('button[title*="Edit"], button[title*="Edytuj"]').first().click();
 
     // Wait for modal
@@ -294,9 +295,11 @@ test.describe('Omnibus Frontend - Admin Side', () => {
 
     // Navigate to step 3 (Sales & Settings) where Advanced Settings lives
     await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
-    await page.waitForTimeout(500);
+    // Wait for step 2 to render before clicking next again
+    await expect(modal.getByRole('button', { name: /Dalej|Continue Setup/i })).toBeVisible({ timeout: 5000 });
     await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
-    await page.waitForTimeout(500);
+    // Wait for step 3 content to render
+    await expect(modal.locator('button', { hasText: /Advanced Settings|Ustawienia zaawansowane/i })).toBeVisible({ timeout: 5000 });
 
     // Expand Advanced Settings section (omnibus_exempt is inside)
     const advancedSettingsButton = modal.locator('button', { hasText: /Advanced Settings|Ustawienia zaawansowane/i });
@@ -334,9 +337,8 @@ test.describe('Omnibus Frontend - Admin Side', () => {
 
     // Navigate to step 3 again
     await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
-    await page.waitForTimeout(500);
+    await expect(modal.getByRole('button', { name: /Dalej|Continue Setup/i })).toBeVisible({ timeout: 5000 });
     await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
-    await page.waitForTimeout(500);
 
     // Advanced Settings may already be expanded (defaultExpanded depends on omnibus_exempt=true)
     const omnibusCheckbox2 = modal.locator('input[name="omnibus_exempt"]');

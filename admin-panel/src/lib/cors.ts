@@ -70,8 +70,12 @@ export function getCrossOriginHeaders(request: Request): Record<string, string> 
     allowedOrigins.push(...allowedOriginsEnv.split(',').map(o => o.trim()))
   }
 
+  // In development, also allow any localhost origin (for test servers like :3002)
+  const isDev = process.env.NODE_ENV === 'development'
+  const isLocalhostOrigin = origin && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+
   let effectiveOrigin: string
-  if (origin && origin !== 'null' && allowedOrigins.some(ao => ao === origin)) {
+  if (origin && origin !== 'null' && (allowedOrigins.some(ao => ao === origin) || (isDev && isLocalhostOrigin))) {
     effectiveOrigin = origin
   } else {
     effectiveOrigin = siteUrl || 'null'

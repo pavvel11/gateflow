@@ -185,19 +185,18 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     const stripePresetRadio = page.locator('input[name="config_mode"]').nth(1);
     await stripePresetRadio.check();
 
-    await page.waitForTimeout(500);
+    // Wait for Stripe PMC section to render (select is a reliable indicator)
+    const pmcSelect = page.locator('select').first();
+    await expect(pmcSelect).toBeVisible({ timeout: 10000 });
 
-    // Look for refresh button (icon button near dropdown)
-    const refreshButton = page.locator('button[aria-label*="refresh" i], button:has(svg):near(select)').first();
+    // Refresh button is immediately after the select in the same flex row
+    const refreshButton = page.locator('select + button').first();
+    await expect(refreshButton, 'Refresh button should be visible in Stripe preset mode').toBeVisible({ timeout: 5000 });
 
-    if (await refreshButton.isVisible()) {
-      await refreshButton.click();
+    await refreshButton.click();
 
-      // Wait for refresh to complete (spinner should appear and disappear)
-      await page.waitForTimeout(1000);
-    } else {
-      expect(false, 'Refresh button should be visible in Stripe preset mode').toBeTruthy();
-    }
+    // Wait for refresh to complete
+    await page.waitForTimeout(1000);
   });
 
   test('E2E-ADMIN-005: Express Checkout configuration', async ({ page }) => {
@@ -347,10 +346,9 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     const customRadio = page.locator('input[name="config_mode"]').nth(2);
     await customRadio.check();
 
-    await page.waitForTimeout(500);
-
-    // Make sure no payment methods are enabled (uncheck all visible checkboxes)
+    // Wait for custom mode UI to render (payment method checkboxes must appear before counting)
     const checkboxes = page.locator('input[type="checkbox"]:visible');
+    await expect(checkboxes.first()).toBeVisible({ timeout: 8000 });
     const count = await checkboxes.count();
     expect(count).toBeGreaterThan(0);
 
@@ -375,11 +373,12 @@ test.describe('Payment Method Configuration - Admin UI', () => {
   test('E2E-ADMIN-010: Validation error - Stripe no PMC', async ({ page }) => {
     await gotoPaymentsSettings(page);
 
-    // Select Stripe preset mode
-    const stripePresetRadio = page.locator('input[name="config_mode"]').nth(1);
-    await stripePresetRadio.check();
+    // Select Stripe preset mode by clicking the label (triggers React onChange reliably)
+    const stripePresetLabel = page.locator('label').filter({ hasText: /Stripe Preset/i });
+    await stripePresetLabel.click();
 
-    await page.waitForTimeout(500);
+    // Wait for mode change to take effect
+    await expect(page.locator('input[name="config_mode"][value="stripe_preset"]')).toBeChecked({ timeout: 5000 });
 
     // Dropdown may be disabled if no PMCs are available in Stripe account — that's fine,
     // we just want to verify saving without a valid PMC selected shows an error.
@@ -389,8 +388,8 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     const saveButton = page.locator('button:has-text("Zapisz Konfigurację")');
     await saveButton.click();
 
-    // Verify error message appears
-    await expect(page.locator('text=Wybierz konfigurację Stripe PMC')).toBeVisible({
+    // Verify error toast appears (sonner renders in [data-sonner-toast])
+    await expect(page.locator('[data-sonner-toast]', { hasText: /Wybierz konfigurację Stripe PMC|Select a Stripe PMC/i })).toBeVisible({
       timeout: 5000,
     });
   });
