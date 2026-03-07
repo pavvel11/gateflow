@@ -30,6 +30,8 @@ const reloadPaymentsSettings = async (page: Page) => {
 };
 
 test.describe('Payment Method Configuration - Admin UI', () => {
+  test.describe.configure({ mode: 'serial' });
+
   let adminEmail: string;
   let adminPassword: string;
   let cleanup: () => Promise<void>;
@@ -215,8 +217,6 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     }
     await expect(masterToggle).toBeChecked();
 
-    await page.waitForTimeout(500);
-
     // Verify sub-options appear
     await expect(page.getByText('Apple Pay', { exact: true })).toBeVisible();
     await expect(page.getByText('Google Pay', { exact: true })).toBeVisible();
@@ -241,6 +241,7 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     await reloadPaymentsSettings(page);
 
     const applePayCheckboxReload = page.locator('label:has-text("Apple Pay")').locator('input[type="checkbox"]');
+    await expect(applePayCheckboxReload).toBeVisible({ timeout: 10000 });
     await expect(applePayCheckboxReload).not.toBeChecked();
   });
 
@@ -261,10 +262,9 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     const customRadio = page.locator('input[name="config_mode"]').nth(2);
     await customRadio.check();
 
-    await page.waitForTimeout(500);
-
     // Enable at least one payment method
     const cardCheckbox = page.locator('label:has-text("Card")').locator('input[type="checkbox"]');
+    await expect(cardCheckbox).toBeVisible({ timeout: 8000 });
     if (!(await cardCheckbox.isChecked())) {
       await cardCheckbox.check();
     }
@@ -290,9 +290,8 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     const customRadio = page.locator('input[name="config_mode"]').nth(2);
     await customRadio.check();
 
-    await page.waitForTimeout(500);
-
     const cardCheckbox = page.locator('label:has-text("Card")').locator('input[type="checkbox"]');
+    await expect(cardCheckbox).toBeVisible({ timeout: 8000 });
     if (!(await cardCheckbox.isChecked())) {
       await cardCheckbox.check();
     }
@@ -331,12 +330,9 @@ test.describe('Payment Method Configuration - Admin UI', () => {
     const resetButton = page.getByRole('button', { name: 'Resetuj', exact: true });
     await resetButton.click();
 
-    // Verify configuration was reset (mode should revert)
-    await page.waitForTimeout(500);
-
     // Check if automatic mode is selected again (default)
     const automaticRadio = page.locator('input[type="radio"][value="automatic"]').first();
-    await expect(automaticRadio).toBeChecked();
+    await expect(automaticRadio).toBeChecked({ timeout: 5000 });
   });
 
   test('E2E-ADMIN-009: Validation error - Custom no methods', async ({ page }) => {
@@ -405,8 +401,8 @@ test.describe('Payment Method Configuration - Security', () => {
     // Wait for redirect or page load (shorter timeout, don't require networkidle)
     await page.waitForLoadState('domcontentloaded');
 
-    // Wait a bit for any redirects to complete
-    await page.waitForTimeout(2000);
+    // Wait for any client-side redirects to complete
+    await page.waitForURL(url => url.includes('/auth/login') || url.includes('/login') || !url.includes('/settings'), { timeout: 5000 }).catch(() => {});
 
     // Should be redirected to login page or see 403 error
     // Check for either login page or unauthorized message

@@ -390,20 +390,20 @@ test.describe('Smart Landing Page', () => {
 
   test('Language switching should work on all landing page variants', async ({ page }) => {
     await acceptAllCookies(page);
-    await page.goto('/');
+    // Use /about which has LandingNav — SiteMenu is in the top nav (no overflow clipping)
+    await page.goto('/about');
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
 
-    // Language switcher is inside SiteMenu — triggered by the user menu button
-    const languageSwitcher = page.locator('button[aria-label="User menu"], button[aria-haspopup="menu"]').first();
+    // SiteMenu trigger is a button with aria-haspopup="menu" in the top nav
+    const languageSwitcher = page.locator('nav button[aria-haspopup="menu"]').first();
     await expect(languageSwitcher).toBeVisible({ timeout: 10000 });
 
-    // Open the menu
-    await languageSwitcher.click();
-    await page.waitForTimeout(500);
+    // Hover to open the dropdown (SiteMenu opens on mouseenter, not click)
+    await languageSwitcher.hover();
+    await page.waitForTimeout(300);
 
     // Dropdown shows full language names ("Polski", "English")
-    const plOption = page.locator('[role="menu"] button:has-text("Polski"), [role="menuitem"]:has-text("Polski")').first();
+    const plOption = page.locator('[role="menu"] button:has-text("Polski")').first();
     await expect(plOption).toBeVisible({ timeout: 5000 });
 
     await plOption.click();

@@ -85,6 +85,10 @@ export default function LoginForm() {
   }, [])
 
   const handleOAuthSignIn = async (provider: OAuthProvider) => {
+    if (!termsAccepted) {
+      setMessage(t('compliance.pleaseAcceptTerms'))
+      return
+    }
     const supabase = await createClient()
     await supabase.auth.signInWithOAuth({
       provider,
@@ -196,7 +200,8 @@ export default function LoginForm() {
     if (demoMode || oauthProviders.length === 0) return null
     return (
       <div className="mb-6">
-        <div className="flex items-center justify-center gap-3">
+        <TermsCheckbox checked={termsAccepted} onChange={setTermsAccepted} />
+        <div className="flex items-center justify-center gap-3 mt-4">
           {oauthProviders.map((provider) => {
             const p = provider as OAuthProvider
             const name = PROVIDER_NAMES[p] ?? provider
@@ -262,8 +267,8 @@ export default function LoginForm() {
         </div>
       )}
 
-      {/* Terms and Conditions Checkbox - not needed in demo */}
-      {!demoMode && (
+      {/* Terms and Conditions Checkbox - not needed in demo, not needed when already shown above OAuth buttons */}
+      {!demoMode && oauthProviders.length === 0 && (
         <TermsCheckbox
           checked={termsAccepted}
           onChange={setTermsAccepted}

@@ -168,9 +168,9 @@ redirect_uri = ""
 url = ""
 
 [auth.external.github]
-enabled = false
-client_id = ""
-secret = ""
+enabled = true
+client_id = "env(GITHUB_CLIENT_ID)"
+secret = "env(GITHUB_CLIENT_SECRET)"
 # Overrides the default auth redirectUrl.
 redirect_uri = ""
 # Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure,
