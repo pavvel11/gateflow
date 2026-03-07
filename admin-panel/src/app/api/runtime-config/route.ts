@@ -15,6 +15,10 @@ export async function GET() {
     cloudflareSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY!,
     siteUrl: process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL!,
     demoMode: process.env.DEMO_MODE === 'true',
+    oauthProviders: (process.env.OAUTH_PROVIDERS || '')
+      .split(',')
+      .map(p => p.trim().toLowerCase())
+      .filter(p => ['google', 'github', 'discord', 'twitter', 'azure', 'facebook', 'apple'].includes(p)),
   }
 
   return NextResponse.json(config, {

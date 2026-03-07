@@ -99,6 +99,16 @@ test.describe('Legal Documents Settings', () => {
       .eq('id', shopConfigId);
   });
 
+  // Reset shared DB state before each test so tests don't bleed into each other
+  test.beforeEach(async () => {
+    if (shopConfigId) {
+      await supabaseAdmin
+        .from('shop_config')
+        .update({ terms_of_service_url: null, privacy_policy_url: null })
+        .eq('id', shopConfigId);
+    }
+  });
+
   test.afterAll(async () => {
     // Cleanup - restore null values for legal documents
     if (shopConfigId) {
@@ -579,14 +589,6 @@ test.describe('Legal Documents Settings', () => {
   });
 
   test('UI-saved URL is used for /terms redirect', async ({ page }) => {
-    // Start with empty
-    await supabaseAdmin
-      .from('shop_config')
-      .update({
-        terms_of_service_url: null
-      })
-      .eq('id', shopConfigId);
-
     // Login as admin and set URL via UI
     await loginAsAdmin(page);
     await gotoLegalSettings(page);
@@ -631,14 +633,6 @@ test.describe('Legal Documents Settings', () => {
   });
 
   test('UI-saved URL is used for /privacy redirect', async ({ page }) => {
-    // Start with empty
-    await supabaseAdmin
-      .from('shop_config')
-      .update({
-        privacy_policy_url: null
-      })
-      .eq('id', shopConfigId);
-
     // Login as admin and set URL via UI
     await loginAsAdmin(page);
     await gotoLegalSettings(page);

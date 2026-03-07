@@ -28,9 +28,11 @@ export default function ShopSettings() {
  });
 
  useEffect(() => {
+ let cancelled = false;
  async function loadConfig() {
  try {
  const data = await getShopConfig();
+ if (cancelled) return;
  if (data) {
  setConfig(data);
  setFormData({
@@ -40,12 +42,14 @@ export default function ShopSettings() {
  });
  }
  } catch (error) {
+ if (cancelled) return;
  console.error('Failed to load shop config:', error);
  } finally {
- setLoading(false);
+ if (!cancelled) setLoading(false);
  }
  }
  loadConfig();
+ return () => { cancelled = true; };
  }, []);
 
  const handleSubmit = async (e: React.FormEvent) => {

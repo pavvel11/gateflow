@@ -112,6 +112,7 @@ export default function StripeTaxSettings() {
  const [saving, setSaving] = useState(false)
 
  useEffect(() => {
+ let cancelled = false
  const load = async () => {
  setLoading(true)
  try {
@@ -120,6 +121,8 @@ export default function StripeTaxSettings() {
  getCheckoutConfigAction(),
  getShopConfig(),
  ])
+
+ if (cancelled) return
 
  if (statusResult.success && statusResult.data) {
  setTaxStatus(statusResult.data)
@@ -158,12 +161,14 @@ export default function StripeTaxSettings() {
  )
  }
  } catch {
+ if (cancelled) return
  setError(t('loadError'))
  } finally {
- setLoading(false)
+ if (!cancelled) setLoading(false)
  }
  }
  load()
+ return () => { cancelled = true }
  }, [])
 
  const handleTaxModeChange = async (mode: TaxMode) => {

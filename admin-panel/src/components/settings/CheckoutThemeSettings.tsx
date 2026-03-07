@@ -18,19 +18,23 @@ export default function CheckoutThemeSettings() {
  const [saving, setSaving] = useState(false);
 
  useEffect(() => {
+ let cancelled = false;
  async function load() {
  try {
  const config = await getShopConfig();
+ if (cancelled) return;
  if (config?.checkout_theme) {
  setTheme(config.checkout_theme);
  }
  } catch (error) {
+ if (cancelled) return;
  console.error('Failed to load checkout theme:', error);
  } finally {
- setLoading(false);
+ if (!cancelled) setLoading(false);
  }
  }
  load();
+ return () => { cancelled = true; };
  }, []);
 
  const handleSave = async (newTheme: string) => {

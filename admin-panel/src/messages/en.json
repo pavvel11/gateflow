@@ -535,7 +535,9 @@
     "disposableEmailBlocked": "Registration blocked: Disposable email addresses are not allowed. Please use a permanent email address.",
     "emailValidationFailed": "Email validation failed. Please try again.",
     "emailPlaceholder": "your@email.com",
-    "passwordPlaceholder": "demo123"
+    "passwordPlaceholder": "demo123",
+    "orContinueWith": "or continue with email",
+    "signInWith": "Sign in with {provider}"
   },
   "products": {
     "title": "Products",

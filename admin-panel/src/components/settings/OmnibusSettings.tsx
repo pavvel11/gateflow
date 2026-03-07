@@ -18,20 +18,24 @@ export default function OmnibusSettings() {
  const [omnibusEnabled, setOmnibusEnabled] = useState(true);
 
  useEffect(() => {
+ let cancelled = false;
  async function loadConfig() {
  try {
  const data = await getShopConfig();
+ if (cancelled) return;
  if (data) {
  setConfig(data);
  setOmnibusEnabled(data.omnibus_enabled ?? true);
  }
  } catch (error) {
+ if (cancelled) return;
  console.error('Failed to load omnibus config:', error);
  } finally {
- setLoading(false);
+ if (!cancelled) setLoading(false);
  }
  }
  loadConfig();
+ return () => { cancelled = true; };
  }, []);
 
  const handleToggle = async () => {

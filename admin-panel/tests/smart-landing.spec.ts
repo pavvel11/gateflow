@@ -394,16 +394,16 @@ test.describe('Smart Landing Page', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    // Language switcher must be present on the landing page
-    const languageSwitcher = page.locator('button[aria-label*="language" i], button:has-text("EN"), button:has-text("PL")').first();
+    // Language switcher is inside SiteMenu — triggered by the user menu button
+    const languageSwitcher = page.locator('button[aria-label="User menu"], button[aria-haspopup="menu"]').first();
     await expect(languageSwitcher).toBeVisible({ timeout: 10000 });
 
-    // Switch to Polish
+    // Open the menu
     await languageSwitcher.click();
     await page.waitForTimeout(500);
 
-    // Dropdown shows full language names (e.g., "Polski", "English")
-    const plOption = page.locator('button:has-text("Polski"), button:has-text("PL"), a:has-text("PL")').first();
+    // Dropdown shows full language names ("Polski", "English")
+    const plOption = page.locator('[role="menu"] button:has-text("Polski"), [role="menuitem"]:has-text("Polski")').first();
     await expect(plOption).toBeVisible({ timeout: 5000 });
 
     await plOption.click();

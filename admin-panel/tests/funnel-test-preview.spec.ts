@@ -206,7 +206,7 @@ test.describe('Admin Funnel Test Preview', () => {
     await expect(page.locator('table')).toBeVisible({ timeout: 10000 });
 
     // The Test Funnel option is in the ⋯ dropdown — open it and check visibility
-    const firstMoreActions = page.locator('button[aria-expanded]').first();
+    const firstMoreActions = page.locator('button[aria-label*="akcji"], button[aria-label*="actions"]').first();
     await firstMoreActions.click();
     await expect(page.locator('button').filter({ hasText: /Testuj lejek|Test Funnel/i }).first()).toBeVisible({ timeout: 5000 });
   });

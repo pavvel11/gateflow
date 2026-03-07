@@ -9,6 +9,7 @@ interface AppConfig {
   cloudflareSiteKey: string
   siteUrl: string
   demoMode: boolean
+  oauthProviders: string[]
 }
 
 const ConfigContext = createContext<AppConfig | null>(null)

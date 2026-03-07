@@ -550,7 +550,9 @@
     "disposableEmailBlocked": "Rejestracja zablokowana: Tymczasowe adresy email nie są dozwolone. Użyj stałego adresu email.",
     "emailValidationFailed": "Weryfikacja email nie powiodła się. Spróbuj ponownie.",
     "emailPlaceholder": "twoj@email.com",
-    "passwordPlaceholder": "demo123"
+    "passwordPlaceholder": "demo123",
+    "orContinueWith": "lub kontynuuj przez email",
+    "signInWith": "Zaloguj przez {provider}"
   },
   "products": {
     "title": "Produkty",

@@ -92,6 +92,7 @@ export default function BrandingSettings() {
  // ===== LOAD DATA =====
 
  useEffect(() => {
+ let cancelled = false;
  async function load() {
  try {
  const [theme, presetsData, licensed] = await Promise.all([
@@ -99,6 +100,8 @@ export default function BrandingSettings() {
  getThemePresets(),
  checkThemeLicense(),
  ]);
+
+ if (cancelled) return;
 
  setActiveTheme(theme);
  setPresets(presetsData);
@@ -116,12 +119,14 @@ export default function BrandingSettings() {
  setSelectedPresetId(null);
  }
  } catch (error) {
+ if (cancelled) return;
  console.error('[BrandingSettings] Load error:', error);
  } finally {
- setLoading(false);
+ if (!cancelled) setLoading(false);
  }
  }
  load();
+ return () => { cancelled = true; };
  }, []);
 
  // ===== HANDLERS =====
