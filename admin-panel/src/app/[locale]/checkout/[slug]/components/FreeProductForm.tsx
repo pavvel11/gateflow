@@ -10,7 +10,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { validateEmailAction } from '@/lib/actions/validate-email';
 import TurnstileWidget from '@/components/TurnstileWidget';
 import TermsCheckbox from '@/components/TermsCheckbox';
+import { OAuthIconButtons, signInWithOAuth, type OAuthProvider } from '@/components/OAuthIconButtons';
 import { createClient } from '@/lib/supabase/client';
+import { useConfig } from '@/components/providers/config-provider';
 import { useTracking } from '@/hooks/useTracking';
 import DemoCheckoutNotice from '@/components/DemoCheckoutNotice';
 import ProductShowcase from './ProductShowcase';
@@ -25,6 +27,7 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
   const tCompliance = useTranslations('compliance');
   const locale = useLocale();
   const { user } = useAuth();
+  const { oauthProviders } = useConfig();
   const router = useRouter();
   const searchParams = useSearchParams();
   const successUrl = searchParams.get('success_url');
@@ -217,6 +220,16 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
     }
   };
 
+  const handleOAuthSignIn = async (provider: OAuthProvider) => {
+    if (!termsAccepted) {
+      setMessage({ type: 'error', text: tCompliance('pleaseAcceptTerms') });
+      return;
+    }
+    const authRedirectPath = `/auth/product-access?product=${product.slug}${successUrl ? `&success_url=${encodeURIComponent(successUrl)}` : ''}`;
+    const redirectUrl = `${window.location.origin}/auth/callback?redirect_to=${encodeURIComponent(authRedirectPath)}`;
+    await signInWithOAuth(provider, redirectUrl);
+  };
+
   const renderProductInfo = () => (
     <ProductShowcase product={product} />
   );
@@ -265,25 +278,35 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
             privacyUrl="/privacy"
           />
 
-          <button
-            type="submit"
-            disabled={
-              loading ||
-              captchaLoading ||
-              !termsAccepted ||
-              (!user && (!email || (process.env.NODE_ENV === 'production' && !captchaToken)))
-            }
-            className="w-full bg-sf-success hover:bg-sf-success/90 disabled:bg-sf-muted/30 disabled:cursor-not-allowed text-sf-inverse font-semibold py-3 px-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-sf-success focus:ring-offset-2 active:scale-[0.98]"
-          >
-            {loading || captchaLoading ? (
-              <div className="flex items-center justify-center">
-                <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-                {captchaLoading ? tSecurity('verifying') : t('processing')}
-              </div>
-            ) : (
-              user ? t('getFreeAccess') : t('sendMagicLink')
+          <div className={!user && oauthProviders.length > 0 ? 'flex items-center gap-2' : ''}>
+            <button
+              type="submit"
+              disabled={
+                loading ||
+                captchaLoading ||
+                !termsAccepted ||
+                (!user && (!email || (process.env.NODE_ENV === 'production' && !captchaToken)))
+              }
+              className={`${!user && oauthProviders.length > 0 ? 'flex-1' : 'w-full'} bg-sf-success hover:bg-sf-success/90 disabled:bg-sf-muted/30 disabled:cursor-not-allowed text-sf-inverse font-semibold py-3 px-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-sf-success focus:ring-offset-2 active:scale-[0.98]`}
+            >
+              {loading || captchaLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                  {captchaLoading ? tSecurity('verifying') : t('processing')}
+                </div>
+              ) : (
+                user ? t('getFreeAccess') : t('sendMagicLink')
+              )}
+            </button>
+
+            {!user && oauthProviders.length > 0 && (
+              <OAuthIconButtons
+                providers={oauthProviders}
+                onSignIn={handleOAuthSignIn}
+                disabled={loading}
+              />
             )}
-          </button>
+          </div>
 
           {!user && (
             <>
