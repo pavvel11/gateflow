@@ -278,35 +278,41 @@ export default function FreeProductForm({ product }: FreeProductFormProps) {
             privacyUrl="/privacy"
           />
 
-          <div className={!user && oauthProviders.length > 0 ? 'flex items-center gap-2' : ''}>
-            <button
-              type="submit"
-              disabled={
-                loading ||
-                captchaLoading ||
-                !termsAccepted ||
-                (!user && (!email || (process.env.NODE_ENV === 'production' && !captchaToken)))
-              }
-              className={`${!user && oauthProviders.length > 0 ? 'flex-1' : 'w-full'} bg-sf-success hover:bg-sf-success/90 disabled:bg-sf-muted/30 disabled:cursor-not-allowed text-sf-inverse font-semibold py-3 px-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-sf-success focus:ring-offset-2 active:scale-[0.98]`}
-            >
-              {loading || captchaLoading ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-                  {captchaLoading ? tSecurity('verifying') : t('processing')}
-                </div>
-              ) : (
-                user ? t('getFreeAccess') : t('sendMagicLink')
-              )}
-            </button>
-
-            {!user && oauthProviders.length > 0 && (
-              <OAuthIconButtons
-                providers={oauthProviders}
-                onSignIn={handleOAuthSignIn}
-                disabled={loading}
-              />
+          <button
+            type="submit"
+            disabled={
+              loading ||
+              captchaLoading ||
+              !termsAccepted ||
+              (!user && (!email || (process.env.NODE_ENV === 'production' && !captchaToken)))
+            }
+            className="w-full bg-sf-success hover:bg-sf-success/90 disabled:bg-sf-muted/30 disabled:cursor-not-allowed text-sf-inverse font-semibold py-3 px-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-sf-success focus:ring-offset-2 active:scale-[0.98]"
+          >
+            {loading || captchaLoading ? (
+              <div className="flex items-center justify-center">
+                <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                {captchaLoading ? tSecurity('verifying') : t('processing')}
+              </div>
+            ) : (
+              user ? t('getFreeAccess') : t('sendMagicLink')
             )}
-          </div>
+          </button>
+
+          {!user && oauthProviders.length > 0 && (
+            <div>
+              <div className="relative my-1">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-sf-border" />
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="bg-sf-raised px-3 text-sf-muted">{tCompliance('orContinueWith')}</span>
+                </div>
+              </div>
+              <div className="flex justify-center gap-3 mt-3">
+                <OAuthIconButtons providers={oauthProviders} onSignIn={handleOAuthSignIn} disabled={loading} />
+              </div>
+            </div>
+          )}
 
           {!user && (
             <>

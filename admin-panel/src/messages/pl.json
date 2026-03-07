@@ -1063,7 +1063,8 @@
     "and": "i",
     "termsOfService": "Regulaminem",
     "privacyPolicy": "Polityką Prywatności",
-    "securityVerificationRequired": "Prosimy o ukończenie weryfikacji bezpieczeństwa."
+    "securityVerificationRequired": "Prosimy o ukończenie weryfikacji bezpieczeństwa.",
+    "orContinueWith": "lub kontynuuj przez"
   },
   "security": {
     "requiredSteps": "Wymagane kroki bezpieczeństwa",

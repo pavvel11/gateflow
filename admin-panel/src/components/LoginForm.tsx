@@ -180,34 +180,41 @@ export default function LoginForm() {
         <TermsCheckbox checked={termsAccepted} onChange={setTermsAccepted} />
       )}
 
-      {/* Action row: magic link button + OAuth icons */}
-      <div className={hasOAuth ? 'flex items-center gap-2' : ''}>
-        <button
-          type="submit"
-          disabled={isLoading || (!demoMode && captchaLoading)}
-          className={`${hasOAuth ? 'flex-1' : 'w-full'} py-3 px-4 bg-sf-accent-bg hover:bg-sf-accent-hover text-white font-semibold rounded-full shadow-[var(--sf-shadow-accent)] hover:shadow-[0_6px_40px_-4px_var(--sf-accent-glow)] focus:outline-none focus:ring-2 focus:ring-sf-accent focus:ring-offset-2 focus:ring-offset-sf-deep transition-[background-color,box-shadow] duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]`}
-        >
-          {isLoading || (!demoMode && captchaLoading) ? (
-            <div className="flex items-center justify-center">
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              {!demoMode && captchaLoading ? t('security.verifying') : (demoMode ? t('auth.signingIn') : t('productView.sendingMagicLink'))}
-            </div>
-          ) : (
-            demoMode ? t('auth.signIn') : t('auth.sendMagicLink')
-          )}
-        </button>
-
-        {hasOAuth && (
-          <OAuthIconButtons
-            providers={oauthProviders}
-            onSignIn={handleOAuthSignIn}
-            disabled={isLoading}
-          />
+      {/* Magic link button */}
+      <button
+        type="submit"
+        disabled={isLoading || (!demoMode && captchaLoading)}
+        className="w-full py-3 px-4 bg-sf-accent-bg hover:bg-sf-accent-hover text-white font-semibold rounded-full shadow-[var(--sf-shadow-accent)] hover:shadow-[0_6px_40px_-4px_var(--sf-accent-glow)] focus:outline-none focus:ring-2 focus:ring-sf-accent focus:ring-offset-2 focus:ring-offset-sf-deep transition-[background-color,box-shadow] duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
+      >
+        {isLoading || (!demoMode && captchaLoading) ? (
+          <div className="flex items-center justify-center">
+            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            {!demoMode && captchaLoading ? t('security.verifying') : (demoMode ? t('auth.signingIn') : t('productView.sendingMagicLink'))}
+          </div>
+        ) : (
+          demoMode ? t('auth.signIn') : t('auth.sendMagicLink')
         )}
-      </div>
+      </button>
+
+      {/* OAuth divider + icons */}
+      {hasOAuth && (
+        <div>
+          <div className="relative my-1">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-sf-border" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-sf-raised/80 px-3 text-sf-muted">{t('auth.orContinueWith')}</span>
+            </div>
+          </div>
+          <div className="flex justify-center gap-3 mt-3">
+            <OAuthIconButtons providers={oauthProviders} onSignIn={handleOAuthSignIn} disabled={isLoading} />
+          </div>
+        </div>
+      )}
 
       {/* Cloudflare Turnstile - not needed in demo */}
       {!demoMode && (

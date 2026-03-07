@@ -1048,7 +1048,8 @@
     "and": "and",
     "termsOfService": "Terms of Service",
     "privacyPolicy": "Privacy Policy",
-    "securityVerificationRequired": "Please complete the security verification."
+    "securityVerificationRequired": "Please complete the security verification.",
+    "orContinueWith": "or continue with"
   },
   "security": {
     "requiredSteps": "Required Security Steps",
