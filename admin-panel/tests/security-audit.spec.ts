@@ -121,28 +121,9 @@ test.describe('Security - Open Redirect Prevention', () => {
     expect(cookies).not.toContain('sb-access-token');
   });
 
-  test('redirect_to parameter with dangerous URLs should be blocked', async ({ request }) => {
-    // The auth callback validates redirect_to AFTER successful code exchange (line 122-159).
-    // With a fake code, the exchange fails → redirect to /login (redirect_to never evaluated).
-    // So we verify the validation logic exists in the source code instead.
-    const { readFileSync } = await import('fs');
-    const { join } = await import('path');
-
-    const callbackSource = readFileSync(
-      join(__dirname, '../src/app/[locale]/auth/callback/route.ts'),
-      'utf-8'
-    );
-
-    // Route decodes redirect_to and validates it
-    expect(callbackSource).toContain("decodeURIComponent(redirectTo)");
-
-    // SECURITY: isSafeRedirectUrl handles backslash normalization and //evil.com blocking
-    expect(callbackSource).toContain("isSafeRedirectUrl");
-
-    // Safe paths must start with /
-    expect(callbackSource).toContain("decodedRedirectTo.startsWith('/')");
-  });
 });
+// Source regression guard for redirect_to validation lives in:
+// tests/unit/security/auth-security.test.ts → "validates redirect_to parameter against open redirect attacks"
 
 // ============================================
 // CORS TESTS
