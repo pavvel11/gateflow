@@ -51,6 +51,24 @@ test.describe('Stripe Configuration Wizard', () => {
     await page.waitForSelector('text=Stripe Configuration', { timeout: 10000 });
   };
 
+  const navigateToStep4 = async (page: Page) => {
+    const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
+    await configureButton.click();
+    await expect(page.locator('button', { hasText: /Start Configuration/i })).toBeVisible({ timeout: 5000 });
+
+    await page.locator('button', { hasText: /Start Configuration/i }).click();
+    await expect(page.locator('button', { hasText: /Test Mode/i }).filter({ has: page.locator('h4') }).first()).toBeVisible({ timeout: 5000 });
+
+    await page.locator('button', { hasText: /Test Mode/i }).filter({ has: page.locator('h4') }).first().click();
+    await expect(page.locator('button', { hasText: /Continue/i }).last()).toBeEnabled({ timeout: 5000 });
+
+    await page.locator('button', { hasText: /Continue/i }).last().click();
+    await expect(page.locator('button', { hasText: /I've Created the Key/i })).toBeVisible({ timeout: 5000 });
+
+    await page.locator('button', { hasText: /I've Created the Key/i }).click();
+    await expect(page.locator('textarea[placeholder*="rk_test"]')).toBeVisible({ timeout: 5000 });
+  };
+
   test.beforeAll(async () => {
     const randomStr = Math.random().toString(36).substring(7);
     adminEmail = `test-stripe-wizard-${Date.now()}-${randomStr}@example.com`;
@@ -120,7 +138,7 @@ test.describe('Stripe Configuration Wizard', () => {
 
     const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
     await configureButton.click();
-    await page.waitForTimeout(500);
+    await expect(page.locator('button', { hasText: /Start Configuration/i })).toBeVisible({ timeout: 5000 });
 
     // Check welcome content - just verify key elements are present
     await expect(page.locator('h3:has-text("Secure Stripe Integration")')).toBeVisible();
@@ -137,12 +155,12 @@ test.describe('Stripe Configuration Wizard', () => {
 
     const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
     await configureButton.click();
-    await page.waitForTimeout(500);
+    await expect(page.locator('button', { hasText: /Start Configuration/i })).toBeVisible({ timeout: 5000 });
 
     // Click Start Configuration
     const startButton = page.locator('button', { hasText: /Start Configuration/i });
     await startButton.click();
-    await page.waitForTimeout(500);
+    await expect(page.locator('text=Step 2 of 5')).toBeVisible({ timeout: 5000 });
 
     // Should be on Step 2
     await expect(page.locator('text=Step 2 of 5')).toBeVisible();
@@ -159,22 +177,21 @@ test.describe('Stripe Configuration Wizard', () => {
 
     const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
     await configureButton.click();
-    await page.waitForTimeout(500);
+    await expect(page.locator('button', { hasText: /Start Configuration/i })).toBeVisible({ timeout: 5000 });
 
     const startButton = page.locator('button', { hasText: /Start Configuration/i });
     await startButton.click();
-    await page.waitForTimeout(500);
+    await expect(page.locator('text=Step 2 of 5')).toBeVisible({ timeout: 5000 });
 
     // Select Test Mode
     const testModeButton = page.locator('button', { hasText: /Test Mode/i }).filter({ has: page.locator('h4') }).first();
     await testModeButton.click();
-    await page.waitForTimeout(300);
 
     // Continue button should be enabled
     const continueButton = page.locator('button', { hasText: /Continue/i }).last();
-    await expect(continueButton).toBeEnabled();
+    await expect(continueButton).toBeEnabled({ timeout: 5000 });
     await continueButton.click();
-    await page.waitForTimeout(500);
+    await expect(page.locator('text=Step 3 of 5')).toBeVisible({ timeout: 5000 });
 
     // Should be on Step 3
     await expect(page.locator('text=Step 3 of 5')).toBeVisible();
@@ -188,19 +205,16 @@ test.describe('Stripe Configuration Wizard', () => {
 
     const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
     await configureButton.click();
-    await page.waitForTimeout(500);
+    await expect(page.locator('button', { hasText: /Start Configuration/i })).toBeVisible({ timeout: 5000 });
 
-    const startButton = page.locator('button', { hasText: /Start Configuration/i });
-    await startButton.click();
-    await page.waitForTimeout(500);
+    await page.locator('button', { hasText: /Start Configuration/i }).click();
+    await expect(page.locator('text=Step 2 of 5')).toBeVisible({ timeout: 5000 });
 
-    const testModeButton = page.locator('button', { hasText: /Test Mode/i }).filter({ has: page.locator('h4') }).first();
-    await testModeButton.click();
-    await page.waitForTimeout(300);
+    await page.locator('button', { hasText: /Test Mode/i }).filter({ has: page.locator('h4') }).first().click();
+    await expect(page.locator('button', { hasText: /Continue/i }).last()).toBeEnabled({ timeout: 5000 });
 
-    const continueButton = page.locator('button', { hasText: /Continue/i }).last();
-    await continueButton.click();
-    await page.waitForTimeout(500);
+    await page.locator('button', { hasText: /Continue/i }).last().click();
+    await expect(page.locator('text=Step 3 of 5')).toBeVisible({ timeout: 5000 });
 
     // Check instructions - use h4 headings to avoid strict mode violations
     await expect(page.locator('h4:has-text("Open Stripe Dashboard")')).toBeVisible();
@@ -212,7 +226,7 @@ test.describe('Stripe Configuration Wizard', () => {
     const createdKeyButton = page.locator('button', { hasText: /I've Created the Key/i });
     await expect(createdKeyButton).toBeVisible();
     await createdKeyButton.click();
-    await page.waitForTimeout(500);
+    await expect(page.locator('text=Step 4 of 5')).toBeVisible({ timeout: 5000 });
 
     // Should be on Step 4
     await expect(page.locator('text=Step 4 of 5')).toBeVisible();
@@ -225,26 +239,28 @@ test.describe('Stripe Configuration Wizard', () => {
 
     const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
     await configureButton.click();
-    await page.waitForTimeout(500);
+    await expect(page.locator('button', { hasText: /Start Configuration/i })).toBeVisible({ timeout: 5000 });
 
     // Navigate to Step 4
     await page.locator('button', { hasText: /Start Configuration/i }).click();
-    await page.waitForTimeout(500);
+    await expect(page.locator('button', { hasText: /Test Mode/i }).filter({ has: page.locator('h4') }).first()).toBeVisible({ timeout: 5000 });
+
     await page.locator('button', { hasText: /Test Mode/i }).filter({ has: page.locator('h4') }).first().click();
-    await page.waitForTimeout(300);
+    await expect(page.locator('button', { hasText: /Continue/i }).last()).toBeVisible({ timeout: 5000 });
+
     await page.locator('button', { hasText: /Continue/i }).last().click();
-    await page.waitForTimeout(500);
+    await expect(page.locator('button', { hasText: /I've Created the Key/i })).toBeVisible({ timeout: 5000 });
+
     await page.locator('button', { hasText: /I've Created the Key/i }).click();
-    await page.waitForTimeout(500);
+    const keyInput = page.locator('textarea[placeholder*="rk_test"]');
+    await expect(keyInput).toBeVisible({ timeout: 5000 });
 
     // Try invalid key (too short)
-    const keyInput = page.locator('textarea[placeholder*="rk_test"]');
     await keyInput.fill('rk_test_short');
     await keyInput.blur();
-    await page.waitForTimeout(1000);
 
     // Should show error
-    await expect(page.locator('text=too short')).toBeVisible();
+    await expect(page.locator('text=too short')).toBeVisible({ timeout: 5000 });
 
     // Validate button should be disabled
     const validateButton = page.locator('button', { hasText: /Validate API Key/i });
@@ -254,34 +270,19 @@ test.describe('Stripe Configuration Wizard', () => {
   test('should validate correct API key format (format only)', async ({ page }) => {
     await loginAsAdmin(page);
     await gotoPaymentsSettings(page);
-
-    const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
-    await configureButton.click();
-    await page.waitForTimeout(500);
-
-    // Navigate to Step 4
-    await page.locator('button', { hasText: /Start Configuration/i }).click();
-    await page.waitForTimeout(500);
-    await page.locator('button', { hasText: /Test Mode/i }).filter({ has: page.locator('h4') }).first().click();
-    await page.waitForTimeout(300);
-    await page.locator('button', { hasText: /Continue/i }).last().click();
-    await page.waitForTimeout(500);
-    await page.locator('button', { hasText: /I've Created the Key/i }).click();
-    await page.waitForTimeout(500);
+    await navigateToStep4(page);
 
     // Enter valid format (but fake key)
     const keyInput = page.locator('textarea[placeholder*="rk_test"]');
     await keyInput.fill('rk_test_1234567890abcdefghijklmnopqrstuvwxyz');
     await keyInput.blur();
-    await page.waitForTimeout(1000);
 
-    // Should NOT show format error
+    // Validate button should be enabled (implies no format errors)
+    const validateButton = page.locator('button', { hasText: /Validate API Key/i });
+    await expect(validateButton).toBeEnabled({ timeout: 5000 });
+
     await expect(page.locator('text=too short')).not.toBeVisible();
     await expect(page.locator('text=Invalid key prefix')).not.toBeVisible();
-
-    // Validate button should be enabled
-    const validateButton = page.locator('button', { hasText: /Validate API Key/i });
-    await expect(validateButton).toBeEnabled();
   });
 
   test('should handle exit confirmation', async ({ page }) => {
@@ -290,27 +291,26 @@ test.describe('Stripe Configuration Wizard', () => {
 
     const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
     await configureButton.click();
-    await page.waitForTimeout(500);
+    await expect(page.locator('button', { hasText: /Start Configuration/i })).toBeVisible({ timeout: 5000 });
 
     // Start wizard and select mode (make it dirty)
     await page.locator('button', { hasText: /Start Configuration/i }).click();
-    await page.waitForTimeout(500);
+    await expect(page.locator('text=Step 2 of 5')).toBeVisible({ timeout: 5000 });
     await page.locator('button', { hasText: /Test Mode/i }).filter({ has: page.locator('h4') }).first().click();
-    await page.waitForTimeout(300);
+    await expect(page.locator('button', { hasText: /Continue/i }).last()).toBeEnabled({ timeout: 5000 });
 
     // Try to close
     const closeButton = page.locator('button[aria-label="Close"]').or(page.locator('svg').filter({ hasText: /Close/i }).first());
     await closeButton.first().click();
-    await page.waitForTimeout(500);
+    await expect(page.locator('text=Exit configuration?')).toBeVisible({ timeout: 5000 });
 
     // Should show confirmation dialog
-    await expect(page.locator('text=Exit configuration?')).toBeVisible();
-    await expect(page.locator('text=/progress will not be saved|start over/i')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=/progress will not be saved|start over/i')).toBeVisible({ timeout: 5000 });
 
     // Click Continue Setup
     const continueSetupButton = page.locator('button', { hasText: /Continue Setup/i });
     await continueSetupButton.click();
-    await page.waitForTimeout(300);
+    await expect(page.locator('text=Step 2 of 5')).toBeVisible({ timeout: 5000 });
 
     // Should still be in wizard
     await expect(page.locator('text=Step 2 of 5')).toBeVisible();
@@ -322,23 +322,20 @@ test.describe('Stripe Configuration Wizard', () => {
 
     const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
     await configureButton.click();
-    await page.waitForTimeout(500);
+    await expect(page.locator('button', { hasText: /Start Configuration/i })).toBeVisible({ timeout: 5000 });
 
     // Go to Step 3
     await page.locator('button', { hasText: /Start Configuration/i }).click();
-    await page.waitForTimeout(500);
+    await expect(page.locator('text=Step 2 of 5')).toBeVisible({ timeout: 5000 });
     await page.locator('button', { hasText: /Test Mode/i }).filter({ has: page.locator('h4') }).first().click();
-    await page.waitForTimeout(300);
+    await expect(page.locator('button', { hasText: /Continue/i }).last()).toBeEnabled({ timeout: 5000 });
     await page.locator('button', { hasText: /Continue/i }).last().click();
-    await page.waitForTimeout(500);
-
-    // Should be on Step 3
-    await expect(page.locator('text=Step 3 of 5')).toBeVisible();
+    await expect(page.locator('text=Step 3 of 5')).toBeVisible({ timeout: 5000 });
 
     // Click Back
     const backButton = page.locator('button', { hasText: /Back/i }).first();
     await backButton.click();
-    await page.waitForTimeout(500);
+    await expect(page.locator('text=Step 2 of 5')).toBeVisible({ timeout: 5000 });
 
     // Should be back on Step 2
     await expect(page.locator('text=Step 2 of 5')).toBeVisible();
@@ -365,20 +362,7 @@ test.describe('Stripe Configuration Wizard', () => {
   test('should show key type explanation in Step 4', async ({ page }) => {
     await loginAsAdmin(page);
     await gotoPaymentsSettings(page);
-
-    const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
-    await configureButton.click();
-    await page.waitForTimeout(500);
-
-    // Navigate to Step 4
-    await page.locator('button', { hasText: /Start Configuration/i }).click();
-    await page.waitForTimeout(500);
-    await page.locator('button', { hasText: /Test Mode/i }).filter({ has: page.locator('h4') }).first().click();
-    await page.waitForTimeout(300);
-    await page.locator('button', { hasText: /Continue/i }).last().click();
-    await page.waitForTimeout(500);
-    await page.locator('button', { hasText: /I've Created the Key/i }).click();
-    await page.waitForTimeout(500);
+    await navigateToStep4(page);
 
     // Should show key type explanation
     await expect(page.locator('text=Choose Your Key Type')).toBeVisible();
@@ -397,35 +381,20 @@ test.describe('Stripe Configuration Wizard', () => {
   test('should accept and validate restricted key (rk_*) with appropriate message', async ({ page }) => {
     await loginAsAdmin(page);
     await gotoPaymentsSettings(page);
-
-    const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
-    await configureButton.click();
-    await page.waitForTimeout(500);
-
-    // Navigate to Step 4
-    await page.locator('button', { hasText: /Start Configuration/i }).click();
-    await page.waitForTimeout(500);
-    await page.locator('button', { hasText: /Test Mode/i }).filter({ has: page.locator('h4') }).first().click();
-    await page.waitForTimeout(300);
-    await page.locator('button', { hasText: /Continue/i }).last().click();
-    await page.waitForTimeout(500);
-    await page.locator('button', { hasText: /I've Created the Key/i }).click();
-    await page.waitForTimeout(500);
+    await navigateToStep4(page);
 
     // Enter valid format restricted key
     const keyInput = page.locator('textarea[placeholder*="rk_test"]');
     const restrictedKey = 'rk_test_1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJ';
     await keyInput.fill(restrictedKey);
     await keyInput.blur();
-    await page.waitForTimeout(1000);
 
-    // Should NOT show format errors
+    // Validate button should be enabled (implies no format errors)
+    const validateButton = page.locator('button', { hasText: /Validate API Key/i });
+    await expect(validateButton).toBeEnabled({ timeout: 5000 });
+
     await expect(page.locator('text=too short')).not.toBeVisible();
     await expect(page.locator('text=Invalid key prefix')).not.toBeVisible();
-
-    // Validate button should be enabled
-    const validateButton = page.locator('button', { hasText: /Validate API Key/i });
-    await expect(validateButton).toBeEnabled();
 
     // Note: We don't actually validate against real Stripe API in tests
     // Just verify the UI accepts the format correctly
@@ -434,35 +403,20 @@ test.describe('Stripe Configuration Wizard', () => {
   test('should accept and validate secret key (sk_*) with appropriate message', async ({ page }) => {
     await loginAsAdmin(page);
     await gotoPaymentsSettings(page);
-
-    const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
-    await configureButton.click();
-    await page.waitForTimeout(500);
-
-    // Navigate to Step 4
-    await page.locator('button', { hasText: /Start Configuration/i }).click();
-    await page.waitForTimeout(500);
-    await page.locator('button', { hasText: /Test Mode/i }).filter({ has: page.locator('h4') }).first().click();
-    await page.waitForTimeout(300);
-    await page.locator('button', { hasText: /Continue/i }).last().click();
-    await page.waitForTimeout(500);
-    await page.locator('button', { hasText: /I've Created the Key/i }).click();
-    await page.waitForTimeout(500);
+    await navigateToStep4(page);
 
     // Enter valid format secret key
     const keyInput = page.locator('textarea[placeholder*="rk_test"]');
     const secretKey = 'sk_test_1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP';
     await keyInput.fill(secretKey);
     await keyInput.blur();
-    await page.waitForTimeout(1000);
 
-    // Should NOT show format errors
+    // Validate button should be enabled (implies no format errors)
+    const validateButton = page.locator('button', { hasText: /Validate API Key/i });
+    await expect(validateButton).toBeEnabled({ timeout: 5000 });
+
     await expect(page.locator('text=too short')).not.toBeVisible();
     await expect(page.locator('text=Invalid key prefix')).not.toBeVisible();
-
-    // Validate button should be enabled
-    const validateButton = page.locator('button', { hasText: /Validate API Key/i });
-    await expect(validateButton).toBeEnabled();
 
     // Note: We don't actually validate against real Stripe API in tests
     // Just verify the UI accepts the sk_* format correctly
@@ -471,29 +425,15 @@ test.describe('Stripe Configuration Wizard', () => {
   test('should reject keys that are not rk_* or sk_*', async ({ page }) => {
     await loginAsAdmin(page);
     await gotoPaymentsSettings(page);
-
-    const configureButton = page.locator('button', { hasText: /Configure Stripe/i }).first();
-    await configureButton.click();
-    await page.waitForTimeout(500);
-
-    // Navigate to Step 4
-    await page.locator('button', { hasText: /Start Configuration/i }).click();
-    await page.waitForTimeout(500);
-    await page.locator('button', { hasText: /Test Mode/i }).filter({ has: page.locator('h4') }).first().click();
-    await page.waitForTimeout(300);
-    await page.locator('button', { hasText: /Continue/i }).last().click();
-    await page.waitForTimeout(500);
-    await page.locator('button', { hasText: /I've Created the Key/i }).click();
-    await page.waitForTimeout(500);
+    await navigateToStep4(page);
 
     // Try publishable key (pk_*) which should be rejected
     const keyInput = page.locator('textarea[placeholder*="rk_test"]');
     await keyInput.fill('pk_test_1234567890abcdefghijklmnopqrstuvwxyz');
     await keyInput.blur();
-    await page.waitForTimeout(1000);
 
     // Should show error about invalid prefix
-    await expect(page.locator('text=/Invalid key prefix/i')).toBeVisible();
+    await expect(page.locator('text=/Invalid key prefix/i')).toBeVisible({ timeout: 5000 });
 
     // Validate button should be disabled
     const validateButton = page.locator('button', { hasText: /Validate API Key/i });
