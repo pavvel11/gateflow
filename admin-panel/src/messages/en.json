@@ -536,7 +536,7 @@
     "emailValidationFailed": "Email validation failed. Please try again.",
     "emailPlaceholder": "your@email.com",
     "passwordPlaceholder": "demo123",
-    "orContinueWith": "or continue with email",
+    "orContinueWith": "or sign in with",
     "signInWith": "Sign in with {provider}"
   },
   "products": {
@@ -1049,7 +1049,7 @@
     "termsOfService": "Terms of Service",
     "privacyPolicy": "Privacy Policy",
     "securityVerificationRequired": "Please complete the security verification.",
-    "orContinueWith": "or continue with"
+    "orContinueWith": "or sign in with"
   },
   "security": {
     "requiredSteps": "Required Security Steps",

@@ -29,8 +29,8 @@ test.describe('Magic Link Authentication (Mailpit)', () => {
     // Give extra time for the dummy key to auto-verify and set the token
     await page.waitForTimeout(4000);
 
-    // 5. Request magic link
-    const submitButton = page.getByRole('button', { name: /send|magic|login|sign in/i }).first();
+    // 5. Request magic link — use type="submit" to avoid matching OAuth icon buttons
+    const submitButton = page.locator('form button[type="submit"]');
     await submitButton.click();
 
     // 6. Wait for form submission and check for success or retry

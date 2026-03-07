@@ -551,7 +551,7 @@
     "emailValidationFailed": "Weryfikacja email nie powiodła się. Spróbuj ponownie.",
     "emailPlaceholder": "twoj@email.com",
     "passwordPlaceholder": "demo123",
-    "orContinueWith": "lub kontynuuj przez email",
+    "orContinueWith": "lub zaloguj przez konto",
     "signInWith": "Zaloguj przez {provider}"
   },
   "products": {
@@ -1064,7 +1064,7 @@
     "termsOfService": "Regulaminem",
     "privacyPolicy": "Polityką Prywatności",
     "securityVerificationRequired": "Prosimy o ukończenie weryfikacji bezpieczeństwa.",
-    "orContinueWith": "lub kontynuuj przez"
+    "orContinueWith": "lub zaloguj przez konto"
   },
   "security": {
     "requiredSteps": "Wymagane kroki bezpieczeństwa",
