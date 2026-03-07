@@ -69,7 +69,7 @@ describe('Security Audit', () => {
       const result = await runSecurityAudit();
 
       expect(result.success).toBe(true);
-      expect(result.checks).toHaveLength(11);
+      expect(result.checks).toHaveLength(15);
       expect(result.timestamp).toBeTruthy();
       expect(result.checks.every(c => c.id && c.name && c.status && c.message)).toBe(true);
     });

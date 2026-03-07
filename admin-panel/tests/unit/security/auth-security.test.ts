@@ -135,9 +135,9 @@ describe('Authentication Security', () => {
     });
 
     it('validates redirect_to parameter against open redirect attacks', () => {
-      expect(authCallbackSource).toContain("!decodedRedirectTo.startsWith('//')");
+      // isSafeRedirectUrl handles backslash normalization and protocol-relative URL blocking
+      expect(authCallbackSource).toContain('isSafeRedirectUrl');
       expect(authCallbackSource).toContain("decodedRedirectTo.startsWith('/')");
-      expect(authCallbackSource).toContain('redirectToUrl.origin === origin');
       expect(authCallbackSource).toContain('decodeURIComponent(redirectTo)');
     });
 
