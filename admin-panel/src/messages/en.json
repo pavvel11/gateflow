@@ -3141,7 +3141,8 @@
       "licenseMIT": "License (MIT)",
       "privacy": "Privacy",
       "terms": "Terms",
-      "copyright": "© {year} Sellf. Open source and self-hosted"
+      "copyright": "© {year} Sellf. Open source and self-hosted",
+      "whiteLabelLicense": "White-Label License"
     }
   },
   "notFound": {

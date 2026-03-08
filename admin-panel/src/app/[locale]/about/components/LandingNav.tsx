@@ -78,7 +78,9 @@ export function LandingNav() {
             )}
 
             <a
-              href="#"
+              href="https://sellf.techskills.academy/v/sellf-white-label-license"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-sm font-medium text-sf-accent hover:text-sf-accent transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sf-accent rounded"
             >
               <Heart className="h-3.5 w-3.5" />
@@ -151,7 +153,9 @@ export function LandingNav() {
               )}
 
               <a
-                href="#"
+                href="https://sellf.techskills.academy/v/sellf-white-label-license"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-sf-accent hover:text-sf-accent hover:bg-sf-accent-soft transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sf-accent"
                 onClick={() => setMobileOpen(false)}
               >

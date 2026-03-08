@@ -112,7 +112,7 @@ Sellf gives you **complete control** over your digital product business. No mont
 - Dark/Light/System mode with optional admin-enforced lock
 - Unified `sf-*` CSS design token system across all UI layers
 - Custom colors, typography, and border radius
-- Server-side license gate for theme customization (Pro)
+- Server-side license gate for theme customization ([White-Label License](https://sellf.techskills.academy/v/sellf-white-label-license))
 
 </details>
 
@@ -354,6 +354,19 @@ Full roadmap: [BACKLOG.md](./BACKLOG.md)
 ├── MCP Server (45 tools, 4 resources, 6 prompts)
 └── 2 languages (EN, PL)
 ```
+
+---
+
+## Support This Project
+
+Sellf is free and open source. If it saves you money on platform fees, consider supporting development by purchasing a white-label license — it removes the "Powered by Sellf" watermark and unlocks the Theme Editor.
+
+| License | Price | Use Case |
+|---------|-------|----------|
+| **Personal** | Pay What You Want (min $9, suggested $29) | 1 Sellf instance |
+| **Agency Pack** | $99 | 5 license keys for client projects |
+
+**[Get a White-Label License →](https://sellf.techskills.academy/v/sellf-white-label-license)**
 
 ---
 
