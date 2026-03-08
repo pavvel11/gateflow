@@ -1,35 +1,83 @@
 # Custom Security Scan Instructions — Sellf
 
-Focus on the following high-priority areas specific to this codebase:
+Review the PR diff for the following vulnerability categories.
 
-## Critical — Always Flag
+## OWASP Top 10
 
-1. **Open Redirect** — any use of `redirect()`, `NextResponse.redirect()`, or `router.push()` with user-controlled input not validated by `isSafeRedirectUrl()` from `@/lib/validations/redirect`
+### A01 — Broken Access Control
+- API routes and server actions that mutate or read sensitive data without authentication check
+- Missing authorization for role-restricted operations (admin-only endpoints accessible to any authenticated user)
+- IDOR — using user-supplied IDs to access other users' resources instead of `auth.uid()` from session
+- Exposed admin endpoints without rate limiting or IP restriction
 
-2. **SSRF** — any `fetch()` call with a URL derived from user input or database values, without SSRF protection. Pay special attention to webhook delivery in `lib/services/` and API key validation endpoints.
+### A02 — Cryptographic Failures
+- Hardcoded secrets, API keys, or passwords in source code (not .env files)
+- Weak or outdated algorithms (MD5, SHA1 for security purposes, DES, RC4)
+- Sensitive data logged in plaintext (tokens, passwords, PII in `console.log` or audit logs)
+- Missing encryption for sensitive data stored in database (payment keys, webhook secrets)
+- IV reuse or static IV in symmetric encryption (AES-GCM requires a fresh random IV per call)
 
-3. **RLS Bypass** — any Supabase query using `createAdminClient()` (service role) that is not preceded by an explicit admin check (`requireAdminApi()` or `is_admin` RPC call). Admin client bypasses all Row Level Security.
+### A03 — Injection
+- SQL injection via string concatenation or template literals with user input (use parameterized queries)
+- XSS via `dangerouslySetInnerHTML` with unsanitized user content
+- Command injection via `exec()`/`spawn()` with user-supplied strings
+- Header injection in HTTP responses with user-controlled values
+- Log injection — user input written directly to logs without sanitization
 
-4. **Stripe Webhook Verification** — any handler in `api/webhooks/stripe/` that calls `stripe.checkout.sessions.retrieve()` or processes payment data without first verifying the webhook signature via `stripe.webhooks.constructEvent()`.
+### A04 — Insecure Design
+- Payment logic errors — access granted before payment confirmed, or without webhook verification
+- Race conditions in purchase flow — concurrent requests could grant duplicate access or bypass checks
+- Missing idempotency on payment processing (duplicate webhook delivery could charge twice)
+- Business logic bypass — free product claim without rate limit, coupon stacking without validation
 
-5. **Server Action Authorization** — server actions in `lib/actions/` that mutate data (products, users, payments) without calling `createClient()` and verifying the session. Look for missing auth checks before Supabase mutations.
+### A05 — Security Misconfiguration
+- CORS misconfiguration — wildcard `*` on authenticated endpoints, or echoing `Origin` header without allowlist check
+- Verbose error messages exposing stack traces, file paths, or internal details to clients
+- Debug endpoints or development-only routes reachable in production
+- Overly permissive Content Security Policy
 
-6. **Prompt Injection** — any place where user-supplied strings are interpolated directly into an AI prompt system message rather than passed as a separate `messages[].content` item.
+### A07 — Identification and Authentication Failures
+- Tokens or session identifiers in URLs (GET parameters, logged in Referer header)
+- Missing expiry on auth tokens or magic links
+- Insecure cookie flags — missing `HttpOnly`, `Secure`, or `SameSite` on auth cookies
+- Account enumeration via different error messages for "user not found" vs "wrong password"
 
-## High — Flag if Present
+### A08 — Software and Data Integrity Failures
+- Prompt injection — user-supplied strings interpolated into LLM system prompts instead of passed as separate `messages[].content`
+- Unsafe deserialization of user-supplied JSON without schema validation
+- Webhook payload processed without signature verification
 
-7. **AES-256-GCM IV reuse** — in `lib/encryption.ts`, verify that a fresh random IV is generated for every encryption call and never reused or hardcoded.
+### A09 — Security Logging and Monitoring Failures
+- Auth failures, access control violations, or payment errors not logged
+- Sensitive data (tokens, keys, PII) included in log entries
+- Missing audit trail for admin actions (user deletion, refunds, config changes)
 
-8. **Rate limit bypass** — new public API routes (`/api/public/`, `/api/waitlist/`, `/api/consent/`) missing `checkRateLimit()` from `@/lib/rate-limiting`.
+### A10 — Server-Side Request Forgery (SSRF)
+- `fetch()` with URL derived from user input or database values without SSRF protection
+- Missing `redirect: 'error'` on fetch calls that could follow attacker-controlled redirects
+- Missing `AbortSignal.timeout()` — open-ended requests can be used for port scanning
 
-9. **Payment session ownership** — any call to `verifyPaymentSession()` that does not check `session.metadata.user_id === user.id`. Empty string and 'null' string checks are required.
+## Stack-Specific Rules
 
-10. **Cookie flags** — new cookies set without `HttpOnly` and `Secure` flags in production (check `lib/supabase/server.ts` and middleware).
+### Next.js / App Router
+- Server Actions without CSRF protection (missing custom header check for cross-origin calls)
+- Middleware that can be bypassed — matcher patterns that miss API routes or auth-required pages
+- `cookies().set()` called in Server Components (only valid in Route Handlers and Server Actions)
+
+### Supabase / PostgreSQL
+- Any query using service role client (`createAdminClient()`) without a preceding explicit admin check — service role bypasses all Row Level Security
+- New tables or views created without RLS policies
+- Database functions using `SECURITY DEFINER` without restricting access to appropriate roles
+
+### Stripe
+- Webhook handler processing payment data before calling `stripe.webhooks.constructEvent()` for signature verification
+- Checkout session retrieved by ID without verifying it belongs to the current user
 
 ## Noise Reduction — Do NOT Flag
 
-- `console.log` / `console.error` statements (intentional logging)
-- Missing input validation on internal server-to-server API calls (not public-facing)
+- `console.log` / `console.error` statements (intentional debug logging, reviewed separately)
 - `any` TypeScript types in test files
-- The `isDemoMode()` pattern blocking mutations — this is intentional
-- Hardcoded strings like `'disposable_email'` or `'DEMO_MODE'` — these are known constants, not secrets
+- Missing input validation on internal server-to-server calls not reachable from outside
+- The `isDemoMode()` pattern blocking mutations — intentional
+- Hardcoded non-secret constants like `'disposable_email'`, `'DEMO_MODE'`, status strings
+- Zod schema validation already present on the same input — do not flag the raw input before it hits the schema
