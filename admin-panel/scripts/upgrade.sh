@@ -117,11 +117,17 @@ import sys, json, os
 try:
     install_dir = os.environ.get('SELLF_INSTALL_DIR', '')
     procs = json.load(sys.stdin)
+    # First pass: match by cwd (precise — avoids hitting wrong instance when multiple sellf-* exist)
     for p in procs:
         cwd = p.get('pm2_env', {}).get('pm_cwd', '')
-        if install_dir and install_dir in cwd or 'sellf' in p.get('name', '').lower():
+        if install_dir and install_dir in cwd:
             print(p['name'])
-            break
+            sys.exit(0)
+    # Second pass: fallback to name match (only when no cwd match found)
+    for p in procs:
+        if 'sellf' in p.get('name', '').lower():
+            print(p['name'])
+            sys.exit(0)
 except: pass
 " 2>/dev/null || true)
 fi
