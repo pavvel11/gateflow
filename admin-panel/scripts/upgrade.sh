@@ -286,6 +286,12 @@ if [ -d "$STANDALONE_DIR" ] && [ -f "$INSTALL_DIR/.env.local" ]; then
   cp "$INSTALL_DIR/.env.local" "$STANDALONE_DIR/.env.local"
 fi
 
+# Link static assets into standalone dir (Next.js standalone does not copy them automatically)
+STANDALONE_STATIC="$STANDALONE_DIR/.next/static"
+if [ -d "$INSTALL_DIR/.next/static" ] && [ ! -e "$STANDALONE_STATIC" ]; then
+  ln -s "$INSTALL_DIR/.next/static" "$STANDALONE_STATIC" 2>/dev/null || true
+fi
+
 log "Files swapped"
 
 # ===== STEP 7: RUN MIGRATIONS =====
