@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
       `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`,
       {
         headers: { 'Accept': 'application/vnd.github.v3+json' },
-        next: { revalidate: 3600 },
+        cache: 'no-store', // module-level releaseCache handles TTL — skip Next.js Data Cache
       }
     );
 
