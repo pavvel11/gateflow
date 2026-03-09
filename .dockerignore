@@ -1,57 +1,47 @@
 # Dependencies
-node_modules
-npm-debug.log
-yarn-error.log
-package-lock.json.bak
+**/node_modules
+admin-panel/.next
 
 # Environment files
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production
-.env.production.local
-
-# Next.js
-.next
-out
-build
+.env*.local
 
 # Testing
-coverage
-.nyc_output
+admin-panel/coverage
+admin-panel/test-results
+admin-panel/playwright-report
+admin-panel/screenshots-*
+admin-panel/tests
 
-# IDE
+# IDE & OS
 .vscode
 .idea
 *.swp
-*.swo
-*~
 .DS_Store
 
 # Git
 .git
-.gitignore
-.gitattributes
 
 # Docker
 Dockerfile
-docker-compose.yml
+docker-compose*.yml
 .dockerignore
-
-# Documentation
-*.md
-docs/
 
 # CI/CD
 .github
-.gitlab-ci.yml
+
+# Large unnecessary directories
+templates/
+examples/
+themes/
+layouts/
+bruno/
+docs/
+mcp-server/
+priv/
+release/
+*.tar.gz
 
 # Logs
-logs
 *.log
-
-# Misc
-.cache
-tmp
-temp

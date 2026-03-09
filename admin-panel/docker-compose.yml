@@ -4,7 +4,7 @@ services:
   # Production optimized build (single image for all environments)
   admin-panel:
     build:
-      context: .
+      context: ..
       dockerfile: Dockerfile
       args:
         NEXT_TELEMETRY_DISABLED: ${NEXT_TELEMETRY_DISABLED:-1}  # Default to 1 if not set
