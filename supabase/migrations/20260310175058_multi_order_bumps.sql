@@ -57,6 +57,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public, pg_temp;
 
+-- Re-grant after DROP+CREATE (DROP loses previous GRANTs)
+GRANT EXECUTE ON FUNCTION public.get_product_order_bumps TO anon, authenticated, service_role;
+
 -- =============================================================================
 -- 2. Create payment_line_items table
 --    Tracks every product in an order (main product + bumps + future cart items).
@@ -245,6 +248,10 @@ BEGIN
   -- MULTI-BUMP: Validate all bump products
   -- Collects: id, name, price, order_bump_id for line items
   -- ==========================================
+  IF bump_product_ids_param IS NOT NULL AND array_length(bump_product_ids_param, 1) > 20 THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Too many bump products (max 20)');
+  END IF;
+
   IF bump_product_ids_param IS NOT NULL AND array_length(bump_product_ids_param, 1) > 0 THEN
     FOR bump_rec IN
       SELECT
@@ -473,9 +480,10 @@ BEGIN
     END IF;
 
   EXCEPTION WHEN OTHERS THEN
+    RAISE WARNING 'process_stripe_payment_completion_with_bump error: % (SQLSTATE: %)', SQLERRM, SQLSTATE;
     RETURN jsonb_build_object(
       'success', false,
-      'error', 'Database Error: ' || SQLERRM,
+      'error', 'Payment processing failed. Please try again or contact support.',
       'code', SQLSTATE
     );
   END;
@@ -484,7 +492,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public, pg_temp
 SET statement_timeout = '30s';
 
-GRANT EXECUTE ON FUNCTION public.process_stripe_payment_completion_with_bump TO service_role, authenticated;
+GRANT EXECUTE ON FUNCTION public.process_stripe_payment_completion_with_bump TO service_role;
 
 -- =============================================================================
 -- 4. Update claim_guest_purchases_for_user to also grant access for bump products
@@ -692,3 +700,6 @@ BEGIN
   ORDER BY ob.display_order ASC, ob.created_at DESC;
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public, pg_temp;
+
+-- Re-grant after DROP+CREATE (DROP loses previous GRANTs)
+GRANT EXECUTE ON FUNCTION public.admin_get_product_order_bumps TO authenticated, service_role;

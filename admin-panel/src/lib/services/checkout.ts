@@ -11,7 +11,8 @@ import {
 import { STRIPE_CONFIG, CHECKOUT_ERRORS, HTTP_STATUS } from '@/lib/stripe/config';
 import { getCheckoutConfig } from '@/lib/stripe/checkout-config';
 import { getOrCreateStripeTaxRate } from '@/lib/stripe/tax-rate-manager';
-import { sanitizeForLog } from '@/lib/logger';
+import { normalizeBumpIds } from '@/lib/validations/product';
+
 
 // Remove the local ProductForCheckout interface since we now use ValidatedProduct
 type ProductForCheckout = ValidatedProduct;
@@ -200,6 +201,7 @@ export class CheckoutService {
         : undefined;
 
       // Build line items array (main product + optional bump)
+      // Note: Record<string, unknown>[] used due to conditional spreads; Stripe SDK validates at runtime
       const lineItems: Record<string, unknown>[] = [
         {
           price_data: {
@@ -338,7 +340,7 @@ export class CheckoutService {
       
       throw new CheckoutError(
         CheckoutErrorType.STRIPE_ERROR,
-        `Failed to create checkout session: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'Failed to create checkout session. Please try again or contact support.',
         HTTP_STATUS.INTERNAL_SERVER_ERROR
       );
     }
@@ -371,13 +373,25 @@ export class CheckoutService {
     }
 
     // Handle order bumps (supports multiple)
-    // Normalize: support both legacy single bumpProductId and new bumpProductIds[]
-    const requestedBumpIds: string[] = request.bumpProductIds && request.bumpProductIds.length > 0
-      ? request.bumpProductIds
-      : request.bumpProductId ? [request.bumpProductId] : [];
+    // Normalize + validate bump IDs (supports legacy single bumpProductId)
+    const { validIds: validBumpIds } = normalizeBumpIds({
+      bumpProductId: request.bumpProductId,
+      bumpProductIds: request.bumpProductIds,
+    });
+
+    // SECURITY: Cap bump IDs count at application level to prevent DoS via hundreds of
+    // validation queries. DB function also limits to 20, but this avoids the round-trips.
+    const MAX_BUMP_IDS = 20;
+    if (validBumpIds.length > MAX_BUMP_IDS) {
+      throw new CheckoutError(
+        CheckoutErrorType.VALIDATION_ERROR,
+        `Too many bump products (maximum ${MAX_BUMP_IDS})`,
+        HTTP_STATUS.BAD_REQUEST
+      );
+    }
 
     const bumpProducts: ProductForCheckout[] = [];
-    for (const bumpId of requestedBumpIds) {
+    for (const bumpId of validBumpIds) {
       try {
         let bp = await this.getProduct(bumpId);
         this.validateTemporalAvailability(bp);
@@ -395,8 +409,11 @@ export class CheckoutService {
         }
         bumpProducts.push(bp);
       } catch (error) {
-        console.error(`Error validating bump product ${bumpId}:`, error);
-        // Skip invalid bumps
+        // Log but don't silently skip — if user selected a bump and it fails validation,
+        // better to warn than charge without the expected bump
+        console.error(`[checkout] Bump product ${bumpId} validation failed:`, error);
+        // Skip bumps that are not found or temporally unavailable (expected cases)
+        // but log clearly so issues can be investigated
       }
     }
 
@@ -404,14 +421,30 @@ export class CheckoutService {
     const bumpProduct: ProductForCheckout | undefined = bumpProducts[0];
 
     // Handle coupon verification
-    let couponInfo: any = undefined;
+    let couponInfo: {
+      id: string;
+      code: string;
+      discount_type: 'percentage' | 'fixed';
+      discount_value: number;
+      exclude_order_bumps?: boolean;
+    } | undefined = undefined;
     if (request.couponCode) {
       try {
-        const { data: vResult } = await this.supabase.rpc('verify_coupon', {
+        const { data: vResult, error: couponError } = await this.supabase.rpc('verify_coupon', {
           code_param: request.couponCode.toUpperCase(),
           product_id_param: product.id,
-          customer_email_param: request.email || null
+          customer_email_param: request.email || null,
+          currency_param: product.currency,
         });
+
+        if (couponError) {
+          console.error('Coupon verification error:', couponError);
+          throw new CheckoutError(
+            CheckoutErrorType.VALIDATION_ERROR,
+            'Failed to verify coupon. Please try again.',
+            HTTP_STATUS.INTERNAL_SERVER_ERROR
+          );
+        }
 
         if (vResult && vResult.valid) {
           couponInfo = {
@@ -421,9 +454,23 @@ export class CheckoutService {
             discount_value: vResult.discount_value,
             exclude_order_bumps: vResult.exclude_order_bumps
           };
+        } else {
+          // Don't silently ignore invalid coupon — user expects a discount
+          throw new CheckoutError(
+            CheckoutErrorType.VALIDATION_ERROR,
+            vResult?.error || 'Coupon code is no longer valid. Please remove it and try again.',
+            HTTP_STATUS.BAD_REQUEST
+          );
         }
       } catch (error) {
+        // Re-throw CheckoutErrors; wrap unexpected errors
+        if (error instanceof CheckoutError) throw error;
         console.error('Error verifying coupon during checkout:', error);
+        throw new CheckoutError(
+          CheckoutErrorType.VALIDATION_ERROR,
+          'Failed to verify coupon. Please try again.',
+          HTTP_STATUS.INTERNAL_SERVER_ERROR
+        );
       }
     }
 

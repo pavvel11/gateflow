@@ -42,7 +42,8 @@ const verifyPaymentLibSource = readFileSync(verifyPaymentLibPath, 'utf-8');
 describe('Guest Purchase Session Takeover Prevention', () => {
   describe('verify-payment route security guards', () => {
     it('validates session_id and delegates to verifyPaymentSession with user context', () => {
-      expect(verifyPaymentRouteSource).toContain("if (!session_id)");
+      expect(verifyPaymentRouteSource).toContain("!session_id");
+      expect(verifyPaymentRouteSource).toContain("typeof session_id !== 'string'");
       expect(verifyPaymentRouteSource).toContain("'Session ID is required'");
       expect(verifyPaymentRouteSource).toContain('verifyPaymentSession(session_id, user)');
     });

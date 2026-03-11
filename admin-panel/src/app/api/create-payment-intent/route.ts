@@ -6,6 +6,9 @@ import { checkRateLimit } from '@/lib/rate-limiting';
 import { calculatePricing, toStripeCents, STRIPE_MINIMUM_AMOUNT } from '@/hooks/usePricing';
 import { getStripeServer } from '@/lib/stripe/server';
 import { getEnabledPaymentMethodsForCurrency } from '@/lib/utils/payment-method-helpers';
+import { isSafeRedirectUrl } from '@/lib/validations/redirect';
+import { normalizeBumpIds, validateUUID } from '@/lib/validations/product';
+import { ProductValidationService } from '@/lib/services/product-validation';
 import type { PaymentMethodConfig } from '@/types/payment-config';
 
 /**
@@ -39,6 +42,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Reject non-JSON Content-Type to prevent blind CSRF via text/plain simple requests
+    const contentType = request.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      return NextResponse.json(
+        { error: 'Content-Type must be application/json' },
+        { status: 415 }
+      );
+    }
+
     const body = await request.json();
     const {
       productId,
@@ -60,10 +72,8 @@ export async function POST(request: NextRequest) {
       customAmount  // Pay What You Want
     } = body;
 
-    // Normalize: support both legacy single bumpProductId and new bumpProductIds[]
-    const requestedBumpIds: string[] = bumpProductIds && Array.isArray(bumpProductIds) && bumpProductIds.length > 0
-      ? bumpProductIds
-      : bumpProductId ? [bumpProductId] : [];
+    // Normalize + validate bump IDs (supports legacy single bumpProductId)
+    const { validIds: requestedBumpIds, invalidIds } = normalizeBumpIds({ bumpProductId, bumpProductIds });
 
     if (!productId) {
       return NextResponse.json(
@@ -72,9 +82,54 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate productId is a valid UUID
+    if (!validateUUID(productId).isValid) {
+      return NextResponse.json(
+        { error: 'Invalid product ID format' },
+        { status: 400 }
+      );
+    }
+
+    // Validate successUrl to prevent open redirects
+    if (successUrl && !isSafeRedirectUrl(successUrl)) {
+      return NextResponse.json(
+        { error: 'Invalid success URL' },
+        { status: 400 }
+      );
+    }
+
+    // Reject request if any bump IDs have invalid UUID format
+    if (invalidIds.length > 0) {
+      return NextResponse.json(
+        { error: 'Invalid bump product ID format' },
+        { status: 400 }
+      );
+    }
+
+    // SECURITY: Cap bump IDs count at application level to prevent DoS via hundreds of
+    // validation queries. DB function also limits to 20, but this avoids the round-trips.
+    const MAX_BUMP_IDS = 20;
+    if (requestedBumpIds.length > MAX_BUMP_IDS) {
+      return NextResponse.json(
+        { error: `Too many bump products (maximum ${MAX_BUMP_IDS})` },
+        { status: 400 }
+      );
+    }
+
     // Use email from request if provided, otherwise from user session
     // For guests without email, we'll let Stripe collect it via billing details
     const finalEmail = email || user?.email || null;
+
+    // Validate email format + disposable domain check (consistent with checkout.ts)
+    if (finalEmail) {
+      const isValidEmail = await ProductValidationService.validateEmail(finalEmail);
+      if (!isValidEmail) {
+        return NextResponse.json(
+          { error: 'Invalid or disposable email address not allowed' },
+          { status: 400 }
+        );
+      }
+    }
 
     // 1. Fetch product
     const { data: product, error: productError } = await supabase
@@ -111,6 +166,14 @@ export async function POST(request: NextRequest) {
     // 3. Validate PWYW (Pay What You Want) custom pricing
     const STRIPE_MAX_AMOUNT = 999999.99; // Stripe's maximum amount limit
     if (customAmount !== undefined) {
+      // SECURITY: Reject non-numeric, NaN, or Infinity values (consistent with checkout.ts)
+      if (typeof customAmount !== 'number' || !Number.isFinite(customAmount)) {
+        return NextResponse.json(
+          { error: 'Custom amount must be a valid number' },
+          { status: 400 }
+        );
+      }
+
       // SECURITY: Explicitly reject zero or negative amounts
       if (customAmount <= 0) {
         return NextResponse.json(
@@ -147,7 +210,8 @@ export async function POST(request: NextRequest) {
 
     // 4. Fetch and validate bump products (supports multiple)
     // SECURITY: Must validate that each bumpProductId is a valid order bump for this product
-    interface ValidatedBump { product: any; bumpPrice: number }
+    type ProductRow = typeof product;
+    interface ValidatedBump { product: ProductRow; bumpPrice: number }
     const validatedBumps: ValidatedBump[] = [];
     let totalBumpPrice = 0;
 
@@ -158,7 +222,7 @@ export async function POST(request: NextRequest) {
       });
 
       for (const reqBumpId of requestedBumpIds) {
-        const validBump = validBumps?.find((b: any) => b.bump_product_id === reqBumpId);
+        const validBump = validBumps?.find((b: { bump_product_id: string; bump_currency: string; bump_price: number }) => b.bump_product_id === reqBumpId);
 
         if (validBump && validBump.bump_currency === product.currency) {
           const { data: bump } = await supabase
@@ -277,8 +341,7 @@ export async function POST(request: NextRequest) {
     // Fetch payment method configuration using admin client (service_role)
     // because RLS only allows admin users to SELECT from payment_method_config,
     // but checkout users can be anonymous or non-admin authenticated users.
-    // createAdminClient() is typed with Database which may not include payment_method_config yet
-    const adminSupabase: any = createAdminClient();
+    const adminSupabase = createAdminClient();
     const { data: paymentConfig } = await adminSupabase
       .from('payment_method_config')
       .select('*')
@@ -412,7 +475,7 @@ export async function POST(request: NextRequest) {
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error creating payment intent:', error);
     return NextResponse.json(
       { error: 'Failed to create payment intent' },
