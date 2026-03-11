@@ -343,6 +343,56 @@ export type Database = {
         }
         Relationships: []
       }
+      sellers: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+          platform_fee_percent: number
+          schema_name: string
+          slug: string
+          status: string
+          stripe_account_id: string | null
+          stripe_onboarding_complete: boolean
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          id?: string
+          platform_fee_percent?: number
+          schema_name: string
+          slug: string
+          status?: string
+          stripe_account_id?: string | null
+          stripe_onboarding_complete?: boolean
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          platform_fee_percent?: number
+          schema_name?: string
+          slug?: string
+          status?: string
+          stripe_account_id?: string | null
+          stripe_onboarding_complete?: boolean
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sellers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_access_stats"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       tracking_logs: {
         Row: {
           created_at: string
@@ -2164,6 +2214,18 @@ export type Database = {
       }
       cleanup_rate_limits: { Args: never; Returns: number }
       clear_admin_cache: { Args: never; Returns: undefined }
+      clone_schema: {
+        Args: {
+          arr?: Database["public"]["Enums"]["cloneparms"][]
+          dest_schema: string
+          source_schema: string
+        }
+        Returns: number
+      }
+      deprovision_seller_schema: {
+        Args: { p_hard_delete?: boolean; p_seller_id: string }
+        Returns: boolean
+      }
       get_cleanup_job_status: {
         Args: never
         Returns: {
@@ -2173,6 +2235,16 @@ export type Database = {
           last_run: string
           schedule: string
         }[]
+      }
+      get_insert_stmt_ddl: {
+        Args: {
+          atable: string
+          bidentity?: boolean
+          btextcast?: boolean
+          source_schema: string
+          target_schema: string
+        }
+        Returns: string
       }
       get_migration_status: { Args: never; Returns: Json }
       is_admin: { Args: { user_id_param?: string }; Returns: boolean }
@@ -2200,6 +2272,32 @@ export type Database = {
         Args: { new_action_details?: Json }
         Returns: undefined
       }
+      pg_get_coldef: {
+        Args: {
+          in_column: string
+          in_schema: string
+          in_table: string
+          oldway?: boolean
+        }
+        Returns: string
+      }
+      pg_get_tabledef: {
+        Args: {
+          _verbose: boolean
+          arr?: Database["public"]["Enums"]["tabledefs"][]
+          in_schema: string
+          in_table: string
+        }
+        Returns: string
+      }
+      provision_seller_schema: {
+        Args: {
+          p_display_name: string
+          p_owner_user_id?: string
+          p_slug: string
+        }
+        Returns: string
+      }
       send_monitoring_email: {
         Args: { alert_details: Json; alert_type: string }
         Returns: undefined
@@ -2218,7 +2316,29 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      cloneparms:
+        | "DATA"
+        | "NODATA"
+        | "DDLONLY"
+        | "NOOWNER"
+        | "NOACL"
+        | "VERBOSE"
+        | "DEBUG"
+        | "FILECOPY"
+        | "DEBUGEXEC"
+      tabledefs:
+        | "PKEY_INTERNAL"
+        | "PKEY_EXTERNAL"
+        | "FKEYS_INTERNAL"
+        | "FKEYS_EXTERNAL"
+        | "COMMENTS"
+        | "FKEYS_NONE"
+        | "INCLUDE_TRIGGERS"
+        | "NO_TRIGGERS"
+        | "SHOWPARTS"
+        | "ACL_OWNER"
+        | "ACL_DCL"
+        | "ACL_POLICIES"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4941,7 +5061,33 @@ export const Constants = {
     Enums: {},
   },
   public: {
-    Enums: {},
+    Enums: {
+      cloneparms: [
+        "DATA",
+        "NODATA",
+        "DDLONLY",
+        "NOOWNER",
+        "NOACL",
+        "VERBOSE",
+        "DEBUG",
+        "FILECOPY",
+        "DEBUGEXEC",
+      ],
+      tabledefs: [
+        "PKEY_INTERNAL",
+        "PKEY_EXTERNAL",
+        "FKEYS_INTERNAL",
+        "FKEYS_EXTERNAL",
+        "COMMENTS",
+        "FKEYS_NONE",
+        "INCLUDE_TRIGGERS",
+        "NO_TRIGGERS",
+        "SHOWPARTS",
+        "ACL_OWNER",
+        "ACL_DCL",
+        "ACL_POLICIES",
+      ],
+    },
   },
   seller_main: {
     Enums: {
