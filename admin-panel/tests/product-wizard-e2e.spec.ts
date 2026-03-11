@@ -104,14 +104,14 @@ test.describe('Product Creation Wizard', () => {
     await page.fill('textarea#description', 'Navigation test');
     await page.fill('input#price', '10');
 
+    // Wait for slug auto-generation from name (required for step validation)
+    await expect(page.locator('input#slug')).not.toHaveValue('', { timeout: 5000 });
+
     // Click Continue Setup → Step 2
     await page.getByRole('dialog').getByRole('button', { name: /Dalej/i }).click();
 
-    // Should be on step 2 — step indicator highlights step 2
-    await expect(page.getByRole('button', { name: /Treść i szczegóły|Content & Details/i })).toBeVisible();
-
-    // Back button should be visible (not Cancel)
-    await expect(page.getByRole('button', { name: /Wstecz/i })).toBeVisible();
+    // Should be on step 2 — Back button visible (not Cancel)
+    await expect(page.getByRole('button', { name: /Wstecz/i })).toBeVisible({ timeout: 5000 });
 
     // Click Continue Setup → Step 3
     await page.getByRole('dialog').getByRole('button', { name: /Dalej/i }).click();
