@@ -180,7 +180,6 @@ export class CheckoutService {
 
       // Resolve tax rates for local mode (per-product vat_rate)
       let mainTaxRates: string[] | undefined;
-      let bumpTaxRates: string[] | undefined;
 
       if (isLocalTax) {
         if (options.product.vat_rate && options.product.vat_rate > 0) {
@@ -190,14 +189,7 @@ export class CheckoutService {
           });
           mainTaxRates = [txrId];
         }
-
-        if (options.bumpProduct?.vat_rate && options.bumpProduct.vat_rate > 0) {
-          const txrId = await getOrCreateStripeTaxRate({
-            percentage: options.bumpProduct.vat_rate,
-            inclusive: options.bumpProduct.price_includes_vat,
-          });
-          bumpTaxRates = [txrId];
-        }
+        // Bump tax rates are resolved per-bump in the loop below
       }
 
       // tax_behavior: tells Stripe how to interpret the price amount
@@ -224,29 +216,43 @@ export class CheckoutService {
         },
       ];
 
-      // Add bump product as second line item if provided
-      if (options.bumpProduct) {
-        let bumpPrice = options.bumpProduct.price;
-        // Percentage discounts apply to bump unless excluded
+      // Add bump products as additional line items (multi-bump support)
+      const bumpList = options.bumpProducts && options.bumpProducts.length > 0
+        ? options.bumpProducts
+        : options.bumpProduct ? [options.bumpProduct] : [];
+
+      for (const bp of bumpList) {
+        let bpPrice = bp.price;
+        // Percentage discounts apply to bumps unless excluded
         if (coupon && coupon.discount_type === 'percentage' && !coupon.exclude_order_bumps) {
-          bumpPrice = bumpPrice * (1 - coupon.discount_value / 100);
+          bpPrice = bpPrice * (1 - coupon.discount_value / 100);
         }
 
-        const bumpTaxBehavior = (isLocalTax && bumpTaxRates) || !isLocalTax
-          ? (options.bumpProduct.price_includes_vat ? 'inclusive' : 'exclusive')
+        // Resolve tax for each bump individually
+        let bpTaxRates: string[] | undefined;
+        if (isLocalTax && bp.vat_rate && bp.vat_rate > 0) {
+          const txrId = await getOrCreateStripeTaxRate({
+            percentage: bp.vat_rate,
+            inclusive: bp.price_includes_vat,
+          });
+          bpTaxRates = [txrId];
+        }
+
+        const bpTaxBehavior = (isLocalTax && bpTaxRates) || !isLocalTax
+          ? (bp.price_includes_vat ? 'inclusive' : 'exclusive')
           : undefined;
 
         lineItems.push({
           price_data: {
-            currency: options.bumpProduct.currency.toLowerCase(),
+            currency: bp.currency.toLowerCase(),
             product_data: {
-              name: options.bumpProduct.name,
-              description: options.bumpProduct.description || undefined,
+              name: bp.name,
+              description: bp.description || undefined,
             },
-            unit_amount: Math.round(bumpPrice * 100),
-            ...(bumpTaxBehavior && { tax_behavior: bumpTaxBehavior }),
+            unit_amount: Math.round(bpPrice * 100),
+            ...(bpTaxBehavior && { tax_behavior: bpTaxBehavior }),
           },
-          ...(bumpTaxRates && { tax_rates: bumpTaxRates }),
+          ...(bpTaxRates && { tax_rates: bpTaxRates }),
           quantity: 1,
         });
       }
@@ -263,10 +269,12 @@ export class CheckoutService {
           product_id: options.product.id,
           product_slug: options.product.slug,
           user_id: options.userId || null,
-          // Add bump product metadata if present
-          ...(options.bumpProduct && {
-            bump_product_id: options.bumpProduct.id,
+          // Add bump product metadata (multi-bump support)
+          ...(bumpList.length > 0 && {
+            bump_product_ids: bumpList.map(bp => bp.id).join(','),
+            bump_product_id: bumpList[0].id, // Legacy compat
             has_bump: 'true',
+            bump_count: bumpList.length.toString(),
           }),
           // Add coupon metadata if present
           ...(coupon && {
@@ -362,36 +370,38 @@ export class CheckoutService {
       await this.checkExistingAccess(userId, product.id);
     }
 
-    // Handle order bump if provided
-    let bumpProduct: ProductForCheckout | undefined;
-    if (request.bumpProductId) {
-      try {
-        bumpProduct = await this.getProduct(request.bumpProductId);
-        this.validateTemporalAvailability(bumpProduct);
+    // Handle order bumps (supports multiple)
+    // Normalize: support both legacy single bumpProductId and new bumpProductIds[]
+    const requestedBumpIds: string[] = request.bumpProductIds && request.bumpProductIds.length > 0
+      ? request.bumpProductIds
+      : request.bumpProductId ? [request.bumpProductId] : [];
 
-        // Fetch special bump price from order_bumps table
+    const bumpProducts: ProductForCheckout[] = [];
+    for (const bumpId of requestedBumpIds) {
+      try {
+        let bp = await this.getProduct(bumpId);
+        this.validateTemporalAvailability(bp);
+
         const { data: bumpData } = await this.supabase
           .from('order_bumps')
           .select('bump_price')
           .eq('main_product_id', request.productId)
-          .eq('bump_product_id', request.bumpProductId)
+          .eq('bump_product_id', bumpId)
           .eq('is_active', true)
           .single();
 
         if (bumpData && bumpData.bump_price !== null) {
-          // Override the product price with the special bump price
-          // Create a new object to avoid mutating cached data if any
-          bumpProduct = {
-            ...bumpProduct,
-            price: bumpData.bump_price
-          };
+          bp = { ...bp, price: bumpData.bump_price };
         }
+        bumpProducts.push(bp);
       } catch (error) {
-        console.error('Error validating bump product:', error);
-        // Continue without bump if validation fails
-        bumpProduct = undefined;
+        console.error(`Error validating bump product ${bumpId}:`, error);
+        // Skip invalid bumps
       }
     }
+
+    // Backward compat: first bump available as bumpProduct
+    const bumpProduct: ProductForCheckout | undefined = bumpProducts[0];
 
     // Handle coupon verification
     let couponInfo: any = undefined;
@@ -449,6 +459,7 @@ export class CheckoutService {
     return await this.createStripeSession({
       product,
       bumpProduct,
+      bumpProducts: bumpProducts.length > 0 ? bumpProducts : undefined,
       email: request.email,
       userId,
       returnUrl,

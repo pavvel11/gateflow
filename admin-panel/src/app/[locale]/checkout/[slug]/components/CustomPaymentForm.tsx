@@ -24,8 +24,12 @@ interface AppliedCoupon {
 interface CustomPaymentFormProps {
   product: Product;
   email?: string;
+  /** @deprecated Use bumpProducts + selectedBumpIds for multi-bump support */
   bumpProduct?: OrderBumpWithProduct | null;
-  bumpSelected: boolean;
+  /** @deprecated Use selectedBumpIds for multi-bump support */
+  bumpSelected?: boolean;
+  bumpProducts?: OrderBumpWithProduct[];
+  selectedBumpIds?: Set<string>;
   appliedCoupon?: AppliedCoupon;
   successUrl?: string;
   onChangeAccount?: () => void;
@@ -41,7 +45,9 @@ export default function CustomPaymentForm({
   product,
   email,
   bumpProduct,
-  bumpSelected,
+  bumpSelected = false,
+  bumpProducts = [],
+  selectedBumpIds = new Set(),
   appliedCoupon,
   successUrl,
   onChangeAccount,
@@ -100,6 +106,11 @@ export default function CustomPaymentForm({
   const [gusSuccess, setGusSuccess] = useState(false);
   const [gusData, setGusData] = useState<GUSCompanyData | null>(null);
 
+  // Resolve bumps: prefer multi-bump (bumpProducts + selectedBumpIds) over legacy single bump
+  const resolvedBumps = bumpProducts.length > 0
+    ? bumpProducts.map(bp => ({ price: bp.bump_price, selected: selectedBumpIds.has(bp.bump_product_id) }))
+    : undefined;
+
   // Centralized pricing calculation
   const pricing = usePricing({
     productPrice: product.price,
@@ -107,8 +118,10 @@ export default function CustomPaymentForm({
     productVatRate: product.vat_rate ?? undefined,
     priceIncludesVat: product.price_includes_vat ?? undefined,
     customAmount,
-    bumpPrice: bumpProduct?.bump_price,
-    bumpSelected,
+    bumps: resolvedBumps,
+    // Legacy fallback when bumpProducts not provided
+    bumpPrice: !resolvedBumps ? bumpProduct?.bump_price : undefined,
+    bumpSelected: !resolvedBumps ? bumpSelected : undefined,
     coupon: appliedCoupon,
   });
 
@@ -335,7 +348,19 @@ export default function CustomPaymentForm({
         price: basePrice,
         quantity: 1,
       }];
-      if (bumpSelected && bumpProduct) {
+      // Multi-bump tracking
+      const selectedBumps = bumpProducts.filter(bp => selectedBumpIds.has(bp.bump_product_id));
+      if (selectedBumps.length > 0) {
+        for (const bump of selectedBumps) {
+          items.push({
+            item_id: bump.bump_product_id,
+            item_name: bump.bump_product_name || t('additionalProduct'),
+            price: bump.bump_price,
+            quantity: 1,
+          });
+        }
+      } else if (bumpSelected && bumpProduct) {
+        // Legacy single bump fallback
         items.push({
           item_id: bumpProduct.bump_product_id,
           item_name: bumpProduct.bump_product_name || t('additionalProduct'),
@@ -632,34 +657,48 @@ export default function CustomPaymentForm({
 
       {/* Order Summary - Compact (Zanfia/EasyCart-inspired) */}
       <div className="space-y-2 py-4 border-t border-sf-border">
-        {/* Show bump or coupon if present */}
-        {(bumpSelected && bumpProduct) || (appliedCoupon && discountAmount > 0) ? (
-          <>
-            {/* Product Price */}
-            <div className="flex justify-between text-sm text-sf-muted">
-              <span>{product.name}</span>
-              <span>{formatPrice(basePrice, product.currency)} {product.currency}</span>
-            </div>
-
-            {/* Bump Product */}
-            {bumpSelected && bumpProduct && (
+        {/* Show bumps or coupon if present */}
+        {(() => {
+          const selectedBumpsForSummary = bumpProducts.filter(bp => selectedBumpIds.has(bp.bump_product_id));
+          const hasSelectedBumps = selectedBumpsForSummary.length > 0 || (bumpSelected && bumpProduct);
+          const showBreakdown = hasSelectedBumps || (appliedCoupon && discountAmount > 0);
+          
+          return showBreakdown ? (
+            <>
+              {/* Product Price */}
               <div className="flex justify-between text-sm text-sf-muted">
-                <span>{bumpProduct.bump_product_name || t('additionalProduct')}</span>
-                <span>{formatPrice(bumpProduct.bump_price, product.currency)} {product.currency}</span>
+                <span>{product.name}</span>
+                <span>{formatPrice(basePrice, product.currency)} {product.currency}</span>
               </div>
-            )}
 
-            {/* Coupon Discount */}
-            {appliedCoupon && discountAmount > 0 && (
-              <div className="flex justify-between text-sm text-sf-success">
-                <span>{t('couponDiscount', { defaultValue: 'Discount' })} ({appliedCoupon.code})</span>
-                <span>-{formatPrice(discountAmount, product.currency)} {product.currency}</span>
-              </div>
-            )}
+              {/* Multi-bump line items */}
+              {selectedBumpsForSummary.map(bump => (
+                <div key={bump.bump_product_id} className="flex justify-between text-sm text-sf-muted">
+                  <span>{bump.bump_product_name || t('additionalProduct')}</span>
+                  <span>{formatPrice(bump.bump_price, product.currency)} {product.currency}</span>
+                </div>
+              ))}
 
-            <div className="border-t border-sf-border my-2" />
-          </>
-        ) : null}
+              {/* Legacy single bump fallback */}
+              {selectedBumpsForSummary.length === 0 && bumpSelected && bumpProduct && (
+                <div className="flex justify-between text-sm text-sf-muted">
+                  <span>{bumpProduct.bump_product_name || t('additionalProduct')}</span>
+                  <span>{formatPrice(bumpProduct.bump_price, product.currency)} {product.currency}</span>
+                </div>
+              )}
+
+              {/* Coupon Discount */}
+              {appliedCoupon && discountAmount > 0 && (
+                <div className="flex justify-between text-sm text-sf-success">
+                  <span>{t('couponDiscount', { defaultValue: 'Discount' })} ({appliedCoupon.code})</span>
+                  <span>-{formatPrice(discountAmount, product.currency)} {product.currency}</span>
+                </div>
+              )}
+
+              <div className="border-t border-sf-border my-2" />
+            </>
+          ) : null;
+        })()}
 
         {/* Total - Prominent */}
         <div className="flex justify-between items-baseline">

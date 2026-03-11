@@ -121,6 +121,7 @@ export async function POST(request: NextRequest) {
       is_active = true,
       display_order = 0,
       access_duration_days,
+      urgency_duration_minutes,
     } = body;
 
     // Validate required fields
@@ -227,6 +228,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Validate urgency_duration_minutes
+    if (urgency_duration_minutes !== null && urgency_duration_minutes !== undefined) {
+      if (typeof urgency_duration_minutes !== 'number' || !Number.isInteger(urgency_duration_minutes) || urgency_duration_minutes < 1 || urgency_duration_minutes > 1440) {
+        return apiError(request, 'VALIDATION_ERROR', 'Invalid urgency duration', {
+          urgency_duration_minutes: ['Urgency duration must be an integer between 1 and 1440 minutes']
+        });
+      }
+    }
+
     // Create order bump
     const { data, error } = await supabase
       .from('order_bumps')
@@ -239,6 +249,7 @@ export async function POST(request: NextRequest) {
         is_active,
         display_order,
         access_duration_days: access_duration_days ?? null,
+        urgency_duration_minutes: urgency_duration_minutes ?? null,
       })
       .select(ORDER_BUMP_SELECT)
       .single();

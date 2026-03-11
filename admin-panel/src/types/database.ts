@@ -748,6 +748,7 @@ export type Database = {
           is_active: boolean
           main_product_id: string
           updated_at: string
+          urgency_duration_minutes: number | null
         }
         Insert: {
           access_duration_days?: number | null
@@ -761,6 +762,7 @@ export type Database = {
           is_active?: boolean
           main_product_id: string
           updated_at?: string
+          urgency_duration_minutes?: number | null
         }
         Update: {
           access_duration_days?: number | null
@@ -774,6 +776,7 @@ export type Database = {
           is_active?: boolean
           main_product_id?: string
           updated_at?: string
+          urgency_duration_minutes?: number | null
         }
         Relationships: [
           {
@@ -842,6 +845,73 @@ export type Database = {
             columns: ["source_product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_line_items: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          item_type: Database["public"]["Enums"]["line_item_type"]
+          metadata: Json
+          order_bump_id: string | null
+          product_id: string
+          product_name: string | null
+          quantity: number
+          total_price: number
+          transaction_id: string
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          currency: string
+          id?: string
+          item_type: Database["public"]["Enums"]["line_item_type"]
+          metadata?: Json
+          order_bump_id?: string | null
+          product_id: string
+          product_name?: string | null
+          quantity?: number
+          total_price: number
+          transaction_id: string
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          item_type?: Database["public"]["Enums"]["line_item_type"]
+          metadata?: Json
+          order_bump_id?: string | null
+          product_id?: string
+          product_name?: string | null
+          quantity?: number
+          total_price?: number
+          transaction_id?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_line_items_order_bump_id_fkey"
+            columns: ["order_bump_id"]
+            isOneToOne: false
+            referencedRelation: "order_bumps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_line_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_line_items_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "payment_transactions"
             referencedColumns: ["id"]
           },
         ]
@@ -1792,6 +1862,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_active: boolean
           name: string | null
           slug: string | null
           tenant_id: string | null
@@ -1800,6 +1871,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_active?: boolean
           name?: string | null
           slug?: string | null
           tenant_id?: string | null
@@ -1808,6 +1880,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_active?: boolean
           name?: string | null
           slug?: string | null
           tenant_id?: string | null
@@ -2082,6 +2155,7 @@ export type Database = {
           display_order: number
           is_active: boolean
           updated_at: string
+          urgency_duration_minutes: number
         }[]
       }
       admin_get_product_oto_offer: {
@@ -2262,6 +2336,7 @@ export type Database = {
           bump_title: string
           display_order: number
           original_price: number
+          urgency_duration_minutes: number
         }[]
       }
       get_public_integrations_config: { Args: never; Returns: Json }
@@ -2322,9 +2397,12 @@ export type Database = {
       get_variant_group: {
         Args: { p_group_id: string }
         Returns: {
+          allow_custom_price: boolean
           currency: string
+          custom_price_min: number
           description: string
           display_order: number
+          icon: string
           id: string
           image_url: string
           is_active: boolean
@@ -2338,9 +2416,12 @@ export type Database = {
       get_variant_group_by_slug: {
         Args: { p_slug: string }
         Returns: {
+          allow_custom_price: boolean
           currency: string
+          custom_price_min: number
           description: string
           display_order: number
+          icon: string
           id: string
           image_url: string
           is_active: boolean
@@ -2439,7 +2520,7 @@ export type Database = {
       process_stripe_payment_completion_with_bump: {
         Args: {
           amount_total: number
-          bump_product_id_param?: string
+          bump_product_ids_param?: string[]
           coupon_id_param?: string
           currency_param: string
           customer_email_param: string
@@ -2499,7 +2580,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      line_item_type: "main_product" | "order_bump"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3163,7 +3244,9 @@ export const Constants = {
     Enums: {},
   },
   public: {
-    Enums: {},
+    Enums: {
+      line_item_type: ["main_product", "order_bump"],
+    },
   },
   storage: {
     Enums: {
@@ -3171,4 +3254,3 @@ export const Constants = {
     },
   },
 } as const
-

@@ -39,13 +39,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const body = await request.json();
     const {
       productId,
       email,
       firstName,
       lastName,
       termsAccepted,
-      bumpProductId,
+      bumpProductId,     // Legacy: single bump ID
+      bumpProductIds,    // New: array of bump IDs
       couponCode,
       needsInvoice,
       nip,
@@ -56,7 +58,12 @@ export async function POST(request: NextRequest) {
       country,
       successUrl,
       customAmount  // Pay What You Want
-    } = await request.json();
+    } = body;
+
+    // Normalize: support both legacy single bumpProductId and new bumpProductIds[]
+    const requestedBumpIds: string[] = bumpProductIds && Array.isArray(bumpProductIds) && bumpProductIds.length > 0
+      ? bumpProductIds
+      : bumpProductId ? [bumpProductId] : [];
 
     if (!productId) {
       return NextResponse.json(
@@ -138,36 +145,42 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 4. Fetch and validate bump product if selected
-    // SECURITY: Must validate that bumpProductId is a valid order bump for this product
-    let bumpProduct = null;
-    let bumpPrice = 0;
-    if (bumpProductId) {
+    // 4. Fetch and validate bump products (supports multiple)
+    // SECURITY: Must validate that each bumpProductId is a valid order bump for this product
+    interface ValidatedBump { product: any; bumpPrice: number }
+    const validatedBumps: ValidatedBump[] = [];
+    let totalBumpPrice = 0;
+
+    if (requestedBumpIds.length > 0) {
       // Use the same RPC function that frontend uses to get valid bumps
       const { data: validBumps } = await supabase.rpc('get_product_order_bumps', {
         product_id_param: productId,
       });
 
-      // Find if the requested bump is in the valid bumps list
-      const validBump = validBumps?.find((b: any) => b.bump_product_id === bumpProductId);
+      for (const reqBumpId of requestedBumpIds) {
+        const validBump = validBumps?.find((b: any) => b.bump_product_id === reqBumpId);
 
-      if (validBump && validBump.bump_currency === product.currency) {
-        // Fetch full product data for metadata
-        const { data: bump } = await supabase
-          .from('products')
-          .select('*')
-          .eq('id', bumpProductId)
-          .single();
+        if (validBump && validBump.bump_currency === product.currency) {
+          const { data: bump } = await supabase
+            .from('products')
+            .select('*')
+            .eq('id', reqBumpId)
+            .single();
 
-        if (bump) {
-          bumpProduct = bump;
-          // SECURITY: Use the bump_price from order_bumps, not the product's regular price
-          bumpPrice = validBump.bump_price;
+          if (bump) {
+            // SECURITY: Use the bump_price from order_bumps, not the product's regular price
+            const price = validBump.bump_price;
+            validatedBumps.push({ product: bump, bumpPrice: price });
+            totalBumpPrice += price;
+          }
         }
+        // Invalid bump IDs are silently ignored
       }
-      // If bumpProductId is not a valid bump for this product, silently ignore it
-      // (could also return 400 error, but ignoring is more user-friendly)
     }
+
+    // Backward compat: expose first bump as bumpProduct for downstream code
+    const bumpProduct = validatedBumps.length > 0 ? validatedBumps[0].product : null;
+    const bumpPrice = validatedBumps.length > 0 ? validatedBumps[0].bumpPrice : 0;
 
     // 5. Fetch and validate coupon using secure DB function
     // SECURITY: Must use verify_coupon RPC which checks all constraints:
@@ -208,13 +221,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 6. Calculate pricing using centralized function
+    // 6. Calculate pricing using centralized function (multi-bump aware)
     const pricing = calculatePricing({
       productPrice: product.price,
       productCurrency: product.currency,
       customAmount,
-      bumpPrice: bumpPrice, // SECURITY: Use validated bump_price from order_bumps, not product.price
-      bumpSelected: !!bumpProduct,
+      bumps: validatedBumps.map(vb => ({ price: vb.bumpPrice, selected: true })),
       coupon: appliedCoupon ? {
         discount_type: appliedCoupon.discount_type,
         discount_value: appliedCoupon.discount_value,
@@ -240,8 +252,12 @@ export async function POST(request: NextRequest) {
         first_name: firstName || '',
         last_name: lastName || '',
         terms_accepted: termsAccepted ? 'true' : '',
-        bump_product_id: bumpProduct?.id || '',  // Only set if bump was validated and applied
+        // Multi-bump: comma-separated IDs for all validated bumps
+        bump_product_ids: validatedBumps.map(vb => vb.product.id).join(','),
+        bump_product_id: bumpProduct?.id || '',  // Legacy: first bump for backward compat
         bump_product_name: bumpProduct?.name || '',
+        has_bump: validatedBumps.length > 0 ? 'true' : '',
+        bump_count: validatedBumps.length.toString(),
         coupon_code: appliedCoupon?.code || '',
         coupon_id: appliedCoupon?.id || '',
         coupon_discount: appliedCoupon ? `${appliedCoupon.discount_value}${appliedCoupon.discount_type === 'percentage' ? '%' : product.currency}` : '',

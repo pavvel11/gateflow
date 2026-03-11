@@ -106,6 +106,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       is_active,
       display_order,
       access_duration_days,
+      urgency_duration_minutes,
     } = body;
 
     // Validate string lengths
@@ -167,6 +168,15 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       }
     }
 
+    // Validate urgency_duration_minutes if provided
+    if (urgency_duration_minutes !== undefined && urgency_duration_minutes !== null) {
+      if (typeof urgency_duration_minutes !== 'number' || !Number.isInteger(urgency_duration_minutes) || urgency_duration_minutes < 1 || urgency_duration_minutes > 1440) {
+        return apiError(request, 'VALIDATION_ERROR', 'Invalid urgency duration', {
+          urgency_duration_minutes: ['Urgency duration must be an integer between 1 and 1440 minutes']
+        });
+      }
+    }
+
     // Validate is_active type if provided
     if (is_active !== undefined && typeof is_active !== 'boolean') {
       return apiError(request, 'VALIDATION_ERROR', 'Invalid is_active value', {
@@ -183,6 +193,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (is_active !== undefined) updates.is_active = is_active;
     if (display_order !== undefined) updates.display_order = display_order;
     if (access_duration_days !== undefined) updates.access_duration_days = access_duration_days;
+    if (urgency_duration_minutes !== undefined) updates.urgency_duration_minutes = urgency_duration_minutes;
 
     if (Object.keys(updates).length === 0) {
       return apiError(request, 'VALIDATION_ERROR', 'No valid update fields provided');

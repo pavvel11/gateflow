@@ -24,7 +24,9 @@ export class CheckoutError extends Error {
 export interface CreateCheckoutRequest {
   productId: string;
   email?: string;
-  bumpProductId?: string; // Optional order bump product ID
+  /** @deprecated Use bumpProductIds instead */
+  bumpProductId?: string;
+  bumpProductIds?: string[]; // Multiple order bump product IDs
   couponCode?: string; // NEW: Optional discount code
   successUrl?: string; // NEW: Optional OTO redirect URL
   customAmount?: number; // Pay What You Want - customer-chosen price
@@ -69,7 +71,9 @@ export interface UserAccessData {
 // Checkout session options
 export interface CheckoutSessionOptions {
   product: ProductForCheckout;
-  bumpProduct?: ProductForCheckout; // Optional order bump product
+  /** @deprecated Use bumpProducts instead */
+  bumpProduct?: ProductForCheckout;
+  bumpProducts?: ProductForCheckout[]; // Multiple order bump products
   email?: string;
   userId?: string;
   returnUrl: string;

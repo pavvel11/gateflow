@@ -731,22 +731,51 @@ We offer this bundle to subscribers as a thank-you for being part of our communi
   -- STEP 5: SEED — ORDER BUMPS
   -- =========================================================
 
-  INSERT INTO order_bumps (main_product_id, bump_product_id, bump_price, bump_title, bump_description, is_active)
+  -- Email Marketing 101 → 3 bumps (multi-bump showcase)
+  INSERT INTO order_bumps (main_product_id, bump_product_id, bump_price, bump_title, bump_description, is_active, display_order)
   VALUES (
     fundamentals_id, toolkit_id,
     25.00,
     '📱 Add the Social Media Toolkit for just $25!',
     'Get 200+ done-for-you social media templates (worth $79). Complete your content system in one purchase.',
-    true
+    true, 1
   );
 
-  INSERT INTO order_bumps (main_product_id, bump_product_id, bump_price, bump_title, bump_description, is_active)
+  INSERT INTO order_bumps (main_product_id, bump_product_id, bump_price, bump_title, bump_description, is_active, display_order)
+  VALUES (
+    fundamentals_id, masterclass_id,
+    69.00,
+    '🚀 Add the Email Masterclass — go from beginner to pro!',
+    'Advanced segmentation, automation, and launch sequences. Normally $149 — save $80 when you add it now.',
+    true, 2
+  );
+
+  INSERT INTO order_bumps (main_product_id, bump_product_id, bump_price, bump_title, bump_description, is_active, display_order, access_duration_days)
+  VALUES (
+    fundamentals_id, bundle_id,
+    99.00,
+    '🎁 Upgrade to Creator Bundle — everything in one package',
+    'Email Marketing 101 + Social Media Toolkit + Notion workspace. Worth $179 — save $80! (90-day access)',
+    true, 3, 90
+  );
+
+  -- Sales Funnel Blueprint → 2 bumps (multi-bump showcase)
+  INSERT INTO order_bumps (main_product_id, bump_product_id, bump_price, bump_title, bump_description, is_active, display_order)
   VALUES (
     blueprint_id, masterclass_id,
     49.00,
     '🚀 Add Email Marketing Masterclass for just $49!',
     'Add the advanced masterclass (worth $149) to your Blueprint. Learn the email strategies that power the funnels you''ll build.',
-    true
+    true, 1
+  );
+
+  INSERT INTO order_bumps (main_product_id, bump_product_id, bump_price, bump_title, bump_description, is_active, display_order)
+  VALUES (
+    blueprint_id, toolkit_id,
+    35.00,
+    '📱 Add Social Media Toolkit — drive traffic to your funnels',
+    '200+ templates to promote your funnels on Instagram, LinkedIn, and Facebook. Worth $79 — more than half off!',
+    true, 2
   );
 
   -- =========================================================

@@ -337,15 +337,21 @@ export async function verifyPaymentSession(
             ? session.payment_intent?.id
             : session.payment_intent;
 
-          // Extract bump product ID from metadata if present
+          // Extract bump product IDs from metadata (multi-bump support)
+          const bumpProductIdsStr = session.metadata?.bump_product_ids || '';
           const bumpProductId = session.metadata?.bump_product_id || null;
           const hasBump = session.metadata?.has_bump === 'true';
+          
+          // Parse bump IDs: prefer comma-separated bump_product_ids, fallback to single bump_product_id
+          const bumpProductIds: string[] = bumpProductIdsStr
+            ? bumpProductIdsStr.split(',').filter((id: string) => id.length > 0)
+            : (hasBump && bumpProductId ? [bumpProductId] : []);
           
           // Extract coupon ID from metadata if present
           const couponId = session.metadata?.coupon_id || null;
           const hasCoupon = session.metadata?.has_coupon === 'true';
 
-          // Use new function that supports order bumps
+          // Use function that supports multiple order bumps (UUID array)
           const rpcParams = {
             session_id_param: session.id,
             product_id_param: productId,
@@ -354,7 +360,7 @@ export async function verifyPaymentSession(
             currency_param: session.currency || 'usd',
             stripe_payment_intent_id: stripePaymentIntentId || null,
             user_id_param: user?.id || null,
-            bump_product_id_param: hasBump && bumpProductId ? bumpProductId : null,
+            bump_product_ids_param: bumpProductIds.length > 0 ? bumpProductIds : null,
             coupon_id_param: hasCoupon && couponId ? couponId : null
           };
           
@@ -396,15 +402,14 @@ export async function verifyPaymentSession(
               .eq('id', productId)
               .single();
 
-            // Fetch bump product info if exists
-            let bumpProductDetails = null;
-            if (hasBump && bumpProductId) {
-               const { data: bump } = await serviceClient
+            // Fetch bump product info for all bumps
+            let bumpProductDetailsList: any[] = [];
+            if (bumpProductIds.length > 0) {
+              const { data: bumps } = await serviceClient
                 .from('products')
                 .select('id, name, slug, price, currency, icon')
-                .eq('id', bumpProductId)
-                .single();
-               bumpProductDetails = bump;
+                .in('id', bumpProductIds);
+              if (bumps) bumpProductDetailsList = bumps;
             }
 
             const webhookData: any = {
@@ -422,14 +427,20 @@ export async function verifyPaymentSession(
                  currency: productDetails.currency,
                  icon: productDetails.icon
               } : { id: productId },
-              bumpProduct: bumpProductDetails ? {
-                 id: bumpProductDetails.id,
-                 name: bumpProductDetails.name,
-                 slug: bumpProductDetails.slug,
-                 price: bumpProductDetails.price,
-                 currency: bumpProductDetails.currency,
-                 icon: bumpProductDetails.icon
+              // Backward compat: first bump as bumpProduct
+              bumpProduct: bumpProductDetailsList.length > 0 ? {
+                 id: bumpProductDetailsList[0].id,
+                 name: bumpProductDetailsList[0].name,
+                 slug: bumpProductDetailsList[0].slug,
+                 price: bumpProductDetailsList[0].price,
+                 currency: bumpProductDetailsList[0].currency,
+                 icon: bumpProductDetailsList[0].icon
               } : null,
+              // New: all bumps
+              bumpProducts: bumpProductDetailsList.map(b => ({
+                 id: b.id, name: b.name, slug: b.slug,
+                 price: b.price, currency: b.currency, icon: b.icon
+              })),
               order: {
                 amount: session.amount_total,
                 currency: session.currency,
@@ -642,21 +653,26 @@ export async function verifyPaymentIntent(
             };
           }
 
-          // Extract metadata
-          const bumpProductId = paymentIntent.metadata?.bump_product_id || null;
+          // Extract metadata (multi-bump support)
+          const bumpProductIdsStr = paymentIntent.metadata?.bump_product_ids || '';
+          const bumpProductIdLegacy = paymentIntent.metadata?.bump_product_id || null;
           const couponId = paymentIntent.metadata?.coupon_id || null;
 
-          // Process payment using database function
-          // For Payment Intent flow, use payment_intent_id as session_id for uniqueness tracking
+          // Parse bump IDs: prefer comma-separated bump_product_ids, fallback to single
+          const bumpProductIds: string[] = bumpProductIdsStr
+            ? bumpProductIdsStr.split(',').filter((id: string) => id.length > 0)
+            : (bumpProductIdLegacy ? [bumpProductIdLegacy] : []);
+
+          // Process payment using database function (multi-bump UUID array)
           const rpcParams = {
-            session_id_param: paymentIntent.id, // Use payment_intent_id as session_id for Payment Intent flow
+            session_id_param: paymentIntent.id,
             product_id_param: productId,
             customer_email_param: customerEmail,
             amount_total: paymentIntent.amount,
             currency_param: paymentIntent.currency,
             stripe_payment_intent_id: paymentIntent.id,
             user_id_param: user?.id || null,
-            bump_product_id_param: bumpProductId || null,
+            bump_product_ids_param: bumpProductIds.length > 0 ? bumpProductIds : null,
             coupon_id_param: couponId || null
           };
 
@@ -698,15 +714,14 @@ export async function verifyPaymentIntent(
               .eq('id', productId)
               .single();
 
-            // Fetch bump product info if exists
-            let bumpProductDetails = null;
-            if (bumpProductId) {
-               const { data: bump } = await serviceClient
+            // Fetch bump product info for all bumps
+            let bumpProductDetailsList: any[] = [];
+            if (bumpProductIds.length > 0) {
+              const { data: bumps } = await serviceClient
                 .from('products')
                 .select('id, name, slug, price, currency, icon')
-                .eq('id', bumpProductId)
-                .single();
-               bumpProductDetails = bump;
+                .in('id', bumpProductIds);
+              if (bumps) bumpProductDetailsList = bumps;
             }
 
             const webhookData: any = {
@@ -724,14 +739,18 @@ export async function verifyPaymentIntent(
                  currency: productDetails.currency,
                  icon: productDetails.icon
               } : { id: productId },
-              bumpProduct: bumpProductDetails ? {
-                 id: bumpProductDetails.id,
-                 name: bumpProductDetails.name,
-                 slug: bumpProductDetails.slug,
-                 price: bumpProductDetails.price,
-                 currency: bumpProductDetails.currency,
-                 icon: bumpProductDetails.icon
+              bumpProduct: bumpProductDetailsList.length > 0 ? {
+                 id: bumpProductDetailsList[0].id,
+                 name: bumpProductDetailsList[0].name,
+                 slug: bumpProductDetailsList[0].slug,
+                 price: bumpProductDetailsList[0].price,
+                 currency: bumpProductDetailsList[0].currency,
+                 icon: bumpProductDetailsList[0].icon
               } : null,
+              bumpProducts: bumpProductDetailsList.map(b => ({
+                 id: b.id, name: b.name, slug: b.slug,
+                 price: b.price, currency: b.currency, icon: b.icon
+              })),
               order: {
                 amount: paymentIntent.amount,
                 currency: paymentIntent.currency,

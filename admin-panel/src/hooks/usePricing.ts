@@ -5,14 +5,23 @@
 
 export const STRIPE_MINIMUM_AMOUNT = 0.50;
 
+export interface BumpPricingItem {
+  price: number;
+  selected: boolean;
+}
+
 export interface PricingInput {
   productPrice: number;
   productCurrency: string;
   productVatRate?: number;
   priceIncludesVat?: boolean;
   customAmount?: number;
+  /** @deprecated Use bumps[] instead for multi-bump support */
   bumpPrice?: number;
+  /** @deprecated Use bumps[] instead for multi-bump support */
   bumpSelected?: boolean;
+  /** Multi-bump: array of bump items with price and selection state. Takes precedence over bumpPrice/bumpSelected. */
+  bumps?: BumpPricingItem[];
   coupon?: {
     discount_type: 'percentage' | 'fixed';
     discount_value: number;
@@ -56,6 +65,7 @@ export function calculatePricing(input: PricingInput): PricingResult {
     customAmount,
     bumpPrice = 0,
     bumpSelected = false,
+    bumps,
     coupon,
   } = input;
 
@@ -63,8 +73,13 @@ export function calculatePricing(input: PricingInput): PricingResult {
   const isPwyw = customAmount !== undefined && customAmount > 0;
   const basePrice = isPwyw ? customAmount : productPrice;
 
-  // Add bump if selected
-  const bumpAmount = bumpSelected ? bumpPrice : 0;
+  // Calculate bump amount: bumps[] takes precedence over legacy bumpPrice/bumpSelected
+  let bumpAmount: number;
+  if (bumps !== undefined) {
+    bumpAmount = bumps.reduce((sum, b) => sum + (b.selected ? b.price : 0), 0);
+  } else {
+    bumpAmount = bumpSelected ? bumpPrice : 0;
+  }
   const subtotal = basePrice + bumpAmount;
 
   // Apply coupon discount
@@ -100,7 +115,7 @@ export function calculatePricing(input: PricingInput): PricingResult {
     currency: productCurrency,
     vatRate,
     isPwyw,
-    hasBump: bumpSelected && bumpPrice > 0,
+    hasBump: bumpAmount > 0,
     hasDiscount: discountAmount > 0,
   };
 }

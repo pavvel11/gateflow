@@ -9,6 +9,10 @@
     "daysAccess": "{days} Days Access",
     "lifetimeAccess": "Lifetime Access",
     "saveAmount": "Save {amount}",
+    "addToYourOrder": "Add to your order",
+    "addToOrder": "Add to order",
+    "addedToOrder": "Added",
+    "specialOfferEnds": "Special offer ends in:",
     "couponPlaceholder": "Enter code",
     "applyCoupon": "Apply",
     "verifying": "...",
@@ -1870,6 +1874,8 @@
       "createSuccess": "Order bump created successfully",
       "updateSuccess": "Order bump updated successfully",
       "deleteSuccess": "Order bump deleted successfully",
+      "activated": "activated",
+      "deactivated": "deactivated",
       "toggleSuccess": "Order bump {status}",
       "noBumps": "No order bumps found. Create your first one!",
       "stats": {
@@ -1903,7 +1909,11 @@
         "creating": "Creating...",
         "saving": "Saving...",
         "accessDurationPlaceholder": "e.g. 30 days",
-        "defaultTitle": "Yes, add \"{name}\" for just {price} {currency}!"
+        "defaultTitle": "Yes, add \"{name}\" for just {price} {currency}!",
+        "urgencyTimer": "Urgency Timer",
+        "showUrgencyTimer": "Show countdown timer on this bump",
+        "urgencyTimerHelp": "Displays a countdown from page load to create urgency. Purely visual — no backend enforcement.",
+        "urgencyMinutesPlaceholder": "e.g. 30 (minutes)"
       },
       "loadError": "Failed to load order bumps",
       "createError": "Failed to create order bump",

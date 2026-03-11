@@ -1,19 +1,20 @@
 /**
  * useOrderBumps Hook
  *
- * Custom hook for fetching order bump configuration for a product
+ * Custom hook for fetching order bump configuration for a product.
+ * Returns an array of all active bumps (supports multi-bump).
  */
 
 import { useEffect, useState } from 'react';
 import type { OrderBumpWithProduct } from '@/types/order-bump';
 
 export function useOrderBumps(productId: string) {
-  const [orderBump, setOrderBump] = useState<OrderBumpWithProduct | null>(null);
+  const [orderBumps, setOrderBumps] = useState<OrderBumpWithProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchOrderBump() {
+    async function fetchOrderBumps() {
       if (!productId) {
         setLoading(false);
         return;
@@ -23,32 +24,30 @@ export function useOrderBumps(productId: string) {
         setLoading(true);
         setError(null);
 
-        // Call Supabase function via API
         const response = await fetch(`/api/order-bumps?productId=${productId}`);
 
         if (!response.ok) {
-          throw new Error('Failed to fetch order bump');
+          throw new Error('Failed to fetch order bumps');
         }
 
         const data = await response.json();
 
-        // get_product_order_bumps returns array, we take first one
         if (data && data.length > 0) {
-          setOrderBump(data[0]);
+          setOrderBumps(data);
         } else {
-          setOrderBump(null);
+          setOrderBumps([]);
         }
       } catch (err) {
-        console.error('Error fetching order bump:', err);
+        console.error('Error fetching order bumps:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
-        setOrderBump(null);
+        setOrderBumps([]);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchOrderBump();
+    fetchOrderBumps();
   }, [productId]);
 
-  return { orderBump, loading, error };
+  return { orderBumps, loading, error };
 }
