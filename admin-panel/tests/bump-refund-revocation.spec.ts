@@ -431,7 +431,7 @@ test.describe('Bump Access Revocation on Refund — Logged-in User', () => {
 // ============================================================================
 
 test.describe('Bump Access Revocation on Refund — Guest User', () => {
-  test('full refund revokes main + bump guest_purchases', async () => {
+  test('full refund revokes main guest_purchase (bumps tracked via payment_line_items)', async () => {
     const sessionId = generateSessionId('guest_full');
     const guestEmail = `guest-bumprefund-${Date.now()}@example.com`;
     const totalCents = (99 + 19 + 9) * 100;
@@ -445,27 +445,16 @@ test.describe('Bump Access Revocation on Refund — Guest User', () => {
         bumpProductIds: [bumpProduct1.id, bumpProduct2.id],
       });
 
-      // Verify guest_purchases exist (RPC creates 1 for main; bumps stored in line_items)
-      // For guest revocation, we need to manually create guest_purchases for bumps
-      // since the RPC only creates main guest_purchase. The real webhook handler creates
-      // them via the SQL function. Let's insert them to test the revocation path.
+      // DB design: only ONE guest_purchases row per session (main product).
+      // Bump products are tracked via payment_line_items, not separate guest_purchases rows.
+      // guest_purchases.session_id has a UNIQUE constraint enforcing this.
       const mainGp = await getGuestPurchase(guestEmail, mainProduct.id);
-      expect(mainGp).toBeTruthy();
+      expect(mainGp, 'RPC should create main guest_purchase for guest checkout').toBeTruthy();
 
-      // Create guest purchases for bumps (simulating what webhook handler does)
-      for (const bumpId of [bumpProduct1.id, bumpProduct2.id]) {
-        await supabaseAdmin.from('guest_purchases').insert({
-          session_id: sessionId,
-          customer_email: guestEmail,
-          product_id: bumpId,
-          transaction_amount: 0, // bump price tracked in line_items
-        });
-      }
-
-      const bump1Gp = await getGuestPurchase(guestEmail, bumpProduct1.id);
-      expect(bump1Gp).toBeTruthy();
-      const bump2Gp = await getGuestPurchase(guestEmail, bumpProduct2.id);
-      expect(bump2Gp).toBeTruthy();
+      // Verify payment_line_items exist for bumps (used by claim_guest_purchases_for_user)
+      const lineItems = await getLineItems(transactionId);
+      const bumpItems = lineItems.filter((i: any) => i.item_type === 'order_bump');
+      expect(bumpItems).toHaveLength(2);
 
       // Simulate revocation
       await simulateRevocation({
@@ -475,10 +464,12 @@ test.describe('Bump Access Revocation on Refund — Guest User', () => {
         sessionId,
       });
 
-      // Verify ALL guest_purchases revoked
+      // Verify main guest_purchase revoked
       expect(await getGuestPurchase(guestEmail, mainProduct.id)).toBeNull();
-      expect(await getGuestPurchase(guestEmail, bumpProduct1.id)).toBeNull();
-      expect(await getGuestPurchase(guestEmail, bumpProduct2.id)).toBeNull();
+
+      // payment_line_items remain as historical records — revocation doesn't delete them
+      const lineItemsAfter = await getLineItems(transactionId);
+      expect(lineItemsAfter.filter((i: any) => i.item_type === 'order_bump')).toHaveLength(2);
     } finally {
       await supabaseAdmin.from('guest_purchases').delete().eq('customer_email', guestEmail);
       await cleanupPayment(sessionId);

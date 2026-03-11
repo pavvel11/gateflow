@@ -14,19 +14,18 @@ const getSupabaseServiceKey = () => process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function POST(request: NextRequest) {
   try {
-    const stripe = await getStripeServer();
-
-    // Initialize Supabase client with service role for admin operations
-    const supabase = createClient(getSupabaseUrl(), getSupabaseServiceKey());
-
-    // Get authorization header
+    // SECURITY: Authenticate before initializing service client
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    // Extract and verify JWT token
     const token = authHeader.substring(7);
+
+    // Initialize service client only after auth header validation
+    const stripe = await getStripeServer();
+    const supabase = createClient(getSupabaseUrl(), getSupabaseServiceKey());
+
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -58,11 +57,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { transactionId, paymentIntentId, amount, reason } = await request.json();
+    const { transactionId, amount, reason } = await request.json();
 
-    if (!transactionId || !paymentIntentId) {
+    if (!transactionId) {
       return NextResponse.json(
-        { message: 'Transaction ID and Payment Intent ID are required' },
+        { message: 'Transaction ID is required' },
         { status: 400 }
       );
     }
@@ -158,6 +157,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Revoke all product access on full refund (main + bumps, user + guest)
+    let accessRevocationFailed = false;
+
     if (isFullRefund) {
       const revocation = await revokeTransactionAccess(supabase, {
         transactionId: transaction.id,
@@ -166,7 +167,8 @@ export async function POST(request: NextRequest) {
         sessionId: transaction.session_id,
       });
 
-      if (revocation.warnings.length > 0) {
+      if (!revocation.success) {
+        accessRevocationFailed = true;
         console.error('[admin-refund] Revocation warnings:', revocation.warnings);
       }
     }
@@ -181,6 +183,7 @@ export async function POST(request: NextRequest) {
         refund_id: refund.id,
         amount: refund.amount,
         reason: reason || null,
+        access_revocation_failed: accessRevocationFailed,
       },
       created_at: new Date().toISOString(),
     });
@@ -192,6 +195,9 @@ export async function POST(request: NextRequest) {
         amount: refund.amount,
         status: refund.status,
       },
+      ...(accessRevocationFailed && {
+        warning: 'Refund processed but access revocation failed. Remove user access manually.',
+      }),
     });
 
   } catch (error) {

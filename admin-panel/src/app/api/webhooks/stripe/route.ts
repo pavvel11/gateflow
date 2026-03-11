@@ -358,10 +358,10 @@ async function handleChargeRefunded(
     return { processed: false, message: 'No payment_intent in charge' };
   }
 
-  // Find transaction by payment intent ID
+  // Find transaction by payment intent ID (include session_id for guest cleanup)
   const { data: transaction, error: txError } = await supabase
     .from('payment_transactions')
-    .select('id, user_id, product_id, status')
+    .select('id, user_id, product_id, status, session_id')
     .eq('stripe_payment_intent_id', paymentIntentId)
     .maybeSingle();
 
@@ -369,7 +369,7 @@ async function handleChargeRefunded(
     // Also try finding by session_id (for payment intent flow)
     const { data: txBySession } = await supabase
       .from('payment_transactions')
-      .select('id, user_id, product_id, status')
+      .select('id, user_id, product_id, status, session_id')
       .eq('session_id', paymentIntentId)
       .maybeSingle();
 
@@ -377,7 +377,6 @@ async function handleChargeRefunded(
       return { processed: false, message: 'Transaction not found for refund' };
     }
 
-    // Use the transaction found by session_id
     return await processRefundForTransaction(txBySession, charge, supabase);
   }
 
@@ -385,7 +384,7 @@ async function handleChargeRefunded(
 }
 
 async function processRefundForTransaction(
-  transaction: { id: string; user_id: string | null; product_id: string; status: string },
+  transaction: { id: string; user_id: string | null; product_id: string; status: string; session_id: string | null },
   charge: Stripe.Charge,
   supabase: ReturnType<typeof getServiceClient>
 ): Promise<{ processed: boolean; message: string }> {
@@ -420,18 +419,12 @@ async function processRefundForTransaction(
   }
 
   // SECURITY: Revoke all product access (main + bumps, user + guest)
-  // Webhook handler needs session_id for guest cleanup — re-fetch from transaction
-  const { data: txFull } = await supabase
-    .from('payment_transactions')
-    .select('session_id')
-    .eq('id', transaction.id)
-    .single();
-
+  // session_id already fetched in initial query — no re-fetch needed
   const revocation = await revokeTransactionAccess(supabase, {
     transactionId: transaction.id,
     userId: transaction.user_id,
     productId: transaction.product_id,
-    sessionId: txFull?.session_id ?? null,
+    sessionId: transaction.session_id,
   });
 
   if (revocation.warnings.length > 0) {
@@ -461,7 +454,15 @@ async function handleChargeDisputeCreated(
   if (!stripe) {
     return { processed: false, message: 'Stripe not configured' };
   }
-  const charge = await stripe.charges.retrieve(chargeId);
+
+  let charge: Stripe.Charge;
+  try {
+    charge = await stripe.charges.retrieve(chargeId);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Unknown error';
+    console.error(`[Stripe Webhook] Failed to retrieve charge ${chargeId}:`, msg);
+    return { processed: false, message: `Failed to retrieve charge: ${msg}` };
+  }
 
   const paymentIntentId = typeof charge.payment_intent === 'string'
     ? charge.payment_intent
@@ -471,10 +472,10 @@ async function handleChargeDisputeCreated(
     return { processed: false, message: 'No payment_intent in disputed charge' };
   }
 
-  // Find transaction
+  // Find transaction (include session_id for guest cleanup)
   const { data: transaction } = await supabase
     .from('payment_transactions')
-    .select('id, user_id, product_id, status')
+    .select('id, user_id, product_id, status, session_id')
     .or(`stripe_payment_intent_id.eq.${paymentIntentId},session_id.eq.${paymentIntentId}`)
     .maybeSingle();
 
@@ -502,18 +503,11 @@ async function handleChargeDisputeCreated(
   }
 
   // SECURITY: Immediately revoke all product access (main + bumps, user + guest)
-  // Dispute query doesn't select session_id — re-fetch for guest cleanup
-  const { data: txForGuest } = await supabase
-    .from('payment_transactions')
-    .select('session_id')
-    .eq('id', transaction.id)
-    .single();
-
   const revocation = await revokeTransactionAccess(supabase, {
     transactionId: transaction.id,
     userId: transaction.user_id,
     productId: transaction.product_id,
-    sessionId: txForGuest?.session_id ?? null,
+    sessionId: transaction.session_id,
   });
 
   if (revocation.warnings.length > 0) {
@@ -583,6 +577,12 @@ export async function POST(request: NextRequest) {
   // Handle events
   let result: { processed: boolean; message: string };
 
+  // Events where failure to process means we MUST retry (access revocation is critical)
+  const RETRIABLE_EVENTS = new Set([
+    'charge.refunded',
+    'charge.dispute.created',
+  ]);
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -636,10 +636,14 @@ export async function POST(request: NextRequest) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     console.error(`[Stripe Webhook] Error processing ${event.type}:`, message);
 
-    // Return 200 anyway to prevent infinite retries
-    // Stripe will retry on 5xx errors, but if we can't process now,
-    // retrying likely won't help
-    // SECURITY: Minimal response — don't leak event details
+    // SECURITY: For refund/dispute events, return 500 so Stripe retries.
+    // A transient DB outage during revocation could cause permanent access retention.
+    if (RETRIABLE_EVENTS.has(event.type)) {
+      return NextResponse.json({ error: 'Processing failed' }, { status: 500 });
+    }
+
+    // For payment events, return 200 to prevent infinite retries.
+    // Payment processing failures are logged and can be reconciled manually.
     return NextResponse.json({ received: true });
   }
 }

@@ -345,28 +345,6 @@ test.describe('Admin Refund API Tests', () => {
     expect(response.status()).toBe(400);
   });
 
-  test('VALIDATION: Missing paymentIntentId is rejected', async ({ request }) => {
-    console.log(`\n🔍 Testing missing paymentIntentId`);
-
-    const response = await request.post(`http://localhost:3000/api/admin/payments/refund`, {
-      headers: {
-        'Authorization': `Bearer ${adminToken}`,
-        'Content-Type': 'application/json',
-      },
-      data: {
-        transactionId: testTransaction.id,
-        reason: 'requested_by_customer',
-      },
-    });
-
-    const result = await response.json();
-
-    console.log(`   Response: HTTP ${response.status()}`);
-    console.log(`   Error: ${result.error || result.message}`);
-
-    expect(response.status()).toBe(400);
-  });
-
   test('VALIDATION: Invalid transactionId (non-existent) is rejected', async ({ request }) => {
     console.log(`\n🔍 Testing non-existent transactionId`);
 

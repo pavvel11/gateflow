@@ -120,13 +120,13 @@ function createMockSupabase({
 
 // ===== FIXTURES =====
 
-const TRANSACTION_ID = 'txn-001';
-const USER_ID = 'user-abc';
-const PRODUCT_ID = 'prod-main';
+const TRANSACTION_ID = '11111111-1111-1111-1111-111111111111';
+const USER_ID = '22222222-2222-2222-2222-222222222222';
+const PRODUCT_ID = '33333333-3333-3333-3333-333333333333';
 const SESSION_ID = 'cs_test_session123';
-const BUMP_1 = 'prod-bump-1';
-const BUMP_2 = 'prod-bump-2';
-const BUMP_3 = 'prod-bump-3';
+const BUMP_1 = '44444444-4444-4444-4444-444444444444';
+const BUMP_2 = '55555555-5555-5555-5555-555555555555';
+const BUMP_3 = '66666666-6666-6666-6666-666666666666';
 
 const fullTarget: RevocationTarget = {
   transactionId: TRANSACTION_ID,
@@ -163,12 +163,55 @@ describe('revokeTransactionAccess', () => {
     vi.restoreAllMocks();
   });
 
+  describe('Input validation (defense-in-depth)', () => {
+    it('rejects empty transactionId', async () => {
+      const mock = createMockSupabase();
+      const result = await revokeTransactionAccess(mock as never, { ...fullTarget, transactionId: '' });
+
+      expect(result.success).toBe(false);
+      expect(result.warnings[0]).toContain('Invalid transactionId');
+      expect(mock.from).not.toHaveBeenCalled();
+    });
+
+    it('rejects non-UUID transactionId', async () => {
+      const mock = createMockSupabase();
+      const result = await revokeTransactionAccess(mock as never, { ...fullTarget, transactionId: 'not-a-uuid' });
+
+      expect(result.success).toBe(false);
+      expect(result.warnings[0]).toContain('Invalid transactionId');
+    });
+
+    it('rejects non-UUID productId', async () => {
+      const mock = createMockSupabase();
+      const result = await revokeTransactionAccess(mock as never, { ...fullTarget, productId: 'bad' });
+
+      expect(result.success).toBe(false);
+      expect(result.warnings[0]).toContain('Invalid productId');
+    });
+
+    it('rejects non-UUID userId (when non-null)', async () => {
+      const mock = createMockSupabase();
+      const result = await revokeTransactionAccess(mock as never, { ...fullTarget, userId: 'bad-id' });
+
+      expect(result.success).toBe(false);
+      expect(result.warnings[0]).toContain('Invalid userId');
+    });
+
+    it('accepts null userId', async () => {
+      const mock = createMockSupabase();
+      const result = await revokeTransactionAccess(mock as never, guestOnlyTarget);
+
+      expect(result.success).toBe(true);
+    });
+  });
+
   describe('Main product revocation (no bumps)', () => {
     it('revokes user_product_access for authenticated user', async () => {
       const mock = createMockSupabase();
       const result = await revokeTransactionAccess(mock as never, authOnlyTarget);
 
       expect(result.success).toBe(true);
+      expect(result.mainProductRevoked).toBe(true);
       expect(result.bumpProductsRevoked).toBe(0);
       expect(result.warnings).toHaveLength(0);
 
@@ -183,6 +226,7 @@ describe('revokeTransactionAccess', () => {
       const result = await revokeTransactionAccess(mock as never, guestOnlyTarget);
 
       expect(result.success).toBe(true);
+      expect(result.mainGuestRevoked).toBe(true);
       expect(result.bumpProductsRevoked).toBe(0);
       expect(mock.from).toHaveBeenCalledWith('guest_purchases');
     });
@@ -192,6 +236,8 @@ describe('revokeTransactionAccess', () => {
       const result = await revokeTransactionAccess(mock as never, fullTarget);
 
       expect(result.success).toBe(true);
+      expect(result.mainProductRevoked).toBe(true);
+      expect(result.mainGuestRevoked).toBe(true);
       expect(mock.from).toHaveBeenCalledWith('user_product_access');
       expect(mock.from).toHaveBeenCalledWith('guest_purchases');
     });
@@ -201,6 +247,8 @@ describe('revokeTransactionAccess', () => {
       const result = await revokeTransactionAccess(mock as never, noAccessTarget);
 
       expect(result.success).toBe(true);
+      expect(result.mainProductRevoked).toBe(false);
+      expect(result.mainGuestRevoked).toBe(false);
       expect(result.bumpProductsRevoked).toBe(0);
       expect(result.warnings).toHaveLength(0);
       // Should still query payment_line_items
@@ -368,6 +416,21 @@ describe('revokeTransactionAccess', () => {
       expect(source).toContain("item_type");
       expect(source).toContain("order_bump");
       expect(source).toContain("transaction_id");
+    });
+
+    it('shared service validates inputs before querying DB', () => {
+      const { readFileSync } = require('fs');
+      const { join } = require('path');
+
+      const source = readFileSync(
+        join(__dirname, '../../../../src/lib/services/access-revocation.ts'),
+        'utf-8'
+      );
+
+      expect(source).toContain('UUID_PATTERN');
+      expect(source).toContain('Invalid transactionId');
+      expect(source).toContain('Invalid productId');
+      expect(source).toContain('Invalid userId');
     });
   });
 });

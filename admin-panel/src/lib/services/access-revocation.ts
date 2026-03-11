@@ -30,11 +30,20 @@ export interface RevocationTarget {
 export interface RevocationResult {
   /** Whether the revocation completed without critical errors */
   success: boolean;
-  /** Number of bump products whose access was revoked */
+  /** Whether main product user_product_access was revoked (or attempted) */
+  mainProductRevoked: boolean;
+  /** Whether main product guest_purchase was revoked (or attempted) */
+  mainGuestRevoked: boolean;
+  /** Number of bump products whose user_product_access was revoked */
   bumpProductsRevoked: number;
+  /** Number of bump products whose guest_purchases were revoked */
+  bumpGuestPurchasesRevoked: number;
   /** Non-fatal warnings (e.g. individual bump revocation failures) */
   warnings: string[];
 }
+
+/** UUID v4 pattern for defense-in-depth validation */
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Revoke all product access (main + bumps) for a transaction.
@@ -47,7 +56,44 @@ export async function revokeTransactionAccess(
   target: RevocationTarget,
 ): Promise<RevocationResult> {
   const warnings: string[] = [];
+  let mainProductRevoked = false;
+  let mainGuestRevoked = false;
   let bumpProductsRevoked = 0;
+  let bumpGuestPurchasesRevoked = 0;
+
+  // --- 0. Defense-in-depth input validation ---
+  if (!target.transactionId || !UUID_PATTERN.test(target.transactionId)) {
+    return {
+      success: false,
+      mainProductRevoked: false,
+      mainGuestRevoked: false,
+      bumpProductsRevoked: 0,
+      bumpGuestPurchasesRevoked: 0,
+      warnings: [`Invalid transactionId: ${target.transactionId ?? 'empty'}`],
+    };
+  }
+
+  if (!target.productId || !UUID_PATTERN.test(target.productId)) {
+    return {
+      success: false,
+      mainProductRevoked: false,
+      mainGuestRevoked: false,
+      bumpProductsRevoked: 0,
+      bumpGuestPurchasesRevoked: 0,
+      warnings: [`Invalid productId: ${target.productId ?? 'empty'}`],
+    };
+  }
+
+  if (target.userId !== null && !UUID_PATTERN.test(target.userId)) {
+    return {
+      success: false,
+      mainProductRevoked: false,
+      mainGuestRevoked: false,
+      bumpProductsRevoked: 0,
+      bumpGuestPurchasesRevoked: 0,
+      warnings: [`Invalid userId: ${target.userId}`],
+    };
+  }
 
   // --- 1. Query bump product IDs from payment_line_items (single query, reused below) ---
   const { data: bumpLineItems, error: bumpQueryError } = await supabase
@@ -73,6 +119,8 @@ export async function revokeTransactionAccess(
 
     if (mainRevokeError) {
       warnings.push(`Failed to revoke main product access: ${mainRevokeError.message}`);
+    } else {
+      mainProductRevoked = true;
     }
 
     // Bump products
@@ -91,9 +139,9 @@ export async function revokeTransactionAccess(
     }
   }
 
-  // --- 3. Revoke guest_purchases (main + bumps) ---
+  // --- 3. Revoke guest_purchases (main product only — bumps don't have separate guest_purchases rows) ---
+  // DB design: one guest_purchases row per session (main product). Bumps tracked via payment_line_items.
   if (target.sessionId && target.productId) {
-    // Main product
     const { error: guestMainError } = await supabase
       .from('guest_purchases')
       .delete()
@@ -102,29 +150,23 @@ export async function revokeTransactionAccess(
 
     if (guestMainError) {
       warnings.push(`Failed to revoke main guest purchase: ${guestMainError.message}`);
-    }
-
-    // Bump products
-    for (const bumpProductId of bumpProductIds) {
-      const { error: guestBumpError } = await supabase
-        .from('guest_purchases')
-        .delete()
-        .eq('session_id', target.sessionId)
-        .eq('product_id', bumpProductId);
-
-      if (guestBumpError) {
-        warnings.push(`Failed to revoke guest bump product ${bumpProductId}: ${guestBumpError.message}`);
-      }
+    } else {
+      mainGuestRevoked = true;
     }
   }
 
-  if (bumpProductsRevoked > 0) {
-    console.log(`[access-revocation] Revoked access for ${bumpProductsRevoked} bump product(s) for transaction ${target.transactionId}`);
+  if (bumpProductsRevoked > 0 || mainProductRevoked || mainGuestRevoked) {
+    console.log(
+      `[access-revocation] transaction=${target.transactionId}: mainProduct=${mainProductRevoked}, mainGuest=${mainGuestRevoked}, bumps=${bumpProductsRevoked}`
+    );
   }
 
   return {
     success: warnings.length === 0,
+    mainProductRevoked,
+    mainGuestRevoked,
     bumpProductsRevoked,
+    bumpGuestPurchasesRevoked,
     warnings,
   };
 }
