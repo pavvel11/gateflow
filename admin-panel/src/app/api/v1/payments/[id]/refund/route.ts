@@ -14,7 +14,7 @@ import {
   successResponse,
   API_SCOPES,
 } from '@/lib/api';
-import { createAdminClient } from '@/lib/supabase/admin';
+import { createAdminClient, createPlatformClient } from '@/lib/supabase/admin';
 import { validateUUID } from '@/lib/validations/product';
 import { getStripeServer } from '@/lib/stripe/server';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limiting';
@@ -234,8 +234,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Log the refund action
-    await adminClient.from('admin_actions').insert({
+    // Log the refund action (admin_actions is in public schema)
+    const platformClient = createPlatformClient();
+    await platformClient.from('admin_actions').insert({
       admin_id: authResult.admin.userId,
       action: 'refund_processed',
       target_type: 'payment_transaction',

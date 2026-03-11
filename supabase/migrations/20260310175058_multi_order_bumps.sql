@@ -12,9 +12,9 @@
 -- =============================================================================
 
 -- Drop existing function first to allow return type change (adding urgency_duration_minutes)
-DROP FUNCTION IF EXISTS public.get_product_order_bumps(UUID);
+DROP FUNCTION IF EXISTS seller_main.get_product_order_bumps(UUID);
 
-CREATE OR REPLACE FUNCTION public.get_product_order_bumps(
+CREATE OR REPLACE FUNCTION seller_main.get_product_order_bumps(
   product_id_param UUID
 ) RETURNS TABLE (
   bump_id UUID,
@@ -47,18 +47,18 @@ BEGIN
     ob.bump_description,
     ob.display_order,
     ob.urgency_duration_minutes
-  FROM public.order_bumps ob
-  INNER JOIN public.products p ON p.id = ob.bump_product_id
+  FROM seller_main.order_bumps ob
+  INNER JOIN seller_main.products p ON p.id = ob.bump_product_id
   WHERE ob.main_product_id = product_id_param
     AND ob.is_active = true
     AND p.is_active = true
   ORDER BY ob.display_order ASC, ob.created_at ASC;
   -- NOTE: Removed LIMIT 1 to support multiple order bumps per product
 END;
-$$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public, pg_temp;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = seller_main, public, pg_temp;
 
 -- Re-grant after DROP+CREATE (DROP loses previous GRANTs)
-GRANT EXECUTE ON FUNCTION public.get_product_order_bumps TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION seller_main.get_product_order_bumps TO anon, authenticated, service_role;
 
 -- =============================================================================
 -- 2. Create payment_line_items table
@@ -66,15 +66,15 @@ GRANT EXECUTE ON FUNCTION public.get_product_order_bumps TO anon, authenticated,
 --    Single source of truth for "what was in this order and at what price".
 -- =============================================================================
 
-CREATE TYPE public.line_item_type AS ENUM ('main_product', 'order_bump');
--- Future: ALTER TYPE public.line_item_type ADD VALUE 'cart_item';
--- Future: ALTER TYPE public.line_item_type ADD VALUE 'upsell';
+CREATE TYPE seller_main.line_item_type AS ENUM ('main_product', 'order_bump');
+-- Future: ALTER TYPE seller_main.line_item_type ADD VALUE 'cart_item';
+-- Future: ALTER TYPE seller_main.line_item_type ADD VALUE 'upsell';
 
-CREATE TABLE IF NOT EXISTS public.payment_line_items (
+CREATE TABLE IF NOT EXISTS seller_main.payment_line_items (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  transaction_id UUID NOT NULL REFERENCES public.payment_transactions(id) ON DELETE CASCADE,
-  product_id UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
-  item_type public.line_item_type NOT NULL,
+  transaction_id UUID NOT NULL REFERENCES seller_main.payment_transactions(id) ON DELETE CASCADE,
+  product_id UUID NOT NULL REFERENCES seller_main.products(id) ON DELETE CASCADE,
+  item_type seller_main.line_item_type NOT NULL,
   quantity INTEGER NOT NULL DEFAULT 1 CHECK (quantity >= 1 AND quantity <= 100),
   unit_price NUMERIC NOT NULL CHECK (unit_price >= 0 AND unit_price <= 99999999),
   total_price NUMERIC NOT NULL CHECK (total_price >= 0 AND total_price <= 99999999),
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS public.payment_line_items (
   -- Snapshot of product name at purchase time (products can be renamed)
   product_name TEXT,
   -- For order_bump: link back to the order_bumps row (nullable for main_product / cart_item)
-  order_bump_id UUID REFERENCES public.order_bumps(id) ON DELETE SET NULL,
+  order_bump_id UUID REFERENCES seller_main.order_bumps(id) ON DELETE SET NULL,
   metadata JSONB DEFAULT '{}' NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
 
@@ -95,19 +95,19 @@ CREATE TABLE IF NOT EXISTS public.payment_line_items (
 );
 
 -- Indexes for common queries
-CREATE INDEX idx_payment_line_items_transaction ON public.payment_line_items(transaction_id);
-CREATE INDEX idx_payment_line_items_product ON public.payment_line_items(product_id);
-CREATE INDEX idx_payment_line_items_type ON public.payment_line_items(item_type);
+CREATE INDEX idx_payment_line_items_transaction ON seller_main.payment_line_items(transaction_id);
+CREATE INDEX idx_payment_line_items_product ON seller_main.payment_line_items(product_id);
+CREATE INDEX idx_payment_line_items_type ON seller_main.payment_line_items(item_type);
 
 -- RLS: Same pattern as payment_transactions
-ALTER TABLE public.payment_line_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE seller_main.payment_line_items ENABLE ROW LEVEL SECURITY;
 
 -- Users can read their own line items (via transaction ownership)
 CREATE POLICY "Users can view own line items"
-  ON public.payment_line_items FOR SELECT
+  ON seller_main.payment_line_items FOR SELECT
   USING (
     EXISTS (
-      SELECT 1 FROM public.payment_transactions pt
+      SELECT 1 FROM seller_main.payment_transactions pt
       WHERE pt.id = payment_line_items.transaction_id
         AND pt.user_id = auth.uid()
     )
@@ -115,7 +115,7 @@ CREATE POLICY "Users can view own line items"
 
 -- Service role has full access (for payment processing)
 CREATE POLICY "Service role full access to line items"
-  ON public.payment_line_items FOR ALL
+  ON seller_main.payment_line_items FOR ALL
   USING (
     (SELECT auth.role()) = 'service_role'
   )
@@ -125,7 +125,7 @@ CREATE POLICY "Service role full access to line items"
 
 -- Admin can read all line items
 CREATE POLICY "Admin can view all line items"
-  ON public.payment_line_items FOR SELECT
+  ON seller_main.payment_line_items FOR SELECT
   USING (
     public.is_admin()
   );
@@ -137,11 +137,11 @@ CREATE POLICY "Admin can view all line items"
 -- =============================================================================
 
 -- Drop the old function signature to avoid overload ambiguity
-DROP FUNCTION IF EXISTS public.process_stripe_payment_completion_with_bump(
+DROP FUNCTION IF EXISTS seller_main.process_stripe_payment_completion_with_bump(
   TEXT, UUID, TEXT, NUMERIC, TEXT, TEXT, UUID, UUID, UUID
 );
 
-CREATE OR REPLACE FUNCTION public.process_stripe_payment_completion_with_bump(
+CREATE OR REPLACE FUNCTION seller_main.process_stripe_payment_completion_with_bump(
   session_id_param TEXT,
   product_id_param UUID,
   customer_email_param TEXT,
@@ -205,8 +205,8 @@ BEGIN
   END IF;
 
   -- Idempotency check
-  IF EXISTS (SELECT 1 FROM public.payment_transactions WHERE session_id = session_id_param AND status != 'pending') THEN
-    IF EXISTS (SELECT 1 FROM public.guest_purchases WHERE session_id = session_id_param) THEN
+  IF EXISTS (SELECT 1 FROM seller_main.payment_transactions WHERE session_id = session_id_param AND status != 'pending') THEN
+    IF EXISTS (SELECT 1 FROM seller_main.guest_purchases WHERE session_id = session_id_param) THEN
       RETURN jsonb_build_object(
         'success', true,
         'scenario', 'guest_purchase_new_user_with_bump',
@@ -229,7 +229,7 @@ BEGIN
 
   -- Get product (include name for line item snapshot)
   SELECT id, name, auto_grant_duration_days, price, currency INTO product_record
-  FROM public.products
+  FROM seller_main.products
   WHERE id = product_id_param AND is_active = true;
 
   IF NOT FOUND THEN
@@ -262,8 +262,8 @@ BEGIN
         COALESCE(ob.bump_price, p.price) as price,
         p.currency
       FROM unnest(bump_product_ids_param) AS bid(id)
-      JOIN public.products p ON p.id = bid.id
-      JOIN public.order_bumps ob ON ob.bump_product_id = p.id AND ob.main_product_id = product_id_param
+      JOIN seller_main.products p ON p.id = bid.id
+      JOIN seller_main.order_bumps ob ON ob.bump_product_id = p.id AND ob.main_product_id = product_id_param
       WHERE p.is_active = true
         AND ob.is_active = true
     LOOP
@@ -316,13 +316,13 @@ BEGIN
   BEGIN
     -- Check for existing pending transaction and update it
     SELECT pt.id INTO pending_transaction_id
-    FROM public.payment_transactions pt
+    FROM seller_main.payment_transactions pt
     WHERE pt.stripe_payment_intent_id = process_stripe_payment_completion_with_bump.stripe_payment_intent_id
       AND pt.status = 'pending'
     LIMIT 1;
 
     IF pending_transaction_id IS NOT NULL THEN
-      UPDATE public.payment_transactions
+      UPDATE seller_main.payment_transactions
       SET
         status = 'completed',
         user_id = current_user_id,
@@ -339,7 +339,7 @@ BEGIN
       WHERE id = pending_transaction_id
       RETURNING id INTO transaction_id_var;
     ELSE
-      INSERT INTO public.payment_transactions (
+      INSERT INTO seller_main.payment_transactions (
         session_id, user_id, product_id, customer_email, amount, currency,
         stripe_payment_intent_id, status, metadata
       ) VALUES (
@@ -356,14 +356,14 @@ BEGIN
     END IF;
 
     -- Increment sale quantity sold
-    PERFORM public.increment_sale_quantity_sold(product_id_param);
+    PERFORM seller_main.increment_sale_quantity_sold(product_id_param);
 
     -- ==========================================
     -- LINE ITEMS: Record order composition
     -- Main product is always the first line item.
     -- Each validated bump gets its own line item.
     -- ==========================================
-    INSERT INTO public.payment_line_items (
+    INSERT INTO seller_main.payment_line_items (
       transaction_id, product_id, item_type, quantity, unit_price, total_price,
       currency, product_name
     ) VALUES (
@@ -381,11 +381,11 @@ BEGIN
           COALESCE(ob.bump_price, p.price) as price,
           p.currency
         FROM unnest(bump_ids_found) AS bid(id)
-        JOIN public.products p ON p.id = bid.id
-        JOIN public.order_bumps ob ON ob.bump_product_id = p.id AND ob.main_product_id = product_id_param
+        JOIN seller_main.products p ON p.id = bid.id
+        JOIN seller_main.order_bumps ob ON ob.bump_product_id = p.id AND ob.main_product_id = product_id_param
         WHERE p.is_active = true AND ob.is_active = true
       LOOP
-        INSERT INTO public.payment_line_items (
+        INSERT INTO seller_main.payment_line_items (
           transaction_id, product_id, item_type, quantity, unit_price, total_price,
           currency, product_name, order_bump_id
         ) VALUES (
@@ -399,7 +399,7 @@ BEGIN
 
     -- Coupon redemption
     IF coupon_id_param IS NOT NULL THEN
-      DELETE FROM public.coupon_reservations
+      DELETE FROM seller_main.coupon_reservations
       WHERE coupon_id = coupon_id_param
         AND customer_email = customer_email_param
         AND expires_at > NOW();
@@ -408,7 +408,7 @@ BEGIN
         RAISE EXCEPTION 'No valid coupon reservation found. Coupon may have expired or reached limit.';
       END IF;
 
-      UPDATE public.coupons
+      UPDATE seller_main.coupons
       SET current_usage_count = COALESCE(current_usage_count, 0) + 1
       WHERE id = coupon_id_param
         AND is_active = true
@@ -418,7 +418,7 @@ BEGIN
         RAISE EXCEPTION 'Coupon limit reached despite reservation (system error)';
       END IF;
 
-      INSERT INTO public.coupon_redemptions (
+      INSERT INTO seller_main.coupon_redemptions (
         coupon_id, user_id, customer_email, transaction_id, discount_amount
       ) VALUES (
         coupon_id_param,
@@ -431,13 +431,13 @@ BEGIN
 
     -- SCENARIO 1: Logged-in user
     IF current_user_id IS NOT NULL THEN
-      PERFORM public.grant_product_access_service_role(current_user_id, product_id_param);
+      PERFORM seller_main.grant_product_access_service_role(current_user_id, product_id_param);
 
       IF bump_count > 0 THEN
         FOR bump_rec IN
           SELECT unnest(bump_ids_found) AS bid
         LOOP
-          PERFORM public.grant_product_access_service_role(current_user_id, bump_rec.bid);
+          PERFORM seller_main.grant_product_access_service_role(current_user_id, bump_rec.bid);
         END LOOP;
       END IF;
 
@@ -452,7 +452,7 @@ BEGIN
 
     -- SCENARIO 2: Guest purchase, user exists
     ELSIF existing_user_id IS NOT NULL THEN
-      INSERT INTO public.guest_purchases (customer_email, product_id, transaction_amount, session_id)
+      INSERT INTO seller_main.guest_purchases (customer_email, product_id, transaction_amount, session_id)
       VALUES (customer_email_param, product_id_param, amount_total, session_id_param);
 
       RETURN jsonb_build_object(
@@ -466,7 +466,7 @@ BEGIN
 
     -- SCENARIO 3: Guest purchase, new user
     ELSE
-      INSERT INTO public.guest_purchases (customer_email, product_id, transaction_amount, session_id)
+      INSERT INTO seller_main.guest_purchases (customer_email, product_id, transaction_amount, session_id)
       VALUES (customer_email_param, product_id_param, amount_total, session_id_param);
 
       RETURN jsonb_build_object(
@@ -489,10 +489,10 @@ BEGIN
   END;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public, pg_temp
+SET search_path = seller_main, public, pg_temp
 SET statement_timeout = '30s';
 
-GRANT EXECUTE ON FUNCTION public.process_stripe_payment_completion_with_bump TO service_role;
+GRANT EXECUTE ON FUNCTION seller_main.process_stripe_payment_completion_with_bump TO service_role;
 
 -- =============================================================================
 -- 4. Update claim_guest_purchases_for_user to also grant access for bump products
@@ -501,7 +501,7 @@ GRANT EXECUTE ON FUNCTION public.process_stripe_payment_completion_with_bump TO 
 --    and grant access for each order_bump product.
 -- =============================================================================
 
-CREATE OR REPLACE FUNCTION public.claim_guest_purchases_for_user(
+CREATE OR REPLACE FUNCTION seller_main.claim_guest_purchases_for_user(
   p_user_id UUID
 ) RETURNS json AS $$
 DECLARE
@@ -534,12 +534,12 @@ BEGIN
 
   FOR guest_purchase_record IN
     SELECT gp.*, pt.id as transaction_id
-    FROM public.guest_purchases gp
-    LEFT JOIN public.payment_transactions pt ON pt.session_id = gp.session_id
+    FROM seller_main.guest_purchases gp
+    LEFT JOIN seller_main.payment_transactions pt ON pt.session_id = gp.session_id
     WHERE gp.customer_email = user_email_var
       AND gp.claimed_by_user_id IS NULL
   LOOP
-    UPDATE public.guest_purchases
+    UPDATE seller_main.guest_purchases
     SET claimed_by_user_id = p_user_id, claimed_at = NOW()
     WHERE id = guest_purchase_record.id;
 
@@ -548,7 +548,7 @@ BEGIN
       DECLARE
         grant_result JSONB;
       BEGIN
-        SELECT public.grant_product_access_service_role(p_user_id, guest_purchase_record.product_id) INTO grant_result;
+        SELECT seller_main.grant_product_access_service_role(p_user_id, guest_purchase_record.product_id) INTO grant_result;
 
         IF (grant_result->>'success')::boolean = true THEN
           claimed_count := claimed_count + 1;
@@ -577,7 +577,7 @@ BEGIN
             );
           END IF;
 
-          UPDATE public.guest_purchases
+          UPDATE seller_main.guest_purchases
           SET claimed_by_user_id = NULL, claimed_at = NULL
           WHERE id = guest_purchase_record.id;
         END IF;
@@ -595,7 +595,7 @@ BEGIN
             'function_name', 'claim_guest_purchases_for_user'
           )
         );
-        UPDATE public.guest_purchases
+        UPDATE seller_main.guest_purchases
         SET claimed_by_user_id = NULL, claimed_at = NULL
         WHERE id = guest_purchase_record.id;
         NULL;
@@ -605,12 +605,12 @@ BEGIN
     IF guest_purchase_record.transaction_id IS NOT NULL THEN
       FOR line_item_rec IN
         SELECT pli.product_id
-        FROM public.payment_line_items pli
+        FROM seller_main.payment_line_items pli
         WHERE pli.transaction_id = guest_purchase_record.transaction_id
           AND pli.item_type = 'order_bump'
       LOOP
         BEGIN
-          PERFORM public.grant_product_access_service_role(p_user_id, line_item_rec.product_id);
+          PERFORM seller_main.grant_product_access_service_role(p_user_id, line_item_rec.product_id);
           claimed_count := claimed_count + 1;
         EXCEPTION WHEN OTHERS THEN
           PERFORM public.log_admin_action(
@@ -636,7 +636,7 @@ BEGIN
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public, pg_temp
+SET search_path = seller_main, public, pg_temp
 SET statement_timeout = '30s';
 
 -- =============================================================================
@@ -647,17 +647,20 @@ SET statement_timeout = '30s';
 -- NULL = no urgency timer shown, value = countdown duration in minutes.
 -- The timer is purely a UI element — it counts from the moment the buyer
 -- enters the checkout page and has no backend enforcement.
-ALTER TABLE public.order_bumps
+ALTER TABLE seller_main.order_bumps
   ADD COLUMN IF NOT EXISTS urgency_duration_minutes INTEGER
   CHECK (urgency_duration_minutes IS NULL OR (urgency_duration_minutes >= 1 AND urgency_duration_minutes <= 1440));
 
-COMMENT ON COLUMN public.order_bumps.urgency_duration_minutes IS
+-- Refresh proxy view to include new column
+CREATE OR REPLACE VIEW public.order_bumps AS SELECT * FROM seller_main.order_bumps;
+
+COMMENT ON COLUMN seller_main.order_bumps.urgency_duration_minutes IS
   'Urgency countdown timer in minutes (NULL = no timer, 1-1440). Purely cosmetic — counts from page load.';
 
 -- Drop and recreate admin_get_product_order_bumps to allow return type change
-DROP FUNCTION IF EXISTS public.admin_get_product_order_bumps(UUID);
+DROP FUNCTION IF EXISTS seller_main.admin_get_product_order_bumps(UUID);
 
-CREATE OR REPLACE FUNCTION public.admin_get_product_order_bumps(
+CREATE OR REPLACE FUNCTION seller_main.admin_get_product_order_bumps(
   product_id_param UUID
 ) RETURNS TABLE (
   bump_id UUID,
@@ -694,12 +697,15 @@ BEGIN
     ob.urgency_duration_minutes,
     ob.created_at,
     ob.updated_at
-  FROM public.order_bumps ob
-  INNER JOIN public.products p ON p.id = ob.bump_product_id
+  FROM seller_main.order_bumps ob
+  INNER JOIN seller_main.products p ON p.id = ob.bump_product_id
   WHERE ob.main_product_id = product_id_param
   ORDER BY ob.display_order ASC, ob.created_at DESC;
 END;
-$$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public, pg_temp;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = seller_main, public, pg_temp;
 
 -- Re-grant after DROP+CREATE (DROP loses previous GRANTs)
-GRANT EXECUTE ON FUNCTION public.admin_get_product_order_bumps TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION seller_main.admin_get_product_order_bumps TO authenticated, service_role;
+
+-- Proxy view for backward compatibility
+CREATE OR REPLACE VIEW public.payment_line_items AS SELECT * FROM seller_main.payment_line_items;

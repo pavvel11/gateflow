@@ -13,7 +13,7 @@ import {
   successResponse,
   API_SCOPES,
 } from '@/lib/api';
-import { createAdminClient } from '@/lib/supabase/admin';
+import { createAdminClient, createPlatformClient } from '@/lib/supabase/admin';
 
 export async function OPTIONS(request: NextRequest) {
   return handleCorsPreFlight(request);
@@ -84,8 +84,9 @@ export async function GET(request: NextRequest) {
       .select('*', { count: 'exact', head: true })
       .eq('is_active', true);
 
-    // Get API key count
-    const { count: activeApiKeys } = await adminClient
+    // Get API key count (api_keys is in public schema)
+    const platformClient = createPlatformClient();
+    const { count: activeApiKeys } = await platformClient
       .from('api_keys')
       .select('*', { count: 'exact', head: true })
       .eq('is_active', true);

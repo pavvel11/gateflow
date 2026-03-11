@@ -52,7 +52,7 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
  * Uses service_role client (the caller is responsible for passing one).
  */
 export async function revokeTransactionAccess(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<any, any>,
   target: RevocationTarget,
 ): Promise<RevocationResult> {
   const warnings: string[] = [];

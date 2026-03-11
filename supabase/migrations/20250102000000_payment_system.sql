@@ -102,14 +102,14 @@ CREATE TABLE IF NOT EXISTS admin_actions (
 -- Create payment_transactions table for completed payments with COMPLETE IDEMPOTENCY PROTECTION
 -- Note: For high-volume applications, consider partitioning by created_at (monthly/yearly)
 -- to improve query performance and maintenance operations
-CREATE TABLE IF NOT EXISTS payment_transactions (
+CREATE TABLE IF NOT EXISTS seller_main.payment_transactions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   session_id TEXT NOT NULL CHECK (
     length(session_id) BETWEEN 1 AND 255 AND
     session_id ~* '^(cs_|pi_)[a-zA-Z0-9_]+$'
   ),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE, -- Nullable for guest purchases
-  product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
+  product_id UUID REFERENCES seller_main.products(id) ON DELETE CASCADE NOT NULL,
   customer_email TEXT NOT NULL CHECK (public.validate_email_format(customer_email)),
   amount NUMERIC NOT NULL CHECK (amount > 0 AND amount <= 99999999), -- Amount in cents, max $999,999.99
   currency TEXT NOT NULL CHECK (
@@ -151,10 +151,10 @@ CREATE TABLE IF NOT EXISTS payment_transactions (
 -- =============================================================================
 
 -- Create guest_purchases table to track purchases by email before account creation
-CREATE TABLE IF NOT EXISTS guest_purchases (
+CREATE TABLE IF NOT EXISTS seller_main.guest_purchases (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   customer_email TEXT NOT NULL CHECK (public.validate_email_format(customer_email)),
-  product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
+  product_id UUID REFERENCES seller_main.products(id) ON DELETE CASCADE NOT NULL,
   transaction_amount NUMERIC NOT NULL CHECK (transaction_amount >= 0 AND transaction_amount <= 99999999), -- Amount in cents, max $999,999.99
   session_id TEXT NOT NULL CHECK (
     length(session_id) BETWEEN 1 AND 255 AND
@@ -180,20 +180,20 @@ CREATE TABLE IF NOT EXISTS guest_purchases (
 -- because UNIQUE constraints automatically create indexes for these columns
 
 -- Essential indexes for core business queries
-CREATE INDEX IF NOT EXISTS idx_payment_transactions_user_id ON payment_transactions(user_id);
-CREATE INDEX IF NOT EXISTS idx_payment_transactions_product_id ON payment_transactions(product_id);
-CREATE INDEX IF NOT EXISTS idx_payment_transactions_customer_email ON payment_transactions(customer_email);
+CREATE INDEX IF NOT EXISTS idx_payment_transactions_user_id ON seller_main.payment_transactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_payment_transactions_product_id ON seller_main.payment_transactions(product_id);
+CREATE INDEX IF NOT EXISTS idx_payment_transactions_customer_email ON seller_main.payment_transactions(customer_email);
 
 -- BRIN index for time-based queries (minimal storage overhead, perfect for timestamp columns)
-CREATE INDEX IF NOT EXISTS idx_payment_transactions_created_at ON payment_transactions USING BRIN (created_at);
+CREATE INDEX IF NOT EXISTS idx_payment_transactions_created_at ON seller_main.payment_transactions USING BRIN (created_at);
 
 -- Critical compound indexes for common query patterns
 CREATE INDEX IF NOT EXISTS idx_payment_transactions_email_date 
-ON payment_transactions(customer_email, created_at DESC);
+ON seller_main.payment_transactions(customer_email, created_at DESC);
 
 -- Optimized compound index for admin refund queries (with WHERE clause for efficiency)
 CREATE INDEX IF NOT EXISTS idx_payment_transactions_status_date 
-ON payment_transactions(status, created_at DESC) 
+ON seller_main.payment_transactions(status, created_at DESC) 
 WHERE status IN ('refunded', 'disputed');
 
 -- NOTE: UNIQUE constraints are now defined directly in the table schema above
@@ -206,13 +206,13 @@ CREATE INDEX IF NOT EXISTS idx_admin_actions_created_at ON admin_actions USING B
 CREATE INDEX IF NOT EXISTS idx_admin_actions_target ON admin_actions(target_type, target_id);
 
 -- Guest checkout indexes
-CREATE INDEX IF NOT EXISTS idx_guest_purchases_customer_email ON guest_purchases(customer_email);
-CREATE INDEX IF NOT EXISTS idx_guest_purchases_product_id ON guest_purchases(product_id);
-CREATE INDEX IF NOT EXISTS idx_guest_purchases_claimed_by_user_id ON guest_purchases(claimed_by_user_id) WHERE claimed_by_user_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_guest_purchases_session_id ON guest_purchases(session_id);
+CREATE INDEX IF NOT EXISTS idx_guest_purchases_customer_email ON seller_main.guest_purchases(customer_email);
+CREATE INDEX IF NOT EXISTS idx_guest_purchases_product_id ON seller_main.guest_purchases(product_id);
+CREATE INDEX IF NOT EXISTS idx_guest_purchases_claimed_by_user_id ON seller_main.guest_purchases(claimed_by_user_id) WHERE claimed_by_user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_guest_purchases_session_id ON seller_main.guest_purchases(session_id);
 
 CREATE INDEX IF NOT EXISTS idx_guest_purchases_cleanup 
-ON guest_purchases USING BRIN (created_at);
+ON seller_main.guest_purchases USING BRIN (created_at);
 
 -- Additional BRIN index for rate_limits cleanup (complements existing B-tree indexes from initial schema)
 CREATE INDEX IF NOT EXISTS idx_rate_limits_cleanup_brin 
@@ -227,8 +227,8 @@ ON rate_limits USING BRIN (window_start);
 -- Enable RLS on all tables
 -- Note: admin_users RLS is already enabled in the initial schema migration
 ALTER TABLE admin_actions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE payment_transactions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE guest_purchases ENABLE ROW LEVEL SECURITY;
+ALTER TABLE seller_main.payment_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE seller_main.guest_purchases ENABLE ROW LEVEL SECURITY;
 -- Note: rate_limits RLS is already enabled in the initial schema migration
 
 -- =============================================================================
@@ -259,7 +259,7 @@ CREATE POLICY "Admins can insert admin actions" ON admin_actions
     );
 
 -- Combined SELECT policy for payment transactions
-CREATE POLICY "Combined SELECT policy for payment transactions" ON payment_transactions
+CREATE POLICY "Combined SELECT policy for payment transactions" ON seller_main.payment_transactions
     FOR SELECT 
     USING (
         user_id = (SELECT auth.uid()) OR  -- Users can see their own transactions
@@ -267,13 +267,13 @@ CREATE POLICY "Combined SELECT policy for payment transactions" ON payment_trans
         (SELECT auth.role()) = 'service_role'  -- Service role can see all
     );
 
-CREATE POLICY "Service role limited access payment transactions" ON payment_transactions
+CREATE POLICY "Service role limited access payment transactions" ON seller_main.payment_transactions
     FOR INSERT 
     TO service_role
     WITH CHECK (true);
 
 -- Admins can update payment transactions for refunds (SECURITY)
-CREATE POLICY "Admins can update payment transactions for refunds" ON payment_transactions
+CREATE POLICY "Admins can update payment transactions for refunds" ON seller_main.payment_transactions
     FOR UPDATE 
     TO authenticated
     USING (
@@ -285,7 +285,7 @@ CREATE POLICY "Admins can update payment transactions for refunds" ON payment_tr
 
 
 -- Combined SELECT policy for all roles
-CREATE POLICY "Combined SELECT policy for guest purchases" ON guest_purchases
+CREATE POLICY "Combined SELECT policy for guest purchases" ON seller_main.guest_purchases
     FOR SELECT 
     USING (
         claimed_by_user_id = (SELECT auth.uid()) OR 
@@ -293,18 +293,18 @@ CREATE POLICY "Combined SELECT policy for guest purchases" ON guest_purchases
     );
 
 -- Service role policies for modifications only
-CREATE POLICY "Service role can insert guest purchases" ON guest_purchases
+CREATE POLICY "Service role can insert guest purchases" ON seller_main.guest_purchases
     FOR INSERT 
     TO service_role
     WITH CHECK (true);
 
-CREATE POLICY "Service role can update guest purchases" ON guest_purchases
+CREATE POLICY "Service role can update guest purchases" ON seller_main.guest_purchases
     FOR UPDATE 
     TO service_role
     USING (true)
     WITH CHECK (true);
 
-CREATE POLICY "Service role can delete guest purchases" ON guest_purchases
+CREATE POLICY "Service role can delete guest purchases" ON seller_main.guest_purchases
     FOR DELETE 
     TO service_role
     USING (true);
@@ -325,17 +325,20 @@ BEGIN
     -- Add version column for optimistic locking if it doesn't exist
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.columns 
-        WHERE table_name = 'user_product_access' 
+        WHERE table_schema = 'seller_main' AND table_name = 'user_product_access' 
         AND column_name = 'version'
     ) THEN
-        ALTER TABLE user_product_access ADD COLUMN version INTEGER DEFAULT 1 NOT NULL;
+        ALTER TABLE seller_main.user_product_access ADD COLUMN version INTEGER DEFAULT 1 NOT NULL;
+        
+        -- Refresh proxy view to include new column
+        CREATE OR REPLACE VIEW public.user_product_access AS SELECT * FROM seller_main.user_product_access;
         
         -- Create index for efficient version-based queries
         CREATE INDEX IF NOT EXISTS idx_user_product_access_version 
-        ON user_product_access(user_id, product_id, version);
+        ON seller_main.user_product_access(user_id, product_id, version);
         
         -- Update existing records to have version = 1
-        UPDATE public.user_product_access SET version = 1 WHERE version IS NULL;
+        UPDATE seller_main.user_product_access SET version = 1 WHERE version IS NULL;
     END IF;
 END $$;
 
@@ -343,7 +346,7 @@ END $$;
 -- This approach eliminates advisory locks by using version-based concurrency control
 -- Key benefits: No connection pooling issues, no lock timeouts, better scalability
 -- Trade-off: May require retry on high concurrency (handled by caller)
-CREATE OR REPLACE FUNCTION grant_product_access_service_role(
+CREATE OR REPLACE FUNCTION seller_main.grant_product_access_service_role(
     user_id_param UUID,
     product_id_param UUID,
     max_retries INTEGER DEFAULT 3
@@ -367,7 +370,7 @@ BEGIN
     -- Get product configuration
     SELECT auto_grant_duration_days 
     INTO product_auto_duration
-    FROM public.products 
+    FROM seller_main.products 
     WHERE id = product_id_param AND is_active = true;
 
     -- If product doesn't exist, return error
@@ -387,7 +390,7 @@ BEGIN
             (access_expires_at IS NULL) as has_permanent_access,
             (access_expires_at IS NOT NULL AND access_expires_at > NOW()) as has_active_access
         INTO existing_record
-        FROM public.user_product_access
+        FROM seller_main.user_product_access
         WHERE user_id = user_id_param AND product_id = product_id_param;
 
         -- Calculate new expiration based on business logic
@@ -420,7 +423,7 @@ BEGIN
             END IF;
 
             -- Optimistic update with version check
-            UPDATE public.user_product_access 
+            UPDATE seller_main.user_product_access 
             SET 
                 access_granted_at = NOW(),
                 access_duration_days = final_duration,
@@ -471,7 +474,7 @@ BEGIN
 
             -- Insert new record with optimistic locking protection
             BEGIN
-                INSERT INTO public.user_product_access (
+                INSERT INTO seller_main.user_product_access (
                     user_id, 
                     product_id, 
                     access_duration_days, 
@@ -584,9 +587,9 @@ SET search_path = ''
 SET statement_timeout = '10s';
 
 -- Grant execute permissions to the service role
-GRANT EXECUTE ON FUNCTION grant_product_access_service_role TO service_role;
+GRANT EXECUTE ON FUNCTION seller_main.grant_product_access_service_role TO service_role;
 
-CREATE OR REPLACE FUNCTION process_stripe_payment_completion(
+CREATE OR REPLACE FUNCTION seller_main.process_stripe_payment_completion(
     session_id_param TEXT,
     product_id_param UUID,
     customer_email_param TEXT,
@@ -697,12 +700,12 @@ BEGIN
     SELECT 
         p.id, p.name, p.slug, p.auto_grant_duration_days, p.price, p.currency as product_currency,
         EXISTS(
-            SELECT 1 FROM public.payment_transactions pt 
+            SELECT 1 FROM seller_main.payment_transactions pt 
             WHERE pt.session_id = session_id_param 
                OR (process_stripe_payment_completion.stripe_payment_intent_id IS NOT NULL AND pt.stripe_payment_intent_id = process_stripe_payment_completion.stripe_payment_intent_id)
         ) as transaction_exists
     INTO product_record
-    FROM public.products p
+    FROM seller_main.products p
     WHERE p.id = product_id_param AND p.is_active = true;
 
     -- Check if product exists
@@ -789,7 +792,7 @@ BEGIN
     END IF;
 
     -- NEW TRANSACTION: Process payment and grant access
-    INSERT INTO public.payment_transactions (
+    INSERT INTO seller_main.payment_transactions (
         session_id, user_id, product_id, customer_email, amount, currency, 
         stripe_payment_intent_id, status, metadata
     ) VALUES (
@@ -810,7 +813,7 @@ BEGIN
         
         -- Use optimistic locking function with enhanced error handling
         BEGIN
-            SELECT public.grant_product_access_service_role(current_user_id, product_id_param) INTO result;
+            SELECT seller_main.grant_product_access_service_role(current_user_id, product_id_param) INTO result;
             IF (result->>'success')::boolean = false THEN
                 -- Handle specific optimistic locking failures
                 IF (result->>'retry_exceeded')::boolean = true THEN
@@ -903,7 +906,7 @@ BEGIN
         scenario := 'existing_user_email';
         
         BEGIN
-            SELECT public.grant_product_access_service_role(existing_user_id, product_id_param) INTO result;
+            SELECT seller_main.grant_product_access_service_role(existing_user_id, product_id_param) INTO result;
 
             IF (result->>'success')::boolean = false THEN
                 -- Handle specific optimistic locking failures
@@ -991,7 +994,7 @@ BEGIN
         
         -- Enhanced idempotency: Use INSERT with proper conflict handling
         BEGIN
-            INSERT INTO public.guest_purchases (customer_email, product_id, session_id, transaction_amount)
+            INSERT INTO seller_main.guest_purchases (customer_email, product_id, session_id, transaction_amount)
             VALUES (customer_email_param, product_id_param, session_id_param, amount_total);
         EXCEPTION 
             WHEN unique_violation THEN
@@ -1091,11 +1094,11 @@ SET search_path = ''
 SET statement_timeout = '15s'; -- Increased for production webhook traffic and complex transactions
 
 -- Grant execute permissions to the service role
-GRANT EXECUTE ON FUNCTION process_stripe_payment_completion TO service_role;
+GRANT EXECUTE ON FUNCTION seller_main.process_stripe_payment_completion TO service_role;
 
 -- Function to claim guest purchases when user logs in
 -- Enhanced with rate limiting and input validation (SECURITY)
-CREATE OR REPLACE FUNCTION claim_guest_purchases_for_user(
+CREATE OR REPLACE FUNCTION seller_main.claim_guest_purchases_for_user(
   p_user_id UUID
 ) RETURNS json AS $$
 DECLARE
@@ -1142,12 +1145,12 @@ BEGIN
   -- Find and claim all unclaimed guest purchases for this email
   -- Direct query - no need for dynamic SQL (SECURITY FIX)
   FOR guest_purchase_record IN
-    SELECT * FROM public.guest_purchases 
+    SELECT * FROM seller_main.guest_purchases 
     WHERE customer_email = user_email_var 
       AND claimed_by_user_id IS NULL
   LOOP
     -- Update guest purchase to mark as claimed
-    UPDATE public.guest_purchases
+    UPDATE seller_main.guest_purchases
     SET claimed_by_user_id = p_user_id,
         claimed_at = NOW()
     WHERE id = guest_purchase_record.id;
@@ -1157,7 +1160,7 @@ BEGIN
       DECLARE
         grant_result JSONB;
       BEGIN
-        SELECT public.grant_product_access_service_role(p_user_id, guest_purchase_record.product_id) INTO grant_result;
+        SELECT seller_main.grant_product_access_service_role(p_user_id, guest_purchase_record.product_id) INTO grant_result;
         
         IF (grant_result->>'success')::boolean = true THEN
           claimed_count := claimed_count + 1;
@@ -1202,7 +1205,7 @@ BEGIN
           END IF;
           
           -- Roll back the claim update since access grant failed
-          UPDATE public.guest_purchases
+          UPDATE seller_main.guest_purchases
           SET claimed_by_user_id = NULL,
               claimed_at = NULL
           WHERE id = guest_purchase_record.id;
@@ -1230,7 +1233,7 @@ BEGIN
         );
         
         -- Roll back the claim update since access grant failed
-        UPDATE public.guest_purchases
+        UPDATE seller_main.guest_purchases
         SET claimed_by_user_id = NULL,
             claimed_at = NULL
         WHERE id = guest_purchase_record.id;
@@ -1255,7 +1258,7 @@ SET statement_timeout = '5s';
 
 -- Get user's payment history
 -- Enhanced with input validation and rate limiting (SECURITY)
-CREATE OR REPLACE FUNCTION get_user_payment_history(
+CREATE OR REPLACE FUNCTION seller_main.get_user_payment_history(
     user_id_param UUID
 ) RETURNS TABLE (
     transaction_id UUID,
@@ -1295,8 +1298,8 @@ BEGIN
         pt.created_at,
         pt.status,
         pt.refunded_amount / 100.0 -- Convert cents to dollars for display
-    FROM public.payment_transactions pt
-    JOIN public.products p ON pt.product_id = p.id
+    FROM seller_main.payment_transactions pt
+    JOIN seller_main.products p ON pt.product_id = p.id
     WHERE pt.user_id = user_id_param
     ORDER BY pt.created_at DESC
     LIMIT 100; -- Prevent excessive data retrieval
@@ -1325,7 +1328,7 @@ SET search_path = '';
 
 -- Create trigger for refunded_at automation
 CREATE TRIGGER trigger_update_refunded_at
-    BEFORE UPDATE ON payment_transactions
+    BEFORE UPDATE ON seller_main.payment_transactions
     FOR EACH ROW
     EXECUTE FUNCTION update_refunded_at();
 
@@ -1506,12 +1509,12 @@ SET search_path = '';
 
 -- Add audit triggers for critical tables
 CREATE TRIGGER audit_payment_transactions
-    AFTER INSERT OR UPDATE OR DELETE ON payment_transactions
+    AFTER INSERT OR UPDATE OR DELETE ON seller_main.payment_transactions
     FOR EACH ROW
     EXECUTE FUNCTION log_admin_action_trigger();
 
 CREATE TRIGGER audit_guest_purchases_updates
-    AFTER UPDATE ON guest_purchases
+    AFTER UPDATE ON seller_main.guest_purchases
     FOR EACH ROW
     EXECUTE FUNCTION log_admin_action_trigger();
 
@@ -1745,7 +1748,7 @@ GRANT EXECUTE ON FUNCTION send_monitoring_email TO service_role;
 -- =============================================================================
 
 -- Function to validate payment transaction integrity
-CREATE OR REPLACE FUNCTION validate_payment_transaction(transaction_id UUID)
+CREATE OR REPLACE FUNCTION seller_main.validate_payment_transaction(transaction_id UUID)
 RETURNS BOOLEAN AS $$
 DECLARE
     transaction_record RECORD;
@@ -1777,7 +1780,7 @@ BEGIN
     
     -- Get transaction with access control
     SELECT * INTO transaction_record
-    FROM public.payment_transactions
+    FROM seller_main.payment_transactions
     WHERE id = transaction_id
       AND (
         -- User can validate their own transactions
@@ -1817,7 +1820,7 @@ SET search_path = ''
 SET statement_timeout = '2s';
 
 -- Function to get payment statistics (admin only)
-CREATE OR REPLACE FUNCTION get_payment_statistics(
+CREATE OR REPLACE FUNCTION seller_main.get_payment_statistics(
     start_date TIMESTAMPTZ DEFAULT NOW() - INTERVAL '30 days',
     end_date TIMESTAMPTZ DEFAULT NOW()
 ) RETURNS JSONB AS $$
@@ -1872,21 +1875,21 @@ BEGIN
         'guest_purchase_summary', jsonb_build_object(
             'total_guest_purchases', (
                 SELECT COUNT(*) 
-                FROM public.guest_purchases 
+                FROM seller_main.guest_purchases 
                 WHERE created_at BETWEEN start_date AND end_date
             ),
             'claimed_percentage', CASE 
-                WHEN (SELECT COUNT(*) FROM public.guest_purchases WHERE created_at BETWEEN start_date AND end_date) = 0 
+                WHEN (SELECT COUNT(*) FROM seller_main.guest_purchases WHERE created_at BETWEEN start_date AND end_date) = 0 
                 THEN 0
                 ELSE ROUND(
-                    (SELECT COUNT(*) FROM public.guest_purchases WHERE claimed_at BETWEEN start_date AND end_date)::numeric * 100.0 /
-                    (SELECT COUNT(*) FROM public.guest_purchases WHERE created_at BETWEEN start_date AND end_date), 1
+                    (SELECT COUNT(*) FROM seller_main.guest_purchases WHERE claimed_at BETWEEN start_date AND end_date)::numeric * 100.0 /
+                    (SELECT COUNT(*) FROM seller_main.guest_purchases WHERE created_at BETWEEN start_date AND end_date), 1
                 )
             END
         ),
         'generated_at', NOW()
     ) INTO stats
-    FROM public.payment_transactions
+    FROM seller_main.payment_transactions
     WHERE created_at BETWEEN start_date AND end_date;
     
     RETURN stats;
@@ -1976,7 +1979,7 @@ SET search_path = ''
 SET statement_timeout = '60s';
 
 -- Function to cleanup old guest purchases (claimed ones older than retention period)
-CREATE OR REPLACE FUNCTION cleanup_old_guest_purchases(
+CREATE OR REPLACE FUNCTION seller_main.cleanup_old_guest_purchases(
     retention_days INTEGER DEFAULT 365
 ) RETURNS INTEGER AS $$
 DECLARE
@@ -1994,7 +1997,7 @@ BEGIN
     
     -- Delete old claimed guest purchases (leverages BRIN index for efficiency)
     -- Only delete claimed purchases to preserve unclaimed ones
-    DELETE FROM public.guest_purchases 
+    DELETE FROM seller_main.guest_purchases 
     WHERE claimed_at IS NOT NULL 
       AND claimed_at < NOW() - (retention_days || ' days')::INTERVAL;
     
@@ -2005,9 +2008,9 @@ BEGIN
     -- PostgreSQL autovacuum will handle actual space reclamation based on updated statistics
     IF deleted_count > 100 THEN
         -- Check dead tuple count and reset statistics if significant cleanup is needed
-        IF (SELECT n_dead_tup FROM pg_stat_user_tables WHERE relname = 'guest_purchases') > 1000 THEN
+        IF (SELECT n_dead_tup FROM pg_stat_user_tables WHERE schemaname = 'seller_main' AND relname = 'guest_purchases') > 1000 THEN
             -- Reset statistics to encourage autovacuum daemon to process this table
-            PERFORM pg_stat_reset_single_table_counters('guest_purchases'::regclass);
+            PERFORM pg_stat_reset_single_table_counters('seller_main.guest_purchases'::regclass);
         END IF;
     END IF;
     
@@ -2048,7 +2051,7 @@ SELECT
     COUNT(*) FILTER (WHERE status = 'disputed') as disputed_transactions,
     ROUND(AVG(amount) / 100.0, 2) as avg_transaction_amount,
     NOW() as snapshot_time
-FROM public.payment_transactions
+FROM seller_main.payment_transactions
 UNION ALL
 SELECT 
     'guest_purchases' as table_name,
@@ -2059,7 +2062,7 @@ SELECT
     0 as disputed_transactions, -- Not applicable
     ROUND(AVG(transaction_amount) / 100.0, 2) as avg_transaction_amount,
     NOW() as snapshot_time
-FROM public.guest_purchases
+FROM seller_main.guest_purchases
 UNION ALL
 SELECT 
     'admin_actions' as table_name,
@@ -2078,12 +2081,12 @@ FROM public.admin_actions;
 -- =============================================================================
 
 -- Create refund_requests table for customer-initiated refund requests
-CREATE TABLE IF NOT EXISTS refund_requests (
+CREATE TABLE IF NOT EXISTS seller_main.refund_requests (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    transaction_id UUID REFERENCES payment_transactions(id) ON DELETE CASCADE NOT NULL,
+    transaction_id UUID REFERENCES seller_main.payment_transactions(id) ON DELETE CASCADE NOT NULL,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE, -- NULL for guest purchases
     customer_email TEXT NOT NULL CHECK (public.validate_email_format(customer_email)),
-    product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
+    product_id UUID REFERENCES seller_main.products(id) ON DELETE CASCADE NOT NULL,
 
     -- Request details
     reason TEXT CHECK (reason IS NULL OR length(reason) <= 2000),
@@ -2106,20 +2109,20 @@ CREATE TABLE IF NOT EXISTS refund_requests (
     CONSTRAINT unique_pending_request UNIQUE (transaction_id) DEFERRABLE INITIALLY DEFERRED
 );
 
-COMMENT ON TABLE refund_requests IS 'Customer-initiated refund requests that require admin approval';
+COMMENT ON TABLE seller_main.refund_requests IS 'Customer-initiated refund requests that require admin approval';
 
 -- Indexes for refund_requests
-CREATE INDEX IF NOT EXISTS idx_refund_requests_user_id ON refund_requests(user_id);
-CREATE INDEX IF NOT EXISTS idx_refund_requests_status ON refund_requests(status);
-CREATE INDEX IF NOT EXISTS idx_refund_requests_created_at ON refund_requests USING BRIN (created_at);
-CREATE INDEX IF NOT EXISTS idx_refund_requests_transaction_id ON refund_requests(transaction_id);
-CREATE INDEX IF NOT EXISTS idx_products_is_refundable ON products(is_refundable) WHERE is_refundable = true;
+CREATE INDEX IF NOT EXISTS idx_refund_requests_user_id ON seller_main.refund_requests(user_id);
+CREATE INDEX IF NOT EXISTS idx_refund_requests_status ON seller_main.refund_requests(status);
+CREATE INDEX IF NOT EXISTS idx_refund_requests_created_at ON seller_main.refund_requests USING BRIN (created_at);
+CREATE INDEX IF NOT EXISTS idx_refund_requests_transaction_id ON seller_main.refund_requests(transaction_id);
+CREATE INDEX IF NOT EXISTS idx_products_is_refundable ON seller_main.products(is_refundable) WHERE is_refundable = true;
 
 -- RLS for refund_requests
-ALTER TABLE refund_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE seller_main.refund_requests ENABLE ROW LEVEL SECURITY;
 
 -- Users can view their own refund requests
-CREATE POLICY "Users can view own refund requests" ON refund_requests
+CREATE POLICY "Users can view own refund requests" ON seller_main.refund_requests
     FOR SELECT
     USING (
         user_id = (SELECT auth.uid()) OR
@@ -2129,7 +2132,7 @@ CREATE POLICY "Users can view own refund requests" ON refund_requests
     );
 
 -- Users can create refund requests for their own transactions
-CREATE POLICY "Users can create refund requests" ON refund_requests
+CREATE POLICY "Users can create refund requests" ON seller_main.refund_requests
     FOR INSERT
     WITH CHECK (
         (user_id = (SELECT auth.uid())) OR
@@ -2137,7 +2140,7 @@ CREATE POLICY "Users can create refund requests" ON refund_requests
     );
 
 -- Admins can update refund requests (approve/reject)
-CREATE POLICY "Admins can update refund requests" ON refund_requests
+CREATE POLICY "Admins can update refund requests" ON seller_main.refund_requests
     FOR UPDATE
     USING (
         EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = (SELECT auth.uid())) OR
@@ -2145,7 +2148,7 @@ CREATE POLICY "Admins can update refund requests" ON refund_requests
     );
 
 -- Check if a transaction is eligible for customer-initiated refund
-CREATE OR REPLACE FUNCTION check_refund_eligibility(
+CREATE OR REPLACE FUNCTION seller_main.check_refund_eligibility(
     transaction_id_param UUID
 ) RETURNS JSONB AS $$
 DECLARE
@@ -2156,8 +2159,8 @@ BEGIN
     -- Get transaction details with product info
     SELECT pt.*, p.is_refundable, p.refund_period_days, p.name as product_name
     INTO transaction_record
-    FROM public.payment_transactions pt
-    JOIN public.products p ON pt.product_id = p.id
+    FROM seller_main.payment_transactions pt
+    JOIN seller_main.products p ON pt.product_id = p.id
     WHERE pt.id = transaction_id_param;
 
     IF NOT FOUND THEN
@@ -2174,7 +2177,7 @@ BEGIN
 
     -- Check for existing pending request
     SELECT * INTO existing_request
-    FROM public.refund_requests
+    FROM seller_main.refund_requests
     WHERE refund_requests.transaction_id = transaction_id_param
       AND status IN ('pending', 'approved');
 
@@ -2221,10 +2224,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = ''
 SET statement_timeout = '5s';
 
-GRANT EXECUTE ON FUNCTION check_refund_eligibility TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION seller_main.check_refund_eligibility TO authenticated, service_role;
 
 -- Create a refund request (customer-initiated)
-CREATE OR REPLACE FUNCTION create_refund_request(
+CREATE OR REPLACE FUNCTION seller_main.create_refund_request(
     transaction_id_param UUID,
     reason_param TEXT DEFAULT NULL
 ) RETURNS JSONB AS $$
@@ -2246,7 +2249,7 @@ BEGIN
     END IF;
 
     -- Check eligibility first
-    eligibility := public.check_refund_eligibility(transaction_id_param);
+    eligibility := seller_main.check_refund_eligibility(transaction_id_param);
 
     IF NOT (eligibility->>'eligible')::boolean THEN
         RETURN jsonb_build_object('success', false, 'error', eligibility->>'reason', 'details', eligibility);
@@ -2255,8 +2258,8 @@ BEGIN
     -- Get transaction for ownership check
     SELECT pt.*, p.name as product_name
     INTO transaction_record
-    FROM public.payment_transactions pt
-    JOIN public.products p ON pt.product_id = p.id
+    FROM seller_main.payment_transactions pt
+    JOIN seller_main.products p ON pt.product_id = p.id
     WHERE pt.id = transaction_id_param;
 
     -- Verify ownership
@@ -2265,7 +2268,7 @@ BEGIN
     END IF;
 
     -- Create the refund request
-    INSERT INTO public.refund_requests (
+    INSERT INTO seller_main.refund_requests (
         transaction_id, user_id, customer_email, product_id, reason,
         requested_amount, currency, status
     ) VALUES (
@@ -2290,10 +2293,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = ''
 SET statement_timeout = '10s';
 
-GRANT EXECUTE ON FUNCTION create_refund_request TO authenticated;
+GRANT EXECUTE ON FUNCTION seller_main.create_refund_request TO authenticated;
 
 -- Process refund request (admin only) - approve or reject
-CREATE OR REPLACE FUNCTION process_refund_request(
+CREATE OR REPLACE FUNCTION seller_main.process_refund_request(
     request_id_param UUID,
     action_param TEXT,
     admin_response_param TEXT DEFAULT NULL
@@ -2316,9 +2319,9 @@ BEGIN
     -- Get request details
     SELECT rr.*, pt.stripe_payment_intent_id, p.name as product_name
     INTO request_record
-    FROM public.refund_requests rr
-    JOIN public.payment_transactions pt ON rr.transaction_id = pt.id
-    JOIN public.products p ON rr.product_id = p.id
+    FROM seller_main.refund_requests rr
+    JOIN seller_main.payment_transactions pt ON rr.transaction_id = pt.id
+    JOIN seller_main.products p ON rr.product_id = p.id
     WHERE rr.id = request_id_param;
 
     IF NOT FOUND THEN
@@ -2330,7 +2333,7 @@ BEGIN
     END IF;
 
     -- Update request status
-    UPDATE public.refund_requests
+    UPDATE seller_main.refund_requests
     SET
         status = CASE WHEN action_param = 'approve' THEN 'approved' ELSE 'rejected' END,
         admin_id = current_admin_id,
@@ -2362,10 +2365,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = ''
 SET statement_timeout = '10s';
 
-GRANT EXECUTE ON FUNCTION process_refund_request TO authenticated;
+GRANT EXECUTE ON FUNCTION seller_main.process_refund_request TO authenticated;
 
 -- Get user's purchase history with refund eligibility
-CREATE OR REPLACE FUNCTION get_user_purchases_with_refund_status(
+CREATE OR REPLACE FUNCTION seller_main.get_user_purchases_with_refund_status(
     user_id_param UUID DEFAULT NULL
 ) RETURNS TABLE (
     transaction_id UUID,
@@ -2425,9 +2428,9 @@ BEGIN
         END as refund_eligible,
         rr.status as refund_request_status,
         rr.id as refund_request_id
-    FROM public.payment_transactions pt
-    JOIN public.products p ON pt.product_id = p.id
-    LEFT JOIN public.refund_requests rr ON pt.id = rr.transaction_id AND rr.status IN ('pending', 'approved', 'rejected')
+    FROM seller_main.payment_transactions pt
+    JOIN seller_main.products p ON pt.product_id = p.id
+    LEFT JOIN seller_main.refund_requests rr ON pt.id = rr.transaction_id AND rr.status IN ('pending', 'approved', 'rejected')
     WHERE pt.user_id = target_user_id
     ORDER BY pt.created_at DESC;
 END;
@@ -2435,10 +2438,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = ''
 SET statement_timeout = '10s';
 
-GRANT EXECUTE ON FUNCTION get_user_purchases_with_refund_status TO authenticated;
+GRANT EXECUTE ON FUNCTION seller_main.get_user_purchases_with_refund_status TO authenticated;
 
 -- Admin function to get all refund requests with filtering
-CREATE OR REPLACE FUNCTION get_admin_refund_requests(
+CREATE OR REPLACE FUNCTION seller_main.get_admin_refund_requests(
     status_filter TEXT DEFAULT NULL,
     limit_param INTEGER DEFAULT 50,
     offset_param INTEGER DEFAULT 0
@@ -2484,9 +2487,9 @@ BEGIN
         rr.created_at,
         pt.created_at as purchase_date,
         pt.stripe_payment_intent_id
-    FROM public.refund_requests rr
-    JOIN public.products p ON rr.product_id = p.id
-    JOIN public.payment_transactions pt ON rr.transaction_id = pt.id
+    FROM seller_main.refund_requests rr
+    JOIN seller_main.products p ON rr.product_id = p.id
+    JOIN seller_main.payment_transactions pt ON rr.transaction_id = pt.id
     WHERE (status_filter IS NULL OR rr.status = status_filter)
     ORDER BY
         CASE WHEN rr.status = 'pending' THEN 0 ELSE 1 END,
@@ -2498,7 +2501,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = ''
 SET statement_timeout = '10s';
 
-GRANT EXECUTE ON FUNCTION get_admin_refund_requests TO authenticated;
+GRANT EXECUTE ON FUNCTION seller_main.get_admin_refund_requests TO authenticated;
 
 -- Update updated_at on refund_requests changes
 CREATE OR REPLACE FUNCTION update_refund_request_timestamp()
@@ -2511,9 +2514,19 @@ $$ LANGUAGE plpgsql
 SET search_path = '';
 
 CREATE TRIGGER trigger_update_refund_request_timestamp
-    BEFORE UPDATE ON refund_requests
+    BEFORE UPDATE ON seller_main.refund_requests
     FOR EACH ROW
     EXECUTE FUNCTION update_refund_request_timestamp();
+
+-- =============================================================================
+-- PROXY VIEWS FOR BACKWARD COMPATIBILITY
+-- =============================================================================
+-- These views allow existing code referencing public.* tables to continue working
+-- while the actual data lives in seller_main schema.
+
+CREATE OR REPLACE VIEW public.payment_transactions AS SELECT * FROM seller_main.payment_transactions;
+CREATE OR REPLACE VIEW public.guest_purchases AS SELECT * FROM seller_main.guest_purchases;
+CREATE OR REPLACE VIEW public.refund_requests AS SELECT * FROM seller_main.refund_requests;
 
 COMMIT;
 

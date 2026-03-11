@@ -2,7 +2,7 @@
 -- Found during pentest: these functions had no rate limiting, allowing unlimited DB spam
 
 -- Recreate grant_free_product_access with rate limiting (20 calls/hour)
-CREATE OR REPLACE FUNCTION public.grant_free_product_access(
+CREATE OR REPLACE FUNCTION seller_main.grant_free_product_access(
     product_slug_param TEXT,
     access_duration_days_param INTEGER DEFAULT NULL
 ) RETURNS BOOLEAN AS $$
@@ -36,7 +36,7 @@ BEGIN
 
     -- Get product by slug (use sanitized slug)
     SELECT id, auto_grant_duration_days INTO product_record
-    FROM public.products
+    FROM seller_main.products
     WHERE slug = clean_slug AND is_active = true AND price = 0;
 
     IF NOT FOUND THEN
@@ -44,7 +44,7 @@ BEGIN
     END IF;
 
     -- Early return if user already has active (non-expired) access — avoids pointless UPSERTs
-    PERFORM 1 FROM public.user_product_access upa
+    PERFORM 1 FROM seller_main.user_product_access upa
     WHERE upa.user_id = current_user_id
       AND upa.product_id = product_record.id
       AND (upa.access_expires_at IS NULL OR upa.access_expires_at > NOW());
@@ -67,7 +67,7 @@ BEGIN
     END IF;
 
     -- Insert or update user access
-    INSERT INTO public.user_product_access (user_id, product_id, access_expires_at, access_duration_days)
+    INSERT INTO seller_main.user_product_access (user_id, product_id, access_expires_at, access_duration_days)
     VALUES (current_user_id, product_record.id, v_access_expires_at, COALESCE(access_duration_days_param, product_record.auto_grant_duration_days))
     ON CONFLICT (user_id, product_id)
     DO UPDATE SET
@@ -82,7 +82,7 @@ SET search_path = ''
 SET statement_timeout = '2s';
 
 -- Recreate grant_pwyw_free_access with rate limiting (20 calls/hour)
-CREATE OR REPLACE FUNCTION public.grant_pwyw_free_access(
+CREATE OR REPLACE FUNCTION seller_main.grant_pwyw_free_access(
     product_slug_param TEXT,
     access_duration_days_param INTEGER DEFAULT NULL
 ) RETURNS BOOLEAN AS $$
@@ -116,7 +116,7 @@ BEGIN
 
     -- Get product by slug - only PWYW products with min=0 allowed
     SELECT id, auto_grant_duration_days INTO product_record
-    FROM public.products
+    FROM seller_main.products
     WHERE slug = clean_slug
       AND is_active = true
       AND allow_custom_price = true
@@ -127,7 +127,7 @@ BEGIN
     END IF;
 
     -- Early return if user already has active (non-expired) access
-    PERFORM 1 FROM public.user_product_access upa
+    PERFORM 1 FROM seller_main.user_product_access upa
     WHERE upa.user_id = current_user_id
       AND upa.product_id = product_record.id
       AND (upa.access_expires_at IS NULL OR upa.access_expires_at > NOW());
@@ -150,7 +150,7 @@ BEGIN
     END IF;
 
     -- Insert or update user access
-    INSERT INTO public.user_product_access (user_id, product_id, access_expires_at, access_duration_days)
+    INSERT INTO seller_main.user_product_access (user_id, product_id, access_expires_at, access_duration_days)
     VALUES (current_user_id, product_record.id, v_access_expires_at, COALESCE(access_duration_days_param, product_record.auto_grant_duration_days))
     ON CONFLICT (user_id, product_id)
     DO UPDATE SET
