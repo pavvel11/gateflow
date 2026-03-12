@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server';
 import { embedCache } from '@/lib/script-cache';
+import { getCaptchaProvider, getTurnstileSiteKey } from '@/lib/captcha/config';
+import type { CaptchaProvider } from '@/lib/captcha/types';
 
 // Cloudflare dummy sitekey for testing (always passes)
 const TURNSTILE_TEST_KEY = '1x00000000000000000000AA';
@@ -18,6 +20,8 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     errorEmail: 'Please enter a valid email address',
     errorCaptcha: 'Please complete the security verification',
     errorNetwork: 'Network error. Please check your connection.',
+    verifying: 'Verifying...',
+    verified: 'Verified',
   },
   pl: {
     title: '🎁 Darmowy Dostęp',
@@ -31,6 +35,8 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     errorEmail: 'Wprowadź poprawny adres email',
     errorCaptcha: 'Potwierdź, że nie jesteś robotem',
     errorNetwork: 'Błąd sieci. Sprawdź połączenie internetowe.',
+    verifying: 'Weryfikacja...',
+    verified: 'Zweryfikowano',
   },
   de: {
     title: '🎁 Kostenloser Zugang',
@@ -44,6 +50,8 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     errorEmail: 'Bitte geben Sie eine gültige E-Mail-Adresse ein',
     errorCaptcha: 'Bitte bestätigen Sie die Sicherheitsüberprüfung',
     errorNetwork: 'Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.',
+    verifying: 'Überprüfung...',
+    verified: 'Überprüft',
   },
   es: {
     title: '🎁 Acceso Gratuito',
@@ -57,6 +65,8 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     errorEmail: 'Por favor, ingresa un correo electrónico válido',
     errorCaptcha: 'Por favor, completa la verificación de seguridad',
     errorNetwork: 'Error de red. Por favor, verifica tu conexión.',
+    verifying: 'Verificando...',
+    verified: 'Verificado',
   },
   fr: {
     title: '🎁 Accès Gratuit',
@@ -70,6 +80,8 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     errorEmail: 'Veuillez entrer une adresse email valide',
     errorCaptcha: 'Veuillez compléter la vérification de sécurité',
     errorNetwork: 'Erreur réseau. Veuillez vérifier votre connexion.',
+    verifying: 'Vérification...',
+    verified: 'Vérifié',
   },
 };
 
@@ -103,11 +115,11 @@ function detectLanguage(acceptLanguage: string | null): string {
  *
  * This endpoint serves the embed widget JS with:
  * - API_BASE_URL automatically set to the serving domain
- * - TURNSTILE_SITE_KEY from integrations_config (or test key for localhost)
+ * - Captcha provider auto-detected (Turnstile → ALTCHA → none)
  * - Translations based on browser's Accept-Language header
  *
  * Performance optimizations:
- * - Script cached in memory for 1 hour per language/host combination
+ * - Script cached in memory for 1 hour per language/host/provider combination
  * - HTTP caching with ETag support (304 Not Modified responses)
  * - Stale-while-revalidate for better UX
  */
@@ -125,20 +137,21 @@ export async function GET(request: NextRequest) {
   const lang = detectLanguage(acceptLanguage);
   const t = TRANSLATIONS[lang];
 
-  // Check if localhost/development
+  // Detect captcha provider
+  const captchaProvider = getCaptchaProvider();
   const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
 
-  // Get Turnstile key - use test key for localhost, env var for production
-  const turnstileSiteKey = isLocalhost
-    ? TURNSTILE_TEST_KEY
-    : (process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || TURNSTILE_TEST_KEY);
+  // Get Turnstile key only when provider is turnstile
+  const turnstileSiteKey = captchaProvider === 'turnstile'
+    ? (isLocalhost ? TURNSTILE_TEST_KEY : (getTurnstileSiteKey() || TURNSTILE_TEST_KEY))
+    : '';
 
-  // Generate cache key based on host + language + turnstile key
-  const cacheKey = `embed_${host}_${lang}_${turnstileSiteKey}`;
+  // Generate cache key based on host + language + provider + key
+  const cacheKey = `embed_${host}_${lang}_${captchaProvider}_${turnstileSiteKey}`;
 
   // Get cached script or generate new one
   const cached = embedCache.getOrGenerate(cacheKey, () =>
-    generateEmbedScript(apiBaseUrl, turnstileSiteKey, t)
+    generateEmbedScript(apiBaseUrl, captchaProvider, turnstileSiteKey, t)
   );
 
   // CORS headers for embedding
@@ -156,26 +169,30 @@ export async function GET(request: NextRequest) {
   return embedCache.createResponse(cached, corsHeaders);
 }
 
+// ===== SCRIPT GENERATION =====
+
 function generateEmbedScript(
   apiBaseUrl: string,
+  captchaProvider: CaptchaProvider,
   turnstileSiteKey: string,
   t: Record<string, string>
 ): string {
   return `/**
- * Sellf Embed Widget v1.1
+ * Sellf Embed Widget v1.2
  * Auto-configured for: ${apiBaseUrl}
+ * Captcha: ${captchaProvider}
  */
 (function(){
 'use strict';
 
 const API_BASE_URL='${apiBaseUrl}';
-const TURNSTILE_SITE_KEY='${turnstileSiteKey}';
+const CAPTCHA_PROVIDER='${captchaProvider}';
+${captchaProvider === 'turnstile' ? `const TURNSTILE_SITE_KEY='${turnstileSiteKey}';` : ''}
 const T=${JSON.stringify(t)};
 
 const widgetState=new Map();
 let cssInjected=false;
-let turnstileLoading=false;
-let turnstileCallbacks=[];
+${captchaProvider === 'turnstile' ? generateTurnstileGlobals() : ''}
 
 function isValidEmail(email){
   return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);
@@ -207,7 +224,15 @@ function injectCSS(){
     .sellf-message-error{background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.5);color:#fff}
     .sellf-terms{color:rgba(255,255,255,.8);font-size:.85rem;margin-top:1rem;text-align:center}
     .sellf-terms a{color:#fff;text-decoration:underline}
-    .sellf-turnstile{margin-top:1rem;display:flex;justify-content:center}
+    .sellf-captcha{margin-top:1rem;display:flex;justify-content:center}
+    .sellf-altcha{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;color:rgba(255,255,255,.9);font-size:.9rem;min-height:48px;transition:all .3s}
+    .sellf-altcha.sellf-altcha-verified{border-color:rgba(16,185,129,.5);background:rgba(16,185,129,.15)}
+    .sellf-altcha-checkbox{width:20px;height:20px;border:2px solid rgba(255,255,255,.4);border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s;flex-shrink:0}
+    .sellf-altcha-checkbox:hover{border-color:rgba(255,255,255,.7)}
+    .sellf-altcha-checkbox.sellf-altcha-solving{border-color:#667eea;animation:sellf-spin .8s linear infinite;border-top-color:rgba(255,255,255,.8);border-radius:50%}
+    .sellf-altcha-checkbox.sellf-altcha-solved{border-color:rgba(16,185,129,.8);background:rgba(16,185,129,.6)}
+    .sellf-altcha-check{display:none;color:#fff;font-size:14px;line-height:1}
+    .sellf-altcha-solved .sellf-altcha-check{display:block}
   \`;
   document.head.appendChild(style);
 }
@@ -230,7 +255,7 @@ function renderWidget(container,productSlug){
     container,
     email:'',
     loading:false,
-    turnstileToken:null
+    captchaToken:null
   });
 
   container.innerHTML=\`
@@ -242,7 +267,7 @@ function renderWidget(container,productSlug){
         <button type="submit" class="sellf-button" id="\${widgetId}-button">
           <span id="\${widgetId}-button-text">\${T.button}</span>
         </button>
-        <div class="sellf-turnstile" id="\${widgetId}-turnstile"></div>
+        <div class="sellf-captcha" id="\${widgetId}-captcha"></div>
         <div class="sellf-terms">\${T.terms}</div>
       </form>
       <div class="sellf-message" id="\${widgetId}-message"></div>
@@ -251,32 +276,10 @@ function renderWidget(container,productSlug){
 
   document.getElementById(widgetId+'-form').addEventListener('submit',e=>handleSubmit(e,widgetId));
   document.getElementById(widgetId+'-email').addEventListener('input',e=>updateEmail(widgetId,e.target.value));
-  loadTurnstile(widgetId);
+  initCaptcha(widgetId);
 }
 
-function loadTurnstile(widgetId){
-  if(window.turnstile){renderTurnstile(widgetId);return}
-  if(turnstileLoading){turnstileCallbacks.push(()=>renderTurnstile(widgetId));return}
-  turnstileLoading=true;
-  turnstileCallbacks.push(()=>renderTurnstile(widgetId));
-  const script=document.createElement('script');
-  script.src='https://challenges.cloudflare.com/turnstile/v0/api.js';
-  script.async=true;
-  script.onload=()=>{turnstileLoading=false;turnstileCallbacks.forEach(cb=>cb());turnstileCallbacks=[]};
-  script.onerror=()=>{turnstileLoading=false;console.error('Sellf: Failed to load Turnstile')};
-  document.head.appendChild(script);
-}
-
-function renderTurnstile(widgetId){
-  const container=document.getElementById(widgetId+'-turnstile');
-  if(!container||!window.turnstile)return;
-  window.turnstile.render(container,{
-    sitekey:TURNSTILE_SITE_KEY,
-    theme:'light',
-    callback:token=>{const s=widgetState.get(widgetId);if(s)s.turnstileToken=token},
-    'error-callback':()=>{const s=widgetState.get(widgetId);if(s)s.turnstileToken=null}
-  });
-}
+${generateCaptchaFunctions(captchaProvider)}
 
 function updateEmail(widgetId,email){
   const state=widgetState.get(widgetId);
@@ -290,7 +293,7 @@ async function handleSubmit(event,widgetId){
   const state=widgetState.get(widgetId);
   if(!state)return;
 
-  const{productSlug,email,turnstileToken,container}=state;
+  const{productSlug,email,captchaToken,container}=state;
   const emailInput=document.getElementById(widgetId+'-email');
 
   if(!email||!isValidEmail(email)){
@@ -299,7 +302,7 @@ async function handleSubmit(event,widgetId){
     return;
   }
 
-  if(!turnstileToken){
+  if(CAPTCHA_PROVIDER!=='none'&&!captchaToken){
     showMessage(widgetId,T.errorCaptcha,'error');
     return;
   }
@@ -311,7 +314,7 @@ async function handleSubmit(event,widgetId){
     const response=await fetch(API_BASE_URL+'/api/public/products/claim-free',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email,productSlug,turnstileToken})
+      body:JSON.stringify({email,productSlug,turnstileToken:captchaToken})
     });
     const data=await response.json();
 
@@ -340,11 +343,8 @@ async function handleSubmit(event,widgetId){
     showMessage(widgetId,T.errorNetwork,'error');
   }finally{
     setLoading(widgetId,false);
-    if(window.turnstile){
-      const tc=document.getElementById(widgetId+'-turnstile');
-      if(tc)window.turnstile.reset(tc);
-    }
-    state.turnstileToken=null;
+    resetCaptcha(widgetId);
+    state.captchaToken=null;
   }
 }
 
@@ -374,4 +374,137 @@ function clearMessage(widgetId){
 window.SellfEmbed={init};
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init)}else{init()}
 })();`;
+}
+
+// ===== CAPTCHA-SPECIFIC CODE GENERATORS =====
+
+function generateTurnstileGlobals(): string {
+  return `let turnstileLoading=false;
+let turnstileCallbacks=[];`;
+}
+
+function generateCaptchaFunctions(provider: CaptchaProvider): string {
+  switch (provider) {
+    case 'turnstile':
+      return generateTurnstileFunctions();
+    case 'altcha':
+      return generateAltchaFunctions();
+    case 'none':
+      return generateNoCaptchaFunctions();
+  }
+}
+
+function generateTurnstileFunctions(): string {
+  return `function initCaptcha(widgetId){
+  if(window.turnstile){renderTurnstile(widgetId);return}
+  if(turnstileLoading){turnstileCallbacks.push(()=>renderTurnstile(widgetId));return}
+  turnstileLoading=true;
+  turnstileCallbacks.push(()=>renderTurnstile(widgetId));
+  const script=document.createElement('script');
+  script.src='https://challenges.cloudflare.com/turnstile/v0/api.js';
+  script.async=true;
+  script.onload=()=>{turnstileLoading=false;turnstileCallbacks.forEach(cb=>cb());turnstileCallbacks=[]};
+  script.onerror=()=>{turnstileLoading=false;console.error('Sellf: Failed to load Turnstile')};
+  document.head.appendChild(script);
+}
+
+function renderTurnstile(widgetId){
+  const container=document.getElementById(widgetId+'-captcha');
+  if(!container||!window.turnstile)return;
+  window.turnstile.render(container,{
+    sitekey:TURNSTILE_SITE_KEY,
+    theme:'light',
+    callback:token=>{const s=widgetState.get(widgetId);if(s)s.captchaToken=token},
+    'error-callback':()=>{const s=widgetState.get(widgetId);if(s)s.captchaToken=null}
+  });
+}
+
+function resetCaptcha(widgetId){
+  if(window.turnstile){
+    const tc=document.getElementById(widgetId+'-captcha');
+    if(tc)window.turnstile.reset(tc);
+  }
+}`;
+}
+
+function generateAltchaFunctions(): string {
+  // Pure vanilla JS ALTCHA solver — no npm package, no web component.
+  // Implements the ALTCHA proof-of-work protocol:
+  // 1. Fetch challenge (algorithm, salt, challenge hash, maxNumber)
+  // 2. Iterate numbers 0..maxNumber, hash(salt + number), compare to challenge
+  // 3. Base64-encode solution payload and set as captcha token
+  return `function initCaptcha(widgetId){
+  const container=document.getElementById(widgetId+'-captcha');
+  if(!container)return;
+  container.innerHTML='<div class="sellf-altcha" id="'+widgetId+'-altcha"><div class="sellf-altcha-checkbox" id="'+widgetId+'-altcha-cb" role="button" tabindex="0" aria-label="Verify"><span class="sellf-altcha-check">\\u2713</span></div><span id="'+widgetId+'-altcha-label">'+T.errorCaptcha+'</span></div>';
+  const cb=document.getElementById(widgetId+'-altcha-cb');
+  cb.addEventListener('click',()=>solveAltcha(widgetId));
+  cb.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();solveAltcha(widgetId)}});
+}
+
+async function solveAltcha(widgetId){
+  const state=widgetState.get(widgetId);
+  if(!state||state.captchaToken)return;
+  const cb=document.getElementById(widgetId+'-altcha-cb');
+  const label=document.getElementById(widgetId+'-altcha-label');
+  const wrapper=document.getElementById(widgetId+'-altcha');
+  if(!cb||!label)return;
+
+  cb.classList.add('sellf-altcha-solving');
+  label.textContent=T.verifying;
+
+  try{
+    const resp=await fetch(API_BASE_URL+'/api/captcha/challenge');
+    if(!resp.ok)throw new Error('Challenge fetch failed');
+    const challenge=await resp.json();
+    const solution=await solvePow(challenge);
+    if(!solution)throw new Error('No solution found');
+
+    const payload=btoa(JSON.stringify({
+      algorithm:challenge.algorithm,
+      challenge:challenge.challenge,
+      number:solution,
+      salt:challenge.salt,
+      signature:challenge.signature
+    }));
+
+    state.captchaToken=payload;
+    cb.classList.remove('sellf-altcha-solving');
+    cb.classList.add('sellf-altcha-solved');
+    if(wrapper)wrapper.classList.add('sellf-altcha-verified');
+    label.textContent=T.verified;
+  }catch(err){
+    console.error('Sellf ALTCHA error:',err);
+    cb.classList.remove('sellf-altcha-solving');
+    label.textContent=T.errorCaptcha;
+  }
+}
+
+async function solvePow(challenge){
+  const algo=challenge.algorithm==='SHA-512'?'SHA-512':'SHA-256';
+  const max=challenge.maxnumber||1000000;
+  for(let n=0;n<=max;n++){
+    const msg=new TextEncoder().encode(challenge.salt+n);
+    const buf=await crypto.subtle.digest(algo,msg);
+    const hex=Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    if(hex===challenge.challenge)return n;
+  }
+  return null;
+}
+
+function resetCaptcha(widgetId){
+  const state=widgetState.get(widgetId);
+  if(state)state.captchaToken=null;
+  const cb=document.getElementById(widgetId+'-altcha-cb');
+  const label=document.getElementById(widgetId+'-altcha-label');
+  const wrapper=document.getElementById(widgetId+'-altcha');
+  if(cb){cb.classList.remove('sellf-altcha-solving','sellf-altcha-solved')}
+  if(wrapper)wrapper.classList.remove('sellf-altcha-verified');
+  if(label)label.textContent=T.errorCaptcha;
+}`;
+}
+
+function generateNoCaptchaFunctions(): string {
+  return `function initCaptcha(){}
+function resetCaptcha(){}`;
 }
