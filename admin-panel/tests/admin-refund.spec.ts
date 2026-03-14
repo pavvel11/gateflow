@@ -224,7 +224,7 @@ test.describe('Admin Refund API Tests', () => {
 
     // Should be rejected
     expect(response.status()).toBe(400);
-    expect(result.message).toContain('Only completed transactions can be refunded');
+    expect(result.error).toContain('Only completed transactions can be refunded');
   });
 
   test('VALIDATION: Refund rejects invalid amounts', async ({ request }) => {
@@ -368,7 +368,7 @@ test.describe('Admin Refund API Tests', () => {
     console.log(`   Error: ${result.error || result.message}`);
 
     expect(response.status()).toBe(404);
-    expect(result.message).toContain('Transaction not found');
+    expect(result.error).toContain('Transaction not found');
   });
 
   test('VALIDATION: Cannot refund disputed transaction', async ({ request }) => {
@@ -410,7 +410,7 @@ test.describe('Admin Refund API Tests', () => {
     console.log(`   Error: ${result.error || result.message}`);
 
     expect(response.status()).toBe(400);
-    expect(result.message).toContain('Only completed transactions can be refunded');
+    expect(result.error).toContain('Only completed transactions can be refunded');
   });
 
   test('VALIDATION: Refund amount exceeding original is rejected', async ({ request }) => {

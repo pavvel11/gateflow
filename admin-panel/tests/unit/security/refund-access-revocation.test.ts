@@ -55,6 +55,46 @@ describe('Refund Access Revocation Security', () => {
     });
   });
 
+  describe('Atomicity: access revocation runs even when DB update fails', () => {
+    it('revocation is NOT inside a dbUpdateFailed===false branch', () => {
+      // The fix: revocation must run regardless of DB update outcome.
+      // If revokeTransactionAccess were inside "if (!dbUpdateFailed)", a DB failure
+      // would leave the customer with both a refund AND product access.
+      const dbCheckIndex = refundRouteSource.indexOf('dbUpdateFailed');
+      const revocationIndex = refundRouteSource.indexOf('revokeTransactionAccess(supabase');
+      expect(dbCheckIndex).toBeGreaterThan(-1);
+      expect(revocationIndex).toBeGreaterThan(-1);
+
+      // Ensure revocation call is NOT wrapped in "if (!dbUpdateFailed)"
+      // by checking that no "!dbUpdateFailed" guard appears before revokeTransactionAccess
+      const betweenDbCheckAndRevocation = refundRouteSource.slice(dbCheckIndex, revocationIndex);
+      expect(betweenDbCheckAndRevocation).not.toContain('if (!dbUpdateFailed)');
+      expect(betweenDbCheckAndRevocation).not.toContain('if(!dbUpdateFailed)');
+    });
+
+    it('revocation runs unconditionally within isFullRefund block', () => {
+      // The revocation should be inside "if (isFullRefund)" but NOT inside
+      // any further condition related to dbUpdateFailed
+      const fullRefundBlock = refundRouteSource.match(/if \(isFullRefund\)\s*\{([\s\S]*?)^\s{4}\}/m);
+      expect(fullRefundBlock).not.toBeNull();
+      const blockContent = fullRefundBlock![1];
+      expect(blockContent).toContain('revokeTransactionAccess');
+      // No dbUpdateFailed guard inside this block
+      expect(blockContent).not.toMatch(/if\s*\(\s*!?\s*dbUpdateFailed/);
+    });
+
+    it('returns 409 with warning when DB update fails but refund succeeds', () => {
+      expect(refundRouteSource).toContain('if (dbUpdateFailed)');
+      expect(refundRouteSource).toContain('status: 409');
+      expect(refundRouteSource).toContain('database update failed');
+    });
+
+    it('tracks access revocation failure separately from DB failure', () => {
+      expect(refundRouteSource).toContain('accessRevocationFailed');
+      expect(refundRouteSource).toContain('access revocation failed');
+    });
+  });
+
   describe('Shared Revocation Service (access-revocation.ts)', () => {
     it('revokes user_product_access with user_id and product_id conditions', () => {
       expect(accessRevocationSource).toMatch(/\.from\(\s*['"]user_product_access['"]\s*\)[\s\S]*?\.delete\(\)/);

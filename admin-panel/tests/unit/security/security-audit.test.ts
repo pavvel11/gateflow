@@ -13,9 +13,25 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
  */
 
 // Mock Supabase client before importing the module
+// withAdminAuth calls: supabase.auth.getUser() → supabase.from('admin_users').select().eq().single()
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn().mockResolvedValue({
-    rpc: vi.fn().mockResolvedValue({ data: true }),
+    auth: {
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: { id: 'test-admin-user-id' } },
+        error: null,
+      }),
+    },
+    from: vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: { user_id: 'test-admin-user-id' },
+            error: null,
+          }),
+        }),
+      }),
+    }),
   }),
 }));
 
@@ -271,13 +287,28 @@ describe('Security Audit', () => {
     it('rejects non-admin users', async () => {
       const { createClient } = await import('@/lib/supabase/server');
       vi.mocked(createClient).mockResolvedValueOnce({
-        rpc: vi.fn().mockResolvedValue({ data: false }),
+        auth: {
+          getUser: vi.fn().mockResolvedValue({
+            data: { user: { id: 'non-admin-user-id' } },
+            error: null,
+          }),
+        },
+        from: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: null,
+                error: null,
+              }),
+            }),
+          }),
+        }),
       } as never);
 
       const result = await runSecurityAudit();
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Unauthorized');
+      expect(result.error).toContain('Forbidden');
       expect(result.checks).toHaveLength(0);
     });
   });

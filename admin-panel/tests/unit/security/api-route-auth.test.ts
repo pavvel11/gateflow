@@ -98,6 +98,7 @@ const PUBLIC_ROUTES = new Set([
   'order-bumps/route.ts',
   'oto/info/route.ts',
   'tracking/fb-capi/route.ts',                 // CORS-protected server-side CAPI proxy
+  'captcha/challenge/route.ts',                // ALTCHA challenge generation — public, stateless
 ]);
 
 /**

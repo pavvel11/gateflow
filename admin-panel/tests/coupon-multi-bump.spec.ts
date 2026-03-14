@@ -446,12 +446,12 @@ test.describe('Coupon × Multi-Bump', () => {
   // Edge Cases
   // =====================================================================
 
-  test('massive fixed coupon: total floors at Stripe minimum', async ({ request }) => {
+  test('massive fixed coupon: 100% off requires login (free access flow)', async ({ request }) => {
     // Main $100, Bump1 $20 → subtotal $120
-    // Discount: min($900, $120) = $120
-    // Total: max($120 - $120, STRIPE_MINIMUM) → clamped to minimum
-    // The API should still return 200, but Stripe may reject if minimum
-    // is currency-dependent. We test that the API handles this gracefully.
+    // Discount: min($900, $120) = $120 → total = $0 → isFreeWithCoupon = true
+    // Since BLOK 11: when coupon reduces total to $0, API skips Stripe entirely
+    // and grants access directly — but only for authenticated users.
+    // Guest (no session cookie) gets 401 requiring login first.
 
     const res = await request.post('/api/create-payment-intent', {
       data: {
@@ -462,22 +462,10 @@ test.describe('Coupon × Multi-Bump', () => {
       }
     });
 
-    // Stripe rejects amounts below its currency-specific minimum.
-    // The calculatePricing floors at $0.50 but for PLN accounts that may
-    // still be too low. We accept either 200 (success) or 500 (Stripe rejection).
-    const status = res.status();
-    if (status === 200) {
-      const { paymentIntentId } = await res.json();
-      const pi = await getStripePaymentIntent(paymentIntentId);
-      // Amount should be the Stripe minimum (50 cents)
-      expect(pi.amount).toBe(50);
-    } else {
-      // Stripe rejected the amount — this is acceptable behavior.
-      // The API returns a generic error message (doesn't expose Stripe internals).
-      expect(status).toBe(500);
-      const body = await res.json();
-      expect(body.error).toBe('Failed to create payment intent');
-    }
+    // Unauthenticated request → 401 (must log in to use free coupon)
+    expect(res.status()).toBe(401);
+    const body = await res.json();
+    expect(body.error).toContain('log in');
   });
 
   test('no bumps selected + percentage coupon: discount on main only', async ({ request }) => {

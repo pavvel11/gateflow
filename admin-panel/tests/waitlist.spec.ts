@@ -471,6 +471,10 @@ test.describe('Waitlist Feature', () => {
 
       // Step 2 → Step 3
       await nextButton.click();
+      // Wait for step 3 content to be present before returning
+      await expect(
+        page.locator('[role="dialog"]').locator('button').filter({ hasText: /Dostępność|Availability/i }).first()
+      ).toBeVisible({ timeout: 10000 });
     }
 
     /**

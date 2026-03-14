@@ -11,7 +11,7 @@
  * 7. Missing session_id — skips guest_purchases, still cleans user_product_access
  * 8. Both user_id and session_id null — no revocation but no crash
  * 9. Bump query error — warns but doesn't fail
- * 10. Individual bump revocation error — warns, continues with remaining bumps
+ * 10. Batch bump revocation error — warns but doesn't fail
  * 11. Main product revocation error — warns but continues
  * 12. Idempotent — deleting non-existent rows is a no-op
  * 13. Multiple bumps — all revoked
@@ -63,6 +63,23 @@ function createMockSupabase({
     const filters: Record<string, string> = {};
     const call = { table, operation: '', filters };
 
+    // .in() handler for batch delete — resolves the chain with product_id array
+    const inHandler = vi.fn().mockImplementation((column: string, values: string[]) => {
+      filters[column] = `[${values.join(',')}]`;
+
+      if (call.operation === 'delete') {
+        // Check for per-value errors (any matching "table:column=value")
+        const matchingError = values
+          .map(v => deleteErrors[`${table}:${column}=${v}`])
+          .find(e => e !== null && e !== undefined);
+
+        fromCalls.push({ ...call });
+        return Promise.resolve({ error: matchingError || null });
+      }
+
+      return Promise.resolve({ data: null, error: null });
+    });
+
     // Chain builder for .eq() — tracks all filter arguments
     const eqHandler = vi.fn().mockImplementation((column: string, value: string) => {
       filters[column] = value;
@@ -90,10 +107,10 @@ function createMockSupabase({
           fromCalls.push({ ...call });
           return Promise.resolve({ error: specificError });
         }
-        return { eq: eqHandler };
+        return { eq: eqHandler, in: inHandler };
       }
 
-      return { eq: eqHandler };
+      return { eq: eqHandler, in: inHandler };
     });
 
     // .select() starts a select chain
@@ -336,22 +353,23 @@ describe('revokeTransactionAccess', () => {
       expect(result.warnings.some(w => w.includes('Failed to revoke main product access'))).toBe(true);
     });
 
-    it('warns on individual bump revocation failure, continues with remaining bumps', async () => {
+    it('warns on batch bump revocation failure', async () => {
       const mock = createMockSupabase({
         bumpLineItems: [
           { product_id: BUMP_1 },
           { product_id: BUMP_2 },
         ],
         deleteErrors: {
+          // Any matching product_id error triggers the batch .in() to fail
           [`user_product_access:product_id=${BUMP_1}`]: { message: 'Some error' },
         },
       });
 
       const result = await revokeTransactionAccess(mock as never, fullTarget);
 
-      // One bump failed, one succeeded
-      expect(result.bumpProductsRevoked).toBe(1);
-      expect(result.warnings.some(w => w.includes(BUMP_1))).toBe(true);
+      // Batch failed — no bumps revoked
+      expect(result.bumpProductsRevoked).toBe(0);
+      expect(result.warnings.some(w => w.includes('bump product access'))).toBe(true);
     });
 
     it('warns on guest purchase revocation failure', async () => {

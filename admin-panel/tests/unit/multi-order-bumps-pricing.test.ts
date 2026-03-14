@@ -228,6 +228,84 @@ describe('calculatePricing — multi order bumps', () => {
 
       // subtotal = 10, discount = 9.90, total = 0.10 → clamped to STRIPE_MINIMUM_AMOUNT
       expect(result.totalGross).toBe(STRIPE_MINIMUM_AMOUNT);
+      expect(result.isFreeWithCoupon).toBe(false);
+    });
+
+    it('100% percentage coupon sets totalGross to 0 and isFreeWithCoupon to true', () => {
+      const result = calculatePricing({
+        productPrice: 100,
+        productCurrency: baseCurrency,
+        coupon: {
+          discount_type: 'percentage',
+          discount_value: 100,
+          code: 'FULL100',
+        },
+      });
+
+      expect(result.discountAmount).toBe(100);
+      expect(result.totalGross).toBe(0);
+      expect(result.isFreeWithCoupon).toBe(true);
+    });
+
+    it('fixed coupon equal to price sets totalGross to 0 and isFreeWithCoupon to true', () => {
+      const result = calculatePricing({
+        productPrice: 49,
+        productCurrency: baseCurrency,
+        coupon: {
+          discount_type: 'fixed',
+          discount_value: 49,
+          code: 'GIFT49',
+        },
+      });
+
+      expect(result.discountAmount).toBe(49);
+      expect(result.totalGross).toBe(0);
+      expect(result.isFreeWithCoupon).toBe(true);
+    });
+
+    it('fixed coupon exceeding price sets totalGross to 0 (no negative total)', () => {
+      const result = calculatePricing({
+        productPrice: 10,
+        productCurrency: baseCurrency,
+        coupon: {
+          discount_type: 'fixed',
+          discount_value: 999,
+          code: 'OVERSHOOT',
+        },
+      });
+
+      expect(result.totalGross).toBe(0);
+      expect(result.isFreeWithCoupon).toBe(true);
+    });
+
+    it('isFreeWithCoupon is false when no coupon is applied', () => {
+      const result = calculatePricing({
+        productPrice: 100,
+        productCurrency: baseCurrency,
+      });
+
+      expect(result.isFreeWithCoupon).toBe(false);
+    });
+
+    it('100% coupon on multi-bump makes entire order free', () => {
+      const result = calculatePricing({
+        productPrice: 50,
+        productCurrency: baseCurrency,
+        bumps: [
+          { price: 20, selected: true },
+          { price: 30, selected: true },
+        ],
+        coupon: {
+          discount_type: 'percentage',
+          discount_value: 100,
+          code: 'ALLFREE',
+        },
+      });
+
+      // subtotal = 100, discount = 100, total = 0 — NOT clamped to STRIPE_MINIMUM_AMOUNT
+      expect(result.subtotal).toBe(100);
+      expect(result.totalGross).toBe(0);
+      expect(result.isFreeWithCoupon).toBe(true);
     });
   });
 
