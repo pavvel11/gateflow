@@ -417,6 +417,15 @@ AS $$
 $$;
 
 -- ============================================================================
+-- ===== increment_coupon_usage =====
+CREATE OR REPLACE FUNCTION public.increment_coupon_usage(coupon_id_param uuid)
+RETURNS void
+LANGUAGE sql VOLATILE SECURITY INVOKER
+SET search_path = ''
+AS $$
+  SELECT seller_main.increment_coupon_usage(coupon_id_param);
+$$;
+
 -- Security: Revoke EXECUTE from anon and authenticated on admin-only functions.
 -- Supabase auto-grants EXECUTE to anon/authenticated on all new public functions.
 -- These proxy functions mirror the permissions of their seller_main originals.
@@ -433,6 +442,7 @@ REVOKE ALL ON FUNCTION public.cleanup_old_guest_purchases FROM anon, authenticat
 REVOKE ALL ON FUNCTION public.get_abandoned_cart_stats FROM anon, authenticated;
 REVOKE ALL ON FUNCTION public.get_abandoned_carts FROM anon, authenticated;
 REVOKE ALL ON FUNCTION public.grant_product_access_service_role FROM anon, authenticated;
+REVOKE ALL ON FUNCTION public.increment_coupon_usage FROM anon, authenticated;
 REVOKE ALL ON FUNCTION public.mark_expired_pending_payments FROM anon, authenticated;
 REVOKE ALL ON FUNCTION public.migrate_guest_payment_data_to_profile FROM anon, authenticated;
 REVOKE ALL ON FUNCTION public.process_stripe_payment_completion FROM anon, authenticated;
@@ -457,10 +467,13 @@ REVOKE ALL ON FUNCTION public.process_refund_request FROM anon;
 REVOKE ALL ON FUNCTION public.set_revenue_goal FROM anon;
 REVOKE ALL ON FUNCTION public.update_video_progress FROM anon;
 
+-- increment_sale_quantity_sold modifies data — restrict to service_role + authenticated only
+REVOKE ALL ON FUNCTION public.increment_sale_quantity_sold FROM anon;
+
 -- Functions callable by anon (public-facing)
 -- batch_check_user_product_access, check_user_product_access, check_waitlist_config,
 -- find_auto_apply_coupon, generate_oto_coupon, get_oto_coupon_info,
 -- get_product_order_bumps, get_public_integrations_config, get_variant_group,
--- get_variant_group_by_slug, increment_sale_quantity_sold, is_sale_price_active,
+-- get_variant_group_by_slug, is_sale_price_active,
 -- verify_coupon, check_refund_eligibility
 -- → These keep default EXECUTE for both anon and authenticated (no revoke needed).

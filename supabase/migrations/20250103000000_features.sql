@@ -419,6 +419,7 @@ CREATE INDEX IF NOT EXISTS idx_coupons_active ON seller_main.coupons(is_active) 
 CREATE INDEX IF NOT EXISTS idx_coupon_redemptions_coupon ON seller_main.coupon_redemptions(coupon_id);
 CREATE INDEX IF NOT EXISTS idx_coupon_redemptions_email ON seller_main.coupon_redemptions(customer_email);
 CREATE INDEX IF NOT EXISTS idx_coupon_redemptions_user ON seller_main.coupon_redemptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_coupon_redemptions_transaction ON seller_main.coupon_redemptions(transaction_id) WHERE transaction_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_coupon_reservations_expires ON seller_main.coupon_reservations(expires_at);
 CREATE INDEX IF NOT EXISTS idx_coupon_reservations_email ON seller_main.coupon_reservations(customer_email);
 CREATE INDEX IF NOT EXISTS idx_coupon_reservations_coupon ON seller_main.coupon_reservations(coupon_id);
@@ -555,9 +556,7 @@ CREATE OR REPLACE FUNCTION seller_main.admin_get_product_order_bumps(
   updated_at TIMESTAMPTZ
 ) AS $$
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()
-  ) THEN
+  IF NOT (SELECT public.is_admin()) THEN
     RAISE EXCEPTION 'Access denied: Admin privileges required';
   END IF;
 
@@ -2148,3 +2147,21 @@ REVOKE ALL ON seller_main.revenue_goals FROM anon, authenticated;
 -- needs authenticated access, add minimal grants here.
 REVOKE ALL ON seller_main.stripe_configurations FROM anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON seller_main.stripe_configurations TO authenticated;
+
+-- ===== ATOMIC COUPON USAGE INCREMENT =====
+-- Used by 100% coupon flow (create-payment-intent) to prevent race conditions
+-- where concurrent requests could both read the same usage count and exceed the limit.
+CREATE OR REPLACE FUNCTION seller_main.increment_coupon_usage(coupon_id_param uuid)
+RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  UPDATE seller_main.coupons
+  SET current_usage_count = COALESCE(current_usage_count, 0) + 1
+  WHERE id = coupon_id_param;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION seller_main.increment_coupon_usage FROM anon, authenticated, PUBLIC;
+GRANT EXECUTE ON FUNCTION seller_main.increment_coupon_usage TO service_role;

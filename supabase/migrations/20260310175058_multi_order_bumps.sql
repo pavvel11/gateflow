@@ -98,6 +98,7 @@ CREATE TABLE IF NOT EXISTS seller_main.payment_line_items (
 CREATE INDEX idx_payment_line_items_transaction ON seller_main.payment_line_items(transaction_id);
 CREATE INDEX idx_payment_line_items_product ON seller_main.payment_line_items(product_id);
 CREATE INDEX idx_payment_line_items_type ON seller_main.payment_line_items(item_type);
+CREATE INDEX idx_payment_line_items_order_bump ON seller_main.payment_line_items(order_bump_id) WHERE order_bump_id IS NOT NULL;
 
 -- RLS: Same pattern as payment_transactions
 ALTER TABLE seller_main.payment_line_items ENABLE ROW LEVEL SECURITY;

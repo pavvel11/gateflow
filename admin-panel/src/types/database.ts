@@ -2177,12 +2177,52 @@ export type Database = {
       }
     }
     Functions: {
+      admin_delete_oto_offer: {
+        Args: { source_product_id_param: string }
+        Returns: Json
+      }
+      admin_get_product_order_bumps: {
+        Args: { product_id_param: string }
+        Returns: {
+          access_duration_days: number
+          bump_description: string
+          bump_id: string
+          bump_price: number
+          bump_product_id: string
+          bump_product_name: string
+          bump_title: string
+          created_at: string
+          display_order: number
+          is_active: boolean
+          updated_at: string
+          urgency_duration_minutes: number
+        }[]
+      }
+      admin_get_product_oto_offer: {
+        Args: { product_id_param: string }
+        Returns: Json
+      }
+      admin_save_oto_offer: {
+        Args: {
+          discount_type_param: string
+          discount_value_param: number
+          duration_minutes_param?: number
+          is_active_param?: boolean
+          oto_product_id_param: string
+          source_product_id_param: string
+        }
+        Returns: Json
+      }
       apply_migration: {
         Args: {
           content_checksum: string
           migration_sql: string
           migration_version: string
         }
+        Returns: Json
+      }
+      batch_check_user_product_access: {
+        Args: { product_slugs_param: string[] }
         Returns: Json
       }
       check_application_rate_limit: {
@@ -2202,9 +2242,27 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_refund_eligibility: {
+        Args: { transaction_id_param: string }
+        Returns: Json
+      }
+      check_user_product_access: {
+        Args: { product_slug_param: string }
+        Returns: boolean
+      }
+      check_waitlist_config: { Args: never; Returns: Json }
+      claim_guest_purchases_for_user: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       cleanup_application_rate_limits: { Args: never; Returns: number }
       cleanup_audit_logs: { Args: { retention_days?: number }; Returns: number }
+      cleanup_expired_oto_coupons: { Args: never; Returns: number }
       cleanup_old_admin_actions: {
+        Args: { retention_days?: number }
+        Returns: number
+      }
+      cleanup_old_guest_purchases: {
         Args: { retention_days?: number }
         Returns: number
       }
@@ -2222,9 +2280,66 @@ export type Database = {
         }
         Returns: number
       }
+      create_refund_request: {
+        Args: { reason_param?: string; transaction_id_param: string }
+        Returns: Json
+      }
       deprovision_seller_schema: {
         Args: { p_hard_delete?: boolean; p_seller_id: string }
         Returns: boolean
+      }
+      find_auto_apply_coupon: {
+        Args: { customer_email_param: string; product_id_param: string }
+        Returns: Json
+      }
+      generate_oto_coupon: {
+        Args: {
+          customer_email_param: string
+          source_product_id_param: string
+          transaction_id_param?: string
+        }
+        Returns: Json
+      }
+      get_abandoned_cart_stats: { Args: { days_ago?: number }; Returns: Json }
+      get_abandoned_carts: {
+        Args: { days_ago?: number; limit_count?: number }
+        Returns: {
+          abandoned_at: string
+          amount: number
+          created_at: string
+          currency: string
+          customer_email: string
+          expires_at: string
+          id: string
+          metadata: Json
+          product_id: string
+          product_name: string
+        }[]
+      }
+      get_admin_refund_requests: {
+        Args: {
+          limit_param?: number
+          offset_param?: number
+          status_filter?: string
+        }
+        Returns: {
+          admin_id: string
+          admin_response: string
+          created_at: string
+          currency: string
+          customer_email: string
+          processed_at: string
+          product_id: string
+          product_name: string
+          purchase_date: string
+          reason: string
+          request_id: string
+          requested_amount: number
+          status: string
+          stripe_payment_intent_id: string
+          transaction_id: string
+          user_id: string
+        }[]
       }
       get_cleanup_job_status: {
         Args: never
@@ -2234,6 +2349,19 @@ export type Database = {
           jobname: string
           last_run: string
           schedule: string
+        }[]
+      }
+      get_dashboard_stats: { Args: never; Returns: Json }
+      get_detailed_revenue_stats: {
+        Args: { p_goal_start_date?: string; p_product_id?: string }
+        Returns: Json
+      }
+      get_hourly_revenue_stats: {
+        Args: { p_product_id?: string; p_target_date?: string }
+        Returns: {
+          amount_by_currency: Json
+          hour: number
+          orders: number
         }[]
       }
       get_insert_stmt_ddl: {
@@ -2247,8 +2375,166 @@ export type Database = {
         Returns: string
       }
       get_migration_status: { Args: never; Returns: Json }
+      get_oto_coupon_info: {
+        Args: { coupon_code_param: string; email_param: string }
+        Returns: Json
+      }
+      get_payment_statistics: {
+        Args: { end_date?: string; start_date?: string }
+        Returns: Json
+      }
+      get_product_order_bumps: {
+        Args: { product_id_param: string }
+        Returns: {
+          bump_access_duration: number
+          bump_currency: string
+          bump_description: string
+          bump_id: string
+          bump_price: number
+          bump_product_description: string
+          bump_product_icon: string
+          bump_product_id: string
+          bump_product_name: string
+          bump_title: string
+          display_order: number
+          original_price: number
+          urgency_duration_minutes: number
+        }[]
+      }
+      get_public_integrations_config: { Args: never; Returns: Json }
+      get_revenue_goal: {
+        Args: { p_product_id?: string }
+        Returns: {
+          goal_amount: number
+          start_date: string
+        }[]
+      }
+      get_sales_chart_data: {
+        Args: {
+          p_end_date: string
+          p_product_id?: string
+          p_start_date: string
+        }
+        Returns: {
+          amount_by_currency: Json
+          date: string
+          orders: number
+        }[]
+      }
+      get_user_payment_history: {
+        Args: { user_id_param: string }
+        Returns: {
+          amount: number
+          currency: string
+          payment_date: string
+          product_name: string
+          product_slug: string
+          refunded_amount: number
+          status: string
+          transaction_id: string
+        }[]
+      }
+      get_user_profile: { Args: { user_id_param: string }; Returns: Json }
+      get_user_purchases_with_refund_status: {
+        Args: { user_id_param?: string }
+        Returns: {
+          amount: number
+          currency: string
+          days_since_purchase: number
+          is_refundable: boolean
+          product_icon: string
+          product_id: string
+          product_name: string
+          product_slug: string
+          purchase_date: string
+          refund_eligible: boolean
+          refund_period_days: number
+          refund_request_id: string
+          refund_request_status: string
+          refunded_amount: number
+          status: string
+          transaction_id: string
+        }[]
+      }
+      get_variant_group: {
+        Args: { p_group_id: string }
+        Returns: {
+          allow_custom_price: boolean
+          currency: string
+          custom_price_min: number
+          description: string
+          display_order: number
+          icon: string
+          id: string
+          image_url: string
+          is_active: boolean
+          is_featured: boolean
+          name: string
+          price: number
+          slug: string
+          variant_name: string
+        }[]
+      }
+      get_variant_group_by_slug: {
+        Args: { p_slug: string }
+        Returns: {
+          allow_custom_price: boolean
+          currency: string
+          custom_price_min: number
+          description: string
+          display_order: number
+          icon: string
+          id: string
+          image_url: string
+          is_active: boolean
+          is_featured: boolean
+          name: string
+          price: number
+          slug: string
+          variant_name: string
+        }[]
+      }
+      grant_free_product_access: {
+        Args: {
+          access_duration_days_param?: number
+          product_slug_param: string
+        }
+        Returns: boolean
+      }
+      grant_product_access_service_role: {
+        Args: {
+          max_retries?: number
+          product_id_param: string
+          user_id_param: string
+        }
+        Returns: Json
+      }
+      grant_pwyw_free_access: {
+        Args: {
+          access_duration_days_param?: number
+          product_slug_param: string
+        }
+        Returns: boolean
+      }
+      increment_coupon_usage: {
+        Args: { coupon_id_param: string }
+        Returns: undefined
+      }
+      increment_sale_quantity_sold: {
+        Args: { p_product_id: string }
+        Returns: boolean
+      }
       is_admin: { Args: { user_id_param?: string }; Returns: boolean }
       is_admin_cached: { Args: never; Returns: boolean }
+      is_sale_price_active: {
+        Args: {
+          p_sale_price: number
+          p_sale_price_until: string
+          p_sale_quantity_limit: number
+          p_sale_quantity_sold: number
+        }
+        Returns: boolean
+      }
       log_admin_action: {
         Args: {
           action_details?: Json
@@ -2272,6 +2558,11 @@ export type Database = {
         Args: { new_action_details?: Json }
         Returns: undefined
       }
+      mark_expired_pending_payments: { Args: never; Returns: number }
+      migrate_guest_payment_data_to_profile: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       pg_get_coldef: {
         Args: {
           in_column: string
@@ -2290,6 +2581,40 @@ export type Database = {
         }
         Returns: string
       }
+      process_refund_request: {
+        Args: {
+          action_param: string
+          admin_response_param?: string
+          request_id_param: string
+        }
+        Returns: Json
+      }
+      process_stripe_payment_completion: {
+        Args: {
+          amount_total: number
+          currency_param: string
+          customer_email_param: string
+          product_id_param: string
+          session_id_param: string
+          stripe_payment_intent_id?: string
+          user_id_param?: string
+        }
+        Returns: Json
+      }
+      process_stripe_payment_completion_with_bump: {
+        Args: {
+          amount_total: number
+          bump_product_ids_param?: string[]
+          coupon_id_param?: string
+          currency_param: string
+          customer_email_param: string
+          product_id_param: string
+          session_id_param: string
+          stripe_payment_intent_id?: string
+          user_id_param?: string
+        }
+        Returns: Json
+      }
       provision_seller_schema: {
         Args: {
           p_display_name: string
@@ -2302,7 +2627,29 @@ export type Database = {
         Args: { alert_details: Json; alert_type: string }
         Returns: undefined
       }
+      set_revenue_goal: {
+        Args: {
+          p_goal_amount: number
+          p_product_id?: string
+          p_start_date: string
+        }
+        Returns: undefined
+      }
+      update_video_progress: {
+        Args: {
+          completed_param?: boolean
+          duration_param?: number
+          position_param: number
+          product_id_param: string
+          video_id_param: string
+        }
+        Returns: Json
+      }
       validate_email_format: { Args: { email_param: string }; Returns: boolean }
+      validate_payment_transaction: {
+        Args: { transaction_id: string }
+        Returns: boolean
+      }
       verify_api_key: {
         Args: { p_key_hash: string }
         Returns: {
@@ -2313,6 +2660,15 @@ export type Database = {
           rejection_reason: string
           scopes: Json
         }[]
+      }
+      verify_coupon: {
+        Args: {
+          code_param: string
+          currency_param?: string
+          customer_email_param?: string
+          product_id_param: string
+        }
+        Returns: Json
       }
     }
     Enums: {
@@ -4311,6 +4667,10 @@ export type Database = {
           product_slug_param: string
         }
         Returns: boolean
+      }
+      increment_coupon_usage: {
+        Args: { coupon_id_param: string }
+        Returns: undefined
       }
       increment_sale_quantity_sold: {
         Args: { p_product_id: string }

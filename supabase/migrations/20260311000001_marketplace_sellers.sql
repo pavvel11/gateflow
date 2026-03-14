@@ -171,8 +171,10 @@ BEGIN
   -- Sequences: authenticated + service_role need usage for inserts
   EXECUTE format('GRANT USAGE ON ALL SEQUENCES IN SCHEMA %I TO authenticated, service_role', v_schema_name);
 
-  -- Functions: all roles can execute (individual function permissions handle auth)
-  EXECUTE format('GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA %I TO anon, authenticated, service_role', v_schema_name);
+  -- Functions: only service_role gets blanket execute.
+  -- Individual public RPC functions are granted to anon/authenticated explicitly below.
+  -- This mirrors the seller_main pattern fixed in core_schema + restrict_rpc_function_access.
+  EXECUTE format('GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA %I TO service_role', v_schema_name);
 
   -- Public catalog tables: anon gets SELECT (storefront browsing).
   -- authenticated gets SELECT + mutation grants for admin CRUD (RLS is the real guard).
@@ -210,7 +212,8 @@ BEGIN
   -- Default privileges for future objects: only service_role gets automatic grants
   EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA %I GRANT ALL ON TABLES TO service_role', v_schema_name);
   EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA %I GRANT USAGE ON SEQUENCES TO authenticated, service_role', v_schema_name);
-  EXECUTE format('GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA %I TO anon, authenticated, service_role', v_schema_name);
+  -- Note: no blanket EXECUTE grant for functions — service_role covered above, anon/authenticated
+  -- must be granted per-function explicitly (same pattern as seller_main in restrict_rpc_function_access)
 
   -- ==========================================
   -- 6. Insert seller record

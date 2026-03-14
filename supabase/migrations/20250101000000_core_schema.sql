@@ -1349,7 +1349,7 @@ GRANT USAGE ON SCHEMA seller_main TO anon, authenticated, service_role;
 -- (if RLS is accidentally disabled, damage is limited).
 GRANT ALL ON ALL TABLES IN SCHEMA seller_main TO service_role;
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA seller_main TO authenticated, service_role;
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA seller_main TO anon, authenticated, service_role;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA seller_main TO service_role;
 
 -- Public catalog tables: anon gets SELECT (storefront browsing).
 -- authenticated gets SELECT + mutation grants needed by admin CRUD routes
@@ -1371,7 +1371,7 @@ GRANT SELECT, DELETE ON seller_main.user_product_access TO authenticated;
 -- New tables for anon/authenticated MUST be granted explicitly (see Security Rule #5).
 ALTER DEFAULT PRIVILEGES IN SCHEMA seller_main GRANT ALL ON TABLES TO service_role;
 ALTER DEFAULT PRIVILEGES IN SCHEMA seller_main GRANT USAGE ON SEQUENCES TO authenticated, service_role;
-ALTER DEFAULT PRIVILEGES IN SCHEMA seller_main GRANT EXECUTE ON FUNCTIONS TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA seller_main GRANT EXECUTE ON FUNCTIONS TO service_role;
 
 --
 -- PROXY VIEWS: public -> seller_main (backward compatibility for standalone mode)

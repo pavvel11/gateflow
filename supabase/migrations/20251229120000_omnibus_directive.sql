@@ -208,7 +208,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql
+$$ LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = '';
 
 COMMENT ON FUNCTION seller_main.cleanup_old_price_history() IS

@@ -1781,7 +1781,7 @@ BEGIN
         -- User can validate their own transactions
         user_id = current_user_id OR
         -- Admins can validate any transaction
-        EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = current_user_id) OR
+        (select public.is_admin()) OR
         -- Service role can validate any transaction
         (select auth.role()) = 'service_role'
       );
@@ -2303,7 +2303,7 @@ BEGIN
     current_admin_id := auth.uid();
 
     -- Check admin permission
-    IF NOT EXISTS (SELECT 1 FROM public.admin_users WHERE user_id = current_admin_id) THEN
+    IF NOT (select public.is_admin()) THEN
         RETURN jsonb_build_object('success', false, 'error', 'Admin privileges required');
     END IF;
 
