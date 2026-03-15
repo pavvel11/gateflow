@@ -6,6 +6,7 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { execSync } from 'child_process';
 import { setAuthSession, supabaseAdmin } from './helpers/admin-auth';
 
 // Test seller definitions — must not collide with real data
@@ -113,16 +114,19 @@ test.describe('Marketplace Provisioning Smoke', () => {
   });
 
   test('each provisioned schema has all 30 tables cloned from seller_main', async () => {
+    // PostgREST doesn't expose dynamically-created schemas, so we query
+    // information_schema directly via psql to verify clone_schema worked.
+    const refCount = execSync(
+      `docker exec supabase_db_sellf psql -U postgres -tA -c "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'seller_main' AND table_type = 'BASE TABLE';"`,
+    ).toString().trim();
+
     for (const dbSlug of DB_SLUGS) {
       const schemaName = `seller_${dbSlug}`;
+      const tableCount = execSync(
+        `docker exec supabase_db_sellf psql -U postgres -tA -c "SELECT count(*) FROM information_schema.tables WHERE table_schema = '${schemaName}' AND table_type = 'BASE TABLE';"`,
+      ).toString().trim();
 
-      const { data: seller } = await supabaseAdmin
-        .from('sellers')
-        .select('schema_name')
-        .eq('slug', dbSlug)
-        .single();
-
-      expect(seller?.schema_name).toBe(schemaName);
+      expect(tableCount, `${schemaName} should have ${refCount} tables (same as seller_main)`).toBe(refCount);
     }
   });
 
@@ -147,14 +151,12 @@ test.describe('Marketplace Provisioning Smoke', () => {
   for (const seller of TEST_SELLERS) {
     test(`/s/${seller.slug} resolves to seller storefront (not 404)`, async ({ page }) => {
       await setAuthSession(page, adminEmail, adminPassword);
-      await page.goto(`/en/s/${seller.slug}`, { waitUntil: 'domcontentloaded' });
-      await page.waitForTimeout(2000);
+      await page.goto(`/en/s/${seller.slug}`, { waitUntil: 'networkidle' });
+
+      await expect(page.locator('body')).not.toHaveText(/this page could not be found/i, { timeout: 5000 });
 
       const url = page.url();
-      await page.screenshot({ path: `/tmp/seller-route-${seller.slug}.png`, fullPage: true });
-
       expect(url).not.toContain('not-found');
-      await expect(page.getByText('this page could not be found', { exact: false })).not.toBeVisible();
 
       const bodyText = await page.locator('body').innerText();
       const hasSellerContent =
