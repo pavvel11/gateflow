@@ -73,12 +73,12 @@ test.describe('Marketplace Provisioning Smoke', () => {
   });
 
   test.afterAll(async () => {
-    // ── Hard-delete provisioned test sellers ──────────────────────────────
+    // Safety net — deprovision anything the deprovision test didn't clean up
     for (const id of provisionedIds) {
       await supabaseAdmin.rpc('deprovision_seller_schema', {
         p_seller_id: id,
         p_hard_delete: true,
-      });
+      }).catch(() => {}); // ignore errors (already deleted or doesn't exist)
     }
     await cleanupAdmin?.();
   });
@@ -167,4 +167,39 @@ test.describe('Marketplace Provisioning Smoke', () => {
       expect(hasSellerContent, `Expected seller content at /s/${seller.slug}`).toBe(true);
     });
   }
+
+  // ===== DEPROVISION VERIFICATION =====
+  // Must run last — validates that hard-delete removes schemas, seller rows,
+  // and leaves no orphaned data (RODO compliance).
+
+  test('hard-delete deprovision removes schemas and seller records completely', async () => {
+    for (const id of provisionedIds) {
+      const { error } = await supabaseAdmin.rpc('deprovision_seller_schema', {
+        p_seller_id: id,
+        p_hard_delete: true,
+      });
+      expect(error, `deprovision_seller_schema(${id}) should succeed`).toBeNull();
+    }
+
+    // Verify seller rows are gone
+    const { data: remaining } = await supabaseAdmin
+      .from('sellers')
+      .select('slug')
+      .in('slug', DB_SLUGS);
+
+    expect(remaining, 'No test seller records should remain after hard-delete').toEqual([]);
+
+    // Verify schemas are dropped from PostgreSQL
+    for (const dbSlug of DB_SLUGS) {
+      const schemaName = `seller_${dbSlug}`;
+      const exists = execSync(
+        `docker exec supabase_db_sellf psql -U postgres -tA -c "SELECT EXISTS(SELECT 1 FROM pg_namespace WHERE nspname = '${schemaName}');"`,
+      ).toString().trim();
+
+      expect(exists, `Schema ${schemaName} should not exist after hard-delete`).toBe('f');
+    }
+
+    // Clear IDs so afterAll safety net doesn't try to delete again
+    provisionedIds = [];
+  });
 });
