@@ -10,6 +10,15 @@ import { isValidSellerSchema } from '@/lib/marketplace/tenant'
  */
 export type SellerDataClient = SupabaseClient<Database, 'seller_main'>
 
+// Module-level env vars — read once, reused by all client factories
+function getSupabaseEnv() {
+  const url = process.env.SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url) throw new Error('SUPABASE_URL is not defined')
+  if (!key) throw new Error('SUPABASE_SERVICE_ROLE_KEY is not defined')
+  return { url, key }
+}
+
 /**
  * Creates a Supabase client with the Service Role key targeting seller_main schema.
  * CRITICAL: This client bypasses RLS. ONLY use in secure server-side environments (API routes, server actions)
@@ -20,20 +29,11 @@ export type SellerDataClient = SupabaseClient<Database, 'seller_main'>
  * use `createPlatformClient()` instead.
  */
 export function createAdminClient() {
-  const supabaseUrl = process.env.SUPABASE_URL!
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-
-  if (!supabaseUrl) {
-    throw new Error('SUPABASE_URL is not defined. Admin client cannot be created.')
-  }
-
-  if (!serviceRoleKey) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not defined. Admin client cannot be created.')
-  }
+  const { url, key } = getSupabaseEnv()
 
   return createSupabaseClient<Database, 'seller_main'>(
-    supabaseUrl,
-    serviceRoleKey,
+    url,
+    key,
     {
       db: {
         schema: 'seller_main',
@@ -76,12 +76,8 @@ export async function createSchemaAwareAdminClient(knownSellerSchema?: string): 
     if (!isValidSellerSchema(knownSellerSchema)) {
       throw new Error(`createSchemaAwareAdminClient: Invalid seller schema: ${knownSellerSchema}`)
     }
-    const supabaseUrl = process.env.SUPABASE_URL!
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-    if (!supabaseUrl || !serviceRoleKey) {
-      throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
-    }
-    return createSupabaseClient(supabaseUrl, serviceRoleKey, {
+    const { url, key } = getSupabaseEnv()
+    return createSupabaseClient(url, key, {
       db: { schema: knownSellerSchema },
       auth: { persistSession: false, autoRefreshToken: false },
     })
@@ -107,12 +103,8 @@ export async function createSchemaAwareAdminClient(knownSellerSchema?: string): 
     .maybeSingle()
 
   if (seller?.schema_name && isValidSellerSchema(seller.schema_name)) {
-    const supabaseUrl = process.env.SUPABASE_URL!
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-    if (!supabaseUrl || !serviceRoleKey) {
-      throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
-    }
-    return createSupabaseClient(supabaseUrl, serviceRoleKey, {
+    const { url, key } = getSupabaseEnv()
+    return createSupabaseClient(url, key, {
       db: { schema: seller.schema_name },
       auth: { persistSession: false, autoRefreshToken: false },
     })
@@ -137,12 +129,8 @@ export function createDataClientFromAuth(sellerSchema?: string): any {
     if (!isValidSellerSchema(sellerSchema)) {
       throw new Error(`createDataClientFromAuth: Invalid seller schema: ${sellerSchema}`)
     }
-    const supabaseUrl = process.env.SUPABASE_URL!
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-    if (!supabaseUrl || !serviceRoleKey) {
-      throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
-    }
-    return createSupabaseClient(supabaseUrl, serviceRoleKey, {
+    const { url, key } = getSupabaseEnv()
+    return createSupabaseClient(url, key, {
       db: { schema: sellerSchema },
       auth: { persistSession: false, autoRefreshToken: false },
     })
@@ -158,20 +146,11 @@ export function createDataClientFromAuth(sellerSchema?: string): any {
  * check_application_rate_limit, is_admin, etc.
  */
 export function createPlatformClient() {
-  const supabaseUrl = process.env.SUPABASE_URL!
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-
-  if (!supabaseUrl) {
-    throw new Error('SUPABASE_URL is not defined. Platform client cannot be created.')
-  }
-
-  if (!serviceRoleKey) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not defined. Platform client cannot be created.')
-  }
+  const { url, key } = getSupabaseEnv()
 
   return createSupabaseClient<Database, 'public'>(
-    supabaseUrl,
-    serviceRoleKey,
+    url,
+    key,
     {
       db: {
         schema: 'public',

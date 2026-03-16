@@ -240,7 +240,8 @@ async function authenticateViaSession(request: NextRequest): Promise<SessionAuth
 
     // Neither admin nor seller
     return null;
-  } catch {
+  } catch (error) {
+    console.error('[authenticateViaSession] Unexpected error:', error instanceof Error ? error.message : error);
     return null;
   }
 }

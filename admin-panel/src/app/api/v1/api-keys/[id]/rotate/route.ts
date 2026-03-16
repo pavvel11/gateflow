@@ -23,7 +23,7 @@ import {
 import { createClient } from '@/lib/supabase/server';
 import { createPlatformClient } from '@/lib/supabase/admin';
 import { requireAdminOrSellerApi } from '@/lib/auth-server';
-import type { AdminRole } from '@/lib/auth-server';
+import { resolveApiKeyOwner } from '@/lib/api/owner-resolution';
 import { validateUUID } from '@/lib/validations/product';
 
 interface RouteParams {
@@ -32,34 +32,6 @@ interface RouteParams {
 
 export async function OPTIONS(request: NextRequest) {
   return handleCorsPreFlight(request);
-}
-
-/**
- * Resolve the owner identity based on the caller's role.
- */
-async function resolveOwner(
-  supabase: ReturnType<typeof createPlatformClient>,
-  userId: string,
-  role: AdminRole,
-): Promise<{ role: AdminRole; sellerId?: string; adminId?: string } | null> {
-  if (role === 'seller_admin') {
-    const platform = createPlatformClient();
-    const { data } = await platform
-      .from('sellers')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('status', 'active')
-      .single();
-    return data ? { role, sellerId: data.id } : null;
-  }
-
-  // Platform admin
-  const { data: admin } = await supabase
-    .from('admin_users')
-    .select('id')
-    .eq('user_id', userId)
-    .single();
-  return admin ? { role, adminId: admin.id } : null;
 }
 
 /**
@@ -83,7 +55,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return apiError(request, 'INVALID_INPUT', 'Invalid key ID format');
     }
 
-    const owner = await resolveOwner(supabase, user.id, role);
+    const owner = await resolveApiKeyOwner(user.id, role);
     if (!owner) {
       return apiError(request, 'FORBIDDEN', 'Account not found');
     }
