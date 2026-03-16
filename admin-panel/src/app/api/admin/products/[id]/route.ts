@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createSchemaAwareAdminClient } from '@/lib/supabase/admin';
+import { createDataClientFromAuth } from '@/lib/supabase/admin';
+
 import { requireAdminOrSellerApi } from '@/lib/auth-server';
 import {
   validateProductId,
@@ -74,7 +75,7 @@ export async function GET(
       const status = errorMessage === 'Forbidden' ? 403 : 401;
       return NextResponse.json({ error: errorMessage }, { status, headers: corsHeaders });
     }
-    const dataClient = await createSchemaAwareAdminClient(authResult.sellerSchema);
+    const dataClient = await createDataClientFromAuth(authResult.sellerSchema);
 
     // Validate product ID
     const idValidation = validateProductId(id);
@@ -128,7 +129,7 @@ export async function PUT(
       const status = errorMessage === 'Forbidden' ? 403 : 401;
       return NextResponse.json({ error: errorMessage }, { status, headers: corsHeaders });
     }
-    const dataClient = await createSchemaAwareAdminClient(authResult.sellerSchema);
+    const dataClient = await createDataClientFromAuth(authResult.sellerSchema);
 
     // Validate product ID
     const idValidation = validateProductId(id);
@@ -249,7 +250,7 @@ export async function DELETE(
       const status = errorMessage === 'Forbidden' ? 403 : 401;
       return NextResponse.json({ error: errorMessage }, { status, headers: corsHeaders });
     }
-    const dataClient = await createSchemaAwareAdminClient(authResult.sellerSchema);
+    const dataClient = await createDataClientFromAuth(authResult.sellerSchema);
 
     // Validate product ID
     const idValidation = validateProductId(id);

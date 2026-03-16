@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createSchemaAwareAdminClient } from '@/lib/supabase/admin';
+import { createDataClientFromAuth } from '@/lib/supabase/admin';
+
 import { requireAdminOrSellerApi } from '@/lib/auth-server';
 
 interface RouteContext {
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       const status = errorMessage === 'Forbidden' ? 403 : 401;
       return NextResponse.json({ error: errorMessage }, { status });
     }
-    const dataClient = await createSchemaAwareAdminClient(authResult.sellerSchema);
+    const dataClient = await createDataClientFromAuth(authResult.sellerSchema);
 
     // Fetch OTO configuration via RPC
     const { data, error } = await (dataClient as any).rpc('admin_get_product_oto_offer', {
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       const status = errorMessage === 'Forbidden' ? 403 : 401;
       return NextResponse.json({ error: errorMessage }, { status });
     }
-    const dataClient = await createSchemaAwareAdminClient(authResult.sellerSchema);
+    const dataClient = await createDataClientFromAuth(authResult.sellerSchema);
 
     if (oto_enabled && oto_product_id) {
       // Save OTO configuration

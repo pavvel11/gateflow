@@ -70,10 +70,14 @@ export default function MyPurchasesPage() {
             purchase_date: p.transaction_date || p.access_granted_at,
             status: p.transaction_status || 'completed',
             refunded_amount: p.refunded_amount || 0,
-            is_refundable: false,
-            refund_period_days: null,
-            days_since_purchase: 0,
-            refund_eligible: false,
+            is_refundable: p.is_refundable ?? false,
+            refund_period_days: p.refund_period_days ?? null,
+            days_since_purchase: p.transaction_date
+              ? Math.floor((Date.now() - new Date(p.transaction_date).getTime()) / (1000 * 60 * 60 * 24))
+              : 0,
+            refund_eligible: (p.is_refundable && p.refund_period_days && p.transaction_date)
+              ? Math.floor((Date.now() - new Date(p.transaction_date).getTime()) / (1000 * 60 * 60 * 24)) <= p.refund_period_days
+              : false,
             refund_request_status: p.refund_request_status,
             refund_request_id: null,
             seller_slug: p.seller_slug,

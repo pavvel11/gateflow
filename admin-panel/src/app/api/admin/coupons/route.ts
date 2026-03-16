@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createSchemaAwareAdminClient } from '@/lib/supabase/admin';
+import { createDataClientFromAuth } from '@/lib/supabase/admin';
+
 import { requireAdminOrSellerApi, requireAdminOrSellerApiWithRequest } from '@/lib/auth-server';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limiting';
 
@@ -10,7 +11,7 @@ export async function GET() {
     const authResult = await requireAdminOrSellerApi(supabase);
 
     // SECURITY: Use schema-aware admin client for data query (not cookie-based client)
-    const dataClient = await createSchemaAwareAdminClient(authResult.sellerSchema);
+    const dataClient = await createDataClientFromAuth(authResult.sellerSchema);
     const { data, error } = await dataClient
       .from('coupons')
       .select('*')
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
     const { user, sellerSchema } = await requireAdminOrSellerApiWithRequest(request);
 
     // Use admin client for seller_main operations (coupons table)
-    const supabase = await createSchemaAwareAdminClient(sellerSchema);
+    const supabase = await createDataClientFromAuth(sellerSchema);
 
     // SECURITY: Rate limit coupon creation
     const rateLimitOk = await checkRateLimit(

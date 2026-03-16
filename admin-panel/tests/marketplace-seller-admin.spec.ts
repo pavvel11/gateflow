@@ -579,9 +579,26 @@ test.describe('Seller Admin: OTO Offers', () => {
   });
 
   test('created OTO exists in seller schema', async ({ page }) => {
-    if (createdOtoProductIds.length === 0) return;
-
     await loginAsSeller(page, sellerEmail, sellerPassword);
+
+    // Ensure OTO exists (re-create if previous test didn't run)
+    if (createdOtoProductIds.length === 0) {
+      const createRes = await page.request.put(`/api/v1/products/${sourceProductId}/oto`, {
+        data: {
+          oto_product_id: otoTargetProductId,
+          discount_type: 'percentage',
+          discount_value: 15,
+          duration_minutes: 30,
+        },
+      });
+      if (createRes.status() === 200 || createRes.status() === 409) {
+        // 200 = created, 409 = already exists (from previous test in batch)
+        createdOtoProductIds.push(sourceProductId);
+      } else {
+        test.skip();
+        return;
+      }
+    }
 
     // Verify via GET endpoint
     const response = await page.request.get(`/api/v1/products/${sourceProductId}/oto`);
@@ -597,7 +614,7 @@ test.describe('Seller Admin: OTO Offers', () => {
       .select('id, source_product_id, oto_product_id, discount_value, is_active')
       .eq('source_product_id', sourceProductId)
       .eq('is_active', true)
-      .single();
+      .maybeSingle();
 
     expect(otoOffer).not.toBeNull();
     expect(otoOffer!.oto_product_id).toBe(otoTargetProductId);

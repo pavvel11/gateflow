@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createSchemaAwareAdminClient } from '@/lib/supabase/admin';
+import { createDataClientFromAuth } from '@/lib/supabase/admin';
+
 import { requireAdminOrSellerApi } from '@/lib/auth-server';
 
 /**
@@ -49,7 +50,7 @@ export async function GET() {
     const authResult = await requireAdminOrSellerApi(supabase);
 
     // Use admin client (seller_main schema) for FK embedding support
-    const adminClient = await createSchemaAwareAdminClient(authResult.sellerSchema);
+    const adminClient = await createDataClientFromAuth(authResult.sellerSchema);
 
     // Get all variant groups
     const { data: groups, error: groupsError } = await adminClient
@@ -139,7 +140,7 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const authResult = await requireAdminOrSellerApi(supabase);
-    const dataClient: any = await createSchemaAwareAdminClient(authResult.sellerSchema);
+    const dataClient: any = await createDataClientFromAuth(authResult.sellerSchema);
 
     const body = await request.json();
     const { name, slug, products } = body as {
@@ -242,7 +243,7 @@ export async function PATCH(request: NextRequest) {
   try {
     const supabase = await createClient();
     const authResult = await requireAdminOrSellerApi(supabase);
-    const dataClient: any = await createSchemaAwareAdminClient(authResult.sellerSchema);
+    const dataClient: any = await createDataClientFromAuth(authResult.sellerSchema);
 
     const { searchParams } = new URL(request.url);
     const groupId = searchParams.get('groupId');
@@ -359,7 +360,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const supabase = await createClient();
     const authResult = await requireAdminOrSellerApi(supabase);
-    const dataClient: any = await createSchemaAwareAdminClient(authResult.sellerSchema);
+    const dataClient: any = await createDataClientFromAuth(authResult.sellerSchema);
 
     const { searchParams } = new URL(request.url);
     const groupId = searchParams.get('groupId');

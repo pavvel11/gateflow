@@ -294,22 +294,25 @@ test.describe('Omnibus Frontend - Admin Side', () => {
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Navigate to step 3 (Sales & Settings) where Advanced Settings lives
-    await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
-    // Wait for step 2 to render before clicking next again
-    await expect(modal.getByRole('button', { name: /Dalej|Continue Setup/i })).toBeVisible({ timeout: 5000 });
-    await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
-    // Wait for step 3 content to render
-    await expect(modal.locator('button', { hasText: /Advanced Settings|Ustawienia zaawansowane/i })).toBeVisible({ timeout: 5000 });
+    // Use toPass to handle React re-renders swallowing clicks during wizard transitions
+    const advSettingsBtn = modal.locator('button', { hasText: /Advanced Settings|Ustawienia zaawansowane/i });
+    await expect(async () => {
+      // Click through step 1 → 2 → 3 if needed
+      const nextBtn = modal.getByRole('button', { name: /Dalej|Continue Setup/i });
+      if (await nextBtn.isVisible().catch(() => false)) {
+        await nextBtn.click();
+      }
+      await expect(advSettingsBtn).toBeVisible({ timeout: 2000 });
+    }).toPass({ timeout: 15000 });
 
     // Expand Advanced Settings section (omnibus_exempt is inside)
-    const advancedSettingsButton = modal.locator('button', { hasText: /Advanced Settings|Ustawienia zaawansowane/i });
-    await advancedSettingsButton.scrollIntoViewIfNeeded();
-    await advancedSettingsButton.click();
+    await advSettingsBtn.scrollIntoViewIfNeeded();
+    await advSettingsBtn.click();
 
     // Find omnibus_exempt checkbox
     const omnibusCheckbox = modal.locator('input[name="omnibus_exempt"]');
+    await expect(omnibusCheckbox).toBeVisible({ timeout: 5000 });
     await omnibusCheckbox.scrollIntoViewIfNeeded();
-    await expect(omnibusCheckbox).toBeVisible();
 
     // Initially should be unchecked (false)
     await expect(omnibusCheckbox).not.toBeChecked();
@@ -339,12 +342,15 @@ test.describe('Omnibus Frontend - Admin Side', () => {
     await row.locator('button[title*="Edit"], button[title*="Edytuj"]').first().click();
     await expect(modal).toBeVisible({ timeout: 5000 });
 
-    // Navigate to step 3 again
-    await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
-    await expect(modal.getByRole('button', { name: /Dalej|Continue Setup/i })).toBeVisible({ timeout: 5000 });
-    await page.getByRole('button', { name: /Dalej|Continue Setup/i }).click();
-    // Wait for step 3 to fully render before interacting with it
-    await expect(modal.locator('button', { hasText: /Advanced Settings|Ustawienia zaawansowane/i })).toBeVisible({ timeout: 5000 });
+    // Navigate to step 3 again — retry to handle re-renders
+    const advSettingsBtn2 = modal.locator('button', { hasText: /Advanced Settings|Ustawienia zaawansowane/i });
+    await expect(async () => {
+      const nextBtn = modal.getByRole('button', { name: /Dalej|Continue Setup/i });
+      if (await nextBtn.isVisible().catch(() => false)) {
+        await nextBtn.click();
+      }
+      await expect(advSettingsBtn2).toBeVisible({ timeout: 2000 });
+    }).toPass({ timeout: 15000 });
 
     // Advanced Settings may already be expanded (defaultExpanded=true when omnibus_exempt=true)
     const omnibusCheckbox2 = modal.locator('input[name="omnibus_exempt"]');

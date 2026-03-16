@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createSchemaAwareAdminClient } from '@/lib/supabase/admin';
+import { createDataClientFromAuth } from '@/lib/supabase/admin';
+
 import { getStripeServer } from '@/lib/stripe/server';
 import { revokeTransactionAccess } from '@/lib/services/access-revocation';
 import { requireAdminOrSellerApi } from '@/lib/auth-server';
@@ -21,7 +22,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     const supabase = await createClient();
     const { user, sellerSchema } = await requireAdminOrSellerApi(supabase);
-    const dataClient = await createSchemaAwareAdminClient(sellerSchema);
+    const dataClient = await createDataClientFromAuth(sellerSchema);
 
     const body = await request.json();
     const { action, admin_response } = body;

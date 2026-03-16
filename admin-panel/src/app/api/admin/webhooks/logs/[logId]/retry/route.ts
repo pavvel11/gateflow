@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createSchemaAwareAdminClient } from '@/lib/supabase/admin';
+import { createDataClientFromAuth } from '@/lib/supabase/admin';
+
 import { WebhookService } from '@/lib/services/webhook-service';
 import { requireAdminOrSellerApi } from '@/lib/auth-server';
 
@@ -14,7 +15,7 @@ export async function POST(
     const authResult = await requireAdminOrSellerApi(supabase);
 
     // SECURITY: Verify log belongs to the seller's schema before retrying
-    const dataClient = await createSchemaAwareAdminClient(authResult.sellerSchema);
+    const dataClient = await createDataClientFromAuth(authResult.sellerSchema);
     const { data: log } = await dataClient
       .from('webhook_logs')
       .select('id')

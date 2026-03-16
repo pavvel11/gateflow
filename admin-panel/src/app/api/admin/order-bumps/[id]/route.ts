@@ -7,7 +7,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createSchemaAwareAdminClient } from '@/lib/supabase/admin';
+import { createDataClientFromAuth } from '@/lib/supabase/admin';
+
 import { requireAdminOrSellerApi } from '@/lib/auth-server';
 import type { OrderBumpFormData } from '@/types/order-bump';
 
@@ -24,7 +25,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
     const supabase = await createClient();
     const authResult = await requireAdminOrSellerApi(supabase);
-    const dataClient = await createSchemaAwareAdminClient(authResult.sellerSchema);
+    const dataClient = await createDataClientFromAuth(authResult.sellerSchema);
 
     // Parse request body
     const updates: Partial<OrderBumpFormData> = await request.json();
@@ -119,7 +120,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
     const supabase = await createClient();
     const authResult = await requireAdminOrSellerApi(supabase);
-    const dataClient = await createSchemaAwareAdminClient(authResult.sellerSchema);
+    const dataClient = await createDataClientFromAuth(authResult.sellerSchema);
 
     // Delete order bump
     const { error } = await (dataClient as any)

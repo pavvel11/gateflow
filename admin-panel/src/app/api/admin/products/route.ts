@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createSchemaAwareAdminClient } from '@/lib/supabase/admin';
+import { createDataClientFromAuth } from '@/lib/supabase/admin';
+
 import {
   validateCreateProduct,
   sanitizeProductData,
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const authResult = await requireAdminOrSellerApi(supabase); // Enforce Admin Access
-    const dataClient = await createSchemaAwareAdminClient(authResult.sellerSchema);
+    const dataClient = await createDataClientFromAuth(authResult.sellerSchema);
 
     // Get search params
     const searchParams = request.nextUrl.searchParams;
@@ -147,7 +148,7 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const authResult = await requireAdminOrSellerApi(supabase); // Enforce Admin Access
-    const dataClient = await createSchemaAwareAdminClient(authResult.sellerSchema);
+    const dataClient = await createDataClientFromAuth(authResult.sellerSchema);
 
     // Parse and validate request body
     let body;

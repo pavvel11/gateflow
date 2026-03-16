@@ -444,9 +444,9 @@ describe('TS-C01: admin routes must use createAdminClient()', () => {
     });
   }
 
-  it('admin/coupons uses createAdminClient or createSchemaAwareAdminClient', () => {
+  it('admin/coupons uses createAdminClient, createSchemaAwareAdminClient, or createDataClientFromAuth', () => {
     const source = src('app/api/admin/coupons/route.ts');
-    expect(source).toMatch(/createAdminClient|createSchemaAwareAdminClient/);
+    expect(source).toMatch(/createAdminClient|createSchemaAwareAdminClient|createDataClientFromAuth/);
   });
 });
 

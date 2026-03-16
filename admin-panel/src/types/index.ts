@@ -377,6 +377,8 @@ export interface UserProductAllSellers {
   transaction_date: string | null;
   refund_request_status: string | null;
   refunded_amount: number | null;
+  is_refundable: boolean | null;
+  refund_period_days: number | null;
 }
 
 // Variant Groups (M:N relationship)

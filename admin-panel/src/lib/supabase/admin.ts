@@ -69,9 +69,9 @@ export async function createSchemaAwareAdminClient(knownSellerSchema?: string): 
     throw new Error('createSchemaAwareAdminClient can only be called on the server')
   }
 
-  // Fast path: if schema already known (e.g. from withAdminOrSellerAuth / requireAdminOrSellerApi),
-  // skip the auth + sellers lookup entirely. This eliminates the N+1 problem when multiple
-  // components on the same page each need a schema-scoped client.
+  // Fast path: caller already resolved auth (via requireAdminOrSellerApi or withAdminOrSellerAuth).
+  // Seller admins pass their schema name → validate and use it.
+  // This eliminates the N+1 auth+DB lookups on dashboard pages.
   if (knownSellerSchema) {
     if (!isValidSellerSchema(knownSellerSchema)) {
       throw new Error(`createSchemaAwareAdminClient: Invalid seller schema: ${knownSellerSchema}`)
@@ -118,6 +118,35 @@ export async function createSchemaAwareAdminClient(knownSellerSchema?: string): 
     })
   }
 
+  return createAdminClient()
+}
+
+/**
+ * Creates a data client from an auth result. Use this in API routes after calling
+ * requireAdminOrSellerApi / requireAdminOrSellerApiWithRequest.
+ *
+ * Platform admins (sellerSchema=undefined) → seller_main client
+ * Seller admins (sellerSchema='seller_xyz') → seller_xyz client
+ *
+ * This avoids the slow path in createSchemaAwareAdminClient which requires
+ * cookie-based auth (unavailable in API routes using Bearer token auth).
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function createDataClientFromAuth(sellerSchema?: string): any {
+  if (sellerSchema) {
+    if (!isValidSellerSchema(sellerSchema)) {
+      throw new Error(`createDataClientFromAuth: Invalid seller schema: ${sellerSchema}`)
+    }
+    const supabaseUrl = process.env.SUPABASE_URL!
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    if (!supabaseUrl || !serviceRoleKey) {
+      throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
+    }
+    return createSupabaseClient(supabaseUrl, serviceRoleKey, {
+      db: { schema: sellerSchema },
+      auth: { persistSession: false, autoRefreshToken: false },
+    })
+  }
   return createAdminClient()
 }
 
