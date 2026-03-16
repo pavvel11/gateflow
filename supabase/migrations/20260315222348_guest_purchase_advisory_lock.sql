@@ -45,17 +45,17 @@ BEGIN
           'SELECT %I.grant_product_access_service_role(%L::uuid, %L::uuid)',
           v_seller.schema_name, p_user_id, v_guest.product_id
         );
+        -- Only mark THIS purchase as claimed after successful grant (prevents data loss on partial failure)
+        EXECUTE format(
+          'UPDATE %I.guest_purchases SET claimed_by_user_id = %L WHERE customer_email = %L AND product_id = %L AND claimed_by_user_id IS NULL',
+          v_seller.schema_name, p_user_id, p_email, v_guest.product_id
+        );
         v_total_migrated := v_total_migrated + 1;
       EXCEPTION WHEN OTHERS THEN
         RAISE WARNING 'Failed to grant access in schema % for product %: %',
           v_seller.schema_name, v_guest.product_id, SQLERRM;
       END;
     END LOOP;
-
-    EXECUTE format(
-      'UPDATE %I.guest_purchases SET claimed_by_user_id = %L WHERE customer_email = %L AND claimed_by_user_id IS NULL',
-      v_seller.schema_name, p_user_id, p_email
-    );
   END LOOP;
 
   RETURN v_total_migrated;

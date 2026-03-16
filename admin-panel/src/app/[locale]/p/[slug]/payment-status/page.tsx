@@ -155,14 +155,14 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
 
       customerEmail = user.email || '';
 
-      const { data: existingAccess } = await supabase
+      const { data: existingAccess } = await productClient
         .from('user_product_access')
         .select('access_expires_at')
         .eq('user_id', user.id)
         .eq('product_id', product.id)
         .single();
 
-      const adminClient = createAdminClient();
+      const adminClient = sellerSlug ? productClient : createAdminClient();
       const freeAccessResult = await grantFreeProductAccess(supabase, adminClient, {
         product: {
           id: product.id,
@@ -204,15 +204,15 @@ export default async function PaymentStatusPage({ params, searchParams }: PagePr
 
     if (otoInfo.oto_product_id && customerEmail) {
       // First check if user exists with this email
-      const { data: existingUser } = await supabase
+      const { data: existingUser } = await productClient
         .from('users')
         .select('id')
         .eq('email', customerEmail)
         .maybeSingle();
 
       if (existingUser) {
-        // Check if user has access to OTO product
-        const { data: existingOtoAccess } = await supabase
+        // Check if user has access to OTO product (same schema as source product)
+        const { data: existingOtoAccess } = await productClient
           .from('user_product_access')
           .select('id, access_expires_at')
           .eq('user_id', existingUser.id)

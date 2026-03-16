@@ -88,7 +88,7 @@ export function useCoupon({ productId, email, isOtoMode, sellerSlug }: UseCoupon
         const res = await fetch('/api/coupons/auto-apply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, productId }),
+          body: JSON.stringify({ email, productId, sellerSlug }),
         });
         const data = await res.json();
         if (data.found) {

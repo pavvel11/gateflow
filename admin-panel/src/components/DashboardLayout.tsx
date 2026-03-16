@@ -612,7 +612,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
         {[
           { href: '/dashboard', label: t('dashboard'), icon: Icons.dashboard, exact: true },
           { href: '/dashboard/products', label: t('products'), icon: Icons.products },
-          { href: '/dashboard/users', label: t('users'), icon: Icons.users },
+          ...(!isSellerAdmin ? [{ href: '/dashboard/users', label: t('users'), icon: Icons.users }] : []),
           { href: '/dashboard/settings', label: t('settings'), icon: Icons.settings },
           { href: '/profile', label: t('profile'), icon: Icons.profile },
         ].map(tab => {

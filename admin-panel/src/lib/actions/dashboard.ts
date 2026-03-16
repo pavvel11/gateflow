@@ -1,20 +1,20 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { withAdminOrSellerAuth } from '@/lib/actions/admin-auth'
 
 export async function getDashboardStats() {
-  const supabase = await createClient()
-  
-  // Use the secure RPC call which checks for admin status internally
-  const { data, error } = await supabase.rpc('get_dashboard_stats')
-  
-  if (error) {
-    console.error('Error fetching dashboard stats:', error)
-    return null
-  }
-  
-  return data
+  const result = await withAdminOrSellerAuth(async ({ dataClient }) => {
+    const { data, error } = await dataClient.rpc('get_dashboard_stats')
+
+    if (error) {
+      console.error('Error fetching dashboard stats:', error)
+      return { success: true as const, data: null }
+    }
+
+    return { success: true as const, data }
+  })
+
+  return result.success ? result.data : null
 }
 
 export async function getRecentActivity() {
