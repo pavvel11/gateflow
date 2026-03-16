@@ -34,7 +34,7 @@ import {
 
 // Valid test license key — generated with the real private key for domain "test.example.com"
 // Verified: verifyLicenseSignature returns true for this key.
-const VALID_LICENSE = 'SF-test.example.com-UNLIMITED-MEUCIEHqYzD3xj-ro61wuTmeBnXI7atQ3d_NWX6QcZUk05zrAiEA53-g5nGLU3_hR2OZfCeUruyVU3lY_57ZQbmO4obico8';
+const VALID_LICENSE = 'SF-test.example.com-PRO-UNLIMITED-MEQCIFJvfvcakzjXutavoqSX9d-NnKPfVit5lb2kSezgO0YZAiAyVYnHJOa9A5WSav0YYVB9LWFQJyR_cM2EL9NfJZAq5Q';
 
 // ===== HELPERS =====
 

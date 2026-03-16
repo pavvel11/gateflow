@@ -1691,6 +1691,8 @@
       "keyNamePlaceholder": "e.g., Production API Key, MCP Server",
       "quickPresets": "Quick Presets",
       "permissions": "Permissions",
+      "scopesLockedTitle": "Upgrade to unlock custom scopes",
+      "scopesLockedDescription": "Pro license required to customize API key permissions. Free keys have full access.",
       "showAdvanced": "Show Advanced Options",
       "hideAdvanced": "Hide Advanced Options",
       "rateLimit": "Rate Limit",
@@ -2410,9 +2412,10 @@
       "title": "Sellf License",
       "subtitle": "Remove Sellf branding from checkout and other pages",
       "licenseKey": "License Key",
-      "formatHint": "Format: SF-domain-expiry-signature (e.g., SF-example.com-20271231-MEUCIQDx... or SF-example.com-UNLIMITED-MEUCIQDx...)",
+      "formatHint": "Format: SF-domain-TIER-expiry-signature (e.g., SF-example.com-PRO-UNLIMITED-MEUCIQDx...)",
       "licenseDetails": "License Details",
       "domain": "Domain",
+      "tier": "Tier",
       "expires": "Expires",
       "signature": "Signature",
       "never": "Never (Unlimited)",
@@ -2426,7 +2429,7 @@
       "howItWorks2": "Valid license removes Sellf branding from checkout page",
       "howItWorks3": "License is bound to a specific domain",
       "howItWorks4": "Get a license at",
-      "keyPlaceholder": "SF-yourdomain.com-UNLIMITED-xxxxxxxxxxxx"
+      "keyPlaceholder": "SF-yourdomain.com-PRO-UNLIMITED-xxxxxxxxxxxx"
     },
     "paymentMethods": {
       "title": "Payment Method Configuration",

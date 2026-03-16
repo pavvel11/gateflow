@@ -1,4 +1,6 @@
 import ApiKeysPageContent from '@/components/ApiKeysPageContent';
+import { getCurrentTier } from '@/lib/license/features';
+import { hasFeature } from '@/lib/license/features';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -6,5 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default function ApiKeysPage() {
-  return <ApiKeysPageContent />;
+  const tier = getCurrentTier();
+  const scopesLocked = !hasFeature(tier, 'api-key-scopes');
+  return <ApiKeysPageContent scopesLocked={scopesLocked} />;
 }

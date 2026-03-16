@@ -298,3 +298,37 @@ export function getScopeDescription(scope: ApiScope): string {
 
   return descriptions[scope] || scope;
 }
+
+// ===== LICENSE-GATED SCOPE CUSTOMIZATION =====
+
+import type { LicenseTier } from '@/lib/license/verify';
+import { hasFeature } from '@/lib/license/features';
+
+interface ScopeGateResult {
+  /** Final scopes to use (may be overridden to ['*'] for free tier) */
+  scopes: string[];
+  /** True if scopes were forced due to license restriction */
+  gated: boolean;
+}
+
+/**
+ * Enforce license-based scope gating on API key creation.
+ * Free tier: scopes locked to ['*'] (full access, no granular control).
+ * Pro+: full scope customization.
+ */
+export function enforceApiKeyScopeGate(
+  tier: LicenseTier,
+  requestedScopes: string[] | undefined,
+): ScopeGateResult {
+  const canCustomize = hasFeature(tier, 'api-key-scopes');
+
+  if (!canCustomize) {
+    return { scopes: [API_SCOPES.FULL_ACCESS], gated: true };
+  }
+
+  const scopes = requestedScopes && requestedScopes.length > 0
+    ? requestedScopes
+    : [API_SCOPES.FULL_ACCESS];
+
+  return { scopes, gated: false };
+}

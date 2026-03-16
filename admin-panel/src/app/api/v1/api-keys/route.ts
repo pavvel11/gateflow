@@ -24,9 +24,11 @@ import {
   generateApiKey,
   hashApiKey,
   validateScopes,
+  enforceApiKeyScopeGate,
   API_SCOPES,
   SCOPE_PRESETS,
 } from '@/lib/api';
+import { getCurrentTier } from '@/lib/license/features';
 import { createClient } from '@/lib/supabase/server';
 import { createPlatformClient } from '@/lib/supabase/admin';
 import { requireAdminOrSellerApi } from '@/lib/auth-server';
@@ -149,13 +151,19 @@ export async function POST(request: NextRequest) {
       throw new ApiValidationError('Name must be less than 100 characters');
     }
 
-    // Validate scopes
-    let scopes = body.scopes || [API_SCOPES.FULL_ACCESS];
-    const scopeValidation = validateScopes(scopes);
-    if (!scopeValidation.isValid) {
-      throw new ApiValidationError(
-        `Invalid scopes: ${scopeValidation.invalidScopes.join(', ')}`
-      );
+    // License-based scope gating: free tier = locked to ['*']
+    const tier = getCurrentTier();
+    const scopeGate = enforceApiKeyScopeGate(tier, body.scopes);
+    let scopes = scopeGate.scopes;
+
+    // Only validate custom scopes (gated scopes are always valid)
+    if (!scopeGate.gated) {
+      const scopeValidation = validateScopes(scopes);
+      if (!scopeValidation.isValid) {
+        throw new ApiValidationError(
+          `Invalid scopes: ${scopeValidation.invalidScopes.join(', ')}`
+        );
+      }
     }
 
     // Seller admins cannot self-assign scopes beyond their allowed set

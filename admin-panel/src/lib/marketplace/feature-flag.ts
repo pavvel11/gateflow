@@ -17,6 +17,7 @@
 
 import { headers } from 'next/headers';
 import { validateLicense } from '@/lib/license/verify';
+import { hasFeature } from '@/lib/license/features';
 
 // ===== SYNC: ENV-ONLY CHECK =====
 
@@ -91,8 +92,9 @@ async function checkMarketplaceLicense(): Promise<boolean> {
   const result = validateLicense(licenseKey, domain);
   if (!result.valid) {
     console.error(`[marketplace] License invalid for domain "${domain}": ${result.error}`);
+    return false;
   }
-  return result.valid;
+  return hasFeature(result.info.tier, 'marketplace');
 }
 
 // ===== HYBRID: ENV + LICENSE =====

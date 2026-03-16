@@ -17,6 +17,7 @@ import {
   maskApiKey,
   validateScopes,
   getScopeDescription,
+  enforceApiKeyScopeGate,
   API_SCOPES,
   SCOPE_PRESETS,
 } from '@/lib/api/api-keys';
@@ -324,6 +325,52 @@ describe('API Keys', () => {
       expect(support).toContain(API_SCOPES.PRODUCTS_READ);
       expect(support).toContain(API_SCOPES.USERS_READ);
       expect(support).not.toContain(API_SCOPES.PRODUCTS_WRITE);
+    });
+  });
+
+  // ===== API KEY SCOPE GATING (LICENSE TIER) =====
+
+  describe('enforceApiKeyScopeGate', () => {
+    it('should force full access for free tier regardless of requested scopes', () => {
+      const result = enforceApiKeyScopeGate('free', ['products:read', 'users:read']);
+      expect(result.scopes).toEqual(['*']);
+      expect(result.gated).toBe(true);
+    });
+
+    it('should force full access for free tier when no scopes requested', () => {
+      const result = enforceApiKeyScopeGate('free', undefined);
+      expect(result.scopes).toEqual(['*']);
+      expect(result.gated).toBe(true);
+    });
+
+    it('should allow custom scopes for pro tier', () => {
+      const result = enforceApiKeyScopeGate('pro', ['products:read', 'analytics:read']);
+      expect(result.scopes).toEqual(['products:read', 'analytics:read']);
+      expect(result.gated).toBe(false);
+    });
+
+    it('should allow custom scopes for business tier', () => {
+      const result = enforceApiKeyScopeGate('business', ['users:write']);
+      expect(result.scopes).toEqual(['users:write']);
+      expect(result.gated).toBe(false);
+    });
+
+    it('should default to full access for pro tier when no scopes provided', () => {
+      const result = enforceApiKeyScopeGate('pro', undefined);
+      expect(result.scopes).toEqual(['*']);
+      expect(result.gated).toBe(false);
+    });
+
+    it('should default to full access for pro tier with empty array', () => {
+      const result = enforceApiKeyScopeGate('pro', []);
+      expect(result.scopes).toEqual(['*']);
+      expect(result.gated).toBe(false);
+    });
+
+    it('should force full access for free tier even when full access explicitly requested', () => {
+      const result = enforceApiKeyScopeGate('free', ['*']);
+      expect(result.scopes).toEqual(['*']);
+      expect(result.gated).toBe(true);
     });
   });
 });

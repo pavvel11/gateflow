@@ -12,6 +12,7 @@ import { revalidatePath } from 'next/cache';
 import { themeConfigSchema, THEME_PRESETS, getPresetById } from '@/lib/themes';
 import { createPublicClient } from '@/lib/supabase/server';
 import { validateLicense } from '@/lib/license/verify';
+import { hasFeature } from '@/lib/license/features';
 import { isDemoMode } from '@/lib/demo-guard';
 import type { ThemeConfig, ThemePreset } from '@/lib/themes';
 
@@ -120,7 +121,7 @@ export async function checkThemeLicense(): Promise<boolean> {
     const currentDomain = siteUrl ? new URL(siteUrl).hostname : undefined;
     const result = validateLicense(data.sellf_license, currentDomain);
 
-    return result.valid;
+    return result.valid && hasFeature(result.info.tier, 'theme-customization');
   } catch {
     return false;
   }
