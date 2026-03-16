@@ -3,6 +3,7 @@ import { SellfGenerator } from '@/lib/sellf-generator'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { MemoryCache, handleConditionalRequest, createScriptResponse } from '@/lib/script-cache'
 import { validateLicense as verifyLicense, extractDomainFromUrl } from '@/lib/license/verify'
+import { hasFeature } from '@/lib/license/features'
 import { checkRateLimit } from '@/lib/rate-limiting'
 import packageJson from '../../../../package.json'
 
@@ -64,7 +65,7 @@ function validateLicense(licenseKey: string | null, siteUrl?: string): boolean {
   // Use the proper license verification with ECDSA signature check
   const result = verifyLicense(licenseKey, currentDomain || undefined);
 
-  return result.valid;
+  return result.valid && hasFeature(result.info.tier, 'watermark-removal');
 }
 
 /**

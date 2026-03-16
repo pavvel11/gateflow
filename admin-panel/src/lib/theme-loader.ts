@@ -7,6 +7,7 @@
 import { cache } from 'react';
 import { getActiveTheme } from '@/lib/actions/theme';
 import { validateLicense } from '@/lib/license/verify';
+import { hasFeature } from '@/lib/license/features';
 import { createPublicClient } from '@/lib/supabase/server';
 import type { ThemeConfig } from '@/lib/themes';
 
@@ -47,7 +48,7 @@ async function checkLicenseValidity(): Promise<boolean> {
     const currentDomain = siteUrl ? new URL(siteUrl).hostname : undefined;
     const result = validateLicense(data.sellf_license, currentDomain);
 
-    return result.valid;
+    return result.valid && hasFeature(result.info.tier, 'theme-customization');
   } catch {
     return false;
   }

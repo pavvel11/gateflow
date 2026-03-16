@@ -1706,6 +1706,8 @@
       "keyNamePlaceholder": "np. Produkcyjny klucz API, Serwer MCP",
       "quickPresets": "Szybkie ustawienia",
       "permissions": "Uprawnienia",
+      "scopesLockedTitle": "Odblokuj z licencja Pro",
+      "scopesLockedDescription": "Licencja Pro wymagana do konfiguracji uprawnien kluczy API. Darmowe klucze maja pelny dostep.",
       "showAdvanced": "Pokaż opcje zaawansowane",
       "hideAdvanced": "Ukryj opcje zaawansowane",
       "rateLimit": "Limit żądań",
@@ -2425,9 +2427,10 @@
       "title": "Licencja Sellf",
       "subtitle": "Usuń branding Sellf ze strony koszyka i innych miejsc",
       "licenseKey": "Klucz licencji",
-      "formatHint": "Format: SF-domena-wygaśnięcie-podpis (np. SF-example.com-20271231-MEUCIQDx... lub SF-example.com-UNLIMITED-MEUCIQDx...)",
+      "formatHint": "Format: SF-domena-TIER-wygaśnięcie-podpis (np. SF-example.com-PRO-UNLIMITED-MEUCIQDx...)",
       "licenseDetails": "Szczegóły licencji",
       "domain": "Domena",
+      "tier": "Plan",
       "expires": "Wygasa",
       "signature": "Podpis",
       "never": "Nigdy (Nieograniczona)",
@@ -2441,7 +2444,7 @@
       "howItWorks2": "Ważna licencja usuwa branding Sellf ze strony koszyka",
       "howItWorks3": "Licencja jest przypisana do konkretnej domeny",
       "howItWorks4": "Kup licencję na",
-      "keyPlaceholder": "SF-twojadomena.pl-UNLIMITED-xxxxxxxxxxxx"
+      "keyPlaceholder": "SF-twojadomena.pl-PRO-UNLIMITED-xxxxxxxxxxxx"
     },
     "paymentMethods": {
       "title": "Konfiguracja Metod Płatności",

@@ -71,4 +71,5 @@ export {
   validateScopes,
   getScopeDescription,
   isValidScope,
+  enforceApiKeyScopeGate,
 } from './api-keys';

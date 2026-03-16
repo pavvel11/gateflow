@@ -58,17 +58,32 @@ export default function LicenseSettings() {
  }
  };
 
- const parseLicense = (licenseKey: string): { valid: true; domain: string; expiry: string; signature: string } | { valid: false } => {
+ const VALID_TIERS = ['REG', 'PRO', 'BIZ'];
+ const TIER_LABELS: Record<string, string> = { REG: 'Registered Free', PRO: 'Pro', BIZ: 'Business' };
+
+ const parseLicense = (licenseKey: string): { valid: true; domain: string; tier: string; expiry: string; signature: string } | { valid: false } => {
  const parts = licenseKey.split('-');
- if (parts.length >= 3 && parts[0] === 'SF') {
+ if (parts.length < 4 || parts[0] !== 'SF') return { valid: false };
+
+ // Current format: SF-{domain}-{TIER}-{expiry}-{signature}
+ if (parts.length >= 5 && VALID_TIERS.includes(parts[2])) {
  return {
  valid: true,
  domain: parts[1],
+ tier: parts[2],
+ expiry: parts[3],
+ signature: parts.slice(4).join('-'),
+ };
+ }
+
+ // Legacy format: SF-{domain}-{expiry}-{signature}
+ return {
+ valid: true,
+ domain: parts[1],
+ tier: 'PRO',
  expiry: parts[2],
  signature: parts.slice(3).join('-'),
  };
- }
- return { valid: false };
  };
 
  const licenseInfo = license ? parseLicense(license) : null;
@@ -140,6 +155,12 @@ export default function LicenseSettings() {
  <div className="flex justify-between items-center">
  <span className="text-sf-muted">{t('domain')}:</span>
  <span className="font-mono text-sf-heading">{licenseInfo.domain}</span>
+ </div>
+ <div className="flex justify-between items-center">
+ <span className="text-sf-muted">{t('tier')}:</span>
+ <span className="font-mono text-sf-heading">
+ {TIER_LABELS[licenseInfo.tier] || licenseInfo.tier}
+ </span>
  </div>
  <div className="flex justify-between items-center">
  <span className="text-sf-muted">{t('expires')}:</span>

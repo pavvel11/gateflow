@@ -32,7 +32,7 @@ import {
 
 // Valid license for domain "test.example.com" — real ECDSA P-256 signature
 const VALID_LICENSE_UNLIMITED =
-  'SF-test.example.com-UNLIMITED-MEUCIEHqYzD3xj-ro61wuTmeBnXI7atQ3d_NWX6QcZUk05zrAiEA53-g5nGLU3_hR2OZfCeUruyVU3lY_57ZQbmO4obico8';
+  'SF-test.example.com-PRO-UNLIMITED-MEQCIFJvfvcakzjXutavoqSX9d-NnKPfVit5lb2kSezgO0YZAiAyVYnHJOa9A5WSav0YYVB9LWFQJyR_cM2EL9NfJZAq5Q';
 
 // ===== SOURCE FILES FOR STATIC ANALYSIS =====
 
