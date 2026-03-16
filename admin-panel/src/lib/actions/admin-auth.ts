@@ -27,13 +27,13 @@ import type { SupabaseClient, User } from '@supabase/supabase-js';
 import type { AdminRole } from '@/lib/auth-server';
 import type { SellerDataClient } from '@/lib/supabase/admin';
 
-export interface AdminAuthContext {
+interface AdminAuthContext {
   user: User;
   supabase: SupabaseClient;
 }
 
 /** Extended context for withAdminOrSellerAuth — includes role and schema-scoped data client. */
-export interface AdminOrSellerAuthContext {
+interface AdminOrSellerAuthContext {
   user: User;
   /** Cookie-based session client (default schema). Use dataClient for seller-scoped queries. */
   supabase: SupabaseClient;

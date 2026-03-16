@@ -21,13 +21,13 @@ import type { SellerInfo } from '@/lib/marketplace/seller-client';
 
 // ===== TYPES =====
 
-export interface ConnectAccountResult {
+interface ConnectAccountResult {
   success: boolean;
   accountId?: string;
   error?: string;
 }
 
-export interface OnboardingLinkResult {
+interface OnboardingLinkResult {
   success: boolean;
   url?: string;
   error?: string;

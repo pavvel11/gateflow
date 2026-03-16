@@ -7,7 +7,7 @@
 import { createPlatformClient } from '@/lib/supabase/admin';
 import type { AdminRole } from '@/lib/auth-server';
 
-export interface OwnerInfo {
+interface OwnerInfo {
   role: AdminRole;
   sellerId?: string;
   adminId?: string;
