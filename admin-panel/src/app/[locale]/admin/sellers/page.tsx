@@ -15,6 +15,7 @@ import { createClient } from '@/lib/supabase/server';
 import { checkMarketplaceAccess } from '@/lib/marketplace/feature-flag';
 import { listSellers } from '@/lib/actions/sellers';
 import type { SellerListItem } from '@/lib/actions/sellers';
+import AddSellerForm from '@/components/admin/AddSellerForm';
 
 // ===== HELPERS =====
 
@@ -158,10 +159,13 @@ export default async function AdminSellersPage() {
           </div>
         </div>
 
+        {/* Add Seller Form */}
+        <AddSellerForm />
+
         {/* Sellers Table */}
         {sellers.length === 0 ? (
           <div className="bg-sf-surface border border-sf-border rounded-lg p-12 text-center">
-            <p className="text-sf-muted">No sellers yet. Use the API to provision a new seller.</p>
+            <p className="text-sf-muted">No sellers yet. Use the form above to add one.</p>
           </div>
         ) : (
           <div className="bg-sf-surface border border-sf-border rounded-lg overflow-hidden">

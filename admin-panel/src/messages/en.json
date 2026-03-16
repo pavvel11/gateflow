@@ -2540,7 +2540,22 @@
       "title": "Marketplace",
       "description": "Multi-tenant marketplace settings. Manage seller stores, Stripe Connect, and platform fees.",
       "sellersLink": "Manage Sellers",
-      "sellersDescription": "View and manage all marketplace seller stores, their status, Stripe Connect onboarding, and platform fee configuration."
+      "sellersDescription": "View and manage all marketplace seller stores, their status, Stripe Connect onboarding, and platform fee configuration.",
+      "stripeConnect": {
+        "title": "Stripe Connect",
+        "description": "Connect your Stripe account to receive payments directly. Funds are transferred to your account after each sale.",
+        "loading": "Checking Stripe account status...",
+        "error": "Failed to load status",
+        "retry": "Retry",
+        "notConnected": "Not connected",
+        "notConnectedDesc": "Connect your Stripe account to start receiving payments.",
+        "connectButton": "Connect Stripe Account",
+        "incomplete": "Onboarding incomplete",
+        "incompleteDesc": "Your Stripe account setup is not finished. Complete onboarding to start receiving payments.",
+        "completeButton": "Complete Onboarding",
+        "connected": "Connected",
+        "accountId": "Account"
+      }
     }
   },
   "stripe": {
