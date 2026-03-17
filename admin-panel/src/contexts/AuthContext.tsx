@@ -46,17 +46,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Use cached version for better performance when called repeatedly
         const supabase = await createClient()
         const { data, error } = await supabase.rpc('is_admin_cached')
-        
+
         if (error) {
           if (attempt === retries) {
             return false // Default to non-admin after final attempt
           }
-          
+
           // Exponential backoff: 1s, 2s, 3s
           await new Promise(resolve => setTimeout(resolve, attempt * 1000))
           continue
         }
-        
+
         return Boolean(data)
       } catch {
         if (attempt === retries) {
