@@ -145,7 +145,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
-    await authenticate(request, [API_SCOPES.ANALYTICS_READ]);
+    await authenticate(request, [API_SCOPES.PAYMENTS_WRITE]);
     const { id } = await params;
 
     const idValidation = validateUUID(id);

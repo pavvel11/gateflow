@@ -27,8 +27,12 @@ export const API_SCOPES = {
   COUPONS_READ: 'coupons:read',
   COUPONS_WRITE: 'coupons:write',
 
-  // Analytics
+  // Analytics (includes payment read for backward compat)
   ANALYTICS_READ: 'analytics:read',
+
+  // Payments
+  PAYMENTS_READ: 'payments:read',
+  PAYMENTS_WRITE: 'payments:write',
 
   // Webhooks
   WEBHOOKS_READ: 'webhooks:read',
@@ -59,6 +63,7 @@ export const SCOPE_PRESETS = {
     API_SCOPES.USERS_READ,
     API_SCOPES.COUPONS_READ,
     API_SCOPES.ANALYTICS_READ,
+    API_SCOPES.PAYMENTS_READ,
     API_SCOPES.WEBHOOKS_READ,
     API_SCOPES.REFUND_REQUESTS_READ,
     API_SCOPES.SYSTEM_READ,
@@ -84,6 +89,8 @@ export const SCOPE_PRESETS = {
     API_SCOPES.COUPONS_READ,
     API_SCOPES.COUPONS_WRITE,
     API_SCOPES.ANALYTICS_READ,
+    API_SCOPES.PAYMENTS_READ,
+    API_SCOPES.PAYMENTS_WRITE,
     API_SCOPES.WEBHOOKS_READ,
     API_SCOPES.WEBHOOKS_WRITE,
     API_SCOPES.REFUND_REQUESTS_READ,
@@ -287,6 +294,8 @@ export function getScopeDescription(scope: ApiScope): string {
     [API_SCOPES.COUPONS_READ]: 'View coupons',
     [API_SCOPES.COUPONS_WRITE]: 'Create, update, delete coupons',
     [API_SCOPES.ANALYTICS_READ]: 'View analytics and reports',
+    [API_SCOPES.PAYMENTS_READ]: 'View payment transactions',
+    [API_SCOPES.PAYMENTS_WRITE]: 'Update payment metadata',
     [API_SCOPES.WEBHOOKS_READ]: 'View webhook configurations',
     [API_SCOPES.WEBHOOKS_WRITE]: 'Manage webhooks',
     [API_SCOPES.REFUND_REQUESTS_READ]: 'View refund requests',
