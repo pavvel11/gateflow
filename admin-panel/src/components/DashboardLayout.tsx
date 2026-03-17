@@ -171,11 +171,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
     signOut()
   }
 
-  // Navigation Items Config
-  // Seller admins see a subset: their products, sales, config — NOT platform-level items
-  const isSellerAdmin = adminRole === 'seller_admin';
-  const platformOnlyHrefs = new Set(['/dashboard/users', '/dashboard/api-keys', '/dashboard/integrations']);
-
+  // Navigation Items Config — all admin links visible for both platform and seller admins
   const adminLinks = [
     { href: '/dashboard', label: t('dashboard'), icon: Icons.dashboard, exact: true },
     { href: '/dashboard/products', label: t('products'), icon: Icons.products },
@@ -185,11 +181,9 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
     { href: '/dashboard/coupons', label: t('coupons'), icon: Icons.coupons },
     { href: '/dashboard/refund-requests', label: t('refundRequests', { defaultValue: 'Refund Requests' }), icon: Icons.refunds },
     { href: '/dashboard/webhooks', label: t('webhooks'), icon: Icons.webhooks },
-    ...(!isSellerAdmin ? [
-      { href: '/dashboard/integrations', label: t('integrations'), icon: Icons.integrations },
-      { href: '/dashboard/api-keys', label: t('apiKeys', { defaultValue: 'API Keys' }), icon: Icons.apiKeys },
-      { href: '/dashboard/users', label: t('users'), icon: Icons.users },
-    ] : []),
+    { href: '/dashboard/integrations', label: t('integrations'), icon: Icons.integrations },
+    { href: '/dashboard/api-keys', label: t('apiKeys', { defaultValue: 'API Keys' }), icon: Icons.apiKeys },
+    { href: '/dashboard/users', label: t('users'), icon: Icons.users },
     { href: '/dashboard/settings', label: t('settings'), icon: Icons.settings },
   ];
 
@@ -612,7 +606,7 @@ export default function DashboardLayout({ children, user, isAdmin: isAdminProp, 
         {[
           { href: '/dashboard', label: t('dashboard'), icon: Icons.dashboard, exact: true },
           { href: '/dashboard/products', label: t('products'), icon: Icons.products },
-          ...(!isSellerAdmin ? [{ href: '/dashboard/users', label: t('users'), icon: Icons.users }] : []),
+          { href: '/dashboard/users', label: t('users'), icon: Icons.users },
           { href: '/dashboard/settings', label: t('settings'), icon: Icons.settings },
           { href: '/profile', label: t('profile'), icon: Icons.profile },
         ].map(tab => {
