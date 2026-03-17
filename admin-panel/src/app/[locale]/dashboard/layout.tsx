@@ -35,7 +35,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
         <RealtimeProvider>
           <DashboardLayout
             user={access.user}
-            isAdmin={access.role === 'platform_admin'}
+            isAdmin={access.role === 'platform_admin' || access.role === 'seller_admin'}
             shopConfig={shopConfig}
             adminRole={access.role}
             sellerDisplayName={access.sellerDisplayName}

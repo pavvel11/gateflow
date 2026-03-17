@@ -29,7 +29,13 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   // State Management with Performance Tracking
   const [user, setUser] = useState<User | null>(null)
-  const [isAdmin, setIsAdmin] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(() => {
+    // Initialize from localStorage to prevent menu flicker on navigation
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('sf_is_admin') === 'true'
+    }
+    return false
+  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
@@ -88,17 +94,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Set user immediately for responsive UI
         setUser(currentUser)
         setError(null)
-        
+
         // Check admin status if user exists
         if (currentUser) {
           const adminStatus = await checkAdminStatus(currentUser.id)
-          
+
           // Check again after async operation
           if (!isMountedRef.current) return
-          
+
           setIsAdmin(adminStatus)
+          if (typeof window !== 'undefined') localStorage.setItem('sf_is_admin', String(adminStatus))
         } else {
           setIsAdmin(false)
+          if (typeof window !== 'undefined') localStorage.removeItem('sf_is_admin')
         }
       } catch {
         if (isMountedRef.current) {
