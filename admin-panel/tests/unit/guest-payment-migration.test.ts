@@ -23,8 +23,8 @@ describe('Guest Payment Data Migration', () => {
   let testProductId: string;
 
   beforeAll(async () => {
-    // Clear rate limits to avoid "Too many admin actions" errors from prior test runs
-    await supabaseAdmin.from('rate_limits').delete().neq('id', 0);
+    // Clear ALL rate limits — prevents "Too many admin actions" from other test file runs
+    await supabaseAdmin.from('rate_limits').delete().gte('created_at', '1970-01-01');
 
     // Create test product
     const { data: product, error: productError } = await supabaseAdmin

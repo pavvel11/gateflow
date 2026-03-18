@@ -117,7 +117,8 @@ describe('Theme license guard', () => {
     process.env = { ...originalEnv };
     delete process.env.DEMO_MODE;
     delete process.env.SELLF_LICENSE_KEY;
-    delete process.env.SITE_URL;
+    // Set platform domain so license domain matching works (resolve.ts rejects when null)
+    process.env.SITE_URL = 'https://example.com';
     delete process.env.NEXT_PUBLIC_SITE_URL;
     // Default: validateLicense returns invalid (overridden per-test when needed)
     mockValidateLicense.mockReturnValue({ valid: false, info: { tier: 'free' }, error: 'No license' });

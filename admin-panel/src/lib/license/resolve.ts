@@ -132,9 +132,9 @@ async function readTierFromDb(
       return result.info.tier;
     }
 
-    // No domain to check against — accept if signature is valid
+    // No domain to check against — reject (cannot validate domain claim)
     if (!platformDomain) {
-      return result.info.tier;
+      return 'free';
     }
 
     return 'free';
