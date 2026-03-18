@@ -42,9 +42,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const adminClient = auth.supabase;
 
-    // Get user stats — seller_customer_stats shows only schema-scoped customers
+    // Platform admin: all users. Seller admin: only their customers.
+    const sellerSchema = (auth as { sellerSchema?: string }).sellerSchema;
+    const usersView = sellerSchema ? 'seller_customer_stats' : 'user_access_stats';
+
     const { data: userStat, error: statsError } = await adminClient
-      .from('seller_customer_stats')
+      .from(usersView)
       .select('user_id, email, user_created_at, email_confirmed_at, last_sign_in_at, raw_user_meta_data, total_products, total_value, last_access_granted_at, first_access_granted_at')
       .eq('user_id', id)
       .single();
