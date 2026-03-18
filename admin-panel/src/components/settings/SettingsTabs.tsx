@@ -15,6 +15,7 @@ import LicenseSettings from './LicenseSettings'
 import SystemUpdateSettings from './SystemUpdateSettings'
 import SecurityAuditSettings from './SecurityAuditSettings'
 import MarketplaceSettings from './MarketplaceSettings'
+import StripeConnectStatus from './StripeConnectStatus'
 import { useConfig } from '@/components/providers/config-provider'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -80,6 +81,7 @@ export default function SettingsTabs({ siteUrl, marketplaceEnabled = false }: Se
 
         {active === 'payments' && (
           <>
+            {role === 'seller_admin' && marketplaceEnabled && <StripeConnectStatus />}
             <StripeSettings siteUrl={siteUrl} />
             <StripeTaxSettings />
             <PaymentMethodSettingsWrapper />
