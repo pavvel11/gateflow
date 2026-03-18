@@ -192,6 +192,13 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error && error.message === 'Forbidden') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
+    if (error instanceof Stripe.errors.StripeError) {
+      console.error('Stripe error during refund:', error);
+      return NextResponse.json(
+        { error: 'Refund processing failed' },
+        { status: 400 }
+      );
+    }
     console.error('Refund processing error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },

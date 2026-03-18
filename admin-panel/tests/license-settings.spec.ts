@@ -290,8 +290,11 @@ test.describe('License Settings', () => {
     await loginAsAdmin(page);
     await gotoSystemSettings(page);
 
-    // Clear the license input
+    // Wait for the saved license to load into the input before clearing
     const licenseInput = page.locator('input[placeholder*="SF-"]');
+    await expect(licenseInput).toHaveValue(/SF-/, { timeout: 10000 });
+
+    // Clear the license input
     await licenseInput.clear();
 
     // Click save button
