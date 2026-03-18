@@ -581,3 +581,59 @@ describe('API middleware -- seller schema resolution', () => {
     expect(sellerDefaultBody).toContain('PAYMENTS_READ');
   });
 });
+
+// =============================================================================
+// 5. Webhook per-schema routing (Stripe Connect)
+// =============================================================================
+
+describe('Webhook handler — per-schema routing security', () => {
+  function readSource(relativePath: string): string {
+    const fs = require('fs');
+    const path = require('path');
+    // Tests run from admin-panel/ but process.cwd() may be repo root
+    const base = process.cwd().endsWith('admin-panel') ? process.cwd() : path.join(process.cwd(), 'admin-panel');
+    return fs.readFileSync(path.join(base, relativePath), 'utf-8');
+  }
+
+  function readWebhookSource(): string {
+    return readSource('src/app/api/webhooks/stripe/route.ts');
+  }
+
+  it('extracts seller_schema from session/payment metadata', () => {
+    const source = readWebhookSource();
+    expect(source).toContain('seller_schema');
+    expect(source).toContain('metadata');
+  });
+
+  it('validates seller_schema with isValidSellerSchema before using', () => {
+    const source = readWebhookSource();
+    expect(source).toContain('isValidSellerSchema');
+  });
+
+  it('routes to seller schema via getServiceClient(sellerSchema)', () => {
+    const source = readWebhookSource();
+    expect(source).toContain('getServiceClient');
+  });
+
+  it('handles account.updated webhook event', () => {
+    const source = readWebhookSource();
+    expect(source).toContain("'account.updated'");
+    expect(source).toContain('handleAccountUpdated');
+  });
+
+  it('handles account.application.deauthorized webhook event', () => {
+    const source = readWebhookSource();
+    expect(source).toContain("'account.application.deauthorized'");
+    expect(source).toContain('handleAccountDeauthorized');
+  });
+
+  it('Connect webhook handlers are imported from lib/stripe/connect', () => {
+    const source = readWebhookSource();
+    expect(source).toContain("from '@/lib/stripe/connect'");
+  });
+
+  it('webhook registration uses connect: true for connected accounts', () => {
+    const regSource = readSource('src/lib/stripe/webhook-registration.ts');
+    expect(regSource).toContain('connect: true');
+  });
+});
