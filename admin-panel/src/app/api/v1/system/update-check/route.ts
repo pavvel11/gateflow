@@ -68,6 +68,7 @@ export async function GET(request: NextRequest) {
       {
         headers: { 'Accept': 'application/vnd.github.v3+json' },
         cache: 'no-store', // module-level releaseCache handles TTL — skip Next.js Data Cache
+        redirect: 'error',
       }
     );
 

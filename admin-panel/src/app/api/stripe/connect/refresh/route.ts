@@ -5,6 +5,13 @@
  * Redirects the seller back to Stripe onboarding.
  * Accessible by platform admins and seller admins (own seller only).
  *
+ * NOTE: This endpoint intentionally uses GET, not POST.
+ * Stripe redirects the user's browser to `refresh_url` via HTTP 302 when
+ * an account link expires or has already been visited. Browser redirects
+ * are always GET requests — Stripe never POSTs to this URL directly.
+ * Changing this to POST would break the Stripe Connect onboarding flow.
+ * @see https://docs.stripe.com/api/account_links/create (refresh_url field)
+ *
  * Query params:
  *   seller_id: string - the seller to refresh the link for
  *

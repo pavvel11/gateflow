@@ -232,7 +232,6 @@
       "analytics": "Analityka",
       "marketing": "Marketing",
       "consents": "Zgody",
-      "code": "Menedżer Skryptów",
       "currency": "Waluty",
       "gus": "GUS"
     },
@@ -442,39 +441,6 @@
         "purchaseDesc": "zakończone transakcje",
         "leadDesc": "rejestracje/pobrania darmowych produktów",
         "notAllowed": "Niedozwolone: ViewContent, InitiateCheckout, AddPaymentInfo (zdarzenia przeglądania)"
-      }
-    },
-    "scripts": {
-      "title": "Własne Skrypty",
-      "addScript": "Dodaj Skrypt",
-      "noScripts": "Brak własnych skryptów.",
-      "deleteConfirm": "Usunąć skrypt?",
-      "table": {
-        "name": "Nazwa",
-        "location": "Lokalizacja",
-        "category": "Kategoria (RODO)",
-        "status": "Status",
-        "actions": "Akcje"
-      },
-      "categories": {
-        "marketing": "Marketing",
-        "analytics": "Analityka",
-        "essential": "Niezbędne"
-      },
-      "modal": {
-        "title": "Dodaj Nowy Skrypt",
-        "name": "Nazwa",
-        "location": "Lokalizacja",
-        "category": "Kategoria (RODO)",
-        "code": "Kod Skryptu",
-        "cancel": "Anuluj",
-        "add": "Dodaj Skrypt",
-        "namePlaceholder": "np. Hotjar",
-        "codePlaceholder": "<script>...</script>"
-      },
-      "location": {
-        "head": "HEAD",
-        "body": "BODY"
       }
     },
     "messages": {

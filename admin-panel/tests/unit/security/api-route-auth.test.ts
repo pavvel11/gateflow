@@ -110,7 +110,6 @@ const SPECIAL_AUTH_ROUTES = new Set([
   'webhooks/stripe/route.ts',                  // Stripe signature verification
   'update-payment-metadata/route.ts',          // CORS + PaymentIntent ID (pre-auth payment flow)
   'verify-payment/route.ts',                   // session_id + ownership check
-  'v1/docs/openapi.json/route.ts',             // OpenAPI spec — intentionally public (schema only, no data)
 ]);
 
 /** Auth-required routes: must verify user session */

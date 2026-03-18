@@ -226,7 +226,6 @@
       "analytics": "Analytics",
       "marketing": "Marketing",
       "consents": "Consents",
-      "code": "Script Manager",
       "currency": "Currency",
       "gus": "GUS"
     },
@@ -427,39 +426,6 @@
         "purchaseDesc": "Payment completed - essential for order tracking",
         "leadDesc": "Free product signup - essential for lead generation",
         "notAllowed": "ViewContent, InitiateCheckout, AddPaymentInfo - NOT allowed without consent"
-      }
-    },
-    "scripts": {
-      "title": "Custom Scripts",
-      "addScript": "Add Script",
-      "noScripts": "No custom scripts added.",
-      "deleteConfirm": "Delete script?",
-      "table": {
-        "name": "Name",
-        "location": "Location",
-        "category": "Category (GDPR)",
-        "status": "Status",
-        "actions": "Actions"
-      },
-      "categories": {
-        "marketing": "Marketing",
-        "analytics": "Analytics",
-        "essential": "Essential"
-      },
-      "modal": {
-        "title": "Add New Script",
-        "name": "Name",
-        "location": "Location",
-        "category": "Category (GDPR)",
-        "code": "Script Code",
-        "cancel": "Cancel",
-        "add": "Add Script",
-        "namePlaceholder": "e.g. Hotjar",
-        "codePlaceholder": "<script>...</script>"
-      },
-      "location": {
-        "head": "HEAD",
-        "body": "BODY"
       }
     },
     "messages": {

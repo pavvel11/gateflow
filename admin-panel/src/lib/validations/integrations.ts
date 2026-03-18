@@ -26,14 +26,6 @@ export interface IntegrationsInput {
   sellf_license?: string | null;
 }
 
-export interface CustomScriptInput {
-  name: string;
-  script_location: 'head' | 'body';
-  script_content: string;
-  category: 'essential' | 'analytics' | 'marketing';
-  is_active: boolean;
-}
-
 export function validateIntegrations(data: IntegrationsInput): ValidationResult {
   const errors: Record<string, string[]> = {};
 
@@ -76,14 +68,5 @@ export function validateIntegrations(data: IntegrationsInput): ValidationResult 
     addError('sellf_license', 'Invalid license format (expected: SF-domain-TIER-expiry-signature)');
   }
 
-  return { isValid: Object.keys(errors).length === 0, errors };
-}
-
-export function validateScript(data: CustomScriptInput): ValidationResult {
-  const errors: Record<string, string[]> = {};
-  
-  if (!data.name || data.name.length < 2) errors['name'] = ['Name is too short'];
-  if (!data.script_content || data.script_content.length < 5) errors['script_content'] = ['Script content is too short'];
-  
   return { isValid: Object.keys(errors).length === 0, errors };
 }

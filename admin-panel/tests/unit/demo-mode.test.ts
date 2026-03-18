@@ -37,7 +37,6 @@ vi.mock('@/lib/services/gus-encryption', () => ({
 
 vi.mock('@/lib/validations/integrations', () => ({
   validateIntegrations: vi.fn(),
-  validateScript: vi.fn(),
 }));
 
 vi.mock('@/lib/license/verify', () => ({
@@ -291,23 +290,6 @@ describe('Server action demo guards', () => {
       expect(result).toMatchObject({ success: false, error: 'This action is disabled in demo mode' });
     });
 
-    it('addScript returns error in demo mode', async () => {
-      const { addScript } = await import('@/lib/actions/integrations');
-      const result = await addScript({} as any);
-      expect(result).toMatchObject({ success: false, error: 'This action is disabled in demo mode' });
-    });
-
-    it('deleteScript returns error in demo mode', async () => {
-      const { deleteScript } = await import('@/lib/actions/integrations');
-      const result = await deleteScript('123');
-      expect(result).toMatchObject({ success: false, error: 'This action is disabled in demo mode' });
-    });
-
-    it('toggleScript returns error in demo mode', async () => {
-      const { toggleScript } = await import('@/lib/actions/integrations');
-      const result = await toggleScript('123', true);
-      expect(result).toMatchObject({ success: false, error: 'This action is disabled in demo mode' });
-    });
   });
 
   describe('stripe-config (return pattern)', () => {

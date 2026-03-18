@@ -1,16 +1,12 @@
-import { getIntegrationsConfig, getScripts } from '@/lib/actions/integrations'
+import { getIntegrationsConfig } from '@/lib/actions/integrations'
 import IntegrationsForm from '@/components/IntegrationsForm'
 import { verifyAdminOrSellerAccess } from '@/lib/auth-server'
 
 export default async function IntegrationsPage() {
   await verifyAdminOrSellerAccess()
 
-  const [configResult, scriptsResult] = await Promise.all([
-    getIntegrationsConfig(),
-    getScripts()
-  ])
-  const config = configResult.success ? configResult.data as any : null
-  const scripts = (scriptsResult.success ? scriptsResult.data : []) as any[]
+  const configResult = await getIntegrationsConfig()
+  const config = configResult.success ? configResult.data : null
 
   return (
     <div className="space-y-6">
@@ -19,11 +15,11 @@ export default async function IntegrationsPage() {
           Integrations & Tracking
         </h1>
         <p className="mt-1 text-sm text-sf-muted">
-          Configure analytics, marketing pixels, and manage custom scripts (GDPR compliant).
+          Configure analytics, marketing pixels, and cookie consent (GDPR compliant).
         </p>
       </div>
 
-      <IntegrationsForm initialData={config} initialScripts={scripts || []} />
+      <IntegrationsForm initialData={config} />
     </div>
   )
 }

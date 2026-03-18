@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     // Calculate date range based on period
     const now = new Date();
     let startDate: Date;
-    let endDate = endDateParam ? new Date(endDateParam) : now;
+    const endDate = endDateParam ? new Date(endDateParam) : now;
 
     if (startDateParam) {
       startDate = new Date(startDateParam);

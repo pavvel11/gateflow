@@ -1,7 +1,7 @@
 'use server'
 
 import { withAdminOrSellerAuth } from '@/lib/actions/admin-auth'
-import { validateIntegrations, validateScript, type IntegrationsInput, type CustomScriptInput } from '@/lib/validations/integrations'
+import { validateIntegrations, type IntegrationsInput } from '@/lib/validations/integrations'
 import { validateLicense, extractDomainFromUrl } from '@/lib/license/verify'
 import { revalidatePath } from 'next/cache'
 import { isDemoMode, DEMO_MODE_ERROR } from '@/lib/demo-guard'
@@ -49,50 +49,6 @@ export async function updateIntegrationsConfig(values: IntegrationsInput) {
       .update({ ...values, updated_at: new Date().toISOString() })
       .eq('id', 1)
 
-    if (error) return { success: false, error: error.message }
-    revalidatePath('/dashboard/integrations')
-    return { success: true }
-  })
-}
-
-// --- SCRIPT MANAGER ---
-
-export async function getScripts() {
-  return withAdminOrSellerAuth(async ({ dataClient }) => {
-    const { data, error } = await dataClient.from('custom_scripts').select('*').order('created_at', { ascending: false })
-    if (error) return { success: true as const, data: [] as Record<string, unknown>[] }
-    return { success: true as const, data: (data ?? []) as Record<string, unknown>[] }
-  })
-}
-
-export async function addScript(values: CustomScriptInput) {
-  if (isDemoMode()) return { success: false, error: DEMO_MODE_ERROR }
-  return withAdminOrSellerAuth(async ({ dataClient }) => {
-    const validation = validateScript(values)
-    if (!validation.isValid) return { success: false, error: 'Invalid script', details: validation.errors }
-
-    const { error } = await dataClient.from('custom_scripts').insert(values)
-    if (error) return { success: false, error: error.message }
-
-    revalidatePath('/dashboard/integrations')
-    return { success: true }
-  })
-}
-
-export async function deleteScript(id: string) {
-  if (isDemoMode()) return { success: false, error: DEMO_MODE_ERROR }
-  return withAdminOrSellerAuth(async ({ dataClient }) => {
-    const { error } = await dataClient.from('custom_scripts').delete().eq('id', id)
-    if (error) return { success: false, error: error.message }
-    revalidatePath('/dashboard/integrations')
-    return { success: true }
-  })
-}
-
-export async function toggleScript(id: string, is_active: boolean) {
-  if (isDemoMode()) return { success: false, error: DEMO_MODE_ERROR }
-  return withAdminOrSellerAuth(async ({ dataClient }) => {
-    const { error } = await dataClient.from('custom_scripts').update({ is_active }).eq('id', id)
     if (error) return { success: false, error: error.message }
     revalidatePath('/dashboard/integrations')
     return { success: true }
