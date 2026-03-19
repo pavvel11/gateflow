@@ -17,6 +17,9 @@
  * 7. Bump array limits (20 = ok, 21 = rejected)
  * 8. Access expiration (auto_grant_duration_days sets access_expires_at)
  * 9. Coupon + amount = 0 (should reject)
+ * 10. Coupon redemption: reservation cleanup, usage_count increment, redemption row
+ * 11. Coupon usage limit reached during reservation window
+ * 12. Percentage coupon + bumps (exclude_order_bumps flag)
  *
  * @see supabase/migrations/20260310175058_multi_order_bumps.sql
  * ============================================================================
@@ -79,11 +82,19 @@ let orderBumpIds: string[];
 let pwywBumpProduct: { id: string; price: number };
 let pwywOrderBumpId: string;
 
+// Coupon test data
+let couponProduct: { id: string; price: number; currency: string };
+let couponBumpProduct: { id: string; price: number };
+let couponOrderBumpId: string;
+let testCoupon: { id: string; code: string };
+let testCouponExcludeBumps: { id: string; code: string };
+
 // IDs to clean up
 const createdProductIds: string[] = [];
 const createdOrderBumpIds: string[] = [];
 const createdSessionIds: string[] = [];
 const createdUserIds: string[] = [];
+const createdCouponIds: string[] = [];
 
 // ============================================================================
 // Setup & Teardown
@@ -228,10 +239,108 @@ beforeAll(async () => {
   if (pobErr) throw pobErr;
   pwywOrderBumpId = pob.id;
   createdOrderBumpIds.push(pob.id);
+
+  // --- Coupon test product ($40 USD) ---
+  const { data: cp, error: cpErr } = await supabaseAdmin
+    .from('products')
+    .insert({
+      name: `RPC Coupon ${TS}`,
+      slug: `rpc-coupon-${TS}`,
+      price: 40.0,
+      currency: 'USD',
+      is_active: true,
+    })
+    .select()
+    .single();
+  if (cpErr) throw cpErr;
+  couponProduct = { id: cp.id, price: cp.price, currency: cp.currency };
+  createdProductIds.push(cp.id);
+
+  // --- Coupon bump product ---
+  const { data: cbp, error: cbpErr } = await supabaseAdmin
+    .from('products')
+    .insert({
+      name: `RPC Coupon Bump ${TS}`,
+      slug: `rpc-coupon-bump-${TS}`,
+      price: 20.0,
+      currency: 'USD',
+      is_active: true,
+    })
+    .select()
+    .single();
+  if (cbpErr) throw cbpErr;
+  couponBumpProduct = { id: cbp.id, price: cbp.price };
+  createdProductIds.push(cbp.id);
+
+  const { data: cob, error: cobErr } = await supabaseAdmin
+    .from('order_bumps')
+    .insert({
+      main_product_id: couponProduct.id,
+      bump_product_id: cbp.id,
+      bump_title: 'Coupon Bump',
+      bump_price: 15.0,
+      display_order: 0,
+      is_active: true,
+    })
+    .select()
+    .single();
+  if (cobErr) throw cobErr;
+  couponOrderBumpId = cob.id;
+  createdOrderBumpIds.push(cob.id);
+
+  // --- Coupon: 20% off, includes bumps ---
+  const { data: tc, error: tcErr } = await supabaseAdmin
+    .from('coupons')
+    .insert({
+      code: `COUPON20-${TS}`,
+      name: `Test Coupon 20% ${TS}`,
+      discount_type: 'percentage',
+      discount_value: 20,
+      allowed_emails: [],
+      allowed_product_ids: [],
+      exclude_order_bumps: false,
+      usage_limit_global: 10,
+      usage_limit_per_user: 1,
+      current_usage_count: 0,
+      is_active: true,
+    })
+    .select()
+    .single();
+  if (tcErr) throw tcErr;
+  testCoupon = { id: tc.id, code: tc.code };
+  createdCouponIds.push(tc.id);
+
+  // --- Coupon: 25% off, excludes bumps ---
+  const { data: tceb, error: tcebErr } = await supabaseAdmin
+    .from('coupons')
+    .insert({
+      code: `COUPON25NB-${TS}`,
+      name: `Test Coupon 25% no bumps ${TS}`,
+      discount_type: 'percentage',
+      discount_value: 25,
+      allowed_emails: [],
+      allowed_product_ids: [],
+      exclude_order_bumps: true,
+      usage_limit_global: 10,
+      usage_limit_per_user: 1,
+      current_usage_count: 0,
+      is_active: true,
+    })
+    .select()
+    .single();
+  if (tcebErr) throw tcebErr;
+  testCouponExcludeBumps = { id: tceb.id, code: tceb.code };
+  createdCouponIds.push(tceb.id);
 });
 
 afterAll(async () => {
   // Clean up in dependency order
+  // Clean coupon data first (references transactions)
+  for (const cid of createdCouponIds) {
+    await supabaseAdmin.from('coupon_redemptions').delete().eq('coupon_id', cid);
+    await supabaseAdmin.from('coupon_reservations').delete().eq('coupon_id', cid);
+  }
+
   for (const sid of createdSessionIds) {
     // Find transaction IDs for this session
     const { data: txs } = await supabaseAdmin
@@ -241,6 +350,7 @@ afterAll(async () => {
     if (txs) {
       for (const tx of txs) {
         await supabaseAdmin.from('payment_line_items').delete().eq('transaction_id', tx.id);
+        await supabaseAdmin.from('coupon_redemptions').delete().eq('transaction_id', tx.id);
       }
     }
     await supabaseAdmin.from('guest_purchases').delete().eq('session_id', sid);
@@ -253,6 +363,9 @@ afterAll(async () => {
   }
   for (const obId of createdOrderBumpIds) {
     await supabaseAdmin.from('order_bumps').delete().eq('id', obId);
+  }
+  for (const cid of createdCouponIds) {
+    await supabaseAdmin.from('coupons').delete().eq('id', cid);
   }
   for (const pid of createdProductIds) {
     await supabaseAdmin.from('products').delete().eq('id', pid);
@@ -938,5 +1051,331 @@ describe('Coupon + amount = 0', () => {
     } else {
       expect(error).toBeTruthy();
     }
+  });
+});
+
+// ============================================================================
+// 10. Coupon redemption: reservation cleanup, usage_count, redemption row
+// ============================================================================
+
+describe('Coupon redemption logic', () => {
+  it('should create coupon_redemptions row on successful payment with coupon', async () => {
+    const email = `coupon-redeem-${TS}@example.com`;
+    const sid = `cs_test_coupon_redeem_${TS}`;
+    createdSessionIds.push(sid);
+
+    // Create reservation (required by the function)
+    const reservationExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    await supabaseAdmin.from('coupon_reservations').insert({
+      coupon_id: testCoupon.id,
+      customer_email: email,
+      expires_at: reservationExpires,
+      session_id: sid,
+    });
+
+    // Product is $40, coupon is 20% off = $32 = 3200 cents
+    const { data, error } = await callRpc(supabaseAdmin, {
+      session_id_param: sid,
+      product_id_param: couponProduct.id,
+      customer_email_param: email,
+      amount_total: 3200,
+      currency_param: 'USD',
+      coupon_id_param: testCoupon.id,
+    });
+
+    expect(error).toBeFalsy();
+    expect(data?.success).toBe(true);
+
+    // Verify coupon_redemptions row was created
+    const { data: redemptions } = await supabaseAdmin
+      .from('coupon_redemptions')
+      .select('*')
+      .eq('coupon_id', testCoupon.id)
+      .eq('customer_email', email);
+
+    expect(redemptions).toBeTruthy();
+    expect(redemptions!.length).toBe(1);
+    expect(redemptions![0].transaction_id).toBeTruthy();
+  });
+
+  it('should increment coupon usage_count on successful payment with coupon', async () => {
+    // Read current usage count
+    const { data: beforeCoupon } = await supabaseAdmin
+      .from('coupons')
+      .select('current_usage_count')
+      .eq('id', testCoupon.id)
+      .single();
+
+    const usageBefore = beforeCoupon?.current_usage_count ?? 0;
+
+    const email = `coupon-usage-${TS}@example.com`;
+    const sid = `cs_test_coupon_usage_${TS}`;
+    createdSessionIds.push(sid);
+
+    // Create reservation
+    const reservationExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    await supabaseAdmin.from('coupon_reservations').insert({
+      coupon_id: testCoupon.id,
+      customer_email: email,
+      expires_at: reservationExpires,
+      session_id: sid,
+    });
+
+    // Product is $40, coupon is 20% off = $32 = 3200 cents
+    const { data, error } = await callRpc(supabaseAdmin, {
+      session_id_param: sid,
+      product_id_param: couponProduct.id,
+      customer_email_param: email,
+      amount_total: 3200,
+      currency_param: 'USD',
+      coupon_id_param: testCoupon.id,
+    });
+
+    expect(error).toBeFalsy();
+    expect(data?.success).toBe(true);
+
+    // Verify usage_count was incremented
+    const { data: afterCoupon } = await supabaseAdmin
+      .from('coupons')
+      .select('current_usage_count')
+      .eq('id', testCoupon.id)
+      .single();
+
+    expect(afterCoupon?.current_usage_count).toBe(usageBefore + 1);
+  });
+
+  it('should delete coupon_reservations row on successful payment with coupon', async () => {
+    const email = `coupon-cleanup-${TS}@example.com`;
+    const sid = `cs_test_coupon_cleanup_${TS}`;
+    createdSessionIds.push(sid);
+
+    // Create reservation
+    const reservationExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    await supabaseAdmin.from('coupon_reservations').insert({
+      coupon_id: testCoupon.id,
+      customer_email: email,
+      expires_at: reservationExpires,
+      session_id: sid,
+    });
+
+    // Verify reservation exists
+    const { data: resBefore } = await supabaseAdmin
+      .from('coupon_reservations')
+      .select('id')
+      .eq('coupon_id', testCoupon.id)
+      .eq('customer_email', email);
+    expect(resBefore!.length).toBe(1);
+
+    // Product is $40, coupon is 20% off = $32 = 3200 cents
+    const { data, error } = await callRpc(supabaseAdmin, {
+      session_id_param: sid,
+      product_id_param: couponProduct.id,
+      customer_email_param: email,
+      amount_total: 3200,
+      currency_param: 'USD',
+      coupon_id_param: testCoupon.id,
+    });
+
+    expect(error).toBeFalsy();
+    expect(data?.success).toBe(true);
+
+    // Verify reservation was deleted
+    const { data: resAfter } = await supabaseAdmin
+      .from('coupon_reservations')
+      .select('id')
+      .eq('coupon_id', testCoupon.id)
+      .eq('customer_email', email);
+    expect(resAfter!.length).toBe(0);
+  });
+});
+
+// ============================================================================
+// 11. Coupon usage limit reached during reservation window
+// ============================================================================
+
+describe('Coupon usage limit reached during reservation window', () => {
+  it('should fail payment when coupon hit usage limit between reservation and payment', async () => {
+    // Create a coupon with limit=1 and current_usage_count=0
+    const { data: limitCoupon, error: lcErr } = await supabaseAdmin
+      .from('coupons')
+      .insert({
+        code: `LIMIT1-${TS}`,
+        name: `Limit 1 coupon ${TS}`,
+        discount_type: 'percentage',
+        discount_value: 10,
+        allowed_emails: [],
+        allowed_product_ids: [],
+        exclude_order_bumps: false,
+        usage_limit_global: 1,
+        usage_limit_per_user: 1,
+        current_usage_count: 0,
+        is_active: true,
+      })
+      .select()
+      .single();
+    if (lcErr) throw lcErr;
+    createdCouponIds.push(limitCoupon.id);
+
+    const email = `coupon-limit-${TS}@example.com`;
+    const sid = `cs_test_coupon_limit_${TS}`;
+    createdSessionIds.push(sid);
+
+    // Create reservation
+    const reservationExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    await supabaseAdmin.from('coupon_reservations').insert({
+      coupon_id: limitCoupon.id,
+      customer_email: email,
+      expires_at: reservationExpires,
+      session_id: sid,
+    });
+
+    // Simulate someone else using the coupon: set usage_count = limit
+    await supabaseAdmin
+      .from('coupons')
+      .update({ current_usage_count: 1 })
+      .eq('id', limitCoupon.id);
+
+    // Now try to pay with this coupon - should fail at the UPDATE coupons step
+    // Product is $40, 10% off = $36 = 3600 cents
+    const { data, error } = await callRpc(supabaseAdmin, {
+      session_id_param: sid,
+      product_id_param: couponProduct.id,
+      customer_email_param: email,
+      amount_total: 3600,
+      currency_param: 'USD',
+      coupon_id_param: limitCoupon.id,
+    });
+
+    // The function catches the exception and returns a generic error
+    expect(data?.success).toBe(false);
+  });
+});
+
+// ============================================================================
+// 12. Percentage coupon + bumps (exclude_order_bumps flag)
+// ============================================================================
+
+describe('Percentage coupon + bumps (exclude_order_bumps)', () => {
+  it('should accept payment with coupon that includes bumps (exclude_order_bumps=false)', async () => {
+    const email = `coupon-with-bumps-${TS}@example.com`;
+    const sid = `cs_test_coupon_bumps_incl_${TS}`;
+    createdSessionIds.push(sid);
+
+    // Create reservation
+    const reservationExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    await supabaseAdmin.from('coupon_reservations').insert({
+      coupon_id: testCoupon.id,
+      customer_email: email,
+      expires_at: reservationExpires,
+      session_id: sid,
+    });
+
+    // Product $40 + bump $15 = $55 total
+    // 20% off everything = $44 = 4400 cents
+    // The coupon branch uses lenient validation: amount > 0 AND amount <= expected_total * 100
+    // expected_total = product.price + bump_price = $40 + $15 = $55 = 5500 cents max
+    // So 4400 is valid (> 0 and <= 5500)
+    const { data, error } = await callRpc(supabaseAdmin, {
+      session_id_param: sid,
+      product_id_param: couponProduct.id,
+      customer_email_param: email,
+      amount_total: 4400,
+      currency_param: 'USD',
+      bump_product_ids_param: [couponBumpProduct.id],
+      coupon_id_param: testCoupon.id,
+    });
+
+    expect(error).toBeFalsy();
+    expect(data?.success).toBe(true);
+    // Guest purchase does not include bump_count in response, but bump access is tracked via line items
+    expect(data?.is_guest_purchase).toBe(true);
+
+    // Verify bump was recorded as a line item
+    const { data: txs } = await supabaseAdmin
+      .from('payment_transactions')
+      .select('id')
+      .eq('session_id', sid)
+      .single();
+    if (txs) {
+      const { data: lineItems } = await supabaseAdmin
+        .from('payment_line_items')
+        .select('item_type, product_id')
+        .eq('transaction_id', txs.id)
+        .eq('item_type', 'order_bump');
+      expect(lineItems!.length).toBe(1);
+      expect(lineItems![0].product_id).toBe(couponBumpProduct.id);
+    }
+  });
+
+  it('should accept payment with coupon that excludes bumps (exclude_order_bumps=true)', async () => {
+    const email = `coupon-no-bumps-${TS}@example.com`;
+    const sid = `cs_test_coupon_bumps_excl_${TS}`;
+    createdSessionIds.push(sid);
+
+    // Create reservation
+    const reservationExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    await supabaseAdmin.from('coupon_reservations').insert({
+      coupon_id: testCouponExcludeBumps.id,
+      customer_email: email,
+      expires_at: reservationExpires,
+      session_id: sid,
+    });
+
+    // Product $40 + bump $15 = $55 total
+    // 25% off main product only = $30 + $15 bump = $45 = 4500 cents
+    // The coupon branch: amount > 0 AND amount <= ($40 + $15) * 100 = 5500
+    // So 4500 is valid (> 0 and <= 5500)
+    const { data, error } = await callRpc(supabaseAdmin, {
+      session_id_param: sid,
+      product_id_param: couponProduct.id,
+      customer_email_param: email,
+      amount_total: 4500,
+      currency_param: 'USD',
+      bump_product_ids_param: [couponBumpProduct.id],
+      coupon_id_param: testCouponExcludeBumps.id,
+    });
+
+    expect(error).toBeFalsy();
+    expect(data?.success).toBe(true);
+
+    // Verify redemption was created
+    const { data: redemptions } = await supabaseAdmin
+      .from('coupon_redemptions')
+      .select('*')
+      .eq('coupon_id', testCouponExcludeBumps.id)
+      .eq('customer_email', email);
+    expect(redemptions!.length).toBe(1);
+  });
+
+  it('should reject payment with coupon when amount exceeds max possible', async () => {
+    const email = `coupon-overpay-${TS}@example.com`;
+    const sid = `cs_test_coupon_overpay_${TS}`;
+    createdSessionIds.push(sid);
+
+    // Create reservation
+    const reservationExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    await supabaseAdmin.from('coupon_reservations').insert({
+      coupon_id: testCoupon.id,
+      customer_email: email,
+      expires_at: reservationExpires,
+      session_id: sid,
+    });
+
+    // Product $40 + bump $15 = $55 = 5500 cents max
+    // Try 6000 cents (more than max)
+    const { data, error } = await callRpc(supabaseAdmin, {
+      session_id_param: sid,
+      product_id_param: couponProduct.id,
+      customer_email_param: email,
+      amount_total: 6000,
+      currency_param: 'USD',
+      bump_product_ids_param: [couponBumpProduct.id],
+      coupon_id_param: testCoupon.id,
+    });
+
+    // The RAISE EXCEPTION is caught by the function's EXCEPTION handler
+    // and returned as {success: false, error: 'Payment processing failed...'}
+    const failed = (data?.success === false) || (error != null);
+    expect(failed).toBe(true);
   });
 });
